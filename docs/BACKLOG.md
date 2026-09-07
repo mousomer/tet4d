@@ -64,8 +64,10 @@ provides deterministic viewport-aware, activity-independent slice tiling and
 records bounded repair 56B-R for settled HUD viewport ownership and manual-fit
 preservation. Stage 56C now renders PIECE and VIEW as shared passive semantic
 rows whose labels are injected from `LiveInputContract` across all densities.
-Shared cockpit extraction, Live 3D/2D migration, responsive acceptance, human
-playability acceptance, and final polish remain gated as Stages 56D–56I.
+Stage 56D extracts the Header, PrimaryBoardSurface, and three-module
+ControlDeck allocation into the authority-free `LiveCockpit` shell. Live 3D/2D
+migration, responsive acceptance, human playability acceptance, and final
+polish remain gated as Stages 56E–56I.
 
 ### Three-product packaging gaps
 

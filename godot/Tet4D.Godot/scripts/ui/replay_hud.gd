@@ -17,6 +17,7 @@ const NextPiecePanelScript = preload("res://scripts/ui/pieces/next_piece_panel.g
 const HoldPiecePanelScript = preload("res://scripts/ui/pieces/hold_piece_panel.gd")
 const LivePieceControlStripScript = preload("res://scripts/ui/live_piece_control_strip.gd")
 const LiveViewControlStripScript = preload("res://scripts/ui/live_view_control_strip.gd")
+const LiveCockpitScript = preload("res://scripts/ui/live_cockpit.gd")
 const SettingsRegistryScript = preload("res://scripts/ui/settings/settings_registry.gd")
 const SettingsStoreScript = preload("res://scripts/ui/settings/settings_store.gd")
 const ShellPresentationPreferencesScript = preload("res://scripts/ui/settings/shell_presentation_preferences.gd")
@@ -213,6 +214,7 @@ var _hold_piece_panel: PanelContainer
 var _piece_preview_row: HBoxContainer
 var _piece_control_strip: PanelContainer
 var _live_view_control_strip: PanelContainer
+var _live_cockpit
 var _live_4d_deck: HBoxContainer
 var _live_4d_piece_module: VBoxContainer
 var _live_4d_view_module: VBoxContainer
@@ -700,8 +702,7 @@ func _set_live_4d_deck_active(active: bool) -> void:
 		_live_view_control_strip.reparent(_live_4d_view_module, false)
 		_piece_preview_row.reparent(_live_4d_state_module, false)
 		_right_scroll.visible = false
-		_live_4d_deck.visible = true
-		_live_4d_deck.custom_minimum_size.y = 150.0 if _hud_density == "compact" else (220.0 if _hud_density == "detailed" else 190.0)
+		_live_cockpit.set_control_deck_visible(true, _hud_density)
 		return
 	if _piece_control_strip.get_parent() != _right_column:
 		_piece_control_strip.reparent(_right_column, false)
@@ -709,7 +710,7 @@ func _set_live_4d_deck_active(active: bool) -> void:
 		_piece_preview_row.reparent(_right_column, false)
 	if _live_view_control_strip.get_parent() != _right_column:
 		_live_view_control_strip.reparent(_right_column, false)
-	_live_4d_deck.visible = false
+	_live_cockpit.set_control_deck_visible(false, _hud_density)
 	_right_scroll.visible = true
 
 
@@ -1008,6 +1009,7 @@ func layout_contract_snapshot() -> Dictionary:
 		"bottom_bar": bottom_rect,
 		"live_4d_deck": cockpit_deck_rect,
 		"live_4d_deck_visible": _live_4d_deck.visible if _live_4d_deck != null else false,
+		"live_cockpit": _live_cockpit.deterministic_snapshot() if _live_cockpit != null else {},
 		"piece_module_rect": _control_rect(_live_4d_piece_module),
 		"view_module_rect": _control_rect(_live_4d_view_module),
 		"piece_state_module_rect": _control_rect(_live_4d_state_module),
@@ -1840,11 +1842,13 @@ func _build_layout() -> void:
 	outer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	outer.custom_minimum_size = ReplayVisuals.supported_shell_minimum_size()
 	_viewer_screen.add_child(outer)
+	_live_cockpit = LiveCockpitScript.new()
+	outer.add_child(_live_cockpit)
 
 	var top_bar := HBoxContainer.new()
 	top_bar.custom_minimum_size = Vector2(0, ReplayVisuals.TOP_BAR_HEIGHT)
 	top_bar.add_theme_constant_override("separation", ReplayVisuals.PANEL_GAP)
-	outer.add_child(top_bar)
+	_live_cockpit.header_slot.add_child(top_bar)
 
 	var viewer_nav := VBoxContainer.new()
 	_viewer_nav = viewer_nav
@@ -2070,7 +2074,7 @@ func _build_layout() -> void:
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.custom_minimum_size = Vector2(ReplayVisuals.BODY_MIN_WIDTH, ReplayVisuals.BODY_MIN_HEIGHT)
 	body.add_theme_constant_override("separation", ReplayVisuals.BODY_GAP)
-	outer.add_child(body)
+	_live_cockpit.primary_board_surface.add_child(body)
 
 	_left_panel = PanelContainer.new()
 	_left_panel.name = "LeftCaseBrowserSlot"
@@ -2286,22 +2290,10 @@ func _build_layout() -> void:
 	_right_column.add_child(_quick_settings_header)
 	_right_column.add_child(_settings_panel)
 
-	_live_4d_deck = HBoxContainer.new()
-	_live_4d_deck.name = "Live4DCockpitDeck"
-	_live_4d_deck.visible = false
-	_live_4d_deck.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_live_4d_deck.add_theme_constant_override("separation", 10)
-	outer.add_child(_live_4d_deck)
-	for specification in [["PieceModule", 42], ["ViewModule", 33], ["PieceStateModule", 25]]:
-		var module := VBoxContainer.new()
-		module.name = specification[0]
-		module.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		module.size_flags_stretch_ratio = float(specification[1])
-		_live_4d_deck.add_child(module)
-		match str(specification[0]):
-			"PieceModule": _live_4d_piece_module = module
-			"ViewModule": _live_4d_view_module = module
-			"PieceStateModule": _live_4d_state_module = module
+	_live_4d_deck = _live_cockpit.control_deck
+	_live_4d_piece_module = _live_cockpit.piece_controls
+	_live_4d_view_module = _live_cockpit.view_controls
+	_live_4d_state_module = _live_cockpit.piece_state
 
 	var bottom_panel := PanelContainer.new()
 	_bottom_panel = bottom_panel

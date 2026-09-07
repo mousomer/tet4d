@@ -126,6 +126,29 @@ runtime result is captured at
 `docs/design/screenshots/stage_56c_semantic_helpers/live_4d_normal.png`.
 Stage 56D is now eligible; Stages 56E–56I remain gated.
 
+### Stage 56D — shared LiveCockpit grammar
+
+`LiveCockpit` owns named `Header`, `PrimaryBoardSurface`, and `ControlDeck`
+slots. Its deck owns `PieceControls`, `ViewControls`, and `PieceState` module
+slots with the accepted 42/33/25 allocation. It does not own or inspect board
+rendering, dimensional geometry, gameplay input, camera state, or piece-state
+models.
+
+This stage moves the existing Live-4D hierarchy into that shell without
+changing its measured rectangles or visible content. Replay and the unmigrated
+Live-2D/Live-3D modes may pass through the shared header/primary slots while
+their deck remains hidden; their outer cockpit migration is reserved for 56E
+and 56F. Acceptance compares pre/post Live-4D slot geometry, semantic rows,
+piece-state consumers, and deterministic state and requires the extracted
+component to contain no renderer or input authority.
+
+Stage 56D is implemented and focused-green. At the 1600×960 reference shell,
+the extraction preserves the `1576×604` game area and `1576×228` deck
+allocation, the same semantic row identities, the existing thumbnail
+consumers, and the deterministic Live-4D state hash. The component-source
+boundary test excludes renderer, camera, input-map, and descriptor ownership.
+Stage 56E is now eligible; Stages 56F–56I remain gated.
+
 ## Explicit non-goals for Stage 56A
 
 No 2D/3D redesign, slice-layout choice, helper/deck refactor,

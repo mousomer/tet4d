@@ -50,6 +50,7 @@ func _run_all() -> void:
 		"res://tests/test_live_board_visual_grammar.gd",
 		"res://tests/test_live_input_contract.gd",
 		"res://tests/test_semantic_control_helpers.gd",
+		"res://tests/test_live_cockpit.gd",
 		"res://tests/test_cockpit_density_control_hierarchy.gd",
 		"res://tests/test_trace_scene_renderer.gd",
 		"res://tests/test_tet4d_core_extension.gd",
@@ -75,6 +76,7 @@ func _run_all() -> void:
 		var test_case = load(script_path).new()
 		if script_path in [
 			"res://tests/test_semantic_control_helpers.gd",
+			"res://tests/test_live_cockpit.gd",
 			"res://tests/test_camera_rig.gd",
 			"res://tests/test_live_4d_orientation_rosette.gd",
 			"res://tests/test_live_4d_slice_tiling.gd",

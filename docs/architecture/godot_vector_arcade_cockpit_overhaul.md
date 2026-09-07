@@ -820,6 +820,16 @@ second compact-text inventory. Tests may inject a descriptor provider solely
 to prove rendered labels follow the authority seam; production always uses
 `LiveInputContract`.
 
+Stage 56D establishes `LiveCockpit` as the shared information-architecture
+container. It owns only three named shell slots—Header, PrimaryBoardSurface,
+and ControlDeck—and the deck's PieceControls, ViewControls, and PieceState
+allocation. Mode-specific board nodes are inserted into PrimaryBoardSurface;
+their renderers, geometry, dimensional semantics, and fitting remain outside
+the shell. The helper strips and existing thumbnail consumers are inserted
+into their named deck slots. Hiding the deck preserves the legacy outer
+arrangement for modes not yet migrated, so extraction itself cannot become a
+hidden 2D/3D redesign.
+
 NEXT and HOLD share one compact cockpit layout convention and remain backed by
 the existing `PieceThumbnailModel` and `PieceThumbnail`. Compactness changes
 panel margins, thumbnail minimums, and side-by-side placement only. Native
