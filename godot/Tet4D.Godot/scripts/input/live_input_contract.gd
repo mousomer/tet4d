@@ -143,9 +143,9 @@ static func camera_helper_items() -> Array:
 
 static func live_4d_pointer_helper_items() -> Array:
 	return [
-		[str(CAMERA_CONTROL_SPECS["camera_orbit"]["display"]), "Orient slices"],
-		[str(CAMERA_CONTROL_SPECS["camera_pan"]["display"]), "Translate framing"],
-		[str(CAMERA_CONTROL_SPECS["camera_zoom"]["display"]), "Zoom"],
+		[str(CAMERA_CONTROL_SPECS["camera_orbit"]["display"]), "Orient slices", {"operation": "Orient"}],
+		[str(CAMERA_CONTROL_SPECS["camera_pan"]["display"]), "Translate framing", {"operation": "Translate"}],
+		[str(CAMERA_CONTROL_SPECS["camera_zoom"]["display"]), "Zoom", {"operation": "Zoom"}],
 	]
 
 
@@ -171,10 +171,11 @@ static func control_hint_groups(mode: String, basis_snapshot: Dictionary = {}, c
 # rather than maintaining a second inventory.
 static func piece_control_groups(mode: String, basis_snapshot: Dictionary = {}, control_frame: Dictionary = {}) -> Array:
 	var result: Array = []
-	for source_group in control_hint_groups(mode, basis_snapshot, control_frame):
-		var role := str(source_group.get("cockpit_role", ""))
-		if role in ["translate", "rotate"]:
-			result.append(source_group.duplicate(true))
+	var groups := control_hint_groups(mode, basis_snapshot, control_frame)
+	for expected_role in ["translate", "drop", "rotate"]:
+		for source_group in groups:
+			if str(source_group.get("cockpit_role", "")) == expected_role:
+				result.append(source_group.duplicate(true))
 	return result
 
 
@@ -225,7 +226,7 @@ static func _live_2d_groups(control_frame: Dictionary = {}) -> Array:
 	return [
 		{"group": "Piece movement", "cockpit_role": "translate", "note": "Controls follow the current view." if relative else "Canonical X axis.", "items": [[_pair("live_move_left", "live_move_right"), movement_label, movement_meta], [_pair("live_2d_move_left", "live_2d_move_right"), movement_label, movement_meta]]},
 		{"group": "Piece rotation", "cockpit_role": "rotate", "items": [[_all_keys("live_rotate_cw"), "Rotate clockwise"], [_display_key("live_rotate_ccw"), "Rotate counter-clockwise"]]},
-		{"group": "Drop", "items": [[_all_keys("live_soft_drop"), "Soft Drop"], [_display_key("live_hard_drop"), "Hard Drop"]]},
+		{"group": "Drop", "cockpit_role": "drop", "items": [[_all_keys("live_soft_drop"), "Soft Drop", {"operation": "Soft"}], [_display_key("live_hard_drop"), "Hard Drop", {"operation": "Hard"}]]},
 		{"group": "Piece management", "items": [[_display_key("live_hold"), "Hold"]]},
 		{"group": "Camera", "items": [["F", "Fit View (framing only)"], [_display_key("reset"), "Reset View (restore flat canonical view)"]]},
 		{"group": "Session", "items": [[_display_key("live_pause"), "Pause"], [_display_key("live_reset"), "Restart Game"]]},
@@ -250,7 +251,7 @@ static func _live_3d_groups(control_frame: Dictionary = {}) -> Array:
 	return [
 		{"group": "Piece movement", "cockpit_role": "translate", "note": "Controls follow the current view; Forward recedes and Back approaches." if relative else "Canonical X/Z axes.", "items": move_rows},
 		{"group": "Piece rotation", "cockpit_role": "rotate", "note": rotation_note, "items": [[_pair("live_3d_rotate_xy_neg", "live_3d_rotate_xy_pos"), "Rotate XY"], [_pair("live_3d_rotate_xz_neg", "live_3d_rotate_xz_pos"), "Rotate XZ"], [_pair("live_3d_rotate_yz_neg", "live_3d_rotate_yz_pos"), "Rotate YZ"]]},
-		{"group": "Drop", "items": [[_display_key("live_3d_soft_drop"), "Soft Drop"], [_display_key("live_3d_hard_drop"), "Hard Drop"]]},
+		{"group": "Drop", "cockpit_role": "drop", "items": [[_display_key("live_3d_soft_drop"), "Soft Drop", {"operation": "Soft"}], [_display_key("live_3d_hard_drop"), "Hard Drop", {"operation": "Hard"}]]},
 		{"group": "Piece management", "items": [[_display_key("live_hold"), "Hold"]]},
 		{"group": "Camera", "items": camera_helper_items() + [["Double-click", "Fit View (framing only)"], [_display_key("reset"), "Reset View (restore canonical view)"]]},
 		{"group": "Session", "items": [[_display_key("live_3d_pause"), "Pause"], [_display_key("live_3d_reset"), "Restart Game"]]},
@@ -280,12 +281,13 @@ static func _live_4d_groups(basis_snapshot: Dictionary = {}, control_frame: Dict
 		[_pair("live_4d_move_w_neg", "live_4d_move_w_pos", " / "), "W− / W+", {"cockpit_direction": "slice", "signed_axis": "+W"}],
 	])
 	return [
+		{"group": "Piece movement", "cockpit_role": "translate", "note": "Controls follow the current view." if relative else "Canonical X/Z/W axes.", "items": move_rows},
+		{"group": "Drop", "cockpit_role": "drop", "items": [[_display_key("live_4d_soft_drop"), "Soft Drop", {"operation": "Soft"}], [_display_key("live_4d_hard_drop"), "Hard Drop", {"operation": "Hard"}]]},
 		{"group": "Piece rotation", "cockpit_role": "rotate", "note": "Left: CCW · Right: CW" if legacy else ("Left: CCW · Right: CW · Planes follow the current view." if rotation_relative else "Left: CCW · Right: CW · Canonical XY/XZ/YZ/XW/YW/ZW planes."), "items": _rotation_hint_items("piece")},
 		{"group": "Exact camera rotation", "cockpit_role": "view_exact", "note": "Exact presentation basis; Y stays down", "items": _exact_camera_rotation_hint_items()},
-		{"group": "Slice orientation", "cockpit_role": "view_orient", "items": [[_pair("live_4d_camera_pitch_up", "live_4d_camera_pitch_down", " / "), "Pitch up / down"], [_pair("live_4d_camera_yaw_left", "live_4d_camera_yaw_right", " / "), "Yaw left / right"]]},
-		{"group": "Framing", "cockpit_role": "view_framing", "items": [["%s / = / +" % _display_key("live_4d_camera_zoom_out"), "Zoom out / in"], ["Double-click", "Fit View (framing only)"]]},
+		{"group": "Slice orientation", "cockpit_role": "view_orient", "items": [[_pair("live_4d_camera_pitch_up", "live_4d_camera_pitch_down", " / "), "Pitch up / down", {"operation": "Pitch"}], [_pair("live_4d_camera_yaw_left", "live_4d_camera_yaw_right", " / "), "Yaw left / right", {"operation": "Yaw"}]]},
+		{"group": "Framing", "cockpit_role": "view_framing", "items": [["%s / = / +" % _display_key("live_4d_camera_zoom_out"), "Zoom out / in", {"operation": "Zoom"}], ["Double-click", "Fit View (framing only)", {"operation": "Fit"}], [_display_key("reset"), "Reset View (basis, slice orientation, framing)", {"operation": "Reset"}]]},
 		{"group": "Pointer", "cockpit_role": "view_pointer", "items": live_4d_pointer_helper_items()},
-		{"group": "Drop", "items": [[_display_key("live_4d_soft_drop"), "Soft Drop"], [_display_key("live_4d_hard_drop"), "Hard Drop"]]},
 		{"group": "Piece management", "items": [[_display_key("live_hold"), "Hold"]]},
 		{"group": "Session", "items": [[_display_key("live_4d_pause"), "Pause"], [_display_key("live_4d_reset"), "Restart Game"]]},
 		{"group": "Navigation", "items": [["Tab", "Replay Demos"], ["Esc", "Main Menu"]]},
@@ -298,6 +300,7 @@ static func _rotation_hint_items(owner: String) -> Array:
 		items.append([
 			_pair(str(spec["negative_action"]), str(spec["positive_action"]), " / "),
 			str(spec["plane"]),
+			{"operation": str(spec["plane"])},
 		])
 	return items
 
@@ -311,8 +314,8 @@ static func _exact_camera_rotation_hint_items() -> Array:
 		items.append([
 			_pair(str(spec["negative_action"]), str(spec["positive_action"]), " / "),
 			"%s - / +%s" % [str(spec["plane"]), suffix],
+			{"operation": str(spec["plane"])},
 		])
-	items.append([_display_key("reset"), "Reset View (basis, slice orientation, framing)"])
 	return items
 
 

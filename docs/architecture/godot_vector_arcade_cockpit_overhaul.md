@@ -810,6 +810,16 @@ metadata on those existing groups, then derives compact symbols from their
 labels. It owns no action identity, applicability rule, key binding, control
 frame, rotation-plane mapping, or command dispatch path.
 
+Stage 56C extends that invariant to the Live-4D lower deck. Role-tagged Move,
+Drop, Rotate Piece, Exact Rotate View, Look, Framing, and Pointer descriptors
+are rendered by shared passive semantic primitives. `ControlRow` keeps the
+operation and its `BindingPair` in separate columns; `Keycap` and
+`PointerGesture` are styled labels with ignored mouse input, not buttons.
+Density changes spacing and optional explanation but never substitutes a
+second compact-text inventory. Tests may inject a descriptor provider solely
+to prove rendered labels follow the authority seam; production always uses
+`LiveInputContract`.
+
 NEXT and HOLD share one compact cockpit layout convention and remain backed by
 the existing `PieceThumbnailModel` and `PieceThumbnail`. Compactness changes
 panel margins, thumbnail minimums, and side-by-side placement only. Native

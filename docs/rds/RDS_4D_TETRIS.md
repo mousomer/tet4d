@@ -365,6 +365,10 @@ Relevant tests:
     expected range, avoids severely unbalanced final rows, and preserves
     left-aligned row-major identity. Axis name, active slice, occupancy, and
     per-slice content cannot affect geometry.
+16. Live-4D PIECE and VIEW guidance is a passive semantic projection of
+    `LiveInputContract`. Operations and bindings remain separately scannable,
+    all supported density modes preserve the same row identities, and no
+    keycap dispatches gameplay or owns a duplicate binding table.
 
 ## 11. Implementation Status (2026-02-19)
 

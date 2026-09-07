@@ -61,10 +61,11 @@ Complete the accepted cockpit direction through serial green stages. Stage
 56A repaired the Live-4D orientation rosette as a passive consumer of the
 existing `B + L + ControlFrameMapping` presentation snapshot. Stage 56B now
 provides deterministic viewport-aware, activity-independent slice tiling and
-records bounded repair 56B-R for settled HUD viewport ownership. Semantic
-keycaps, shared cockpit extraction, Live 3D/2D migration, responsive
-acceptance, human playability acceptance, and final polish remain gated as
-Stages 56C–56I.
+records bounded repair 56B-R for settled HUD viewport ownership and manual-fit
+preservation. Stage 56C now renders PIECE and VIEW as shared passive semantic
+rows whose labels are injected from `LiveInputContract` across all densities.
+Shared cockpit extraction, Live 3D/2D migration, responsive acceptance, human
+playability acceptance, and final polish remain gated as Stages 56D–56I.
 
 ### Three-product packaging gaps
 

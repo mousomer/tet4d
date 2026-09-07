@@ -103,6 +103,29 @@ The measured candidate table and required A/B captures are recorded in
 `docs/design/stage_56b_slice_tiling_evidence.md`. Stage 56C is now eligible;
 Stages 56D–56I remain gated.
 
+### Stage 56C — semantic passive control rows
+
+The Live-4D `PIECE` and `VIEW` modules consume role-tagged groups from
+`LiveInputContract` and render them through shared passive `ControlSection`,
+`ControlRow`, `BindingPair`, `Keycap`, and `PointerGesture` construction
+primitives. Operation labels and bindings occupy separate columns. Keycaps are
+labels, never buttons, and dispatch no gameplay input.
+
+`PIECE` contains applicable Move, Drop, and Rotate Piece rows. `VIEW` contains
+Exact Rotate View, Look, Framing, and Pointer rows. Full, normal, and compact
+density consume the same semantic rows; density may change spacing and
+optional explanatory copy only. Acceptance requires an injected contract
+fixture to change rendered bindings, proving the strips own no parallel action
+or key inventory. Stage 56D remains gated until this test and the existing
+input/cockpit hierarchy regressions are green.
+
+Stage 56C is implemented and focused-green. The contract, injected fixture,
+production deck containment, density-invariant row identities, passive-node
+check, and deterministic-state isolation are automated. The normal-density
+runtime result is captured at
+`docs/design/screenshots/stage_56c_semantic_helpers/live_4d_normal.png`.
+Stage 56D is now eligible; Stages 56E–56I remain gated.
+
 ## Explicit non-goals for Stage 56A
 
 No 2D/3D redesign, slice-layout choice, helper/deck refactor,

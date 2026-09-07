@@ -670,7 +670,7 @@ func _configure_live_cockpit_mode(mode: String) -> void:
 		_basis_panel.visible = mode == GameSetupSpecScript.MODE_4D
 	_refresh_piece_control_strip()
 	if _live_view_control_strip != null:
-		_live_view_control_strip.configure(_live_4d_basis_snapshot, _control_frame_snapshot)
+		_live_view_control_strip.configure(_live_4d_basis_snapshot, _control_frame_snapshot, _hud_density)
 	_update_camera_guidance(mode)
 	if _inspector_hint_panel != null:
 		_inspector_hint_panel.set_meta("hint_cache_key", "")
@@ -685,7 +685,8 @@ func _refresh_piece_control_strip() -> void:
 	_piece_control_strip.configure(
 		_active_live_mode,
 		_live_4d_basis_snapshot if _active_live_mode == GameSetupSpecScript.MODE_4D else {},
-		_control_frame_snapshot
+		_control_frame_snapshot,
+		_hud_density
 	)
 	if is_inside_tree():
 		_style_applier.apply_to_tree(_piece_control_strip, _style_manager)
@@ -1689,6 +1690,9 @@ func _apply_ui_scale(scale_id: String) -> void:
 
 func _apply_hud_density(density: String) -> void:
 	_hud_density = density if density in ShellPresentationPreferencesScript.HUD_DENSITIES else "standard"
+	_refresh_piece_control_strip()
+	if _live_view_control_strip != null and not _active_live_mode.is_empty():
+		_live_view_control_strip.configure(_live_4d_basis_snapshot, _control_frame_snapshot, _hud_density)
 	_set_live_inspector_density(_bottom_panel != null and not _bottom_panel.visible)
 	_update_live_view_action_labels()
 

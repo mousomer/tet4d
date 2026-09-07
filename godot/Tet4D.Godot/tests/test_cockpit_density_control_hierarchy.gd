@@ -34,8 +34,8 @@ func _check_authoritative_piece_sets() -> Array:
 	}
 	for mode in cases:
 		var groups := LiveInputContractScript.piece_control_groups(mode)
-		if groups.size() != 2 or str(groups[0].get("cockpit_role", "")) != "translate" or str(groups[1].get("cockpit_role", "")) != "rotate":
-			failures.append("%s piece strip must select exactly authoritative translate and rotate groups" % mode)
+		if groups.size() != 3 or groups.map(func(group): return str(group.get("cockpit_role", ""))) != ["translate", "drop", "rotate"]:
+			failures.append("%s piece strip must select exactly authoritative translate, rotate, and drop groups" % mode)
 			continue
 		var text := str(groups)
 		for rotation_label in cases[mode]["rotation"]:
@@ -240,8 +240,8 @@ func _check_primary_surfaces(hud, mode: String, label: String) -> Array:
 	if camera_rect.position.y < piece_rect.end.y - 0.5:
 		failures.append("%s %s camera guidance must appear below primary piece guidance" % [label, mode])
 	var strip: Dictionary = hud._piece_control_strip.deterministic_snapshot()
-	if strip.get("source") != "LiveInputContract" or strip.get("roles", []) != ["translate", "rotate"]:
-		failures.append("%s %s piece surface must report authoritative translate/rotate consumption" % [label, mode])
+	if strip.get("source") != "LiveInputContract" or strip.get("roles", []) != ["translate", "drop", "rotate"]:
+		failures.append("%s %s piece surface must report authoritative translate/rotate/drop consumption" % [label, mode])
 	if hud._piece_control_strip.mouse_filter != Control.MOUSE_FILTER_IGNORE or not hud._piece_control_strip.find_children("*", "BaseButton", true, false).is_empty():
 		failures.append("%s %s piece surface must remain passive guidance, not a gameplay input modality" % [label, mode])
 	if hud._right_scroll.scroll_vertical != 0:
