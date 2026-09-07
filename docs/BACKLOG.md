@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-09-02
+Updated: 2026-09-07
 Scope: active work, explicit deferrals, and near-term acceptance boundaries.
 
 Completed chronology is recoverable from Git, merged PRs, CI, and
@@ -31,6 +31,27 @@ never duplicate the verification graph.
 
 Follow-up: separately review destructive `--rebuild-venv` recreation for
 operator confirmation and recovery messaging.
+
+### Camera and relative-control contract
+
+Unify the Godot presentation contract for exact camera basis turns, slice
+orientation, and Relative translation without changing native gameplay,
+deterministic identity, or accepted 4D resolver behaviour. Issue #74 requires
+2D screen-left/right and 3D screen-left/right plus Forward-away/Back-approach
+to agree across resolver output, camera basis, direction helpers, and help.
+
+Acceptance boundary:
+
+- exact camera pairs are XZ `1/2`, XW `3/4`, and ZW `5/6`; the public and
+  tutorial progression remains XW, ZW, XZ;
+- `LiveInputContract` owns shared piece/camera rotation descriptors and 4D
+  keeps the existing `B + Q(L.local_yaw)` resolver semantics; `O/L` preserve
+  local-yaw decrement/increment without rotating the outer camera rig; and
+- coordinate/framing changes are limited to the Stage 55B exact-basis fit
+  contract and need independent mapper-oracle coverage.
+
+Cockpit allocation, NEXT/HOLD redesign, grid/spacing polish, Figma/export,
+and issues #69/#70 remain separate PR3–PR5 work.
 
 ### Three-product packaging gaps
 

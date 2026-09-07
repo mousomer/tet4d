@@ -2815,23 +2815,19 @@ func _build_basis_panel() -> PanelContainer:
 	controls.add_theme_constant_override("h_separation", 6)
 	controls.add_theme_constant_override("v_separation", 6)
 	content.add_child(controls)
-	for action in [
-		["view_xw_neg", "XW -", "xw", -1],
-		["view_xw_pos", "XW +", "xw", 1],
-		["view_zw_neg", "ZW -", "zw", -1],
-		["view_zw_pos", "ZW +", "zw", 1],
-		["view_zx_neg", "ZX -", "zx", -1],
-		["view_zx_pos", "ZX +", "zx", 1],
-	]:
-		var button := Button.new()
-		button.name = "BasisButton__%s" % str(action[0])
-		button.text = "%s  %s" % [LiveInputContractScript.display_key(str(action[0])), str(action[1])]
-		button.tooltip_text = "Rotate the 4D presentation frame by an exact 90°; does not rotate the piece"
-		button.set_meta("semantic_role", "action_button")
-		var plane := str(action[2])
-		var direction := int(action[3])
-		button.pressed.connect(func() -> void: basis_turn_requested.emit(plane, direction))
-		controls.add_child(button)
+	for spec in LiveInputContractScript.exact_camera_rotation_specs():
+		for direction_key in [["negative_action", -1], ["positive_action", 1]]:
+			var action_id := str(spec[direction_key[0]])
+			var direction := int(direction_key[1])
+			var plane := str(spec["plane"]).to_lower()
+			var turn_label := "%s %s" % [str(spec["plane"]), "CCW" if direction < 0 else "CW"]
+			var button := Button.new()
+			button.name = "BasisButton__%s" % action_id
+			button.text = "%s  %s" % [LiveInputContractScript.display_key(action_id), turn_label]
+			button.tooltip_text = "Rotate the 4D presentation frame by an exact 90°; does not rotate the piece"
+			button.set_meta("semantic_role", "action_button")
+			button.pressed.connect(func() -> void: basis_turn_requested.emit(plane, direction))
+			controls.add_child(button)
 	return panel
 
 

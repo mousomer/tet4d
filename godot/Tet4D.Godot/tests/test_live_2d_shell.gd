@@ -24,7 +24,7 @@ func run() -> Array:
 		failures.append("replay hint text should not expose live gameplay controls")
 	if not live_3d_hint.contains("R/T") or not live_3d_hint.contains("F/G") or not live_3d_hint.contains("V/B") or not live_3d_hint.contains("Backspace Restart Game"):
 		failures.append("live 3D hint text should expose direct rotation and reset controls")
-	if not live_4d_hint.contains("Q / E Slice W - / +") or not live_4d_hint.contains("Y / U XW") or not live_4d_hint.contains("H / J YW") or not live_4d_hint.contains("N / M ZW") or not live_4d_hint.contains("1 / 2 XW - / + (re-slice)") or not live_4d_hint.contains("; / ' ZW - / + (re-slice)") or not live_4d_hint.contains("[ / ] ZX - / +") or not live_4d_hint.contains("I / K") or live_4d_hint.contains("Roll left / right") or not live_4d_hint.contains("Left Drag Orient slices") or not live_4d_hint.contains("Right Drag Translate framing") or live_4d_hint.contains("Shift + Left Drag") or not live_4d_hint.contains("Tab Replay Demos") or live_4d_hint.contains("Q/Esc Quit"):
+	if not live_4d_hint.contains("Q / E Slice W - / +") or not live_4d_hint.contains("Y / U XW") or not live_4d_hint.contains("H / J YW") or not live_4d_hint.contains("N / M ZW") or not live_4d_hint.contains("1 / 2 XZ - / +") or not live_4d_hint.contains("3 / 4 XW - / + (re-slice)") or not live_4d_hint.contains("5 / 6 ZW - / + (re-slice)") or not live_4d_hint.contains("I / K") or not live_4d_hint.contains("O / L") or live_4d_hint.contains("Roll left / right") or not live_4d_hint.contains("Left Drag Orient slices") or not live_4d_hint.contains("Right Drag Translate framing") or live_4d_hint.contains("Shift + Left Drag") or not live_4d_hint.contains("Tab Replay Demos") or live_4d_hint.contains("Q/Esc Quit"):
 		failures.append("live 4D hint text should expose separated slice orientation, framing, exact basis, piece rotation, and Esc-only quit")
 	_assert_camera_command_help_is_executable_truth(live_hint, live_3d_hint, live_4d_hint, failures)
 	for roll_action in ["live_4d_camera_roll_left", "live_4d_camera_roll_right"]:
@@ -408,12 +408,103 @@ func run() -> Array:
 			failures.append("Live 4D orientation keys should not mutate gameplay state")
 		if app._live_4d_local_orientation.local_yaw >= local_yaw_before:
 			failures.append("Live 4D O key should adjust shared L yaw left")
+		var local_yaw_after_o: float = app._live_4d_local_orientation.local_yaw
+		var yaw_right_event := InputEventKey.new()
+		yaw_right_event.keycode = KEY_L
+		yaw_right_event.pressed = true
+		app._unhandled_input(yaw_right_event)
+		if app._live_4d_local_orientation.local_yaw <= local_yaw_after_o:
+			failures.append("Live 4D L key should adjust shared L yaw right")
 		if not is_equal_approx(app._camera_rig._current_yaw, outer_yaw_before):
 			failures.append("Live 4D keyboard yaw must not rotate the outer rig")
 		if app._renderer.live_4d_local_orientation_snapshot() != app._live_4d_local_orientation.snapshot():
 			failures.append("Live 4D renderer and resolver must observe the same shared L")
 		if app._renderer._live_4d_fit_reference != app._renderer.current_bounds():
 			failures.append("Live 4D L mutation must refresh oriented bounds and fit reference")
+		# Keep the exact-basis keys distinct from ordinary L orientation. These
+		# fixed slot expectations are an independent input-to-basis oracle.
+		app._reset_view()
+		var exact_hash_before: String = str(app._live_bridge.live_4d_state_hash())
+		var exact_outer_before: float = app._camera_rig._current_yaw
+		var exact_local_before: Dictionary = app._live_4d_local_orientation.snapshot()
+		var xz_event := InputEventKey.new()
+		xz_event.keycode = KEY_2
+		xz_event.pressed = true
+		app._unhandled_input(xz_event)
+		if app._live_4d_basis.slots() != [-3, 2, 1, 4] or app._live_4d_basis.slice_axis_label() != "+W":
+			failures.append("Live 4D 2 key must apply XZ+ without re-slicing")
+		if app._live_4d_local_orientation.snapshot() != exact_local_before or not is_equal_approx(app._camera_rig._current_yaw, exact_outer_before) or str(app._live_bridge.live_4d_state_hash()) != exact_hash_before:
+			failures.append("Live 4D XZ exact turn must preserve L, outer camera, and gameplay state")
+		app._reset_view()
+		var xw_event := InputEventKey.new()
+		xw_event.keycode = KEY_4
+		xw_event.pressed = true
+		app._unhandled_input(xw_event)
+		if app._live_4d_basis.slots() != [4, 2, 3, -1] or app._live_4d_basis.slice_axis_label() != "-X":
+			failures.append("Live 4D 4 key must apply XW+ and re-slice to -X")
+		app._reset_view()
+		var zw_event := InputEventKey.new()
+		zw_event.keycode = KEY_6
+		zw_event.pressed = true
+		app._unhandled_input(zw_event)
+		if app._live_4d_basis.slots() != [1, 2, 4, -3] or app._live_4d_basis.slice_axis_label() != "-Z":
+			failures.append("Live 4D 6 key must apply ZW+ and re-slice to -Z")
+		if str(app._live_bridge.live_4d_state_hash()) != exact_hash_before:
+			failures.append("Live 4D exact basis keys must not mutate gameplay state")
+		app._reset_view()
+		# The HUD buttons must reach the same boundary as the keyboard. This
+		# caught an "xz"/"zx" mismatch that keyboard-only coverage could not.
+		for basis_case in [
+			{"action": "view_zx_neg", "key": KEY_1, "label": "XZ-"},
+			{"action": "view_zx_pos", "key": KEY_2, "label": "XZ+"},
+			{"action": "view_xw_neg", "key": KEY_3, "label": "XW-"},
+			{"action": "view_xw_pos", "key": KEY_4, "label": "XW+"},
+			{"action": "view_zw_neg", "key": KEY_5, "label": "ZW-"},
+			{"action": "view_zw_pos", "key": KEY_6, "label": "ZW+"},
+		]:
+			var button_name: String = "BasisButton__%s" % str(basis_case["action"])
+			var basis_button := app._hud.find_child(button_name, true, false) as Button
+			if basis_button == null:
+				failures.append("Live 4D basis panel must expose %s" % button_name)
+				continue
+			app._reset_view()
+			var keyboard_event := InputEventKey.new()
+			keyboard_event.keycode = int(basis_case["key"])
+			keyboard_event.pressed = true
+			app._unhandled_input(keyboard_event)
+			var keyboard_slots: Array = app._live_4d_basis.slots()
+			var keyboard_slice: String = app._live_4d_basis.slice_axis_label()
+			if keyboard_slots == [1, 2, 3, 4]:
+				failures.append(
+					"%s keyboard turn must change the basis to be discriminating"
+					% str(basis_case["label"])
+				)
+			app._reset_view()
+			var gameplay_hash_before: String = str(app._live_bridge.live_4d_state_hash())
+			var local_before: Dictionary = app._live_4d_local_orientation.snapshot()
+			basis_button.pressed.emit()
+			if app._live_4d_basis.slots() != keyboard_slots:
+				failures.append(
+					"%s HUD button must apply the same turn as its key: expected %s, got %s"
+					% [
+						str(basis_case["label"]),
+						keyboard_slots,
+						app._live_4d_basis.slots(),
+					]
+				)
+			if app._live_4d_basis.slice_axis_label() != keyboard_slice:
+				failures.append(
+					"%s HUD button must re-slice exactly like its key" % str(basis_case["label"])
+				)
+			if str(app._live_bridge.live_4d_state_hash()) != gameplay_hash_before:
+				failures.append(
+					"%s HUD button must not mutate gameplay state" % str(basis_case["label"])
+				)
+			if app._live_4d_local_orientation.snapshot() != local_before:
+				failures.append(
+					"%s HUD button must preserve shared L" % str(basis_case["label"])
+				)
+		app._reset_view()
 		var outer_pitch_before: float = app._camera_rig._current_pitch
 		var local_pitch_before: float = app._live_4d_local_orientation.local_pitch
 		var pitch_event := InputEventKey.new()

@@ -253,6 +253,8 @@ Parameters:
 - `action_topics.view_xw_pos`: `"camera_and_view"` (`string`)
 - `action_topics.view_zw_neg`: `"camera_and_view"` (`string`)
 - `action_topics.view_zw_pos`: `"camera_and_view"` (`string`)
+- `action_topics.view_zx_neg`: `"camera_and_view"` (`string`)
+- `action_topics.view_zx_pos`: `"camera_and_view"` (`string`)
 - `action_topics.yaw_fine_neg`: `"camera_and_view"` (`string`)
 - `action_topics.yaw_fine_pos`: `"camera_and_view"` (`string`)
 - `action_topics.yaw_neg`: `"camera_and_view"` (`string`)
@@ -575,26 +577,36 @@ Parameters:
 - `actions.toggle_grid.group`: `"system"` (`string`)
 - `actions.toggle_grid.label`: `"Grid mode"` (`string`)
 - `actions.toggle_grid.order`: `50` (`int`)
-- `actions.view_xw_neg.description`: `"Turn view in x-w plane by -90 degrees (camera only)."` (`string`)
+- `actions.view_xw_neg.description`: `"Exact camera-basis rotation in XW by -90 degrees (CCW; camera only)."` (`string`)
 - `actions.view_xw_neg.dimensions[]`: array[`int`]; examples: `4`
 - `actions.view_xw_neg.group`: `"camera"` (`string`)
-- `actions.view_xw_neg.label`: `"View x-w -"` (`string`)
+- `actions.view_xw_neg.label`: `"Exact XW CCW"` (`string`)
 - `actions.view_xw_neg.order`: `560` (`int`)
-- `actions.view_xw_pos.description`: `"Turn view in x-w plane by +90 degrees (camera only)."` (`string`)
+- `actions.view_xw_pos.description`: `"Exact camera-basis rotation in XW by +90 degrees (CW; camera only)."` (`string`)
 - `actions.view_xw_pos.dimensions[]`: array[`int`]; examples: `4`
 - `actions.view_xw_pos.group`: `"camera"` (`string`)
-- `actions.view_xw_pos.label`: `"View x-w +"` (`string`)
+- `actions.view_xw_pos.label`: `"Exact XW CW"` (`string`)
 - `actions.view_xw_pos.order`: `570` (`int`)
-- `actions.view_zw_neg.description`: `"Turn view in z-w plane by -90 degrees (camera only)."` (`string`)
+- `actions.view_zw_neg.description`: `"Exact camera-basis rotation in ZW by -90 degrees (CCW; camera only)."` (`string`)
 - `actions.view_zw_neg.dimensions[]`: array[`int`]; examples: `4`
 - `actions.view_zw_neg.group`: `"camera"` (`string`)
-- `actions.view_zw_neg.label`: `"View z-w -"` (`string`)
+- `actions.view_zw_neg.label`: `"Exact ZW CCW"` (`string`)
 - `actions.view_zw_neg.order`: `580` (`int`)
-- `actions.view_zw_pos.description`: `"Turn view in z-w plane by +90 degrees (camera only)."` (`string`)
+- `actions.view_zw_pos.description`: `"Exact camera-basis rotation in ZW by +90 degrees (CW; camera only)."` (`string`)
 - `actions.view_zw_pos.dimensions[]`: array[`int`]; examples: `4`
 - `actions.view_zw_pos.group`: `"camera"` (`string`)
-- `actions.view_zw_pos.label`: `"View z-w +"` (`string`)
+- `actions.view_zw_pos.label`: `"Exact ZW CW"` (`string`)
 - `actions.view_zw_pos.order`: `590` (`int`)
+- `actions.view_zx_neg.description`: `"Exact camera-basis rotation in XZ by -90 degrees (CCW; camera only)."` (`string`)
+- `actions.view_zx_neg.dimensions[]`: array[`int`]; examples: `4`
+- `actions.view_zx_neg.group`: `"camera"` (`string`)
+- `actions.view_zx_neg.label`: `"Exact XZ CCW"` (`string`)
+- `actions.view_zx_neg.order`: `540` (`int`)
+- `actions.view_zx_pos.description`: `"Exact camera-basis rotation in XZ by +90 degrees (CW; camera only)."` (`string`)
+- `actions.view_zx_pos.dimensions[]`: array[`int`]; examples: `4`
+- `actions.view_zx_pos.group`: `"camera"` (`string`)
+- `actions.view_zx_pos.label`: `"Exact XZ CW"` (`string`)
+- `actions.view_zx_pos.order`: `550` (`int`)
 - `actions.yaw_fine_neg.description`: `"Yaw camera by -15 degrees."` (`string`)
 - `actions.yaw_fine_neg.dimensions[]`: array[`int`]; examples: `3`, `4`
 - `actions.yaw_fine_neg.group`: `"camera"` (`string`)
@@ -701,17 +713,19 @@ Parameters:
 - `profiles.full.camera.d4.cycle_projection[]`: array[`int`]; examples: `57`, `1073741913`
 - `profiles.full.camera.d4.overlay_alpha_dec[]`: array[`int`]; examples: `91`
 - `profiles.full.camera.d4.overlay_alpha_inc[]`: array[`int`]; examples: `93`
-- `profiles.full.camera.d4.pitch_neg[]`: array[`int`]; examples: `53`
-- `profiles.full.camera.d4.pitch_pos[]`: array[`int`]; examples: `54`
+- `profiles.full.camera.d4.pitch_neg[]`: array[`int`]; examples: `107`
+- `profiles.full.camera.d4.pitch_pos[]`: array[`int`]; examples: `105`
 - `profiles.full.camera.d4.reset[]`: array[`int`]; examples: `48`, `1073741915`
-- `profiles.full.camera.d4.view_xw_neg[]`: array[`int`]; examples: `49`
-- `profiles.full.camera.d4.view_xw_pos[]`: array[`int`]; examples: `50`
-- `profiles.full.camera.d4.view_zw_neg[]`: array[`int`]; examples: `59`, `1073741910`
-- `profiles.full.camera.d4.view_zw_pos[]`: array[`int`]; examples: `39`, `1073741911`
+- `profiles.full.camera.d4.view_xw_neg[]`: array[`int`]; examples: `51`
+- `profiles.full.camera.d4.view_xw_pos[]`: array[`int`]; examples: `52`
+- `profiles.full.camera.d4.view_zw_neg[]`: array[`int`]; examples: `53`
+- `profiles.full.camera.d4.view_zw_pos[]`: array[`int`]; examples: `54`
+- `profiles.full.camera.d4.view_zx_neg[]`: array[`int`]; examples: `49`
+- `profiles.full.camera.d4.view_zx_pos[]`: array[`int`]; examples: `50`
 - `profiles.full.camera.d4.yaw_fine_neg[]`: array[`int`]; examples: `1073741919`
 - `profiles.full.camera.d4.yaw_fine_pos[]`: array[`int`]; examples: `1073741921`
-- `profiles.full.camera.d4.yaw_neg[]`: array[`int`]; examples: `51`
-- `profiles.full.camera.d4.yaw_pos[]`: array[`int`]; examples: `52`
+- `profiles.full.camera.d4.yaw_neg[]`: array[`int`]; examples: `111`
+- `profiles.full.camera.d4.yaw_pos[]`: array[`int`]; examples: `108`
 - `profiles.full.camera.d4.zoom_in[]`: array[`int`]; examples: `56`
 - `profiles.full.camera.d4.zoom_out[]`: array[`int`]; examples: `55`
 - `profiles.full.explorer.d2.move_down[]`: array[`int`]; examples: `1073741905`, `1073741902`, `1073741915`
@@ -778,17 +792,19 @@ Parameters:
 - `profiles.macbook.camera.d4.cycle_projection[]`: array[`int`]; examples: `57`
 - `profiles.macbook.camera.d4.overlay_alpha_dec[]`: array[`int`]; examples: `91`
 - `profiles.macbook.camera.d4.overlay_alpha_inc[]`: array[`int`]; examples: `93`
-- `profiles.macbook.camera.d4.pitch_neg[]`: array[`int`]; examples: `53`
-- `profiles.macbook.camera.d4.pitch_pos[]`: array[`int`]; examples: `54`
+- `profiles.macbook.camera.d4.pitch_neg[]`: array[`int`]; examples: `107`
+- `profiles.macbook.camera.d4.pitch_pos[]`: array[`int`]; examples: `105`
 - `profiles.macbook.camera.d4.reset[]`: array[`int`]; examples: `48`
-- `profiles.macbook.camera.d4.view_xw_neg[]`: array[`int`]; examples: `49`
-- `profiles.macbook.camera.d4.view_xw_pos[]`: array[`int`]; examples: `50`
-- `profiles.macbook.camera.d4.view_zw_neg[]`: array[`int`]; examples: `59`
-- `profiles.macbook.camera.d4.view_zw_pos[]`: array[`int`]; examples: `39`
+- `profiles.macbook.camera.d4.view_xw_neg[]`: array[`int`]; examples: `51`
+- `profiles.macbook.camera.d4.view_xw_pos[]`: array[`int`]; examples: `52`
+- `profiles.macbook.camera.d4.view_zw_neg[]`: array[`int`]; examples: `53`
+- `profiles.macbook.camera.d4.view_zw_pos[]`: array[`int`]; examples: `54`
+- `profiles.macbook.camera.d4.view_zx_neg[]`: array[`int`]; examples: `49`
+- `profiles.macbook.camera.d4.view_zx_pos[]`: array[`int`]; examples: `50`
 - `profiles.macbook.camera.d4.yaw_fine_neg[]`: array[`int`]; examples: `45`
 - `profiles.macbook.camera.d4.yaw_fine_pos[]`: array[`int`]; examples: `61`
-- `profiles.macbook.camera.d4.yaw_neg[]`: array[`int`]; examples: `51`
-- `profiles.macbook.camera.d4.yaw_pos[]`: array[`int`]; examples: `52`
+- `profiles.macbook.camera.d4.yaw_neg[]`: array[`int`]; examples: `111`
+- `profiles.macbook.camera.d4.yaw_pos[]`: array[`int`]; examples: `108`
 - `profiles.macbook.camera.d4.zoom_in[]`: array[`int`]; examples: `56`
 - `profiles.macbook.camera.d4.zoom_out[]`: array[`int`]; examples: `55`
 - `profiles.macbook.explorer.d2.move_down[]`: array[`int`]; examples: `1073741905`, `1073741902`
@@ -855,17 +871,19 @@ Parameters:
 - `profiles.small.camera.d4.cycle_projection[]`: array[`int`]; examples: `57`
 - `profiles.small.camera.d4.overlay_alpha_dec[]`: array[`int`]; examples: `91`
 - `profiles.small.camera.d4.overlay_alpha_inc[]`: array[`int`]; examples: `93`
-- `profiles.small.camera.d4.pitch_neg[]`: array[`int`]; examples: `53`
-- `profiles.small.camera.d4.pitch_pos[]`: array[`int`]; examples: `54`
+- `profiles.small.camera.d4.pitch_neg[]`: array[`int`]; examples: `107`
+- `profiles.small.camera.d4.pitch_pos[]`: array[`int`]; examples: `105`
 - `profiles.small.camera.d4.reset[]`: array[`int`]; examples: `48`
-- `profiles.small.camera.d4.view_xw_neg[]`: array[`int`]; examples: `49`
-- `profiles.small.camera.d4.view_xw_pos[]`: array[`int`]; examples: `50`
-- `profiles.small.camera.d4.view_zw_neg[]`: array[`int`]; examples: `59`
-- `profiles.small.camera.d4.view_zw_pos[]`: array[`int`]; examples: `39`
+- `profiles.small.camera.d4.view_xw_neg[]`: array[`int`]; examples: `51`
+- `profiles.small.camera.d4.view_xw_pos[]`: array[`int`]; examples: `52`
+- `profiles.small.camera.d4.view_zw_neg[]`: array[`int`]; examples: `53`
+- `profiles.small.camera.d4.view_zw_pos[]`: array[`int`]; examples: `54`
+- `profiles.small.camera.d4.view_zx_neg[]`: array[`int`]; examples: `49`
+- `profiles.small.camera.d4.view_zx_pos[]`: array[`int`]; examples: `50`
 - `profiles.small.camera.d4.yaw_fine_neg[]`: array[`int`]; examples: `45`
 - `profiles.small.camera.d4.yaw_fine_pos[]`: array[`int`]; examples: `61`
-- `profiles.small.camera.d4.yaw_neg[]`: array[`int`]; examples: `51`
-- `profiles.small.camera.d4.yaw_pos[]`: array[`int`]; examples: `52`
+- `profiles.small.camera.d4.yaw_neg[]`: array[`int`]; examples: `111`
+- `profiles.small.camera.d4.yaw_pos[]`: array[`int`]; examples: `108`
 - `profiles.small.camera.d4.zoom_in[]`: array[`int`]; examples: `56`
 - `profiles.small.camera.d4.zoom_out[]`: array[`int`]; examples: `55`
 - `profiles.small.explorer.d2.move_down[]`: array[`int`]; examples: `1073741905`, `1073741902`
@@ -932,17 +950,19 @@ Parameters:
 - `profiles.tiny.camera.d4.cycle_projection[]`: array[`int`]; examples: `57`
 - `profiles.tiny.camera.d4.overlay_alpha_dec[]`: array[`int`]; examples: `91`
 - `profiles.tiny.camera.d4.overlay_alpha_inc[]`: array[`int`]; examples: `93`
-- `profiles.tiny.camera.d4.pitch_neg[]`: array[`int`]; examples: `53`
-- `profiles.tiny.camera.d4.pitch_pos[]`: array[`int`]; examples: `54`
+- `profiles.tiny.camera.d4.pitch_neg[]`: array[`int`]; examples: `107`
+- `profiles.tiny.camera.d4.pitch_pos[]`: array[`int`]; examples: `105`
 - `profiles.tiny.camera.d4.reset[]`: array[`int`]; examples: `48`
-- `profiles.tiny.camera.d4.view_xw_neg[]`: array[`int`]; examples: `49`
-- `profiles.tiny.camera.d4.view_xw_pos[]`: array[`int`]; examples: `50`
-- `profiles.tiny.camera.d4.view_zw_neg[]`: array[`int`]; examples: `59`
-- `profiles.tiny.camera.d4.view_zw_pos[]`: array[`int`]; examples: `39`
+- `profiles.tiny.camera.d4.view_xw_neg[]`: array[`int`]; examples: `51`
+- `profiles.tiny.camera.d4.view_xw_pos[]`: array[`int`]; examples: `52`
+- `profiles.tiny.camera.d4.view_zw_neg[]`: array[`int`]; examples: `53`
+- `profiles.tiny.camera.d4.view_zw_pos[]`: array[`int`]; examples: `54`
+- `profiles.tiny.camera.d4.view_zx_neg[]`: array[`int`]; examples: `49`
+- `profiles.tiny.camera.d4.view_zx_pos[]`: array[`int`]; examples: `50`
 - `profiles.tiny.camera.d4.yaw_fine_neg[]`: array[`int`]; examples: `45`
 - `profiles.tiny.camera.d4.yaw_fine_pos[]`: array[`int`]; examples: `61`
-- `profiles.tiny.camera.d4.yaw_neg[]`: array[`int`]; examples: `51`
-- `profiles.tiny.camera.d4.yaw_pos[]`: array[`int`]; examples: `52`
+- `profiles.tiny.camera.d4.yaw_neg[]`: array[`int`]; examples: `111`
+- `profiles.tiny.camera.d4.yaw_pos[]`: array[`int`]; examples: `108`
 - `profiles.tiny.camera.d4.zoom_in[]`: array[`int`]; examples: `56`
 - `profiles.tiny.camera.d4.zoom_out[]`: array[`int`]; examples: `55`
 - `profiles.tiny.explorer.d2.move_down[]`: array[`int`]; examples: `107`

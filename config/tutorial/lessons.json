@@ -2482,8 +2482,8 @@
         {
           "id": "view_xw_neg",
           "ui": {
-            "text": "Change to another 4D viewing angle four times with XW-.",
-            "hint": "Press View XW - 4 times.",
+            "text": "Rotate the exact XW camera basis counterclockwise four times.",
+            "hint": "Press Exact XW CCW 4 times.",
             "highlights": [
               "camera_axes"
             ],
@@ -2514,8 +2514,8 @@
         {
           "id": "view_xw_pos",
           "ui": {
-            "text": "Change to another 4D viewing angle four times with XW+.",
-            "hint": "Press View XW + 4 times.",
+            "text": "Rotate the exact XW camera basis clockwise four times.",
+            "hint": "Press Exact XW CW 4 times.",
             "highlights": [
               "camera_axes"
             ],
@@ -2546,8 +2546,8 @@
         {
           "id": "view_zw_neg",
           "ui": {
-            "text": "Change to another 4D viewing angle four times with ZW-.",
-            "hint": "Press View ZW - 4 times.",
+            "text": "Rotate the exact ZW camera basis counterclockwise four times.",
+            "hint": "Press Exact ZW CCW 4 times.",
             "highlights": [
               "camera_axes"
             ],
@@ -2578,8 +2578,8 @@
         {
           "id": "view_zw_pos",
           "ui": {
-            "text": "Change to another 4D viewing angle four times with ZW+.",
-            "hint": "Press View ZW + 4 times.",
+            "text": "Rotate the exact ZW camera basis clockwise four times.",
+            "hint": "Press Exact ZW CW 4 times.",
             "highlights": [
               "camera_axes"
             ],
@@ -2602,6 +2602,46 @@
             "events": [
               "view_zw_pos"
             ],
+            "predicates": [],
+            "logic": "all",
+            "event_count_required": 4
+          }
+        },
+        {
+          "id": "view_zx_neg",
+          "ui": {
+            "text": "Rotate the exact XZ camera basis counterclockwise four times.",
+            "hint": "Press Exact XZ CCW 4 times.",
+            "highlights": ["camera_axes"],
+            "key_prompts": ["view_zx_neg"]
+          },
+          "gating": {
+            "allow": ["view_zx_neg", "menu", "help", "restart", "soft_drop"],
+            "deny": []
+          },
+          "setup": {},
+          "complete_when": {
+            "events": ["view_zx_neg"],
+            "predicates": [],
+            "logic": "all",
+            "event_count_required": 4
+          }
+        },
+        {
+          "id": "view_zx_pos",
+          "ui": {
+            "text": "Rotate the exact XZ camera basis clockwise four times.",
+            "hint": "Press Exact XZ CW 4 times.",
+            "highlights": ["camera_axes"],
+            "key_prompts": ["view_zx_pos"]
+          },
+          "gating": {
+            "allow": ["view_zx_pos", "menu", "help", "restart", "soft_drop"],
+            "deny": []
+          },
+          "setup": {},
+          "complete_when": {
+            "events": ["view_zx_pos"],
             "predicates": [],
             "logic": "all",
             "event_count_required": 4

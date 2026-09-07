@@ -92,6 +92,8 @@ func run() -> Array:
 	_assert_rejected_pitch_only_counterexample(failures, rig, presentation_root)
 	_assert_live_4d_fitted_view_contract(failures, rig, presentation_root)
 	_assert_live_4d_signed_correspondence(failures, rig, presentation_root)
+	_assert_shared_orbit_input_contract(failures)
+	_assert_live_4d_screen_level_slice_rows(failures, rig, presentation_root)
 	status = rig.view_status_text()
 	if status.find("Iso") != -1 or status.find("Custom") != -1 or status.find("size") == -1 or status.find("zoom") == -1:
 		failures.append("live 4D view status should expose framing diagnostics without action identity: %s" % status)
@@ -171,6 +173,40 @@ func run() -> Array:
 	viewport.queue_free()
 	await tree.process_frame
 	return failures
+
+
+func _assert_shared_orbit_input_contract(failures: Array) -> void:
+	var camera_delta := CameraRigScript.camera_orbit_delta(Vector2(12.0, -7.0), 0.01, 1.5, false)
+	_assert_vector2(failures, camera_delta, Vector2(-0.18, 0.105), "shared camera pointer delta")
+	var local_delta := CameraRigScript.passive_local_orientation_delta_for_camera_orbit(camera_delta)
+	_assert_vector2(failures, local_delta, Vector2(0.18, 0.105), "passive Live-4D pointer adapter")
+	var inverted_delta := CameraRigScript.camera_orbit_delta(Vector2(12.0, -7.0), 0.01, 1.5, true)
+	if not is_equal_approx(inverted_delta.x, camera_delta.x) or not is_equal_approx(inverted_delta.y, -camera_delta.y):
+		failures.append("invert-Y must reverse only the canonical camera vertical pointer delta")
+	if not is_equal_approx(CameraRigScript.passive_local_yaw_delta_for_camera_yaw(0.25), -0.25):
+		failures.append("Live-4D keyboard yaw must adapt the shared camera direction exactly once")
+
+
+func _assert_live_4d_screen_level_slice_rows(failures: Array, rig, presentation_root: Node3D) -> void:
+	var mapper := TraceCoordinateMapperScript.new()
+	mapper.configure(
+		[5, 7, 3, 4],
+		SliceBasis4DScript.identity(),
+		1.0,
+		CameraRigScript.live_4d_screen_row_y_per_world_x()
+	)
+	if mapper.layer_layout.columns != 2 or mapper.layer_layout.rows != 2:
+		failures.append("four Live-4D slices must exercise the two-column row-alignment fixture")
+		return
+	var left_anchor := mapper.slice_anchor(0)
+	var right_anchor := mapper.slice_anchor(1)
+	if is_equal_approx(left_anchor.y, right_anchor.y):
+		failures.append("oblique Live-4D row compensation must not leave same-row anchors world-Y aligned")
+		return
+	var left_screen: Vector2 = rig.project_world_point(presentation_root.to_global(left_anchor))
+	var right_screen: Vector2 = rig.project_world_point(presentation_root.to_global(right_anchor))
+	if absf(left_screen.y - right_screen.y) > SCREEN_RIGHT_TOLERANCE_PX:
+		failures.append("same-row Live-4D slices must be level in the fitted screen plane")
 
 
 func _assert_rejected_pitch_only_counterexample(failures: Array, rig, presentation_root: Node3D) -> void:
@@ -462,6 +498,11 @@ func _canonical_world_delta(command: String) -> Vector3:
 
 
 func _assert_vector(failures: Array, actual: Vector3, expected: Vector3, label: String) -> void:
+	if actual.distance_to(expected) > 0.001:
+		failures.append("%s: expected %s, got %s" % [label, expected, actual])
+
+
+func _assert_vector2(failures: Array, actual: Vector2, expected: Vector2, label: String) -> void:
 	if actual.distance_to(expected) > 0.001:
 		failures.append("%s: expected %s, got %s" % [label, expected, actual])
 

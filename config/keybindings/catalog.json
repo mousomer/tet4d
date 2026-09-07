@@ -337,29 +337,43 @@
     "view_xw_neg": {
       "group": "camera",
       "order": 560,
-      "label": "View x-w -",
-      "description": "Turn view in x-w plane by -90 degrees (camera only).",
+      "label": "Exact XW CCW",
+      "description": "Exact camera-basis rotation in XW by -90 degrees (CCW; camera only).",
       "dimensions": [4]
     },
     "view_xw_pos": {
       "group": "camera",
       "order": 570,
-      "label": "View x-w +",
-      "description": "Turn view in x-w plane by +90 degrees (camera only).",
+      "label": "Exact XW CW",
+      "description": "Exact camera-basis rotation in XW by +90 degrees (CW; camera only).",
       "dimensions": [4]
     },
     "view_zw_neg": {
       "group": "camera",
       "order": 580,
-      "label": "View z-w -",
-      "description": "Turn view in z-w plane by -90 degrees (camera only).",
+      "label": "Exact ZW CCW",
+      "description": "Exact camera-basis rotation in ZW by -90 degrees (CCW; camera only).",
       "dimensions": [4]
     },
     "view_zw_pos": {
       "group": "camera",
       "order": 590,
-      "label": "View z-w +",
-      "description": "Turn view in z-w plane by +90 degrees (camera only).",
+      "label": "Exact ZW CW",
+      "description": "Exact camera-basis rotation in ZW by +90 degrees (CW; camera only).",
+      "dimensions": [4]
+    },
+    "view_zx_neg": {
+      "group": "camera",
+      "order": 540,
+      "label": "Exact XZ CCW",
+      "description": "Exact camera-basis rotation in XZ by -90 degrees (CCW; camera only).",
+      "dimensions": [4]
+    },
+    "view_zx_pos": {
+      "group": "camera",
+      "order": 550,
+      "label": "Exact XZ CW",
+      "description": "Exact camera-basis rotation in XZ by +90 degrees (CW; camera only).",
       "dimensions": [4]
     },
     "zoom_out": {
@@ -620,20 +634,12 @@
             "template": "pitch +/-90"
           },
           {
-            "id": "cam_view_xw",
+            "id": "cam_exact_camera_rotation",
             "order": 40,
             "modes": ["4d"],
             "requires": [],
-            "key_actions": ["view_xw_neg", "view_xw_pos"],
-            "template": "view x-w +/-90"
-          },
-          {
-            "id": "cam_view_zw",
-            "order": 50,
-            "modes": ["4d"],
-            "requires": [],
-            "key_actions": ["view_zw_neg", "view_zw_pos"],
-            "template": "view z-w +/-90"
+            "key_actions": ["view_zx_neg", "view_zx_pos", "view_xw_neg", "view_xw_pos", "view_zw_neg", "view_zw_pos"],
+            "template": "exact camera rotation: XZ CCW/CW, XW CCW/CW, ZW CCW/CW"
           },
           {
             "id": "cam_zoom",

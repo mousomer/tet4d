@@ -38,7 +38,7 @@ func run() -> Array:
 	var group_names: Array = []
 	for group in LiveInputContractScript.control_hint_groups("live_4d"):
 		group_names.append(str(group.get("group", "")))
-	for required_group in ["Piece movement", "Piece rotation", "90° View Rotation", "Slice orientation", "Framing", "Drop", "Session", "Navigation"]:
+	for required_group in ["Piece movement", "Piece rotation", "Exact camera rotation", "Slice orientation", "Framing", "Drop", "Session", "Navigation"]:
 		if required_group not in group_names:
 			failures.append("Live 4D help must retain the %s category" % required_group)
 	for forbidden in ["Roll left / right", "Rotate camera"]:
@@ -48,13 +48,24 @@ func run() -> Array:
 		if helper.to_lower().contains(obsolete.to_lower()):
 			failures.append("helper must not advertise obsolete control: %s" % obsolete)
 	var expected_basis_keys := {
-		"view_xw_neg": KEY_1,
-		"view_xw_pos": KEY_2,
-		"view_zw_neg": KEY_SEMICOLON,
-		"view_zw_pos": KEY_APOSTROPHE,
-		"view_zx_neg": KEY_BRACKETLEFT,
-		"view_zx_pos": KEY_BRACKETRIGHT,
+		"view_zx_neg": KEY_1,
+		"view_zx_pos": KEY_2,
+		"view_xw_neg": KEY_3,
+		"view_xw_pos": KEY_4,
+		"view_zw_neg": KEY_5,
+		"view_zw_pos": KEY_6,
 	}
+	var expected_camera_planes := ["XZ", "XW", "ZW"]
+	var expected_piece_planes := ["XY", "XZ", "YZ", "XW", "YW", "ZW"]
+	var camera_rotation_specs := LiveInputContractScript.exact_camera_rotation_specs()
+	var piece_specs := LiveInputContractScript.rotation_control_specs("piece")
+	if camera_rotation_specs.map(func(spec: Dictionary) -> String: return str(spec.get("plane", ""))) != expected_camera_planes:
+		failures.append("exact camera rotation descriptors must preserve XZ, XW, ZW presentation order")
+	if piece_specs.map(func(spec: Dictionary) -> String: return str(spec.get("plane", ""))) != expected_piece_planes:
+		failures.append("piece rotation descriptors must cover every canonical plane in one source")
+	for spec in camera_rotation_specs:
+		if str(spec.get("owner", "")) != "camera" or not LiveInputContractScript.ACTION_SPECS.has(str(spec.get("negative_action", ""))) or not LiveInputContractScript.ACTION_SPECS.has(str(spec.get("positive_action", ""))):
+			failures.append("camera rotation descriptors must resolve to public action bindings")
 	var reserved_keys := []
 	for action_id in ["live_4d_rotate_xw_neg", "live_4d_rotate_xw_pos", "live_4d_rotate_zw_neg", "live_4d_rotate_zw_pos", "live_4d_soft_drop", "live_4d_hard_drop", "live_4d_camera_yaw_left", "live_4d_camera_yaw_right", "live_4d_camera_pitch_up", "live_4d_camera_pitch_down"]:
 		reserved_keys.append_array(specs.get(action_id, {}).get("keys", []))

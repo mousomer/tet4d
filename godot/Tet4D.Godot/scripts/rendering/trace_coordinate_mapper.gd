@@ -15,7 +15,15 @@ var layer_layout = AdaptiveLayerLayoutScript.new()
 var _local_geometry = LocalBoardPresentationGeometryScript.new()
 
 
-func configure(board_shape: Array, basis = null, spacing_scale: float = 1.0) -> void:
+# `screen_row_slope` is supplied by the presentation owner, which knows whether
+# this board is rendered through the fixed Live-4D fitted camera mount. The
+# mapper never infers presentation mode from board dimensionality.
+func configure(
+	board_shape: Array,
+	basis = null,
+	spacing_scale: float = 1.0,
+	screen_row_slope: float = 0.0
+) -> void:
 	_board_shape = board_shape.duplicate()
 	_basis = basis if basis != null else SliceBasis4DScript.identity()
 	var axis_mapping := []
@@ -34,7 +42,7 @@ func configure(board_shape: Array, basis = null, spacing_scale: float = 1.0) -> 
 	var width: float = _local_geometry.local_extent.x if _local_geometry.is_configured() else 4.0
 	var height: float = _local_geometry.local_extent.y if _local_geometry.is_configured() else 4.0
 	var depth: float = _local_geometry.local_extent.z if _local_geometry.is_configured() else 4.0
-	layer_layout.configure(current_layer_count(), width, height, 1.7777778, spacing_scale, depth)
+	layer_layout.configure(current_layer_count(), width, height, 1.7777778, spacing_scale, depth, screen_row_slope)
 	slice_stride = layer_layout.tile_width + layer_layout.horizontal_gap
 
 

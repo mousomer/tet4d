@@ -165,10 +165,48 @@ func clear_presentation_state() -> void:
 
 
 func orbit(delta: Vector2) -> void:
-	_target_yaw -= delta.x * orbit_sensitivity * _sensitivity_factor
-	var vertical_direction := 1.0 if _invert_y else -1.0
-	_target_pitch = clampf(_target_pitch + delta.y * orbit_sensitivity * _sensitivity_factor * vertical_direction, -1.2, 1.2)
+	var orbit_delta := camera_orbit_delta(delta, orbit_sensitivity, _sensitivity_factor, _invert_y)
+	_target_yaw += orbit_delta.x
+	_target_pitch = clampf(_target_pitch + orbit_delta.y, -1.2, 1.2)
 	_mark_manual_view("manual")
+
+
+# Canonical physical-pointer convention for every camera owner. A positive
+# horizontal pointer delta moves an outer camera toward negative yaw; invert-Y
+# affects only the vertical component.
+static func camera_orbit_delta(
+	delta: Vector2,
+	orbit_sensitivity_value: float,
+	sensitivity_factor: float = 1.0,
+	invert_y: bool = false
+) -> Vector2:
+	var scale := orbit_sensitivity_value * sensitivity_factor
+	return Vector2(
+		-delta.x * scale,
+		delta.y * scale * (1.0 if invert_y else -1.0)
+	)
+
+
+# `L` is a passive object-space transform. It consumes the canonical camera
+# delta through this sole adapter instead of choosing independent input signs.
+static func passive_local_orientation_delta_for_camera_orbit(camera_delta: Vector2) -> Vector2:
+	return Vector2(-camera_delta.x, camera_delta.y)
+
+
+static func passive_local_yaw_delta_for_camera_yaw(camera_yaw_delta: float) -> float:
+	return -camera_yaw_delta
+
+
+# In the fixed Live-4D fitted mount, world-X has a screen-row component. This
+# derived slope offsets each subsequent layout column so equal layout rows are
+# level on screen. Reflection leaves the screen-up component unchanged.
+static func live_4d_screen_row_y_per_world_x() -> float:
+	var camera_up := Vector3(
+		-sin(LIVE_4D_DISPLAY_YAW_RAD) * sin(LIVE_4D_DISPLAY_PITCH_RAD),
+		cos(LIVE_4D_DISPLAY_PITCH_RAD),
+		-cos(LIVE_4D_DISPLAY_YAW_RAD) * sin(LIVE_4D_DISPLAY_PITCH_RAD)
+	)
+	return -camera_up.x / maxf(camera_up.y, 0.001)
 
 
 func nudge_yaw(delta_radians: float) -> void:

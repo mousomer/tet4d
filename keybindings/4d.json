@@ -11,25 +11,31 @@
         "]"
       ],
       "pitch_neg": [
-        "5"
+        "k"
       ],
       "pitch_pos": [
-        "6"
+        "i"
       ],
       "reset": [
         "0"
       ],
       "view_xw_neg": [
-        "1"
+        "3"
       ],
       "view_xw_pos": [
-        "2"
+        "4"
       ],
       "view_zw_neg": [
-        ";"
+        "5"
       ],
       "view_zw_pos": [
-        "'"
+        "6"
+      ],
+      "view_zx_neg": [
+        "1"
+      ],
+      "view_zx_pos": [
+        "2"
       ],
       "yaw_fine_neg": [
         "-"
@@ -38,10 +44,10 @@
         "="
       ],
       "yaw_neg": [
-        "3"
+        "o"
       ],
       "yaw_pos": [
-        "4"
+        "l"
       ],
       "zoom_in": [
         "8"

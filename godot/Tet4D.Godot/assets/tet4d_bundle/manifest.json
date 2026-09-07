@@ -10,7 +10,7 @@
   "bundle_version": 1,
   "config": {
     "bundle_path": "config/tet4d_config_bundle.json",
-    "combined_digest": "da8c07231d7397349857da874716e69e80fd9cd1143daa075d206cb5eabebd87",
+    "combined_digest": "0d8173aafd4d3a8855bfa7cbef93cb0683e3906e767810ff5857a4af50b93d09",
     "files": [
       {
         "category": "audio_defaults",
@@ -35,7 +35,7 @@
       {
         "category": "help_defaults",
         "path": "config/help/action_map.json",
-        "sha256": "c95a3cecfb31ff31af61645f4fdbcd846c1a0df6f26415d60aa5a15d05c2ab0d"
+        "sha256": "752c469f6ab741fe4dbc570baae008db79ac1f04abbd66e77b0055b544147ff1"
       },
       {
         "category": "help_defaults",
@@ -60,12 +60,12 @@
       {
         "category": "keybinding_defaults",
         "path": "config/keybindings/catalog.json",
-        "sha256": "aefa9178c7d75586a2feaeeebc03b2b50d349a9e4907676fc700502de5ee8a9b"
+        "sha256": "92ece8f1c787c0c84e1189dbd94f3ec5e520f12c20f6e6002c51623c1ae7ad41"
       },
       {
         "category": "keybinding_defaults",
         "path": "config/keybindings/defaults.json",
-        "sha256": "f5990e2a9c46a09570217ddc5b8aaea73fca1280a6a88f7002b9b0a8769e9100"
+        "sha256": "828e0520fa2fb9e92cacc6a1cb5037f0c498c1bad1ab54b765fd80b3bf3cc917"
       },
       {
         "category": "menu_defaults",
@@ -89,13 +89,18 @@
       },
       {
         "category": "project_governance",
+        "path": "config/project/codex_ci_lanes.json",
+        "sha256": "1c9a0e45b131b6118572bf5ce111c687ff5e93f911d2d4125620c321d00a7466"
+      },
+      {
+        "category": "project_governance",
         "path": "config/project/constants.json",
         "sha256": "40b3fb2f1847a2be04eb0667a1162b44534af3c65984f34dc77b87fa8a7b3a22"
       },
       {
         "category": "project_governance",
         "path": "config/project/folder_balance_budgets.json",
-        "sha256": "3aa7d986f51f282d67eda41a9fc049e2e7b500300af3a113e4940b190738ca29"
+        "sha256": "40be71886ddf09abed928139b9dae1377e3cd7f5d957501508322067481f3247"
       },
       {
         "category": "project_governance",
@@ -125,7 +130,7 @@
       {
         "category": "project_governance",
         "path": "config/project/policy_pack.json",
-        "sha256": "d138e8b3bcf402114f18ce34fb7de7c382ebcc512de383a7247b647254142d11"
+        "sha256": "da6e2dd66e723d224a65aac5c1e70150ff4e982f744304bb76918fe6399058fd"
       },
       {
         "category": "topology_defaults",
@@ -140,12 +145,12 @@
       {
         "category": "tutorial_defaults",
         "path": "config/tutorial/lessons.json",
-        "sha256": "5623e0313d97a399f8eab713bb51884faf2b3ec4e8d1043acc74225f3ab1f024"
+        "sha256": "54b4c6d166ca55d309d8eeb024a98f7c7c7bb9f6a7444f6170ab35d3cf6538dd"
       },
       {
         "category": "tutorial_defaults",
         "path": "config/tutorial/plan.json",
-        "sha256": "a51aca8ad29fad28c8fcfbd99f03ea3092a7bbcc2cea841db02c998214a8615c"
+        "sha256": "571f0e443914ff5075b40232d0f23c89ffaed4061328b62dc3e42fe72393318b"
       },
       {
         "category": "ui_defaults",
@@ -159,31 +164,31 @@
       {
         "purpose": "Current migration and handoff state.",
         "role": "restart_handoff",
-        "sha256": "59eb31bb03e96fd419ed5b02d6571b5b6a0dca63ce701754753fd5dc446aa58e",
+        "sha256": "f26d8b94157c36d1e6ee9e81c3e5ae84684f0cd519c0cc09998f51fa76c14527",
         "source_path": "CURRENT_STATE.md"
       },
       {
         "purpose": "Active migration follow-up tracker.",
         "role": "backlog",
-        "sha256": "2a61d8f2344fe9c212299ba08084ef2450876f8ffec580922d8744d143311672",
+        "sha256": "2b0b290998b315228fa27a6be1b95d87c9ecf605df0a5fb3a52a29875f8e4cff",
         "source_path": "docs/BACKLOG.md"
       },
       {
         "purpose": "Generated package layout and source-of-truth inventory.",
         "role": "project_structure",
-        "sha256": "023dea1ca8dd2dfab7e557153a645b9464d2a5c8179abcd4cc6a5f3188ae187e",
+        "sha256": "f0e3c1a6df04e81960c7c7ce782d022147abd14575747db19339f6cf85e6b729",
         "source_path": "docs/PROJECT_STRUCTURE.md"
       },
       {
         "purpose": "Shared topology/gameplay/endgame product requirements.",
         "role": "product_requirements",
-        "sha256": "70e37a87c7e27c4c44631e65e8619ba4662376732af533e834d08a1a3f0c7c03",
+        "sha256": "f4b1f5f02c228395d1e5afb9bbda4fdc43bc4fcc8a8912e589d86dc34ed9c860",
         "source_path": "docs/rds/RDS_TETRIS_GENERAL.md"
       },
       {
         "purpose": "Menu/config authority for launcher, settings, and keybindings.",
         "role": "menu_requirements",
-        "sha256": "c93927ae3020046045adee6746eb848aa151b68f9a3d592bf0c4401a51ca51c4",
+        "sha256": "aabecf5ef1f18d1090cfb3a1d6ca631eacfd5ebc9ae7ce23974b8dffcb99381a",
         "source_path": "docs/rds/RDS_MENU_STRUCTURE.md"
       },
       {
@@ -219,19 +224,19 @@
       {
         "purpose": "Stage 7+ Godot shell and native core-port ordering authority.",
         "role": "godot_core_port_authority",
-        "sha256": "b59fb4a96b5c440329a21386e786c6447ee711d44a471121a2e03739ca6009fe",
+        "sha256": "e3a5c9189806402273db6c0467fcd339dbfb3d67dce341260a4116ae0f238ae6",
         "source_path": "docs/plans/godot_core_port_plan.md"
       },
       {
         "purpose": "Stage 25 topology Godot/C++ port planning authority.",
         "role": "topology_godot_core_port_authority",
-        "sha256": "9fe556142c7183ef8bc94e94cfb0738fc04cc70e88db663e930299b065788e14",
+        "sha256": "932a8aacb58c3e19ae573c051ab008c58d667448bbac8d2fdb9589c1bae01ac6",
         "source_path": "docs/plans/topology_godot_core_port_plan.md"
       },
       {
         "purpose": "Stage 22d Live 3D and future Live 4D board visual-language authority.",
         "role": "gameboard_visual_language_authority",
-        "sha256": "89e603a47fac5e5b4a1a007d425545c565edfc03632a0a1d228f035e7ca544d2",
+        "sha256": "513dafabbb903f52a610f4f12056cce3c99115814b2cbefa161b86cc39eaec4e",
         "source_path": "docs/plans/gameboard_visual_language_design.md"
       },
       {
@@ -258,6 +263,11 @@
   },
   "schemas": {
     "files": [
+      {
+        "purpose": "board extent contract.schema JSON schema",
+        "sha256": "e685d207ac0519f792f67039f592b377495313b6d2a3d01a88b50938b12b5057",
+        "source_path": "config/schema/board_extent_contract.schema.json"
+      },
       {
         "purpose": "help action map.schema JSON schema",
         "sha256": "acb29a4b1b7d1aa7dd7e337e19667a057bee166008319aec88e7b97c6edc54fe",
@@ -289,6 +299,11 @@
         "source_path": "config/schema/save_state.schema.json"
       },
       {
+        "purpose": "topology contract.schema JSON schema",
+        "sha256": "7c5c4a03a8439eca35635909c05440489ce2997ac2830afed07e582dd9b6a2b2",
+        "source_path": "config/schema/topology_contract.schema.json"
+      },
+      {
         "purpose": "tutorial lessons.schema JSON schema",
         "sha256": "7caebcfc21e806fc941fadf7d92ee8eca791cbf102877b3674ff1a97c3927be8",
         "source_path": "config/schema/tutorial_lessons.schema.json"
@@ -303,7 +318,7 @@
     "trace_schema": {
       "purpose": "Code-defined canonical trace schema helpers.",
       "schema_version": 1,
-      "sha256": "7b3fdaf35495ac05f4f11deb925ee21455ccc7a5013ff07b7d99a7f46a1b2960",
+      "sha256": "38af9eed2e27809d128f6b1e56bc433cdfa7a54edb1d6e735bbc3652682f5962",
       "source_path": "tools/migration/trace_schema.py",
       "trace_version": 1
     }

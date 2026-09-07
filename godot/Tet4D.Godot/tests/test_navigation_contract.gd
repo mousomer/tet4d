@@ -10,7 +10,7 @@ func run() -> Array:
 		if text.find("Back / Quit") != -1: failures.append("live controls should distinguish Main Menu from Quit")
 	var four_d := Hud._control_groups_text(Hud.live_4d_control_hint_groups())
 	if four_d.find("Q / E Slice W - / +") == -1: failures.append("identity-basis Q/E should navigate the W slice axis")
-	if four_d.find("1 / 2 XW - / + (re-slice)") == -1 or four_d.find("; / ' ZW - / + (re-slice)") == -1 or four_d.find("[ / ] ZX - / +") == -1:
+	if four_d.find("1 / 2 XZ - / +") == -1 or four_d.find("3 / 4 XW - / + (re-slice)") == -1 or four_d.find("5 / 6 ZW - / + (re-slice)") == -1:
 		failures.append("4D view rotations should remain distinct from piece rotation and camera controls")
 	var hud := Hud.new()
 	var quit_count := [0]

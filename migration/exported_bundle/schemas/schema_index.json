@@ -2,6 +2,11 @@
   "bundle_version": 1,
   "files": [
     {
+      "purpose": "board extent contract.schema JSON schema",
+      "sha256": "e685d207ac0519f792f67039f592b377495313b6d2a3d01a88b50938b12b5057",
+      "source_path": "config/schema/board_extent_contract.schema.json"
+    },
+    {
       "purpose": "help action map.schema JSON schema",
       "sha256": "acb29a4b1b7d1aa7dd7e337e19667a057bee166008319aec88e7b97c6edc54fe",
       "source_path": "config/schema/help_action_map.schema.json"
@@ -32,6 +37,11 @@
       "source_path": "config/schema/save_state.schema.json"
     },
     {
+      "purpose": "topology contract.schema JSON schema",
+      "sha256": "7c5c4a03a8439eca35635909c05440489ce2997ac2830afed07e582dd9b6a2b2",
+      "source_path": "config/schema/topology_contract.schema.json"
+    },
+    {
       "purpose": "tutorial lessons.schema JSON schema",
       "sha256": "7caebcfc21e806fc941fadf7d92ee8eca791cbf102877b3674ff1a97c3927be8",
       "source_path": "config/schema/tutorial_lessons.schema.json"
@@ -45,7 +55,7 @@
   "trace_schema": {
     "purpose": "Code-defined canonical trace schema helpers.",
     "schema_version": 1,
-    "sha256": "7b3fdaf35495ac05f4f11deb925ee21455ccc7a5013ff07b7d99a7f46a1b2960",
+    "sha256": "38af9eed2e27809d128f6b1e56bc433cdfa7a54edb1d6e735bbc3652682f5962",
     "source_path": "tools/migration/trace_schema.py",
     "trace_version": 1
   }

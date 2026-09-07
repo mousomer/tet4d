@@ -75,14 +75,29 @@ const ACTION_SPECS := {
 	"live_4d_camera_zoom_out": {"keys": [KEY_MINUS, KEY_KP_SUBTRACT], "display_key": KEY_MINUS},
 	# Existing repository-wide view action IDs are reused for exact Stage 54C
 	# basis turns. Piece rotations retain their separate live_4d_rotate_* IDs.
-	"view_xw_neg": {"keys": [KEY_1], "display_key": KEY_1},
-	"view_xw_pos": {"keys": [KEY_2], "display_key": KEY_2},
-	"view_zw_neg": {"keys": [KEY_SEMICOLON], "display_key": KEY_SEMICOLON},
-	"view_zw_pos": {"keys": [KEY_APOSTROPHE], "display_key": KEY_APOSTROPHE},
-	"view_zx_neg": {"keys": [KEY_BRACKETLEFT], "display_key": KEY_BRACKETLEFT},
-	"view_zx_pos": {"keys": [KEY_BRACKETRIGHT], "display_key": KEY_BRACKETRIGHT},
+	"view_zx_neg": {"keys": [KEY_1], "display_key": KEY_1},
+	"view_zx_pos": {"keys": [KEY_2], "display_key": KEY_2},
+	"view_xw_neg": {"keys": [KEY_3], "display_key": KEY_3},
+	"view_xw_pos": {"keys": [KEY_4], "display_key": KEY_4},
+	"view_zw_neg": {"keys": [KEY_5], "display_key": KEY_5},
+	"view_zw_pos": {"keys": [KEY_6], "display_key": KEY_6},
 	"reset": {"keys": [KEY_0], "display_key": KEY_0},
 }
+
+# One semantic inventory owns every normal-game rotation pair. Consumers use
+# this metadata for input routing and public labels instead of duplicating a
+# camera-only list beside the piece-control list.
+const ROTATION_CONTROL_SPECS := [
+	{"owner": "piece", "plane": "XY", "negative_action": "live_4d_rotate_xy_neg", "positive_action": "live_4d_rotate_xy_pos"},
+	{"owner": "piece", "plane": "XZ", "negative_action": "live_4d_rotate_xz_neg", "positive_action": "live_4d_rotate_xz_pos"},
+	{"owner": "piece", "plane": "YZ", "negative_action": "live_4d_rotate_yz_neg", "positive_action": "live_4d_rotate_yz_pos"},
+	{"owner": "piece", "plane": "XW", "negative_action": "live_4d_rotate_xw_neg", "positive_action": "live_4d_rotate_xw_pos"},
+	{"owner": "piece", "plane": "YW", "negative_action": "live_4d_rotate_yw_neg", "positive_action": "live_4d_rotate_yw_pos"},
+	{"owner": "piece", "plane": "ZW", "negative_action": "live_4d_rotate_zw_neg", "positive_action": "live_4d_rotate_zw_pos"},
+	{"owner": "camera", "plane": "XZ", "negative_action": "view_zx_neg", "positive_action": "view_zx_pos", "re_slices": false},
+	{"owner": "camera", "plane": "XW", "negative_action": "view_xw_neg", "positive_action": "view_xw_pos", "re_slices": true},
+	{"owner": "camera", "plane": "ZW", "negative_action": "view_zw_neg", "positive_action": "view_zw_pos", "re_slices": true},
+]
 
 
 static func action_specs() -> Dictionary:
@@ -91,6 +106,19 @@ static func action_specs() -> Dictionary:
 
 static func camera_control_specs() -> Dictionary:
 	return CAMERA_CONTROL_SPECS.duplicate(true)
+
+
+static func rotation_control_specs(owner: String = "") -> Array:
+	var result: Array = []
+	for raw_spec in ROTATION_CONTROL_SPECS:
+		var spec: Dictionary = raw_spec
+		if owner.is_empty() or str(spec.get("owner", "")) == owner:
+			result.append(spec.duplicate(true))
+	return result
+
+
+static func exact_camera_rotation_specs() -> Array:
+	return rotation_control_specs("camera")
 
 
 static func camera_control_for_button(button: MouseButton) -> String:
@@ -160,7 +188,7 @@ static func cockpit_hint_groups(mode: String, basis_snapshot: Dictionary = {}, c
 	for source_group in groups:
 		var group: Dictionary = source_group.duplicate(true)
 		var group_name := str(group.get("group", ""))
-		if group_name == "Navigation" or (mode == "live_4d" and group_name == "90° View Rotation"):
+		if group_name == "Navigation" or (mode == "live_4d" and group_name == "Exact camera rotation"):
 			continue
 		var items: Array = []
 		for item in group.get("items", []):
@@ -242,8 +270,8 @@ static func _live_4d_groups(basis_snapshot: Dictionary = {}, control_frame: Dict
 	])
 	return [
 		{"group": "Piece movement", "cockpit_role": "translate", "note": "Controls follow the current view." if relative else "Canonical X/Z/W axes.", "items": move_rows},
-		{"group": "Piece rotation", "cockpit_role": "rotate", "note": "Left: CCW · Right: CW" if legacy else ("Left: CCW · Right: CW · Planes follow the current view." if rotation_relative else "Left: CCW · Right: CW · Canonical XY/XZ/YZ/XW/YW/ZW planes."), "items": [[_pair("live_4d_rotate_xy_neg", "live_4d_rotate_xy_pos", " / "), "XY"], [_pair("live_4d_rotate_xz_neg", "live_4d_rotate_xz_pos", " / "), "XZ"], [_pair("live_4d_rotate_yz_neg", "live_4d_rotate_yz_pos", " / "), "YZ"], [_pair("live_4d_rotate_xw_neg", "live_4d_rotate_xw_pos", " / "), "XW"], [_pair("live_4d_rotate_yw_neg", "live_4d_rotate_yw_pos", " / "), "YW"], [_pair("live_4d_rotate_zw_neg", "live_4d_rotate_zw_pos", " / "), "ZW"]]},
-		{"group": "90° View Rotation", "note": "Exact presentation basis; Y stays down", "items": [[_pair("view_xw_neg", "view_xw_pos", " / "), "XW - / + (re-slice)"], [_pair("view_zw_neg", "view_zw_pos", " / "), "ZW - / + (re-slice)"], [_pair("view_zx_neg", "view_zx_pos", " / "), "ZX - / +"], [_display_key("reset"), "Reset View (basis, slice orientation, framing)"]]},
+		{"group": "Piece rotation", "cockpit_role": "rotate", "note": "Left: CCW · Right: CW" if legacy else ("Left: CCW · Right: CW · Planes follow the current view." if rotation_relative else "Left: CCW · Right: CW · Canonical XY/XZ/YZ/XW/YW/ZW planes."), "items": _rotation_hint_items("piece")},
+		{"group": "Exact camera rotation", "note": "Exact presentation basis; Y stays down", "items": _exact_camera_rotation_hint_items()},
 		{"group": "Slice orientation", "items": [[_pair("live_4d_camera_pitch_up", "live_4d_camera_pitch_down", " / "), "Pitch up / down"], [_pair("live_4d_camera_yaw_left", "live_4d_camera_yaw_right", " / "), "Yaw left / right"]]},
 		{"group": "Framing", "items": [["%s / = / +" % _display_key("live_4d_camera_zoom_out"), "Zoom out / in"], ["Double-click", "Fit View (framing only)"]]},
 		{"group": "Pointer", "items": live_4d_pointer_helper_items()},
@@ -252,6 +280,30 @@ static func _live_4d_groups(basis_snapshot: Dictionary = {}, control_frame: Dict
 		{"group": "Session", "items": [[_display_key("live_4d_pause"), "Pause"], [_display_key("live_4d_reset"), "Restart Game"]]},
 		{"group": "Navigation", "items": [["Tab", "Replay Demos"], ["Esc", "Main Menu"]]},
 	]
+
+
+static func _rotation_hint_items(owner: String) -> Array:
+	var items: Array = []
+	for spec in rotation_control_specs(owner):
+		items.append([
+			_pair(str(spec["negative_action"]), str(spec["positive_action"]), " / "),
+			str(spec["plane"]),
+		])
+	return items
+
+
+# One pass over one descriptor collection: labels and key pairs cannot drift
+# apart by index because both are read from the same spec.
+static func _exact_camera_rotation_hint_items() -> Array:
+	var items: Array = []
+	for spec in exact_camera_rotation_specs():
+		var suffix := " (re-slice)" if bool(spec.get("re_slices", false)) else ""
+		items.append([
+			_pair(str(spec["negative_action"]), str(spec["positive_action"]), " / "),
+			"%s - / +%s" % [str(spec["plane"]), suffix],
+		])
+	items.append([_display_key("reset"), "Reset View (basis, slice orientation, framing)"])
+	return items
 
 
 static func _pair(first_action: String, second_action: String, separator: String = "/") -> String:

@@ -320,7 +320,7 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", "- / = / +", "Left Drag", "Right Drag", "Wheel", "P"]:
 		if inspector_hint_text.find(required) == -1:
 			failures.append("%s: Live 4D cockpit guidance should include %s" % [label, required])
-	for duplicated in ["90° View Rotation", "Reset View", "Fit View", "Restart Game", "Navigation", "Backspace", "Tab", "Esc"]:
+	for duplicated in ["Exact camera rotation", "Reset View", "Fit View", "Restart Game", "Navigation", "Backspace", "Tab", "Esc"]:
 		if inspector_hint_text.find(duplicated) != -1:
 			failures.append("%s: visible action families should keep %s out of passive cockpit help" % [label, duplicated])
 	if inspector_hint_text.find("Roll left / right") != -1:
@@ -408,7 +408,7 @@ func _check_live_mode_progression(hud: Node, viewport_size: Vector2i) -> Array:
 	var two_d_hints := str(two_d.get("inspector_hint_text", ""))
 	if bool(two_d.get("view_action_menu_visible", true)) or bool(two_d.get("basis_panel_visible", true)) or not bool(two_d.get("camera_panel_visible", false)) or bool(two_d.get("camera_status_visible", true)):
 		failures.append("live 2D viewport %s: named views, basis, and numeric diagnostics must be absent while secondary Reset remains available" % str(viewport_size))
-	for leaked_copy in ["Forward / Back", "Slice", "View gestures", "90° View Rotation"]:
+	for leaked_copy in ["Forward / Back", "Slice", "View gestures", "Exact camera rotation"]:
 		if two_d_hints.find(leaked_copy) != -1:
 			failures.append("live 2D viewport %s: cockpit must not leak %s" % [str(viewport_size), leaked_copy])
 	if two_d_hints.find("Piece movement") == -1 or two_d_hints.find("Piece rotation") == -1 or two_d_hints.find("Drop") == -1:
@@ -484,7 +484,7 @@ func _check_live_control_maps() -> Array:
 		group_names.append(str(group.get("group", "")))
 		for item in group.get("items", []):
 			flattened += "%s %s\n" % [str(item[0]), str(item[1])]
-	for required_group in ["Piece movement", "Piece rotation", "90° View Rotation", "Drop", "Slice orientation", "Framing", "Pointer", "Session", "Navigation"]:
+	for required_group in ["Piece movement", "Piece rotation", "Exact camera rotation", "Drop", "Slice orientation", "Framing", "Pointer", "Session", "Navigation"]:
 		if not group_names.has(required_group):
 			failures.append("Live 4D controls should include %s group" % required_group)
 	for required in ["A / D", "W / S", "Q / E", "R / T", "F / G", "V / B", "Y / U", "H / J", "N / M", "I / K", "O / L", "- / = / +", "Left Drag", "Right Drag", "Wheel"]:
@@ -504,8 +504,8 @@ func _check_live_control_maps() -> Array:
 	_assert_group_items(
 		failures,
 		group_items,
-		"90° View Rotation",
-		[["1 / 2", "XW - / + (re-slice)"], ["; / '", "ZW - / + (re-slice)"], ["[ / ]", "ZX - / +"], ["0", "Reset View (basis, slice orientation, framing)"]]
+		"Exact camera rotation",
+		[["1 / 2", "XZ - / +"], ["3 / 4", "XW - / + (re-slice)"], ["5 / 6", "ZW - / + (re-slice)"], ["0", "Reset View (basis, slice orientation, framing)"]]
 	)
 	_assert_group_items(
 		failures,
