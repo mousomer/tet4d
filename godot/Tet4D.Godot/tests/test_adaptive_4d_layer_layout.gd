@@ -9,6 +9,7 @@ const SliceLocalOrientationScript = preload("res://scripts/presentation/slice_lo
 
 func run() -> Array:
 	var failures := []
+	_test_reference_viewport_policy(failures)
 	for count in [3, 4, 8, 12]:
 		var layout = AdaptiveLayerLayoutScript.new()
 		layout.configure(count, 8.0, 16.0)
@@ -55,6 +56,59 @@ func run() -> Array:
 		failures.append("W=1 must remain a valid visible dimension after ZW re-slicing")
 	_test_anchor_only_layout(failures)
 	return failures
+
+
+func _test_reference_viewport_policy(failures: Array) -> void:
+	var expected_columns := {5: 3, 6: 3, 7: 4, 8: 4}
+	for count in expected_columns:
+		var layout = AdaptiveLayerLayoutScript.new()
+		layout.configure(count, 8.0, 16.0, 1600.0 / 960.0, 1.0, 5.0, 0.0, Vector2(1600.0, 960.0))
+		var snapshot: Dictionary = layout.snapshot()
+		if int(snapshot.get("columns", 0)) != int(expected_columns[count]) or int(snapshot.get("rows", 0)) != 2:
+			failures.append("%d slices at 1600x960 must select %dx2, got %sx%s" % [count, expected_columns[count], snapshot.get("columns"), snapshot.get("rows")])
+		if snapshot.get("viewport_size", Vector2.ZERO) != Vector2(1600.0, 960.0):
+			failures.append("%d-slice evidence must retain the measured viewport" % count)
+		if float(snapshot.get("projected_board_scale", 0.0)) <= 0.0 or float(snapshot.get("unused_viewport_area", -1.0)) < 0.0:
+			failures.append("%d-slice evidence must report scale and unused area" % count)
+		var content_rect: Rect2 = snapshot.get("content_rect", Rect2())
+		var tile_rects: Array = snapshot.get("tile_rects", [])
+		if tile_rects.size() != count:
+			failures.append("%d-slice evidence must report every tile rectangle" % count)
+		for index in range(tile_rects.size()):
+			var tile_rect: Rect2 = tile_rects[index]
+			if not _rect_contains(content_rect, tile_rect):
+				failures.append("%d-slice tile %d must remain inside collection bounds" % [count, index])
+			var assignment: Dictionary = snapshot.get("assignments", [])[index]
+			if int(assignment.get("layer", -1)) != index or int(assignment.get("row", -1)) != index / int(expected_columns[count]) or int(assignment.get("column", -1)) != index % int(expected_columns[count]):
+				failures.append("%d-slice assignment %d must remain monotonic row-major" % [count, index])
+		if str(snapshot.get("partial_row_alignment", "")) != "left":
+			failures.append("partial rows must retain the stable left-aligned column origin")
+		var final_row_first := int(expected_columns[count])
+		if count % int(expected_columns[count]) != 0 and int((snapshot.get("assignments", []) as Array)[final_row_first].get("column", -1)) != 0:
+			failures.append("%d-slice partial final row must begin in column zero" % count)
+		var fixed_four: Dictionary = layout.candidate_snapshot(4)
+		var chosen_scale := float(snapshot.get("projected_board_scale", 0.0))
+		if chosen_scale + AdaptiveLayerLayoutScript.SCALE_TIE_EPSILON < float(fixed_four.get("projected_board_scale", 0.0)):
+			failures.append("%d-slice chosen grid must not reduce scale versus fixed four columns" % count)
+		if count in [5, 6] and float(fixed_four.get("last_row_imbalance", 0.0)) <= float(layout.candidate_snapshot(int(expected_columns[count])).get("last_row_imbalance", 1.0)):
+			failures.append("%d-slice 3-column choice must improve final-row balance versus fixed four" % count)
+
+	var eight = AdaptiveLayerLayoutScript.new()
+	eight.configure(8, 8.0, 16.0, 1600.0 / 960.0, 1.0, 5.0, 0.0, Vector2(1600.0, 960.0))
+	var old_five_plus_three: Dictionary = eight.candidate_snapshot(5)
+	var new_four_plus_four: Dictionary = eight.candidate_snapshot(4)
+	if float(new_four_plus_four.get("last_row_imbalance", 1.0)) >= float(old_five_plus_three.get("last_row_imbalance", 0.0)):
+		failures.append("8-slice 4+4 must improve balance over the old 5+3 grid")
+
+
+func _rect_contains(outer: Rect2, inner: Rect2) -> bool:
+	var epsilon := 0.0001
+	return (
+		inner.position.x >= outer.position.x - epsilon
+		and inner.position.y >= outer.position.y - epsilon
+		and inner.end.x <= outer.end.x + epsilon
+		and inner.end.y <= outer.end.y + epsilon
+	)
 
 
 func _test_anchor_only_layout(failures: Array) -> void:

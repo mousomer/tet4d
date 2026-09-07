@@ -359,6 +359,12 @@ Relevant tests:
     yaw, pitch, and Reset View update that passive marker without dispatching
     gameplay commands. Ctrl owns soft drop; Shift has no normal Live-4D camera
     or soft-drop binding.
+15. Live-4D slice tiling is a deterministic function of visible slice count,
+    board viewport geometry, and the stable local-board envelope. It maximizes
+    projected per-slice scale, strongly prefers at most two rows in the
+    expected range, avoids severely unbalanced final rows, and preserves
+    left-aligned row-major identity. Axis name, active slice, occupancy, and
+    per-slice content cannot affect geometry.
 
 ## 11. Implementation Status (2026-02-19)
 

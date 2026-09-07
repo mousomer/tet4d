@@ -15,7 +15,7 @@ var is_live_4d := false
 var uses_live_exterior_cells := false
 
 
-func configure(source_snapshot: Dictionary, basis = null, orientation = null, spacing_scale: float = 1.0) -> void:
+func configure(source_snapshot: Dictionary, basis = null, orientation = null, spacing_scale: float = 1.0, viewport_size: Vector2 = Vector2.ZERO) -> void:
 	snapshot = source_snapshot
 	trace_type = str(snapshot.get("trace_type", ""))
 	dimension = int(snapshot.get("dimension", 0))
@@ -34,7 +34,8 @@ func configure(source_snapshot: Dictionary, basis = null, orientation = null, sp
 		basis,
 		orientation if is_live_4d else null,
 		spacing_scale,
-		screen_row_slope
+		screen_row_slope,
+		viewport_size
 	)
 
 

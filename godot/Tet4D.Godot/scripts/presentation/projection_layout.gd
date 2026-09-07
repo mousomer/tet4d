@@ -19,14 +19,15 @@ func configure(
 	basis = null,
 	orientation = null,
 	spacing_scale: float = 1.0,
-	screen_row_slope: float = 0.0
+	screen_row_slope: float = 0.0,
+	viewport_size: Vector2 = Vector2.ZERO
 ) -> void:
 	board_shape = snapshot.get("board_shape", []).duplicate()
 	dimension = int(snapshot.get("dimension", 0))
 	if orientation != null:
 		local_orientation = orientation
 	applies_local_orientation = dimension == 4 and orientation != null
-	mapper.configure(board_shape, basis, spacing_scale, screen_row_slope)
+	mapper.configure(board_shape, basis, spacing_scale, screen_row_slope, viewport_size)
 	bounds = _collection_bounds()
 
 

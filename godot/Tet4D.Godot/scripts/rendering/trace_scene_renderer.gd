@@ -37,6 +37,7 @@ var _presentation := BoardPresentationModelScript.new()
 var _last_bounds: Dictionary = {"ok": false}
 var _live_4d_basis = SliceBasis4DScript.identity()
 var _live_4d_local_orientation = SliceLocalOrientationScript.new()
+var _layout_viewport_size := Vector2(1600.0, 960.0)
 var _basis_transition_progress := 1.0
 var _basis_transition_duration := 0.16
 var _live_4d_fit_reference: Dictionary = {}
@@ -140,6 +141,11 @@ func set_live_4d_local_orientation(orientation) -> void:
 		_live_4d_local_orientation = orientation
 
 
+func set_layout_viewport_size(viewport_size: Vector2) -> void:
+	if viewport_size.x >= 240.0 and viewport_size.y >= 120.0:
+		_layout_viewport_size = viewport_size
+
+
 func live_4d_local_orientation_snapshot() -> Dictionary:
 	return _live_4d_local_orientation.snapshot()
 
@@ -194,7 +200,8 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		snapshot,
 		presentation_basis,
 		_live_4d_local_orientation if str(snapshot.get("trace_type", "")) == "live_4d" else null,
-		_slice_spacing_scale
+		_slice_spacing_scale,
+		_layout_viewport_size
 	)
 	current_slice_stride = _presentation.projection.mapper.slice_stride
 	_last_bounds = _presentation.current_bounds()

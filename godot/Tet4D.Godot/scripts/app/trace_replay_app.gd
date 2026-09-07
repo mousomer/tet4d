@@ -684,6 +684,7 @@ func _wire_hud() -> void:
 		_refresh_hud()
 	)
 	_hud.fit_view_requested.connect(_fit_view)
+	_hud.game_viewport_geometry_changed.connect(_on_game_viewport_geometry_changed)
 	_hud.reset_view_requested.connect(_reset_view)
 	_hud.quit_requested.connect(_quit_application)
 	_hud.main_menu_requested.connect(_return_to_main_menu)
@@ -971,6 +972,8 @@ func _refresh_snapshot() -> void:
 
 
 func _refresh_render() -> void:
+	if _renderer != null and _hud != null and _renderer.has_method("set_layout_viewport_size"):
+		_renderer.set_layout_viewport_size(_hud.board_viewport_size())
 	if _is_live_mode():
 		if not _current_snapshot.is_empty():
 			_renderer.render_snapshot(_presentation_snapshot_for_render())
@@ -979,6 +982,15 @@ func _refresh_render() -> void:
 		return
 	var next_snapshot := _next_snapshot()
 	_renderer.render_interpolated_snapshot(_current_snapshot, next_snapshot, _state.interpolation_alpha)
+
+
+func _on_game_viewport_geometry_changed(viewport_size: Vector2) -> void:
+	if viewport_size.x < 240.0 or viewport_size.y < 120.0 or _renderer == null:
+		return
+	_renderer.set_layout_viewport_size(viewport_size)
+	if _mode == MODE_LIVE_4D and not _current_snapshot.is_empty():
+		_refresh_live_4d_presentation(true)
+		_fit_view()
 
 
 func _presentation_snapshot_for_render() -> Dictionary:

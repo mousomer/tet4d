@@ -141,16 +141,22 @@ frames, camera bounds, and active-layer emphasis:
 
 1. derive layer count from the presentation basis (W in the currently exposed
    identity view);
-2. choose columns from layer count, viewport aspect, local-board aspect, and a
-   minimum readable tile span;
+2. evaluate count-derived column candidates against the available board
+   viewport and the stable local-board orientation envelope, maximizing
+   projected per-slice scale before preferring at most two rows and a balanced
+   final row;
 3. set rows to `ceil(layer_count / columns)`;
 4. assign every layer exactly once in stable row-major order;
 5. derive mapper offsets and camera bounds from the same assignment;
 6. highlight every layer occupied by active-piece cells.
 
-Counts up to four prefer one row or `2x2`; five through twelve use an
-approximately square matrix. All Stage 49 presets remain fully represented and
-Fit View restores the whole matrix. In Live 4D, right drag pans the matrix
+Counts up to four retain the best-fitting one-row or compact matrix. At the
+1600×960 reference viewport, five/six use `3x2` and seven/eight use `4x2`;
+the policy is an optimization, not a count table. Partial final rows remain
+left aligned so a layer keeps its predictable row-major column. Centering has
+identical scale and unused area and remains a human A/B option rather than an
+activity-dependent runtime choice. All Stage 49 presets remain fully
+represented and Fit View restores the whole matrix. In Live 4D, right drag pans the matrix
 focus while the wheel retains camera zoom; double-click or the visible Fit View
 action restores the complete overview. Matrix panning is presentation only,
 does not dispatch gameplay commands, and does not take live keyboard focus.

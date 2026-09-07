@@ -76,6 +76,33 @@ state owners, all required operations, passive redraw, native snapshot/hash
 isolation, and the retained Live-3D path. Stage 56B is now eligible; Stages
 56C–56I remain gated.
 
+### Stage 56B — deterministic viewport-aware slice tiling
+
+`AdaptiveLayerLayout` evaluates count-derived row/column candidates against
+the available board viewport and the stable local-orientation envelope. The
+selection maximizes projected per-slice scale, prefers at most two rows for
+the expected Live-4D range, and then rejects unbalanced final rows. It must not
+consume axis identity, active-slice identity, cell occupancy, or gameplay
+state. Assignment remains monotonically row-major.
+
+At the 1600×960 reference viewport the required results are `5→3×2`,
+`6→3×2`, `7→4×2`, and `8→4×2`. Evidence records viewport, tile rectangles,
+projected scale, and unused area and compares fixed-four alternatives. A
+partial final row remains left aligned because it preserves stable columns and
+sequence scanning. In the real oblique cockpit projection it also preserves a
+slightly larger fit than centering; visual preference remains eligible for the
+explicit human A/B gate.
+
+Stage 56B is implemented and focused-green. During cockpit integration it
+exposed bounded repair `56B-R`: the stretched render SubViewport can report a
+transient `120×2` allocation before the real game area settles, so the HUD's
+stable game-area geometry now owns layout invalidation and supplies the board
+viewport to the renderer. The repair changes presentation geometry only and
+does not alter slice identity, activity, gameplay, or deterministic state.
+The measured candidate table and required A/B captures are recorded in
+`docs/design/stage_56b_slice_tiling_evidence.md`. Stage 56C is now eligible;
+Stages 56D–56I remain gated.
+
 ## Explicit non-goals for Stage 56A
 
 No 2D/3D redesign, slice-layout choice, helper/deck refactor,

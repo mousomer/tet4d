@@ -53,6 +53,7 @@ signal accessibility_policy_changed(policy: Dictionary)
 signal camera_preferences_changed(sensitivity_factor: float, invert_y: bool, interpolation_scale: float)
 signal camera_preset_requested(id: String)
 signal fit_view_requested()
+signal game_viewport_geometry_changed(size: Vector2)
 signal reset_view_requested()
 signal quit_requested()
 signal replay_mode_requested()
@@ -977,6 +978,10 @@ func set_world_root(world_root: Node3D) -> void:
 
 func game_viewport() -> SubViewport:
 	return _game_viewport
+
+
+func board_viewport_size() -> Vector2:
+	return _game_area.size if _game_area != null else Vector2.ZERO
 
 
 func layout_contract_snapshot() -> Dictionary:
@@ -2087,6 +2092,9 @@ func _build_layout() -> void:
 	_game_area.custom_minimum_size = Vector2(ReplayVisuals.GAME_AREA_MIN_WIDTH, 0)
 	_game_area.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_game_area.theme_type_variation = "ViewportFrame"
+	_game_area.resized.connect(func() -> void:
+		game_viewport_geometry_changed.emit(_game_area.size)
+	)
 	body.add_child(_game_area)
 	_viewport_frame = _game_area
 	var viewport_inner := MarginContainer.new()
