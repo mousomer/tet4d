@@ -137,7 +137,7 @@ static func camera_helper_items() -> Array:
 	var items: Array = []
 	for control_id in ["camera_orbit", "camera_pan", "camera_zoom"]:
 		var spec: Dictionary = CAMERA_CONTROL_SPECS[control_id]
-		items.append([str(spec["display"]), str(spec["helper"])])
+		items.append([str(spec["display"]), str(spec["helper"]), {"operation": {"camera_orbit": "Orient", "camera_pan": "Translate", "camera_zoom": "Zoom"}[control_id]}])
 	return items
 
 
@@ -253,7 +253,8 @@ static func _live_3d_groups(control_frame: Dictionary = {}) -> Array:
 		{"group": "Piece rotation", "cockpit_role": "rotate", "note": rotation_note, "items": [[_pair("live_3d_rotate_xy_neg", "live_3d_rotate_xy_pos"), "Rotate XY"], [_pair("live_3d_rotate_xz_neg", "live_3d_rotate_xz_pos"), "Rotate XZ"], [_pair("live_3d_rotate_yz_neg", "live_3d_rotate_yz_pos"), "Rotate YZ"]]},
 		{"group": "Drop", "cockpit_role": "drop", "items": [[_display_key("live_3d_soft_drop"), "Soft Drop", {"operation": "Soft"}], [_display_key("live_3d_hard_drop"), "Hard Drop", {"operation": "Hard"}]]},
 		{"group": "Piece management", "items": [[_display_key("live_hold"), "Hold"]]},
-		{"group": "Camera", "items": camera_helper_items() + [["Double-click", "Fit View (framing only)"], [_display_key("reset"), "Reset View (restore canonical view)"]]},
+		{"group": "Framing", "cockpit_role": "view_framing", "items": [["Double-click", "Fit View (framing only)", {"operation": "Fit"}], [_display_key("reset"), "Reset View (restore canonical view)", {"operation": "Reset"}]]},
+		{"group": "Pointer", "cockpit_role": "view_pointer", "items": camera_helper_items()},
 		{"group": "Session", "items": [[_display_key("live_3d_pause"), "Pause"], [_display_key("live_3d_reset"), "Restart Game"]]},
 		{"group": "Navigation", "items": [["Tab", "Play 4D"], ["Esc", "Main Menu"]]},
 	]

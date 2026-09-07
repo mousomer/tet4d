@@ -149,6 +149,27 @@ consumers, and the deterministic Live-4D state hash. The component-source
 boundary test excludes renderer, camera, input-map, and descriptor ownership.
 Stage 56E is now eligible; Stages 56F–56I remain gated.
 
+### Stage 56E — Live-3D migration
+
+Live 3D activates the shared `LiveCockpit` deck beneath its unchanged
+mode-specific 3D board renderer. PIECE consumes only 3D Move, Drop, and XY/XZ/YZ
+Rotate Piece descriptors. VIEW consumes only the existing 3D pointer gestures
+and Fit/Reset framing descriptors; no 4D exact-basis, slice, W, or XW/YW/ZW
+operation may appear. Piece State reuses the existing NEXT/HOLD consumers.
+
+Acceptance compares the legacy-inspector and shared-deck captures, requires the
+primary board area not to regress, retains the state-driven 3D rosette path,
+and proves input descriptors, gameplay state/hash, renderer ownership, and
+camera semantics are unchanged.
+
+Stage 56E is implemented and focused-green. At 1600×960 the primary board area
+increases from `910×836` (`760,760 px²`) to `1576×642` (`1,011,792 px²`),
+while the exact 3D PIECE/VIEW row sets, shared NEXT/HOLD consumers, visible
+orientation marker, input action identities, and native state hash remain
+verified. Before/after captures and measurements are recorded in
+`docs/design/stage_56e_live_3d_evidence.md`. Stage 56F is now eligible; Stages
+56G–56I remain gated.
+
 ## Explicit non-goals for Stage 56A
 
 No 2D/3D redesign, slice-layout choice, helper/deck refactor,

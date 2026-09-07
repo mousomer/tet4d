@@ -175,6 +175,10 @@ Relevant tests:
 7. Debug 3D piece set is selectable and supports fast layer-fill validation.
 8. Random-cell set no longer causes premature game-over due to invalid spawn shapes.
 9. Terminal animation reuses the shared projected renderer rather than a separate one-off effect path, and the relic field remains compositionally stable instead of emptying the screen over time.
+10. Live 3D uses the shared Header / PrimaryBoardSurface / ControlDeck cockpit
+    grammar. Its deck contains only applicable 3D PIECE controls, legitimate
+    pointer/framing VIEW controls, and the existing NEXT/HOLD consumers; it
+    must not advertise W translation or 4D rotation/view planes.
 
 ## 10. Mode-aware topology split (2026-03-08)
 

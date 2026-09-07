@@ -60,12 +60,11 @@ func _check_production_extraction() -> Array:
 		failures.append("LiveCockpit extraction must keep primary board and control deck non-overlapping")
 	if str(app._live_bridge.live_4d_state_hash()) != hash_before:
 		failures.append("LiveCockpit extraction must not mutate deterministic gameplay state")
-	for enter_mode in [Callable(app, "_enter_live_2d_mode"), Callable(app, "_enter_live_3d_mode")]:
-		enter_mode.call()
-		await tree.process_frame
-		await tree.process_frame
-		if hud._live_cockpit.control_deck.visible:
-			failures.append("unmigrated Live 2D/3D must retain their legacy outer layout with the shared deck hidden")
+	app._enter_live_2d_mode()
+	await tree.process_frame
+	await tree.process_frame
+	if hud._live_cockpit.control_deck.visible:
+		failures.append("unmigrated Live 2D must retain its legacy outer layout with the shared deck hidden")
 	root.queue_free()
 	await tree.process_frame
 	tree.root.size = original_size

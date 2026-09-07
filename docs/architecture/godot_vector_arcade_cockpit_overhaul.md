@@ -830,6 +830,14 @@ into their named deck slots. Hiding the deck preserves the legacy outer
 arrangement for modes not yet migrated, so extraction itself cannot become a
 hidden 2D/3D redesign.
 
+Stage 56E activates that shell for Live 3D. The existing 3D board remains the
+PrimaryBoardSurface provider; the shared deck receives dimension-filtered
+PIECE, VIEW, and PieceState consumers. `LiveInputContract` exposes 3D pointer
+and framing groups as semantic roles, while the 3D VIEW surface excludes every
+4D exact-basis and slice operation. Removing the old right inspector is an
+allocation change only: renderer, camera rig, orientation marker, gameplay,
+input routing, NEXT/HOLD models, and deterministic identity retain ownership.
+
 NEXT and HOLD share one compact cockpit layout convention and remain backed by
 the existing `PieceThumbnailModel` and `PieceThumbnail`. Compactness changes
 panel margins, thumbnail minimums, and side-by-side placement only. Native
