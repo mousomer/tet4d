@@ -19,7 +19,7 @@ if __package__ in {None, ""}:
 from tools.ui_export.semantic_design import extract, inventory
 
 ROOT = Path(__file__).resolve().parents[2]
-SCHEMA_VERSION = "tet4d.ui-bootstrap.v2"
+SCHEMA_VERSION = "tet4d.runtime-screen.v2"
 PROBES = ROOT / "design/bootstrap/probes"
 
 
@@ -54,8 +54,12 @@ def _normalize_node(node: dict[str, Any]) -> dict[str, Any]:
         "bounds": _bounds(node["bounds"]),
         "visible": bool(node.get("visible", True)),
         "semantic_role": str(node.get("semantic_role", node.get("kind", "container"))),
+        # Always explicit: the semantic projection uses this as its only signal
+        # for discarding runtime-generated plumbing, so an omitted flag must
+        # read as "not generated" rather than as missing evidence.
+        "generated": bool(node.get("generated", False)),
     }
-    for key in ("text", "style", "provenance", "generated"):
+    for key in ("text", "style", "provenance"):
         if key in node:
             result[key] = node[key]
     children = [_normalize_node(child) for child in node.get("children", [])]

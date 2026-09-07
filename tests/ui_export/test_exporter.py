@@ -6,11 +6,15 @@ import sys
 from pathlib import Path
 
 from tools.ui_export.exporter import export, load_runtime_screens, semantic_payload
-from tools.ui_export.semantic_design import (
-    extract,
-    is_generated_runtime_identifier,
-    node_count,
-)
+from tools.ui_export.semantic_design import extract, node_count
+
+# Verified by running Godot 4.7.2 through the probe's own transformation,
+# `name.replace("@", "generated_").to_snake_case()`:
+#     @VBoxContainer@12  ->  generated_v_box_containergenerated_12
+# Note there is no underscore before the second "generated". Fixtures must use
+# this real form, never a hand-written approximation of it.
+GENERATED_WRAPPER_SEGMENT = "generated_v_box_containergenerated_12"
+GENERATED_OUTER_SEGMENT = "generated_margin_containergenerated_1"
 
 
 def _write_probes(root: Path) -> Path:
@@ -92,7 +96,7 @@ def test_semantic_payload_keeps_semantic_layers_and_provenance(tmp_path):
     )
     payload = semantic_payload(screens)
     assert payload["format"] == "tet4d.semantic-export.v1"
-    assert payload["source_schema"] == "tet4d.ui-bootstrap.v2"
+    assert payload["source_schema"] == "tet4d.runtime-screen.v2"
     assert payload["projection_schema"] == "tet4d.semantic-projection.v1"
     assert len(payload["screens"]) == 6
 
@@ -192,6 +196,15 @@ def test_semantic_projection_preserves_regions_controls_and_provenance(tmp_path)
 
 
 def _screen_with_generated_wrappers() -> dict:
+    """Mirror the probe's real output: `semantic_id` carries the ancestor path.
+
+    A named control nested under a generated wrapper must survive, which is only
+    observable when the child identifier actually contains its generated
+    ancestors the way `get_path()` produces them.
+    """
+    outer = GENERATED_OUTER_SEGMENT
+    inner = f"{outer}__{GENERATED_WRAPPER_SEGMENT}"
+    button = f"{inner}__rotate_button"
     return {
         "provenance": {"implementation": "godot", "mode": "4d", "probe": "fixture_v2"},
         "root": {
@@ -199,25 +212,28 @@ def _screen_with_generated_wrappers() -> dict:
             "kind": "screen",
             "bounds": {"x": 0, "y": 0, "width": 100, "height": 80},
             "visible": True,
+            "generated": False,
             "children": [
                 {
-                    "semantic_id": "generated_margin_container_generated_1",
+                    "semantic_id": outer,
                     "kind": "container",
                     "generated": True,
                     "bounds": {},
                     "visible": True,
                     "children": [
                         {
-                            "semantic_id": "generated_v_box_container_generated_12",
+                            "semantic_id": inner,
                             "kind": "container",
+                            "generated": True,
                             "bounds": {},
                             "visible": True,
-                            "text": "Generated V Box Container Generated 12",
+                            "text": "Generated V Box Containergenerated 12",
                             "children": [
                                 {
-                                    "semantic_id": "rotate_button",
+                                    "semantic_id": button,
                                     "kind": "text",
                                     "semantic_role": "action_button",
+                                    "generated": False,
                                     "bounds": {},
                                     "visible": True,
                                     "text": "Rotate",
@@ -229,6 +245,7 @@ def _screen_with_generated_wrappers() -> dict:
                 {
                     "semantic_id": "generated_container_help",
                     "kind": "text",
+                    "generated": False,
                     "bounds": {},
                     "visible": True,
                     "text": "Manual generated container help",
@@ -243,15 +260,31 @@ def test_generated_wrapper_with_text_is_removed_but_control_survives():
     names = [child["name"] for child in semantic["children"]]
     assert names == ["Rotate", "Manual generated container help"]
     assert semantic["children"][0]["role"] == "action_button"
-    assert semantic["children"][0]["provenance"]["runtime_ids"] == ["rotate_button"]
     assert all("Generated V Box" not in name for name in names)
 
 
-def test_generated_identifier_contract_is_precise():
-    assert is_generated_runtime_identifier("generated_v_box_container_generated_12")
-    assert is_generated_runtime_identifier("generated_margin_container_generated_3")
-    assert is_generated_runtime_identifier("generated_h_box_container_generated_9")
-    assert not is_generated_runtime_identifier("generated_container_help")
+def test_named_control_survives_a_generated_ancestor_path():
+    """Regression: filtering must read the node's own flag, not its path.
+
+    `semantic_id` contains every ancestor, so matching a generated pattern
+    against it also matches each descendant and silently deletes real controls.
+    """
+    semantic = extract([_screen_with_generated_wrappers()])[0]["root"]
+    rotate = semantic["children"][0]
+    assert rotate["name"] == "Rotate"
+    # It kept its own runtime identity even though that identity spells out two
+    # generated ancestors.
+    assert rotate["provenance"]["runtime_ids"] == [
+        f"{GENERATED_OUTER_SEGMENT}__{GENERATED_WRAPPER_SEGMENT}__rotate_button"
+    ]
+
+
+def test_a_node_whose_name_merely_contains_generated_is_kept():
+    """`generated_container_help` is a real runtime name, not a wrapper."""
+    semantic = extract([_screen_with_generated_wrappers()])[0]["root"]
+    assert "Manual generated container help" in [
+        child["name"] for child in semantic["children"]
+    ]
 
 
 def test_multiline_text_round_trips_as_real_newlines(tmp_path):

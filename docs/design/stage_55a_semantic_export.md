@@ -19,7 +19,7 @@ capture_root="$(mktemp -d)"
 .venv/bin/python tools/ui_export/exporter.py --probes "$capture_root/probes" --output "$capture_root/export" --projection runtime
 ```
 
-The runtime-observation schema is `tet4d.ui-bootstrap.v2`. Its generated-node
+The runtime-observation schema is `tet4d.runtime-screen.v2`. Its generated-node
 marker is source provenance used only to discard wrapper identity during
 projection; meaningful descendants remain observable.
 

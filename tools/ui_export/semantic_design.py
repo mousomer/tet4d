@@ -11,14 +11,6 @@ from collections import Counter
 from typing import Any
 
 GENERIC_ROLES = {"", "frame", "container", "text", "screen"}
-_GENERATED_RUNTIME_IDENTIFIER = re.compile(
-    r"(?:^|__)generated(?:_[a-z0-9]+)*_generated_\d+(?:__|$)"
-)
-
-
-def is_generated_runtime_identifier(identifier: str) -> bool:
-    """Recognize the normalized identifiers emitted for generated runtime nodes."""
-    return bool(_GENERATED_RUNTIME_IDENTIFIER.search(identifier))
 
 
 def _walk(node: dict[str, Any]):
@@ -32,10 +24,12 @@ def _meaningful(node: dict[str, Any]) -> bool:
     if not node.get("visible", True):
         return False
     role = str(node.get("semantic_role", ""))
-    identifier = str(node["semantic_id"])
-    if bool(node.get("generated", False)) or is_generated_runtime_identifier(
-        identifier
-    ):
+    # `generated` is reported by the probe, which knows the runtime node's real
+    # identity. It is deliberately the only signal used here: `semantic_id` is a
+    # full ancestor path, so any pattern match against it also matches every
+    # descendant and would discard real controls nested under a generated
+    # wrapper.
+    if bool(node.get("generated", False)):
         return False
     if node.get("kind") == "viewport" or role not in GENERIC_ROLES:
         return True
