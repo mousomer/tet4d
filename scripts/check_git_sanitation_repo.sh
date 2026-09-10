@@ -109,6 +109,7 @@ fi
 
 
 required_exec_paths=(
+  "gov"
   "scripts/bootstrap_env.sh"
   "scripts/check_architecture_boundaries.sh"
   "scripts/check_architecture_metric_budgets.sh"
@@ -123,6 +124,7 @@ required_exec_paths=(
   "scripts/ci_check.sh"
   "scripts/ci_preflight.sh"
   "scripts/install_git_hooks.sh"
+  "scripts/resolve_python_env.sh"
   "scripts/update_policy_template_hashes.sh"
   "scripts/verify.sh"
   "scripts/verify_local.sh"

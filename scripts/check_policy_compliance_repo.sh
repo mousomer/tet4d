@@ -3,18 +3,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-if [[ -n "${PYTHON_BIN:-}" ]]; then
-  :
-elif [[ -x ".venv/bin/python" ]]; then
-  PYTHON_BIN=".venv/bin/python"
-elif command -v python3 >/dev/null 2>&1; then
-  PYTHON_BIN="python3"
-elif command -v python >/dev/null 2>&1; then
-  PYTHON_BIN="python"
-else
-  echo "No Python runtime found. Set PYTHON_BIN or install python3." >&2
-  exit 1
-fi
+PYTHON_BIN="$(./scripts/resolve_python_env.sh)"
 
 required_files=(
   "AGENTS.md"
@@ -26,6 +15,10 @@ required_files=(
   "docs/governance/NATIVE_AND_PLATFORM.md"
   "docs/governance/CHANGE_GOVERNANCE.md"
   "config/project/policy_pack.json"
+  ".governance/workspace.json"
+  "config/governance/project.json"
+  "config/governance/workspace.lock.json"
+  "gov"
   "scripts/ci_preflight.sh"
   "scripts/verify.sh"
 )

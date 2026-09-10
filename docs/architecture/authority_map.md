@@ -24,6 +24,7 @@ Do not implement a new capability in Python solely to manufacture an oracle.
 
 | Subsystem | Current authority | Notes |
 | --- | --- | --- |
+| Workspace governance composition | Generic mechanisms in `tools/workspace_governance/`; workspace coordination in `.governance/workspace.json`; project execution facts and references in `config/governance/project.json`; human semantics in referenced documents | The legacy policy pack remains authoritative for explicitly unmigrated Tet4D facts. Local overlays are non-semantic execution state. No product or subsystem authority transfer occurs. |
 | Inherited gameplay legality, piece transformations, gravity, drop/lock, clear, and scoring not explicitly transferred | Python reference implementation | Native live implementations remain parity-backed/provisional except where a future transfer record says otherwise. |
 | Existing topology semantics and Play/Sandbox policy | Python topology implementation and canonical topology contracts | Native transport/query implementation does not by itself transfer topology semantics. |
 | Existing replay, trace, and compatibility semantics | Python/reference contracts and versioned fixtures | Transfer may occur by bounded subsystem. |

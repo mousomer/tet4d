@@ -13,6 +13,8 @@ Coverage:
 - `config/gameplay/piece_sets_nd.json`
 - `config/gameplay/score_analyzer.json`
 - `config/gameplay/tuning.json`
+- `config/governance/project.json`
+- `config/governance/workspace.lock.json`
 - `config/help/action_map.json`
 - `config/help/content/runtime_help_content.json`
 - `config/help/icon_map.json`
@@ -212,6 +214,75 @@ Parameters:
 - `speed_curve.4d_plus.base_ms`: `1700` (`int`)
 - `speed_curve.4d_plus.min_ms`: `140` (`int`)
 - `version`: `1` (`int`)
+
+### `config/governance/project.json`
+Top-level keys: `authorities`, `compatibility`, `environment`, `execution`, `generated_surfaces`, `project`, `routes`, `sanitation`, `schema_version`, `verification`
+Parameters:
+- `authorities[]`: array[`object`]
+- `authorities[].authority_id`: varies (`string`); examples: `"engineering"`, `"verification"`, `"change-governance"`
+- `authorities[].authority_type`: varies (`string`); examples: `"human"`, `"compatibility"`, `"project_metadata"`
+- `authorities[].exclusive`: varies (`bool`); examples: `true`
+- `authorities[].scope`: varies (`string`); examples: `"engineering-practice"`, `"verification-evidence"`, `"change-governance"`
+- `authorities[].source`: varies (`string`); examples: `"docs/governance/ENGINEERING.md"`, `"docs/governance/VERIFICATION.md"`, `"docs/governance/CHANGE_GOVERNANCE.md"`
+- `compatibility.facade`: `"config/project/policy_pack.json"` (`string`)
+- `compatibility.rule`: `"no project.json field duplicates an unmigrated facade fact as canoni...` (`string`)
+- `compatibility.status`: `"authoritative-for-unmigrated-fields"` (`string`)
+- `environment.critical_packages[]`: array[`string`]; examples: `"tet4d"`, `"pytest"`, `"ruff"`
+- `environment.dependency_authority.authority_ref`: `"python-project-metadata"` (`string`)
+- `environment.dependency_authority.source`: `"pyproject.toml"` (`string`)
+- `environment.editable_source`: `"src/tet4d"` (`string`)
+- `environment.interpreter_override`: `"TET4D_PYTHON"` (`string`)
+- `environment.package_import`: `"tet4d"` (`string`)
+- `environment.preferred`: `".venv/bin/python"` (`string`)
+- `environment.python_requires.authority_ref`: `"python-project-metadata"` (`string`)
+- `environment.python_requires.source_field`: `"project.requires-python"` (`string`)
+- `environment.route_tools.godot.candidates[]`: array[`string`]; examples: `"godot"`
+- `environment.route_tools.godot.override`: `"GODOT_BIN"` (`string`)
+- `environment.route_tools.godot.version_args[]`: array[`string`]; examples: `"--version"`
+- `execution.default_mode`: `"FEATURE"` (`string`)
+- `execution.profiles.FEATURE.exploration[]`: array[`string`]; examples: `"owner"`, `"neighboring-contracts"`, `"bounded-architecture-search"`
+- `execution.profiles.FEATURE.final_evidence_rule`: `"resolved-from-diff-authority-risk"` (`string`)
+- `execution.profiles.FEATURE.routes[]`: array[`string`]; examples: `"python_reference_engine"`
+- `execution.profiles.LOCAL_FIX.exploration[]`: array[`string`]; examples: `"reproduce"`, `"owning-source"`, `"direct-tests"`
+- `execution.profiles.LOCAL_FIX.final_evidence_rule`: `"resolved-from-diff-authority-risk"` (`string`)
+- `execution.profiles.LOCAL_FIX.routes[]`: array[`string`]; examples: `"python_reference_engine"`
+- `execution.profiles.STRUCTURAL_CHANGE.exploration[]`: array[`string`]; examples: `"authority-review"`, `"routing-review"`, `"repository-impact"`
+- `execution.profiles.STRUCTURAL_CHANGE.final_evidence_rule`: `"resolved-from-diff-authority-risk"` (`string`)
+- `execution.profiles.STRUCTURAL_CHANGE.routes[]`: array[`string`]; examples: `"governance_and_tooling"`
+- `execution.representative_scenarios[]`: array[`object`]
+- `execution.representative_scenarios[].id`: varies (`string`); examples: `"small-godot-ui-defect"`, `"small-python-defect"`, `"moderate-feature"`
+- `execution.representative_scenarios[].match_all[]`: array[`string`]; examples: `"small"`, `"godot"`, `"defect"`
+- `execution.representative_scenarios[].mode`: varies (`string`); examples: `"LOCAL_FIX"`, `"FEATURE"`, `"STRUCTURAL_CHANGE"`
+- `execution.representative_scenarios[].routes[]`: array[`string`]; examples: `"godot_product_shell"`, `"python_reference_engine"`, `"native_deterministic_core"`
+- `generated_surfaces[]`: array[`empty`]
+- `project.id`: `"tet4d"` (`string`)
+- `project.name`: `"Tet4D"` (`string`)
+- `routes.godot_product_shell.authority_refs[]`: array[`string`]; examples: `"verification"`, `"architecture"`, `"godot-runtime"`
+- `routes.godot_product_shell.environment_tools[]`: array[`string`]; examples: `"godot"`
+- `routes.governance_and_tooling.authority_refs[]`: array[`string`]; examples: `"engineering"`, `"verification"`, `"change-governance"`
+- `routes.native_deterministic_core.authority_refs[]`: array[`string`]; examples: `"verification"`, `"architecture"`, `"subsystem-ownership"`
+- `routes.packaging_and_release.authority_refs[]`: array[`string`]; examples: `"verification"`, `"change-governance"`, `"security-sanitation"`
+- `routes.python_reference_engine.authority_refs[]`: array[`string`]; examples: `"engineering"`, `"verification"`, `"architecture"`
+- `sanitation.bounded_diagnostics`: `50` (`int`)
+- `sanitation.repository_check`: `"scripts/check_git_sanitation_repo.sh"` (`string`)
+- `sanitation.secret_scanner`: `"tools/governance/scan_secrets.py"` (`string`)
+- `schema_version`: `1` (`int`)
+- `verification.canonical.authority_ref`: `"legacy-policy-pack"` (`string`)
+- `verification.canonical.json_pointer`: `"/governance/verification_command"` (`string`)
+- `verification.full.authority_ref`: `"legacy-policy-pack"` (`string`)
+- `verification.full.json_pointer`: `"/governance/godot_toolchain/canonical_commands/full_repository"` (`string`)
+- `verification.rule`: `"task + authority + actual diff + risk"` (`string`)
+- `verification.targeted`: `"./scripts/verify_focus.sh"` (`string`)
+
+### `config/governance/workspace.lock.json`
+Top-level keys: `content_sha256`, `files`, `pack_path`, `revision`, `schema_version`, `version`
+Parameters:
+- `content_sha256`: `"014bada3c253063fe4d27550799cef9ed8f98ff31df881245668d9afbec3c317"` (`string`)
+- `files[]`: array[`string`]; examples: `"MANIFEST.json"`, `"VERSION"`, `"__init__.py"`
+- `pack_path`: `"tools/workspace_governance"` (`string`)
+- `revision`: `"vendored-v0.1"` (`string`)
+- `schema_version`: `1` (`int`)
+- `version`: `"0.1.0"` (`string`)
 
 ### `config/help/action_map.json`
 Top-level keys: `action_topics`, `default_topic`, `version`
@@ -2140,7 +2211,7 @@ Parameters:
 - `governance.architecture.zero_budgets.engine_to_ai_imports`: `0` (`int`)
 - `governance.architecture.zero_budgets.engine_to_ui_imports`: `0` (`int`)
 - `governance.architecture.zero_budgets.pygame_imports_in_non_test`: `0` (`int`)
-- `governance.canonical_governance_contract.required_tokens[]`: array[`string`]; examples: `"docs/governance/ENGINEERING.md"`, `"docs/governance/VERIFICATION.md"`, `"docs/governance/SECURITY_AND_SANITATION.md"`
+- `governance.canonical_governance_contract.required_tokens[]`: array[`string`]; examples: `".governance/workspace.json"`, `"config/governance/project.json"`, `"config/project/policy_pack.json"`
 - `governance.ci_entrypoint`: `"./scripts/ci_check.sh"` (`string`)
 - `governance.contracts.help_assets_manifest`: `"config/project/policy/manifests/help_assets_manifest.json"` (`string`)
 - `governance.contracts.policy_pack`: `"config/project/policy_pack.json"` (`string`)

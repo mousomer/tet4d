@@ -13,6 +13,7 @@ import pytest
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 SANITATION_SCRIPT = REPOSITORY_ROOT / "scripts" / "check_git_sanitation_repo.sh"
 REQUIRED_ENTRYPOINTS = (
+    "gov",
     "scripts/bootstrap_env.sh",
     "scripts/check_architecture_boundaries.sh",
     "scripts/check_architecture_metric_budgets.sh",
@@ -27,6 +28,7 @@ REQUIRED_ENTRYPOINTS = (
     "scripts/ci_check.sh",
     "scripts/ci_preflight.sh",
     "scripts/install_git_hooks.sh",
+    "scripts/resolve_python_env.sh",
     "scripts/update_policy_template_hashes.sh",
     "scripts/verify.sh",
     "scripts/verify_local.sh",

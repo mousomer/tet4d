@@ -142,6 +142,14 @@ Godot game/iPadOS target gap.
 
 ## Explicit Deferrals
 
+### Workspace governance extraction
+
+- v0.1 retains `config/project/policy_pack.json` as authority for unmigrated
+  Tet4D-specific facts. Future extraction should migrate one bounded fact family
+  at a time with generated/validated compatibility output.
+- General prompt classification, runtime execution graphs, cross-repository
+  orchestration, migration engines, and planner/runner redesign remain deferred.
+
 ### Release and platform
 
 - Clean-machine Windows and iPadOS runtime acceptance remain real-platform

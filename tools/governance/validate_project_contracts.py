@@ -2417,12 +2417,12 @@ def _validate_governance_routing_concepts() -> list[ValidationIssue]:
             label="root routing",
             text=root_text,
             concept_groups=(
-                ("Python", ("python",)),
-                ("reference authority", ("reference authority",)),
-                ("Godot", ("godot",)),
-                ("native deterministic core", ("native",)),
-                ("authority", ("authority",)),
-                ("parity", ("parity",)),
+                ("workspace manifest", (".governance/workspace.json",)),
+                ("project manifest", ("config/governance/project.json",)),
+                ("resolver", ("./gov resolve",)),
+                ("explanation", ("./gov explain",)),
+                ("task modes", ("local_fix", "structural_change")),
+                ("verification invariant", ("actual diff",)),
             ),
             issues=issues,
         )

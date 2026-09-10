@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "project", "authorities", "routes", "verification", "execution", "generated_surfaces", "environment", "sanitation", "compatibility"],
+  "properties": {
+    "schema_version": {"const": 1}, "project": {"type": "object"},
+    "authorities": {"type": "array"}, "routes": {"type": "object"},
+    "verification": {"type": "object"}, "execution": {"type": "object"},
+    "generated_surfaces": {"type": "array"}, "environment": {"type": "object"},
+    "sanitation": {"type": "object"}, "compatibility": {"type": "object"}
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {"id": "duplicate-exclusive-authority", "expected": "DUPLICATE_AUTHORITY"},
+    {"id": "cross-layer-semantic-field", "expected": "CONFLICTING_VALUE"},
+    {"id": "broken-authority-reference", "expected": "BROKEN_REFERENCE"},
+    {"id": "stale-generated-surface", "expected": "STALE_GENERATED_SURFACE"},
+    {"id": "compatibility-facade-drift", "expected": "CONFLICTING_VALUE"},
+    {"id": "modified-pack", "expected": "PACK_DRIFT"},
+    {"id": "tracked-machine-path", "expected": "CONFLICTING_VALUE"},
+    {"id": "missing-interpreter", "expected": "ENVIRONMENT_MISMATCH"},
+    {"id": "wrong-python-version", "expected": "ENVIRONMENT_MISMATCH"},
+    {"id": "wrong-editable-checkout", "expected": "ENVIRONMENT_MISMATCH"},
+    {"id": "ambiguous-project-routing", "expected": "AMBIGUOUS_AUTHORITY"},
+    {"id": "valid-local-override", "expected": "ok"},
+    {"id": "valid-local-fix-resolution", "expected": "ok"}
+  ]
+}

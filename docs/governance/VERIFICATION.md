@@ -5,6 +5,10 @@ triggers, and verification reporting.
 
 ## Evidence model
 
+Workspace-governance task modes bound discovery cost but never evidence. Use
+`./gov resolve` or `./gov explain --task "..."`; final requirements continue to
+come from task, authority, actual diff, claims, and risk.
+
 Verification is a set, not a ladder. Start from every selected route's default
 evidence, then union requirements from the actual diff, behavioural claims,
 affected layers, compatibility contracts, authority boundaries, and workflow
@@ -102,6 +106,8 @@ available and quiet output by default. Never run the full verification and CI
 wrappers in parallel.
 
 ```bash
+./gov check
+./gov doctor
 ./scripts/verify_focus.sh [--docs] [ruff-targets...] [--pytest pytest-targets...]
 python tools/governance/validate_project_contracts.py
 python tools/governance/validate_governance_surface.py
@@ -112,6 +118,12 @@ git diff --check
 CODEX_MODE=1 ./scripts/verify.sh
 ./scripts/ci_preflight.sh
 ```
+
+Governed project checks resolve Python once through
+`scripts/resolve_python_env.sh`. They prefer `.venv`, accept the explicit
+`TET4D_PYTHON` override, and do not require shell activation. `./verify.sh` and
+`./verify.sh --verbose` execute identical checks with identical environment and
+pass/fail semantics; verbose mode changes logging only.
 
 Run `CODEX_MODE=1 ./scripts/verify.sh` for authority changes, governance,
 broad shared infrastructure, material uncertainty, reviewer requests, release

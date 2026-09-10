@@ -8,6 +8,10 @@ VENV_PATH="${VENV_PATH:-.venv}"
 VENV_PYTHON="${VENV_PATH}/bin/python"
 
 if [ ! -x "${VENV_PYTHON}" ]; then
+  if ! "${PYTHON_BOOTSTRAP_BIN}" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)'; then
+    echo "ENVIRONMENT_INVALID: bootstrap Python 3.11 or newer is required." >&2
+    exit 1
+  fi
   "${PYTHON_BOOTSTRAP_BIN}" -m venv "${VENV_PATH}"
 fi
 
@@ -18,4 +22,4 @@ PIP_ARGS=(--disable-pip-version-check --no-input)
 ./scripts/install_git_hooks.sh
 
 echo "Environment bootstrap complete: ${VENV_PATH}"
-echo "Use it with: source ${VENV_PATH}/bin/activate"
+echo "No activation is required; governed scripts resolve ${VENV_PYTHON} directly."

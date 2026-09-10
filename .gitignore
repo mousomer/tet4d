@@ -27,6 +27,7 @@ app.log
 
 # Local virtual env
 .venv/
+.governance/workspace.local.json
 
 # Local/offline wheel artifacts
 wheelhouse/

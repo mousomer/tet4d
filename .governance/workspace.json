@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "workspace_id": "tet4d-workspace",
+  "governance_pack": {
+    "required_schema": 1,
+    "lock": "config/governance/workspace.lock.json"
+  },
+  "projects": [
+    {
+      "id": "tet4d",
+      "repository": ".",
+      "manifest": "config/governance/project.json"
+    }
+  ],
+  "relationships": [],
+  "defaults": {
+    "project": "tet4d"
+  }
+}

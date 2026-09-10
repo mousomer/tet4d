@@ -1,0 +1,23 @@
+{
+  "content_sha256": "014bada3c253063fe4d27550799cef9ed8f98ff31df881245668d9afbec3c317",
+  "files": [
+    "MANIFEST.json",
+    "VERSION",
+    "__init__.py",
+    "cli/__init__.py",
+    "cli/gov.py",
+    "policies/ownership.md",
+    "resolver/__init__.py",
+    "resolver/core.py",
+    "schemas/project.schema.json",
+    "schemas/workspace-local.schema.json",
+    "schemas/workspace.schema.json",
+    "synthetic-fixtures/contradictions.json",
+    "validators/__init__.py",
+    "validators/core.py"
+  ],
+  "pack_path": "tools/workspace_governance",
+  "revision": "vendored-v0.1",
+  "schema_version": 1,
+  "version": "0.1.0"
+}
