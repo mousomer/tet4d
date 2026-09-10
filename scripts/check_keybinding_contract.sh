@@ -4,14 +4,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-if [[ -x ".venv/bin/python" ]]; then
-  PYTHON_BIN=".venv/bin/python"
-elif command -v python3 >/dev/null 2>&1; then
-  PYTHON_BIN="python3"
-else
-  echo "No Python runtime found." >&2
-  exit 1
-fi
+PYTHON_BIN="$(./scripts/resolve_python_env.sh)"
 
 "$PYTHON_BIN" -m ruff check \
   src/tet4d/engine/runtime/keybinding_runtime_state.py \

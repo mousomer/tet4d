@@ -216,17 +216,17 @@ Parameters:
 - `version`: `1` (`int`)
 
 ### `config/governance/project.json`
-Top-level keys: `authorities`, `compatibility`, `environment`, `execution`, `generated_surfaces`, `project`, `routes`, `sanitation`, `schema_version`, `verification`
+Top-level keys: `authorities`, `environment`, `execution`, `generated_surfaces`, `project`, `routes`, `sanitation`, `schema_version`, `verification`
 Parameters:
 - `authorities[]`: array[`object`]
+- `authorities[].alias_of`: `"subsystem-ownership"` (`string`)
 - `authorities[].authority_id`: varies (`string`); examples: `"engineering"`, `"verification"`, `"change-governance"`
-- `authorities[].authority_type`: varies (`string`); examples: `"human"`, `"compatibility"`, `"project_metadata"`
+- `authorities[].authority_type`: varies (`string`); examples: `"human"`, `"alias"`, `"compatibility"`
+- `authorities[].canonical_governance`: varies (`bool`); examples: `true`, `false`
 - `authorities[].exclusive`: varies (`bool`); examples: `true`
+- `authorities[].legacy_key`: varies (`string`); examples: `"engineering_governance"`, `"verification_governance"`, `"change_governance"`
 - `authorities[].scope`: varies (`string`); examples: `"engineering-practice"`, `"verification-evidence"`, `"change-governance"`
 - `authorities[].source`: varies (`string`); examples: `"docs/governance/ENGINEERING.md"`, `"docs/governance/VERIFICATION.md"`, `"docs/governance/CHANGE_GOVERNANCE.md"`
-- `compatibility.facade`: `"config/project/policy_pack.json"` (`string`)
-- `compatibility.rule`: `"no project.json field duplicates an unmigrated facade fact as canoni...` (`string`)
-- `compatibility.status`: `"authoritative-for-unmigrated-fields"` (`string`)
 - `environment.critical_packages[]`: array[`string`]; examples: `"tet4d"`, `"pytest"`, `"ruff"`
 - `environment.dependency_authority.authority_ref`: `"python-project-metadata"` (`string`)
 - `environment.dependency_authority.source`: `"pyproject.toml"` (`string`)
@@ -254,15 +254,36 @@ Parameters:
 - `execution.representative_scenarios[].match_all[]`: array[`string`]; examples: `"small"`, `"godot"`, `"defect"`
 - `execution.representative_scenarios[].mode`: varies (`string`); examples: `"LOCAL_FIX"`, `"FEATURE"`, `"STRUCTURAL_CHANGE"`
 - `execution.representative_scenarios[].routes[]`: array[`string`]; examples: `"godot_product_shell"`, `"python_reference_engine"`, `"native_deterministic_core"`
-- `generated_surfaces[]`: array[`empty`]
+- `generated_surfaces[]`: array[`object`]
+- `generated_surfaces[].kind`: `"compatibility_facade"` (`string`)
+- `generated_surfaces[].source`: `"config/governance/project.json#/routes"` (`string`)
+- `generated_surfaces[].surface_id`: `"legacy-route-facade"` (`string`)
+- `generated_surfaces[].target`: `"config/project/policy_pack.json#/codex_routing/routes"` (`string`)
+- `generated_surfaces[].transform`: `"authority-legacy-key-route-v1"` (`string`)
 - `project.id`: `"tet4d"` (`string`)
 - `project.name`: `"Tet4D"` (`string`)
-- `routes.godot_product_shell.authority_refs[]`: array[`string`]; examples: `"verification"`, `"architecture"`, `"godot-runtime"`
+- `routes.godot_product_shell.authority_refs[]`: array[`string`]; examples: `"product-requirements"`, `"subsystem-ownership"`, `"native-and-platform"`
+- `routes.godot_product_shell.dispatch_paths[]`: array[`string`]; examples: `"godot/AGENTS.md"`
 - `routes.godot_product_shell.environment_tools[]`: array[`string`]; examples: `"godot"`
-- `routes.governance_and_tooling.authority_refs[]`: array[`string`]; examples: `"engineering"`, `"verification"`, `"change-governance"`
-- `routes.native_deterministic_core.authority_refs[]`: array[`string`]; examples: `"verification"`, `"architecture"`, `"subsystem-ownership"`
-- `routes.packaging_and_release.authority_refs[]`: array[`string`]; examples: `"verification"`, `"change-governance"`, `"security-sanitation"`
-- `routes.python_reference_engine.authority_refs[]`: array[`string`]; examples: `"engineering"`, `"verification"`, `"architecture"`
+- `routes.godot_product_shell.typical_verification_requirements[]`: array[`string`]; examples: `"godot"`
+- `routes.governance_and_tooling.authority_refs[]`: array[`string`]; examples: `"legacy-policy-pack"`, `"change-governance"`, `"verification"`
+- `routes.governance_and_tooling.dispatch_paths[]`: array[`empty`]
+- `routes.governance_and_tooling.typical_verification_requirements[]`: array[`string`]; examples: `"governance_structure"`
+- `routes.native_deterministic_core.authority_refs[]`: array[`string`]; examples: `"subsystem-ownership"`, `"authority-transfer"`, `"native-and-platform"`
+- `routes.native_deterministic_core.dispatch_paths[]`: array[`string`]; examples: `"native/AGENTS.md"`
+- `routes.native_deterministic_core.typical_verification_requirements[]`: array[`string`]; examples: `"native"`, `"deterministic"`
+- `routes.packaging_and_release.authority_refs[]`: array[`string`]; examples: `"native-and-platform"`, `"security-sanitation"`, `"verification"`
+- `routes.packaging_and_release.dispatch_paths[]`: array[`string`]; examples: `"docs/rds/RDS_PACKAGING.md"`, `"docs/RELEASE_CHECKLIST.md"`
+- `routes.packaging_and_release.typical_verification_requirements[]`: array[`string`]; examples: `"packaging"`, `"platform"`
+- `routes.product_planning.authority_refs[]`: array[`string`]; examples: `"professional-product-programme"`, `"product-requirements"`, `"open-work-backlog"`
+- `routes.product_planning.dispatch_paths[]`: array[`empty`]
+- `routes.product_planning.typical_verification_requirements[]`: array[`string`]; examples: `"documentation"`
+- `routes.python_reference_engine.authority_refs[]`: array[`string`]; examples: `"architecture"`, `"product-requirements"`, `"subsystem-ownership"`
+- `routes.python_reference_engine.dispatch_paths[]`: array[`empty`]
+- `routes.python_reference_engine.typical_verification_requirements[]`: array[`string`]; examples: `"python"`, `"deterministic"`
+- `routes.topology_and_explorer.authority_refs[]`: array[`string`]; examples: `"topology-current-authority"`, `"product-requirements"`, `"subsystem-ownership"`
+- `routes.topology_and_explorer.dispatch_paths[]`: array[`empty`]
+- `routes.topology_and_explorer.typical_verification_requirements[]`: array[`string`]; examples: `"deterministic"`
 - `sanitation.bounded_diagnostics`: `50` (`int`)
 - `sanitation.repository_check`: `"scripts/check_git_sanitation_repo.sh"` (`string`)
 - `sanitation.secret_scanner`: `"tools/governance/scan_secrets.py"` (`string`)
@@ -275,12 +296,14 @@ Parameters:
 - `verification.targeted`: `"./scripts/verify_focus.sh"` (`string`)
 
 ### `config/governance/workspace.lock.json`
-Top-level keys: `content_sha256`, `files`, `pack_path`, `revision`, `schema_version`, `version`
+Top-level keys: `content_sha256`, `files`, `lock_algorithm`, `pack_name`, `pack_path`, `revision`, `schema_version`, `version`
 Parameters:
-- `content_sha256`: `"014bada3c253063fe4d27550799cef9ed8f98ff31df881245668d9afbec3c317"` (`string`)
+- `content_sha256`: `"995d427870b348a576c6ff58d83c25ba7ea177853588c03dad56ce79fc2534a2"` (`string`)
 - `files[]`: array[`string`]; examples: `"MANIFEST.json"`, `"VERSION"`, `"__init__.py"`
+- `lock_algorithm`: `"sha256-path-and-content-v1"` (`string`)
+- `pack_name`: `"workspace-governance"` (`string`)
 - `pack_path`: `"tools/workspace_governance"` (`string`)
-- `revision`: `"vendored-v0.1"` (`string`)
+- `revision`: `"v0.1-integrity-1"` (`string`)
 - `schema_version`: `1` (`int`)
 - `version`: `"0.1.0"` (`string`)
 

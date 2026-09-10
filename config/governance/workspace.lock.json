@@ -1,5 +1,5 @@
 {
-  "content_sha256": "014bada3c253063fe4d27550799cef9ed8f98ff31df881245668d9afbec3c317",
+  "content_sha256": "995d427870b348a576c6ff58d83c25ba7ea177853588c03dad56ce79fc2534a2",
   "files": [
     "MANIFEST.json",
     "VERSION",
@@ -16,8 +16,10 @@
     "validators/__init__.py",
     "validators/core.py"
   ],
+  "lock_algorithm": "sha256-path-and-content-v1",
+  "pack_name": "workspace-governance",
   "pack_path": "tools/workspace_governance",
-  "revision": "vendored-v0.1",
+  "revision": "v0.1-integrity-1",
   "schema_version": 1,
   "version": "0.1.0"
 }

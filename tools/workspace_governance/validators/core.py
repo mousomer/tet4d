@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+import fnmatch
 import hashlib
 import json
 import os
-import re
 import shutil
 import subprocess
-import sys
+import tomllib
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -20,6 +20,13 @@ DIAGNOSTIC_CLASSES = {
     "PACK_DRIFT",
     "ENVIRONMENT_MISMATCH",
 }
+SCHEMA_FILES = {
+    "workspace": "schemas/workspace.schema.json",
+    "project": "schemas/project.schema.json",
+    "local": "schemas/workspace-local.schema.json",
+}
+SUPPORTED_COMMANDS = {"check", "resolve", "explain", "doctor", "sync"}
+REQUIRED_STABLE_AUTHORITIES = {"native-and-platform", "authority-transfer"}
 
 
 @dataclass(frozen=True)
@@ -33,6 +40,17 @@ class Diagnostic:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+
+def _diag(
+    code: str,
+    fact: str,
+    owner: str,
+    sources: list[str],
+    reason: str,
+    repair: str,
+) -> Diagnostic:
+    return Diagnostic(code, fact, owner, tuple(sources), reason, repair)
 
 
 def load_manifest_json(path: Path) -> dict[str, Any]:
@@ -50,192 +68,213 @@ def load_manifest_json(path: Path) -> dict[str, Any]:
     return value
 
 
-def content_hash(root: Path, files: list[str]) -> str:
-    digest = hashlib.sha256()
-    for rel in sorted(files):
-        digest.update(rel.encode() + b"\0")
-        digest.update((root / rel).read_bytes())
-        digest.update(b"\0")
-    return digest.hexdigest()
+def _type_matches(value: object, expected: str) -> bool:
+    return {
+        "object": isinstance(value, dict),
+        "array": isinstance(value, list),
+        "string": isinstance(value, str),
+        "integer": isinstance(value, int) and not isinstance(value, bool),
+        "boolean": isinstance(value, bool),
+    }.get(expected, True)
 
 
-def pack_hash(pack_root: Path) -> tuple[str, list[str]]:
-    files = sorted(
-        p.relative_to(pack_root).as_posix()
-        for p in pack_root.rglob("*")
-        if p.is_file() and "__pycache__" not in p.parts
-    )
-    return content_hash(pack_root, files), files
-
-
-def _diag(
-    code: str, fact: str, owner: str, sources: list[str], reason: str, repair: str
-) -> Diagnostic:
-    return Diagnostic(code, fact, owner, tuple(sources), reason, repair)
-
-
-def validate_manifests(  # noqa: C901 - each independent rule emits a stable diagnostic
-    root: Path,
-    workspace: dict[str, Any],
-    project: dict[str, Any],
-    local: dict[str, Any] | None,
+def _schema_issues(  # noqa: C901 - bounded recursive schema evaluator
+    value: object,
+    schema: dict[str, Any],
+    *,
+    path: str,
+    source: str,
 ) -> list[Diagnostic]:
     issues: list[Diagnostic] = []
-    workspace_allowed = {
-        "schema_version",
-        "workspace_id",
-        "governance_pack",
-        "projects",
-        "relationships",
-        "defaults",
-    }
-    project_allowed = {
-        "schema_version",
-        "project",
-        "authorities",
-        "routes",
-        "verification",
-        "execution",
-        "generated_surfaces",
-        "environment",
-        "sanitation",
-        "compatibility",
-    }
-    local_allowed = {
-        "schema_version",
-        "interpreter",
-        "tool_paths",
-        "checkout_locations",
-        "cache_locations",
-    }
-    for layer, payload, allowed, source in (
-        ("workspace", workspace, workspace_allowed, ".governance/workspace.json"),
-        ("project", project, project_allowed, "config/governance/project.json"),
-    ):
-        for key in sorted(set(payload) - allowed):
-            issues.append(
-                _diag(
-                    "CONFLICTING_VALUE",
-                    key,
-                    layer,
-                    [source],
-                    f"field is not owned by the {layer} layer",
-                    "move the fact to its owning layer or reference its authority",
-                )
-            )
-    if local is not None:
-        for key in sorted(set(local) - local_allowed):
-            issues.append(
-                _diag(
-                    "CONFLICTING_VALUE",
-                    key,
-                    "local",
-                    [".governance/workspace.local.json"],
-                    "local overlay attempted to define semantic governance",
-                    "remove the semantic field; local overlays may contain execution locations only",
-                )
-            )
 
-    required_workspace = workspace_allowed
-    required_project = project_allowed
-    for key in sorted(required_workspace - set(workspace)):
-        issues.append(
-            _diag(
-                "BROKEN_REFERENCE",
-                key,
-                "workspace",
-                [".governance/workspace.json"],
-                "required workspace field is missing",
-                "add the field to the workspace manifest",
-            )
-        )
-    for key in sorted(required_project - set(project)):
-        issues.append(
-            _diag(
-                "BROKEN_REFERENCE",
-                key,
-                "project",
-                ["config/governance/project.json"],
-                "required project field is missing",
-                "add the field to the project manifest",
-            )
-        )
-
-    for layer, payload, source in (
-        ("workspace", workspace, ".governance/workspace.json"),
-        ("project", project, "config/governance/project.json"),
-    ):
-        if payload.get("schema_version") != 1:
-            issues.append(
-                _diag(
-                    "CONFLICTING_VALUE",
-                    "schema_version",
-                    layer,
-                    [source],
-                    "manifest schema version is not supported by this pack",
-                    "sync a compatible pack or migrate the manifest explicitly",
-                )
-            )
-    if local is not None and local.get("schema_version") != 1:
+    def fail(reason: str) -> None:
         issues.append(
             _diag(
                 "CONFLICTING_VALUE",
-                "schema_version",
-                "local",
-                [".governance/workspace.local.json"],
-                "local overlay schema version is unsupported",
-                "update or remove the local overlay",
+                path or "manifest",
+                "schema",
+                [source],
+                reason,
+                "change the manifest to satisfy its versioned schema",
             )
         )
 
-    workspace_projects = workspace.get("projects", [])
-    project_claims: dict[str, list[dict[str, Any]]] = {}
-    repository_claims: dict[str, list[dict[str, Any]]] = {}
-    if isinstance(workspace_projects, list):
-        for entry in workspace_projects:
-            if not isinstance(entry, dict):
-                continue
-            project_id = entry.get("id")
-            repository = entry.get("repository")
-            if isinstance(project_id, str):
-                project_claims.setdefault(project_id, []).append(entry)
-            if isinstance(repository, str):
-                repository_claims.setdefault(repository, []).append(entry)
-    for fact, entries in sorted({**project_claims, **repository_claims}.items()):
-        if len(entries) > 1:
+    expected = schema.get("type")
+    if isinstance(expected, str) and not _type_matches(value, expected):
+        fail(f"expected {expected}, got {type(value).__name__}")
+        return issues
+    if "const" in schema and value != schema["const"]:
+        fail(f"value must equal {schema['const']!r}")
+    if "enum" in schema and value not in schema["enum"]:
+        fail(f"value is not one of {schema['enum']!r}")
+    if isinstance(value, str) and len(value) < schema.get("minLength", 0):
+        fail("string is shorter than minLength")
+    if (
+        isinstance(value, int)
+        and not isinstance(value, bool)
+        and "minimum" in schema
+        and value < schema["minimum"]
+    ):
+        fail(f"integer is below minimum {schema['minimum']}")
+    if isinstance(value, list):
+        if len(value) < schema.get("minItems", 0):
+            fail("array has too few items")
+        if "maxItems" in schema and len(value) > schema["maxItems"]:
+            fail("array has too many items")
+        if schema.get("uniqueItems") and len(
+            {json.dumps(v, sort_keys=True) for v in value}
+        ) != len(value):
+            fail("array items must be unique")
+        item_schema = schema.get("items")
+        if isinstance(item_schema, dict):
+            for index, item in enumerate(value):
+                issues.extend(
+                    _schema_issues(
+                        item, item_schema, path=f"{path}[{index}]", source=source
+                    )
+                )
+    if isinstance(value, dict):
+        required = schema.get("required", [])
+        for key in required:
+            if key not in value:
+                issues.append(
+                    _diag(
+                        "BROKEN_REFERENCE",
+                        f"{path}.{key}".strip("."),
+                        "schema",
+                        [source],
+                        "required field is missing",
+                        "add the field required by the versioned schema",
+                    )
+                )
+        properties = schema.get("properties", {})
+        additional = schema.get("additionalProperties", True)
+        for key, nested in value.items():
+            nested_schema = (
+                properties.get(key) if isinstance(properties, dict) else None
+            )
+            if nested_schema is None and additional is False:
+                fail(f"undeclared field is not allowed: {key}")
+            elif nested_schema is None and isinstance(additional, dict):
+                nested_schema = additional
+            if isinstance(nested_schema, dict):
+                issues.extend(
+                    _schema_issues(
+                        nested,
+                        nested_schema,
+                        path=f"{path}.{key}".strip("."),
+                        source=source,
+                    )
+                )
+        if len(value) < schema.get("minProperties", 0):
+            fail("object has too few properties")
+        if "maxProperties" in schema and len(value) > schema["maxProperties"]:
+            fail("reserved object must remain empty")
+    return issues
+
+
+def _schema_field_usage_issues(schema: dict[str, Any], source: str) -> list[Diagnostic]:
+    issues: list[Diagnostic] = []
+    allowed = {"consumed", "validation-only", "reserved-for-future-use"}
+
+    def visit(node: object, path: str) -> None:
+        if not isinstance(node, dict):
+            return
+        properties = node.get("properties")
+        if isinstance(properties, dict):
+            for key, child in properties.items():
+                child_path = f"{path}.{key}".strip(".")
+                usage = (
+                    child.get("x-governance-use") if isinstance(child, dict) else None
+                )
+                if usage not in allowed:
+                    issues.append(
+                        _diag(
+                            "BROKEN_REFERENCE",
+                            child_path,
+                            "schema",
+                            [source],
+                            "declared field lacks a valid use classification",
+                            "classify it as consumed, validation-only, or reserved-for-future-use",
+                        )
+                    )
+                visit(child, child_path)
+        visit(node.get("items"), f"{path}[]")
+        additional = node.get("additionalProperties")
+        if isinstance(additional, dict):
+            visit(additional, f"{path}.*")
+
+    visit(schema, "")
+    return issues
+
+
+def _load_schemas(
+    pack_root: Path,
+) -> tuple[dict[str, dict[str, Any]], list[Diagnostic]]:
+    schemas: dict[str, dict[str, Any]] = {}
+    issues: list[Diagnostic] = []
+    for layer, rel in SCHEMA_FILES.items():
+        try:
+            schema = load_manifest_json(pack_root / rel)
+        except (OSError, ValueError, TypeError) as exc:
             issues.append(
                 _diag(
-                    "AMBIGUOUS_AUTHORITY",
-                    f"workspace-project:{fact}",
-                    "workspace",
-                    [".governance/workspace.json"],
-                    "multiple project entries claim the same routing identity",
-                    "assign unique project IDs and repository roots",
+                    "BROKEN_REFERENCE",
+                    f"schema:{layer}",
+                    "shared_pack",
+                    [rel],
+                    str(exc),
+                    "restore the versioned schema",
                 )
             )
-    selected_project = (
-        project.get("project", {}).get("id")
-        if isinstance(project.get("project"), dict)
-        else None
-    )
-    if selected_project not in project_claims:
-        issues.append(
-            _diag(
-                "BROKEN_REFERENCE",
-                "project.id",
-                "workspace/project",
-                [".governance/workspace.json", "config/governance/project.json"],
-                "project manifest ID is not a workspace member",
-                "add a unique workspace project entry referencing this manifest",
-            )
-        )
+            continue
+        schemas[layer] = schema
+        issues.extend(_schema_field_usage_issues(schema, rel))
+    return schemas, issues
 
-    authorities = project.get("authorities", [])
+
+def _json_pointer(document: object, pointer: str) -> object:
+    if not pointer.startswith("/"):
+        raise ValueError("JSON pointer must begin with /")
+    value = document
+    for token in pointer[1:].split("/"):
+        if not isinstance(value, dict):
+            raise KeyError(token)
+        value = value[token.replace("~1", "/").replace("~0", "~")]
+    return value
+
+
+def _split_reference(root: Path, reference: str) -> tuple[Path, str]:
+    raw_path, marker, pointer = reference.partition("#")
+    path = root / raw_path
+    return path, pointer if marker else ""
+
+
+def _route_facade(project: dict[str, Any]) -> dict[str, Any]:
+    authorities = {item["authority_id"]: item for item in project["authorities"]}
+    facade: dict[str, Any] = {}
+    for route_id, route in project["routes"].items():
+        entry: dict[str, Any] = {}
+        if route["dispatch_paths"]:
+            entry["dispatch_paths"] = route["dispatch_paths"]
+        entry["authority_keys"] = [
+            authorities[item]["legacy_key"] for item in route["authority_refs"]
+        ]
+        entry["typical_verification_requirements"] = route[
+            "typical_verification_requirements"
+        ]
+        facade[route_id] = entry
+    return facade
+
+
+def _semantic_manifest_issues(  # noqa: C901 - cross-field integrity transaction
+    root: Path, workspace: dict[str, Any], project: dict[str, Any]
+) -> list[Diagnostic]:
+    issues: list[Diagnostic] = []
+    authorities = project["authorities"]
     by_id: dict[str, list[dict[str, Any]]] = {}
-    if isinstance(authorities, list):
-        for entry in authorities:
-            if isinstance(entry, dict) and isinstance(entry.get("authority_id"), str):
-                by_id.setdefault(entry["authority_id"], []).append(entry)
+    for entry in authorities:
+        by_id.setdefault(entry["authority_id"], []).append(entry)
     for authority_id, entries in sorted(by_id.items()):
         if len(entries) > 1:
             issues.append(
@@ -243,184 +282,302 @@ def validate_manifests(  # noqa: C901 - each independent rule emits a stable dia
                     "DUPLICATE_AUTHORITY",
                     authority_id,
                     "project",
-                    [str(e.get("source", "<missing>")) for e in entries],
+                    [item["source"] for item in entries],
                     "stable authority ID is declared more than once",
-                    "deduplicate identical declarations or assign distinct scoped IDs",
+                    "deduplicate declarations",
                 )
             )
         for entry in entries:
-            source = entry.get("source")
-            if not isinstance(source, str) or not (root / source).exists():
+            if not (root / entry["source"]).exists():
                 issues.append(
                     _diag(
                         "BROKEN_REFERENCE",
                         f"authority:{authority_id}",
                         "project",
-                        [str(source or "<missing>")],
+                        [entry["source"]],
                         "authority source does not exist",
-                        "restore the authority or correct its repo-relative source",
+                        "restore or correct the authority source",
                     )
                 )
-
-    scope_claims: dict[str, list[dict[str, Any]]] = {}
-    for entries in by_id.values():
-        for entry in entries:
-            if entry.get("exclusive") is True and isinstance(entry.get("scope"), str):
-                scope_claims.setdefault(entry["scope"], []).append(entry)
-    for scope, entries in sorted(scope_claims.items()):
-        ids = sorted(str(e.get("authority_id")) for e in entries)
-        if len(set(ids)) > 1:
+    for required in sorted(REQUIRED_STABLE_AUTHORITIES - set(by_id)):
+        issues.append(
+            _diag(
+                "BROKEN_REFERENCE",
+                f"authority:{required}",
+                "project",
+                ["config/governance/project.json"],
+                "required stable authority ID is missing",
+                "restore the stable authority ID",
+            )
+        )
+    scopes: dict[str, list[dict[str, Any]]] = {}
+    for entry in authorities:
+        if entry["exclusive"]:
+            scopes.setdefault(entry["scope"], []).append(entry)
+        alias = entry.get("alias_of")
+        if alias is not None and alias not in by_id:
+            issues.append(
+                _diag(
+                    "BROKEN_REFERENCE",
+                    f"authority:{entry['authority_id']}",
+                    "project",
+                    ["config/governance/project.json"],
+                    f"alias target is missing: {alias}",
+                    "restore or correct the alias",
+                )
+            )
+    for scope, entries in scopes.items():
+        if len(entries) > 1:
             issues.append(
                 _diag(
                     "AMBIGUOUS_AUTHORITY",
                     scope,
-                    "human/project",
-                    [str(e.get("source", "<missing>")) for e in entries],
-                    f"exclusive scope has candidate authority IDs: {', '.join(ids)}",
-                    "resolve the human governance contradiction explicitly; do not choose by discovery order",
+                    "project",
+                    [item["source"] for item in entries],
+                    "exclusive scope has multiple owners",
+                    "resolve the authority conflict explicitly",
                 )
             )
-
-    known = set(by_id)
-    reference_specs: list[tuple[str, object]] = []
-    verification = project.get("verification", {})
-    if isinstance(verification, dict):
-        reference_specs.extend(
-            (f"verification.{key}", value)
-            for key, value in verification.items()
-            if isinstance(value, dict)
-        )
-    environment = project.get("environment", {})
-    if isinstance(environment, dict):
-        reference_specs.extend(
-            (f"environment.{key}", value)
-            for key, value in environment.items()
-            if isinstance(value, dict) and "authority_ref" in value
-        )
-    for fact, spec in reference_specs:
-        authority_id = spec.get("authority_ref")
-        if authority_id not in known:
+    reached: set[str] = set()
+    for route_id, route in project["routes"].items():
+        for authority_id in route["authority_refs"]:
+            if authority_id not in by_id:
+                issues.append(
+                    _diag(
+                        "BROKEN_REFERENCE",
+                        f"route:{route_id}",
+                        "project",
+                        ["config/governance/project.json"],
+                        f"route references missing authority {authority_id}",
+                        "correct the typed authority reference",
+                    )
+                )
+            reached.add(authority_id)
+            if authority_id in by_id and "legacy_key" not in by_id[authority_id][0]:
+                issues.append(
+                    _diag(
+                        "BROKEN_REFERENCE",
+                        f"route:{route_id}",
+                        "project",
+                        ["config/governance/project.json"],
+                        f"routed authority lacks compatibility identity: {authority_id}",
+                        "add its legacy_key before exposing it through the route facade",
+                    )
+                )
+        for path in route["dispatch_paths"]:
+            if not (root / path).exists():
+                issues.append(
+                    _diag(
+                        "BROKEN_REFERENCE",
+                        f"route:{route_id}",
+                        "project",
+                        [path],
+                        "dispatch path does not exist",
+                        "restore or correct the dispatch path",
+                    )
+                )
+        for tool_id in route.get("environment_tools", []):
+            if tool_id not in project["environment"]["route_tools"]:
+                issues.append(
+                    _diag(
+                        "BROKEN_REFERENCE",
+                        f"route:{route_id}",
+                        "project",
+                        ["config/governance/project.json"],
+                        f"route references missing environment tool {tool_id}",
+                        "declare the route tool or correct the reference",
+                    )
+                )
+    aliases = {
+        item["authority_id"]: item["alias_of"]
+        for item in authorities
+        if "alias_of" in item
+    }
+    reached.update(alias for alias, target in aliases.items() if target in reached)
+    for entry in authorities:
+        if (
+            entry["authority_type"] not in {"project_metadata"}
+            and entry["authority_id"] not in reached
+        ):
             issues.append(
                 _diag(
                     "BROKEN_REFERENCE",
-                    fact,
+                    f"authority:{entry['authority_id']}",
                     "project",
-                    ["config/governance/project.json"],
-                    f"fact references missing authority ID {authority_id}",
-                    "declare the authority or correct the typed reference",
+                    [entry["source"]],
+                    "authority is unreachable from every project route",
+                    "add it to an applicable route or declare a reachable alias",
                 )
             )
-    routes = project.get("routes", {})
-    if isinstance(routes, dict):
-        for route_id, route in sorted(routes.items()):
-            if not isinstance(route, dict):
-                continue
-            for authority_id in route.get("authority_refs", []):
-                if authority_id not in known:
-                    issues.append(
-                        _diag(
-                            "BROKEN_REFERENCE",
-                            f"route:{route_id}",
-                            "project",
-                            ["config/governance/project.json"],
-                            f"route references missing authority ID {authority_id}",
-                            "declare the authority or correct the typed reference",
-                        )
+    for profile_id, profile in project["execution"]["profiles"].items():
+        for route in profile["routes"]:
+            if route not in project["routes"]:
+                issues.append(
+                    _diag(
+                        "BROKEN_REFERENCE",
+                        f"profile:{profile_id}",
+                        "project",
+                        ["config/governance/project.json"],
+                        f"unknown route {route}",
+                        "correct the route reference",
                     )
-    known_routes = set(routes) if isinstance(routes, dict) else set()
-    execution = project.get("execution", {})
-    profiles = execution.get("profiles", {}) if isinstance(execution, dict) else {}
-    if isinstance(profiles, dict):
-        for profile_id, profile in profiles.items():
-            if not isinstance(profile, dict):
-                continue
-            for route_id in profile.get("routes", []):
-                if route_id not in known_routes:
-                    issues.append(
-                        _diag(
-                            "BROKEN_REFERENCE",
-                            f"profile:{profile_id}",
-                            "project",
-                            ["config/governance/project.json"],
-                            f"execution profile references missing route {route_id}",
-                            "declare the route or correct the typed reference",
-                        )
+                )
+    for scenario in project["execution"]["representative_scenarios"]:
+        for route in scenario["routes"]:
+            if route not in project["routes"]:
+                issues.append(
+                    _diag(
+                        "BROKEN_REFERENCE",
+                        f"scenario:{scenario['id']}",
+                        "project",
+                        ["config/governance/project.json"],
+                        f"unknown route {route}",
+                        "correct the route reference",
                     )
-    scenarios = (
-        execution.get("representative_scenarios", [])
-        if isinstance(execution, dict)
-        else []
-    )
-    if isinstance(scenarios, list):
-        for scenario in scenarios:
-            if not isinstance(scenario, dict):
-                continue
-            for route_id in scenario.get("routes", []):
-                if route_id not in known_routes:
-                    issues.append(
-                        _diag(
-                            "BROKEN_REFERENCE",
-                            f"scenario:{scenario.get('id', '<missing>')}",
-                            "project",
-                            ["config/governance/project.json"],
-                            f"scenario references missing route {route_id}",
-                            "declare the route or correct the typed reference",
-                        )
-                    )
-
-    for surface in project.get("generated_surfaces", []):
-        if not isinstance(surface, dict):
-            continue
-        source = surface.get("source")
-        target = surface.get("target")
-        expected = surface.get("source_sha256")
-        if not isinstance(source, str) or not isinstance(target, str):
+                )
+    if project["execution"]["default_mode"] not in project["execution"]["profiles"]:
+        issues.append(
+            _diag(
+                "BROKEN_REFERENCE",
+                "execution.default_mode",
+                "project",
+                ["config/governance/project.json"],
+                "default mode has no profile",
+                "declare the profile or correct the default",
+            )
+        )
+    for fact in ("canonical", "full"):
+        authority_id = project["verification"][fact]["authority_ref"]
+        if authority_id not in by_id:
             issues.append(
                 _diag(
                     "BROKEN_REFERENCE",
-                    "generated_surface",
+                    f"verification.{fact}",
                     "project",
                     ["config/governance/project.json"],
-                    "generated surface lacks a source or target reference",
-                    "declare repo-relative source and target paths",
+                    f"verification fact references missing authority {authority_id}",
+                    "correct the authority reference",
                 )
             )
-            continue
-        source_path = root / source
-        target_path = root / target
+    for fact in ("python_requires", "dependency_authority"):
+        authority_id = project["environment"][fact]["authority_ref"]
+        if authority_id not in by_id:
+            issues.append(
+                _diag(
+                    "BROKEN_REFERENCE",
+                    f"environment.{fact}",
+                    "project",
+                    ["config/governance/project.json"],
+                    f"environment fact references missing authority {authority_id}",
+                    "correct the authority reference",
+                )
+            )
+    default_id = workspace["defaults"]["project"]
+    members = [item for item in workspace["projects"] if item["id"] == default_id]
+    if len(members) != 1:
+        issues.append(
+            _diag(
+                "AMBIGUOUS_AUTHORITY",
+                "workspace.default_project",
+                "workspace",
+                [".governance/workspace.json"],
+                "default project must resolve to exactly one member",
+                "declare one unique default project",
+            )
+        )
+    return issues
+
+
+def _generated_surface_issues(root: Path, project: dict[str, Any]) -> list[Diagnostic]:
+    issues: list[Diagnostic] = []
+    for surface in project["generated_surfaces"]:
+        source_path, source_pointer = _split_reference(root, surface["source"])
+        target_path, target_pointer = _split_reference(root, surface["target"])
         if not source_path.is_file() or not target_path.is_file():
             issues.append(
                 _diag(
                     "BROKEN_REFERENCE",
-                    target,
+                    surface["surface_id"],
                     "project",
-                    [source, target],
-                    "generated source relationship points to a missing file",
-                    "restore the source/target or remove the relationship",
+                    [surface["source"], surface["target"]],
+                    "generated relationship references a missing file",
+                    "restore the declared source and target",
                 )
             )
-        elif (
-            isinstance(expected, str)
-            and hashlib.sha256(source_path.read_bytes()).hexdigest() != expected
-        ):
-            is_facade = surface.get("kind") == "compatibility_facade"
+            continue
+        try:
+            source_value = _json_pointer(
+                load_manifest_json(source_path), source_pointer
+            )
+            target_value = _json_pointer(
+                load_manifest_json(target_path), target_pointer
+            )
+        except (ValueError, KeyError, TypeError) as exc:
             issues.append(
                 _diag(
-                    "CONFLICTING_VALUE" if is_facade else "STALE_GENERATED_SURFACE",
-                    target,
+                    "BROKEN_REFERENCE",
+                    surface["surface_id"],
                     "project",
-                    [source, target],
-                    "compatibility facade disagrees with canonical authority"
-                    if is_facade
-                    else "recorded source hash no longer matches its authority",
-                    "update the compatibility facade from its canonical authority"
-                    if is_facade
-                    else "regenerate the surface from the declared source",
+                    [surface["source"], surface["target"]],
+                    f"generated relationship pointer failed: {exc}",
+                    "correct the source or target pointer",
                 )
             )
+            continue
+        if surface["transform"] == "authority-legacy-key-route-v1":
+            expected = _route_facade(project)
+            if source_value != project["routes"] or target_value != expected:
+                issues.append(
+                    _diag(
+                        "CONFLICTING_VALUE",
+                        surface["surface_id"],
+                        "project",
+                        [surface["source"], surface["target"]],
+                        "legacy route compatibility facade diverges from canonical project routes",
+                        "regenerate or update the compatibility facade from project routes",
+                    )
+                )
+    return issues
 
-    unix_user_roots = "/" + "Users/|/" + "home/"
-    machine_path = re.compile(rf"(?:^|[\s\"'])(?:{unix_user_roots}|[A-Za-z]:[\\/])")
+
+def validate_manifests(
+    root: Path,
+    workspace: dict[str, Any],
+    project: dict[str, Any],
+    local: dict[str, Any] | None,
+    *,
+    pack_root: Path,
+) -> list[Diagnostic]:
+    schemas, issues = _load_schemas(pack_root)
+    for layer, value, source in (
+        ("workspace", workspace, ".governance/workspace.json"),
+        ("project", project, "config/governance/project.json"),
+        ("local", local, ".governance/workspace.local.json"),
+    ):
+        if value is not None and layer in schemas:
+            issues.extend(_schema_issues(value, schemas[layer], path="", source=source))
+    if issues:
+        return issues
+    issues.extend(_semantic_manifest_issues(root, workspace, project))
+    issues.extend(_generated_surface_issues(root, project))
+    for rel in (
+        project["sanitation"]["secret_scanner"],
+        project["sanitation"]["repository_check"],
+    ):
+        if not (root / rel).is_file():
+            issues.append(
+                _diag(
+                    "BROKEN_REFERENCE",
+                    "sanitation",
+                    "project",
+                    [rel],
+                    "declared sanitation entrypoint does not exist",
+                    "restore or correct the entrypoint",
+                )
+            )
+    machine_path = __import__("re").compile(
+        r'(?:^|[\s"\'])(?:/Users/|/home/|[A-Za-z]:[\\/])'
+    )
     for rel, payload in (
         (".governance/workspace.json", workspace),
         ("config/governance/project.json", project),
@@ -432,106 +589,149 @@ def validate_manifests(  # noqa: C901 - each independent rule emits a stable dia
                     "machine_local_path",
                     "local",
                     [rel],
-                    "tracked semantic manifest contains a machine-local absolute path",
-                    "move the value to the ignored local overlay",
+                    "tracked manifest contains a machine-local absolute path",
+                    "move the path to the ignored local overlay",
                 )
             )
     return issues
 
 
+def _pack_files(pack_root: Path, exclusions: list[str]) -> list[str]:
+    files: list[str] = []
+    for path in pack_root.rglob("*"):
+        if not path.is_file():
+            continue
+        rel = path.relative_to(pack_root).as_posix()
+        if any(
+            fnmatch.fnmatch(rel, pattern) or fnmatch.fnmatch(f"/{rel}", pattern)
+            for pattern in exclusions
+        ):
+            continue
+        files.append(rel)
+    return sorted(files)
+
+
+def content_hash(
+    root: Path, files: list[str], algorithm: str = "sha256-path-and-content-v1"
+) -> str:
+    if algorithm != "sha256-path-and-content-v1":
+        raise ValueError(f"unsupported pack hash algorithm: {algorithm}")
+    digest = hashlib.sha256()
+    for rel in sorted(files):
+        digest.update(rel.encode() + b"\0")
+        digest.update((root / rel).read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def pack_hash(pack_root: Path) -> tuple[str, list[str]]:
+    manifest = load_manifest_json(pack_root / "MANIFEST.json")
+    files = _pack_files(pack_root, manifest["pack_hash_excludes"])
+    return content_hash(pack_root, files, manifest["lock_algorithm"]), files
+
+
 def validate_pack(root: Path, workspace: dict[str, Any]) -> list[Diagnostic]:
-    lock_rel = (
-        workspace.get("governance_pack", {}).get("lock")
-        if isinstance(workspace.get("governance_pack"), dict)
-        else None
-    )
-    if not isinstance(lock_rel, str):
-        return [
-            _diag(
-                "BROKEN_REFERENCE",
-                "governance_pack.lock",
-                "workspace",
-                [".governance/workspace.json"],
-                "pack lock reference is missing",
-                "declare a repo-relative lock path",
-            )
-        ]
+    lock_rel = workspace["governance_pack"]["lock"]
     try:
         lock = load_manifest_json(root / lock_rel)
-    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        pack_root = root / lock["pack_path"]
+        manifest = load_manifest_json(pack_root / "MANIFEST.json")
+        version = (
+            (pack_root / manifest["version_file"]).read_text(encoding="utf-8").strip()
+        )
+        actual, files = pack_hash(pack_root)
+    except (OSError, ValueError, TypeError, KeyError) as exc:
         return [
             _diag(
-                "BROKEN_REFERENCE",
-                "governance_pack.lock",
-                "workspace",
+                "PACK_DRIFT",
+                "governance_pack",
+                "shared_pack",
                 [lock_rel],
                 str(exc),
-                "restore a valid pack lock",
+                "restore a coherent pack and lock",
             )
         ]
-    pack_rel = lock.get("pack_path")
-    expected = lock.get("content_sha256")
-    if not isinstance(pack_rel, str) or not isinstance(expected, str):
+    usage = manifest.get("field_usage")
+    allowed_usage = {"consumed", "validation-only", "reserved-for-future-use"}
+    if (
+        not isinstance(usage, dict)
+        or set(usage) != set(manifest)
+        or set(usage.values()) - allowed_usage
+    ):
         return [
             _diag(
-                "BROKEN_REFERENCE",
-                "governance_pack.lock",
-                "workspace",
+                "PACK_DRIFT",
+                "MANIFEST.field_usage",
+                "shared_pack",
+                [f"{lock['pack_path']}/MANIFEST.json"],
+                "pack manifest fields are not completely classified",
+                "classify every manifest field",
+            )
+        ]
+    identity = {
+        "pack_name": manifest["name"],
+        "version": manifest["version"],
+        "revision": manifest["revision"],
+        "content_sha256": actual,
+        "files": files,
+        "lock_algorithm": manifest["lock_algorithm"],
+    }
+    for key, expected in identity.items():
+        if lock.get(key) != expected:
+            return [
+                _diag(
+                    "PACK_DRIFT",
+                    f"governance_pack.{key}",
+                    "shared_pack",
+                    [lock_rel, f"{lock['pack_path']}/MANIFEST.json"],
+                    "pack lock identity does not match the pack manifest/content",
+                    "run gov sync after reviewing the pack update",
+                )
+            ]
+    if (
+        version != manifest["version"]
+        or workspace["governance_pack"]["required_schema"] != manifest["schema_version"]
+    ):
+        return [
+            _diag(
+                "PACK_DRIFT",
+                "governance_pack.version",
+                "shared_pack",
                 [lock_rel],
-                "lock lacks pack_path or content_sha256",
-                "regenerate the lock with gov sync",
+                "pack version or required schema disagrees",
+                "install a compatible pack or update the workspace contract",
             )
         ]
-    pack_root = root / pack_rel
-    try:
-        version = (pack_root / "VERSION").read_text(encoding="utf-8").strip()
-        manifest = load_manifest_json(pack_root / "MANIFEST.json")
-    except (OSError, ValueError, TypeError) as exc:
+    if (
+        set(manifest["commands"]) != SUPPORTED_COMMANDS
+        or set(manifest["diagnostics"]) != DIAGNOSTIC_CLASSES
+    ):
         return [
             _diag(
                 "PACK_DRIFT",
-                pack_rel,
+                "MANIFEST.capabilities",
                 "shared_pack",
-                [lock_rel, pack_rel],
-                f"pack identity is incomplete: {exc}",
-                "restore the pinned pack contents before syncing",
-            )
-        ]
-    if lock.get("version") != version or manifest.get("version") != version:
-        return [
-            _diag(
-                "PACK_DRIFT",
-                pack_rel,
-                "shared_pack",
-                [lock_rel, f"{pack_rel}/VERSION", f"{pack_rel}/MANIFEST.json"],
-                "pack version identities disagree",
-                "install one coherent pack revision, then run gov sync",
-            )
-        ]
-    actual, actual_files = pack_hash(pack_root)
-    if lock.get("files") != actual_files:
-        return [
-            _diag(
-                "PACK_DRIFT",
-                pack_rel,
-                "shared_pack",
-                [lock_rel, pack_rel],
-                "locked file inventory does not match vendored pack contents",
-                "inspect the pack update, then run gov sync to accept it",
-            )
-        ]
-    if actual != expected:
-        return [
-            _diag(
-                "PACK_DRIFT",
-                pack_rel,
-                "shared_pack",
-                [lock_rel, pack_rel],
-                f"locked hash {expected} does not match content hash {actual}",
-                "inspect the pack update, then run gov sync to accept it",
+                [f"{lock['pack_path']}/MANIFEST.json"],
+                "declared commands or diagnostics do not match implementation",
+                "align the manifest with implemented capabilities",
             )
         ]
     return []
+
+
+def _python_specifier(root: Path, project: dict[str, Any]) -> tuple[str, str]:
+    environment = project["environment"]
+    authority_id = environment["python_requires"]["authority_ref"]
+    authority = next(
+        item for item in project["authorities"] if item["authority_id"] == authority_id
+    )
+    payload = tomllib.loads((root / authority["source"]).read_text(encoding="utf-8"))
+    value: object = payload
+    for token in environment["python_requires"]["source_field"].split("."):
+        value = value[token]
+    if not isinstance(value, str):
+        raise TypeError("Python requirement must be a string")
+    return value, authority["source"]
 
 
 def resolve_interpreter(
@@ -541,39 +741,81 @@ def resolve_interpreter(
     environ: dict[str, str] | None = None,
 ) -> tuple[Path | None, str, list[Diagnostic]]:
     env = os.environ if environ is None else environ
-    candidates: list[tuple[str, str]] = []
-    override_name = project.get("environment", {}).get("interpreter_override")
-    if isinstance(override_name, str) and env.get(override_name):
-        candidates.append((f"explicit override {override_name}", env[override_name]))
-    if local and isinstance(local.get("interpreter"), str):
-        candidates.append(("approved local overlay", local["interpreter"]))
-    preferred = project.get("environment", {}).get("preferred", ".venv/bin/python")
-    if isinstance(preferred, str):
-        candidates.append(("repository-local environment", preferred))
-    selected: tuple[Path, str] | None = None
-    for reason, raw in candidates:
-        path = Path(raw).expanduser()
-        if not path.is_absolute():
-            path = root / path
-        if path.is_file() and os.access(path, os.X_OK):
-            selected = (path.absolute(), reason)
-            break
-    if selected is None:
+    override = project["environment"]["interpreter_override"]
+    if env.get(override):
+        raw, reason = env[override], f"explicit override {override}"
+    elif local and local.get("interpreter"):
+        raw, reason = local["interpreter"], "approved local overlay"
+    else:
+        raw, reason = (
+            project["environment"]["preferred"],
+            "repository-local environment",
+        )
+    path = Path(raw).expanduser()
+    if not path.is_absolute():
+        path = root / path
+    if not path.is_file() or not os.access(path, os.X_OK):
         return (
             None,
-            "none",
+            reason,
             [
                 _diag(
                     "ENVIRONMENT_MISMATCH",
                     "python.interpreter",
                     "environment",
-                    [str(c[1]) for c in candidates],
-                    "no approved interpreter is executable",
-                    "set the approved override or create the repository-local environment",
+                    [str(path)],
+                    "highest-priority approved interpreter is not executable",
+                    "repair or remove that override; no fallback is permitted",
                 )
             ],
         )
-    return selected[0], selected[1], []
+    try:
+        specifier_text, source = _python_specifier(root, project)
+        from packaging.specifiers import SpecifierSet
+        from packaging.version import Version
+
+        probe = subprocess.run(
+            [str(path), "-c", "import platform; print(platform.python_version())"],
+            cwd=root,
+            text=True,
+            capture_output=True,
+            timeout=20,
+            check=False,
+        )
+        version = probe.stdout.strip()
+        if probe.returncode != 0 or Version(version) not in SpecifierSet(
+            specifier_text
+        ):
+            return (
+                None,
+                reason,
+                [
+                    _diag(
+                        "ENVIRONMENT_MISMATCH",
+                        "python.version",
+                        "project_metadata",
+                        [str(path), source],
+                        f"interpreter version {version or '<unknown>'} does not satisfy {specifier_text}",
+                        "select an approved interpreter satisfying project metadata",
+                    )
+                ],
+            )
+    except (OSError, ValueError, TypeError, KeyError, subprocess.TimeoutExpired) as exc:
+        return (
+            None,
+            reason,
+            [
+                _diag(
+                    "ENVIRONMENT_MISMATCH",
+                    "python.version",
+                    "environment",
+                    [str(path)],
+                    str(exc),
+                    "repair project metadata or the selected interpreter",
+                )
+            ],
+        )
+    return path.absolute(), reason, []
 
 
 def doctor(  # noqa: C901 - environment probes remain one deterministic transaction
@@ -584,69 +826,36 @@ def doctor(  # noqa: C901 - environment probes remain one deterministic transact
     route: str | None = None,
 ) -> tuple[dict[str, Any], list[Diagnostic]]:
     env = os.environ if environ is None else environ
-    interpreter, reason, issues = resolve_interpreter(root, project, local, environ)
-    dependency_spec = project.get("environment", {}).get("dependency_authority")
-    dependency_ref = (
-        dependency_spec.get("authority_ref")
-        if isinstance(dependency_spec, dict)
-        else None
-    )
-    dependency_entry = next(
-        (
-            item
-            for item in project.get("authorities", [])
-            if isinstance(item, dict) and item.get("authority_id") == dependency_ref
-        ),
-        None,
-    )
+    interpreter, reason, issues = resolve_interpreter(root, project, local, env)
+    requirement, requirement_source = _python_specifier(root, project)
     result: dict[str, Any] = {
         "status": "ENVIRONMENT_INVALID" if issues else "ok",
         "interpreter": str(interpreter) if interpreter else None,
         "selection_reason": reason,
-        "dependency_authority": dependency_entry.get("source")
-        if dependency_entry
-        else dependency_spec,
+        "python_requires": requirement,
+        "python_requires_source": requirement_source,
+        "dependency_authority": project["environment"]["dependency_authority"][
+            "source"
+        ],
     }
     if interpreter is None:
         return result, issues
-    environment = project.get("environment", {})
-    package_import = environment.get("package_import")
-    editable_source = environment.get("editable_source")
-    critical = environment.get("critical_packages", [])
-    if (
-        not isinstance(package_import, str)
-        or not package_import.isidentifier()
-        or not isinstance(editable_source, str)
-    ):
-        issues.append(
-            _diag(
-                "BROKEN_REFERENCE",
-                "environment.package_import",
-                "project",
-                ["config/governance/project.json"],
-                "package import or editable source metadata is invalid",
-                "declare a Python identifier and repo-relative source path",
-            )
-        )
-        result["status"] = "ENVIRONMENT_INVALID"
-        return result, issues
-    module_names = [package_import] + [
-        name
-        for name in critical
-        if isinstance(name, str) and name.isidentifier() and name != package_import
-    ]
-    probe = (
-        "import importlib,json,sys,pathlib; mods=[importlib.import_module(n) for n in "
-        + repr(module_names)
+    package_import = project["environment"]["package_import"]
+    modules = list(
+        dict.fromkeys([package_import, *project["environment"]["critical_packages"]])
+    )
+    probe_code = (
+        "import importlib,json,pathlib,platform; mods=[importlib.import_module(n) for n in "
+        + repr(modules)
         + "]; root=importlib.import_module("
         + repr(package_import)
-        + "); print(json.dumps({'version':list(sys.version_info[:3]),'package':str(pathlib.Path(root.__file__).resolve()),'critical_packages':"
-        + repr(module_names)
+        + "); print(json.dumps({'version':platform.python_version(),'package':str(pathlib.Path(root.__file__).resolve()),'critical_packages':"
+        + repr(modules)
         + "}))"
     )
     try:
-        proc = subprocess.run(
-            [str(interpreter), "-c", probe],
+        probe = subprocess.run(
+            [str(interpreter), "-c", probe_code],
             cwd=root,
             text=True,
             capture_output=True,
@@ -654,6 +863,7 @@ def doctor(  # noqa: C901 - environment probes remain one deterministic transact
             check=False,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
+        probe = None
         issues.append(
             _diag(
                 "ENVIRONMENT_MISMATCH",
@@ -661,76 +871,24 @@ def doctor(  # noqa: C901 - environment probes remain one deterministic transact
                 "environment",
                 [str(interpreter)],
                 str(exc),
-                "repair or replace the selected environment",
+                "repair the selected environment",
             )
         )
-        result["status"] = "ENVIRONMENT_INVALID"
-        return result, issues
-    if proc.returncode != 0:
+    if probe is not None and probe.returncode != 0:
         issues.append(
             _diag(
                 "ENVIRONMENT_MISMATCH",
                 "project.import",
                 "environment",
                 [str(interpreter)],
-                "project package or critical dependencies cannot be imported",
-                "install the current checkout with its declared development dependencies",
+                "project or critical package import failed",
+                "install current-checkout development dependencies",
             )
         )
-    else:
-        data = json.loads(proc.stdout)
+    elif probe is not None:
+        data = json.loads(probe.stdout)
         result.update(data)
-        requires_source = environment.get("python_requires", {})
-        authority_id = (
-            requires_source.get("authority_ref")
-            if isinstance(requires_source, dict)
-            else None
-        )
-        authority = next(
-            (
-                item
-                for item in project.get("authorities", [])
-                if isinstance(item, dict) and item.get("authority_id") == authority_id
-            ),
-            None,
-        )
-        authority_source = authority.get("source") if authority else None
-        source_text = (
-            (root / authority_source).read_text(encoding="utf-8")
-            if isinstance(authority_source, str) and (root / authority_source).is_file()
-            else ""
-        )
-        version_match = re.search(
-            r'^requires-python\s*=\s*">=(\d+)\.(\d+)"',
-            source_text,
-            re.MULTILINE,
-        )
-        if not version_match:
-            issues.append(
-                _diag(
-                    "BROKEN_REFERENCE",
-                    "environment.python_requires",
-                    "project_metadata",
-                    [str(authority_source or "<missing>")],
-                    "supported Python reference cannot be resolved",
-                    "declare an authority containing project.requires-python in >=major.minor form",
-                )
-            )
-            minimum = (sys.version_info.major + 1, 0)
-        else:
-            minimum = tuple(int(item) for item in version_match.groups())
-        if tuple(data["version"][:2]) < tuple(minimum):
-            issues.append(
-                _diag(
-                    "ENVIRONMENT_MISMATCH",
-                    "python.version",
-                    "project",
-                    [str(interpreter), "config/governance/project.json"],
-                    f"resolved Python {data['version'][0]}.{data['version'][1]} is below supported minimum",
-                    "recreate the environment with a supported Python",
-                )
-            )
-        expected = (root / editable_source).resolve()
+        expected = (root / project["environment"]["editable_source"]).resolve()
         actual = Path(data["package"]).parent
         if actual != expected:
             issues.append(
@@ -740,42 +898,38 @@ def doctor(  # noqa: C901 - environment probes remain one deterministic transact
                     "project",
                     [str(actual), str(expected)],
                     "editable install targets another checkout",
-                    "reinstall the selected environment editable from the current checkout",
+                    "reinstall editable from the current checkout",
                 )
             )
-    result["status"] = "ENVIRONMENT_INVALID" if issues else "ok"
     if route is not None:
-        route_spec = project.get("routes", {}).get(route)
-        if not isinstance(route_spec, dict):
+        route_spec = project["routes"].get(route)
+        if route_spec is None:
             issues.append(
                 _diag(
                     "BROKEN_REFERENCE",
                     f"route:{route}",
                     "project",
                     ["config/governance/project.json"],
-                    "requested doctor route is unknown",
+                    "requested route is unknown",
                     "select a declared route",
                 )
             )
         else:
-            route_tools = project.get("environment", {}).get("route_tools", {})
             observed: dict[str, str] = {}
+            local_tools = local.get("tool_paths", {}) if local else {}
             for tool_id in route_spec.get("environment_tools", []):
-                spec = (
-                    route_tools.get(tool_id, {})
-                    if isinstance(route_tools, dict)
-                    else {}
-                )
-                override = spec.get("override")
-                candidates = spec.get("candidates", [])
-                raw = env.get(override) if isinstance(override, str) else None
-                executable = raw or next(
-                    (
-                        shutil.which(item)
-                        for item in candidates
-                        if isinstance(item, str) and shutil.which(item)
-                    ),
-                    None,
+                spec = project["environment"]["route_tools"][tool_id]
+                executable = (
+                    local_tools.get(tool_id)
+                    or env.get(spec["override"])
+                    or next(
+                        (
+                            shutil.which(item)
+                            for item in spec["candidates"]
+                            if shutil.which(item)
+                        ),
+                        None,
+                    )
                 )
                 if not executable:
                     issues.append(
@@ -783,34 +937,21 @@ def doctor(  # noqa: C901 - environment probes remain one deterministic transact
                             "ENVIRONMENT_MISMATCH",
                             f"tool:{tool_id}",
                             "environment",
-                            [str(override or tool_id)],
+                            [spec["override"]],
                             "route-required tool is unavailable",
-                            "set the approved tool override or install the declared tool",
+                            "configure local tool_paths, the approved override, or install it",
                         )
                     )
                     continue
-                try:
-                    version = subprocess.run(
-                        [executable, *spec.get("version_args", ["--version"])],
-                        cwd=root,
-                        text=True,
-                        capture_output=True,
-                        timeout=20,
-                        check=False,
-                    )
-                except (OSError, subprocess.TimeoutExpired) as exc:
-                    issues.append(
-                        _diag(
-                            "ENVIRONMENT_MISMATCH",
-                            f"tool:{tool_id}",
-                            "environment",
-                            [executable],
-                            str(exc),
-                            "repair the route tool installation",
-                        )
-                    )
-                    continue
-                if version.returncode != 0:
+                version = subprocess.run(
+                    [executable, *spec["version_args"]],
+                    cwd=root,
+                    text=True,
+                    capture_output=True,
+                    timeout=20,
+                    check=False,
+                )
+                if version.returncode:
                     issues.append(
                         _diag(
                             "ENVIRONMENT_MISMATCH",
@@ -818,7 +959,7 @@ def doctor(  # noqa: C901 - environment probes remain one deterministic transact
                             "environment",
                             [executable],
                             "route tool version probe failed",
-                            "repair the route tool installation",
+                            "repair the tool",
                         )
                     )
                 else:

@@ -3,18 +3,33 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
-# Governance checks are dependency-light. Prefer an explicit governance runtime,
-# then the repository environment; use python3 only as the bootstrap for checks
-# that diagnose or create the project environment.
+# The bootstrap runtime only imports the generic interpreter resolver. Every
+# governance command is then executed by the interpreter that resolver selects.
 if [[ -n "${GOVERNANCE_PYTHON:-}" ]]; then
-  GOV_RUNTIME="$GOVERNANCE_PYTHON"
+  GOV_BOOTSTRAP="$GOVERNANCE_PYTHON"
 elif [[ -x ".venv/bin/python" ]]; then
-  GOV_RUNTIME=".venv/bin/python"
-elif command -v python3 >/dev/null 2>&1; then
-  GOV_RUNTIME="$(command -v python3)"
+  GOV_BOOTSTRAP=".venv/bin/python"
 else
-  echo "governance runtime unavailable; set GOVERNANCE_PYTHON or create .venv" >&2
+  echo "governance bootstrap unavailable; set GOVERNANCE_PYTHON or create .venv" >&2
   exit 1
 fi
+
+GOV_RUNTIME="$("$GOV_BOOTSTRAP" - <<'PY'
+from pathlib import Path
+
+from tools.workspace_governance.resolver.core import GovernanceResolver
+from tools.workspace_governance.validators.core import resolve_interpreter
+
+root = Path.cwd()
+resolver = GovernanceResolver.for_root(root)
+_, project, local = resolver.load()
+interpreter, _, issues = resolve_interpreter(root, project, local)
+if issues:
+    for issue in issues:
+        print(f"{issue.code}: {issue.fact}: {issue.reason}", file=__import__("sys").stderr)
+    raise SystemExit(1)
+print(interpreter)
+PY
+)"
 
 exec "$GOV_RUNTIME" tools/workspace_governance/cli/gov.py "$@"

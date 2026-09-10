@@ -120,10 +120,12 @@ CODEX_MODE=1 ./scripts/verify.sh
 ```
 
 Governed project checks resolve Python once through
-`scripts/resolve_python_env.sh`. They prefer `.venv`, accept the explicit
-`TET4D_PYTHON` override, and do not require shell activation. `./verify.sh` and
-`./verify.sh --verbose` execute identical checks with identical environment and
-pass/fail semantics; verbose mode changes logging only.
+`scripts/resolve_python_env.sh`. Priority is the explicit `TET4D_PYTHON`
+override, then the ignored workspace-local interpreter, then `.venv`; no valid
+candidate is `ENVIRONMENT_INVALID`. `PYTHON_BIN` only carries the resolved
+output to child processes. `./scripts/verify.sh` and
+`./scripts/verify.sh --verbose` execute identical checks with identical
+environment and pass/fail semantics; verbose mode changes logging only.
 
 Run `CODEX_MODE=1 ./scripts/verify.sh` for authority changes, governance,
 broad shared infrastructure, material uncertainty, reviewer requests, release

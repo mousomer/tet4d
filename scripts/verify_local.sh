@@ -34,8 +34,8 @@ else
   exit 1
 fi
 
-if ! "$BOOTSTRAP_BIN" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)' >/dev/null 2>&1; then
-  echo "local verify: bootstrap Python is unavailable or unsupported: ${BOOTSTRAP_BIN}" >&2
+if ! "$BOOTSTRAP_BIN" -c 'import sys' >/dev/null 2>&1; then
+  echo "local verify: bootstrap Python is unavailable: ${BOOTSTRAP_BIN}" >&2
   exit 1
 fi
 
@@ -103,7 +103,7 @@ if [[ ! -f "$FINGERPRINT_PATH" || "$(<"$FINGERPRINT_PATH")" != "$fingerprint" ]]
   : >"$LOG_PATH"
   run_bootstrap_phase "dependency installation" "$VENV_PYTHON" -m pip install --disable-pip-version-check --no-input --quiet -e '.[dev]'
   printf '%s\n' "$fingerprint" >"$FINGERPRINT_PATH"
-elif ! PYTHON_BIN="$VENV_PYTHON" ./scripts/check_editable_install.sh >/dev/null 2>&1; then
+elif ! TET4D_PYTHON="$VENV_PYTHON" ./scripts/check_editable_install.sh >/dev/null 2>&1; then
   echo "local verify: repairing editable installation"
   : >"$LOG_PATH"
   run_bootstrap_phase "editable installation repair" "$VENV_PYTHON" -m pip install --disable-pip-version-check --no-input --quiet -e '.[dev]'
@@ -112,7 +112,7 @@ else
   echo "local verify: venv cached"
 fi
 
-if ! PYTHON_BIN="$VENV_PYTHON" ./scripts/check_editable_install.sh; then
+if ! TET4D_PYTHON="$VENV_PYTHON" ./scripts/check_editable_install.sh; then
   echo "local verify: editable installation does not belong to this worktree" >&2
   exit 1
 fi
@@ -122,4 +122,4 @@ if [[ "$BOOTSTRAP_ONLY" == "1" ]]; then
 fi
 
 echo "local verify: running repository gate"
-exec env PYTHON_BIN="$VENV_PYTHON" CODEX_MODE="${CODEX_MODE:-1}" QUIET="${QUIET:-1}" ./scripts/verify.sh
+exec env TET4D_PYTHON="$VENV_PYTHON" CODEX_MODE="${CODEX_MODE:-1}" QUIET="${QUIET:-1}" ./scripts/verify.sh

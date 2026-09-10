@@ -1,10 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "type": "object", "additionalProperties": false,
-  "required": ["schema_version"],
+  "type": "object", "additionalProperties": false, "required": ["schema_version"],
   "properties": {
-    "schema_version": {"const": 1},
-    "interpreter": {"type": "string"}, "tool_paths": {"type": "object"},
-    "checkout_locations": {"type": "object"}, "cache_locations": {"type": "object"}
+    "schema_version": {"const": 1, "x-governance-use": "validation-only"},
+    "interpreter": {"type": "string", "minLength": 1, "x-governance-use": "consumed"},
+    "tool_paths": {"type": "object", "x-governance-use": "consumed", "additionalProperties": {"type": "string", "minLength": 1}},
+    "checkout_locations": {"type": "object", "maxProperties": 0, "x-governance-use": "reserved-for-future-use"},
+    "cache_locations": {"type": "object", "maxProperties": 0, "x-governance-use": "reserved-for-future-use"}
   }
 }

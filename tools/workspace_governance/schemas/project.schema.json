@@ -1,13 +1,67 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "type": "object",
-  "additionalProperties": false,
-  "required": ["schema_version", "project", "authorities", "routes", "verification", "execution", "generated_surfaces", "environment", "sanitation", "compatibility"],
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "project", "authorities", "routes", "verification", "execution", "generated_surfaces", "environment", "sanitation"],
   "properties": {
-    "schema_version": {"const": 1}, "project": {"type": "object"},
-    "authorities": {"type": "array"}, "routes": {"type": "object"},
-    "verification": {"type": "object"}, "execution": {"type": "object"},
-    "generated_surfaces": {"type": "array"}, "environment": {"type": "object"},
-    "sanitation": {"type": "object"}, "compatibility": {"type": "object"}
+    "schema_version": {"const": 1, "x-governance-use": "validation-only"},
+    "project": {"type": "object", "additionalProperties": false, "required": ["id", "name"], "x-governance-use": "consumed", "properties": {
+      "id": {"type": "string", "minLength": 1, "x-governance-use": "consumed"},
+      "name": {"type": "string", "minLength": 1, "x-governance-use": "consumed"}
+    }},
+    "authorities": {"type": "array", "minItems": 1, "x-governance-use": "consumed", "items": {"type": "object", "additionalProperties": false, "required": ["authority_id", "authority_type", "scope", "source", "exclusive", "canonical_governance"], "properties": {
+      "authority_id": {"type": "string", "minLength": 1, "x-governance-use": "consumed"},
+      "authority_type": {"type": "string", "enum": ["human", "alias", "compatibility", "project_metadata"], "x-governance-use": "consumed"},
+      "scope": {"type": "string", "minLength": 1, "x-governance-use": "consumed"},
+      "source": {"type": "string", "minLength": 1, "x-governance-use": "consumed"},
+      "exclusive": {"type": "boolean", "x-governance-use": "consumed"},
+      "canonical_governance": {"type": "boolean", "x-governance-use": "consumed"},
+      "legacy_key": {"type": "string", "minLength": 1, "x-governance-use": "consumed"},
+      "alias_of": {"type": "string", "minLength": 1, "x-governance-use": "consumed"}
+    }}},
+    "routes": {"type": "object", "minProperties": 1, "x-governance-use": "consumed", "additionalProperties": {"type": "object", "additionalProperties": false, "required": ["authority_refs", "dispatch_paths", "typical_verification_requirements"], "properties": {
+      "authority_refs": {"type": "array", "minItems": 1, "uniqueItems": true, "x-governance-use": "consumed", "items": {"type": "string", "minLength": 1}},
+      "dispatch_paths": {"type": "array", "uniqueItems": true, "x-governance-use": "consumed", "items": {"type": "string", "minLength": 1}},
+      "typical_verification_requirements": {"type": "array", "minItems": 1, "uniqueItems": true, "x-governance-use": "consumed", "items": {"type": "string", "minLength": 1}},
+      "environment_tools": {"type": "array", "uniqueItems": true, "x-governance-use": "consumed", "items": {"type": "string", "minLength": 1}}
+    }}},
+    "verification": {"type": "object", "additionalProperties": false, "required": ["canonical", "full", "targeted", "rule"], "x-governance-use": "consumed", "properties": {
+      "canonical": {"type": "object", "additionalProperties": false, "required": ["authority_ref", "json_pointer"], "x-governance-use": "consumed", "properties": {
+        "authority_ref": {"type": "string", "x-governance-use": "consumed"}, "json_pointer": {"type": "string", "x-governance-use": "consumed"}
+      }},
+      "full": {"type": "object", "additionalProperties": false, "required": ["authority_ref", "json_pointer"], "x-governance-use": "consumed", "properties": {
+        "authority_ref": {"type": "string", "x-governance-use": "consumed"}, "json_pointer": {"type": "string", "x-governance-use": "consumed"}
+      }},
+      "targeted": {"type": "string", "minLength": 1, "x-governance-use": "consumed"},
+      "rule": {"type": "string", "minLength": 1, "x-governance-use": "consumed"}
+    }},
+    "execution": {"type": "object", "additionalProperties": false, "required": ["default_mode", "profiles", "representative_scenarios"], "x-governance-use": "consumed", "properties": {
+      "default_mode": {"type": "string", "enum": ["LOCAL_FIX", "FEATURE", "STRUCTURAL_CHANGE"], "x-governance-use": "consumed"},
+      "profiles": {"type": "object", "minProperties": 3, "x-governance-use": "consumed", "additionalProperties": {"type": "object", "additionalProperties": false, "required": ["exploration", "routes", "final_evidence_rule"], "properties": {
+        "exploration": {"type": "array", "minItems": 1, "x-governance-use": "consumed", "items": {"type": "string"}},
+        "routes": {"type": "array", "minItems": 1, "x-governance-use": "consumed", "items": {"type": "string"}},
+        "final_evidence_rule": {"type": "string", "minLength": 1, "x-governance-use": "consumed"}
+      }}},
+      "representative_scenarios": {"type": "array", "x-governance-use": "consumed", "items": {"type": "object", "additionalProperties": false, "required": ["id", "match_all", "mode", "routes"], "properties": {
+        "id": {"type": "string", "x-governance-use": "consumed"}, "match_all": {"type": "array", "minItems": 1, "x-governance-use": "consumed", "items": {"type": "string"}},
+        "mode": {"type": "string", "x-governance-use": "consumed"}, "routes": {"type": "array", "minItems": 1, "x-governance-use": "consumed", "items": {"type": "string"}}
+      }}}
+    }},
+    "generated_surfaces": {"type": "array", "minItems": 1, "x-governance-use": "consumed", "items": {"type": "object", "additionalProperties": false, "required": ["surface_id", "kind", "source", "target", "transform"], "properties": {
+      "surface_id": {"type": "string", "x-governance-use": "consumed"}, "kind": {"const": "compatibility_facade", "x-governance-use": "consumed"},
+      "source": {"type": "string", "x-governance-use": "consumed"}, "target": {"type": "string", "x-governance-use": "consumed"}, "transform": {"enum": ["authority-legacy-key-route-v1"], "x-governance-use": "consumed"}
+    }}},
+    "environment": {"type": "object", "additionalProperties": false, "required": ["python_requires", "dependency_authority", "preferred", "interpreter_override", "package_import", "editable_source", "critical_packages", "route_tools"], "x-governance-use": "consumed", "properties": {
+      "python_requires": {"type": "object", "additionalProperties": false, "required": ["authority_ref", "source_field"], "x-governance-use": "consumed", "properties": {"authority_ref": {"type": "string", "x-governance-use": "consumed"}, "source_field": {"type": "string", "x-governance-use": "consumed"}}},
+      "dependency_authority": {"type": "object", "additionalProperties": false, "required": ["authority_ref", "source"], "x-governance-use": "consumed", "properties": {"authority_ref": {"type": "string", "x-governance-use": "consumed"}, "source": {"type": "string", "x-governance-use": "consumed"}}},
+      "preferred": {"type": "string", "x-governance-use": "consumed"}, "interpreter_override": {"type": "string", "x-governance-use": "consumed"},
+      "package_import": {"type": "string", "x-governance-use": "consumed"}, "editable_source": {"type": "string", "x-governance-use": "consumed"},
+      "critical_packages": {"type": "array", "minItems": 1, "x-governance-use": "consumed", "items": {"type": "string"}},
+      "route_tools": {"type": "object", "x-governance-use": "consumed", "additionalProperties": {"type": "object", "additionalProperties": false, "required": ["override", "candidates", "version_args"], "properties": {
+        "override": {"type": "string", "x-governance-use": "consumed"}, "candidates": {"type": "array", "x-governance-use": "consumed", "items": {"type": "string"}}, "version_args": {"type": "array", "x-governance-use": "consumed", "items": {"type": "string"}}
+      }}}
+    }},
+    "sanitation": {"type": "object", "additionalProperties": false, "required": ["secret_scanner", "repository_check", "bounded_diagnostics"], "x-governance-use": "validation-only", "properties": {
+      "secret_scanner": {"type": "string", "x-governance-use": "validation-only"}, "repository_check": {"type": "string", "x-governance-use": "validation-only"}, "bounded_diagnostics": {"type": "integer", "minimum": 1, "x-governance-use": "validation-only"}
+    }}
   }
 }

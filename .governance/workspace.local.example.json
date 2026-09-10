@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "interpreter": ".venv/bin/python",
+  "tool_paths": {},
+  "checkout_locations": {},
+  "cache_locations": {}
+}

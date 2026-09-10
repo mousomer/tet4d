@@ -30,7 +30,10 @@ No active handoff.
 
 ## Current Authority
 
-- Machine governance and task routing: `config/project/policy_pack.json`
+- Workspace/project routing: `.governance/workspace.json` and
+  `config/governance/project.json`
+- Unmigrated machine governance and route compatibility facade:
+  `config/project/policy_pack.json`
 - Contributor dispatch: `AGENTS.md`
 - Canonical human governance: the six owner files under `docs/governance/`
 - Product behaviour: relevant `docs/rds/*`
@@ -41,8 +44,9 @@ No active handoff.
 
 ## Next Acceptance Boundary
 
-Review the focused product-boundary PR. Durable open work and release-matrix
-deferrals remain in `docs/BACKLOG.md`.
+Review the verified workspace-governance v0.1 integrity repair without extracting
+another policy family. Durable open work and release-matrix deferrals remain in
+`docs/BACKLOG.md`.
 
 Sections with `BEGIN/END GENERATED:*` markers are maintained by
 `tools/governance/generate_maintenance_docs.py`.
