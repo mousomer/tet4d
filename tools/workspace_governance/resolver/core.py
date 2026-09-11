@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -13,15 +14,24 @@ from tools.workspace_governance.validators.core import (
 )
 
 USER_OVERLAY_DIR = "workspace-governance"
+# A workspace id becomes a filename, so it may not contain anything that could
+# address a different directory. The shell bootstrap resolver applies the same
+# rule; both derive one path and must agree on what is addressable.
+SAFE_WORKSPACE_ID = re.compile(r"^[A-Za-z0-9._-]+$")
 
 
-def user_overlay_path(workspace_id: str, environ: dict[str, str] | None = None) -> Path:
+def user_overlay_path(
+    workspace_id: str, environ: dict[str, str] | None = None
+) -> Path | None:
     """Locate the machine-wide overlay shared by every checkout of a workspace.
 
     Keyed by workspace identity rather than checkout path so a worktree
     inherits it wherever it lives, and honouring XDG_CONFIG_HOME so a test or
-    an operator can substitute an isolated configuration root.
+    an operator can substitute an isolated configuration root. Returns None for
+    an identity that cannot safely become a filename.
     """
+    if not SAFE_WORKSPACE_ID.match(workspace_id):
+        return None
     env = os.environ if environ is None else environ
     base = env.get("XDG_CONFIG_HOME") or str(Path.home() / ".config")
     return Path(base).expanduser() / USER_OVERLAY_DIR / f"{workspace_id}.local.json"
@@ -56,7 +66,7 @@ class GovernanceResolver:
             if len(members) == 1:
                 project_path = root / members[0]["repository"] / members[0]["manifest"]
             inherited = user_overlay_path(str(workspace["workspace_id"]))
-            if inherited.is_file():
+            if inherited is not None and inherited.is_file():
                 user_local = inherited
         except (OSError, ValueError, TypeError, KeyError):
             # check() owns the bounded diagnostic; construction remains total.

@@ -224,3 +224,30 @@ def test_bootstrap_never_selects_an_interpreter_nested_under_tool_paths(
     assert refused.returncode == 1
     assert "bootstrap.interpreter" in refused.stderr
     assert str(decoy) not in refused.stdout
+
+
+def test_an_unsafe_workspace_identity_addresses_no_overlay(
+    isolated_user_overlay: Path,
+) -> None:
+    """The identity becomes a filename, so it may not address another directory.
+
+    `resolve_bootstrap_python.sh` applies the same rule; the two resolvers derive
+    one path and must agree on what is addressable.
+    """
+    env = {"XDG_CONFIG_HOME": str(isolated_user_overlay)}
+    assert user_overlay_path(WORKSPACE_ID, env) is not None
+    for unsafe in ("../../../tmp/evil", "a/b", "", "we..ird/../x"):
+        assert user_overlay_path(unsafe, env) is None
+
+
+def test_an_unsafe_workspace_identity_does_not_inherit(
+    checkout: Path, isolated_user_overlay: Path
+) -> None:
+    declare(isolated_user_overlay, {"schema_version": 1, "interpreter": sys.executable})
+    manifest = checkout / ".governance/workspace.json"
+    payload = json.loads(manifest.read_text())
+    payload["workspace_id"] = "../../../tmp/evil"
+    write(manifest, payload)
+    resolver = GovernanceResolver.for_root(checkout)
+    assert resolver.user_local_path is None
+    assert resolver.local_overlay() == (None, {})

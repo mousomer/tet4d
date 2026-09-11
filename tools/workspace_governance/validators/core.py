@@ -25,6 +25,10 @@ SCHEMA_FILES = {
     "project": "schemas/project.schema.json",
     "local": "schemas/workspace-local.schema.json",
 }
+# The modes the resolver implements. Not a per-project choice, so it is code
+# rather than manifest: a project may say which variable carries the mode and
+# what it defaults to, never invent a third meaning for it.
+EXECUTION_MODES = ("source", "installed")
 OVERLAY_REASONS = {
     "local": "approved local overlay",
     "workspace": "inherited workspace overlay",
@@ -1029,6 +1033,42 @@ def resolve_interpreter(
     return path.absolute(), reason, []
 
 
+def resolve_execution_mode(
+    project: dict[str, Any], environ: dict[str, str] | None = None
+) -> tuple[str, str, list[Diagnostic]]:
+    """Declare whether the project runs from a checkout or an installed dist.
+
+    This is declared and never inferred. Whether `tet4d` is imported from a
+    checkout or from an installed distribution decides which dependency
+    metadata is truthful, and reading that back from whichever source happens
+    to answer would make the check agree with any environment it runs in --
+    including one holding another worktree's stale build artifacts.
+    """
+    env = os.environ if environ is None else environ
+    spec = project["environment"]["execution_mode"]
+    override = spec["override"]
+    if env.get(override):
+        mode, reason = env[override], f"explicit override {override}"
+    else:
+        mode, reason = spec["default"], "declared project default"
+    if mode not in EXECUTION_MODES:
+        return (
+            mode,
+            reason,
+            [
+                _diag(
+                    "CONFLICTING_VALUE",
+                    "environment.execution_mode",
+                    "environment",
+                    [mode, override],
+                    "execution mode is not one this resolver implements",
+                    f"select one of {', '.join(EXECUTION_MODES)}",
+                )
+            ],
+        )
+    return mode, reason, []
+
+
 def doctor(  # noqa: C901 - environment probes remain one deterministic transaction
     root: Path,
     project: dict[str, Any],
@@ -1042,6 +1082,10 @@ def doctor(  # noqa: C901 - environment probes remain one deterministic transact
     interpreter, reason, issues = resolve_interpreter(
         root, project, local, env, local_tiers=local_tiers
     )
+    execution_mode, execution_mode_reason, mode_issues = resolve_execution_mode(
+        project, env
+    )
+    issues.extend(mode_issues)
     try:
         requirement, requirement_source = _python_specifier(root, project)
     except (
@@ -1067,6 +1111,8 @@ def doctor(  # noqa: C901 - environment probes remain one deterministic transact
         "status": "ENVIRONMENT_INVALID" if issues else "ok",
         "interpreter": str(interpreter) if interpreter else None,
         "selection_reason": reason,
+        "execution_mode": execution_mode,
+        "execution_mode_reason": execution_mode_reason,
         "python_requires": requirement,
         "python_requires_source": requirement_source,
         "dependency_authority": project["environment"]["dependency_authority"][

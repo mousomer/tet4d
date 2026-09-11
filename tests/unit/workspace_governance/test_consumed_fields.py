@@ -112,7 +112,13 @@ def _observe(root: Path, calls: list) -> str:
         for overlay in (None, local):
             for env in (
                 {},
-                {"TET4D_PYTHON": sys.executable, "GODOT_BIN": sys.executable},
+                {
+                    "TET4D_PYTHON": sys.executable,
+                    "GODOT_BIN": sys.executable,
+                    # A declared override needs a value here, or renaming the
+                    # variable it reads has nothing to observe.
+                    "TET4D_ENVIRONMENT_MODE": "source",
+                },
             ):
                 data, issues = core.doctor(
                     root, project, overlay, env, route="godot_product_shell"

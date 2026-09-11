@@ -44,6 +44,13 @@ refusal previously fired on every worktree here. Deferred to the `verify_local`
 retirement/rework rather than patched under bootstrap inheritance; symlink-farm
 removal remains blocked until then.
 
+Constraint for any future dependency fingerprint over an inherited environment:
+a digest of project inputs records what this repository declares, not what the
+shared environment contains, and projects outside this workspace mutate that
+environment. Treat an unchanged fingerprint as an optimisation, never as
+evidence the environment still satisfies the declaration; keep a content check
+as the correctness statement. `packaging>=24` is the worked example.
+
 ### Camera and relative-control contract
 
 Unify the Godot presentation contract for exact camera basis turns, slice
