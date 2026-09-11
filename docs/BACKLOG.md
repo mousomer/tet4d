@@ -58,8 +58,9 @@ Acceptance boundary:
 
 Cockpit allocation, NEXT/HOLD redesign, grid/spacing polish, and issues
 #69/#70 remain separate PR3–PR5 work. Stage 55 semantic export is available
-only as reproducible, non-authoritative investigation tooling; it is not a
-canonical design workflow and its generated captures remain untracked.
+only as reproducible, non-authoritative investigation tooling. Its compact
+projection retains runtime provenance when generated wrappers are elided; it
+is not a canonical design workflow and its generated captures remain untracked.
 
 ### Stage 56 cockpit completion
 
