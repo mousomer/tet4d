@@ -2,7 +2,7 @@
   "schema_version": 1,
   "name": "workspace-governance",
   "version": "0.1.0",
-  "revision": "v0.1-integrity-3",
+  "revision": "v0.1-integrity-4",
   "version_file": "VERSION",
   "lock_algorithm": "sha256-path-and-content-v1",
   "pack_hash_excludes": [

@@ -59,6 +59,16 @@ a repository overlay naming only `tool_paths` keeps the inherited interpreter.
 compatibility state only. `GOVERNANCE_PYTHON` selects only the CLI bootstrap and
 cannot affect certification. `resolve_python_env.sh` delegates to `gov doctor`.
 
+An inherited interpreter may be shared with projects outside this workspace, so
+its `site-packages` is not inert and is not governed from here. A third-party
+distribution can ship a generic top-level package, and a regular package
+anywhere on `sys.path` beats a namespace portion, so repository code and tests
+must never import an ambiguous top-level name such as `tests`: sibling test
+helpers are imported directly, which is the standard pytest prepend-mode form
+and needs no package at all. The constraint is permanent while the interpreter
+is shared, and it is invisible from inside the repository, because the same
+import succeeds under a private `.venv` that lacks the offending distribution.
+
 `gov doctor` verifies interpreter/version selection, import and editable-install
 origin, dependency authority, and reports `ENVIRONMENT_INVALID` via
 `ENVIRONMENT_MISMATCH` diagnostics. Godot inspection remains route-specific and
