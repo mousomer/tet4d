@@ -147,6 +147,10 @@
     "dependency_authority": {"authority_ref": "python-project-metadata", "source": "pyproject.toml"},
     "preferred": ".venv/bin/python",
     "interpreter_override": "TET4D_PYTHON",
+    "execution_mode": {
+      "override": "TET4D_ENVIRONMENT_MODE",
+      "default": "installed"
+    },
     "package_import": "tet4d",
     "editable_source": "src/tet4d",
     "critical_packages": ["tet4d", "pytest", "ruff", "packaging"],
