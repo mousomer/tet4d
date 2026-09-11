@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -10,6 +11,20 @@ from tools.workspace_governance.validators.core import (
     validate_manifests,
     validate_pack,
 )
+
+USER_OVERLAY_DIR = "workspace-governance"
+
+
+def user_overlay_path(workspace_id: str, environ: dict[str, str] | None = None) -> Path:
+    """Locate the machine-wide overlay shared by every checkout of a workspace.
+
+    Keyed by workspace identity rather than checkout path so a worktree
+    inherits it wherever it lives, and honouring XDG_CONFIG_HOME so a test or
+    an operator can substitute an isolated configuration root.
+    """
+    env = os.environ if environ is None else environ
+    base = env.get("XDG_CONFIG_HOME") or str(Path.home() / ".config")
+    return Path(base).expanduser() / USER_OVERLAY_DIR / f"{workspace_id}.local.json"
 
 
 class GovernanceError(ValueError):
@@ -24,12 +39,14 @@ class GovernanceResolver:
     workspace_path: Path
     project_path: Path
     local_path: Path | None
+    user_local_path: Path | None = None
 
     @classmethod
     def for_root(cls, root: Path) -> GovernanceResolver:
         root = root.resolve()
         workspace_path = root / ".governance/workspace.json"
         project_path = root / "config/governance/project.json"
+        user_local: Path | None = None
         try:
             workspace = load_manifest_json(workspace_path)
             default_id = workspace["defaults"]["project"]
@@ -38,19 +55,51 @@ class GovernanceResolver:
             ]
             if len(members) == 1:
                 project_path = root / members[0]["repository"] / members[0]["manifest"]
+            inherited = user_overlay_path(str(workspace["workspace_id"]))
+            if inherited.is_file():
+                user_local = inherited
         except (OSError, ValueError, TypeError, KeyError):
             # check() owns the bounded diagnostic; construction remains total.
             pass
         local = root / ".governance/workspace.local.json"
         return cls(
-            root, workspace_path, project_path, local if local.exists() else None
+            root,
+            workspace_path,
+            project_path,
+            local if local.exists() else None,
+            user_local,
         )
+
+    def local_documents(self) -> list[tuple[dict[str, Any], str, str]]:
+        """Return overlays lowest-precedence first as (payload, tier, source)."""
+        documents: list[tuple[dict[str, Any], str, str]] = []
+        for path, tier in (
+            (self.user_local_path, "workspace"),
+            (self.local_path, "local"),
+        ):
+            if path is not None:
+                documents.append((load_manifest_json(path), tier, self._source(path)))
+        return documents
+
+    def local_overlay(self) -> tuple[dict[str, Any] | None, dict[str, str]]:
+        """Layer overlays per key so a repository setting overrides an inherited one.
+
+        Merging by key rather than by document keeps a repository overlay that
+        names only `tool_paths` from silently discarding the inherited
+        interpreter.
+        """
+        merged: dict[str, Any] = {}
+        tiers: dict[str, str] = {}
+        for payload, tier, _ in self.local_documents():
+            for key, value in payload.items():
+                merged[key], tiers[key] = value, tier
+        return (merged or None), tiers
 
     def load(self) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any] | None]:
         return (
             load_manifest_json(self.workspace_path),
             load_manifest_json(self.project_path),
-            load_manifest_json(self.local_path) if self.local_path else None,
+            self.local_overlay()[0],
         )
 
     def _source(self, path: Path) -> str:
@@ -60,6 +109,25 @@ class GovernanceResolver:
             return str(path)
 
     def check(self) -> list[Diagnostic]:
+        try:
+            documents = self.local_documents()
+        except (OSError, ValueError, TypeError, KeyError) as exc:
+            # Name the overlays themselves: a malformed inherited overlay must
+            # not be reported against the tracked workspace manifests.
+            return [
+                Diagnostic(
+                    "BROKEN_REFERENCE",
+                    "manifest",
+                    "local",
+                    tuple(
+                        self._source(path)
+                        for path in (self.user_local_path, self.local_path)
+                        if path is not None
+                    ),
+                    str(exc),
+                    "restore valid strict JSON in the local interpreter overlays",
+                )
+            ]
         try:
             workspace, project, local = self.load()
             lock = load_manifest_json(self.root / workspace["governance_pack"]["lock"])
@@ -79,7 +147,12 @@ class GovernanceResolver:
                 )
             ]
         return validate_manifests(
-            self.root, workspace, project, local, pack_root=pack_root
+            self.root,
+            workspace,
+            project,
+            local,
+            pack_root=pack_root,
+            local_documents=[(payload, source) for payload, _, source in documents],
         ) + validate_pack(self.root, workspace)
 
     def resolve(

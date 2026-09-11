@@ -12,10 +12,13 @@ governance certifies. Do not set `PYTHON_BIN` as an input; it now only carries a
 resolved path to child processes.
 
 The certified chain is `TET4D_PYTHON`, then the `interpreter` key in the ignored
-`.governance/workspace.local.json` (where the workspace venv belongs; copy
-`.governance/workspace.local.example.json`), then the repository `.venv`, else
-`ENVIRONMENT_INVALID`. It never falls back, so a broken higher tier fails rather
-than silently selecting another interpreter.
+`.governance/workspace.local.json` (copy `.governance/workspace.local.example.json`),
+then the same key in the inherited workspace overlay at
+`${XDG_CONFIG_HOME:-~/.config}/workspace-governance/<workspace_id>.local.json`,
+then the repository `.venv`, else `ENVIRONMENT_INVALID`. Declare a machine's
+shared venv in the inherited overlay once and every worktree picks it up; the
+repository overlay is for overriding a single checkout. It never falls back, so
+a broken higher tier fails rather than silently selecting another interpreter.
 
 `config/governance/project.json#/environment` and
 `docs/architecture/workspace_governance_v0_1.md` are the authority; this file is

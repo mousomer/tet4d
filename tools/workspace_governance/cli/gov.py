@@ -113,8 +113,11 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "sync":
             _emit(_sync(root, resolver), as_json=args.json)
             return 0
-        _, project, local = resolver.load()
-        result, issues = doctor(root, project, local, route=args.route)
+        _, project, _ = resolver.load()
+        local, local_tiers = resolver.local_overlay()
+        result, issues = doctor(
+            root, project, local, route=args.route, local_tiers=local_tiers
+        )
         if args.print_interpreter and not issues:
             print(result["interpreter"])
         elif args.print_interpreter:

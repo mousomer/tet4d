@@ -44,8 +44,14 @@ demonstrated.
 ## Environment contract
 
 The Python constraint and dependencies are owned by `pyproject.toml`. The one
-semantic priority is `TET4D_PYTHON`, then the approved local-overlay interpreter,
-then repository `.venv`, else `ENVIRONMENT_INVALID`. `PYTHON_BIN` is output
+semantic priority is `TET4D_PYTHON`, then the approved repository-overlay
+interpreter, then the inherited workspace overlay, then repository `.venv`, else
+`ENVIRONMENT_INVALID`. The inherited overlay lives at
+`${XDG_CONFIG_HOME:-~/.config}/workspace-governance/<workspace_id>.local.json`;
+being keyed by workspace identity rather than checkout path, one declaration
+serves every worktree wherever it sits, including those outside any common
+parent directory. The two overlays merge per key, so a repository overlay naming
+only `tool_paths` keeps the inherited interpreter. `PYTHON_BIN` is output
 compatibility state only. `GOVERNANCE_PYTHON` selects only the CLI bootstrap and
 cannot affect certification. `resolve_python_env.sh` delegates to `gov doctor`.
 

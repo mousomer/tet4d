@@ -25,6 +25,10 @@ SCHEMA_FILES = {
     "project": "schemas/project.schema.json",
     "local": "schemas/workspace-local.schema.json",
 }
+OVERLAY_REASONS = {
+    "local": "approved local overlay",
+    "workspace": "inherited workspace overlay",
+}
 SUPPORTED_COMMANDS = {"check", "resolve", "explain", "doctor", "sync"}
 REQUIRED_STABLE_AUTHORITIES = {"native-and-platform", "authority-transfer"}
 
@@ -733,13 +737,19 @@ def validate_manifests(
     local: dict[str, Any] | None,
     *,
     pack_root: Path,
+    local_documents: list[tuple[dict[str, Any], str]] | None = None,
 ) -> list[Diagnostic]:
     schemas, issues = _load_schemas(pack_root)
-    for layer, value, source in (
+    if local_documents is None:
+        local_documents = (
+            [(local, ".governance/workspace.local.json")] if local is not None else []
+        )
+    layers: list[tuple[str, dict[str, Any] | None, str]] = [
         ("workspace", workspace, ".governance/workspace.json"),
         ("project", project, "config/governance/project.json"),
-        ("local", local, ".governance/workspace.local.json"),
-    ):
+        *(("local", payload, source) for payload, source in local_documents),
+    ]
+    for layer, value, source in layers:
         if value is not None and layer in schemas:
             issues.extend(_schema_issues(value, schemas[layer], path="", source=source))
     if issues:
@@ -925,13 +935,17 @@ def resolve_interpreter(
     project: dict[str, Any],
     local: dict[str, Any] | None,
     environ: dict[str, str] | None = None,
+    *,
+    local_tiers: dict[str, str] | None = None,
 ) -> tuple[Path | None, str, list[Diagnostic]]:
     env = os.environ if environ is None else environ
     override = project["environment"]["interpreter_override"]
     if env.get(override):
         raw, reason = env[override], f"explicit override {override}"
     elif local and local.get("interpreter"):
-        raw, reason = local["interpreter"], "approved local overlay"
+        tier = (local_tiers or {}).get("interpreter", "local")
+        raw = local["interpreter"]
+        reason = OVERLAY_REASONS.get(tier, OVERLAY_REASONS["local"])
     else:
         raw, reason = (
             project["environment"]["preferred"],
@@ -1021,9 +1035,13 @@ def doctor(  # noqa: C901 - environment probes remain one deterministic transact
     local: dict[str, Any] | None,
     environ: dict[str, str] | None = None,
     route: str | None = None,
+    *,
+    local_tiers: dict[str, str] | None = None,
 ) -> tuple[dict[str, Any], list[Diagnostic]]:
     env = os.environ if environ is None else environ
-    interpreter, reason, issues = resolve_interpreter(root, project, local, env)
+    interpreter, reason, issues = resolve_interpreter(
+        root, project, local, env, local_tiers=local_tiers
+    )
     try:
         requirement, requirement_source = _python_specifier(root, project)
     except (

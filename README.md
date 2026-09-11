@@ -113,6 +113,19 @@ a command of your own, ask the resolver:
 "$(./scripts/resolve_python_env.sh)" -m pytest -q
 ```
 
+To point every worktree on a machine at one interpreter instead of building a
+`.venv` per checkout, declare it once in the inherited workspace overlay:
+
+```bash
+mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/workspace-governance"
+cat > "${XDG_CONFIG_HOME:-$HOME/.config}/workspace-governance/tet4d-workspace.local.json" <<'JSON'
+{"schema_version": 1, "interpreter": "/absolute/path/to/bin/python"}
+JSON
+```
+
+It is keyed by workspace identity, so a worktree inherits it wherever it lives.
+A repository `.governance/workspace.local.json` still overrides it per checkout.
+
 `bootstrap_env.sh` needs an approved interpreter to create the environment
 from. It uses `GOVERNANCE_PYTHON`, else `$WORKSPACE_VENV/bin/python`, else an
 existing `.venv`; on a machine with none of those, export `WORKSPACE_VENV` or
