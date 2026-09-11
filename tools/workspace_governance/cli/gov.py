@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from contextlib import redirect_stdout
 from pathlib import Path
 
 if __package__ in {None, ""}:
@@ -91,8 +92,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(raw_argv)
     args.json = as_json or args.json
     root = args.root.resolve()
-    resolver = GovernanceResolver.for_root(root)
     try:
+        resolver = GovernanceResolver.for_root(root)
         if args.command == "check":
             issues = resolver.check()
             _emit(
@@ -117,17 +118,48 @@ def main(argv: list[str] | None = None) -> int:
         if args.print_interpreter and not issues:
             print(result["interpreter"])
         elif args.print_interpreter:
-            _emit([item.to_dict() for item in issues], as_json=False)
+            with redirect_stdout(sys.stderr):
+                _emit([item.to_dict() for item in issues], as_json=False)
         else:
             payload = {**result, "diagnostics": [item.to_dict() for item in issues]}
             _emit(payload, as_json=args.json)
         return 1 if issues else 0
-    except (GovernanceError, OSError, ValueError, json.JSONDecodeError) as exc:
+    except (
+        GovernanceError,
+        OSError,
+        ValueError,
+        TypeError,
+        KeyError,
+        StopIteration,
+        ImportError,
+    ) as exc:
         diagnostics = exc.diagnostics if isinstance(exc, GovernanceError) else []
         if diagnostics:
             _emit([item.to_dict() for item in diagnostics], as_json=args.json)
         else:
-            _emit({"status": "invalid", "reason": str(exc)}, as_json=args.json)
+            payload = {
+                "status": "ENVIRONMENT_INVALID"
+                if args.command == "doctor"
+                else "invalid",
+                "diagnostics": [
+                    {
+                        "code": "ENVIRONMENT_MISMATCH"
+                        if isinstance(exc, ImportError) or args.command == "doctor"
+                        else "BROKEN_REFERENCE",
+                        "fact": args.command,
+                        "owner": "environment"
+                        if args.command == "doctor"
+                        else "project",
+                        "sources": [],
+                        "reason": str(exc),
+                        "repair": "repair the referenced metadata or dependency",
+                    }
+                ],
+            }
+            with redirect_stdout(
+                sys.stderr if getattr(args, "print_interpreter", False) else sys.stdout
+            ):
+                _emit(payload, as_json=args.json)
         return 1
 
 

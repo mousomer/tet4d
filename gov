@@ -1,35 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
-
 cd "$(dirname "$0")"
-
-# The bootstrap runtime only imports the generic interpreter resolver. Every
-# governance command is then executed by the interpreter that resolver selects.
+# This interpreter only boots governance. Project execution is resolved separately.
 if [[ -n "${GOVERNANCE_PYTHON:-}" ]]; then
   GOV_BOOTSTRAP="$GOVERNANCE_PYTHON"
-elif [[ -x ".venv/bin/python" ]]; then
-  GOV_BOOTSTRAP=".venv/bin/python"
+elif [[ -x .venv/bin/python ]]; then
+  GOV_BOOTSTRAP=.venv/bin/python
 else
-  echo "governance bootstrap unavailable; set GOVERNANCE_PYTHON or create .venv" >&2
+  GOV_BOOTSTRAP="$(command -v python3 || command -v python || true)"
+fi
+if [[ -z "$GOV_BOOTSTRAP" || ! -x "$GOV_BOOTSTRAP" ]]; then
+  echo '{"status":"ENVIRONMENT_INVALID","diagnostics":[{"code":"ENVIRONMENT_MISMATCH","fact":"bootstrap.interpreter","reason":"No executable bootstrap Python; set GOVERNANCE_PYTHON"}]}' >&2
   exit 1
 fi
-
-GOV_RUNTIME="$("$GOV_BOOTSTRAP" - <<'PY'
-from pathlib import Path
-
-from tools.workspace_governance.resolver.core import GovernanceResolver
-from tools.workspace_governance.validators.core import resolve_interpreter
-
-root = Path.cwd()
-resolver = GovernanceResolver.for_root(root)
-_, project, local = resolver.load()
-interpreter, _, issues = resolve_interpreter(root, project, local)
-if issues:
-    for issue in issues:
-        print(f"{issue.code}: {issue.fact}: {issue.reason}", file=__import__("sys").stderr)
-    raise SystemExit(1)
-print(interpreter)
-PY
-)"
-
-exec "$GOV_RUNTIME" tools/workspace_governance/cli/gov.py "$@"
+exec "$GOV_BOOTSTRAP" tools/workspace_governance/cli/bootstrap.py "$@"

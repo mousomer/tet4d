@@ -130,7 +130,7 @@ require_repo_package
 
 run_step "workspace_governance" ./gov check
 run_step "environment_doctor" ./gov doctor
-run_step "editable_install" env PYTHON_BIN="$PYTHON_BIN" ./scripts/check_editable_install.sh
+run_step "editable_install" ./scripts/check_editable_install.sh
 run_governance_step "policy_compliance" ./scripts/check_policy_compliance.sh
 run_governance_step "policy_compliance_repo" ./scripts/check_policy_compliance_repo.sh
 run_governance_step "git_sanitation_repo" ./scripts/check_git_sanitation_repo.sh
@@ -147,8 +147,8 @@ run_governance_step "ruff" run_module ruff check .
 run_governance_step "ruff_format" run_module ruff format --check scripts tools
 run_governance_step "ruff_c901" run_module ruff check --select C901 .
 run_step "arch_metrics"   "$PYTHON_BIN" scripts/arch_metrics.py
-run_governance_step "arch_metrics_soft_gate" env PYTHON_BIN="$PYTHON_BIN" ./scripts/check_architecture_metrics_soft_gate.sh
-run_governance_step "arch_metrics_budgets" env PYTHON_BIN="$PYTHON_BIN" ./scripts/check_architecture_metric_budgets.sh
+run_governance_step "arch_metrics_soft_gate" ./scripts/check_architecture_metrics_soft_gate.sh
+run_governance_step "arch_metrics_budgets" ./scripts/check_architecture_metric_budgets.sh
 
 # Keep pytest quiet and bounded in interactive mode
 PYTEST_ARGS=(-q --maxfail=1 --disable-warnings)

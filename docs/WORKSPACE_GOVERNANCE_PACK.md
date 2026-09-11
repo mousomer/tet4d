@@ -45,7 +45,7 @@ choices.
 Before exporting it, validate the reusable source in Tet4D:
 
 ```bash
-./scripts/resolve_python_env.sh tools/governance/validate_workspace_bundle.py
+"$(./scripts/resolve_python_env.sh)" tools/governance/validate_workspace_bundle.py
 ```
 
 The validator checks that required files exist, that `MANIFEST.md` describes the

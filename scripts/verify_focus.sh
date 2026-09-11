@@ -181,7 +181,7 @@ require_repo_package
 
 
 
-env PYTHON_BIN="$PYTHON_BIN" ./scripts/check_editable_install.sh
+./scripts/check_editable_install.sh
 
 mapfile -t RUFF_CHECK_TARGETS < <(filter_python_targets "${RUFF_TARGETS[@]}")
 

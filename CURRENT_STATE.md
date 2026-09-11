@@ -44,9 +44,14 @@ No active handoff.
 
 ## Next Acceptance Boundary
 
-Review the verified workspace-governance v0.1 integrity repair without extracting
-another policy family. Durable open work and release-matrix deferrals remain in
-`docs/BACKLOG.md`.
+Review the workspace-governance v0.1 round 2 repair. Every declared route is now
+reachable from an execution profile or representative scenario, and `gov check`
+reports that as `BROKEN_REFERENCE` when it is not. No cockpit files have changed;
+the boundary-validator finding that reproduces from commit `8d80bdc3` for
+`godot/Tet4D.Godot/tests/test_live_cockpit.gd` is already resolved in the live
+cockpit work, so this repair must land on a base that includes it rather than
+renaming that helper again. Durable open work and release-matrix deferrals
+remain in `docs/BACKLOG.md`.
 
 Sections with `BEGIN/END GENERATED:*` markers are maintained by
 `tools/governance/generate_maintenance_docs.py`.
@@ -62,12 +67,12 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 28` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 6.23` (`low`)
+- `tech_debt.score = 6.13` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.97`
-2. `code_balance = 2.27`
+1. `delivery_size_pressure = 2.98`
+2. `code_balance = 2.15`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
 <!-- BEGIN GENERATED:current_state_drift_watch -->

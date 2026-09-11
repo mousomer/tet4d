@@ -130,6 +130,7 @@ def test_authority_identity_ambiguity_and_structured_reachability() -> None:
     project["authorities"].append(
         {
             "authority_id": "orphan",
+            "source_type": "file",
             "authority_type": "human",
             "scope": "orphan-scope",
             "source": "docs/BACKLOG.md",
@@ -138,6 +139,41 @@ def test_authority_identity_ambiguity_and_structured_reachability() -> None:
         }
     )
     assert any("unreachable" in issue.reason for issue in validate(workspace, project))
+
+
+def test_every_declared_route_is_selectable_from_an_execution_path() -> None:
+    workspace, project = manifests()
+    assert not [
+        issue
+        for issue in validate(workspace, project)
+        if issue.fact.startswith("route:")
+    ]
+    reachable = {
+        route
+        for profile in project["execution"]["profiles"].values()
+        for route in profile["routes"]
+    } | {
+        route
+        for scenario in project["execution"]["representative_scenarios"]
+        for route in scenario["routes"]
+    }
+    orphan = min(reachable)
+    for profile in project["execution"]["profiles"].values():
+        profile["routes"] = [item for item in profile["routes"] if item != orphan] or [
+            "governance_and_tooling"
+        ]
+    project["execution"]["representative_scenarios"] = [
+        scenario
+        for scenario in project["execution"]["representative_scenarios"]
+        if orphan not in scenario["routes"]
+    ]
+    unreachable = next(
+        issue
+        for issue in validate(workspace, project)
+        if issue.fact == f"route:{orphan}"
+    )
+    assert unreachable.code == "BROKEN_REFERENCE"
+    assert "unreachable" in unreachable.reason
 
 
 def test_schema_is_structural_source_and_reserved_fields_are_rejected() -> None:
@@ -171,7 +207,7 @@ def test_environment_priority_is_override_then_local_then_repository_and_never_p
     (tmp_path / "pyproject.toml").write_text('[project]\nrequires-python = ">=3.11"\n')
     preferred = tmp_path / ".venv/bin/python"
     preferred.parent.mkdir(parents=True)
-    shutil.copy2(sys.executable, preferred)
+    preferred.write_text(f'#!/bin/sh\nexec "{sys.executable}" "$@"\n')
     os.chmod(preferred, 0o755)
     interpreter, reason, issues = core.resolve_interpreter(
         tmp_path, project, None, {"PYTHON_BIN": "/invalid/legacy"}
@@ -265,23 +301,11 @@ def test_workspace_local_override_is_used_by_cli_and_shell(tmp_path: Path) -> No
     invocations = invocation_log.read_text().splitlines()
     assert (
         sum(
-            "tools/workspace_governance/cli/gov.py doctor" in line
+            "from packaging.specifiers import SpecifierSet" in line
             for line in invocations
         )
         == 2
     )
-
-
-def test_verify_uses_only_the_resolver_output_for_python() -> None:
-    script = (ROOT / "scripts/verify.sh").read_text()
-    launcher = (ROOT / "gov").read_text()
-    assert 'PYTHON_BIN="$(./scripts/resolve_python_env.sh)"' in script
-    assert "export PYTHON_BIN" in script
-    assert "./gov check" in script and "./gov doctor" in script
-    assert "${PYTHON_BIN:-}" not in script
-    assert "resolve_interpreter" in launcher
-    assert 'exec "$GOV_RUNTIME"' in launcher
-    assert "command -v python3" not in launcher
 
 
 def test_doctor_detects_wrong_checkout(
@@ -295,7 +319,7 @@ def test_doctor_detects_wrong_checkout(
     (tmp_path / "pyproject.toml").write_text('[project]\nrequires-python = ">=3.11"\n')
 
     def fake_run(command: list[str], **_: object) -> SimpleNamespace:
-        if command[-1] == "import platform; print(platform.python_version())":
+        if "from packaging.specifiers import SpecifierSet" in command[-1]:
             return SimpleNamespace(returncode=0, stdout="3.14.0\n", stderr="")
         payload = {
             "version": "3.14.0",
@@ -382,12 +406,3 @@ def test_cli_accepts_json_in_both_positions_and_missing_explain_is_usage_error()
     assert missing.returncode == 2
     assert missing.stderr.startswith("usage:")
     assert "BROKEN_REFERENCE" not in missing.stdout + missing.stderr
-
-
-def test_fixture_catalog_covers_required_cases() -> None:
-    fixture = json.loads(
-        (
-            ROOT / "tools/workspace_governance/synthetic-fixtures/contradictions.json"
-        ).read_text()
-    )
-    assert len(fixture["cases"]) == 13

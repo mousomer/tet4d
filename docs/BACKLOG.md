@@ -149,6 +149,9 @@ Godot game/iPadOS target gap.
   at a time with generated/validated compatibility output.
 - General prompt classification, runtime execution graphs, cross-repository
   orchestration, migration engines, and planner/runner redesign remain deferred.
+- Round 2 hardens bootstrap diagnostics, canonical-owner coverage, field-use
+  mutation evidence, and executable contradiction fixtures. Generic generated
+  documents and the Godot-namespaced full-gate pointer remain deferred.
 - The v0.1 integrity repair makes project routes canonical and retains legacy
   routes only as a parity-validated facade. Do not extract another policy family
   until the repaired contract receives independent review.

@@ -2,17 +2,26 @@
   "schema_version": 1,
   "name": "workspace-governance",
   "version": "0.1.0",
-  "revision": "v0.1-integrity-1",
+  "revision": "v0.1-integrity-2",
   "version_file": "VERSION",
   "lock_algorithm": "sha256-path-and-content-v1",
-  "pack_hash_excludes": ["**/__pycache__/**", "**/*.pyc"],
-  "commands": ["check", "resolve", "explain", "doctor", "sync"],
+  "pack_hash_excludes": [
+    "**/__pycache__/**",
+    "**/*.pyc",
+    "**/.DS_Store"
+  ],
+  "commands": [
+    "check",
+    "resolve",
+    "explain",
+    "doctor",
+    "sync"
+  ],
   "diagnostics": [
     "DUPLICATE_AUTHORITY",
     "CONFLICTING_VALUE",
     "AMBIGUOUS_AUTHORITY",
     "BROKEN_REFERENCE",
-    "STALE_GENERATED_SURFACE",
     "PACK_DRIFT",
     "ENVIRONMENT_MISMATCH"
   ],

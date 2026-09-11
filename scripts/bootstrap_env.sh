@@ -7,6 +7,9 @@ PYTHON_BOOTSTRAP_BIN="${PYTHON_BOOTSTRAP_BIN:-python3}"
 VENV_PATH="${VENV_PATH:-.venv}"
 VENV_PYTHON="${VENV_PATH}/bin/python"
 
+# Diagnose an unsupported bootstrap before any environment creation or replacement.
+"${PYTHON_BOOTSTRAP_BIN}" -c 'from tools.workspace_governance.cli.bootstrap import main; raise SystemExit(main(check_only=True))'
+
 if [ ! -x "${VENV_PYTHON}" ]; then
   "${PYTHON_BOOTSTRAP_BIN}" -m venv "${VENV_PATH}"
 fi

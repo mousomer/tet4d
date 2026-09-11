@@ -4,6 +4,7 @@ import fnmatch
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import tomllib
@@ -16,7 +17,6 @@ DIAGNOSTIC_CLASSES = {
     "CONFLICTING_VALUE",
     "AMBIGUOUS_AUTHORITY",
     "BROKEN_REFERENCE",
-    "STALE_GENERATED_SURFACE",
     "PACK_DRIFT",
     "ENVIRONMENT_MISMATCH",
 }
@@ -176,6 +176,7 @@ def _schema_issues(  # noqa: C901 - bounded recursive schema evaluator
 def _schema_field_usage_issues(schema: dict[str, Any], source: str) -> list[Diagnostic]:
     issues: list[Diagnostic] = []
     allowed = {"consumed", "validation-only", "reserved-for-future-use"}
+    registry = load_manifest_json(Path(source).parent.parent / "field-usage.json")
 
     def visit(node: object, path: str) -> None:
         if not isinstance(node, dict):
@@ -187,7 +188,20 @@ def _schema_field_usage_issues(schema: dict[str, Any], source: str) -> list[Diag
                 usage = (
                     child.get("x-governance-use") if isinstance(child, dict) else None
                 )
-                if usage not in allowed:
+                behavior = registry.get(child.get("x-governance-behavior"), {})
+                reserved_empty = usage != "reserved-for-future-use" or (
+                    child.get("type") == "object"
+                    and child.get("maxProperties") == 0
+                    or child.get("type") == "array"
+                    and child.get("maxItems") == 0
+                )
+                if (
+                    usage not in allowed
+                    or behavior.get("classification") != usage
+                    or not behavior.get("handler")
+                    or not behavior.get("test")
+                    or not reserved_empty
+                ):
                     issues.append(
                         _diag(
                             "BROKEN_REFERENCE",
@@ -216,6 +230,7 @@ def _load_schemas(
     for layer, rel in SCHEMA_FILES.items():
         try:
             schema = load_manifest_json(pack_root / rel)
+            usage_issues = _schema_field_usage_issues(schema, str(pack_root / rel))
         except (OSError, ValueError, TypeError) as exc:
             issues.append(
                 _diag(
@@ -229,7 +244,7 @@ def _load_schemas(
             )
             continue
         schemas[layer] = schema
-        issues.extend(_schema_field_usage_issues(schema, rel))
+        issues.extend(usage_issues)
     return schemas, issues
 
 
@@ -257,14 +272,135 @@ def _route_facade(project: dict[str, Any]) -> dict[str, Any]:
         entry: dict[str, Any] = {}
         if route["dispatch_paths"]:
             entry["dispatch_paths"] = route["dispatch_paths"]
-        entry["authority_keys"] = [
+        entry["authority_keys"] = sorted(
             authorities[item]["legacy_key"] for item in route["authority_refs"]
-        ]
+        )
         entry["typical_verification_requirements"] = route[
             "typical_verification_requirements"
         ]
         facade[route_id] = entry
     return facade
+
+
+def _valid_authority_source(
+    root: Path, entry: dict[str, Any], by_id: dict[str, Any]
+) -> bool:
+    source, pointer = _split_reference(root, entry["source"])
+    kind = entry["source_type"]
+    valid = source.is_dir() if kind == "directory" else source.is_file()
+    if kind == "json_pointer" and valid:
+        try:
+            _json_pointer(load_manifest_json(source), pointer)
+            valid = bool(pointer)
+        except (OSError, ValueError, KeyError, TypeError):
+            valid = False
+    elif pointer:
+        valid = False
+    if kind == "alias":
+        target = by_id.get(entry.get("alias_of"))
+        valid = bool(
+            target
+            and target["source_type"] != "alias"
+            and target["source"] == entry["source"]
+            and not entry["exclusive"]
+            and not entry["canonical_governance"]
+        )
+    elif "alias_of" in entry or entry["authority_type"] == "alias":
+        valid = False
+    return valid
+
+
+def _authority_graph_issues(root: Path, project: dict[str, Any]) -> list[Diagnostic]:
+    issues: list[Diagnostic] = []
+    authorities = project["authorities"]
+    by_id = {item["authority_id"]: item for item in authorities}
+    sources: dict[str, list[str]] = {}
+    for entry in authorities:
+        valid = _valid_authority_source(root, entry, by_id)
+        if not valid:
+            issues.append(
+                _diag(
+                    "BROKEN_REFERENCE",
+                    "authority:" + entry["authority_id"],
+                    "project",
+                    [entry["source"]],
+                    "invalid typed authority source or alias",
+                    "correct the source type; aliases must be nonexclusive references",
+                )
+            )
+        if entry["exclusive"]:
+            path, pointer = _split_reference(root, entry["source"])
+            identity = path.resolve().as_posix() + ("#" + pointer if pointer else "")
+            sources.setdefault(identity, []).append(entry["authority_id"])
+    for source, identities in sources.items():
+        if len(identities) > 1:
+            issues.append(
+                _diag(
+                    "AMBIGUOUS_AUTHORITY",
+                    "authority.source",
+                    "project",
+                    [source],
+                    "exclusive identities share a source: " + ", ".join(identities),
+                    "use a nonexclusive alias or distinct typed source",
+                )
+            )
+    return issues + _canonical_owner_issues(root, project, by_id)
+
+
+def _canonical_owner_issues(
+    root: Path, project: dict[str, Any], by_id: dict[str, Any]
+) -> list[Diagnostic]:
+    issues: list[Diagnostic] = []
+    authorities = project["authorities"]
+    try:
+        ref = project["canonical_owner_set"]
+        owner_source = by_id[ref["authority_ref"]]["source"]
+        owner_set = _json_pointer(
+            load_manifest_json(root / owner_source), ref["json_pointer"]
+        )
+        if (
+            not isinstance(owner_set, dict)
+            or not owner_set
+            or not all(isinstance(v, str) for v in owner_set.values())
+        ):
+            raise ValueError(
+                "canonical owner set must be a nonempty domain-to-source mapping"
+            )
+        canonical = [a for a in authorities if a["canonical_governance"]]
+        for domain, source in owner_set.items():
+            matches = [
+                a
+                for a in canonical
+                if a["source"] == source
+                and a["authority_type"] == "human"
+                and a["exclusive"]
+                and a["source_type"] == "file"
+            ]
+            if len(matches) != 1:
+                issues.append(
+                    _diag(
+                        "BROKEN_REFERENCE",
+                        "canonical_owner:" + domain,
+                        "project",
+                        [source],
+                        "canonical owner requires exactly one applicable human authority",
+                        "restore the canonical authority identity and flag",
+                    )
+                )
+        if any(a["source"] not in owner_set.values() for a in canonical):
+            raise ValueError("canonical authority is outside the defined owner set")
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        issues.append(
+            _diag(
+                "BROKEN_REFERENCE",
+                "canonical_owner_set",
+                "project",
+                ["config/governance/project.json"],
+                str(exc),
+                "restore the existing owner-set reference",
+            )
+        )
+    return issues
 
 
 def _semantic_manifest_issues(  # noqa: C901 - cross-field integrity transaction
@@ -288,7 +424,7 @@ def _semantic_manifest_issues(  # noqa: C901 - cross-field integrity transaction
                 )
             )
         for entry in entries:
-            if not (root / entry["source"]).exists():
+            if not _split_reference(root, entry["source"])[0].exists():
                 issues.append(
                     _diag(
                         "BROKEN_REFERENCE",
@@ -435,6 +571,26 @@ def _semantic_manifest_issues(  # noqa: C901 - cross-field integrity transaction
                         "correct the route reference",
                     )
                 )
+    selectable = {
+        route
+        for profile in project["execution"]["profiles"].values()
+        for route in profile["routes"]
+    } | {
+        route
+        for scenario in project["execution"]["representative_scenarios"]
+        for route in scenario["routes"]
+    }
+    for route_id in sorted(set(project["routes"]) - selectable):
+        issues.append(
+            _diag(
+                "BROKEN_REFERENCE",
+                f"route:{route_id}",
+                "project",
+                ["config/governance/project.json"],
+                "route is unreachable from every execution profile and scenario",
+                "add the route to a profile or declare a representative scenario",
+            )
+        )
     if project["execution"]["default_mode"] not in project["execution"]["profiles"]:
         issues.append(
             _diag(
@@ -472,6 +628,19 @@ def _semantic_manifest_issues(  # noqa: C901 - cross-field integrity transaction
                     "correct the authority reference",
                 )
             )
+    dependency = project["environment"]["dependency_authority"]
+    target = by_id.get(dependency["authority_ref"], [])
+    if target and dependency["source"] != target[0]["source"]:
+        issues.append(
+            _diag(
+                "CONFLICTING_VALUE",
+                "environment.dependency_authority",
+                "project",
+                [dependency["source"], target[0]["source"]],
+                "dependency source disagrees with authority",
+                "use the referenced dependency authority source",
+            )
+        )
     default_id = workspace["defaults"]["project"]
     members = [item for item in workspace["projects"] if item["id"] == default_id]
     if len(members) != 1:
@@ -486,6 +655,22 @@ def _semantic_manifest_issues(  # noqa: C901 - cross-field integrity transaction
             )
         )
     return issues
+
+
+def _normalized_facade(value: object) -> dict[str, Any] | None:
+    if not isinstance(value, dict):
+        return None
+    result = {}
+    for key, route in value.items():
+        if not isinstance(route, dict):
+            return None
+        keys = route.get("authority_keys")
+        if not isinstance(keys, list) or not all(
+            isinstance(item, str) for item in keys
+        ):
+            return None
+        result[key] = {**route, "authority_keys": sorted(keys)}
+    return result
 
 
 def _generated_surface_issues(root: Path, project: dict[str, Any]) -> list[Diagnostic]:
@@ -526,7 +711,8 @@ def _generated_surface_issues(root: Path, project: dict[str, Any]) -> list[Diagn
             continue
         if surface["transform"] == "authority-legacy-key-route-v1":
             expected = _route_facade(project)
-            if source_value != project["routes"] or target_value != expected:
+            normalized = _normalized_facade(target_value)
+            if source_value != project["routes"] or normalized != expected:
                 issues.append(
                     _diag(
                         "CONFLICTING_VALUE",
@@ -559,7 +745,9 @@ def validate_manifests(
     if issues:
         return issues
     issues.extend(_semantic_manifest_issues(root, workspace, project))
-    issues.extend(_generated_surface_issues(root, project))
+    issues.extend(_authority_graph_issues(root, project))
+    if not issues:
+        issues.extend(_generated_surface_issues(root, project))
     for rel in (
         project["sanitation"]["secret_scanner"],
         project["sanitation"]["repository_check"],
@@ -575,9 +763,7 @@ def validate_manifests(
                     "restore or correct the entrypoint",
                 )
             )
-    machine_path = __import__("re").compile(
-        r'(?:^|[\s"\'])(?:/Users/|/home/|[A-Za-z]:[\\/])'
-    )
+    machine_path = re.compile(r'(?:^|[\s"\'])(?:/Users/|/home/|[A-Za-z]:[\\/])')
     for rel, payload in (
         (".governance/workspace.json", workspace),
         ("config/governance/project.json", project),
@@ -771,11 +957,16 @@ def resolve_interpreter(
         )
     try:
         specifier_text, source = _python_specifier(root, project)
-        from packaging.specifiers import SpecifierSet
-        from packaging.version import Version
-
         probe = subprocess.run(
-            [str(path), "-c", "import platform; print(platform.python_version())"],
+            [
+                str(path),
+                "-c",
+                "import platform; from packaging.specifiers import SpecifierSet; "
+                "from packaging.version import Version; v=platform.python_version(); "
+                "print(v); raise SystemExit(0 if Version(v) in SpecifierSet("
+                + repr(specifier_text)
+                + ") else 1)",
+            ],
             cwd=root,
             text=True,
             capture_output=True,
@@ -783,9 +974,7 @@ def resolve_interpreter(
             check=False,
         )
         version = probe.stdout.strip()
-        if probe.returncode != 0 or Version(version) not in SpecifierSet(
-            specifier_text
-        ):
+        if probe.returncode != 0:
             return (
                 None,
                 reason,
@@ -795,12 +984,20 @@ def resolve_interpreter(
                         "python.version",
                         "project_metadata",
                         [str(path), source],
-                        f"interpreter version {version or '<unknown>'} does not satisfy {specifier_text}",
+                        f"interpreter version {version or '<unknown>'} cannot certify {specifier_text}; packaging must be installed in the selected environment",
                         "select an approved interpreter satisfying project metadata",
                     )
                 ],
             )
-    except (OSError, ValueError, TypeError, KeyError, subprocess.TimeoutExpired) as exc:
+    except (
+        OSError,
+        ValueError,
+        TypeError,
+        KeyError,
+        StopIteration,
+        ImportError,
+        subprocess.TimeoutExpired,
+    ) as exc:
         return (
             None,
             reason,
@@ -827,7 +1024,27 @@ def doctor(  # noqa: C901 - environment probes remain one deterministic transact
 ) -> tuple[dict[str, Any], list[Diagnostic]]:
     env = os.environ if environ is None else environ
     interpreter, reason, issues = resolve_interpreter(root, project, local, env)
-    requirement, requirement_source = _python_specifier(root, project)
+    try:
+        requirement, requirement_source = _python_specifier(root, project)
+    except (
+        OSError,
+        ValueError,
+        TypeError,
+        KeyError,
+        StopIteration,
+        ImportError,
+    ) as exc:
+        requirement, requirement_source = None, None
+        issues.append(
+            _diag(
+                "ENVIRONMENT_MISMATCH",
+                "python.metadata",
+                "project_metadata",
+                [],
+                str(exc),
+                "repair the Python requirement authority",
+            )
+        )
     result: dict[str, Any] = {
         "status": "ENVIRONMENT_INVALID" if issues else "ok",
         "interpreter": str(interpreter) if interpreter else None,
@@ -886,10 +1103,24 @@ def doctor(  # noqa: C901 - environment probes remain one deterministic transact
             )
         )
     elif probe is not None:
-        data = json.loads(probe.stdout)
+        try:
+            data = json.loads(probe.stdout)
+            actual = Path(data["package"]).parent
+        except (ValueError, KeyError, TypeError) as exc:
+            issues.append(
+                _diag(
+                    "ENVIRONMENT_MISMATCH",
+                    "python.probe",
+                    "environment",
+                    [str(interpreter)],
+                    str(exc),
+                    "repair the environment probe output",
+                )
+            )
+            result["status"] = "ENVIRONMENT_INVALID"
+            return result, issues
         result.update(data)
         expected = (root / project["environment"]["editable_source"]).resolve()
-        actual = Path(data["package"]).parent
         if actual != expected:
             issues.append(
                 _diag(

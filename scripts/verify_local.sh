@@ -39,6 +39,9 @@ if ! "$BOOTSTRAP_BIN" -c 'import sys' >/dev/null 2>&1; then
   exit 1
 fi
 
+# Diagnose an unsupported bootstrap before any environment creation or replacement.
+"$BOOTSTRAP_BIN" -c 'from tools.workspace_governance.cli.bootstrap import main; raise SystemExit(main(check_only=True))'
+
 mkdir -p "$LOG_DIR"
 
 bootstrap_fingerprint() {
