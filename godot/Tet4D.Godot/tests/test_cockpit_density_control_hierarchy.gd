@@ -118,6 +118,7 @@ func _check_production_layout() -> Array:
 	# Earlier integration tests deliberately exercise global UI-scale changes.
 	# Establish this test's documented standard-density baseline explicitly.
 	hud._apply_ui_scale("standard")
+	hud._set_onboarding_visible(false)
 	await tree.process_frame
 	await tree.process_frame
 	for mode in ["live_2d", "live_3d", "live_4d"]:

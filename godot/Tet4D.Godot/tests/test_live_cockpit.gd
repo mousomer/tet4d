@@ -42,6 +42,12 @@ func _check_production_extraction() -> Array:
 	await tree.process_frame
 	var app = root.get_node("App")
 	var hud = root.get_node("ReplayHud")
+	# Other in-process tests exercise global accessibility and onboarding state.
+	# This geometry contract has a standard-density, no-overlay precondition.
+	hud._apply_ui_scale("standard")
+	hud._set_onboarding_visible(false)
+	await tree.process_frame
+	await tree.process_frame
 	app._enter_live_4d_mode()
 	await tree.process_frame
 	await tree.process_frame
