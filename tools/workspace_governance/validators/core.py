@@ -33,7 +33,7 @@ OVERLAY_REASONS = {
     "local": "approved local overlay",
     "workspace": "inherited workspace overlay",
 }
-SUPPORTED_COMMANDS = {"check", "resolve", "explain", "doctor", "sync"}
+SUPPORTED_COMMANDS = {"check", "resolve", "explain", "doctor", "sync", "env"}
 REQUIRED_STABLE_AUTHORITIES = {"native-and-platform", "authority-transfer"}
 
 
@@ -1033,6 +1033,37 @@ def resolve_interpreter(
     return path.absolute(), reason, []
 
 
+def source_binding_path(root: Path, project: dict[str, Any]) -> Path:
+    """Where this checkout's importable source lives.
+
+    Derived from the declared editable source rather than spelled out in each
+    caller, so the binding is one governed fact instead of a shell convention
+    repeated wherever a Python subprocess is started.
+    """
+    return (root / project["environment"]["editable_source"]).resolve().parent
+
+
+def binding_environment(
+    root: Path,
+    project: dict[str, Any],
+    environ: dict[str, str] | None = None,
+) -> dict[str, str]:
+    """Variables that bind execution to this checkout, for the declared mode.
+
+    Source mode prepends this checkout's source so imports resolve here rather
+    than through whichever checkout an installed distribution was built from.
+    Installed mode adds nothing: the distribution is the binding, and injecting
+    a path would make `editable_install` unable to observe a wrong one.
+    """
+    env = os.environ if environ is None else environ
+    mode, _, issues = resolve_execution_mode(project, env)
+    if issues or mode != "source":
+        return {}
+    binding = str(source_binding_path(root, project))
+    inherited = env.get("PYTHONPATH", "")
+    return {"PYTHONPATH": f"{binding}:{inherited}" if inherited else binding}
+
+
 def resolve_execution_mode(
     project: dict[str, Any], environ: dict[str, str] | None = None
 ) -> tuple[str, str, list[Diagnostic]]:
@@ -1134,6 +1165,10 @@ def doctor(  # noqa: C901 - environment probes remain one deterministic transact
         + repr(modules)
         + "}))"
     )
+    # The probe must run under the same binding the gate will use, or doctor
+    # answers a question about a different environment than the one verified.
+    binding = binding_environment(root, project, env)
+    result["source_binding"] = binding.get("PYTHONPATH")
     try:
         probe = subprocess.run(
             [str(interpreter), "-c", probe_code],
@@ -1142,6 +1177,7 @@ def doctor(  # noqa: C901 - environment probes remain one deterministic transact
             capture_output=True,
             timeout=20,
             check=False,
+            env={**os.environ, **binding},
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
         probe = None
@@ -1186,14 +1222,37 @@ def doctor(  # noqa: C901 - environment probes remain one deterministic transact
         result.update(data)
         expected = (root / project["environment"]["editable_source"]).resolve()
         if actual != expected:
+            # Under source mode the injected binding precedes site-packages, so
+            # a mismatch here means the binding itself is wrong rather than that
+            # some other checkout owns an install. Say which, or the repair is
+            # the opposite of the actual fault.
+            source_bound = execution_mode == "source"
             issues.append(
                 _diag(
                     "ENVIRONMENT_MISMATCH",
-                    "editable_install",
+                    "source_binding" if source_bound else "editable_install",
                     "project",
                     [str(actual), str(expected)],
-                    "editable install targets another checkout",
-                    "reinstall editable from the current checkout",
+                    "bound source is not this checkout"
+                    if source_bound
+                    else "editable install targets another checkout",
+                    "correct environment.editable_source or the injected binding"
+                    if source_bound
+                    else "reinstall editable from the current checkout",
+                )
+            )
+        elif execution_mode == "source" and not binding:
+            # Importing this checkout without a declared binding means an
+            # installed distribution answered, which is the cross-checkout
+            # ownership source mode exists to remove.
+            issues.append(
+                _diag(
+                    "ENVIRONMENT_MISMATCH",
+                    "source_binding",
+                    "environment",
+                    [str(expected)],
+                    "source mode resolved no binding, so a distribution answered",
+                    "declare execution_mode source only with a resolvable binding",
                 )
             )
     if route is not None:

@@ -31,9 +31,13 @@ else
 fi
 STABILITY_SEED_BASE="${STABILITY_SEED_BASE:-0}"
 
-# Resolve once. Every Python subprocess receives this exact interpreter.
-PYTHON_BIN="$(./scripts/resolve_python_env.sh)"
-export PYTHON_BIN
+# Resolve once. Every Python subprocess receives this exact interpreter, and in
+# source mode the binding that decides which checkout it imports. Both come from
+# the governance resolver rather than being reconstructed here: a gate that
+# derived its own binding could verify a different environment than `gov doctor`
+# certified. A failure here aborts under `set -e` with the resolver's diagnostic.
+GOVERNED_ENV="$(./gov env)"
+eval "$GOVERNED_ENV"
 
 VERIFY_LOCK_DIR="state/.verify.lock"
 VERIFY_STATE_ROOT_OWNED=0
