@@ -50,10 +50,10 @@ interpreter, then the inherited workspace overlay, then repository `.venv`, else
 `${XDG_CONFIG_HOME:-~/.config}/workspace-governance/<workspace_id>.local.json`;
 being keyed by workspace identity rather than checkout path, one runtime
 selection is available to every worktree wherever it sits, including those
-outside any common parent directory. It is runtime selection only: a fresh
-worktree still needs an approved bootstrap Python through the supported
-environment/local mechanisms, and a shared editable environment is not
-certified across multiple worktree origins. The two overlays merge per key, so
+outside any common parent directory. The same declaration also starts
+governance: the bootstrap chain reads this overlay, so a fresh worktree with no
+`.venv` and no bootstrap variables can run `gov`. A shared editable environment
+is still not certified across multiple worktree origins. The two overlays merge per key, so
 a repository overlay naming only `tool_paths` keeps the inherited interpreter.
 `PYTHON_BIN` is output
 compatibility state only. `GOVERNANCE_PYTHON` selects only the CLI bootstrap and
@@ -98,9 +98,17 @@ projects. Schema annotations classify every declared field.
 
 `scripts/resolve_bootstrap_python.sh` owns bootstrap selection for the shell
 launcher, `bootstrap_env.sh`, and `verify_local.sh`: `GOVERNANCE_PYTHON`, then
-`$WORKSPACE_VENV/bin/python`, then an executable local `.venv`, else a
-structured `ENVIRONMENT_MISMATCH`. System Python discovered on `PATH` is not an
-approved bootstrap, and there is no fallback past an unusable candidate.
+`$WORKSPACE_VENV/bin/python`, then the inherited workspace overlay interpreter,
+then an executable local `.venv`, else a structured `ENVIRONMENT_MISMATCH`.
+System Python discovered on `PATH` is not an approved bootstrap, and there is no
+fallback past an unusable candidate. Explicit operator overrides stay strongest
+and machine-wide authority precedes the repository-local fallback; the
+repository overlay is deliberately absent from this chain, being per checkout
+and therefore never present in the fresh worktree this tier exists to start.
+Bootstrap cannot ask the interpreter it is selecting to parse the overlay, so
+the shell reads that one key itself with a depth-aware scan: an overlay may
+carry a `tool_paths` entry keyed `interpreter`, and matching it would start
+governance under a tool path.
 Bootstrap only runs standard-library governance code; its early capability check
 reads the lower bound from `[project].requires-python` before importing
 `tomllib`. `bootstrap_env.sh` and `verify_local.sh` invoke the same early check

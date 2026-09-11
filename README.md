@@ -123,16 +123,19 @@ cat > "${XDG_CONFIG_HOME:-$HOME/.config}/workspace-governance/tet4d-workspace.lo
 JSON
 ```
 
-It is keyed by workspace identity, so a worktree inherits the *runtime
-selection* wherever it lives. A repository `.governance/workspace.local.json`
-still overrides it per checkout. This does not bootstrap a fresh worktree and
-does not certify one shared editable environment for multiple worktrees: each
-checkout still needs its own editable-origin-valid environment.
+It is keyed by workspace identity, so a worktree inherits it wherever it lives,
+and it both starts governance and is certified: a fresh worktree with no `.venv`
+and no bootstrap variables can run `./gov check` and `./gov doctor` from this
+declaration alone. A repository `.governance/workspace.local.json` still
+overrides the certified selection per checkout. It does not certify one shared
+editable environment for multiple worktrees: each checkout still needs its own
+editable-origin-valid environment.
 
 `bootstrap_env.sh` needs an approved interpreter to create the environment
-from. It uses `GOVERNANCE_PYTHON`, else `$WORKSPACE_VENV/bin/python`, else an
-existing `.venv`; on a machine with none of those, export `WORKSPACE_VENV` or
-set `PYTHON_BOOTSTRAP_BIN` to a Python satisfying `requires-python`. Likewise,
+from. It uses `GOVERNANCE_PYTHON`, else `$WORKSPACE_VENV/bin/python`, else the
+inherited workspace overlay interpreter, else an existing `.venv`; on a machine
+with none of those, declare the overlay above, export `WORKSPACE_VENV`, or set
+`PYTHON_BOOTSTRAP_BIN` to a Python satisfying `requires-python`. Likewise,
 `verify_local.sh --rebuild-venv` requires an external bootstrap; it refuses a
 bootstrap selected from the `.venv` it would replace. See
 `docs/architecture/workspace_governance_v0_1.md` for the full contract.
