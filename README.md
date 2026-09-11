@@ -113,8 +113,8 @@ a command of your own, ask the resolver:
 "$(./scripts/resolve_python_env.sh)" -m pytest -q
 ```
 
-To point every worktree on a machine at one interpreter instead of building a
-`.venv` per checkout, declare it once in the inherited workspace overlay:
+To select one already-approved runtime interpreter for every worktree on a
+machine, declare it once in the inherited workspace overlay:
 
 ```bash
 mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/workspace-governance"
@@ -123,13 +123,18 @@ cat > "${XDG_CONFIG_HOME:-$HOME/.config}/workspace-governance/tet4d-workspace.lo
 JSON
 ```
 
-It is keyed by workspace identity, so a worktree inherits it wherever it lives.
-A repository `.governance/workspace.local.json` still overrides it per checkout.
+It is keyed by workspace identity, so a worktree inherits the *runtime
+selection* wherever it lives. A repository `.governance/workspace.local.json`
+still overrides it per checkout. This does not bootstrap a fresh worktree and
+does not certify one shared editable environment for multiple worktrees: each
+checkout still needs its own editable-origin-valid environment.
 
 `bootstrap_env.sh` needs an approved interpreter to create the environment
 from. It uses `GOVERNANCE_PYTHON`, else `$WORKSPACE_VENV/bin/python`, else an
 existing `.venv`; on a machine with none of those, export `WORKSPACE_VENV` or
-set `PYTHON_BOOTSTRAP_BIN` to a Python satisfying `requires-python`. See
+set `PYTHON_BOOTSTRAP_BIN` to a Python satisfying `requires-python`. Likewise,
+`verify_local.sh --rebuild-venv` requires an external bootstrap; it refuses a
+bootstrap selected from the `.venv` it would replace. See
 `docs/architecture/workspace_governance_v0_1.md` for the full contract.
 
 ## Run Commands

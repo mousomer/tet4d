@@ -29,8 +29,14 @@ packaging inputs and interpreter major/minor version, preserve the existing
 editable-install ownership check, avoid repeat network/bootstrap work, and
 never duplicate the verification graph.
 
-Follow-up: separately review destructive `--rebuild-venv` recreation for
-operator confirmation and recovery messaging.
+`--rebuild-venv` now refuses before deletion when its selected bootstrap is
+inside the `.venv` being replaced. Follow-up: separately review operator
+confirmation and recovery messaging for other destructive recreation cases.
+
+The inherited workspace interpreter overlay is runtime selection only. Fresh
+worktrees still need an approved bootstrap Python through the supported
+environment/local mechanisms, and multi-worktree shared editable-environment
+certification remains deferred.
 
 ### Camera and relative-control contract
 
@@ -158,6 +164,8 @@ Godot game/iPadOS target gap.
 - The v0.1 integrity repair makes project routes canonical and retains legacy
   routes only as a parity-validated facade. Do not extract another policy family
   until the repaired contract receives independent review.
+- The vendored v0.1 pack is internally integrity-checked here; upstream
+  canonical reconstruction or export of that pack remains deferred.
 
 ### Release and platform
 

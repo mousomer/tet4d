@@ -48,10 +48,14 @@ semantic priority is `TET4D_PYTHON`, then the approved repository-overlay
 interpreter, then the inherited workspace overlay, then repository `.venv`, else
 `ENVIRONMENT_INVALID`. The inherited overlay lives at
 `${XDG_CONFIG_HOME:-~/.config}/workspace-governance/<workspace_id>.local.json`;
-being keyed by workspace identity rather than checkout path, one declaration
-serves every worktree wherever it sits, including those outside any common
-parent directory. The two overlays merge per key, so a repository overlay naming
-only `tool_paths` keeps the inherited interpreter. `PYTHON_BIN` is output
+being keyed by workspace identity rather than checkout path, one runtime
+selection is available to every worktree wherever it sits, including those
+outside any common parent directory. It is runtime selection only: a fresh
+worktree still needs an approved bootstrap Python through the supported
+environment/local mechanisms, and a shared editable environment is not
+certified across multiple worktree origins. The two overlays merge per key, so
+a repository overlay naming only `tool_paths` keeps the inherited interpreter.
+`PYTHON_BIN` is output
 compatibility state only. `GOVERNANCE_PYTHON` selects only the CLI bootstrap and
 cannot affect certification. `resolve_python_env.sh` delegates to `gov doctor`.
 
@@ -106,6 +110,11 @@ nothing more. `check`, `resolve`, and `explain` need no third-party libraries.
 `doctor` resolves the approved project interpreter independently of whichever
 bootstrap started it, returning `ENVIRONMENT_INVALID` with
 `ENVIRONMENT_MISMATCH` when that interpreter is unavailable.
+
+`verify_local.sh --rebuild-venv` additionally refuses before deletion when the
+selected bootstrap path is inside the worktree `.venv` being replaced. The
+operator must select an approved external bootstrap explicitly; there is no
+implicit system-Python fallback.
 The selected project interpreter evaluates the full Python specifier using
 `packaging`, explicitly declared in `pyproject.toml`. Missing packages and broken
 metadata produce diagnostics, not forwarded subprocess tracebacks.
