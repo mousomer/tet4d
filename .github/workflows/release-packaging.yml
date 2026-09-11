@@ -30,8 +30,14 @@ jobs:
           ref: ${{ inputs.source_sha }}
 
       - uses: actions/setup-python@v6
+        id: setup-python
         with:
           python-version: "3.14"
+
+      - name: Bind the governed interpreter
+        run: |
+          echo "GOVERNANCE_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
+          echo "TET4D_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
 
       - name: Validate exact source, version, and registered release scope
         id: identity
@@ -57,8 +63,14 @@ jobs:
           ref: ${{ inputs.source_sha }}
 
       - uses: actions/setup-python@v6
+        id: setup-python
         with:
           python-version: "3.14"
+
+      - name: Bind the governed interpreter
+        run: |
+          echo "GOVERNANCE_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
+          echo "TET4D_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
 
       - name: Require expected runner architecture
         run: test "$(uname -m)" = arm64
@@ -66,7 +78,7 @@ jobs:
       - name: Build existing Python macOS package
         env:
           PYINSTALLER_CONFIG_DIR: ${{ runner.temp }}/pyinstaller
-          PYTHON_BIN: python
+          PYTHON_BIN: ${{ steps.setup-python.outputs.python-path }}
         run: packaging/scripts/build_macos.sh
 
       - name: Verify, mount, and launch outside checkout
@@ -110,13 +122,19 @@ jobs:
           ref: ${{ inputs.source_sha }}
 
       - uses: actions/setup-python@v6
+        id: setup-python
         with:
           python-version: "3.14"
+
+      - name: Bind the governed interpreter
+        run: |
+          echo "GOVERNANCE_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
+          echo "TET4D_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
 
       - name: Build existing Python Linux package
         env:
           PYINSTALLER_CONFIG_DIR: ${{ runner.temp }}/pyinstaller
-          PYTHON_BIN: python
+          PYTHON_BIN: ${{ steps.setup-python.outputs.python-path }}
         run: packaging/scripts/build_linux.sh
 
       - name: Verify, install, launch outside checkout, and uninstall
@@ -163,14 +181,20 @@ jobs:
           ref: ${{ inputs.source_sha }}
 
       - uses: actions/setup-python@v6
+        id: setup-python
         with:
           python-version: "3.14"
+
+      - name: Bind the governed interpreter
+        run: |
+          echo "GOVERNANCE_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
+          echo "TET4D_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
 
       - name: Build existing Python Windows package
         shell: pwsh
         env:
           PYINSTALLER_CONFIG_DIR: ${{ runner.temp }}\pyinstaller
-          PYTHON_BIN: python
+          PYTHON_BIN: ${{ steps.setup-python.outputs.python-path }}
         run: packaging/scripts/build_windows.ps1
 
       - name: Verify, install, launch outside checkout, and uninstall
@@ -238,8 +262,14 @@ jobs:
           submodules: recursive
 
       - uses: actions/setup-python@v6
+        id: setup-python
         with:
           python-version: "3.14"
+
+      - name: Bind the governed interpreter
+        run: |
+          echo "GOVERNANCE_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
+          echo "TET4D_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
 
       - name: Install build dependencies
         run: |
@@ -297,6 +327,8 @@ jobs:
             templates/macos.zip templates/version.txt -d "$template_dir"
 
       - name: Build and validate Godot macOS release
+        env:
+          PYTHON_BIN: ${{ steps.setup-python.outputs.python-path }}
         run: GODOT_BIN="$GODOT_BIN" packaging/godot/build_macos.sh
 
       - name: Stage explicit Godot game artifact name
@@ -324,8 +356,14 @@ jobs:
           submodules: recursive
 
       - uses: actions/setup-python@v6
+        id: setup-python
         with:
           python-version: "3.14"
+
+      - name: Bind the governed interpreter
+        run: |
+          echo "GOVERNANCE_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
+          echo "TET4D_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
 
       - name: Install build dependencies
         run: |
@@ -419,8 +457,14 @@ jobs:
           submodules: recursive
 
       - uses: actions/setup-python@v6
+        id: setup-python
         with:
           python-version: "3.14"
+
+      - name: Bind the governed interpreter
+        run: |
+          echo "GOVERNANCE_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
+          echo "TET4D_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
 
       - uses: actions/setup-java@v5
         with:
@@ -502,6 +546,8 @@ jobs:
             --script tests/run_cross_platform_design_tests.gd
 
       - name: Build and validate the transitional Android Designer artifact
+        env:
+          PYTHON_BIN: ${{ steps.setup-python.outputs.python-path }}
         run: |
           GODOT_BIN="$GODOT_BIN" GODOT_TEMPLATE_ROOT="$GODOT_TEMPLATE_ROOT" packaging/godot/build_android.sh
 
@@ -530,8 +576,14 @@ jobs:
           submodules: recursive
 
       - uses: actions/setup-python@v6
+        id: setup-python
         with:
           python-version: "3.14"
+
+      - name: Bind the governed interpreter
+        run: |
+          echo "GOVERNANCE_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
+          echo "TET4D_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
 
       - name: Install build dependencies
         run: |
@@ -590,6 +642,8 @@ jobs:
       # the iOS GDExtension is cross-compiled and the exported project is
       # compiled unsigned for the simulator.
       - name: Build and validate the transitional iPadOS Designer artifact
+        env:
+          PYTHON_BIN: ${{ steps.setup-python.outputs.python-path }}
         run: |
           GODOT_BIN="$GODOT_BIN" GODOT_TEMPLATE_ROOT="$GODOT_TEMPLATE_ROOT" packaging/godot/build_ipados.sh
 

@@ -462,6 +462,8 @@ jobs:
             templates/macos.zip templates/version.txt -d "$template_dir"
 
       - name: Build and validate the Godot game macOS Universal package
+        env:
+          PYTHON_BIN: ${{ steps.setup-python.outputs.python-path }}
         run: GODOT_BIN="$GODOT_BIN" packaging/godot/build_macos.sh
 
   platform-ipados:
@@ -546,6 +548,8 @@ jobs:
       # and an unsigned simulator build through final link. Hosted final link is
       # not physical-device acceptance.
       - name: Build and validate the iPadOS export through Xcode final link
+        env:
+          PYTHON_BIN: ${{ steps.setup-python.outputs.python-path }}
         run: |
           GODOT_BIN="$GODOT_BIN" GODOT_TEMPLATE_ROOT="$GODOT_TEMPLATE_ROOT" \
             packaging/godot/build_ipados.sh
