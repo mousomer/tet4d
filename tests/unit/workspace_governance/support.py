@@ -7,11 +7,29 @@ the fixture and tests building their own roots need.
 from __future__ import annotations
 
 import json
+import os
 import shutil
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 PACK = ROOT / "tools/workspace_governance"
+
+# Every variable that can decide an interpreter. A test exercising a lower tier
+# must scrub them: CI exports TET4D_PYTHON and GOVERNANCE_PYTHON for the whole
+# job, so an inherited environment would otherwise answer instead of the tier
+# under test.
+INTERPRETER_SELECTORS = (
+    "TET4D_PYTHON",
+    "GOVERNANCE_PYTHON",
+    "PYTHON_BIN",
+    "TET4D_RESOLVED_PYTHON",
+)
+
+
+def scrubbed_environment(**updates: str) -> dict[str, str]:
+    """Ambient environment with every interpreter selector removed."""
+    env = {k: v for k, v in os.environ.items() if k not in INTERPRETER_SELECTORS}
+    return {**env, **updates}
 
 
 def write(path: Path, payload: object) -> None:

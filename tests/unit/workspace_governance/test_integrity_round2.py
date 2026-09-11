@@ -3,14 +3,13 @@ from __future__ import annotations
 import copy
 import importlib.metadata
 import json
-import os
 import subprocess
 import sys
 import tomllib
 from pathlib import Path
 
 import pytest
-from support import PACK, ROOT, build_checkout, write
+from support import PACK, ROOT, build_checkout, scrubbed_environment, write
 
 from tools.workspace_governance.cli.gov import main
 from tools.workspace_governance.resolver.core import GovernanceResolver
@@ -21,18 +20,7 @@ USAGE = json.loads((PACK / "field-usage.json").read_text())
 
 
 def environment(**updates: str) -> dict[str, str]:
-    env = {
-        k: v
-        for k, v in os.environ.items()
-        if k
-        not in {
-            "TET4D_PYTHON",
-            "GOVERNANCE_PYTHON",
-            "PYTHON_BIN",
-            "TET4D_RESOLVED_PYTHON",
-        }
-    }
-    return {**env, **updates}
+    return scrubbed_environment(**updates)
 
 
 def run(

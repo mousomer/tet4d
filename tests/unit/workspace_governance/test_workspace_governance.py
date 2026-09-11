@@ -10,6 +10,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from support import scrubbed_environment
 
 from tools.workspace_governance.cli.gov import _sync
 from tools.workspace_governance.resolver.core import GovernanceResolver
@@ -282,7 +283,9 @@ def test_workspace_local_override_is_used_by_cli_and_shell(tmp_path: Path) -> No
     (tmp_path / "pyproject.toml").write_text('[project]\nrequires-python = ">=3.11"\n')
     (tmp_path / "src").mkdir()
     (tmp_path / "src/tet4d").symlink_to(ROOT / "src/tet4d", target_is_directory=True)
-    env = {**os.environ, "GOVERNANCE_PYTHON": sys.executable}
+    # Scrubbed: this asserts the overlay tier, which an ambient TET4D_PYTHON
+    # would outrank.
+    env = scrubbed_environment(GOVERNANCE_PYTHON=sys.executable)
     doctor_value = subprocess.check_output(
         [str(tmp_path / "gov"), "doctor", "--print-interpreter"],
         cwd=tmp_path,
