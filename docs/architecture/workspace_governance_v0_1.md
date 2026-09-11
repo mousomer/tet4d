@@ -86,16 +86,20 @@ projects. Schema annotations classify every declared field.
 
 ## Round 2 integrity contracts
 
-The shell launcher selects bootstrap plumbing from `GOVERNANCE_PYTHON`, an
-executable local `.venv`, then discoverable `python3`/`python`. Bootstrap only
-runs standard-library governance code; its early capability check reads the
-lower bound from `[project].requires-python` before importing `tomllib`.
-`bootstrap_env.sh` and `verify_local.sh` invoke the same early check before
-creating or replacing an environment. It does not certify that interpreter for
-project execution. `check`, `resolve`,
-and `explain` need no third-party libraries. `doctor` resolves the approved
-project interpreter even when bootstrap used system Python, returning
-`ENVIRONMENT_INVALID` with `ENVIRONMENT_MISMATCH` when it is unavailable.
+`scripts/resolve_bootstrap_python.sh` owns bootstrap selection for the shell
+launcher, `bootstrap_env.sh`, and `verify_local.sh`: `GOVERNANCE_PYTHON`, then
+`$WORKSPACE_VENV/bin/python`, then an executable local `.venv`, else a
+structured `ENVIRONMENT_MISMATCH`. System Python discovered on `PATH` is not an
+approved bootstrap, and there is no fallback past an unusable candidate.
+Bootstrap only runs standard-library governance code; its early capability check
+reads the lower bound from `[project].requires-python` before importing
+`tomllib`. `bootstrap_env.sh` and `verify_local.sh` invoke the same early check
+before creating or replacing an environment. Bootstrap never certifies its own
+interpreter for project execution: `GOVERNANCE_PYTHON` can start governance and
+nothing more. `check`, `resolve`, and `explain` need no third-party libraries.
+`doctor` resolves the approved project interpreter independently of whichever
+bootstrap started it, returning `ENVIRONMENT_INVALID` with
+`ENVIRONMENT_MISMATCH` when that interpreter is unavailable.
 The selected project interpreter evaluates the full Python specifier using
 `packaging`, explicitly declared in `pyproject.toml`. Missing packages and broken
 metadata produce diagnostics, not forwarded subprocess tracebacks.

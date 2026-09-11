@@ -29,18 +29,18 @@ From the repo root:
 
 ```bash
 scripts/bootstrap_env.sh
-source .venv/bin/activate
-python front.py
+"$(./scripts/resolve_python_env.sh)" front.py
 ```
 
 Or launch a specific Python frontend:
 
 ```bash
-python front.py --frontend 2d
-python front.py --frontend 3d
-python front.py --frontend 4d
-python cli/front.py --topology-playground
-python cli/front.py --topology-playground 4
+PY="$(./scripts/resolve_python_env.sh)"
+"$PY" front.py --frontend 2d
+"$PY" front.py --frontend 3d
+"$PY" front.py --frontend 4d
+"$PY" cli/front.py --topology-playground
+"$PY" cli/front.py --topology-playground 4
 ```
 
 ## What You Can Do in Python
@@ -101,34 +101,36 @@ For the longer philosophical background, see
 
 ## Setup
 
-Preferred bootstrap:
-
 ```bash
 scripts/bootstrap_env.sh
-source .venv/bin/activate
 ```
 
-Manual setup:
+No activation is needed, and nothing should invoke a bare `python3`/`python`
+from `PATH`. Governed scripts resolve the interpreter themselves; to get it for
+a command of your own, ask the resolver:
 
 ```bash
-python3 -m venv .venv
-. .venv/bin/activate
-python -m pip install -U pip
-python -m pip install -e ".[dev]"
-scripts/install_git_hooks.sh
+"$(./scripts/resolve_python_env.sh)" -m pytest -q
 ```
+
+`bootstrap_env.sh` needs an approved interpreter to create the environment
+from. It uses `GOVERNANCE_PYTHON`, else `$WORKSPACE_VENV/bin/python`, else an
+existing `.venv`; on a machine with none of those, export `WORKSPACE_VENV` or
+set `PYTHON_BOOTSTRAP_BIN` to a Python satisfying `requires-python`. See
+`docs/architecture/workspace_governance_v0_1.md` for the full contract.
 
 ## Run Commands
 
 Python launcher:
 
 ```bash
-python front.py
-python front.py --frontend 2d
-python front.py --frontend 3d
-python front.py --frontend 4d
-python cli/front.py --topology-playground
-python cli/front.py --topology-playground 4
+PY="$(./scripts/resolve_python_env.sh)"
+"$PY" front.py
+"$PY" front.py --frontend 2d
+"$PY" front.py --frontend 3d
+"$PY" front.py --frontend 4d
+"$PY" cli/front.py --topology-playground
+"$PY" cli/front.py --topology-playground 4
 ```
 
 Godot front end:
