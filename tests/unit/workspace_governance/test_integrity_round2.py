@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import importlib.metadata
 import json
+import shutil
 import subprocess
 import sys
 import tomllib
@@ -529,6 +530,50 @@ def test_environment_creators_reject_unsupported_bootstrap_before_creating_venv(
     assert "bootstrap.interpreter" in result.stderr and ">=99" in result.stderr
     assert not (checkout / ".venv").exists()
     assert "Traceback" not in result.stdout + result.stderr
+
+
+def test_verify_local_rebuild_refuses_bootstrap_inside_venv_before_deletion(
+    checkout: Path,
+) -> None:
+    internal_python = checkout / ".venv/bin/python"
+    internal_python.parent.mkdir(parents=True)
+    internal_python.write_text(f'#!/bin/sh\nexec "{sys.executable}" "$@"\n')
+    internal_python.chmod(0o755)
+    sentinel = checkout / ".venv/keep-before-refusal"
+    sentinel.write_text("must survive\n")
+
+    result = run(
+        checkout,
+        "./scripts/verify_local.sh",
+        "--bootstrap-only",
+        "--rebuild-venv",
+        env=environment(BOOTSTRAP_PYTHON=str(internal_python)),
+    )
+
+    assert result.returncode == 2
+    assert sentinel.read_text() == "must survive\n"
+    assert "refusing --rebuild-venv" in result.stderr
+    assert "BOOTSTRAP_PYTHON" in result.stderr
+
+
+def test_verify_local_rebuild_accepts_external_bootstrap(checkout: Path) -> None:
+    # The general governance fixture links source trees read-only. Rebuild
+    # acceptance also verifies editable-origin ownership, so give this checkout
+    # its own source tree like a real worktree has.
+    (checkout / "src").unlink()
+    shutil.copytree(ROOT / "src", checkout / "src")
+    external_python = wrapper(checkout)
+
+    result = run(
+        checkout,
+        "./scripts/verify_local.sh",
+        "--bootstrap-only",
+        "--rebuild-venv",
+        env=environment(BOOTSTRAP_PYTHON=str(external_python)),
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert (checkout / ".venv/bin/python").is_file()
 
 
 def test_exclusive_file_identity_normalizes_equivalent_paths(checkout: Path) -> None:

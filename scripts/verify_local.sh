@@ -31,6 +31,28 @@ else
   BOOTSTRAP_BIN="$(./scripts/resolve_bootstrap_python.sh)"
 fi
 
+absolute_logical_path() {
+  local candidate="$1"
+  local directory
+  local filename
+  directory="$(dirname "$candidate")"
+  filename="$(basename "$candidate")"
+  (
+    cd -L "$directory"
+    printf '%s/%s\n' "$PWD" "$filename"
+  )
+}
+
+if [[ "$REBUILD_VENV" == "1" ]]; then
+  venv_absolute="$(absolute_logical_path "$VENV_PATH")"
+  bootstrap_absolute="$(absolute_logical_path "$BOOTSTRAP_BIN")"
+  if [[ "$bootstrap_absolute" == "$venv_absolute"/* ]]; then
+    echo "local verify: refusing --rebuild-venv because bootstrap Python is inside the .venv slated for deletion: ${BOOTSTRAP_BIN}" >&2
+    echo "local verify: select an approved external bootstrap explicitly, for example BOOTSTRAP_PYTHON=/absolute/path/to/python ./scripts/verify_local.sh --rebuild-venv" >&2
+    exit 2
+  fi
+fi
+
 if ! "$BOOTSTRAP_BIN" -c 'import sys' >/dev/null 2>&1; then
   echo "local verify: bootstrap Python is unavailable: ${BOOTSTRAP_BIN}" >&2
   exit 1
