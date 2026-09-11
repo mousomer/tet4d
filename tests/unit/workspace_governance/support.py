@@ -21,6 +21,7 @@ PACK = ROOT / "tools/workspace_governance"
 INTERPRETER_SELECTORS = (
     "TET4D_PYTHON",
     "GOVERNANCE_PYTHON",
+    "WORKSPACE_VENV",
     "PYTHON_BIN",
     "TET4D_RESOLVED_PYTHON",
 )

@@ -33,10 +33,16 @@ never duplicate the verification graph.
 inside the `.venv` being replaced. Follow-up: separately review operator
 confirmation and recovery messaging for other destructive recreation cases.
 
-The inherited workspace interpreter overlay is runtime selection only. Fresh
-worktrees still need an approved bootstrap Python through the supported
-environment/local mechanisms, and multi-worktree shared editable-environment
-certification remains deferred.
+The inherited workspace interpreter overlay now serves both bootstrap and
+certified selection, so a fresh worktree starts governance from it alone.
+Multi-worktree shared editable-environment certification remains deferred.
+
+With inherited bootstrap active, the selected bootstrap is external to the
+worktree, so `--rebuild-venv` may now regard it as safe and permit rebuilding
+`.venv`, including replacing a symlink-farm entry with a real environment. That
+refusal previously fired on every worktree here. Deferred to the `verify_local`
+retirement/rework rather than patched under bootstrap inheritance; symlink-farm
+removal remains blocked until then.
 
 ### Camera and relative-control contract
 
