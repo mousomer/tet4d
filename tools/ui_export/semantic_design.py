@@ -11,6 +11,8 @@ from collections import Counter
 from typing import Any
 
 GENERIC_ROLES = {"", "frame", "container", "text", "screen"}
+# The projected root always carries this identity rather than a derived one.
+ROOT_DESIGN_ID = "design_game_screen"
 
 
 def _walk(node: dict[str, Any]):
@@ -116,13 +118,16 @@ def extract_screen(screen: dict[str, Any]) -> dict[str, Any]:
     root = screen["root"]
     retained, parent, evidence = _retained_nodes(root)
 
-    used_ids: set[str] = set()
+    # Claim the root's fixed identity before deriving any child's. `_semantic_id`
+    # can produce that same string for a child, and the uniquifier only knows the
+    # ids it has handed out itself, so leaving it unclaimed lets a child take it.
+    used_ids: set[str] = {ROOT_DESIGN_ID}
     models: dict[str, dict[str, Any]] = {}
     for source, node in retained.items():
         models[source] = {
             "semantic_id": _unique_design_id(_semantic_id(node), used_ids)
             if source != root["semantic_id"]
-            else "design_game_screen",
+            else ROOT_DESIGN_ID,
             "name": _name(node)
             if source != root["semantic_id"]
             else f"{screen['provenance']['mode'].upper()} Game",

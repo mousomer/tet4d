@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from tools.ui_export.exporter import export, load_runtime_screens, semantic_payload
-from tools.ui_export.semantic_design import extract, node_count
+from tools.ui_export.semantic_design import ROOT_DESIGN_ID, extract, node_count
 
 # Verified by running Godot 4.7.2 through the probe's own transformation,
 # `name.replace("@", "generated_").to_snake_case()`:
@@ -321,3 +321,58 @@ def test_multiline_text_round_trips_as_real_newlines(tmp_path):
     assert not any(chr(92) + "n" in text for text in values), (
         "literal backslash-n in text"
     )
+
+
+def _screen_whose_child_derives_the_root_id() -> dict:
+    """A child whose derived identity is exactly the root's fixed identity.
+
+    `_semantic_id` builds `design_<name>_<suffix>`, so a control named "Game"
+    whose runtime path ends in `screen` derives `design_game_screen` — the very
+    string the root is always given.
+    """
+    return {
+        "provenance": {"implementation": "godot", "mode": "4d", "probe": "fixture_v2"},
+        "root": {
+            "semantic_id": "game_screen",
+            "kind": "screen",
+            "bounds": {"x": 0, "y": 0, "width": 100, "height": 80},
+            "visible": True,
+            "generated": False,
+            "children": [
+                {
+                    "semantic_id": "game_screen__screen",
+                    "kind": "control",
+                    "semantic_role": "action_button",
+                    "text": "Game",
+                    "bounds": {"x": 0, "y": 0, "width": 10, "height": 10},
+                    "visible": True,
+                    "generated": False,
+                    "children": [],
+                }
+            ],
+        },
+    }
+
+
+def _design_ids(node: dict) -> list[str]:
+    ids = [node["semantic_id"]]
+    for child in node.get("children", []):
+        ids.extend(_design_ids(child))
+    return ids
+
+
+def test_a_child_cannot_take_the_root_design_id():
+    """Regression: the root's fixed id was never entered into the used-id set.
+
+    Every child went through the uniquifier, which only knows the ids it issued
+    itself, so a child deriving the root's literal kept it verbatim.
+    """
+    root = extract([_screen_whose_child_derives_the_root_id()])[0]["root"]
+    assert root["semantic_id"] == ROOT_DESIGN_ID
+    assert root["children"][0]["semantic_id"] == f"{ROOT_DESIGN_ID}_2"
+
+
+def test_projected_design_ids_are_unique():
+    root = extract([_screen_whose_child_derives_the_root_id()])[0]["root"]
+    ids = _design_ids(root)
+    assert len(ids) == len(set(ids))
