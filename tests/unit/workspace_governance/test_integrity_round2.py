@@ -10,8 +10,8 @@ import tomllib
 from pathlib import Path
 
 import pytest
+from support import PACK, ROOT, build_checkout, write
 
-from tests.unit.workspace_governance.support import PACK, ROOT, build_checkout, write
 from tools.workspace_governance.cli.gov import main
 from tools.workspace_governance.resolver.core import GovernanceResolver
 from tools.workspace_governance.validators import core
@@ -91,13 +91,14 @@ def test_dependency_light_bootstrap_and_missing_project_dependency(
 def test_system_bootstrap_diagnoses_missing_environment_without_becoming_project_python(
     checkout: Path,
 ) -> None:
-    result = run(checkout, "./gov", "doctor", "--json")
-    assert result.returncode == 1
-    data = json.loads(result.stdout)
-    assert data["status"] == "ENVIRONMENT_INVALID"
-    assert data["interpreter"] is None
-    assert data["diagnostics"][0]["fact"] == "python.interpreter"
-    # Explicit bootstrap selection is equally incapable of becoming project authority.
+    # System Python on PATH is not an approved bootstrap: refuse it, never adopt it.
+    refused = run(checkout, "./gov", "doctor", "--json")
+    assert refused.returncode == 1
+    assert "ENVIRONMENT_MISMATCH" in refused.stderr
+    assert "bootstrap.interpreter" in refused.stderr
+    assert "Traceback" not in refused.stdout + refused.stderr
+    # With an approved bootstrap and no project environment, doctor still diagnoses,
+    # and that bootstrap is equally incapable of becoming project authority.
     result = run(
         checkout,
         "./gov",
@@ -105,7 +106,11 @@ def test_system_bootstrap_diagnoses_missing_environment_without_becoming_project
         "--json",
         env=environment(GOVERNANCE_PYTHON=sys.executable),
     )
-    assert json.loads(result.stdout)["interpreter"] is None
+    assert result.returncode == 1
+    data = json.loads(result.stdout)
+    assert data["status"] == "ENVIRONMENT_INVALID"
+    assert data["interpreter"] is None
+    assert data["diagnostics"][0]["fact"] == "python.interpreter"
 
 
 def test_bootstrap_floor_is_derived_from_project_metadata(checkout: Path) -> None:
@@ -120,7 +125,7 @@ def test_bootstrap_floor_is_derived_from_project_metadata(checkout: Path) -> Non
 
 
 def test_resolver_is_print_only_and_documented_command_executes(checkout: Path) -> None:
-    env = environment(TET4D_PYTHON=sys.executable)
+    env = environment(TET4D_PYTHON=sys.executable, GOVERNANCE_PYTHON=sys.executable)
     rejected = run(checkout, "./scripts/resolve_python_env.sh", "ignored.py", env=env)
     assert rejected.returncode == 2 and not rejected.stdout
     result = run(
@@ -479,7 +484,11 @@ def test_verify_and_project_test_use_the_doctor_selected_interpreter(
     selected.chmod(0o755)
     stop = checkout / "scripts/check_editable_install.sh"
     stop.write_text("#!/bin/sh\necho intentional-test-boundary >&2\nexit 79\n")
-    env = environment(TET4D_PYTHON=str(selected), PYTHON_BIN="/ignored/legacy")
+    env = environment(
+        TET4D_PYTHON=str(selected),
+        GOVERNANCE_PYTHON=sys.executable,
+        PYTHON_BIN="/ignored/legacy",
+    )
     diagnosed = run(checkout, "./gov", "doctor", "--print-interpreter", env=env)
     assert diagnosed.stdout.strip() == str(selected)
     verified = run(checkout, "./scripts/verify.sh", env=env)

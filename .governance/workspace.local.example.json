@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "interpreter": ".venv/bin/python",
+  "interpreter": "/absolute/path/to/workspace/venvs/venv314/bin/python",
   "tool_paths": {},
   "checkout_locations": {},
   "cache_locations": {}

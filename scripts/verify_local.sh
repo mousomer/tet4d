@@ -27,11 +27,8 @@ done
 
 if [[ -n "${BOOTSTRAP_PYTHON:-}" ]]; then
   BOOTSTRAP_BIN="${BOOTSTRAP_PYTHON}"
-elif command -v python3 >/dev/null 2>&1; then
-  BOOTSTRAP_BIN="python3"
 else
-  echo "local verify: no bootstrap Python found" >&2
-  exit 1
+  BOOTSTRAP_BIN="$(./scripts/resolve_bootstrap_python.sh)"
 fi
 
 if ! "$BOOTSTRAP_BIN" -c 'import sys' >/dev/null 2>&1; then

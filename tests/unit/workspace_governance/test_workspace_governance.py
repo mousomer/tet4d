@@ -263,10 +263,8 @@ def test_workspace_local_override_is_used_by_cli_and_shell(tmp_path: Path) -> No
     (tmp_path / "tools").mkdir()
     shutil.copytree(PACK_ROOT, tmp_path / "tools/workspace_governance")
     shutil.copy2(ROOT / "gov", tmp_path / "gov")
-    shutil.copy2(
-        ROOT / "scripts/resolve_python_env.sh",
-        tmp_path / "scripts/resolve_python_env.sh",
-    )
+    for name in ("resolve_python_env.sh", "resolve_bootstrap_python.sh"):
+        shutil.copy2(ROOT / "scripts" / name, tmp_path / "scripts" / name)
     workspace, project = manifests()
     (tmp_path / ".governance/workspace.json").write_text(json.dumps(workspace))
     invocation_log = tmp_path / "interpreter-invocations.log"

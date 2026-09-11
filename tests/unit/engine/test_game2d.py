@@ -2,9 +2,10 @@
 import random
 import unittest
 
-from tests.unit.engine._translation_contract import (
+from _translation_contract import (
     assert_repeated_translation_progress,
 )
+
 from tet4d.engine.core.model import BoardND
 from tet4d.engine.core.rules.scoring import score_for_clear
 from tet4d.engine.gameplay.game2d import GameConfig, GameState

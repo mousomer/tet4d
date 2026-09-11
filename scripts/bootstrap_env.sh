@@ -3,7 +3,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-PYTHON_BOOTSTRAP_BIN="${PYTHON_BOOTSTRAP_BIN:-python3}"
+PYTHON_BOOTSTRAP_BIN="${PYTHON_BOOTSTRAP_BIN:-$(./scripts/resolve_bootstrap_python.sh)}"
 VENV_PATH="${VENV_PATH:-.venv}"
 VENV_PYTHON="${VENV_PATH}/bin/python"
 

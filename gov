@@ -2,15 +2,6 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 # This interpreter only boots governance. Project execution is resolved separately.
-if [[ -n "${GOVERNANCE_PYTHON:-}" ]]; then
-  GOV_BOOTSTRAP="$GOVERNANCE_PYTHON"
-elif [[ -x .venv/bin/python ]]; then
-  GOV_BOOTSTRAP=.venv/bin/python
-else
-  GOV_BOOTSTRAP="$(command -v python3 || command -v python || true)"
-fi
-if [[ -z "$GOV_BOOTSTRAP" || ! -x "$GOV_BOOTSTRAP" ]]; then
-  echo '{"status":"ENVIRONMENT_INVALID","diagnostics":[{"code":"ENVIRONMENT_MISMATCH","fact":"bootstrap.interpreter","reason":"No executable bootstrap Python; set GOVERNANCE_PYTHON"}]}' >&2
-  exit 1
-fi
+# The resolver owns bootstrap priority and refuses system Python on PATH.
+GOV_BOOTSTRAP="$(./scripts/resolve_bootstrap_python.sh)"
 exec "$GOV_BOOTSTRAP" tools/workspace_governance/cli/bootstrap.py "$@"

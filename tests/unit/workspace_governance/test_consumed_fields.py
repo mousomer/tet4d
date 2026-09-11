@@ -9,8 +9,8 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from support import PACK, ROOT, write
 
-from tests.unit.workspace_governance.support import PACK, ROOT, write
 from tools.workspace_governance.resolver.core import GovernanceResolver
 from tools.workspace_governance.validators import core
 

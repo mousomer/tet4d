@@ -3,8 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-
-from tests.unit.workspace_governance.support import build_checkout
+from support import build_checkout
 
 
 @pytest.fixture

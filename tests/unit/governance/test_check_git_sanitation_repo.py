@@ -28,6 +28,7 @@ REQUIRED_ENTRYPOINTS = (
     "scripts/ci_check.sh",
     "scripts/ci_preflight.sh",
     "scripts/install_git_hooks.sh",
+    "scripts/resolve_bootstrap_python.sh",
     "scripts/resolve_python_env.sh",
     "scripts/update_policy_template_hashes.sh",
     "scripts/verify.sh",

@@ -3,10 +3,10 @@ from __future__ import annotations
 import unittest
 
 import pygame
-
-from tests.unit.engine._translation_contract import (
+from _translation_contract import (
     assert_repeated_translation_progress,
 )
+
 from tet4d.engine.gameplay.topology_designer import (
     GAMEPLAY_MODE_EXPLORER,
     default_topology_profile_state,
