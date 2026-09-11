@@ -125,3 +125,7 @@ Relevant test files:
 6. Debug 2D piece set is selectable and supports easy line-fill validation.
 7. Random-cell set no longer causes premature game-over due to invalid spawn shapes.
 8. Terminal animation stays simple and readable while remaining snapshot-driven, deterministic, seam-aware, and visibly correct when planar particles bounce, traverse seams, or escape the board under `boundary_response=escape`.
+9. Live 2D uses the shared Header / PrimaryBoardSurface / ControlDeck cockpit
+   grammar with authoritative 2D PIECE rows, minimal Fit/Reset VIEW guidance,
+   and existing NEXT/HOLD consumers. It must not display depth, pointer, slice,
+   exact-basis, or higher-dimensional operations.

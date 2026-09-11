@@ -228,7 +228,7 @@ static func _live_2d_groups(control_frame: Dictionary = {}) -> Array:
 		{"group": "Piece rotation", "cockpit_role": "rotate", "items": [[_all_keys("live_rotate_cw"), "Rotate clockwise"], [_display_key("live_rotate_ccw"), "Rotate counter-clockwise"]]},
 		{"group": "Drop", "cockpit_role": "drop", "items": [[_all_keys("live_soft_drop"), "Soft Drop", {"operation": "Soft"}], [_display_key("live_hard_drop"), "Hard Drop", {"operation": "Hard"}]]},
 		{"group": "Piece management", "items": [[_display_key("live_hold"), "Hold"]]},
-		{"group": "Camera", "items": [["F", "Fit View (framing only)"], [_display_key("reset"), "Reset View (restore flat canonical view)"]]},
+		{"group": "Framing", "cockpit_role": "view_framing", "items": [["F", "Fit View (framing only)", {"operation": "Fit"}], [_display_key("reset"), "Reset View (restore flat canonical view)", {"operation": "Reset"}]]},
 		{"group": "Session", "items": [[_display_key("live_pause"), "Pause"], [_display_key("live_reset"), "Restart Game"]]},
 		{"group": "Navigation", "items": [["Tab", "Play 3D"], ["Esc", "Main Menu"]]},
 	]

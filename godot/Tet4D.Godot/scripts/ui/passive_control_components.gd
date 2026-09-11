@@ -62,6 +62,14 @@ static func keycap(binding: String, density: String = "normal", pointer := false
 
 
 static func binding_labels(binding: String) -> Array[String]:
+	if binding.contains(" · "):
+		# Merged alternatives still split on their own separator, so a keycap
+		# never renders an embedded "A / D" where an unmerged row would show
+		# two caps.
+		var alternatives: Array[String] = []
+		for alternative in binding.split(" · ", false):
+			alternatives.append_array(binding_labels(alternative.strip_edges()))
+		return alternatives
 	var separator := " / " if binding.contains(" / ") else ("/" if binding.contains("/") else "")
 	if separator.is_empty():
 		return [binding]

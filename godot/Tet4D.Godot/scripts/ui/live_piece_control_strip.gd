@@ -46,13 +46,16 @@ func _init() -> void:
 
 func configure(mode: String, basis_snapshot: Dictionary = {}, control_frame: Dictionary = {}, density: String = "normal", authority = LiveInputContractScript) -> void:
 	var groups: Array = authority.piece_control_groups(mode, basis_snapshot, control_frame)
-	var next_signature := JSON.stringify([mode, density, groups])
+	var source := "LiveInputContract" if authority == LiveInputContractScript else "injected_fixture"
+	# Provenance is part of the cached identity: an injected fixture that happens
+	# to yield identical groups must not keep reporting contract provenance.
+	var next_signature := JSON.stringify([mode, density, source, groups])
 	if next_signature == _signature:
 		return
 	_mode = mode
 	_density = density
 	_groups = groups.duplicate(true)
-	_source = "LiveInputContract" if authority == LiveInputContractScript else "injected_fixture"
+	_source = source
 	_signature = next_signature
 	_rebuild()
 

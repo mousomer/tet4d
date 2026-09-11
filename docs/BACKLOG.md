@@ -67,8 +67,11 @@ rows whose labels are injected from `LiveInputContract` across all densities.
 Stage 56D extracts the Header, PrimaryBoardSurface, and three-module
 ControlDeck allocation into the authority-free `LiveCockpit` shell. Stage 56E
 has now migrated Live 3D with a larger primary board and dimension-filtered
-PIECE/VIEW rows. Live 2D migration, responsive acceptance, human playability
-acceptance, and final polish remain gated as Stages 56F–56I.
+PIECE/VIEW rows. Stage 56F has now migrated Live 2D and has implementation and
+automated evidence complete; its regression evidence is independent of
+machine-local onboarding preferences while preserving the profile-owned
+guidance setting. Responsive acceptance, human playability/overlay acceptance,
+final polish, and the 190/200 human A/B choice remain gated as Stages 56G–56I.
 
 ### Three-product packaging gaps
 

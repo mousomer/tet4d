@@ -48,6 +48,8 @@ var _playback_accumulator := 0.0
 var _mouse_orbiting := false
 var _mouse_panning := false
 var _pending_fit_view := false
+var _presentation_layout_guard_revision := 0
+var _presentation_layout_guard_active := false
 var _mode := MODE_REPLAY
 var _retained_live_navigation_mode := ""
 var _retained_live_navigation_paused := false
@@ -991,7 +993,7 @@ func _on_game_viewport_geometry_changed(viewport_size: Vector2) -> void:
 	if _mode == MODE_LIVE_4D and not _current_snapshot.is_empty():
 		var framing_status := str(_camera_rig.presentation_snapshot().get("framing_status", "")) if _camera_rig != null else ""
 		_refresh_live_4d_presentation(true)
-		if not framing_status.begins_with("manual"):
+		if not _presentation_layout_guard_active and not framing_status.begins_with("manual"):
 			_fit_view()
 
 
@@ -1223,6 +1225,8 @@ func apply_presentation_profile(profile) -> bool:
 	if profile == null or not profile.has_method("contract_conforms") or not profile.contract_conforms():
 		return false
 	var previous_ghost_enabled := _ghost_enabled
+	if _mode == MODE_LIVE_4D and not _current_snapshot.is_empty():
+		_begin_presentation_layout_guard()
 	_presentation_profile = profile.detached_copy()
 	_state.display_mode = ReplayVisuals.normalize_display_mode(str(_presentation_profile.value("theme.name")))
 	_state.playback_speed = float(_presentation_profile.value("replay.playback_speed"))
@@ -1253,6 +1257,30 @@ func apply_presentation_profile(profile) -> bool:
 	if _hud != null:
 		_refresh_hud()
 	return true
+
+
+func _begin_presentation_layout_guard() -> void:
+	_presentation_layout_guard_revision += 1
+	# Without a tree there is no frame that could ever release the guard, so
+	# never latch it: a permanently active guard would suppress every later
+	# fit-view recovery for the rest of the session.
+	if not is_inside_tree() or get_tree() == null:
+		_presentation_layout_guard_active = false
+		return
+	_presentation_layout_guard_active = true
+	_release_presentation_layout_guard_after_settle(_presentation_layout_guard_revision)
+
+
+func _release_presentation_layout_guard_after_settle(revision: int) -> void:
+	for _settle_frame in 2:
+		var tree := get_tree()
+		if tree == null:
+			break
+		await tree.process_frame
+		if not is_instance_valid(self):
+			return
+	if revision == _presentation_layout_guard_revision:
+		_presentation_layout_guard_active = false
 
 
 func _refresh_hud() -> void:
@@ -1356,13 +1384,17 @@ func _refresh_control_frame_presentation() -> bool:
 	var changed := presentation_key != _control_frame_presentation_key
 	_control_frame_presentation_key = presentation_key
 	if _camera_rig != null:
+		var live_4d_state_applied := false
 		if dimension == 4 and _camera_rig.has_method("set_live_4d_orientation_state"):
-			_camera_rig.set_live_4d_orientation_state(
+			live_4d_state_applied = bool(_camera_rig.set_live_4d_orientation_state(
 				_live_4d_basis,
 				_live_4d_local_orientation,
 				snapshot
-			)
-		elif _camera_rig.has_method("set_control_frame_mapping"):
+			))
+		# The combined 4D seam declines incomplete state (for example before the
+		# basis and local orientation exist). Fall back rather than leave the rig
+		# rendering the previous presentation's orientation.
+		if not live_4d_state_applied and _camera_rig.has_method("set_control_frame_mapping"):
 			_camera_rig.set_control_frame_mapping(snapshot)
 	if _hud != null and _hud.has_method("set_control_frame_snapshot"):
 		_hud.set_control_frame_snapshot(snapshot)

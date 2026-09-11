@@ -682,7 +682,7 @@ func _configure_live_cockpit_mode(mode: String) -> void:
 	if _inspector_hint_panel != null:
 		_inspector_hint_panel.set_meta("hint_cache_key", "")
 		_update_control_hint_panel(_inspector_hint_panel, mode)
-	_set_live_4d_deck_active(mode in [GameSetupSpecScript.MODE_3D, GameSetupSpecScript.MODE_4D])
+	_set_live_4d_deck_active(mode in [GameSetupSpecScript.MODE_2D, GameSetupSpecScript.MODE_3D, GameSetupSpecScript.MODE_4D])
 	_set_live_inspector_density(true)
 
 
@@ -706,6 +706,8 @@ func _set_live_4d_deck_active(active: bool) -> void:
 		_piece_control_strip.reparent(_live_4d_piece_module, false)
 		_live_view_control_strip.reparent(_live_4d_view_module, false)
 		_piece_preview_row.reparent(_live_4d_state_module, false)
+		if _onboarding_panel != null and _onboarding_panel.get_parent() != _live_cockpit.header_slot:
+			_onboarding_panel.reparent(_live_cockpit.header_slot, false)
 		_right_scroll.visible = false
 		_live_cockpit.set_control_deck_visible(true, _hud_density)
 		return
@@ -715,6 +717,8 @@ func _set_live_4d_deck_active(active: bool) -> void:
 		_piece_preview_row.reparent(_right_column, false)
 	if _live_view_control_strip.get_parent() != _right_column:
 		_live_view_control_strip.reparent(_right_column, false)
+	if _onboarding_panel != null and _onboarding_panel.get_parent() != _right_column:
+		_onboarding_panel.reparent(_right_column, false)
 	_live_cockpit.set_control_deck_visible(false, _hud_density)
 	_right_scroll.visible = true
 

@@ -1,6 +1,8 @@
 # Task Contract — Stage 56 Cockpit Completion
 
-Status: in progress on `codex/live-4d-cockpit-convergence-rebuilt`; not accepted.
+Status: Stage 56F implementation and automated evidence are complete on
+`codex/workspace-governance-v0.1-integrity-repair`. Stages 56G–56I and final
+human acceptance remain incomplete.
 
 ## Objective
 
@@ -44,9 +46,10 @@ retain their current ownership.
    190/200 normal, full, compact, occupied Hold, Designer, and constrained
    states. The 190/200 choice remains a human A/B decision if both comply.
 
-None of these criteria is accepted by this reconstruction. The current branch
-only preserves the work on the repaired camera/control contract and establishes
-focused structural evidence for later review.
+Stage 56F satisfies its implementation and automated-evidence portion of these
+criteria. It does not accept the remaining programme: Stage 56G responsive
+acceptance, Stage 56H human playability/overlay acceptance, Stage 56I polish,
+and the 190/200 human A/B choice remain open.
 
 ## Stage 56 execution contract
 
@@ -169,6 +172,42 @@ orientation marker, input action identities, and native state hash remain
 verified. Before/after captures and measurements are recorded in
 `docs/design/stage_56e_live_3d_evidence.md`. Stage 56F is now eligible; Stages
 56G–56I remain gated.
+
+### Stage 56F — Live-2D migration
+
+Live 2D activates the shared `LiveCockpit` deck beneath its unchanged planar
+board provider. PIECE consumes the authoritative 2D movement, drop, and
+clockwise/counter-clockwise rotation rows. VIEW contains only the existing Fit
+and Reset framing rows; it may take a narrower share visually but must not
+manufacture pointer, depth, slice, or higher-dimensional controls. Piece State
+reuses NEXT/HOLD.
+
+Acceptance compares legacy-inspector and shared-deck captures, requires the
+primary board allocation not to regress, proves the dimension-filtered row set
+and deterministic state are unchanged, and keeps 2D rendering/gameplay outside
+the cockpit shell. Completion of this stage triggers the requested full Godot
+and repository verification before Stage 56G.
+
+Bounded repair `56F-R` covers a regression exposed by the full migration gate:
+a presentation-only profile update can settle the new deck geometry one frame
+later and otherwise trigger an implicit Live-4D refit. Profile-driven relayout
+must continue routing viewport geometry while preserving the complete camera
+pose; explicit Fit and Reset behavior is unchanged.
+
+The same gate requires enabled onboarding to survive inspector retirement. Its
+existing panel is reparented into the live Header slot without changing guide
+state, dismissal, settings persistence, or gameplay input ownership; Stage 56H
+retains responsibility for final overlay-system consolidation. Regression
+evidence must establish its onboarding-profile precondition explicitly rather
+than inherit machine-local persisted preferences from `user://`.
+
+Stage 56F is implemented and automated-evidence complete. The focused Live-2D
+suite, the canonical Godot suite, and the repository verification gate cover
+the shared deck, row filtering, board allocation, onboarding placement, and
+deterministic isolation. The real-runtime captures and measurements are in
+`docs/design/stage_56f_live_2d_evidence.md`. This is not a Stage 56 programme
+acceptance: Stage 56G–56I and the final human A/B decision remain explicitly
+gated.
 
 ## Explicit non-goals for Stage 56A
 

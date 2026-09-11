@@ -14,7 +14,6 @@ const DEFAULT_VIEWPORT_SIZE := Vector2(1600.0, 960.0)
 const SCALE_TIE_EPSILON := 0.0001
 const NON_PREFERRED_ROW_SCALE_WEIGHT := 0.50
 const FINAL_ROW_IMBALANCE_WEIGHT := 0.30
-const PARTIAL_ROW_ALIGNMENT := "left"
 
 var layer_count := 1
 var columns := 1
@@ -100,7 +99,9 @@ func snapshot() -> Dictionary:
 		"viewport_size": viewport_size,
 		"projected_board_scale": projected_board_scale,
 		"unused_viewport_area": unused_viewport_area,
-		"partial_row_alignment": PARTIAL_ROW_ALIGNMENT,
+		# Reported, not configurable: row-major assignment from column 0 always
+		# leaves a partial final row left aligned.
+		"partial_row_alignment": "left",
 		"tile_rects": range(layer_count).map(func(index): return tile_rect_for_layer(index)),
 		"content_rect": _layout_rect(columns),
 		"assignments": assignments,

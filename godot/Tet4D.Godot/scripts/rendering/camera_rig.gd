@@ -165,6 +165,7 @@ func clear_presentation_state() -> void:
 	_orientation_local_snapshot = {"local_yaw": 0.0, "local_pitch": 0.0}
 	_orientation_local_render_basis = Basis.IDENTITY
 	_orientation_control_frame_snapshot.clear()
+	_orientation_axis_snapshot.clear()
 	_orientation_state_source = "camera"
 	set_orientation_gizmo_visible(false)
 	if _camera != null:
@@ -293,7 +294,9 @@ func set_orientation_basis(basis) -> void:
 # Passive Live-4D consumer seam. The app supplies the exact basis, the shared
 # continuous local orientation, and the already-resolved control frame as one
 # coherent state. CameraRig snapshots those owners solely for rendering.
-func set_live_4d_orientation_state(basis, local_orientation, control_frame: Dictionary) -> void:
+# Returns false when the supplied state is not a usable Live-4D triple, so the
+# caller can fall back instead of leaving the rig on a stale orientation.
+func set_live_4d_orientation_state(basis, local_orientation, control_frame: Dictionary) -> bool:
 	if (
 		basis == null
 		or not basis.has_method("indicator_snapshot")
@@ -302,7 +305,7 @@ func set_live_4d_orientation_state(basis, local_orientation, control_frame: Dict
 		or not local_orientation.has_method("passive_render_basis")
 		or control_frame.is_empty()
 	):
-		return
+		return false
 	_orientation_basis_snapshot = basis.indicator_snapshot().duplicate(true)
 	_orientation_local_snapshot = local_orientation.snapshot().duplicate(true)
 	_orientation_local_render_basis = local_orientation.passive_render_basis()
@@ -317,6 +320,7 @@ func set_live_4d_orientation_state(basis, local_orientation, control_frame: Dict
 	_orientation_basis_snapshot["control_frame_dimension"] = 4
 	_orientation_basis_snapshot["translation_commands"] = control_frame.get("translation_commands", {}).duplicate(true)
 	_update_gizmo_axes()
+	return true
 
 
 func set_control_frame_mapping(mapping: Dictionary) -> void:
@@ -681,6 +685,20 @@ func _update_gizmo_axis(slot: String, label_text: String, direction: Vector3) ->
 	var shaft := _orientation_gizmo.get_node_or_null("%sAxis" % slot) as MeshInstance3D
 	var arrow := _orientation_gizmo.get_node_or_null("%sArrow" % slot) as MeshInstance3D
 	var label := _orientation_gizmo.get_node_or_null("%sLabel" % slot) as Label3D
+	var available := direction.length_squared() > 0.000001
+	if shaft != null:
+		shaft.visible = available
+	if arrow != null:
+		arrow.visible = available
+	if label != null:
+		label.visible = available
+	if not available:
+		_orientation_axis_snapshot[slot.to_lower()] = {
+			"signed_axis": label_text,
+			"presented_direction": Vector3.ZERO,
+			"available": false,
+		}
+		return
 	var color := ReplayVisuals.axis_color(label_text)
 	if shaft != null:
 		shaft.position = direction * 0.35
@@ -700,6 +718,7 @@ func _update_gizmo_axis(slot: String, label_text: String, direction: Vector3) ->
 	_orientation_axis_snapshot[slot.to_lower()] = {
 		"signed_axis": label_text,
 		"presented_direction": direction,
+		"available": true,
 	}
 
 
