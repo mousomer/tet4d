@@ -46,12 +46,11 @@ No active handoff.
 
 Review the workspace-governance v0.1 round 2 repair. Every declared route is now
 reachable from an execution profile or representative scenario, and `gov check`
-reports that as `BROKEN_REFERENCE` when it is not. No cockpit files have changed;
-the boundary-validator finding that reproduces from commit `8d80bdc3` for
-`godot/Tet4D.Godot/tests/test_live_cockpit.gd` is already resolved in the live
-cockpit work, so this repair must land on a base that includes it rather than
-renaming that helper again. Durable open work and release-matrix deferrals
-remain in `docs/BACKLOG.md`.
+reports that as `BROKEN_REFERENCE` when it is not. The live-cockpit component
+grammar helper uses the established `_assert_component_grammar` name, keeping
+the test outside the semantic-computation patterns enforced by the Godot
+boundary validator. Durable open work and release-matrix deferrals remain in
+`docs/BACKLOG.md`.
 
 Sections with `BEGIN/END GENERATED:*` markers are maintained by
 `tools/governance/generate_maintenance_docs.py`.
