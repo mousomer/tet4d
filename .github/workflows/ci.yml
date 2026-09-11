@@ -23,6 +23,9 @@ env:
   SDL_VIDEODRIVER: dummy
   SDL_AUDIODRIVER: dummy
   CODEX_MODE: "1"
+  # A runner installs the project, so it declares installed mode rather than
+  # letting the default speak for it.
+  TET4D_ENVIRONMENT_MODE: installed
   TET4D_NATIVE_TOOLS_CI_ADVISORY: "1"
 
 jobs:

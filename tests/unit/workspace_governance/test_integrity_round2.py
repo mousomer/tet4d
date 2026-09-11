@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import importlib.metadata
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -46,7 +47,16 @@ def wrapper(root: Path, *, no_site: bool = False) -> Path:
     return path
 
 
-def test_packaging_is_an_explicit_installed_runtime_dependency() -> None:
+def execution_mode() -> str:
+    """Ask the resolver, which reads the declaration rather than the environment."""
+    _, project, _ = GovernanceResolver.for_root(ROOT).load()
+    mode, _, issues = core.resolve_execution_mode(project, dict(os.environ))
+    assert not issues, [item.to_dict() for item in issues]
+    return mode
+
+
+def test_packaging_is_declared_once_by_the_dependency_authority() -> None:
+    """pyproject declares dependencies in every mode; only the check differs."""
     from packaging.requirements import Requirement
     from packaging.specifiers import SpecifierSet
 
@@ -54,11 +64,35 @@ def test_packaging_is_an_explicit_installed_runtime_dependency() -> None:
         "dependencies"
     ]
     declared = [Requirement(d) for d in deps if Requirement(d).name == "packaging"]
-    installed = [Requirement(d) for d in importlib.metadata.requires("tet4d") or []]
     assert len(declared) == 1
-    assert any(d.name == "packaging" for d in installed)
     assert importlib.metadata.version("packaging") in declared[0].specifier
     assert str(SpecifierSet(">=3.11")) == ">=3.11"
+
+
+def test_installed_mode_carries_the_declaration_into_distribution_metadata() -> None:
+    """Installed metadata is a separate claim from importability.
+
+    A dependency can be present transitively and import fine while never being
+    declared, which is exactly what this guards.
+    """
+    from packaging.requirements import Requirement
+
+    if execution_mode() != "installed":
+        pytest.skip("source mode declares no tet4d distribution")
+    installed = [Requirement(d) for d in importlib.metadata.requires("tet4d") or []]
+    assert any(item.name == "packaging" for item in installed)
+
+
+def test_source_mode_keeps_the_environment_free_of_a_tet4d_distribution() -> None:
+    """The invariant a shared environment exists to hold: no source binding.
+
+    An installed distribution would make one checkout authoritative for every
+    other, so in source mode none may be discoverable at all.
+    """
+    if execution_mode() != "source":
+        pytest.skip("installed mode declares a tet4d distribution")
+    with pytest.raises(importlib.metadata.PackageNotFoundError):
+        importlib.metadata.distribution("tet4d")
 
 
 def test_dependency_light_bootstrap_and_missing_project_dependency(

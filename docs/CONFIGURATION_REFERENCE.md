@@ -235,6 +235,8 @@ Parameters:
 - `environment.dependency_authority.authority_ref`: `"python-project-metadata"` (`string`)
 - `environment.dependency_authority.source`: `"pyproject.toml"` (`string`)
 - `environment.editable_source`: `"src/tet4d"` (`string`)
+- `environment.execution_mode.default`: `"installed"` (`string`)
+- `environment.execution_mode.override`: `"TET4D_ENVIRONMENT_MODE"` (`string`)
 - `environment.interpreter_override`: `"TET4D_PYTHON"` (`string`)
 - `environment.package_import`: `"tet4d"` (`string`)
 - `environment.preferred`: `".venv/bin/python"` (`string`)
@@ -302,12 +304,12 @@ Parameters:
 ### `config/governance/workspace.lock.json`
 Top-level keys: `content_sha256`, `files`, `lock_algorithm`, `pack_name`, `pack_path`, `revision`, `schema_version`, `version`
 Parameters:
-- `content_sha256`: `"e86b146ec6d88f625f409fa65185c124c9182dcdbf1b6061db0e0ae835143429"` (`string`)
+- `content_sha256`: `"9ef762742a10936226fa7869f30cc8e14a1d29692665283eda10ee450462ab3b"` (`string`)
 - `files[]`: array[`string`]; examples: `"MANIFEST.json"`, `"VERSION"`, `"__init__.py"`
 - `lock_algorithm`: `"sha256-path-and-content-v1"` (`string`)
 - `pack_name`: `"workspace-governance"` (`string`)
 - `pack_path`: `"tools/workspace_governance"` (`string`)
-- `revision`: `"v0.1-integrity-4"` (`string`)
+- `revision`: `"v0.1-integrity-5"` (`string`)
 - `schema_version`: `1` (`int`)
 - `version`: `"0.1.0"` (`string`)
 

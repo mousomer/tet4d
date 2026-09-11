@@ -220,7 +220,7 @@
     "environment": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["python_requires", "dependency_authority", "preferred", "interpreter_override", "package_import", "editable_source", "critical_packages", "route_tools"],
+      "required": ["python_requires", "dependency_authority", "preferred", "interpreter_override", "execution_mode", "package_import", "editable_source", "critical_packages", "route_tools"],
       "x-governance-use": "consumed",
       "properties": {
         "python_requires": {
@@ -246,6 +246,17 @@
           "x-governance-behavior": "environment"
         },
         "preferred": {"type": "string", "x-governance-use": "consumed", "x-governance-behavior": "environment"},
+        "execution_mode": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["override", "default"],
+          "x-governance-use": "consumed",
+          "x-governance-behavior": "environment",
+          "properties": {
+            "override": {"type": "string", "minLength": 1, "x-governance-use": "consumed", "x-governance-behavior": "environment"},
+            "default": {"type": "string", "minLength": 1, "x-governance-use": "consumed", "x-governance-behavior": "environment"}
+          }
+        },
         "interpreter_override": {"type": "string", "x-governance-use": "consumed", "x-governance-behavior": "environment"},
         "package_import": {"type": "string", "x-governance-use": "consumed", "x-governance-behavior": "environment"},
         "editable_source": {"type": "string", "x-governance-use": "consumed", "x-governance-behavior": "environment"},

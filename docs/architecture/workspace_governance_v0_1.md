@@ -69,6 +69,17 @@ and needs no package at all. The constraint is permanent while the interpreter
 is shared, and it is invisible from inside the repository, because the same
 import succeeds under a private `.venv` that lacks the offending distribution.
 
+Execution mode is declared, never inferred. `environment.execution_mode` names
+the variable that carries it and the default when that variable is unset;
+`source` means the project is imported from a checkout, `installed` that it
+comes from a distribution. Which one holds decides whether `pyproject.toml` or
+distribution metadata is the truthful dependency record, so reading it back
+from whichever source happens to answer would make the check agree with any
+environment it runs in, including one holding another worktree's build
+artifacts. The set of modes is implementation, not configuration: a project
+says which variable carries the mode and what it defaults to, never what a
+third mode would mean.
+
 `gov doctor` verifies interpreter/version selection, import and editable-install
 origin, dependency authority, and reports `ENVIRONMENT_INVALID` via
 `ENVIRONMENT_MISMATCH` diagnostics. Godot inspection remains route-specific and
