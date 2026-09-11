@@ -58,6 +58,7 @@ func _test_shell_preferences() -> Array:
 		root.queue_free()
 		return ["display presentation runtime test requires ReplayHud"]
 	var panel = hud._settings_screen_panel
+	hud._set_onboarding_visible(true)
 	var state_hash_before := str(app._current_snapshot.get("state_hash", "")) if app != null else ""
 	var theme_before_scale = hud.theme
 	panel._on_control_value_changed("display.ui_scale", "extra_large")
@@ -100,7 +101,12 @@ func _test_shell_preferences() -> Array:
 		var local_orientation_before: Dictionary = app._live_4d_local_orientation.snapshot()
 		var camera_before: Dictionary = app._camera_rig.presentation_snapshot()
 		var background_before: Color = app._world_environment.environment.background_color
-		var profile_before = hud.presentation_profile()
+		# The test made onboarding visible explicitly above, so its detached
+		# profile precondition must say the same thing. Do not inherit an
+		# operator's persisted `user://` preference into headless acceptance.
+		var profile_before = hud.presentation_profile().with_overrides({
+			"interface.show_onboarding": true,
+		})
 		var variant = profile_before.with_overrides({
 			"replay.playback_speed": 0.5,
 			"replay.loop_enabled": false,
