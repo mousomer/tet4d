@@ -18,7 +18,7 @@ PYTHON_BIN="$(./scripts/resolve_python_env.sh)"
   tests/unit/engine/test_tutorial_overlay_layout.py \
   tools/governance/validate_project_contracts.py
 
-PYTHONPATH=src "$PYTHON_BIN" -m pytest -q \
+PYTHONPATH="src${PYTHONPATH:+:$PYTHONPATH}" "$PYTHON_BIN" -m pytest -q \
   tests/unit/engine/test_keybindings.py \
   tests/unit/engine/test_keybindings_menu_model.py \
   tests/unit/engine/test_menu_navigation_keys.py \

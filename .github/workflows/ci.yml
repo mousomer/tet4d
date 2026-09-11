@@ -224,11 +224,11 @@ jobs:
 
       - name: Check Python and native parity
         run: |
-          PYTHONPATH=src python tools/migration/compare_cpp_gameplay_trace.py \
+          PYTHONPATH="src${PYTHONPATH:+:$PYTHONPATH}" python tools/migration/compare_cpp_gameplay_trace.py \
             --all-plain-2d
-          PYTHONPATH=src python tools/migration/compare_cpp_gameplay_trace.py \
+          PYTHONPATH="src${PYTHONPATH:+:$PYTHONPATH}" python tools/migration/compare_cpp_gameplay_trace.py \
             --all-plain-nd
-          PYTHONPATH=src python tools/migration/compare_cpp_gameplay_trace.py \
+          PYTHONPATH="src${PYTHONPATH:+:$PYTHONPATH}" python tools/migration/compare_cpp_gameplay_trace.py \
             --all-plain-setup
           python -m pytest -q \
             tests/unit/migration/test_cpp_geometry_parity.py \
