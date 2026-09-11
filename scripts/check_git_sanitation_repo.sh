@@ -16,6 +16,8 @@ rg_usable() {
 
 search_repo_text() {
   local pattern="$1"
+  # The governance validator must contain the literal forms it rejects.
+  local validator_literal_path='tools/workspace_governance/validators/core.py'
   if rg_usable; then
     rg -n -I --hidden \
       --glob '!**/.git' \
@@ -38,6 +40,7 @@ search_repo_text() {
       --glob '!**/context-*.instructions.md' \
       --glob '!**/check_git_sanitation.sh' \
       --glob '!**/check_git_sanitation_repo.sh' \
+      --glob "!${validator_literal_path}" \
       "$pattern" .
     return
   fi
@@ -63,7 +66,7 @@ search_repo_text() {
     --exclude=check_git_sanitation.sh \
     --exclude=check_git_sanitation_repo.sh \
     --binary-files=without-match \
-    "$pattern" .
+    "$pattern" . | grep -v "^./${validator_literal_path}:"
 }
 
 search_docs_and_config_text() {
@@ -109,6 +112,7 @@ fi
 
 
 required_exec_paths=(
+  "gov"
   "scripts/bootstrap_env.sh"
   "scripts/check_architecture_boundaries.sh"
   "scripts/check_architecture_metric_budgets.sh"
@@ -123,6 +127,8 @@ required_exec_paths=(
   "scripts/ci_check.sh"
   "scripts/ci_preflight.sh"
   "scripts/install_git_hooks.sh"
+  "scripts/resolve_bootstrap_python.sh"
+  "scripts/resolve_python_env.sh"
   "scripts/update_policy_template_hashes.sh"
   "scripts/verify.sh"
   "scripts/verify_local.sh"

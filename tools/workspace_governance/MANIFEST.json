@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "name": "workspace-governance",
+  "version": "0.1.0",
+  "revision": "v0.1-integrity-3",
+  "version_file": "VERSION",
+  "lock_algorithm": "sha256-path-and-content-v1",
+  "pack_hash_excludes": [
+    "**/__pycache__/**",
+    "**/*.pyc",
+    "**/.DS_Store"
+  ],
+  "commands": [
+    "check",
+    "resolve",
+    "explain",
+    "doctor",
+    "sync"
+  ],
+  "diagnostics": [
+    "DUPLICATE_AUTHORITY",
+    "CONFLICTING_VALUE",
+    "AMBIGUOUS_AUTHORITY",
+    "BROKEN_REFERENCE",
+    "PACK_DRIFT",
+    "ENVIRONMENT_MISMATCH"
+  ],
+  "field_usage": {
+    "schema_version": "validation-only",
+    "name": "consumed",
+    "version": "consumed",
+    "revision": "consumed",
+    "version_file": "consumed",
+    "lock_algorithm": "consumed",
+    "pack_hash_excludes": "consumed",
+    "commands": "validation-only",
+    "diagnostics": "validation-only",
+    "field_usage": "validation-only"
+  }
+}

@@ -3,9 +3,24 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+VERBOSE=0
+if [[ "${1:-}" == "--verbose" ]]; then
+  VERBOSE=1
+  shift
+fi
+if [[ "$#" -ne 0 ]]; then
+  echo "Usage: ./scripts/verify.sh [--verbose]" >&2
+  exit 2
+fi
+
 # CODEX_MODE=1 reduces token-heavy runtime while preserving core correctness checks.
 CODEX_MODE="${CODEX_MODE:-0}"
-QUIET="${QUIET:-1}"
+if [[ "$VERBOSE" == "1" ]]; then
+  QUIET=0
+  export GOV_ENV_VERBOSE=1
+else
+  QUIET="${QUIET:-1}"
+fi
 KEEP_VERIFY_STATE="${KEEP_VERIFY_STATE:-0}"
 
 # Reduce stability repeats in CODEX_MODE to keep logs/time bounded.
@@ -16,19 +31,9 @@ else
 fi
 STABILITY_SEED_BASE="${STABILITY_SEED_BASE:-0}"
 
-# Select python
-if [[ -n "${PYTHON_BIN:-}" ]]; then
-  :
-elif [[ -x ".venv/bin/python" ]]; then
-  PYTHON_BIN=".venv/bin/python"
-elif command -v python3 >/dev/null 2>&1; then
-  PYTHON_BIN="python3"
-elif command -v python >/dev/null 2>&1; then
-  PYTHON_BIN="python"
-else
-  echo "No Python runtime found. Set PYTHON_BIN or install python3." >&2
-  exit 1
-fi
+# Resolve once. Every Python subprocess receives this exact interpreter.
+PYTHON_BIN="$(./scripts/resolve_python_env.sh)"
+export PYTHON_BIN
 
 VERIFY_LOCK_DIR="state/.verify.lock"
 VERIFY_STATE_ROOT_OWNED=0
@@ -123,7 +128,9 @@ require_module ruff ruff
 require_module pytest pytest
 require_repo_package
 
-run_step "editable_install" env PYTHON_BIN="$PYTHON_BIN" ./scripts/check_editable_install.sh
+run_step "workspace_governance" ./gov check
+run_step "environment_doctor" ./gov doctor
+run_step "editable_install" ./scripts/check_editable_install.sh
 run_governance_step "policy_compliance" ./scripts/check_policy_compliance.sh
 run_governance_step "policy_compliance_repo" ./scripts/check_policy_compliance_repo.sh
 run_governance_step "git_sanitation_repo" ./scripts/check_git_sanitation_repo.sh
@@ -140,8 +147,8 @@ run_governance_step "ruff" run_module ruff check .
 run_governance_step "ruff_format" run_module ruff format --check scripts tools
 run_governance_step "ruff_c901" run_module ruff check --select C901 .
 run_step "arch_metrics"   "$PYTHON_BIN" scripts/arch_metrics.py
-run_governance_step "arch_metrics_soft_gate" env PYTHON_BIN="$PYTHON_BIN" ./scripts/check_architecture_metrics_soft_gate.sh
-run_governance_step "arch_metrics_budgets" env PYTHON_BIN="$PYTHON_BIN" ./scripts/check_architecture_metric_budgets.sh
+run_governance_step "arch_metrics_soft_gate" ./scripts/check_architecture_metrics_soft_gate.sh
+run_governance_step "arch_metrics_budgets" ./scripts/check_architecture_metric_budgets.sh
 
 # Keep pytest quiet and bounded in interactive mode
 PYTEST_ARGS=(-q --maxfail=1 --disable-warnings)
@@ -151,7 +158,7 @@ fi
 
 run_step "pytest"         run_module pytest "${PYTEST_ARGS[@]}"
 
-run_step "playbot_stability"   env PYTHONPATH=. "$PYTHON_BIN" tools/stability/check_playbot_stability.py --repeats "$STABILITY_REPEATS" --seed-base "$STABILITY_SEED_BASE"
+run_step "playbot_stability"   env PYTHONPATH=".${PYTHONPATH:+:$PYTHONPATH}" "$PYTHON_BIN" tools/stability/check_playbot_stability.py --repeats "$STABILITY_REPEATS" --seed-base "$STABILITY_SEED_BASE"
 
 run_step "compileall"     "$PYTHON_BIN" -m compileall -q front.py cli/__init__.py cli/front.py cli/front2d.py cli/front3d.py cli/front4d.py src/tet4d src/tet4d/engine
 run_step "bench_playbot"  "$PYTHON_BIN" tools/benchmarks/bench_playbot.py --assert --record-trend

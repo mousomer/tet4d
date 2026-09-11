@@ -5,6 +5,10 @@ generated-data provenance.
 
 ## Authority
 
+Workspace coordination and new stable governance references follow
+`docs/architecture/workspace_governance_v0_1.md`. The workspace manifest is not
+a project-policy authority, and local overlays are execution state only.
+
 Canonical runtime and governance sources include
 `config/project/constants.json`, `config/gameplay/tuning.json`,
 `config/menu/defaults.json`, `config/project/policy_pack.json`, and the

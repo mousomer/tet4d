@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+TET4D_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REPO_PATH="${1:-.}"
 cd "$REPO_PATH"
 
@@ -17,10 +18,7 @@ if [[ ! -f "$HASH_MANIFEST" ]]; then
   exit 0
 fi
 
-PYTHON_BIN="${PYTHON_BIN:-python3}"
-if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
-  PYTHON_BIN="python"
-fi
+PYTHON_BIN="$("$TET4D_ROOT/scripts/resolve_python_env.sh")"
 
 "$PYTHON_BIN" - <<'PY'
 import hashlib

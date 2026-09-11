@@ -595,8 +595,9 @@ func _test_live_integration(registry) -> Array:
 		failures.append("animation-only changes and time advancement must not touch deterministic gameplay state")
 	if app._renderer.current_bounds() != bounds_before:
 		failures.append("animation-only changes must not move authoritative board bounds")
-	if not hud._basis_panel.is_visible_in_tree() or str(animation_layout_after.get("basis_indicator_text", "")).find("Slice:") == -1:
-		failures.append("the animated style must preserve visible Live 4D basis/slice state")
+	var orientation: Dictionary = app._camera_rig.orientation_indicator_snapshot()
+	if orientation.get("source") != "live_4d_presentation" or str(orientation.get("control_frame", {}).get("slice_axis", "")).is_empty():
+		failures.append("the animated style must preserve Live 4D orientation/slice state")
 	if not hud._next_piece_panel.is_visible_in_tree() or not hud._hold_piece_panel.is_visible_in_tree() or not hud._piece_control_strip.is_visible_in_tree():
 		failures.append("the animated style must preserve visible NEXT, HOLD, and piece controls")
 	if not library.list_profiles().is_empty():

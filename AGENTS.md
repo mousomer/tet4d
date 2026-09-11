@@ -1,74 +1,42 @@
-# tet4d Dispatch
+# Tet4D governance dispatcher
 
-tet4d is a Python-origin game and engine with Godot as the product shell and
-subsystem-specific semantic authority.
+Tet4D uses the vendored `workspace-governance` pack to resolve bounded context
+without weakening its existing semantic or verification authorities.
 
-## Governance bootstrap
+## Start here
 
-The machine-readable owner and route registry is
-`config/project/policy_pack.json` under `authority_model` and `codex_routing`.
-Human governance has exactly these canonical owners:
+- Workspace membership and pack lock: `.governance/workspace.json`
+- Project facts, stable authority IDs, routes, environment, and task profiles:
+  `config/governance/project.json`
+- Machine-local execution overlay (optional and ignored):
+  `.governance/workspace.local.json`
+- Unmigrated Tet4D machine policy compatibility authority:
+  `config/project/policy_pack.json`
+- Human product and architecture truth: the authority sources referenced by the
+  project manifest
 
-- `docs/governance/ENGINEERING.md`
-- `docs/governance/VERIFICATION.md`
-- `docs/governance/SECURITY_AND_SANITATION.md`
-- `docs/governance/CONFIG_AND_GENERATED_DATA.md`
-- `docs/governance/NATIVE_AND_PLATFORM.md`
-- `docs/governance/CHANGE_GOVERNANCE.md`
+Run `./gov check`, then use `./gov resolve` or `./gov explain <key>` to discover
+the applicable source and provenance. `./gov explain --task "<description>"`
+shows a declared representative task resolution. Run `./gov doctor` before
+environment-dependent work when environment identity is uncertain.
 
-Product behaviour lives in relevant `docs/rds/*`; architecture and subsystem
-ownership live in `docs/ARCHITECTURE_CONTRACT.md` and
-`docs/architecture/authority_map.md`. Authority transfer or establishment uses
-`docs/architecture/authority_transfer_protocol.md`. Active work and deferrals
-live in `docs/BACKLOG.md`; `CURRENT_STATE.md` is restart/handoff context only.
+## Choose an execution mode
 
-## Compositional routes
+- `LOCAL_FIX`: reproduce, inspect the minimum owning path and direct tests, then
+  expand only from evidence.
+- `FEATURE`: identify the owner, neighboring contracts, and a bounded
+  architecture surface.
+- `STRUCTURAL_CHANGE`: review authorities, routing, broad impact, migrations,
+  and generated surfaces as applicable.
 
-Select zero, one, or several matching routes:
-
-`product_planning`, `python_reference_engine`, `godot_product_shell`,
-`native_deterministic_core`, `topology_and_explorer`,
-`governance_and_tooling`, `packaging_and_release`.
-
-Routes add context and default evidence; none is primary or exclusive. Union
-the selected routes, then derive final verification from the actual diff,
-claims, contracts, and authority boundaries. Repository changes require
-affected layers, a claim, and non-empty verification. Select an additional
-route only when the actual claims, contracts, or authority boundaries make it
-applicable. `review_only`, `staged_handoff`, `cross_layer`, and
-`verification_failure` are workflow modifiers, not routes.
+Mode controls exploration cost only. Required evidence always resolves from
+the task, authority, actual diff, claims, and risk. Escalate a local fix when
+ownership is unclear or crossed, implementations disagree, a generated
+authority changes, or packaging/release behavior changes.
 
 Follow `godot/AGENTS.md` or `native/AGENTS.md` when those trees are in scope.
-Nested dispatch may tighten but never weaken this contract.
-
-## Universal invariants
-
-- Inspect current code, tests, and routed authorities before editing; search
-  for existing implementations and utilities first.
-- Start restructuring or behaviour work with a concise plan and acceptance
-  criteria; update the owning design documentation before finalizing code.
-- Python remains reference authority only for inherited, untransferred
-  behaviour. Implementation, parity, or visual plausibility alone does not
-  transfer authority.
-- New authority requires a normative contract, named owners, conformance
-  evidence, compatibility rules, an establishment record, and map update.
-- Keep one semantic objective per PR. Cross-layer work needs a scope matrix and
-  provider-consumer integration evidence.
-- Behaviour changes require tests. Never weaken tests, deterministic identity,
-  replay/trace compatibility, sanitation, or explicit deferrals.
-- Update affected docs and `docs/BACKLOG.md`; update `CURRENT_STATE.md` only for
-  staged/restart/handoff context.
-- GitHub writes target canonical `origin` under its owner. Never publish
-  secrets, private identity data, or machine-local paths.
-- Partial acceptance is not completion; do not continue into another task or
-  stage without separate scope.
-
-Run focused checks from `VERIFICATION.md`; governance, authority, broad shared
-infrastructure, uncertainty, reviewer, or release claims require:
-
-```bash
-CODEX_MODE=1 ./scripts/verify.sh
-```
-
-Report routes, modifiers, layers, claims, authorities, evidence, omissions and
-rationale, scope matrix, authority effects, risks, and unverified areas.
+Authority establishment or transfer follows
+`docs/architecture/authority_transfer_protocol.md`.
+Update the owning design source and `docs/BACKLOG.md` for repository changes.
+The resolved full gate is `CODEX_MODE=1 ./scripts/verify.sh`; `--verbose` changes
+logging only.

@@ -3,16 +3,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-if [[ -n "${PYTHON_BIN:-}" ]]; then
-  :
-elif command -v python3 >/dev/null 2>&1; then
-  PYTHON_BIN="python3"
-elif command -v python >/dev/null 2>&1; then
-  PYTHON_BIN="python"
-else
-  echo "No Python runtime found. Set PYTHON_BIN or install python3." >&2
-  exit 1
-fi
+PYTHON_BIN="$(./scripts/resolve_python_env.sh)"
 
 "$PYTHON_BIN" - <<'PY'
 from __future__ import annotations

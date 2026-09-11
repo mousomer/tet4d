@@ -190,13 +190,13 @@ func _assert_shared_orbit_input_contract(failures: Array) -> void:
 func _assert_live_4d_screen_level_slice_rows(failures: Array, rig, presentation_root: Node3D) -> void:
 	var mapper := TraceCoordinateMapperScript.new()
 	mapper.configure(
-		[5, 7, 3, 4],
+		[8, 16, 5, 6],
 		SliceBasis4DScript.identity(),
 		1.0,
 		CameraRigScript.live_4d_screen_row_y_per_world_x()
 	)
-	if mapper.layer_layout.columns != 2 or mapper.layer_layout.rows != 2:
-		failures.append("four Live-4D slices must exercise the two-column row-alignment fixture")
+	if mapper.layer_layout.columns != 3 or mapper.layer_layout.rows != 2:
+		failures.append("six Live-4D slices must exercise the three-column row-alignment fixture, got %dx%d" % [mapper.layer_layout.columns, mapper.layer_layout.rows])
 		return
 	var left_anchor := mapper.slice_anchor(0)
 	var right_anchor := mapper.slice_anchor(1)
@@ -364,6 +364,10 @@ func _assert_live_2d_3d_relative_projection(failures: Array, rig) -> void:
 	for yaw in [0.0, deg_to_rad(100.0), PI, deg_to_rad(-100.0)]:
 		rig.establish_outer_view(yaw, 0.0, 0.0, false)
 		var mapping_2d = ControlFrameMappingScript.for_2d(rig.control_frame_yaw())
+		rig.set_control_frame_mapping(mapping_2d.effective_translation_snapshot("relative"))
+		var orientation_2d: Dictionary = rig.orientation_indicator_snapshot()
+		if orientation_2d.get("axes", {}).get("depth", {}).get("available", true):
+			failures.append("2D orientation state must mark its unavailable depth axis without constructing a zero-vector arrow")
 		var right_command_2d: String = mapping_2d.translation_command("move_right", "relative")
 		var right_delta_2d := Vector3.RIGHT if right_command_2d == "move_right" else Vector3.LEFT
 		var origin_screen_2d: Vector2 = rig.project_world_point(focus)

@@ -22,7 +22,8 @@ func configure(
 	board_shape: Array,
 	basis = null,
 	spacing_scale: float = 1.0,
-	screen_row_slope: float = 0.0
+	screen_row_slope: float = 0.0,
+	viewport_size: Vector2 = Vector2.ZERO
 ) -> void:
 	_board_shape = board_shape.duplicate()
 	_basis = basis if basis != null else SliceBasis4DScript.identity()
@@ -42,7 +43,8 @@ func configure(
 	var width: float = _local_geometry.local_extent.x if _local_geometry.is_configured() else 4.0
 	var height: float = _local_geometry.local_extent.y if _local_geometry.is_configured() else 4.0
 	var depth: float = _local_geometry.local_extent.z if _local_geometry.is_configured() else 4.0
-	layer_layout.configure(current_layer_count(), width, height, 1.7777778, spacing_scale, depth, screen_row_slope)
+	var viewport_aspect := viewport_size.x / viewport_size.y if viewport_size.x > 0.0 and viewport_size.y > 0.0 else 1.7777778
+	layer_layout.configure(current_layer_count(), width, height, viewport_aspect, spacing_scale, depth, screen_row_slope, viewport_size)
 	slice_stride = layer_layout.tile_width + layer_layout.horizontal_gap
 
 

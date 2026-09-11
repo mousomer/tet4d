@@ -30,7 +30,10 @@ No active handoff.
 
 ## Current Authority
 
-- Machine governance and task routing: `config/project/policy_pack.json`
+- Workspace/project routing: `.governance/workspace.json` and
+  `config/governance/project.json`
+- Unmigrated machine governance and route compatibility facade:
+  `config/project/policy_pack.json`
 - Contributor dispatch: `AGENTS.md`
 - Canonical human governance: the six owner files under `docs/governance/`
 - Product behaviour: relevant `docs/rds/*`
@@ -41,8 +44,13 @@ No active handoff.
 
 ## Next Acceptance Boundary
 
-Review the focused product-boundary PR. Durable open work and release-matrix
-deferrals remain in `docs/BACKLOG.md`.
+Review the workspace-governance v0.1 round 2 repair. Every declared route is now
+reachable from an execution profile or representative scenario, and `gov check`
+reports that as `BROKEN_REFERENCE` when it is not. The live-cockpit component
+grammar helper uses the established `_assert_component_grammar` name, keeping
+the test outside the semantic-computation patterns enforced by the Godot
+boundary validator. Durable open work and release-matrix deferrals remain in
+`docs/BACKLOG.md`.
 
 Sections with `BEGIN/END GENERATED:*` markers are maintained by
 `tools/governance/generate_maintenance_docs.py`.
@@ -58,11 +66,11 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 28` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 6.10` (`low`)
+- `tech_debt.score = 6.13` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 2.96`
+1. `delivery_size_pressure = 2.99`
 2. `code_balance = 2.15`
 <!-- END GENERATED:current_state_metric_snapshot -->
 

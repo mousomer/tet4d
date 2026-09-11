@@ -70,45 +70,57 @@ def _semantic_id(node: dict[str, Any]) -> str:
 
 def _retained_nodes(
     root: dict[str, Any],
-) -> tuple[dict[str, dict[str, Any]], dict[str, str]]:
+) -> tuple[dict[str, dict[str, Any]], dict[str, str], dict[str, list[str]]]:
+    """Walk once, collecting retained nodes, their parents, and their evidence.
+
+    Discarded nodes are attributed to the nearest retained ancestor the
+    traversal is already carrying, so no path-prefix rescan is needed.
+    """
     retained: dict[str, dict[str, Any]] = {root["semantic_id"]: root}
     parent: dict[str, str] = {}
+    evidence: dict[str, list[str]] = {root["semantic_id"]: [root["semantic_id"]]}
 
     def visit(node: dict[str, Any], retained_parent: dict[str, Any]) -> None:
-        keep = _meaningful(node)
+        identity = node["semantic_id"]
         current_parent = retained_parent
-        if keep:
-            retained[node["semantic_id"]] = node
-            parent[node["semantic_id"]] = retained_parent["semantic_id"]
+        if _meaningful(node):
+            retained[identity] = node
+            parent[identity] = retained_parent["semantic_id"]
+            evidence[identity] = [identity]
             current_parent = node
+        else:
+            evidence[current_parent["semantic_id"]].append(identity)
         for child in node.get("children", []):
             visit(child, current_parent)
 
     for child in root.get("children", []):
         visit(child, root)
-    return retained, parent
+    return retained, parent, evidence
+
+
+def _unique_design_id(candidate: str, used: set[str]) -> str:
+    """Keep derived design identities distinct after name/suffix truncation."""
+    if candidate not in used:
+        used.add(candidate)
+        return candidate
+    ordinal = 2
+    while f"{candidate}_{ordinal}" in used:
+        ordinal += 1
+    unique = f"{candidate}_{ordinal}"
+    used.add(unique)
+    return unique
 
 
 def extract_screen(screen: dict[str, Any]) -> dict[str, Any]:
     """Compress one normalized runtime screen into a provenance-complete tree."""
     root = screen["root"]
-    retained, parent = _retained_nodes(root)
+    retained, parent, evidence = _retained_nodes(root)
 
-    evidence: dict[str, list[str]] = {key: [key] for key in retained}
-    for node in _walk(root):
-        source = node["semantic_id"]
-        if source in retained:
-            continue
-        # The traversal parent map is constructed from retained nodes, so find
-        # the closest retained identity by path-prefix, not layout assumptions.
-        candidates = [key for key in retained if source.startswith(key + "__")]
-        target = max(candidates, key=len) if candidates else root["semantic_id"]
-        evidence[target].append(source)
-
+    used_ids: set[str] = set()
     models: dict[str, dict[str, Any]] = {}
     for source, node in retained.items():
         models[source] = {
-            "semantic_id": _semantic_id(node)
+            "semantic_id": _unique_design_id(_semantic_id(node), used_ids)
             if source != root["semantic_id"]
             else "design_game_screen",
             "name": _name(node)

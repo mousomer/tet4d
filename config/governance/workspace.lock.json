@@ -1,0 +1,27 @@
+{
+  "content_sha256": "b032b8cff6c5631447e8315d608bdad4f68f61176c2b0dbb24c58cd9770c7ccd",
+  "files": [
+    "MANIFEST.json",
+    "VERSION",
+    "__init__.py",
+    "cli/__init__.py",
+    "cli/bootstrap.py",
+    "cli/gov.py",
+    "field-usage.json",
+    "policies/ownership.md",
+    "resolver/__init__.py",
+    "resolver/core.py",
+    "schemas/project.schema.json",
+    "schemas/workspace-local.schema.json",
+    "schemas/workspace.schema.json",
+    "synthetic-fixtures/contradictions.json",
+    "validators/__init__.py",
+    "validators/core.py"
+  ],
+  "lock_algorithm": "sha256-path-and-content-v1",
+  "pack_name": "workspace-governance",
+  "pack_path": "tools/workspace_governance",
+  "revision": "v0.1-integrity-3",
+  "schema_version": 1,
+  "version": "0.1.0"
+}

@@ -1,0 +1,217 @@
+# Task Contract — Stage 56 Cockpit Completion
+
+Status: Stage 56F implementation and automated evidence are complete on
+`codex/workspace-governance-v0.1-integrity-repair`. Stages 56G–56I and final
+human acceptance remain incomplete.
+
+## Objective
+
+Preserve and converge the proposed Live-4D cockpit implementation in the Godot product shell:
+a stable horizontal W1–W4 board sequence with one bottom deck ordered `PIECE |
+VIEW | PIECE STATE`.  The task is presentation-only.  It makes exact 4D view
+operations discoverable as passive, contract-derived View guidance and keeps
+the existing gameplay, input, camera, geometry, queue, Hold, and deterministic
+owners unchanged.
+
+## Authority and scope
+
+The routes are `godot_product_shell` and `product_planning`; the workflow
+modifier is `cross_layer`. `LiveInputContract` remains the only action and
+binding authority. `LivePieceControlStrip` remains the Piece consumer;
+`PieceThumbnailModel` and `PieceThumbnail` remain NEXT/HOLD authority
+consumers. Canonical local geometry, slice layout, collection bounds, the
+existing bounds-driven fit path, native session, and Presentation Designer
+retain their current ownership.
+
+| Layer | Allowed change | Consumer evidence |
+| --- | --- | --- |
+| Live-4D shell layout | Horizontal slice allocation and bottom-deck composition. | Stable ordered slice, contained board, no permanent gameplay inspector. |
+| Input presentation | Contract-derived passive `VIEW` groups. | Actual exact-view, orientation, framing, and pointer labels update with the contract. |
+| Piece state | Shared quiet HOLD/NEXT presentation allocation. | Existing thumbnails and state remain adjacent and contained. |
+| Documents/tests | Supersede the relevant passive-help hierarchy and record scope. | Layout, Designer isolation, and deterministic regression evidence. |
+
+## Proposed acceptance criteria
+
+1. Live 4D has ordered horizontal W1, W2, W3, W4 geometry; no activity may
+   reorder or resize those slots.
+2. Its deck is below and non-overlapping with the board and keeps `PIECE`,
+   `VIEW`, then `PIECE STATE` at all supported density and scale states.
+3. Piece and View are distinct passive semantic components. View derives its
+   groups and bindings from `LiveInputContract`; it introduces no binding map.
+4. HOLD and NEXT remain adjacent consumers of the existing thumbnail path;
+   empty Hold remains explicit.
+5. Designer full/compact operation and all gameplay, input, camera/basis,
+   queue/Hold, snapshot/hash, and replay identity remain unchanged.
+6. Automated Godot acceptance plus real runtime captures and measurements cover
+   190/200 normal, full, compact, occupied Hold, Designer, and constrained
+   states. The 190/200 choice remains a human A/B decision if both comply.
+
+Stage 56F satisfies its implementation and automated-evidence portion of these
+criteria. It does not accept the remaining programme: Stage 56G responsive
+acceptance, Stage 56H human playability/overlay acceptance, Stage 56I polish,
+and the 190/200 human A/B choice remain open.
+
+## Stage 56 execution contract
+
+The completion programme is deliberately serial: `56A` rosette correctness,
+`56B` deterministic slice tiling, `56C` semantic helper rows, `56D` shared
+cockpit grammar, `56E` Live 3D migration, `56F` Live 2D migration, `56G`
+responsive acceptance, `56H` human playability acceptance, and `56I` bounded
+polish. Each stage requires its own focused green evidence and reviewable
+commit. A failed stage gate blocks the next stage.
+
+### Stage 56A — state-driven Live-4D orientation rosette
+
+The rosette is a passive projection of the same app-owned exact basis `B`,
+shared slice-local orientation `L`, and `ControlFrameMapping` snapshot already
+consumed by rendering and relative controls. `CameraRig` may cache only a
+render snapshot supplied through that path; it must not mutate or reconstruct
+an independent orientation model, dispatch input, or touch native gameplay.
+
+Acceptance requires the initial state, XZ/XW/ZW exact turns, continuous yaw,
+continuous pitch, and Reset View to leave the rosette semantic snapshot equal
+to the current authoritative presentation snapshot. Drawing and refreshing the
+rosette must be observational, native snapshot/hash must remain unchanged, and
+Live-3D orientation behavior must remain on its existing camera-driven path.
+
+Stage 56A is implemented and focused-green. Its evidence covers the three
+state owners, all required operations, passive redraw, native snapshot/hash
+isolation, and the retained Live-3D path. Stage 56B is now eligible; Stages
+56C–56I remain gated.
+
+### Stage 56B — deterministic viewport-aware slice tiling
+
+`AdaptiveLayerLayout` evaluates count-derived row/column candidates against
+the available board viewport and the stable local-orientation envelope. The
+selection maximizes projected per-slice scale, prefers at most two rows for
+the expected Live-4D range, and then rejects unbalanced final rows. It must not
+consume axis identity, active-slice identity, cell occupancy, or gameplay
+state. Assignment remains monotonically row-major.
+
+At the 1600×960 reference viewport the required results are `5→3×2`,
+`6→3×2`, `7→4×2`, and `8→4×2`. Evidence records viewport, tile rectangles,
+projected scale, and unused area and compares fixed-four alternatives. A
+partial final row remains left aligned because it preserves stable columns and
+sequence scanning. In the real oblique cockpit projection it also preserves a
+slightly larger fit than centering; visual preference remains eligible for the
+explicit human A/B gate.
+
+Stage 56B is implemented and focused-green. During cockpit integration it
+exposed bounded repair `56B-R`: the stretched render SubViewport can report a
+transient `120×2` allocation before the real game area settles, so the HUD's
+stable game-area geometry now owns layout invalidation and supplies the board
+viewport to the renderer. The repair changes presentation geometry only and
+does not alter slice identity, activity, gameplay, or deterministic state.
+The measured candidate table and required A/B captures are recorded in
+`docs/design/stage_56b_slice_tiling_evidence.md`. Stage 56C is now eligible;
+Stages 56D–56I remain gated.
+
+### Stage 56C — semantic passive control rows
+
+The Live-4D `PIECE` and `VIEW` modules consume role-tagged groups from
+`LiveInputContract` and render them through shared passive `ControlSection`,
+`ControlRow`, `BindingPair`, `Keycap`, and `PointerGesture` construction
+primitives. Operation labels and bindings occupy separate columns. Keycaps are
+labels, never buttons, and dispatch no gameplay input.
+
+`PIECE` contains applicable Move, Drop, and Rotate Piece rows. `VIEW` contains
+Exact Rotate View, Look, Framing, and Pointer rows. Full, normal, and compact
+density consume the same semantic rows; density may change spacing and
+optional explanatory copy only. Acceptance requires an injected contract
+fixture to change rendered bindings, proving the strips own no parallel action
+or key inventory. Stage 56D remains gated until this test and the existing
+input/cockpit hierarchy regressions are green.
+
+Stage 56C is implemented and focused-green. The contract, injected fixture,
+production deck containment, density-invariant row identities, passive-node
+check, and deterministic-state isolation are automated. The normal-density
+runtime result is captured at
+`docs/design/screenshots/stage_56c_semantic_helpers/live_4d_normal.png`.
+Stage 56D is now eligible; Stages 56E–56I remain gated.
+
+### Stage 56D — shared LiveCockpit grammar
+
+`LiveCockpit` owns named `Header`, `PrimaryBoardSurface`, and `ControlDeck`
+slots. Its deck owns `PieceControls`, `ViewControls`, and `PieceState` module
+slots with the accepted 42/33/25 allocation. It does not own or inspect board
+rendering, dimensional geometry, gameplay input, camera state, or piece-state
+models.
+
+This stage moves the existing Live-4D hierarchy into that shell without
+changing its measured rectangles or visible content. Replay and the unmigrated
+Live-2D/Live-3D modes may pass through the shared header/primary slots while
+their deck remains hidden; their outer cockpit migration is reserved for 56E
+and 56F. Acceptance compares pre/post Live-4D slot geometry, semantic rows,
+piece-state consumers, and deterministic state and requires the extracted
+component to contain no renderer or input authority.
+
+Stage 56D is implemented and focused-green. At the 1600×960 reference shell,
+the extraction preserves the `1576×604` game area and `1576×228` deck
+allocation, the same semantic row identities, the existing thumbnail
+consumers, and the deterministic Live-4D state hash. The component-source
+boundary test excludes renderer, camera, input-map, and descriptor ownership.
+Stage 56E is now eligible; Stages 56F–56I remain gated.
+
+### Stage 56E — Live-3D migration
+
+Live 3D activates the shared `LiveCockpit` deck beneath its unchanged
+mode-specific 3D board renderer. PIECE consumes only 3D Move, Drop, and XY/XZ/YZ
+Rotate Piece descriptors. VIEW consumes only the existing 3D pointer gestures
+and Fit/Reset framing descriptors; no 4D exact-basis, slice, W, or XW/YW/ZW
+operation may appear. Piece State reuses the existing NEXT/HOLD consumers.
+
+Acceptance compares the legacy-inspector and shared-deck captures, requires the
+primary board area not to regress, retains the state-driven 3D rosette path,
+and proves input descriptors, gameplay state/hash, renderer ownership, and
+camera semantics are unchanged.
+
+Stage 56E is implemented and focused-green. At 1600×960 the primary board area
+increases from `910×836` (`760,760 px²`) to `1576×642` (`1,011,792 px²`),
+while the exact 3D PIECE/VIEW row sets, shared NEXT/HOLD consumers, visible
+orientation marker, input action identities, and native state hash remain
+verified. Before/after captures and measurements are recorded in
+`docs/design/stage_56e_live_3d_evidence.md`. Stage 56F is now eligible; Stages
+56G–56I remain gated.
+
+### Stage 56F — Live-2D migration
+
+Live 2D activates the shared `LiveCockpit` deck beneath its unchanged planar
+board provider. PIECE consumes the authoritative 2D movement, drop, and
+clockwise/counter-clockwise rotation rows. VIEW contains only the existing Fit
+and Reset framing rows; it may take a narrower share visually but must not
+manufacture pointer, depth, slice, or higher-dimensional controls. Piece State
+reuses NEXT/HOLD.
+
+Acceptance compares legacy-inspector and shared-deck captures, requires the
+primary board allocation not to regress, proves the dimension-filtered row set
+and deterministic state are unchanged, and keeps 2D rendering/gameplay outside
+the cockpit shell. Completion of this stage triggers the requested full Godot
+and repository verification before Stage 56G.
+
+Bounded repair `56F-R` covers a regression exposed by the full migration gate:
+a presentation-only profile update can settle the new deck geometry one frame
+later and otherwise trigger an implicit Live-4D refit. Profile-driven relayout
+must continue routing viewport geometry while preserving the complete camera
+pose; explicit Fit and Reset behavior is unchanged.
+
+The same gate requires enabled onboarding to survive inspector retirement. Its
+existing panel is reparented into the live Header slot without changing guide
+state, dismissal, settings persistence, or gameplay input ownership; Stage 56H
+retains responsibility for final overlay-system consolidation. Regression
+evidence must establish its onboarding-profile precondition explicitly rather
+than inherit machine-local persisted preferences from `user://`.
+
+Stage 56F is implemented and automated-evidence complete. The focused Live-2D
+suite, the canonical Godot suite, and the repository verification gate cover
+the shared deck, row filtering, board allocation, onboarding placement, and
+deterministic isolation. The real-runtime captures and measurements are in
+`docs/design/stage_56f_live_2d_evidence.md`. This is not a Stage 56 programme
+acceptance: Stage 56G–56I and the final human A/B decision remain explicitly
+gated.
+
+## Explicit non-goals for Stage 56A
+
+No 2D/3D redesign, slice-layout choice, helper/deck refactor,
+action/key/pointer changes, clickable gameplay controls, camera translation or
+fit-policy bypass, native change, authority transfer, profile/persistence
+change, publication, merge, or release is authorized.

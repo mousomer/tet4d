@@ -810,6 +810,55 @@ metadata on those existing groups, then derives compact symbols from their
 labels. It owns no action identity, applicability rule, key binding, control
 frame, rotation-plane mapping, or command dispatch path.
 
+Stage 56C extends that invariant to the Live-4D lower deck. Role-tagged Move,
+Drop, Rotate Piece, Exact Rotate View, Look, Framing, and Pointer descriptors
+are rendered by shared passive semantic primitives. `ControlRow` keeps the
+operation and its `BindingPair` in separate columns; `Keycap` and
+`PointerGesture` are styled labels with ignored mouse input, not buttons.
+Density changes spacing and optional explanation but never substitutes a
+second compact-text inventory. Tests may inject a descriptor provider solely
+to prove rendered labels follow the authority seam; production always uses
+`LiveInputContract`.
+
+Stage 56D establishes `LiveCockpit` as the shared information-architecture
+container. It owns only three named shell slots—Header, PrimaryBoardSurface,
+and ControlDeck—and the deck's PieceControls, ViewControls, and PieceState
+allocation. Mode-specific board nodes are inserted into PrimaryBoardSurface;
+their renderers, geometry, dimensional semantics, and fitting remain outside
+the shell. The helper strips and existing thumbnail consumers are inserted
+into their named deck slots. Hiding the deck preserves the legacy outer
+arrangement for modes not yet migrated, so extraction itself cannot become a
+hidden 2D/3D redesign.
+
+Stage 56E activates that shell for Live 3D. The existing 3D board remains the
+PrimaryBoardSurface provider; the shared deck receives dimension-filtered
+PIECE, VIEW, and PieceState consumers. `LiveInputContract` exposes 3D pointer
+and framing groups as semantic roles, while the 3D VIEW surface excludes every
+4D exact-basis and slice operation. Removing the old right inspector is an
+allocation change only: renderer, camera rig, orientation marker, gameplay,
+input routing, NEXT/HOLD models, and deterministic identity retain ownership.
+
+Stage 56F activates the same shell for Live 2D without filling its simpler
+mode with false symmetry. The planar renderer remains the PrimaryBoardSurface
+provider. PIECE receives only 2D movement/drop/rotation descriptors; VIEW
+receives only Fit and Reset framing descriptors; PieceState retains NEXT/HOLD.
+Pointer, depth, slice, exact-basis, and higher-dimensional rotation rows are
+absent. This completes cockpit-family migration without transferring planar
+rendering or gameplay authority into the shell.
+
+The existing onboarding consumer must not disappear merely because its legacy
+inspector parent is retired. While enabled in any live mode it occupies the
+shared Header slot after the primary action header; outside live play it
+returns to its historical inspector owner. This is a compatibility placement,
+not a new onboarding model or persistence path, and remains eligible for the
+Stage 56H overlay consolidation.
+
+Presentation-profile application may cause the shared deck to settle its
+minimum size on a later frame. That relayout still routes the new board
+viewport to the renderer, but it must not implicitly refit or recenter an
+already established Live-4D camera. Explicit Fit and Reset remain the only
+profile-independent commands that intentionally replace camera framing.
+
 NEXT and HOLD share one compact cockpit layout convention and remain backed by
 the existing `PieceThumbnailModel` and `PieceThumbnail`. Compactness changes
 panel margins, thumbnail minimums, and side-by-side placement only. Native

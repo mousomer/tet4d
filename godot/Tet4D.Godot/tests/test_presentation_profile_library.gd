@@ -653,8 +653,9 @@ func _test_live_integration(registry) -> Array:
 			failures.append("profile load must preserve transient camera pose field %s" % pose_key)
 	if _piece_semantic_snapshot(hud._next_piece_panel.deterministic_snapshot()) != next_before or _piece_semantic_snapshot(hud._hold_piece_panel.deterministic_snapshot()) != hold_before:
 		failures.append("profile lifecycle must preserve authoritative NEXT and HOLD identity/availability")
-	if not hud._next_piece_panel.is_visible_in_tree() or not hud._hold_piece_panel.is_visible_in_tree() or not hud._piece_control_strip.is_visible_in_tree() or not hud._basis_panel.is_visible_in_tree():
-		failures.append("profile management must preserve NEXT, HOLD, piece controls, and 4D basis cockpit surfaces")
+	var orientation: Dictionary = app._camera_rig.orientation_indicator_snapshot()
+	if not hud._next_piece_panel.is_visible_in_tree() or not hud._hold_piece_panel.is_visible_in_tree() or not hud._piece_control_strip.is_visible_in_tree() or orientation.get("source") != "live_4d_presentation" or str(orientation.get("control_frame", {}).get("slice_axis", "")).is_empty():
+		failures.append("profile management must preserve NEXT, HOLD, piece controls, and the 4D orientation consumer")
 	root.queue_free()
 	await tree.process_frame
 	return failures

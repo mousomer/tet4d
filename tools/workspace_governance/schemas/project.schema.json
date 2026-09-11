@@ -1,0 +1,311 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "project", "authorities", "routes", "verification", "execution", "generated_surfaces", "environment", "sanitation", "canonical_owner_set"],
+  "properties": {
+    "schema_version": {"const": 1, "x-governance-use": "validation-only", "x-governance-behavior": "schema"},
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name"],
+      "x-governance-use": "consumed",
+      "properties": {
+        "id": {"type": "string", "minLength": 1, "x-governance-use": "consumed", "x-governance-behavior": "identity"},
+        "name": {"type": "string", "minLength": 1, "x-governance-use": "consumed", "x-governance-behavior": "identity"}
+      },
+      "x-governance-behavior": "identity"
+    },
+    "authorities": {
+      "type": "array",
+      "minItems": 1,
+      "x-governance-use": "consumed",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["authority_id", "authority_type", "scope", "source", "exclusive", "canonical_governance", "source_type"],
+        "properties": {
+          "authority_id": {"type": "string", "minLength": 1, "x-governance-use": "consumed", "x-governance-behavior": "authority"},
+          "authority_type": {
+            "type": "string",
+            "enum": ["human", "alias", "compatibility", "project_metadata"],
+            "x-governance-use": "consumed",
+            "x-governance-behavior": "authority"
+          },
+          "scope": {"type": "string", "minLength": 1, "x-governance-use": "consumed", "x-governance-behavior": "authority"},
+          "source": {"type": "string", "minLength": 1, "x-governance-use": "consumed", "x-governance-behavior": "authority"},
+          "exclusive": {"type": "boolean", "x-governance-use": "consumed", "x-governance-behavior": "authority"},
+          "canonical_governance": {"type": "boolean", "x-governance-use": "consumed", "x-governance-behavior": "authority"},
+          "legacy_key": {"type": "string", "minLength": 1, "x-governance-use": "consumed", "x-governance-behavior": "authority"},
+          "alias_of": {"type": "string", "minLength": 1, "x-governance-use": "consumed", "x-governance-behavior": "authority"},
+          "source_type": {
+            "type": "string",
+            "enum": ["file", "directory", "alias", "json_pointer"],
+            "x-governance-use": "consumed",
+            "x-governance-behavior": "authority"
+          }
+        }
+      },
+      "x-governance-behavior": "authority"
+    },
+    "routes": {
+      "type": "object",
+      "minProperties": 1,
+      "x-governance-use": "consumed",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["authority_refs", "dispatch_paths", "typical_verification_requirements"],
+        "properties": {
+          "authority_refs": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "x-governance-use": "consumed",
+            "items": {"type": "string", "minLength": 1},
+            "x-governance-behavior": "routes"
+          },
+          "dispatch_paths": {
+            "type": "array",
+            "uniqueItems": true,
+            "x-governance-use": "consumed",
+            "items": {"type": "string", "minLength": 1},
+            "x-governance-behavior": "routes"
+          },
+          "typical_verification_requirements": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "x-governance-use": "consumed",
+            "items": {"type": "string", "minLength": 1},
+            "x-governance-behavior": "routes"
+          },
+          "environment_tools": {
+            "type": "array",
+            "uniqueItems": true,
+            "x-governance-use": "consumed",
+            "items": {"type": "string", "minLength": 1},
+            "x-governance-behavior": "routes"
+          }
+        }
+      },
+      "x-governance-behavior": "routes"
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["canonical", "full", "targeted", "rule"],
+      "x-governance-use": "consumed",
+      "properties": {
+        "canonical": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["authority_ref", "json_pointer"],
+          "x-governance-use": "consumed",
+          "properties": {
+            "authority_ref": {"type": "string", "x-governance-use": "consumed", "x-governance-behavior": "verification"},
+            "json_pointer": {"type": "string", "x-governance-use": "consumed", "x-governance-behavior": "verification"}
+          },
+          "x-governance-behavior": "verification"
+        },
+        "full": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["authority_ref", "json_pointer"],
+          "x-governance-use": "consumed",
+          "properties": {
+            "authority_ref": {"type": "string", "x-governance-use": "consumed", "x-governance-behavior": "verification"},
+            "json_pointer": {"type": "string", "x-governance-use": "consumed", "x-governance-behavior": "verification"}
+          },
+          "x-governance-behavior": "verification"
+        },
+        "targeted": {"type": "string", "minLength": 1, "x-governance-use": "consumed", "x-governance-behavior": "verification"},
+        "rule": {"type": "string", "minLength": 1, "x-governance-use": "consumed", "x-governance-behavior": "verification"}
+      },
+      "x-governance-behavior": "verification"
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["default_mode", "profiles", "representative_scenarios"],
+      "x-governance-use": "consumed",
+      "properties": {
+        "default_mode": {
+          "type": "string",
+          "enum": ["LOCAL_FIX", "FEATURE", "STRUCTURAL_CHANGE"],
+          "x-governance-use": "consumed",
+          "x-governance-behavior": "execution"
+        },
+        "profiles": {
+          "type": "object",
+          "minProperties": 3,
+          "x-governance-use": "consumed",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["exploration", "routes", "final_evidence_rule"],
+            "properties": {
+              "exploration": {
+                "type": "array",
+                "minItems": 1,
+                "x-governance-use": "consumed",
+                "items": {"type": "string"},
+                "x-governance-behavior": "execution"
+              },
+              "routes": {
+                "type": "array",
+                "minItems": 1,
+                "x-governance-use": "consumed",
+                "items": {"type": "string"},
+                "x-governance-behavior": "execution"
+              },
+              "final_evidence_rule": {"type": "string", "minLength": 1, "x-governance-use": "consumed", "x-governance-behavior": "execution"}
+            }
+          },
+          "x-governance-behavior": "execution"
+        },
+        "representative_scenarios": {
+          "type": "array",
+          "x-governance-use": "consumed",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "match_all", "mode", "routes"],
+            "properties": {
+              "id": {"type": "string", "x-governance-use": "consumed", "x-governance-behavior": "execution"},
+              "match_all": {
+                "type": "array",
+                "minItems": 1,
+                "x-governance-use": "consumed",
+                "items": {"type": "string"},
+                "x-governance-behavior": "execution"
+              },
+              "mode": {"type": "string", "x-governance-use": "consumed", "x-governance-behavior": "execution"},
+              "routes": {
+                "type": "array",
+                "minItems": 1,
+                "x-governance-use": "consumed",
+                "items": {"type": "string"},
+                "x-governance-behavior": "execution"
+              }
+            }
+          },
+          "x-governance-behavior": "execution"
+        }
+      },
+      "x-governance-behavior": "execution"
+    },
+    "generated_surfaces": {
+      "type": "array",
+      "minItems": 1,
+      "x-governance-use": "consumed",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["surface_id", "kind", "source", "target", "transform"],
+        "properties": {
+          "surface_id": {"type": "string", "x-governance-use": "consumed", "x-governance-behavior": "facade"},
+          "kind": {"const": "compatibility_facade", "x-governance-use": "validation-only", "x-governance-behavior": "schema"},
+          "source": {"type": "string", "x-governance-use": "consumed", "x-governance-behavior": "facade"},
+          "target": {"type": "string", "x-governance-use": "consumed", "x-governance-behavior": "facade"},
+          "transform": {
+            "enum": ["authority-legacy-key-route-v1"],
+            "x-governance-use": "consumed",
+            "x-governance-behavior": "facade"
+          }
+        }
+      },
+      "x-governance-behavior": "facade"
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["python_requires", "dependency_authority", "preferred", "interpreter_override", "package_import", "editable_source", "critical_packages", "route_tools"],
+      "x-governance-use": "consumed",
+      "properties": {
+        "python_requires": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["authority_ref", "source_field"],
+          "x-governance-use": "consumed",
+          "properties": {
+            "authority_ref": {"type": "string", "x-governance-use": "consumed", "x-governance-behavior": "environment"},
+            "source_field": {"type": "string", "x-governance-use": "consumed", "x-governance-behavior": "environment"}
+          },
+          "x-governance-behavior": "environment"
+        },
+        "dependency_authority": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["authority_ref", "source"],
+          "x-governance-use": "consumed",
+          "properties": {
+            "authority_ref": {"type": "string", "x-governance-use": "consumed", "x-governance-behavior": "environment"},
+            "source": {"type": "string", "x-governance-use": "consumed", "x-governance-behavior": "environment"}
+          },
+          "x-governance-behavior": "environment"
+        },
+        "preferred": {"type": "string", "x-governance-use": "consumed", "x-governance-behavior": "environment"},
+        "interpreter_override": {"type": "string", "x-governance-use": "consumed", "x-governance-behavior": "environment"},
+        "package_import": {"type": "string", "x-governance-use": "consumed", "x-governance-behavior": "environment"},
+        "editable_source": {"type": "string", "x-governance-use": "consumed", "x-governance-behavior": "environment"},
+        "critical_packages": {
+          "type": "array",
+          "minItems": 1,
+          "x-governance-use": "consumed",
+          "items": {"type": "string"},
+          "x-governance-behavior": "environment"
+        },
+        "route_tools": {
+          "type": "object",
+          "x-governance-use": "consumed",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["override", "candidates", "version_args"],
+            "properties": {
+              "override": {"type": "string", "x-governance-use": "consumed", "x-governance-behavior": "environment"},
+              "candidates": {
+                "type": "array",
+                "x-governance-use": "consumed",
+                "items": {"type": "string"},
+                "x-governance-behavior": "environment"
+              },
+              "version_args": {
+                "type": "array",
+                "x-governance-use": "consumed",
+                "items": {"type": "string"},
+                "x-governance-behavior": "environment"
+              }
+            }
+          },
+          "x-governance-behavior": "environment"
+        }
+      },
+      "x-governance-behavior": "environment"
+    },
+    "sanitation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["secret_scanner", "repository_check", "bounded_diagnostics"],
+      "x-governance-use": "validation-only",
+      "properties": {
+        "secret_scanner": {"type": "string", "x-governance-use": "validation-only", "x-governance-behavior": "sanitation"},
+        "repository_check": {"type": "string", "x-governance-use": "validation-only", "x-governance-behavior": "sanitation"},
+        "bounded_diagnostics": {"type": "integer", "minimum": 1, "x-governance-use": "validation-only", "x-governance-behavior": "sanitation"}
+      },
+      "x-governance-behavior": "sanitation"
+    },
+    "canonical_owner_set": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authority_ref", "json_pointer"],
+      "x-governance-use": "consumed",
+      "properties": {
+        "authority_ref": {"type": "string", "x-governance-use": "consumed", "x-governance-behavior": "owner_set"},
+        "json_pointer": {"type": "string", "x-governance-use": "consumed", "x-governance-behavior": "owner_set"}
+      },
+      "x-governance-behavior": "owner_set"
+    }
+  }
+}

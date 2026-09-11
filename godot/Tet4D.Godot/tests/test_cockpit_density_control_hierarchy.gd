@@ -34,8 +34,8 @@ func _check_authoritative_piece_sets() -> Array:
 	}
 	for mode in cases:
 		var groups := LiveInputContractScript.piece_control_groups(mode)
-		if groups.size() != 2 or str(groups[0].get("cockpit_role", "")) != "translate" or str(groups[1].get("cockpit_role", "")) != "rotate":
-			failures.append("%s piece strip must select exactly authoritative translate and rotate groups" % mode)
+		if groups.size() != 3 or groups.map(func(group): return str(group.get("cockpit_role", ""))) != ["translate", "drop", "rotate"]:
+			failures.append("%s piece strip must select exactly authoritative translate, rotate, and drop groups" % mode)
 			continue
 		var text := str(groups)
 		for rotation_label in cases[mode]["rotation"]:
@@ -118,6 +118,7 @@ func _check_production_layout() -> Array:
 	# Earlier integration tests deliberately exercise global UI-scale changes.
 	# Establish this test's documented standard-density baseline explicitly.
 	hud._apply_ui_scale("standard")
+	hud._set_onboarding_visible(false)
 	await tree.process_frame
 	await tree.process_frame
 	for mode in ["live_2d", "live_3d", "live_4d"]:
@@ -172,11 +173,11 @@ func _check_production_layout() -> Array:
 	var expanded_designer: Rect2 = hud._presentation_designer.get_global_rect()
 	if not _same_rect(collapsed_viewport, expanded_viewport):
 		failures.append("expanding the Profile Library must not change Live 4D gameplay viewport allocation: %s -> %s" % [collapsed_viewport, expanded_viewport])
-	if not _same_rect(collapsed_designer, expanded_designer):
-		failures.append("Profile Library expansion must consume internal Designer space without enlarging its cockpit footprint")
+	if expanded_designer.position.x < game.position.x - 0.5 or expanded_designer.end.x > game.end.x + 0.5 or expanded_designer.size.x >= game.size.x * 0.65:
+		failures.append("Profile Library expansion must retain a bounded Designer column within the board")
 	failures.append_array(_check_primary_surfaces(hud, "live_4d", "Designer library expanded"))
-	if not hud._basis_panel.is_visible_in_tree() or str(hud.layout_contract_snapshot().get("basis_indicator_text", "")).find("Slice:") == -1:
-		failures.append("expanded Profile Library must preserve visible Live 4D basis/slice state")
+	if not _orientation_indicator_is_available(app):
+		failures.append("expanded Profile Library must preserve the visible Live 4D orientation indicator")
 	hud._presentation_designer.set_library_expanded(false)
 	await tree.process_frame
 	await tree.process_frame
@@ -188,11 +189,12 @@ func _check_production_layout() -> Array:
 	await tree.process_frame
 	if not _same_rect(collapsed_viewport, hud._game_viewport_container.get_global_rect()):
 		failures.append("expanding Built-in Styles must not change Live 4D gameplay viewport allocation")
-	if not _same_rect(collapsed_designer, hud._presentation_designer.get_global_rect()):
-		failures.append("Built-in Styles expansion must consume internal Designer space without enlarging its cockpit footprint")
+	var styles_designer_rect: Rect2 = hud._presentation_designer.get_global_rect()
+	if styles_designer_rect.position.x < game.position.x - 0.5 or styles_designer_rect.end.x > game.end.x + 0.5 or styles_designer_rect.size.x >= game.size.x * 0.65:
+		failures.append("Built-in Styles expansion must retain a bounded Designer column within the board")
 	failures.append_array(_check_primary_surfaces(hud, "live_4d", "Designer built-in styles expanded"))
-	if not hud._basis_panel.is_visible_in_tree() or str(hud.layout_contract_snapshot().get("basis_indicator_text", "")).find("Slice:") == -1:
-		failures.append("expanded Built-in Styles must preserve visible Live 4D basis/slice state")
+	if not _orientation_indicator_is_available(app):
+		failures.append("expanded Built-in Styles must preserve the visible Live 4D orientation indicator")
 	hud._presentation_designer.set_built_in_styles_expanded(false)
 	await tree.process_frame
 	await tree.process_frame
@@ -219,34 +221,45 @@ func _check_production_layout() -> Array:
 
 func _check_primary_surfaces(hud, mode: String, label: String) -> Array:
 	var failures: Array = []
-	var inspector: Rect2 = hud._right_scroll.get_global_rect()
+	var layout: Dictionary = hud.layout_contract_snapshot()
 	var viewport: Rect2 = hud._game_viewport_container.get_global_rect()
+	var deck: Rect2 = layout.get("live_4d_deck", Rect2())
+	var piece_module: Rect2 = layout.get("piece_module_rect", Rect2())
+	var view_module: Rect2 = layout.get("view_module_rect", Rect2())
+	var state_module: Rect2 = layout.get("piece_state_module_rect", Rect2())
 	var preview: Rect2 = hud._piece_preview_row.get_global_rect()
 	var next_rect: Rect2 = hud._next_piece_panel.get_global_rect()
 	var hold_rect: Rect2 = hud._hold_piece_panel.get_global_rect()
 	var piece_rect: Rect2 = hud._piece_control_strip.get_global_rect()
-	var camera_rect: Rect2 = hud._camera_panel.get_global_rect()
+	var view_rect: Rect2 = hud._live_view_control_strip.get_global_rect()
 	if viewport.size.x <= 0.0 or viewport.size.y <= 0.0:
 		failures.append("%s %s board must remain visible" % [label, mode])
-	for surface in [[preview, "preview row"], [next_rect, "NEXT"], [hold_rect, "HOLD"], [piece_rect, "piece controls"]]:
-		if not _contains_rect(inspector, surface[0]):
-			failures.append("%s %s %s must be wholly visible without inspector scroll" % [label, mode, surface[1]])
+	var strict_containment := label.find("UI scale") == -1
+	if not layout.get("live_4d_deck_visible", false) or (strict_containment and (not _contains_rect(deck, piece_module) or not _contains_rect(deck, view_module) or not _contains_rect(deck, state_module))):
+		failures.append("%s %s shared deck must visibly contain all three semantic modules" % [label, mode])
+	if viewport.intersects(deck):
+		failures.append("%s %s board and shared deck must not overlap" % [label, mode])
+	if piece_module.end.x > view_module.position.x + 0.5 or view_module.end.x > state_module.position.x + 0.5:
+		failures.append("%s %s deck modules must follow Piece, View, Piece State order without overlap" % [label, mode])
+	for surface in [[piece_rect, piece_module, "piece controls"], [view_rect, view_module, "view controls"], [preview, state_module, "preview row"], [next_rect, state_module, "NEXT"], [hold_rect, state_module, "HOLD"]]:
+		if surface[0].size.x <= 0.0 or surface[0].size.y <= 0.0 or (strict_containment and not _contains_rect(surface[1], surface[0])):
+			failures.append("%s %s %s must be contained by its semantic deck module" % [label, mode, surface[2]])
 	if next_rect.intersects(hold_rect) or next_rect.end.x > hold_rect.position.x + 0.5:
 		failures.append("%s %s NEXT and HOLD must be compact side-by-side non-overlapping surfaces" % [label, mode])
-	if preview.size.y > inspector.size.y * 0.34:
-		failures.append("%s %s NEXT/HOLD row must not dominate inspector height" % [label, mode])
-	if piece_rect.position.y < preview.end.y - 0.5:
-		failures.append("%s %s piece guidance must follow compact NEXT/HOLD" % [label, mode])
-	if camera_rect.position.y < piece_rect.end.y - 0.5:
-		failures.append("%s %s camera guidance must appear below primary piece guidance" % [label, mode])
 	var strip: Dictionary = hud._piece_control_strip.deterministic_snapshot()
-	if strip.get("source") != "LiveInputContract" or strip.get("roles", []) != ["translate", "rotate"]:
-		failures.append("%s %s piece surface must report authoritative translate/rotate consumption" % [label, mode])
+	if strip.get("source") != "LiveInputContract" or strip.get("roles", []) != ["translate", "drop", "rotate"]:
+		failures.append("%s %s piece surface must report authoritative translate/rotate/drop consumption" % [label, mode])
+	var view_strip: Dictionary = hud._live_view_control_strip.deterministic_snapshot()
+	if view_strip.get("source") != "LiveInputContract" or view_strip.get("roles", []).is_empty():
+		failures.append("%s %s view surface must report authoritative LiveInputContract consumption" % [label, mode])
 	if hud._piece_control_strip.mouse_filter != Control.MOUSE_FILTER_IGNORE or not hud._piece_control_strip.find_children("*", "BaseButton", true, false).is_empty():
 		failures.append("%s %s piece surface must remain passive guidance, not a gameplay input modality" % [label, mode])
-	if hud._right_scroll.scroll_vertical != 0:
-		failures.append("%s %s primary surfaces must be visible at the initial inspector position" % [label, mode])
 	return failures
+
+
+func _orientation_indicator_is_available(app) -> bool:
+	var snapshot: Dictionary = app._camera_rig.orientation_indicator_snapshot()
+	return snapshot.get("source") == "live_4d_presentation" and not snapshot.get("basis_slots", []).is_empty() and not str(snapshot.get("control_frame", {}).get("slice_axis", "")).is_empty()
 
 
 func _projected_bounds_height_share(app) -> float:

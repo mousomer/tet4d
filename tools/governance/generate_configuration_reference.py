@@ -226,6 +226,7 @@ def render_configuration_reference() -> str:
         "",
         "Coverage:",
         "- Includes source-controlled config assets under `config/`.",
+        "- Workspace membership in `.governance/workspace.json` is outside this scope; `gov check` validates it.",
         (
             "- Excludes `config/schema/`, which defines validation contracts rather "
             "than runtime parameter values."

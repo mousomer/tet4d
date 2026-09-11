@@ -9,17 +9,18 @@ if [[ ! -f "$GODOT_CPP_DIR/SConstruct" ]]; then
   git -C "$ROOT_DIR" submodule update --init --recursive native/third_party/godot-cpp
 fi
 
+# SCons is an exactly pinned dev dependency, so it comes from the approved
+# interpreter rather than whatever `scons` happens to be on PATH.
 if [[ -n "${SCONS:-}" ]]; then
   read -r -a SCONS_CMD <<< "$SCONS"
-elif [[ -x "$ROOT_DIR/.venv/bin/python" ]] && "$ROOT_DIR/.venv/bin/python" -c "import SCons" >/dev/null 2>&1; then
-  SCONS_CMD=("$ROOT_DIR/.venv/bin/python" -m SCons)
-elif [[ -x "$ROOT_DIR/.venv/bin/scons" ]]; then
-  SCONS_CMD=("$ROOT_DIR/.venv/bin/scons")
-elif command -v scons >/dev/null 2>&1; then
-  SCONS_CMD=("$(command -v scons)")
 else
-  echo "scons not found. Install it with: .venv/bin/pip install scons" >&2
-  exit 1
+  SCONS_PYTHON="$("$ROOT_DIR/scripts/resolve_python_env.sh")"
+  if ! "$SCONS_PYTHON" -c "import SCons" >/dev/null 2>&1; then
+    echo "SCons is missing from the approved environment: $SCONS_PYTHON" >&2
+    echo "Install it with: $SCONS_PYTHON -m pip install -e \".[dev]\"" >&2
+    exit 1
+  fi
+  SCONS_CMD=("$SCONS_PYTHON" -m SCons)
 fi
 
 platform="${SCONS_PLATFORM:-}"

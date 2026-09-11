@@ -15,9 +15,10 @@ except (
 if pygame is None:  # pragma: no cover - exercised in environments without pygame-ce
     raise unittest.SkipTest("pygame-ce is required for gameplay replay tests")
 
-from tests.unit.engine._translation_contract import (
+from _translation_contract import (
     assert_repeated_translation_progress,
 )
+
 from tet4d.engine.gameplay.game2d import Action, GameConfig
 from tet4d.engine.gameplay.game_nd import GameConfigND
 from tet4d.engine.gameplay.pieces2d import ActivePiece2D, PieceShape2D

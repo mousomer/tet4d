@@ -108,33 +108,8 @@ fi
 
 
 
-if [[ -n "${PYTHON_BIN:-}" ]]; then
-
-  :
-
-elif [[ -x ".venv/bin/python" ]]; then
-
-  PYTHON_BIN=".venv/bin/python"
-
-elif [[ -x ".venv/Scripts/python.exe" ]]; then
-
-  PYTHON_BIN=".venv/Scripts/python.exe"
-
-elif command -v python3 >/dev/null 2>&1; then
-
-  PYTHON_BIN="python3"
-
-elif command -v python >/dev/null 2>&1; then
-
-  PYTHON_BIN="python"
-
-else
-
-  echo "No Python runtime found. Set PYTHON_BIN or install python3." >&2
-
-  exit 1
-
-fi
+PYTHON_BIN="$(./scripts/resolve_python_env.sh)"
+export PYTHON_BIN
 
 
 
@@ -206,7 +181,7 @@ require_repo_package
 
 
 
-env PYTHON_BIN="$PYTHON_BIN" ./scripts/check_editable_install.sh
+./scripts/check_editable_install.sh
 
 mapfile -t RUFF_CHECK_TARGETS < <(filter_python_targets "${RUFF_TARGETS[@]}")
 

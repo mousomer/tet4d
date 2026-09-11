@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
+# This interpreter only boots governance. Project execution is resolved separately.
+# The resolver owns bootstrap priority and refuses system Python on PATH.
+GOV_BOOTSTRAP="$(./scripts/resolve_bootstrap_python.sh)"
+exec "$GOV_BOOTSTRAP" tools/workspace_governance/cli/bootstrap.py "$@"

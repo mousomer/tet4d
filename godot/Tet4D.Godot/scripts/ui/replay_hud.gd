@@ -16,6 +16,8 @@ const LiveOnboardingPanelScript = preload("res://scripts/ui/onboarding/live_onbo
 const NextPiecePanelScript = preload("res://scripts/ui/pieces/next_piece_panel.gd")
 const HoldPiecePanelScript = preload("res://scripts/ui/pieces/hold_piece_panel.gd")
 const LivePieceControlStripScript = preload("res://scripts/ui/live_piece_control_strip.gd")
+const LiveViewControlStripScript = preload("res://scripts/ui/live_view_control_strip.gd")
+const LiveCockpitScript = preload("res://scripts/ui/live_cockpit.gd")
 const SettingsRegistryScript = preload("res://scripts/ui/settings/settings_registry.gd")
 const SettingsStoreScript = preload("res://scripts/ui/settings/settings_store.gd")
 const ShellPresentationPreferencesScript = preload("res://scripts/ui/settings/shell_presentation_preferences.gd")
@@ -52,6 +54,7 @@ signal accessibility_policy_changed(policy: Dictionary)
 signal camera_preferences_changed(sensitivity_factor: float, invert_y: bool, interpolation_scale: float)
 signal camera_preset_requested(id: String)
 signal fit_view_requested()
+signal game_viewport_geometry_changed(size: Vector2)
 signal reset_view_requested()
 signal quit_requested()
 signal replay_mode_requested()
@@ -210,6 +213,12 @@ var _next_piece_panel: PanelContainer
 var _hold_piece_panel: PanelContainer
 var _piece_preview_row: HBoxContainer
 var _piece_control_strip: PanelContainer
+var _live_view_control_strip: PanelContainer
+var _live_cockpit
+var _live_4d_deck: HBoxContainer
+var _live_4d_piece_module: VBoxContainer
+var _live_4d_view_module: VBoxContainer
+var _live_4d_state_module: VBoxContainer
 var _basis_panel: PanelContainer
 var _basis_indicator_label: Label
 var _live_4d_basis_snapshot: Dictionary = {
@@ -601,6 +610,7 @@ func set_live_4d_mode(
 
 
 func set_replay_mode_labels(is_playing: bool, speed: float, diagnostics_visible: bool) -> void:
+	_set_live_4d_deck_active(false)
 	if _summary_title != null:
 		_summary_title.text = "Replay"
 	_set_live_declutter_mode(false)
@@ -661,10 +671,18 @@ func _configure_live_cockpit_mode(mode: String) -> void:
 	if _basis_panel != null:
 		_basis_panel.visible = mode == GameSetupSpecScript.MODE_4D
 	_refresh_piece_control_strip()
+	if _live_view_control_strip != null:
+		_live_view_control_strip.configure(
+			_live_4d_basis_snapshot if mode == GameSetupSpecScript.MODE_4D else {},
+			_control_frame_snapshot,
+			_hud_density,
+			mode
+		)
 	_update_camera_guidance(mode)
 	if _inspector_hint_panel != null:
 		_inspector_hint_panel.set_meta("hint_cache_key", "")
 		_update_control_hint_panel(_inspector_hint_panel, mode)
+	_set_live_4d_deck_active(mode in [GameSetupSpecScript.MODE_2D, GameSetupSpecScript.MODE_3D, GameSetupSpecScript.MODE_4D])
 	_set_live_inspector_density(true)
 
 
@@ -674,10 +692,35 @@ func _refresh_piece_control_strip() -> void:
 	_piece_control_strip.configure(
 		_active_live_mode,
 		_live_4d_basis_snapshot if _active_live_mode == GameSetupSpecScript.MODE_4D else {},
-		_control_frame_snapshot
+		_control_frame_snapshot,
+		_hud_density
 	)
 	if is_inside_tree():
 		_style_applier.apply_to_tree(_piece_control_strip, _style_manager)
+
+
+func _set_live_4d_deck_active(active: bool) -> void:
+	if _live_4d_deck == null:
+		return
+	if active:
+		_piece_control_strip.reparent(_live_4d_piece_module, false)
+		_live_view_control_strip.reparent(_live_4d_view_module, false)
+		_piece_preview_row.reparent(_live_4d_state_module, false)
+		if _onboarding_panel != null and _onboarding_panel.get_parent() != _live_cockpit.header_slot:
+			_onboarding_panel.reparent(_live_cockpit.header_slot, false)
+		_right_scroll.visible = false
+		_live_cockpit.set_control_deck_visible(true, _hud_density)
+		return
+	if _piece_control_strip.get_parent() != _right_column:
+		_piece_control_strip.reparent(_right_column, false)
+	if _piece_preview_row.get_parent() != _right_column:
+		_piece_preview_row.reparent(_right_column, false)
+	if _live_view_control_strip.get_parent() != _right_column:
+		_live_view_control_strip.reparent(_right_column, false)
+	if _onboarding_panel != null and _onboarding_panel.get_parent() != _right_column:
+		_onboarding_panel.reparent(_right_column, false)
+	_live_cockpit.set_control_deck_visible(false, _hud_density)
+	_right_scroll.visible = true
 
 
 func _update_camera_guidance(mode: String) -> void:
@@ -948,6 +991,10 @@ func game_viewport() -> SubViewport:
 	return _game_viewport
 
 
+func board_viewport_size() -> Vector2:
+	return _game_area.size if _game_area != null else Vector2.ZERO
+
+
 func layout_contract_snapshot() -> Dictionary:
 	var root_rect := Rect2(global_position, size)
 	var left_rect := _control_rect(_left_panel)
@@ -957,6 +1004,7 @@ func layout_contract_snapshot() -> Dictionary:
 	var inspector_rect := _control_rect(_right_scroll)
 	var settings_rect := _control_rect(_settings_panel)
 	var bottom_rect := _control_rect(_bottom_panel)
+	var cockpit_deck_rect := _control_rect(_live_4d_deck)
 	return {
 		"root": root_rect,
 		"left_panel": left_rect,
@@ -968,6 +1016,13 @@ func layout_contract_snapshot() -> Dictionary:
 		"right_inspector": inspector_rect,
 		"settings_panel": settings_rect,
 		"bottom_bar": bottom_rect,
+		"live_4d_deck": cockpit_deck_rect,
+		"live_4d_deck_visible": _live_4d_deck.visible if _live_4d_deck != null else false,
+		"live_cockpit": _live_cockpit.deterministic_snapshot() if _live_cockpit != null else {},
+		"piece_module_rect": _control_rect(_live_4d_piece_module),
+		"view_module_rect": _control_rect(_live_4d_view_module),
+		"piece_state_module_rect": _control_rect(_live_4d_state_module),
+		"view_control_strip": _live_view_control_strip.deterministic_snapshot() if _live_view_control_strip != null else {},
 		"current_screen": _current_screen,
 		"bottom_bar_visible": _bottom_panel.visible if _bottom_panel != null else false,
 		"viewport_hints_visible": _mode_hint_strip.visible if _mode_hint_strip != null else false,
@@ -1523,7 +1578,10 @@ func _set_live_inspector_density(live_mode: bool) -> void:
 
 func _move_right_column_child(node: Node, index: int) -> void:
 	if node != null and node.get_parent() == _right_column:
-		_right_column.move_child(node, index)
+		# Live-4D temporarily reparents deck modules out of this column. Clamp the
+		# historical ordering slot against the current child count so returning to
+		# the inspector cannot request an index that no longer exists.
+		_right_column.move_child(node, mini(index, _right_column.get_child_count() - 1))
 
 
 func _status_badge_text(state_label: String, reason: String) -> String:
@@ -1643,6 +1701,14 @@ func _apply_ui_scale(scale_id: String) -> void:
 
 func _apply_hud_density(density: String) -> void:
 	_hud_density = density if density in ShellPresentationPreferencesScript.HUD_DENSITIES else "standard"
+	_refresh_piece_control_strip()
+	if _live_view_control_strip != null and not _active_live_mode.is_empty():
+		_live_view_control_strip.configure(
+			_live_4d_basis_snapshot if _active_live_mode == GameSetupSpecScript.MODE_4D else {},
+			_control_frame_snapshot,
+			_hud_density,
+			_active_live_mode
+		)
 	_set_live_inspector_density(_bottom_panel != null and not _bottom_panel.visible)
 	_update_live_view_action_labels()
 
@@ -1790,11 +1856,13 @@ func _build_layout() -> void:
 	outer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	outer.custom_minimum_size = ReplayVisuals.supported_shell_minimum_size()
 	_viewer_screen.add_child(outer)
+	_live_cockpit = LiveCockpitScript.new()
+	outer.add_child(_live_cockpit)
 
 	var top_bar := HBoxContainer.new()
 	top_bar.custom_minimum_size = Vector2(0, ReplayVisuals.TOP_BAR_HEIGHT)
 	top_bar.add_theme_constant_override("separation", ReplayVisuals.PANEL_GAP)
-	outer.add_child(top_bar)
+	_live_cockpit.header_slot.add_child(top_bar)
 
 	var viewer_nav := VBoxContainer.new()
 	_viewer_nav = viewer_nav
@@ -2020,7 +2088,7 @@ func _build_layout() -> void:
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.custom_minimum_size = Vector2(ReplayVisuals.BODY_MIN_WIDTH, ReplayVisuals.BODY_MIN_HEIGHT)
 	body.add_theme_constant_override("separation", ReplayVisuals.BODY_GAP)
-	outer.add_child(body)
+	_live_cockpit.primary_board_surface.add_child(body)
 
 	_left_panel = PanelContainer.new()
 	_left_panel.name = "LeftCaseBrowserSlot"
@@ -2046,6 +2114,9 @@ func _build_layout() -> void:
 	_game_area.custom_minimum_size = Vector2(ReplayVisuals.GAME_AREA_MIN_WIDTH, 0)
 	_game_area.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_game_area.theme_type_variation = "ViewportFrame"
+	_game_area.resized.connect(func() -> void:
+		game_viewport_geometry_changed.emit(_game_area.size)
+	)
 	body.add_child(_game_area)
 	_viewport_frame = _game_area
 	var viewport_inner := MarginContainer.new()
@@ -2209,6 +2280,8 @@ func _build_layout() -> void:
 	_piece_control_strip = LivePieceControlStripScript.new()
 	_piece_control_strip.visible = false
 	_right_column.add_child(_piece_control_strip)
+	_live_view_control_strip = LiveViewControlStripScript.new()
+	_right_column.add_child(_live_view_control_strip)
 	_basis_panel = _build_basis_panel()
 	_basis_panel.visible = false
 	_right_column.add_child(_basis_panel)
@@ -2230,6 +2303,11 @@ func _build_layout() -> void:
 	_quick_settings_header = _inspector_section_header("QUICK SETTINGS")
 	_right_column.add_child(_quick_settings_header)
 	_right_column.add_child(_settings_panel)
+
+	_live_4d_deck = _live_cockpit.control_deck
+	_live_4d_piece_module = _live_cockpit.piece_controls
+	_live_4d_view_module = _live_cockpit.view_controls
+	_live_4d_state_module = _live_cockpit.piece_state
 
 	var bottom_panel := PanelContainer.new()
 	_bottom_panel = bottom_panel

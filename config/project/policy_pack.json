@@ -120,7 +120,7 @@
       "canonical_commands": {"native_build": "./scripts/build_godot_tet4d_core.sh", "native_tests": "./scripts/test_godot_tet4d_core.sh", "godot_verification": "GODOT_BIN=/path/to/Godot ./scripts/verify_godot_4_7.sh", "macos_release_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_macos.sh", "windows_release_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_windows.sh", "android_configuration_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_android.sh --configuration-only", "android_release_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_android.sh", "ipados_configuration_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_ipados.sh --configuration-only", "ipados_release_export": "GODOT_BIN=/path/to/Godot ./packaging/godot/build_ipados.sh", "full_repository": "CODEX_MODE=1 ./scripts/verify.sh"}
     },
     "canonical_governance_contract": {
-      "required_tokens": ["docs/governance/ENGINEERING.md", "docs/governance/VERIFICATION.md", "docs/governance/SECURITY_AND_SANITATION.md", "docs/governance/CONFIG_AND_GENERATED_DATA.md", "docs/governance/NATIVE_AND_PLATFORM.md", "docs/governance/CHANGE_GOVERNANCE.md"]
+      "required_tokens": [".governance/workspace.json", "config/governance/project.json", "config/project/policy_pack.json", "./gov resolve", "./gov explain", "CODEX_MODE=1 ./scripts/verify.sh"]
     },
     "menu_simplification_manifest_rule": {
       "rule_id": "menu-simplification-common-settings",
@@ -595,7 +595,7 @@
       },
       {
         "file": "AGENTS.md",
-        "must_contain": ["config/project/policy_pack.json", "docs/governance/ENGINEERING.md", "docs/governance/VERIFICATION.md", "docs/governance/SECURITY_AND_SANITATION.md", "docs/governance/CONFIG_AND_GENERATED_DATA.md", "docs/governance/NATIVE_AND_PLATFORM.md", "docs/governance/CHANGE_GOVERNANCE.md", "CURRENT_STATE.md", "docs/rds/", "docs/ARCHITECTURE_CONTRACT.md", "`codex_routing`", "docs/architecture/authority_map.md", "CODEX_MODE=1 ./scripts/verify.sh"]
+        "must_contain": [".governance/workspace.json", "config/governance/project.json", ".governance/workspace.local.json", "config/project/policy_pack.json", "./gov check", "./gov resolve", "./gov explain", "./gov doctor", "`LOCAL_FIX`", "`FEATURE`", "`STRUCTURAL_CHANGE`", "godot/AGENTS.md", "native/AGENTS.md", "docs/BACKLOG.md", "CODEX_MODE=1 ./scripts/verify.sh"]
       },
       {
         "file": "CONTRIBUTING.md",

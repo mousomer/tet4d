@@ -64,6 +64,11 @@ var _orientation_basis_snapshot := {
 	"visible_axes": ["+X", "+Y", "+Z"],
 	"gravity_axis": "+Y",
 }
+var _orientation_local_snapshot := {"local_yaw": 0.0, "local_pitch": 0.0}
+var _orientation_local_render_basis := Basis.IDENTITY
+var _orientation_control_frame_snapshot := {}
+var _orientation_axis_snapshot := {}
+var _orientation_state_source := "camera"
 
 @onready var _camera: Camera3D = $Camera3D
 
@@ -157,6 +162,11 @@ func clear_presentation_state() -> void:
 	_view_context = "cleared"
 	_framing_status = "cleared"
 	_set_horizontal_reflection(false)
+	_orientation_local_snapshot = {"local_yaw": 0.0, "local_pitch": 0.0}
+	_orientation_local_render_basis = Basis.IDENTITY
+	_orientation_control_frame_snapshot.clear()
+	_orientation_axis_snapshot.clear()
+	_orientation_state_source = "camera"
 	set_orientation_gizmo_visible(false)
 	if _camera != null:
 		_camera.projection = Camera3D.PROJECTION_ORTHOGONAL
@@ -281,6 +291,38 @@ func set_orientation_basis(basis) -> void:
 	_update_gizmo_axes()
 
 
+# Passive Live-4D consumer seam. The app supplies the exact basis, the shared
+# continuous local orientation, and the already-resolved control frame as one
+# coherent state. CameraRig snapshots those owners solely for rendering.
+# Returns false when the supplied state is not a usable Live-4D triple, so the
+# caller can fall back instead of leaving the rig on a stale orientation.
+func set_live_4d_orientation_state(basis, local_orientation, control_frame: Dictionary) -> bool:
+	if (
+		basis == null
+		or not basis.has_method("indicator_snapshot")
+		or local_orientation == null
+		or not local_orientation.has_method("snapshot")
+		or not local_orientation.has_method("passive_render_basis")
+		or control_frame.is_empty()
+	):
+		return false
+	_orientation_basis_snapshot = basis.indicator_snapshot().duplicate(true)
+	_orientation_local_snapshot = local_orientation.snapshot().duplicate(true)
+	_orientation_local_render_basis = local_orientation.passive_render_basis()
+	_orientation_control_frame_snapshot = control_frame.duplicate(true)
+	_orientation_state_source = "live_4d_presentation"
+	_orientation_basis_snapshot["visible_axes"] = [
+		str(control_frame.get("horizontal_axis", "+X")),
+		"+Y",
+		str(control_frame.get("depth_axis", "+Z")),
+	]
+	_orientation_basis_snapshot["slice_axis"] = str(control_frame.get("slice_axis", "+W"))
+	_orientation_basis_snapshot["control_frame_dimension"] = 4
+	_orientation_basis_snapshot["translation_commands"] = control_frame.get("translation_commands", {}).duplicate(true)
+	_update_gizmo_axes()
+	return true
+
+
 func set_control_frame_mapping(mapping: Dictionary) -> void:
 	if mapping.is_empty():
 		return
@@ -288,7 +330,20 @@ func set_control_frame_mapping(mapping: Dictionary) -> void:
 	_orientation_basis_snapshot["slice_axis"] = str(mapping.get("slice_axis", "+W"))
 	_orientation_basis_snapshot["control_frame_dimension"] = int(mapping.get("dimension", 4))
 	_orientation_basis_snapshot["translation_commands"] = mapping.get("translation_commands", {}).duplicate(true)
+	_orientation_control_frame_snapshot = mapping.duplicate(true)
+	_orientation_state_source = "camera" if int(mapping.get("dimension", 4)) < 4 else _orientation_state_source
 	_update_gizmo_axes()
+
+
+func orientation_indicator_snapshot() -> Dictionary:
+	return {
+		"source": _orientation_state_source,
+		"basis_key": str(_orientation_basis_snapshot.get("key", "")),
+		"basis_slots": _orientation_basis_snapshot.get("slots", []).duplicate(),
+		"local_orientation": _orientation_local_snapshot.duplicate(true),
+		"control_frame": _orientation_control_frame_snapshot.duplicate(true),
+		"axes": _orientation_axis_snapshot.duplicate(true),
+	}
 
 
 func control_frame_yaw() -> float:
@@ -584,12 +639,40 @@ func _update_gizmo_axes() -> void:
 	var horizontal := str(visible_axes[0]) if visible_axes.size() > 0 else "+X"
 	var depth := str(visible_axes[2]) if visible_axes.size() > 2 else "+Z"
 	var control_frame_dimension := int(_orientation_basis_snapshot.get("control_frame_dimension", 4))
-	var horizontal_direction := _canonical_axis_direction(horizontal) if control_frame_dimension == 3 else _signed_direction(Vector3.RIGHT, horizontal)
-	var depth_direction := _canonical_axis_direction(depth) if control_frame_dimension == 3 else _signed_direction(Vector3.BACK, depth)
+	var horizontal_direction := _canonical_axis_direction(horizontal)
+	var depth_direction := _canonical_axis_direction(depth)
+	var gravity_direction := Vector3.DOWN
+	if control_frame_dimension == 4:
+		horizontal_direction = _orientation_local_render_basis * _pre_local_direction(horizontal)
+		depth_direction = _orientation_local_render_basis * _pre_local_direction(depth)
+		gravity_direction = _orientation_local_render_basis * Vector3.DOWN
 	_update_gizmo_axis("Horizontal", horizontal, _presented_direction(horizontal_direction))
-	# +Y is fixed as the gravity/down direction in every valid presentation basis.
-	_update_gizmo_axis("Gravity", str(_orientation_basis_snapshot.get("gravity_axis", "+Y")), Vector3.DOWN)
+	_update_gizmo_axis("Gravity", str(_orientation_basis_snapshot.get("gravity_axis", "+Y")), _presented_direction(gravity_direction))
 	_update_gizmo_axis("Depth", depth, _presented_direction(depth_direction))
+
+
+func _pre_local_direction(signed_axis: String) -> Vector3:
+	var exact_visible_axes: Array = _orientation_basis_snapshot.get("visible_axes", ["+X", "+Y", "+Z"])
+	# The combined Live-4D setter replaces visible_axes with resolved labels, so
+	# recover the exact pre-L slots from the authoritative signed slot snapshot.
+	var slots: Array = _orientation_basis_snapshot.get("slots", [])
+	if slots.size() == 4:
+		exact_visible_axes = [
+			_signed_slot_label(int(slots[0])),
+			"+Y",
+			_signed_slot_label(int(slots[2])),
+		]
+	var horizontal_axis := str(exact_visible_axes[0])
+	var depth_axis := str(exact_visible_axes[2])
+	if signed_axis == horizontal_axis:
+		return Vector3.RIGHT
+	if signed_axis == _opposite_signed_axis(horizontal_axis):
+		return Vector3.LEFT
+	if signed_axis == depth_axis:
+		return Vector3.BACK
+	if signed_axis == _opposite_signed_axis(depth_axis):
+		return Vector3.FORWARD
+	return Vector3.ZERO
 
 
 func _presented_direction(direction: Vector3) -> Vector3:
@@ -602,6 +685,20 @@ func _update_gizmo_axis(slot: String, label_text: String, direction: Vector3) ->
 	var shaft := _orientation_gizmo.get_node_or_null("%sAxis" % slot) as MeshInstance3D
 	var arrow := _orientation_gizmo.get_node_or_null("%sArrow" % slot) as MeshInstance3D
 	var label := _orientation_gizmo.get_node_or_null("%sLabel" % slot) as Label3D
+	var available := direction.length_squared() > 0.000001
+	if shaft != null:
+		shaft.visible = available
+	if arrow != null:
+		arrow.visible = available
+	if label != null:
+		label.visible = available
+	if not available:
+		_orientation_axis_snapshot[slot.to_lower()] = {
+			"signed_axis": label_text,
+			"presented_direction": Vector3.ZERO,
+			"available": false,
+		}
+		return
 	var color := ReplayVisuals.axis_color(label_text)
 	if shaft != null:
 		shaft.position = direction * 0.35
@@ -618,10 +715,25 @@ func _update_gizmo_axis(slot: String, label_text: String, direction: Vector3) ->
 		label.modulate = color
 		label.position = direction * 1.02
 		label.set_meta("signed_axis", label_text)
+	_orientation_axis_snapshot[slot.to_lower()] = {
+		"signed_axis": label_text,
+		"presented_direction": direction,
+		"available": true,
+	}
 
 
-func _signed_direction(base: Vector3, signed_axis: String) -> Vector3:
-	return -base if signed_axis.begins_with("-") else base
+func _signed_slot_label(signed_slot: int) -> String:
+	var names := ["X", "Y", "Z", "W"]
+	var index := absi(signed_slot) - 1
+	return "" if index < 0 or index >= names.size() else ("+" if signed_slot > 0 else "-") + names[index]
+
+
+func _opposite_signed_axis(signed_axis: String) -> String:
+	if signed_axis.begins_with("+"):
+		return "-" + signed_axis.substr(1)
+	if signed_axis.begins_with("-"):
+		return "+" + signed_axis.substr(1)
+	return signed_axis
 
 
 func _canonical_axis_direction(signed_axis: String) -> Vector3:

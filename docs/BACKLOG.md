@@ -29,8 +29,14 @@ packaging inputs and interpreter major/minor version, preserve the existing
 editable-install ownership check, avoid repeat network/bootstrap work, and
 never duplicate the verification graph.
 
-Follow-up: separately review destructive `--rebuild-venv` recreation for
-operator confirmation and recovery messaging.
+`--rebuild-venv` now refuses before deletion when its selected bootstrap is
+inside the `.venv` being replaced. Follow-up: separately review operator
+confirmation and recovery messaging for other destructive recreation cases.
+
+The inherited workspace interpreter overlay is runtime selection only. Fresh
+worktrees still need an approved bootstrap Python through the supported
+environment/local mechanisms, and multi-worktree shared editable-environment
+certification remains deferred.
 
 ### Camera and relative-control contract
 
@@ -52,8 +58,27 @@ Acceptance boundary:
 
 Cockpit allocation, NEXT/HOLD redesign, grid/spacing polish, and issues
 #69/#70 remain separate PR3–PR5 work. Stage 55 semantic export is available
-only as reproducible, non-authoritative investigation tooling; it is not a
-canonical design workflow and its generated captures remain untracked.
+only as reproducible, non-authoritative investigation tooling. Its compact
+projection retains runtime provenance when generated wrappers are elided; it
+is not a canonical design workflow and its generated captures remain untracked.
+
+### Stage 56 cockpit completion
+
+Complete the accepted cockpit direction through serial green stages. Stage
+56A repaired the Live-4D orientation rosette as a passive consumer of the
+existing `B + L + ControlFrameMapping` presentation snapshot. Stage 56B now
+provides deterministic viewport-aware, activity-independent slice tiling and
+records bounded repair 56B-R for settled HUD viewport ownership and manual-fit
+preservation. Stage 56C now renders PIECE and VIEW as shared passive semantic
+rows whose labels are injected from `LiveInputContract` across all densities.
+Stage 56D extracts the Header, PrimaryBoardSurface, and three-module
+ControlDeck allocation into the authority-free `LiveCockpit` shell. Stage 56E
+has now migrated Live 3D with a larger primary board and dimension-filtered
+PIECE/VIEW rows. Stage 56F has now migrated Live 2D and has implementation and
+automated evidence complete; its regression evidence is independent of
+machine-local onboarding preferences while preserving the profile-owned
+guidance setting. Responsive acceptance, human playability/overlay acceptance,
+final polish, and the 190/200 human A/B choice remain gated as Stages 56G–56I.
 
 ### Three-product packaging gaps
 
@@ -126,6 +151,22 @@ Godot game/iPadOS target gap.
   full-gate fallback.
 
 ## Explicit Deferrals
+
+### Workspace governance extraction
+
+- v0.1 retains `config/project/policy_pack.json` as authority for unmigrated
+  Tet4D-specific facts. Future extraction should migrate one bounded fact family
+  at a time with generated/validated compatibility output.
+- General prompt classification, runtime execution graphs, cross-repository
+  orchestration, migration engines, and planner/runner redesign remain deferred.
+- Round 2 hardens bootstrap diagnostics, canonical-owner coverage, field-use
+  mutation evidence, and executable contradiction fixtures. Generic generated
+  documents and the Godot-namespaced full-gate pointer remain deferred.
+- The v0.1 integrity repair makes project routes canonical and retains legacy
+  routes only as a parity-validated facade. Do not extract another policy family
+  until the repaired contract receives independent review.
+- The vendored v0.1 pack is internally integrity-checked here; upstream
+  canonical reconstruction or export of that pack remains deferred.
 
 ### Release and platform
 

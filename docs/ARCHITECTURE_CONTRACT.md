@@ -207,6 +207,11 @@ engine-owned helpers, but direct engine or UI imports are acceptable when they
 measure UI-specific behavior or when they remove wrapper duplication without
 creating reverse dependencies.
 
+The generic `tools/workspace_governance/` pack owns only schemas, composition,
+diagnostics, pack identity, and environment inspection. Tet4D project facts and
+human semantic ownership remain outside the pack as defined by
+`docs/architecture/workspace_governance_v0_1.md`.
+
 ## Semantic Boundary Validation
 
 Identity-bearing replay, trace/hash, gameplay-configuration, derived-cache,

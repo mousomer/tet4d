@@ -48,6 +48,8 @@ var _playback_accumulator := 0.0
 var _mouse_orbiting := false
 var _mouse_panning := false
 var _pending_fit_view := false
+var _presentation_layout_guard_revision := 0
+var _presentation_layout_guard_active := false
 var _mode := MODE_REPLAY
 var _retained_live_navigation_mode := ""
 var _retained_live_navigation_paused := false
@@ -122,6 +124,7 @@ var _live_4d_presentation_root: Node3D
 var _renderer: TraceSceneRenderer
 var _camera_rig: CameraRig
 var _world_environment: WorldEnvironment
+var _last_layout_viewport_size := Vector2.ZERO
 # Keep this dynamically typed and construct it through AnimatedBackgroundScript.
 # `global_script_class_cache.cfg` is ignored generated state, so a checkout may
 # legitimately have a stale cache that predates this component. A global-class
@@ -684,6 +687,7 @@ func _wire_hud() -> void:
 		_refresh_hud()
 	)
 	_hud.fit_view_requested.connect(_fit_view)
+	_hud.game_viewport_geometry_changed.connect(_on_game_viewport_geometry_changed)
 	_hud.reset_view_requested.connect(_reset_view)
 	_hud.quit_requested.connect(_quit_application)
 	_hud.main_menu_requested.connect(_return_to_main_menu)
@@ -971,6 +975,8 @@ func _refresh_snapshot() -> void:
 
 
 func _refresh_render() -> void:
+	if _renderer != null and _hud != null and _renderer.has_method("set_layout_viewport_size"):
+		_route_layout_viewport_size(_hud.board_viewport_size())
 	if _is_live_mode():
 		if not _current_snapshot.is_empty():
 			_renderer.render_snapshot(_presentation_snapshot_for_render())
@@ -979,6 +985,26 @@ func _refresh_render() -> void:
 		return
 	var next_snapshot := _next_snapshot()
 	_renderer.render_interpolated_snapshot(_current_snapshot, next_snapshot, _state.interpolation_alpha)
+
+
+func _on_game_viewport_geometry_changed(viewport_size: Vector2) -> void:
+	if not _route_layout_viewport_size(viewport_size):
+		return
+	if _mode == MODE_LIVE_4D and not _current_snapshot.is_empty():
+		var framing_status := str(_camera_rig.presentation_snapshot().get("framing_status", "")) if _camera_rig != null else ""
+		_refresh_live_4d_presentation(true)
+		if not _presentation_layout_guard_active and not framing_status.begins_with("manual"):
+			_fit_view()
+
+
+func _route_layout_viewport_size(viewport_size: Vector2) -> bool:
+	if viewport_size.x < 240.0 or viewport_size.y < 120.0 or _renderer == null:
+		return false
+	if viewport_size.is_equal_approx(_last_layout_viewport_size):
+		return false
+	_last_layout_viewport_size = viewport_size
+	_renderer.set_layout_viewport_size(viewport_size)
+	return true
 
 
 func _presentation_snapshot_for_render() -> Dictionary:
@@ -1199,6 +1225,8 @@ func apply_presentation_profile(profile) -> bool:
 	if profile == null or not profile.has_method("contract_conforms") or not profile.contract_conforms():
 		return false
 	var previous_ghost_enabled := _ghost_enabled
+	if _mode == MODE_LIVE_4D and not _current_snapshot.is_empty():
+		_begin_presentation_layout_guard()
 	_presentation_profile = profile.detached_copy()
 	_state.display_mode = ReplayVisuals.normalize_display_mode(str(_presentation_profile.value("theme.name")))
 	_state.playback_speed = float(_presentation_profile.value("replay.playback_speed"))
@@ -1229,6 +1257,30 @@ func apply_presentation_profile(profile) -> bool:
 	if _hud != null:
 		_refresh_hud()
 	return true
+
+
+func _begin_presentation_layout_guard() -> void:
+	_presentation_layout_guard_revision += 1
+	# Without a tree there is no frame that could ever release the guard, so
+	# never latch it: a permanently active guard would suppress every later
+	# fit-view recovery for the rest of the session.
+	if not is_inside_tree() or get_tree() == null:
+		_presentation_layout_guard_active = false
+		return
+	_presentation_layout_guard_active = true
+	_release_presentation_layout_guard_after_settle(_presentation_layout_guard_revision)
+
+
+func _release_presentation_layout_guard_after_settle(revision: int) -> void:
+	for _settle_frame in 2:
+		var tree := get_tree()
+		if tree == null:
+			break
+		await tree.process_frame
+		if not is_instance_valid(self):
+			return
+	if revision == _presentation_layout_guard_revision:
+		_presentation_layout_guard_active = false
 
 
 func _refresh_hud() -> void:
@@ -1331,8 +1383,19 @@ func _refresh_control_frame_presentation() -> bool:
 	var presentation_key := "%s|%s" % [_mode, str(snapshot)]
 	var changed := presentation_key != _control_frame_presentation_key
 	_control_frame_presentation_key = presentation_key
-	if _camera_rig != null and _camera_rig.has_method("set_control_frame_mapping"):
-		_camera_rig.set_control_frame_mapping(snapshot)
+	if _camera_rig != null:
+		var live_4d_state_applied := false
+		if dimension == 4 and _camera_rig.has_method("set_live_4d_orientation_state"):
+			live_4d_state_applied = bool(_camera_rig.set_live_4d_orientation_state(
+				_live_4d_basis,
+				_live_4d_local_orientation,
+				snapshot
+			))
+		# The combined 4D seam declines incomplete state (for example before the
+		# basis and local orientation exist). Fall back rather than leave the rig
+		# rendering the previous presentation's orientation.
+		if not live_4d_state_applied and _camera_rig.has_method("set_control_frame_mapping"):
+			_camera_rig.set_control_frame_mapping(snapshot)
 	if _hud != null and _hud.has_method("set_control_frame_snapshot"):
 		_hud.set_control_frame_snapshot(snapshot)
 	return changed
@@ -1663,8 +1726,6 @@ func _apply_live_4d_basis_turn(plane: String, direction: int) -> void:
 		return
 	_live_4d_basis = _live_4d_basis.turned(plane, direction)
 	_renderer.set_live_4d_basis(_live_4d_basis, true)
-	if _camera_rig != null:
-		_camera_rig.set_orientation_basis(_live_4d_basis)
 	_refresh_live_4d_presentation()
 	_refresh_hud()
 
@@ -1677,8 +1738,6 @@ func _reset_live_4d_basis_only() -> void:
 	_live_4d_basis = SliceBasis4DScript.identity()
 	if _renderer != null:
 		_renderer.set_live_4d_basis(_live_4d_basis, false)
-	if _camera_rig != null:
-		_camera_rig.set_orientation_basis(_live_4d_basis)
 	_refresh_live_4d_presentation()
 	_refresh_hud()
 
@@ -1692,8 +1751,6 @@ func _restore_live_4d_presentation_defaults() -> void:
 		_renderer.clear_presentation()
 		_renderer.set_live_4d_basis(_live_4d_basis, false)
 		_renderer.set_live_4d_local_orientation(_live_4d_local_orientation)
-	if _camera_rig != null:
-		_camera_rig.set_orientation_basis(_live_4d_basis)
 	_pending_fit_view = false
 
 

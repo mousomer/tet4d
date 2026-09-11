@@ -39,7 +39,12 @@ func run() -> Array:
 	hud.show_screen(hud.SCREEN_ABOUT)
 	await tree.process_frame
 	_check_scroll(failures, hud.layout_contract_snapshot().get("about_scroll", {}), "about")
+	# The live cockpit lives inside the viewer screen, so return to it before
+	# asserting that onboarding is actually visible in the shared Header slot.
+	hud.show_screen(hud.SCREEN_VIEWER)
+	await tree.process_frame
 	for mode in ["live_2d", "live_3d", "live_4d"]:
+		hud._set_onboarding_visible(true)
 		if mode == "live_2d": hud.set_live_2d_mode(false, false, "none")
 		elif mode == "live_3d": hud.set_live_3d_mode(false, false, "none")
 		else: hud.set_live_4d_mode(false, false, "none")
@@ -51,9 +56,8 @@ func run() -> Array:
 			failures.append("%s onboarding should expose its initial title and instruction" % mode)
 		if float(panel.get("minimum_height", 0.0)) < 170.0 or str(panel.get("hide_action", "")) != "Hide Guide":
 			failures.append("%s onboarding should be prominent and expose an explicit Hide Guide action" % mode)
-		var order: Array = snapshot.get("right_inspector_order", [])
-		if order.is_empty() or str(order[0]) != "LiveOnboardingPanel":
-			failures.append("%s onboarding should be first in the live inspector" % mode)
+		if hud._onboarding_panel.get_parent() != hud._live_cockpit.header_slot or not hud._onboarding_panel.is_visible_in_tree():
+			failures.append("%s onboarding should remain visible in the shared live Header slot" % mode)
 	root.queue_free()
 	await tree.process_frame
 	return failures

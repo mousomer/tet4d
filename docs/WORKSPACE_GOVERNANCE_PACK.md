@@ -1,8 +1,14 @@
-# Workspace Governance Pack
+# Legacy Workspace Governance Template Pack
 
-Tet4D contains a reusable, project-neutral governance pack intended to bootstrap
-engineering governance in other repositories. The pack lives under
-`tools/templates/governance/`.
+This document describes the legacy copy-based template bundle under
+`tools/templates/governance/`; it is not the versioned runtime pack.
+
+The canonical versioned pack consumed by Tet4D is
+`tools/workspace_governance/`, pinned by
+`config/governance/workspace.lock.json`, and specified by
+`docs/architecture/workspace_governance_v0_1.md`. Project routes are canonical;
+the legacy policy-pack routes are a validated compatibility facade. Other
+Tet4D-specific facts remain with their existing authorities.
 
 The pack is deliberately **not** Tet4D authority. Tet4D remains governed by its
 root `AGENTS.md` and the canonical project-specific owners under
@@ -39,7 +45,7 @@ choices.
 Before exporting it, validate the reusable source in Tet4D:
 
 ```bash
-python tools/governance/validate_workspace_bundle.py
+"$(./scripts/resolve_python_env.sh)" tools/governance/validate_workspace_bundle.py
 ```
 
 The validator checks that required files exist, that `MANIFEST.md` describes the

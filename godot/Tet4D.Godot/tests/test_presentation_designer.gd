@@ -171,18 +171,21 @@ func _test_live_app_integration() -> Array:
 	var designer_rect: Rect2 = designer.get_global_rect()
 	if not _rect_contains_rect(game_rect, designer_rect) or designer_rect.size.x >= game_rect.size.x * 0.65:
 		failures.append("full Designer should remain bounded inside the board area without obscuring the whole board")
-	var inspector_rect: Rect2 = hud._right_scroll.get_global_rect()
+	var deck_rect: Rect2 = layout.get("live_4d_deck", Rect2())
+	var piece_module_rect: Rect2 = layout.get("piece_module_rect", Rect2())
+	var state_module_rect: Rect2 = layout.get("piece_state_module_rect", Rect2())
 	if (
 		not hud._next_piece_panel.is_visible_in_tree()
 		or not hud._hold_piece_panel.is_visible_in_tree()
 		or not hud._piece_control_strip.is_visible_in_tree()
-		or not _rect_contains_rect(inspector_rect, hud._next_piece_panel.get_global_rect())
-		or not _rect_contains_rect(inspector_rect, hud._hold_piece_panel.get_global_rect())
-		or not _rect_contains_rect(inspector_rect, hud._piece_control_strip.get_global_rect())
+		or not _rect_contains_rect(deck_rect, state_module_rect)
+		or not _rect_contains_rect(state_module_rect, hud._next_piece_panel.get_global_rect())
+		or not _rect_contains_rect(state_module_rect, hud._hold_piece_panel.get_global_rect())
+		or not _rect_contains_rect(piece_module_rect, hud._piece_control_strip.get_global_rect())
 	):
 		failures.append("NEXT, HOLD, and primary piece controls must remain simultaneously present while the full Designer is open")
-	if not hud._right_scroll.is_visible_in_tree() or hud._right_scroll.vertical_scroll_mode == ScrollContainer.SCROLL_MODE_DISABLED:
-		failures.append("helper/status content should remain immediately reachable through the existing inspector scroll surface")
+	if not layout.get("live_4d_deck_visible", false) or hud._right_scroll.is_visible_in_tree():
+		failures.append("shared live guidance must remain reachable in the deck while the legacy inspector stays retired")
 
 	var full_owned_hash := str(app._live_bridge.live_2d_state_hash())
 	var blocked_drop := InputEventAction.new()
@@ -317,12 +320,14 @@ func _test_live_app_integration() -> Array:
 	for pose_key in ["target_yaw", "target_pitch", "target_roll", "current_yaw", "current_pitch", "current_roll", "target_focus", "current_focus", "zoom_multiplier"]:
 		if four_d_camera_after.get(pose_key) != four_d_camera_before.get(pose_key):
 			failures.append("4D slice presentation editing must preserve camera pose field %s" % pose_key)
-	if not hud._basis_panel.is_visible_in_tree() or str(hud.layout_contract_snapshot().get("basis_indicator_text", "")).find("Slice:") == -1:
-		failures.append("4D basis/slice information should remain readable while tuning presentation")
-	if not _rect_contains_rect(hud._right_scroll.get_global_rect(), hud._piece_control_strip.get_global_rect()):
-		failures.append("4D primary piece controls should remain visible without scrolling while tuning presentation")
-	if str(hud.layout_contract_snapshot().get("inspector_hint_text", "")).find("Slice") == -1:
-		failures.append("4D helper guidance should remain present and scroll-reachable while tuning presentation")
+	var four_d_layout: Dictionary = hud.layout_contract_snapshot()
+	var orientation: Dictionary = app._camera_rig.orientation_indicator_snapshot()
+	if orientation.get("source") != "live_4d_presentation" or str(orientation.get("control_frame", {}).get("slice_axis", "")).is_empty():
+		failures.append("4D orientation indicator should preserve readable slice state while tuning presentation")
+	if not _rect_contains_rect(four_d_layout.get("piece_module_rect", Rect2()), hud._piece_control_strip.get_global_rect()):
+		failures.append("4D primary piece controls should remain visible in the shared Piece module while tuning presentation")
+	if "translate:W" not in four_d_layout.get("piece_control_strip", {}).get("row_ids", []):
+		failures.append("4D slice guidance should remain present in the shared Piece module while tuning presentation")
 
 	designer.revert_and_hide()
 	await tree.process_frame

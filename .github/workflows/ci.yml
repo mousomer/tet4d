@@ -51,8 +51,14 @@ jobs:
           fetch-depth: 0
 
       - uses: actions/setup-python@v6
+        id: setup-python
         with:
           python-version: "3.14"
+
+      - name: Bind the governed interpreter
+        run: |
+          echo "GOVERNANCE_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
+          echo "TET4D_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
 
       - name: Install baseline dependencies
         run: |
@@ -123,8 +129,14 @@ jobs:
       - uses: actions/checkout@v5
 
       - uses: actions/setup-python@v6
+        id: setup-python
         with:
           python-version: "3.14"
+
+      - name: Bind the governed interpreter
+        run: |
+          echo "GOVERNANCE_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
+          echo "TET4D_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
 
       - name: Install dependencies
         run: |
@@ -159,8 +171,14 @@ jobs:
       - uses: actions/checkout@v5
 
       - uses: actions/setup-python@v6
+        id: setup-python
         with:
           python-version: "${{ matrix.python-version }}"
+
+      - name: Bind the governed interpreter
+        run: |
+          echo "GOVERNANCE_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
+          echo "TET4D_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
 
       - name: Install dependencies
         run: |
@@ -183,8 +201,14 @@ jobs:
           submodules: recursive
 
       - uses: actions/setup-python@v6
+        id: setup-python
         with:
           python-version: "3.14"
+
+      - name: Bind the governed interpreter
+        run: |
+          echo "GOVERNANCE_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
+          echo "TET4D_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
 
       - name: Install dependencies
         run: |
@@ -209,8 +233,14 @@ jobs:
           submodules: recursive
 
       - uses: actions/setup-python@v6
+        id: setup-python
         with:
           python-version: "3.14"
+
+      - name: Bind the governed interpreter
+        run: |
+          echo "GOVERNANCE_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
+          echo "TET4D_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
 
       - name: Install dependencies
         run: |
@@ -224,11 +254,11 @@ jobs:
 
       - name: Check Python and native parity
         run: |
-          PYTHONPATH=src python tools/migration/compare_cpp_gameplay_trace.py \
+          PYTHONPATH="src${PYTHONPATH:+:$PYTHONPATH}" python tools/migration/compare_cpp_gameplay_trace.py \
             --all-plain-2d
-          PYTHONPATH=src python tools/migration/compare_cpp_gameplay_trace.py \
+          PYTHONPATH="src${PYTHONPATH:+:$PYTHONPATH}" python tools/migration/compare_cpp_gameplay_trace.py \
             --all-plain-nd
-          PYTHONPATH=src python tools/migration/compare_cpp_gameplay_trace.py \
+          PYTHONPATH="src${PYTHONPATH:+:$PYTHONPATH}" python tools/migration/compare_cpp_gameplay_trace.py \
             --all-plain-setup
           python -m pytest -q \
             tests/unit/migration/test_cpp_geometry_parity.py \
@@ -247,8 +277,14 @@ jobs:
           submodules: recursive
 
       - uses: actions/setup-python@v6
+        id: setup-python
         with:
           python-version: "3.14"
+
+      - name: Bind the governed interpreter
+        run: |
+          echo "GOVERNANCE_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
+          echo "TET4D_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
 
       - name: Install Python and native build dependencies
         run: |
@@ -324,8 +360,14 @@ jobs:
       - uses: actions/checkout@v5
 
       - uses: actions/setup-python@v6
+        id: setup-python
         with:
           python-version: "3.14"
+
+      - name: Bind the governed interpreter
+        run: |
+          echo "GOVERNANCE_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
+          echo "TET4D_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
 
       - name: Install dependencies
         run: |
@@ -355,8 +397,14 @@ jobs:
           submodules: recursive
 
       - uses: actions/setup-python@v6
+        id: setup-python
         with:
           python-version: "3.14"
+
+      - name: Bind the governed interpreter
+        run: |
+          echo "GOVERNANCE_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
+          echo "TET4D_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
 
       - name: Install build dependencies
         run: |
@@ -428,8 +476,14 @@ jobs:
           submodules: recursive
 
       - uses: actions/setup-python@v6
+        id: setup-python
         with:
           python-version: "3.14"
+
+      - name: Bind the governed interpreter
+        run: |
+          echo "GOVERNANCE_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
+          echo "TET4D_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
 
       - name: Install build dependencies
         run: |
@@ -576,8 +630,14 @@ jobs:
       - uses: actions/checkout@v5
 
       - uses: actions/setup-python@v6
+        id: setup-python
         with:
           python-version: "3.14"
+
+      - name: Bind the governed interpreter
+        run: |
+          echo "GOVERNANCE_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
+          echo "TET4D_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
 
       - name: Install dependencies
         run: |
