@@ -18,7 +18,7 @@ if [[ ! -f "$HASH_MANIFEST" ]]; then
   exit 1
 fi
 
-PYTHON_BIN="$("$TET4D_ROOT/scripts/resolve_python_env.sh")"
+eval "$("$TET4D_ROOT/gov" env)"
 
 "$PYTHON_BIN" - <<'PY'
 import hashlib

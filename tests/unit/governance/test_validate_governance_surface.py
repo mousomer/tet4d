@@ -130,9 +130,9 @@ def test_actual_governance_surface_is_within_all_limits() -> None:
     issues, measurement = surface.validate_surface(surface.ROOT)
     assert issues == []
     assert measurement is not None
-    # Durable worktree-verification and tracked/ignored sanitation invariants
-    # raise the human-governance baseline by three physical lines.
-    assert measurement.human <= 701 + 100
+    # Durable worktree-verification, tracked/ignored sanitation, and the
+    # resolver-owned source-binding invariant raise the baseline by four lines.
+    assert measurement.human <= 701 + 101
     assert measurement.machine <= 1000
     assert measurement.operational <= 400
     assert measurement.total <= 2500

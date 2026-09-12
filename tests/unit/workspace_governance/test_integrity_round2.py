@@ -525,15 +525,15 @@ def test_route_tool_fields_and_local_tool_override_are_consumed(checkout: Path) 
 def test_verify_and_project_test_use_the_doctor_selected_interpreter(
     checkout: Path,
 ) -> None:
-    # Real verify startup and module checks; stop intentionally at the editable-install
-    # shell entrypoint so this regression does not recursively run the full test suite.
+    # Real verify startup and module checks; stop at the first policy boundary
+    # so this regression does not recursively run the full test suite.
     selected = checkout / "traced-python"
     log = checkout / "calls.jsonl"
     selected.write_text(
         f'#!/bin/sh\nprintf "%s\\n" "$*" >> "{log}"\nexec "{sys.executable}" "$@"\n'
     )
     selected.chmod(0o755)
-    stop = checkout / "scripts/check_editable_install.sh"
+    stop = checkout / "scripts/check_policy_compliance.sh"
     stop.write_text("#!/bin/sh\necho intentional-test-boundary >&2\nexit 79\n")
     env = environment(
         TET4D_PYTHON=str(selected),
@@ -636,8 +636,51 @@ def test_shared_bootstrap_never_falls_back_to_building_a_local_environment(
     )
 
     assert result.returncode == 1
-    assert "source mode needs an interpreter" in result.stderr
+    assert "bootstrap.interpreter" in result.stderr
     assert not (checkout / ".venv").exists()
+
+
+def test_source_bootstrap_mutates_the_explicitly_governed_interpreter(
+    checkout: Path,
+) -> None:
+    """An override outranks an overlay for both `gov env` and bootstrap."""
+    overlay = wrapper(checkout)
+    selected = checkout / "explicit-python"
+    prefix = checkout / "explicit-prefix"
+    prefix.mkdir()
+    calls = checkout / "explicit-python.calls"
+    selected.write_text(
+        "#!/bin/sh\n"
+        f'printf "%s\\n" "$*" >> "{calls}"\n'
+        'if [ "$1" = "-c" ] && case "$2" in *"print(sys.prefix)"*) true;; *) false;; esac; then\n'
+        f'  printf "%s\\n" "{prefix}"\n'
+        "  exit 0\n"
+        "fi\n"
+        'if [ "$1" = "-m" ] && [ "$2" = "pip" ]; then exit 0; fi\n'
+        f'exec "{sys.executable}" "$@"\n'
+    )
+    selected.chmod(0o755)
+    (checkout / ".governance/workspace.local.json").write_text(
+        json.dumps({"schema_version": 1, "interpreter": str(overlay)}),
+        encoding="utf-8",
+    )
+    hooks = checkout / "scripts/install_git_hooks.sh"
+    hooks.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+    hooks.chmod(0o755)
+    env = environment(
+        GOVERNANCE_PYTHON=sys.executable,
+        PYTHON_BOOTSTRAP_BIN=sys.executable,
+        TET4D_ENVIRONMENT_MODE="source",
+        TET4D_PYTHON=str(selected),
+    )
+
+    resolved = run(checkout, "./gov", "env", "--json", env=env)
+    assert resolved.returncode == 0, resolved.stdout + resolved.stderr
+    assert json.loads(resolved.stdout)["PYTHON_BIN"] == str(selected)
+
+    bootstrapped = run(checkout, "./scripts/bootstrap_env.sh", env=env)
+    assert bootstrapped.returncode == 0, bootstrapped.stdout + bootstrapped.stderr
+    assert "-m pip install" in calls.read_text(encoding="utf-8")
 
 
 def test_exclusive_file_identity_normalizes_equivalent_paths(checkout: Path) -> None:

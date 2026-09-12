@@ -4,7 +4,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-PYTHON_BIN="$(./scripts/resolve_python_env.sh)"
+eval "$(./gov env)"
 
 "$PYTHON_BIN" -m ruff check \
   src/tet4d/engine/runtime/keybinding_runtime_state.py \
@@ -18,7 +18,7 @@ PYTHON_BIN="$(./scripts/resolve_python_env.sh)"
   tests/unit/engine/test_tutorial_overlay_layout.py \
   tools/governance/validate_project_contracts.py
 
-PYTHONPATH="src${PYTHONPATH:+:$PYTHONPATH}" "$PYTHON_BIN" -m pytest -q \
+"$PYTHON_BIN" -m pytest -q \
   tests/unit/engine/test_keybindings.py \
   tests/unit/engine/test_keybindings_menu_model.py \
   tests/unit/engine/test_menu_navigation_keys.py \

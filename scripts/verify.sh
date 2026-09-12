@@ -134,7 +134,6 @@ require_repo_package
 
 run_step "workspace_governance" ./gov check
 run_step "environment_doctor" ./gov doctor
-run_step "editable_install" ./scripts/check_editable_install.sh
 run_governance_step "policy_compliance" ./scripts/check_policy_compliance.sh
 run_governance_step "policy_compliance_repo" ./scripts/check_policy_compliance_repo.sh
 run_governance_step "git_sanitation_repo" ./scripts/check_git_sanitation_repo.sh
@@ -162,7 +161,7 @@ fi
 
 run_step "pytest"         run_module pytest "${PYTEST_ARGS[@]}"
 
-run_step "playbot_stability"   env PYTHONPATH=".${PYTHONPATH:+:$PYTHONPATH}" "$PYTHON_BIN" tools/stability/check_playbot_stability.py --repeats "$STABILITY_REPEATS" --seed-base "$STABILITY_SEED_BASE"
+run_step "playbot_stability" "$PYTHON_BIN" tools/stability/check_playbot_stability.py --repeats "$STABILITY_REPEATS" --seed-base "$STABILITY_SEED_BASE"
 
 run_step "compileall"     "$PYTHON_BIN" -m compileall -q front.py cli/__init__.py cli/front.py cli/front2d.py cli/front3d.py cli/front4d.py src/tet4d src/tet4d/engine
 run_step "bench_playbot"  "$PYTHON_BIN" tools/benchmarks/bench_playbot.py --assert --record-trend

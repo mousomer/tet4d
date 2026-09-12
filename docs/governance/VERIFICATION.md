@@ -119,8 +119,9 @@ CODEX_MODE=1 ./scripts/verify.sh
 ./scripts/ci_preflight.sh
 ```
 
-Governed project checks resolve Python once through
-`scripts/resolve_python_env.sh`. Priority is the explicit `TET4D_PYTHON`
+Governed project checks consume `gov env` once, receiving the resolver-selected
+interpreter, execution mode, and source binding when source mode is active.
+Priority is the explicit `TET4D_PYTHON`
 override, then the ignored workspace-local interpreter, then `.venv`; no valid
 candidate is `ENVIRONMENT_INVALID`. `PYTHON_BIN` only carries the resolved
 output to child processes. `./scripts/verify.sh` and

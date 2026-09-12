@@ -73,7 +73,7 @@ Interpreter and source selection are separate decisions. One environment holds
 exactly one distribution of a given name, so an installed project makes a single
 checkout authoritative for every other; the invoking checkout decides instead,
 through a binding derived from `environment.editable_source`. `gov env` emits the
-interpreter and, in source mode, that binding as shell assignments, because shell
+interpreter, resolved execution mode, and, in source mode, that binding as shell assignments, because shell
 cannot import the resolver and `resolve_python_env.sh` prints one interpreter and
 rejects arguments. Gates consume it rather than deriving their own, which could
 verify a different environment than `doctor` certified.
@@ -163,8 +163,11 @@ nothing more. `check`, `resolve`, and `explain` need no third-party libraries.
 bootstrap started it, returning `ENVIRONMENT_INVALID` with
 `ENVIRONMENT_MISMATCH` when that interpreter is unavailable.
 
-`bootstrap_env.sh` is the only path that mutates a Python environment, and what
-it builds follows the declared mode: installed mode an environment belonging to
+`bootstrap_env.sh` consumes `gov env --allow-missing-interpreter`, so it mutates
+exactly the interpreter and mode selected by the resolver. The missing-interpreter
+exception is resolver-owned and limited to the declared installed-mode local
+environment, which bootstrap may create. What it builds follows the declared mode:
+installed mode an environment belonging to
 this checkout, source mode declared dependencies in the shared toolchain and no
 project. Its fingerprint and mutation lock sit beside that environment, since a
 shared one is reachable from every worktree while a worktree's verify lock
@@ -174,8 +177,9 @@ The selected project interpreter evaluates the full Python specifier using
 metadata produce diagnostics, not forwarded subprocess tracebacks.
 
 `resolve_python_env.sh` prints only the approved interpreter and rejects all
-arguments. Execute a script with `"$(./scripts/resolve_python_env.sh)" script.py`.
-`PYTHON_BIN` remains an output alias, never an independent selection input.
+arguments. Shell entry points that may import project code consume `gov env`
+instead, so they receive its source binding as well as `PYTHON_BIN`; neither
+value is an independent selection input.
 
 `canonical_owner_set` references the existing compatibility authority's
 `authority_model.canonical_human_owners`. Graph validation requires exactly one

@@ -8,6 +8,7 @@ mode replaces that ownership with a binding derived from the invoking checkout.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -47,7 +48,7 @@ def test_installed_mode_injects_no_binding(checkout: Path) -> None:
     assert core.binding_environment(checkout, project, {}) == {}
 
 
-def test_source_mode_prepends_and_never_replaces(checkout: Path) -> None:
+def test_source_mode_prepends_and_never_replaces(checkout: Path, monkeypatch) -> None:
     project = project_of(checkout)
     expected = str((checkout / "src").resolve())
 
@@ -61,7 +62,17 @@ def test_source_mode_prepends_and_never_replaces(checkout: Path) -> None:
         project,
         {"TET4D_ENVIRONMENT_MODE": "source", "PYTHONPATH": "/outer"},
     )
-    assert inherited == {"PYTHONPATH": f"{expected}:/outer"}
+    assert inherited == {"PYTHONPATH": os.pathsep.join((expected, "/outer"))}
+
+    # Exercise the Windows separator without requiring a Windows test host.
+    monkeypatch.setattr(core.os, "pathsep", ";")
+    windows_inherited = "C" + ":" + "\\outer"
+    windows = core.binding_environment(
+        checkout,
+        project,
+        {"TET4D_ENVIRONMENT_MODE": "source", "PYTHONPATH": windows_inherited},
+    )
+    assert windows == {"PYTHONPATH": expected + ";" + windows_inherited}
 
 
 def test_an_unimplemented_mode_binds_nothing(checkout: Path) -> None:
@@ -136,6 +147,8 @@ def test_gov_env_is_the_one_interface_for_non_python_callers(
     installed = emitted(TET4D_PYTHON=sys.executable, TET4D_ENVIRONMENT_MODE="installed")
     assert installed["PYTHON_BIN"] == str(Path(sys.executable).absolute())
     assert "PYTHONPATH" not in installed
+    assert installed["TET4D_ENVIRONMENT_MODE"] == "installed"
 
     source = emitted(TET4D_PYTHON=sys.executable, TET4D_ENVIRONMENT_MODE="source")
     assert source["PYTHONPATH"] == str((checkout / "src").resolve())
+    assert source["TET4D_ENVIRONMENT_MODE"] == "source"

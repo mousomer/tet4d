@@ -934,14 +934,15 @@ def _python_specifier(root: Path, project: dict[str, Any]) -> tuple[str, str]:
     return value, authority["source"]
 
 
-def resolve_interpreter(
+def interpreter_candidate(
     root: Path,
     project: dict[str, Any],
     local: dict[str, Any] | None,
     environ: dict[str, str] | None = None,
     *,
     local_tiers: dict[str, str] | None = None,
-) -> tuple[Path | None, str, list[Diagnostic]]:
+) -> tuple[Path, str]:
+    """Select the governed interpreter path before environment validation."""
     env = os.environ if environ is None else environ
     override = project["environment"]["interpreter_override"]
     if env.get(override):
@@ -958,6 +959,20 @@ def resolve_interpreter(
     path = Path(raw).expanduser()
     if not path.is_absolute():
         path = root / path
+    return path, reason
+
+
+def resolve_interpreter(
+    root: Path,
+    project: dict[str, Any],
+    local: dict[str, Any] | None,
+    environ: dict[str, str] | None = None,
+    *,
+    local_tiers: dict[str, str] | None = None,
+) -> tuple[Path | None, str, list[Diagnostic]]:
+    path, reason = interpreter_candidate(
+        root, project, local, environ, local_tiers=local_tiers
+    )
     if not path.is_file() or not os.access(path, os.X_OK):
         return (
             None,
@@ -1062,7 +1077,9 @@ def binding_environment(
         return {}
     binding = str(source_binding_path(root, project))
     inherited = env.get("PYTHONPATH", "")
-    return {"PYTHONPATH": f"{binding}:{inherited}" if inherited else binding}
+    return {
+        "PYTHONPATH": os.pathsep.join((binding, inherited)) if inherited else binding
+    }
 
 
 def resolve_execution_mode(

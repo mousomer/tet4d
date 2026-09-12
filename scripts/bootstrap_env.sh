@@ -14,30 +14,18 @@ cd "$(dirname "$0")/.."
 # installed and the checkout supplies its own source.
 
 PYTHON_BOOTSTRAP_BIN="${PYTHON_BOOTSTRAP_BIN:-$(./scripts/resolve_bootstrap_python.sh)}"
-VENV_PATH="${VENV_PATH:-.venv}"
-VENV_PYTHON="${VENV_PATH}/bin/python"
 PIP_ARGS=(--disable-pip-version-check --no-input)
 
 # Diagnose an unsupported bootstrap before any environment creation or replacement.
 "${PYTHON_BOOTSTRAP_BIN}" -c 'from tools.workspace_governance.cli.bootstrap import main; raise SystemExit(main(check_only=True))'
 
-# Read the declaration through the governance resolver, not a second parser. The
-# bootstrap interpreter can import it because check-level governance is
-# standard-library only, which matters here: this runs before the environment
-# it is about to build exists.
-read -r MODE DECLARED_INTERPRETER <<<"$(
-  "${PYTHON_BOOTSTRAP_BIN}" -c '
-from pathlib import Path
-from tools.workspace_governance.resolver.core import GovernanceResolver
-from tools.workspace_governance.validators.core import resolve_execution_mode
-
-resolver = GovernanceResolver.for_root(Path.cwd())
-_, project, _ = resolver.load()
-local, _ = resolver.local_overlay()
-mode = resolve_execution_mode(project, None, local)[0]
-print(mode, (local or {}).get("interpreter", ""))
-'
-)"
+# `gov env` is the shell boundary for governed execution state. It resolves the
+# mode and interpreter with the same precedence as doctor and verification, so
+# bootstrap cannot accidentally mutate an overlay interpreter when an explicit
+# governed override selects another one.
+GOVERNED_ENV="$(./gov env --allow-missing-interpreter)"
+eval "$GOVERNED_ENV"
+MODE="$TET4D_ENVIRONMENT_MODE"
 
 declared_dependencies() {
   "${PYTHON_BOOTSTRAP_BIN}" -c '
@@ -52,7 +40,7 @@ print("\n".join(items))
 }
 
 dependency_fingerprint() {
-  "${PYTHON_BOOTSTRAP_BIN}" -c '
+  "$1" -c '
 import hashlib, pathlib, sys, tomllib
 
 project = tomllib.loads(pathlib.Path("pyproject.toml").read_text())["project"]
@@ -68,12 +56,7 @@ print(digest.hexdigest())
 }
 
 if [[ "$MODE" == "source" ]]; then
-  if [[ -z "$DECLARED_INTERPRETER" ]]; then
-    echo "bootstrap: source mode needs an interpreter declared in an overlay" >&2
-    echo "bootstrap: see docs/architecture/workspace_governance_v0_1.md" >&2
-    exit 1
-  fi
-  TARGET_PYTHON="$DECLARED_INTERPRETER"
+  TARGET_PYTHON="$PYTHON_BIN"
   PREFIX="$("$TARGET_PYTHON" -c 'import sys; print(sys.prefix)')"
   FINGERPRINT_PATH="${PREFIX}/.tet4d-dependency-fingerprint"
   LOCK_DIR="${PREFIX}/.tet4d-sync.lock"
@@ -88,7 +71,7 @@ if [[ "$MODE" == "source" ]]; then
   fi
   trap 'rmdir "$LOCK_DIR" 2>/dev/null || true' EXIT
 
-  fingerprint="$(dependency_fingerprint)"
+  fingerprint="$(dependency_fingerprint "$TARGET_PYTHON")"
   if [[ -f "$FINGERPRINT_PATH" && "$(<"$FINGERPRINT_PATH")" == "$fingerprint" ]]; then
     echo "Dependencies already synchronised: ${PREFIX}"
   else
@@ -112,12 +95,14 @@ if [[ "$MODE" == "source" ]]; then
   exit 0
 fi
 
-if [ ! -x "${VENV_PYTHON}" ]; then
+TARGET_PYTHON="$PYTHON_BIN"
+if [ ! -x "${TARGET_PYTHON}" ]; then
+  VENV_PATH="$(dirname "$(dirname "${TARGET_PYTHON}")")"
   "${PYTHON_BOOTSTRAP_BIN}" -m venv "${VENV_PATH}"
 fi
-"${VENV_PYTHON}" -m pip install "${PIP_ARGS[@]}" --upgrade pip
-"${VENV_PYTHON}" -m pip install "${PIP_ARGS[@]}" -e ".[dev]"
-GOVERNANCE_PYTHON="${VENV_PYTHON}" TET4D_PYTHON="${VENV_PYTHON}" \
+"${TARGET_PYTHON}" -m pip install "${PIP_ARGS[@]}" --upgrade pip
+"${TARGET_PYTHON}" -m pip install "${PIP_ARGS[@]}" -e ".[dev]"
+GOVERNANCE_PYTHON="${PYTHON_BOOTSTRAP_BIN}" TET4D_PYTHON="${TARGET_PYTHON}" \
   ./gov doctor >/dev/null
 
 ./scripts/install_git_hooks.sh

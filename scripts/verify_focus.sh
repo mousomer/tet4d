@@ -108,8 +108,7 @@ fi
 
 
 
-PYTHON_BIN="$(./scripts/resolve_python_env.sh)"
-export PYTHON_BIN
+eval "$(./gov env)"
 
 
 
@@ -181,9 +180,10 @@ require_repo_package
 
 
 
-./scripts/check_editable_install.sh
-
-mapfile -t RUFF_CHECK_TARGETS < <(filter_python_targets "${RUFF_TARGETS[@]}")
+RUFF_CHECK_TARGETS=()
+while IFS= read -r target; do
+  [[ -n "$target" ]] && RUFF_CHECK_TARGETS+=("$target")
+done < <(filter_python_targets "${RUFF_TARGETS[@]}")
 
 if [[ ${#RUFF_CHECK_TARGETS[@]} -gt 0 ]]; then
 
@@ -193,7 +193,10 @@ fi
 
 
 
-mapfile -t FORMAT_TARGETS < <(filter_python_targets "${RUFF_TARGETS[@]}")
+FORMAT_TARGETS=()
+while IFS= read -r target; do
+  [[ -n "$target" ]] && FORMAT_TARGETS+=("$target")
+done < <(filter_python_targets "${RUFF_TARGETS[@]}")
 
 if [[ ${#FORMAT_TARGETS[@]} -gt 0 ]]; then
 

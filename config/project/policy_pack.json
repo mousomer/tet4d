@@ -951,7 +951,7 @@
     "verification": {
       "local_gate": "CODEX_MODE=1 ./scripts/verify.sh",
       "ci_entrypoint": "./scripts/ci_check.sh",
-      "enforcers": ["scripts/check_editable_install.sh", "scripts/check_architecture_boundaries.sh", "scripts/check_engine_core_purity.sh", "scripts/arch_metrics.py", "tools/codegen/generate_topology_contract.py", "tools/governance/architecture_metric_budget.py"]
+      "enforcers": ["scripts/check_architecture_boundaries.sh", "scripts/check_engine_core_purity.sh", "scripts/arch_metrics.py", "tools/codegen/generate_topology_contract.py", "tools/governance/architecture_metric_budget.py"]
     }
   },
   "deprecated_authorities": {

@@ -3,7 +3,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-PYTHON_BIN="$(./scripts/resolve_python_env.sh)"
+eval "$(./gov env)"
 
 tmp_json="$(mktemp -t tet4d_arch_metrics_soft.XXXXXX.json)"
 trap 'rm -f "$tmp_json"' EXIT

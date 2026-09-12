@@ -30,6 +30,11 @@ toolchain and installs no project. Its fingerprint and mutation lock live beside
 that environment, because a shared one is reachable from every worktree at once
 while each worktree's verify lock guards only its own tree.
 
+Bootstrap and every project-importing verification entry point consume `gov env`
+for the resolver-selected interpreter, mode, and source binding. The obsolete shell
+editable-install checker is retired: `gov doctor` is the one mode-aware environment
+certification authority, checking installed origin in installed mode and checkout binding plus distribution neutrality in source mode.
+
 `verify_local.sh` owns nothing: it reports an unready environment and execs the
 canonical gate. `--rebuild-venv` is gone with the venv it rebuilt, which also
 retires the finding that inherited bootstrap had made that refusal permissive.

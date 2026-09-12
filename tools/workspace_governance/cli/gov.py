@@ -15,8 +15,10 @@ from tools.workspace_governance.resolver.core import GovernanceError, Governance
 from tools.workspace_governance.validators.core import (
     binding_environment,
     doctor,
+    interpreter_candidate,
     load_manifest_json,
     pack_hash,
+    resolve_execution_mode,
     resolve_interpreter,
 )
 
@@ -69,7 +71,13 @@ def _sync(root: Path, resolver: GovernanceResolver) -> dict[str, object]:
     return lock
 
 
-def _env(root: Path, resolver: GovernanceResolver, *, as_json: bool) -> int:
+def _env(
+    root: Path,
+    resolver: GovernanceResolver,
+    *,
+    as_json: bool,
+    allow_missing_interpreter: bool = False,
+) -> int:
     """Emit the execution environment for callers that are not Python.
 
     Shell cannot import the resolver, and `resolve_python_env.sh` prints one
@@ -83,11 +91,26 @@ def _env(root: Path, resolver: GovernanceResolver, *, as_json: bool) -> int:
     interpreter, _, issues = resolve_interpreter(
         root, project, local, local_tiers=local_tiers
     )
+    execution_mode, _, mode_issues = resolve_execution_mode(project, None, local)
+    issues.extend(mode_issues)
+    if (
+        interpreter is None
+        and allow_missing_interpreter
+        and execution_mode == "installed"
+    ):
+        candidate, selection_reason = interpreter_candidate(
+            root, project, local, local_tiers=local_tiers
+        )
+        if selection_reason == "repository-local environment":
+            interpreter, issues = candidate, mode_issues
     if issues or interpreter is None:
         with redirect_stdout(sys.stderr):
             _emit([item.to_dict() for item in issues], as_json=as_json)
         return 1
-    assignments = {"PYTHON_BIN": str(interpreter)}
+    assignments = {
+        "PYTHON_BIN": str(interpreter),
+        "TET4D_ENVIRONMENT_MODE": execution_mode,
+    }
     assignments.update(binding_environment(root, project, None, local))
     if as_json:
         _emit(assignments, as_json=True)
@@ -139,7 +162,8 @@ def main(argv: list[str] | None = None) -> int:
     doctor_parser.add_argument("--print-interpreter", action="store_true")
     doctor_parser.add_argument("--route")
     sub.add_parser("sync")
-    sub.add_parser("env")
+    env_parser = sub.add_parser("env")
+    env_parser.add_argument("--allow-missing-interpreter", action="store_true")
     args = parser.parse_args(raw_argv)
     args.json = as_json or args.json
     root = args.root.resolve()
@@ -165,7 +189,12 @@ def main(argv: list[str] | None = None) -> int:
             _emit(_sync(root, resolver), as_json=args.json)
             return 0
         if args.command == "env":
-            return _env(root, resolver, as_json=args.json)
+            return _env(
+                root,
+                resolver,
+                as_json=args.json,
+                allow_missing_interpreter=args.allow_missing_interpreter,
+            )
         return _doctor_command(root, resolver, args)
     except (
         GovernanceError,

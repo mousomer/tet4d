@@ -14,7 +14,8 @@ fi
 if [[ -n "${SCONS:-}" ]]; then
   read -r -a SCONS_CMD <<< "$SCONS"
 else
-  SCONS_PYTHON="$("$ROOT_DIR/scripts/resolve_python_env.sh")"
+  eval "$("$ROOT_DIR/gov" env)"
+  SCONS_PYTHON="$PYTHON_BIN"
   if ! "$SCONS_PYTHON" -c "import SCons" >/dev/null 2>&1; then
     echo "SCons is missing from the approved environment: $SCONS_PYTHON" >&2
     echo "Install it with: $SCONS_PYTHON -m pip install -e \".[dev]\"" >&2

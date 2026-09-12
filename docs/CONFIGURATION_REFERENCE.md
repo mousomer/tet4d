@@ -304,7 +304,7 @@ Parameters:
 ### `config/governance/workspace.lock.json`
 Top-level keys: `content_sha256`, `files`, `lock_algorithm`, `pack_name`, `pack_path`, `revision`, `schema_version`, `version`
 Parameters:
-- `content_sha256`: `"6b3af756539df6615f01521be376528b96041ea56163b61b0bd629a005de896c"` (`string`)
+- `content_sha256`: `"ddb6540cb74bd857638ca39cac59030f3ed50261ffc69e76652babd5dae04b93"` (`string`)
 - `files[]`: array[`string`]; examples: `"MANIFEST.json"`, `"VERSION"`, `"__init__.py"`
 - `lock_algorithm`: `"sha256-path-and-content-v1"` (`string`)
 - `pack_name`: `"workspace-governance"` (`string`)
@@ -2517,7 +2517,7 @@ Parameters:
 - `maintenance_docs.symbol_index.max_symbols_per_file`: `12` (`int`)
 - `maintenance_docs.symbol_index.source_roots[]`: array[`string`]; examples: `"src/tet4d"`, `"cli"`
 - `maintenance_docs.verification.ci_entrypoint`: `"./scripts/ci_check.sh"` (`string`)
-- `maintenance_docs.verification.enforcers[]`: array[`string`]; examples: `"scripts/check_editable_install.sh"`, `"scripts/check_architecture_boundaries.sh"`, `"scripts/check_engine_core_purity.sh"`
+- `maintenance_docs.verification.enforcers[]`: array[`string`]; examples: `"scripts/check_architecture_boundaries.sh"`, `"scripts/check_engine_core_purity.sh"`, `"scripts/arch_metrics.py"`
 - `maintenance_docs.verification.local_gate`: `"CODEX_MODE=1 ./scripts/verify.sh"` (`string`)
 - `product_platform_contract.authority.change_governance`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
 - `product_platform_contract.authority.change_route`: `"product_planning"` (`string`)
