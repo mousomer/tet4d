@@ -62,7 +62,9 @@ def _validate_pck_resources(pck: bytes) -> None:
         resources = set(read_pack_paths_from_bytes(pck))
     except (PackFormatError, UnicodeDecodeError) as exc:
         raise ValueError(f"PCK resource table is invalid: {exc}") from exc
-    missing_resources = [resource for resource in REQUIRED_PCK_RESOURCES if resource not in resources]
+    missing_resources = [
+        resource for resource in REQUIRED_PCK_RESOURCES if resource not in resources
+    ]
     if missing_resources:
         raise ValueError(f"PCK resource table is missing: {missing_resources}")
     if DESIGNER_IDENTITY_MARKER not in resources:
@@ -71,9 +73,15 @@ def _validate_pck_resources(pck: bytes) -> None:
         raise ValueError("PCK resource table carries the Game identity marker")
 
 
-def _validate_source_version_contract(repository_root: Path, expected_version: str) -> None:
-    project_text = (repository_root / "godot/Tet4D.Godot/project.godot").read_text(encoding="utf-8")
-    export_text = (repository_root / "godot/Tet4D.Godot/export_presets.cfg").read_text(encoding="utf-8")
+def _validate_source_version_contract(
+    repository_root: Path, expected_version: str
+) -> None:
+    project_text = (repository_root / "godot/Tet4D.Godot/project.godot").read_text(
+        encoding="utf-8"
+    )
+    export_text = (repository_root / "godot/Tet4D.Godot/export_presets.cfg").read_text(
+        encoding="utf-8"
+    )
     if f'config/version="{expected_version}"' not in project_text:
         raise ValueError("project.godot version disagrees with pyproject.toml")
     if export_text.count(f'="{expected_version}"') < 4:
@@ -81,7 +89,9 @@ def _validate_source_version_contract(repository_root: Path, expected_version: s
 
 
 def validate(archive_path: Path, repository_root: Path) -> dict[str, object]:
-    expected_version = tomllib.loads((repository_root / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
+    expected_version = tomllib.loads(
+        (repository_root / "pyproject.toml").read_text(encoding="utf-8")
+    )["project"]["version"]
     if f"-{expected_version}-windows-x86_64.zip" not in archive_path.name:
         raise ValueError("archive filename does not match pyproject.toml version")
     with zipfile.ZipFile(archive_path) as archive:
@@ -90,8 +100,11 @@ def validate(archive_path: Path, repository_root: Path) -> dict[str, object]:
         if missing:
             raise ValueError(f"missing required Windows files: {sorted(missing)}")
         forbidden = sorted(
-            name for name in names
-            if name.endswith((".py", ".pyc", ".gd.uid")) or "/tests/" in name or "/.godot/" in name
+            name
+            for name in names
+            if name.endswith((".py", ".pyc", ".gd.uid"))
+            or "/tests/" in name
+            or "/.godot/" in name
         )
         if forbidden:
             raise ValueError(f"development-only files entered package: {forbidden[:5]}")
@@ -130,7 +143,9 @@ def validate(archive_path: Path, repository_root: Path) -> dict[str, object]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("archive", type=Path)
-    parser.add_argument("--repository-root", type=Path, default=Path(__file__).resolve().parents[2])
+    parser.add_argument(
+        "--repository-root", type=Path, default=Path(__file__).resolve().parents[2]
+    )
     args = parser.parse_args()
     try:
         result = validate(args.archive.resolve(), args.repository_root.resolve())

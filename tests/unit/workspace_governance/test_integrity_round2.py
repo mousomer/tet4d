@@ -618,6 +618,106 @@ def test_verify_local_rejects_the_flag_that_rebuilt_an_environment(
     assert not (checkout / ".venv").exists()
 
 
+def recording_interpreter(path: Path, calls: Path, source_root: Path) -> Path:
+    """A Python that records environment mutation instead of performing it.
+
+    `-m pip` and `-m venv` are the only boundaries that change an environment;
+    everything else passes through to a real interpreter so `gov` and `doctor`
+    behave exactly as they would. That keeps these cases about shell control
+    flow and the derived prefix rather than about pip, and keeps them off the
+    gate's critical path -- a real editable install costs a minute per run.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "#!/bin/sh\n"
+        f'CALLS="{calls}"\n'
+        'if [ "$1" = "-m" ] && [ "$2" = "pip" ]; then\n'
+        '  printf "pip\\n" >> "$CALLS"\n'
+        "  exit 0\n"
+        "fi\n"
+        'if [ "$1" = "-m" ] && [ "$2" = "venv" ]; then\n'
+        '  printf "venv %s\\n" "$3" >> "$CALLS"\n'
+        '  mkdir -p "$3/bin"\n'
+        '  cp "$0" "$3/bin/python"\n'
+        '  chmod +x "$3/bin/python"\n'
+        "  exit 0\n"
+        "fi\n"
+        f'PYTHONPATH="{source_root}" exec "{sys.executable}" "$@"\n'
+    )
+    path.chmod(0o755)
+    return path
+
+
+def without_hook_installation(checkout: Path) -> None:
+    """Stop bootstrap at the environment boundary these cases are about.
+
+    Hook installation resolves paths against the enclosing git repository, and
+    under CODEX_MODE the temporary checkout sits inside this one, so the real
+    script would report on a tree that is not under test.
+    """
+    (checkout / "scripts/install_git_hooks.sh").write_text("#!/bin/sh\nexit 0\n")
+
+
+def test_installed_bootstrap_reuses_an_existing_interpreter(checkout: Path) -> None:
+    """An interpreter that already exists must not be rebuilt over.
+
+    Regression: the prefix was derived only inside the branch that creates an
+    environment, so every re-run installed dependencies, wrote the git hooks,
+    and then died reporting an unset variable.
+    """
+    calls = checkout / "mutation-calls.txt"
+    calls.write_text("")
+    stub = recording_interpreter(
+        checkout / "existing-env/bin/python", calls, checkout / "src"
+    )
+    without_hook_installation(checkout)
+
+    result = run(
+        checkout,
+        "./scripts/bootstrap_env.sh",
+        env=environment(
+            PYTHON_BOOTSTRAP_BIN=str(stub),
+            GOVERNANCE_PYTHON=sys.executable,
+            TET4D_PYTHON=str(stub),
+            TET4D_ENVIRONMENT_MODE="installed",
+        ),
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    recorded = calls.read_text()
+    assert "venv " not in recorded, recorded
+    assert "pip" in recorded, recorded
+    # The prefix is still derived and reported on the path that creates nothing.
+    assert str(checkout / "existing-env") in result.stdout
+
+
+def test_installed_bootstrap_creates_at_exactly_the_derived_prefix(
+    checkout: Path,
+) -> None:
+    calls = checkout / "mutation-calls.txt"
+    calls.write_text("")
+    stub = recording_interpreter(checkout / "seed/bin/python", calls, checkout / "src")
+    without_hook_installation(checkout)
+
+    # No interpreter override and no overlay, so the repository-local tier names
+    # a path that does not exist yet.
+    result = run(
+        checkout,
+        "./scripts/bootstrap_env.sh",
+        env=environment(
+            PYTHON_BOOTSTRAP_BIN=str(stub),
+            GOVERNANCE_PYTHON=sys.executable,
+            TET4D_ENVIRONMENT_MODE="installed",
+        ),
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    recorded = calls.read_text()
+    assert f"venv {checkout / '.venv'}\n" in recorded, recorded
+    assert recorded.count("venv ") == 1, recorded
+    assert "pip" in recorded, recorded
+
+
 def test_shared_bootstrap_never_falls_back_to_building_a_local_environment(
     checkout: Path,
 ) -> None:

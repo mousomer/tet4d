@@ -13,7 +13,9 @@ REGISTRY_PATH = ROOT / "godot/Tet4D.Godot/config/shell_settings_registry.json"
 
 
 def _module():
-    spec = importlib.util.spec_from_file_location("design_export_validator", VALIDATOR_PATH)
+    spec = importlib.util.spec_from_file_location(
+        "design_export_validator", VALIDATOR_PATH
+    )
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -51,7 +53,10 @@ def _bundle(tmp_path: Path) -> Path:
                 "evaluation_records": [
                     {
                         "scenario_id": "plain_4d_dense_v1",
-                        "presets": {"A": {"preset_id": "reference"}, "B": {"preset_id": preset_id}},
+                        "presets": {
+                            "A": {"preset_id": "reference"},
+                            "B": {"preset_id": preset_id},
+                        },
                     }
                 ],
             }
@@ -72,8 +77,12 @@ def test_valid_bundle_resolves_every_property_and_owner(tmp_path: Path) -> None:
     assert result["evaluation_count"] == 1
 
 
-@pytest.mark.parametrize("mutation", ["unknown_property", "wrong_owner", "out_of_range"])
-def test_invalid_candidate_cannot_cross_promotion_boundary(tmp_path: Path, mutation: str) -> None:
+@pytest.mark.parametrize(
+    "mutation", ["unknown_property", "wrong_owner", "out_of_range"]
+)
+def test_invalid_candidate_cannot_cross_promotion_boundary(
+    tmp_path: Path, mutation: str
+) -> None:
     validator = _module()
     bundle = _bundle(tmp_path)
     preset = json.loads((bundle / "preset.json").read_text(encoding="utf-8"))

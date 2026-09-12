@@ -2169,6 +2169,8 @@ Parameters:
 - `code_rules.sanitation.entrypoints[].required_any_tokens[]`: array[`string`]; examples: `"sanitize_text_runtime"`, `"_sanitize_text("`, `"sanitize_text("`
 - `code_rules.sanitation.entrypoints[].severity`: varies (`string`); examples: `"error"`, `"warning"`
 - `code_rules.schema_version`: `1` (`int`)
+- `code_rules.static_analysis.ruff_check_scope[]`: array[`string`]; examples: `"."`
+- `code_rules.static_analysis.ruff_format_scope[]`: array[`string`]; examples: `"."`
 - `code_rules.wheel_reuse.exception_marker`: `"Wheel Exception:"` (`string`)
 - `code_rules.wheel_reuse.rules[]`: array[`object`]
 - `code_rules.wheel_reuse.rules[].ast_detectors[]`: array[`empty, string`]; examples: `"custom_bool_parser"`, `"custom_numeric_text_parser"`

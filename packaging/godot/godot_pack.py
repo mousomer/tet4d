@@ -43,7 +43,9 @@ def _pack_directory_location(data: bytes) -> tuple[int, int, int, int]:
     return pack_format, file_base, cursor + 4, file_count
 
 
-def _read_pack_directory_data(data: bytes) -> tuple[bytes, int, list[tuple[str, int, int, int]]]:
+def _read_pack_directory_data(
+    data: bytes,
+) -> tuple[bytes, int, list[tuple[str, int, int, int]]]:
     pack_format, file_base, cursor, file_count = _pack_directory_location(data)
     entries: list[tuple[str, int, int, int]] = []
     for _ in range(file_count):

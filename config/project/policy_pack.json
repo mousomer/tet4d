@@ -380,52 +380,6 @@
     }
   },
   "code_rules": {
-    "schema_version": 1,
-    "description": "Unified code rule manifest for sanitation, magic numbers, config-backed runtime constants, wheel reuse, dead code, and LOC guidance.",
-    "sanitation": {
-      "entrypoints": [
-        {
-          "path": "src/tet4d/ui/pygame/launch/settings_hub_actions.py",
-          "required_any_tokens": ["sanitize_text_runtime", "_sanitize_text("],
-          "required_all_tokens": ["append_numeric_text", "parse_numeric_text"],
-          "severity": "error"
-        },
-        {
-          "path": "src/tet4d/ui/pygame/menu/keybindings_menu.py",
-          "required_any_tokens": ["sanitize_text_runtime"],
-          "required_all_tokens": ["_sanitize_profile_name"],
-          "severity": "warning"
-        },
-        {
-          "path": "src/tet4d/ui/pygame/launch/leaderboard_menu.py",
-          "required_any_tokens": ["sanitize_text_runtime"],
-          "required_all_tokens": ["_NAME_MAX_LENGTH"],
-          "severity": "warning"
-        },
-        {
-          "path": "src/tet4d/ui/pygame/menu/numeric_text_input.py",
-          "required_any_tokens": ["sanitize_text("],
-          "required_all_tokens": ["sanitize_text: SanitizeTextFn"],
-          "severity": "error"
-        }
-      ]
-    },
-    "magic_numbers": {
-      "entrypoints": [
-        {
-          "path": "src/tet4d/ui/pygame/launch/settings_hub_actions.py",
-          "required_all_tokens": ["clamp_game_seed", "clamp_overlay_transparency", "clamp_lines_per_level", "GAME_SEED_STEP"],
-          "forbidden_regex": ["\\b999_?999_?999\\b", "\\b0\\.85\\b"],
-          "severity": "error"
-        },
-        {
-          "path": "src/tet4d/engine/runtime/settings_schema.py",
-          "required_all_tokens": ["OVERLAY_TRANSPARENCY_MIN", "OVERLAY_TRANSPARENCY_MAX", "GAME_SEED_MIN", "GAME_SEED_MAX", "LINES_PER_LEVEL_MIN", "LINES_PER_LEVEL_MAX"],
-          "forbidden_regex": [],
-          "severity": "warning"
-        }
-      ]
-    },
     "config_backed_runtime_constants": {
       "authoritative_sources": [
         {"path": "config/project/constants.json", "description": "repo-owned runtime constants, UI/layout defaults, animation timings, and cache limits"},
@@ -465,6 +419,87 @@
         "allowed_invariant_module_globs": []
       }
     },
+    "dead_code": {
+      "forbidden_paths": ["tetris_nd/"],
+      "todo_rule": {
+        "scope_globs": ["src/**/*.py", "tools/**/*.py", "scripts/**/*.py"],
+        "ignore_globs": ["tools/governance/check_dedup_dead_code_rules.py", "tests/**/*.py"],
+        "token_regex": "\\b(?:TODO|FIXME)\\b",
+        "required_backlog_regex": "\\[BKL-[^\\]]+\\]"
+      },
+      "duplicate_functions": {
+        "enabled": true,
+        "strict_scope_globs": ["tools/governance/*.py"],
+        "advisory_scope_globs": ["src/tet4d/engine/runtime/*.py"],
+        "min_body_lines": 12,
+        "max_allowed_duplicates_per_signature": 1,
+        "exclude_function_names": ["main"]
+      }
+    },
+    "description": "Unified code rule manifest for sanitation, magic numbers, config-backed runtime constants, wheel reuse, dead code, and LOC guidance.",
+    "loc_guidance": {
+      "mode": "soft_warning",
+      "default_batch_type": "mixed",
+      "batch_type_env_var": "LOC_GUIDANCE_BATCH_TYPE",
+      "include_extensions": [".py"],
+      "buckets": {"src": "src/", "tests": "tests/", "tools_scripts": "tools/|scripts/"},
+      "thresholds": {
+        "feature": {"src": 500, "tests": 250, "tools_scripts": 150},
+        "bugfix": {"src": 250, "tests": 150, "tools_scripts": 120},
+        "refactor_only": {"src": 0, "tests": 0, "tools_scripts": 0},
+        "mixed": {"src": 300, "tests": 180, "tools_scripts": 120},
+        "governance": {"src": 0, "tests": 80, "tools_scripts": 200}
+      }
+    },
+    "magic_numbers": {
+      "entrypoints": [
+        {
+          "path": "src/tet4d/ui/pygame/launch/settings_hub_actions.py",
+          "required_all_tokens": ["clamp_game_seed", "clamp_overlay_transparency", "clamp_lines_per_level", "GAME_SEED_STEP"],
+          "forbidden_regex": ["\\b999_?999_?999\\b", "\\b0\\.85\\b"],
+          "severity": "error"
+        },
+        {
+          "path": "src/tet4d/engine/runtime/settings_schema.py",
+          "required_all_tokens": ["OVERLAY_TRANSPARENCY_MIN", "OVERLAY_TRANSPARENCY_MAX", "GAME_SEED_MIN", "GAME_SEED_MAX", "LINES_PER_LEVEL_MIN", "LINES_PER_LEVEL_MAX"],
+          "forbidden_regex": [],
+          "severity": "warning"
+        }
+      ]
+    },
+    "sanitation": {
+      "entrypoints": [
+        {
+          "path": "src/tet4d/ui/pygame/launch/settings_hub_actions.py",
+          "required_any_tokens": ["sanitize_text_runtime", "_sanitize_text("],
+          "required_all_tokens": ["append_numeric_text", "parse_numeric_text"],
+          "severity": "error"
+        },
+        {
+          "path": "src/tet4d/ui/pygame/menu/keybindings_menu.py",
+          "required_any_tokens": ["sanitize_text_runtime"],
+          "required_all_tokens": ["_sanitize_profile_name"],
+          "severity": "warning"
+        },
+        {
+          "path": "src/tet4d/ui/pygame/launch/leaderboard_menu.py",
+          "required_any_tokens": ["sanitize_text_runtime"],
+          "required_all_tokens": ["_NAME_MAX_LENGTH"],
+          "severity": "warning"
+        },
+        {
+          "path": "src/tet4d/ui/pygame/menu/numeric_text_input.py",
+          "required_any_tokens": ["sanitize_text("],
+          "required_all_tokens": ["sanitize_text: SanitizeTextFn"],
+          "severity": "error"
+        }
+      ]
+    },
+    "schema_version": 1,
+    "static_analysis": {
+      "ruff_check_scope": ["."],
+      "ruff_format_scope": ["."]
+    },
     "wheel_reuse": {
       "exception_marker": "Wheel Exception:",
       "rules": [
@@ -501,37 +536,6 @@
           "prefer_symbols": ["set(", "dict.fromkeys", "collections"]
         }
       ]
-    },
-    "dead_code": {
-      "forbidden_paths": ["tetris_nd/"],
-      "todo_rule": {
-        "scope_globs": ["src/**/*.py", "tools/**/*.py", "scripts/**/*.py"],
-        "ignore_globs": ["tools/governance/check_dedup_dead_code_rules.py", "tests/**/*.py"],
-        "token_regex": "\\b(?:TODO|FIXME)\\b",
-        "required_backlog_regex": "\\[BKL-[^\\]]+\\]"
-      },
-      "duplicate_functions": {
-        "enabled": true,
-        "strict_scope_globs": ["tools/governance/*.py"],
-        "advisory_scope_globs": ["src/tet4d/engine/runtime/*.py"],
-        "min_body_lines": 12,
-        "max_allowed_duplicates_per_signature": 1,
-        "exclude_function_names": ["main"]
-      }
-    },
-    "loc_guidance": {
-      "mode": "soft_warning",
-      "default_batch_type": "mixed",
-      "batch_type_env_var": "LOC_GUIDANCE_BATCH_TYPE",
-      "include_extensions": [".py"],
-      "buckets": {"src": "src/", "tests": "tests/", "tools_scripts": "tools/|scripts/"},
-      "thresholds": {
-        "feature": {"src": 500, "tests": 250, "tools_scripts": 150},
-        "bugfix": {"src": 250, "tests": 150, "tools_scripts": 120},
-        "refactor_only": {"src": 0, "tests": 0, "tools_scripts": 0},
-        "mixed": {"src": 300, "tests": 180, "tools_scripts": 120},
-        "governance": {"src": 0, "tests": 80, "tools_scripts": 200}
-      }
     }
   },
   "maintenance_contract": {

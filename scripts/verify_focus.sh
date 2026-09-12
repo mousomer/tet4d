@@ -100,15 +100,32 @@ done
 
 
 
-if [[ ${#RUFF_TARGETS[@]} -eq 0 ]]; then
+# An empty target list defaults to the declared scope once the interpreter is
+# resolved below, so this gate cannot be narrower than the canonical one.
 
-  RUFF_TARGETS=(".")
-
-fi
 
 
 
 eval "$(./gov env)"
+
+# Both gates read their Ruff scope from one authority. Carrying separate target
+# lists is how repository-wide formatting drift stayed invisible to whichever
+# list was narrower.
+static_analysis_scope() {
+  "$PYTHON_BIN" - "$1" <<'SCOPE'
+import json
+import pathlib
+import sys
+
+rules = json.loads(pathlib.Path("config/project/policy_pack.json").read_text())
+print(" ".join(rules["code_rules"]["static_analysis"][sys.argv[1]]))
+SCOPE
+}
+
+if [[ ${#RUFF_TARGETS[@]} -eq 0 ]]; then
+  read -r -a RUFF_TARGETS <<<"$(static_analysis_scope ruff_format_scope)"
+fi
+
 
 
 

@@ -95,6 +95,21 @@ require_module() {
 
 run_module() { "$PYTHON_BIN" -m "$@"; }
 
+# Both gates read their Ruff scope from one authority. Carrying separate target
+# lists is how repository-wide formatting drift stayed invisible to whichever
+# list was narrower.
+static_analysis_scope() {
+  "$PYTHON_BIN" - "$1" <<'SCOPE'
+import json
+import pathlib
+import sys
+
+rules = json.loads(pathlib.Path("config/project/policy_pack.json").read_text())
+print(" ".join(rules["code_rules"]["static_analysis"][sys.argv[1]]))
+SCOPE
+}
+
+
 require_repo_package() {
   if "$PYTHON_BIN" -c "import tet4d" >/dev/null 2>&1; then
     return 0
@@ -146,9 +161,11 @@ run_governance_step "secret_scan" "$PYTHON_BIN" tools/governance/scan_secrets.py
 run_governance_step "pygame_ce" "$PYTHON_BIN" tools/governance/check_pygame_ce.py
 run_governance_step "godot_settings_externalization" "$PYTHON_BIN" tools/governance/check_godot_settings_externalization.py
 
-run_governance_step "ruff" run_module ruff check .
-run_governance_step "ruff_format" run_module ruff format --check scripts tools
-run_governance_step "ruff_c901" run_module ruff check --select C901 .
+read -r -a RUFF_CHECK_SCOPE <<<"$(static_analysis_scope ruff_check_scope)"
+read -r -a RUFF_FORMAT_SCOPE <<<"$(static_analysis_scope ruff_format_scope)"
+run_governance_step "ruff" run_module ruff check "${RUFF_CHECK_SCOPE[@]}"
+run_governance_step "ruff_format" run_module ruff format --check "${RUFF_FORMAT_SCOPE[@]}"
+run_governance_step "ruff_c901" run_module ruff check --select C901 "${RUFF_CHECK_SCOPE[@]}"
 run_step "arch_metrics"   "$PYTHON_BIN" scripts/arch_metrics.py
 run_governance_step "arch_metrics_soft_gate" ./scripts/check_architecture_metrics_soft_gate.sh
 run_governance_step "arch_metrics_budgets" ./scripts/check_architecture_metric_budgets.sh
