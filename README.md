@@ -139,6 +139,13 @@ overrides the certified selection per checkout. It does not certify one shared
 editable environment for multiple worktrees: each checkout still needs its own
 editable-origin-valid environment.
 
+`bootstrap_env.sh` is the only command that changes a Python environment, and
+what it builds follows the declared mode: installed mode creates `.venv` and
+installs this checkout editable into it, source mode synchronises declared
+dependencies into the shared interpreter and installs no project, so no
+worktree needs a `.venv` of its own. `verify_local.sh` creates nothing; it
+reports an unready environment and runs the gate.
+
 `bootstrap_env.sh` needs an approved interpreter to create the environment
 from. It uses `GOVERNANCE_PYTHON`, else `$WORKSPACE_VENV/bin/python`, else the
 inherited workspace overlay interpreter, else an existing `.venv`; on a machine

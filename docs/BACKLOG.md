@@ -35,7 +35,10 @@ canonical gate. `--rebuild-venv` is gone with the venv it rebuilt, which also
 retires the finding that inherited bootstrap had made that refusal permissive.
 
 The inherited overlay serves bootstrap, certified selection and execution mode;
-two-worktree operation is certified sequentially and concurrently.
+two-worktree operation is certified sequentially and concurrently, and no
+worktree carries a `.venv` symlink farm. A checkout on a branch predating the
+overlay needs one back -- four symlinks into the shared environment -- or an
+exported `WORKSPACE_VENV`.
 
 Constraint for any future dependency fingerprint over an inherited environment:
 a digest of project inputs records what this repository declares, not what the
