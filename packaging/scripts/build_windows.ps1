@@ -1,7 +1,10 @@
 $ErrorActionPreference = "Stop"
 
 $RootDir = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
-$PythonBin = if ($env:PYTHON_BIN) { $env:PYTHON_BIN } else { "python" }
+if (-not $env:PYTHON_BIN) {
+    throw "packaging: set PYTHON_BIN to an absolute interpreter path. System Python on PATH is not approved."
+}
+$PythonBin = $env:PYTHON_BIN
 $ArtifactDir = Join-Path $RootDir "artifacts\installers"
 $BuildDir = Join-Path $RootDir "build\packaging\windows"
 $TempOutputDir = Join-Path $BuildDir "out"
