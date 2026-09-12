@@ -8,13 +8,34 @@ that neither operation mutates the shared environment.
 
 from __future__ import annotations
 
+import importlib.metadata
 import json
 import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+import pytest
 from support import build_checkout, scrubbed_environment
+
+
+def _owns_a_distribution() -> bool:
+    try:
+        importlib.metadata.distribution("tet4d")
+    except importlib.metadata.PackageNotFoundError:
+        return False
+    return True
+
+
+# The property certified here exists only where the interpreter owns no source
+# binding of its own. An environment that installs the project -- a CI runner,
+# or a contributor's isolated .venv -- is authoritative for one checkout by
+# construction, so there is nothing to certify and the cases would assert a
+# state the machine is deliberately not in.
+pytestmark = pytest.mark.skipif(
+    _owns_a_distribution(),
+    reason="requires a source-neutral environment; this one installs the project",
+)
 
 
 def worktree(root: Path, name: str) -> Path:

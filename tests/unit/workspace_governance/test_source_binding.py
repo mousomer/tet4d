@@ -107,7 +107,11 @@ def test_source_mode_binds_the_invoking_checkout(checkout: Path) -> None:
         None,
         {"TET4D_PYTHON": sys.executable, "TET4D_ENVIRONMENT_MODE": "source"},
     )
-    assert not issues, [item.to_dict() for item in issues]
+    # Assert the binding rather than a clean environment: whether the
+    # interpreter also owns a distribution is a property of the machine, and
+    # `source_neutrality` reports that separately.
+    facts = {item.fact for item in issues}
+    assert "source_binding" not in facts and "editable_install" not in facts
     assert data["source_binding"] == str((checkout / "src").resolve())
     assert Path(data["package"]).parent == (checkout / "src/tet4d").resolve()
 

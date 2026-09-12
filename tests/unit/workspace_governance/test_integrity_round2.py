@@ -186,7 +186,7 @@ def test_metadata_failure_classes_are_controlled(
         checkout,
         project,
         None,
-        {"TET4D_PYTHON": sys.executable, "TET4D_ENVIRONMENT_MODE": "source"},
+        {"TET4D_PYTHON": sys.executable, "TET4D_ENVIRONMENT_MODE": execution_mode()},
     )
     assert data["status"] == "ENVIRONMENT_INVALID"
     assert {i.code for i in issues} == {"ENVIRONMENT_MISMATCH"}
@@ -248,7 +248,7 @@ def apply_case(root: Path, mutation: str) -> set[str]:  # noqa: C901 - explicit 
     }:
         env = {
             "TET4D_PYTHON": sys.executable,
-            "TET4D_ENVIRONMENT_MODE": "source",
+            "TET4D_ENVIRONMENT_MODE": execution_mode(),
         }
         if mutation == "missing-interpreter":
             env["TET4D_PYTHON"] = str(root / "missing")
@@ -260,7 +260,7 @@ def apply_case(root: Path, mutation: str) -> set[str]:  # noqa: C901 - explicit 
             project["environment"]["editable_source"] = "wrong/source"
         else:
             local, env = (
-                {"interpreter": sys.executable, "execution_mode": "source"},
+                {"interpreter": sys.executable, "execution_mode": execution_mode()},
                 {},
             )
         _, issues = core.doctor(root, project, local, env)
@@ -442,7 +442,10 @@ def test_registered_behavior_paths_have_mutation_evidence(  # noqa: C901 - expli
             checkout,
             project,
             None,
-            {"TET4D_PYTHON": sys.executable, "TET4D_ENVIRONMENT_MODE": "source"},
+            {
+                "TET4D_PYTHON": sys.executable,
+                "TET4D_ENVIRONMENT_MODE": execution_mode(),
+            },
         )
         assert data["status"] == "ok" and not issues
         project["environment"]["critical_packages"].append(
@@ -452,7 +455,10 @@ def test_registered_behavior_paths_have_mutation_evidence(  # noqa: C901 - expli
             checkout,
             project,
             None,
-            {"TET4D_PYTHON": sys.executable, "TET4D_ENVIRONMENT_MODE": "source"},
+            {
+                "TET4D_PYTHON": sys.executable,
+                "TET4D_ENVIRONMENT_MODE": execution_mode(),
+            },
         )
         assert data["status"] == "ENVIRONMENT_INVALID" and issues
         return
@@ -464,7 +470,7 @@ def test_registered_behavior_paths_have_mutation_evidence(  # noqa: C901 - expli
         assert not core.doctor(
             checkout,
             project,
-            {"interpreter": sys.executable, "execution_mode": "source"},
+            {"interpreter": sys.executable, "execution_mode": execution_mode()},
             {},
         )[1]
         a = core.resolve_interpreter(
@@ -503,7 +509,7 @@ def test_route_tool_fields_and_local_tool_override_are_consumed(checkout: Path) 
     tool.chmod(0o755)
     env = {
         "TET4D_PYTHON": sys.executable,
-        "TET4D_ENVIRONMENT_MODE": "source",
+        "TET4D_ENVIRONMENT_MODE": execution_mode(),
     }
     local = {"tool_paths": {"godot": str(tool)}}
     data, issues = core.doctor(
