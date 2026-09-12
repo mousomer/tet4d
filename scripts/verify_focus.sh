@@ -178,6 +178,11 @@ require_module ruff ruff
 
 require_repo_package
 
+# Importability is not origin. `gov doctor` owns that assertion -- interpreter,
+# binding, and which checkout the import resolved from -- so the focused gate
+# cannot report success against another worktree's source.
+./gov doctor >/dev/null
+
 
 
 RUFF_CHECK_TARGETS=()

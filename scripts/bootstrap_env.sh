@@ -96,8 +96,11 @@ if [[ "$MODE" == "source" ]]; then
 fi
 
 TARGET_PYTHON="$PYTHON_BIN"
+# Derive the prefix unconditionally: it is reported at the end regardless of
+# whether this run had to create the environment, and assigning it only in the
+# creating branch left it unset on every re-run.
+VENV_PATH="$(dirname "$(dirname "${TARGET_PYTHON}")")"
 if [ ! -x "${TARGET_PYTHON}" ]; then
-  VENV_PATH="$(dirname "$(dirname "${TARGET_PYTHON}")")"
   "${PYTHON_BOOTSTRAP_BIN}" -m venv "${VENV_PATH}"
 fi
 "${TARGET_PYTHON}" -m pip install "${PIP_ARGS[@]}" --upgrade pip
