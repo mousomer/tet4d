@@ -271,12 +271,11 @@ CODEX_MODE=1 ./scripts/verify.sh
 
 Authoritative enforcement is backed by:
 
-1. `scripts/check_editable_install.sh`
-2. `scripts/check_architecture_boundaries.sh`
-3. `scripts/check_engine_core_purity.sh`
-4. `scripts/arch_metrics.py`
-5. `tools/codegen/generate_topology_contract.py`
-6. `tools/governance/architecture_metric_budget.py`
+1. `scripts/check_architecture_boundaries.sh`
+2. `scripts/check_engine_core_purity.sh`
+3. `scripts/arch_metrics.py`
+4. `tools/codegen/generate_topology_contract.py`
+5. `tools/governance/architecture_metric_budget.py`
 <!-- END GENERATED:project_structure_verification_contract -->
 
 <!-- BEGIN GENERATED:project_structure_symbol_index -->

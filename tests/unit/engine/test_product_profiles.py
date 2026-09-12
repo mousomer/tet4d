@@ -31,7 +31,9 @@ class TestProductProfiles(unittest.TestCase):
         repository_root = Path(temporary) / "repository"
         canonical_project = repository_root / "godot/Tet4D.Godot"
         canonical_project.parent.mkdir(parents=True)
-        shutil.copytree(PROJECT, canonical_project, ignore=shutil.ignore_patterns(".godot"))
+        shutil.copytree(
+            PROJECT, canonical_project, ignore=shutil.ignore_patterns(".godot")
+        )
         policy_path = repository_root / "config/project/policy_pack.json"
         policy_path.parent.mkdir(parents=True)
         shutil.copy2(ROOT / "config/project/policy_pack.json", policy_path)
@@ -42,31 +44,60 @@ class TestProductProfiles(unittest.TestCase):
     ) -> None:
         before_project = (canonical_project / "project.godot").read_bytes()
         before_presets = (canonical_project / "export_presets.cfg").read_bytes()
-        with self.assertRaisesRegex(staging.ProfileError, "outside the canonical Godot project"):
+        with self.assertRaisesRegex(
+            staging.ProfileError, "outside the canonical Godot project"
+        ):
             staging.apply_profile(repository_root, staged_root, "godot_game")
-        self.assertEqual(before_project, (canonical_project / "project.godot").read_bytes())
-        self.assertEqual(before_presets, (canonical_project / "export_presets.cfg").read_bytes())
+        self.assertEqual(
+            before_project, (canonical_project / "project.godot").read_bytes()
+        )
+        self.assertEqual(
+            before_presets, (canonical_project / "export_presets.cfg").read_bytes()
+        )
 
     def test_profiles_are_distinct_and_reference_existing_resources(self) -> None:
-        products = json.loads((ROOT / "config/project/policy_pack.json").read_text())["product_platform_contract"]["products"]
+        products = json.loads((ROOT / "config/project/policy_pack.json").read_text())[
+            "product_platform_contract"
+        ]["products"]
         game = products["godot_game"]
         designer = products["godot_designer"]
-        for key in ("application_identity", "main_scene", "icon", "artifact_name_token"):
+        for key in (
+            "application_identity",
+            "main_scene",
+            "icon",
+            "artifact_name_token",
+        ):
             self.assertNotEqual(game[key], designer[key])
         for profile in (game, designer):
-            self.assertTrue((PROJECT / profile["main_scene"].removeprefix("res://")).is_file())
-            self.assertTrue((PROJECT / profile["icon"].removeprefix("res://")).is_file())
+            self.assertTrue(
+                (PROJECT / profile["main_scene"].removeprefix("res://")).is_file()
+            )
+            self.assertTrue(
+                (PROJECT / profile["icon"].removeprefix("res://")).is_file()
+            )
 
     def test_staging_selects_each_profile_without_mutating_source(self) -> None:
         before_project = (PROJECT / "project.godot").read_bytes()
         before_presets = (PROJECT / "export_presets.cfg").read_bytes()
         with tempfile.TemporaryDirectory() as temporary:
             for product_id, scene, icon, identity in (
-                ("godot_game", "game_bootstrap.tscn", "tet4d_game.svg", "io.github.mousomer.tet4d"),
-                ("godot_designer", "designer_bootstrap.tscn", "tet4d_designer.svg", "io.github.mousomer.tet4d.designer"),
+                (
+                    "godot_game",
+                    "game_bootstrap.tscn",
+                    "tet4d_game.svg",
+                    "io.github.mousomer.tet4d",
+                ),
+                (
+                    "godot_designer",
+                    "designer_bootstrap.tscn",
+                    "tet4d_designer.svg",
+                    "io.github.mousomer.tet4d.designer",
+                ),
             ):
                 staged = Path(temporary) / product_id
-                shutil.copytree(PROJECT, staged, ignore=shutil.ignore_patterns(".godot"))
+                shutil.copytree(
+                    PROJECT, staged, ignore=shutil.ignore_patterns(".godot")
+                )
                 staging.apply_profile(ROOT, staged, product_id)
                 project = (staged / "project.godot").read_text(encoding="utf-8")
                 presets = (staged / "export_presets.cfg").read_text(encoding="utf-8")
@@ -74,13 +105,17 @@ class TestProductProfiles(unittest.TestCase):
                 self.assertIn(f'config/icon="res://assets/icons/{icon}"', project)
                 self.assertIn(f'config/tet4d_product_id="{product_id}"', project)
                 marker = staging.identity_marker_resource(product_id)
-                self.assertIn(f'config/tet4d_product_identity_marker="{marker}"', project)
+                self.assertIn(
+                    f'config/tet4d_product_identity_marker="{marker}"', project
+                )
                 self.assertTrue((staged / marker.removeprefix("res://")).is_file())
                 self.assertIn(identity, presets)
         self.assertEqual(before_project, (PROJECT / "project.godot").read_bytes())
         self.assertEqual(before_presets, (PROJECT / "export_presets.cfg").read_bytes())
 
-    def test_staging_rejects_incorrect_product_id_or_main_scene_before_export(self) -> None:
+    def test_staging_rejects_incorrect_product_id_or_main_scene_before_export(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             staged = Path(temporary) / "project"
             shutil.copytree(PROJECT, staged, ignore=shutil.ignore_patterns(".godot"))
@@ -93,19 +128,25 @@ class TestProductProfiles(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
-            with self.assertRaisesRegex(staging.ProfileError, "identity does not match"):
+            with self.assertRaisesRegex(
+                staging.ProfileError, "identity does not match"
+            ):
                 staging.validate_staged_profile(ROOT, staged, "godot_designer")
             project.write_text(
-                project.read_text(encoding="utf-8").replace(
+                project.read_text(encoding="utf-8")
+                .replace(
                     'config/tet4d_product_id="godot_game"',
                     'config/tet4d_product_id="godot_designer"',
-                ).replace(
+                )
+                .replace(
                     'run/main_scene="res://scenes/designer_bootstrap.tscn"',
                     'run/main_scene="res://scenes/game_bootstrap.tscn"',
                 ),
                 encoding="utf-8",
             )
-            with self.assertRaisesRegex(staging.ProfileError, "identity does not match"):
+            with self.assertRaisesRegex(
+                staging.ProfileError, "identity does not match"
+            ):
                 staging.validate_staged_profile(ROOT, staged, "godot_designer")
 
     def test_game_staging_does_not_acquire_designer_identity_marker(self) -> None:
@@ -114,10 +155,20 @@ class TestProductProfiles(unittest.TestCase):
             shutil.copytree(PROJECT, staged, ignore=shutil.ignore_patterns(".godot"))
             staging.apply_profile(ROOT, staged, "godot_game")
             self.assertTrue(
-                (staged / staging.identity_marker_resource("godot_game").removeprefix("res://")).is_file()
+                (
+                    staged
+                    / staging.identity_marker_resource("godot_game").removeprefix(
+                        "res://"
+                    )
+                ).is_file()
             )
             self.assertFalse(
-                (staged / staging.identity_marker_resource("godot_designer").removeprefix("res://")).exists()
+                (
+                    staged
+                    / staging.identity_marker_resource("godot_designer").removeprefix(
+                        "res://"
+                    )
+                ).exists()
             )
 
     def test_unknown_and_ambiguous_profiles_fail_closed(self) -> None:
@@ -127,7 +178,11 @@ class TestProductProfiles(unittest.TestCase):
             with self.assertRaisesRegex(staging.ProfileError, "unknown"):
                 staging.apply_profile(ROOT, staged, "unknown")
             project = staged / "project.godot"
-            project.write_text(project.read_text(encoding="utf-8") + '\nrun/main_scene="res://scenes/game_bootstrap.tscn"\n', encoding="utf-8")
+            project.write_text(
+                project.read_text(encoding="utf-8")
+                + '\nrun/main_scene="res://scenes/game_bootstrap.tscn"\n',
+                encoding="utf-8",
+            )
             with self.assertRaisesRegex(staging.ProfileError, "ambiguous"):
                 staging.apply_profile(ROOT, staged, "godot_game")
 
@@ -141,7 +196,9 @@ class TestProductProfiles(unittest.TestCase):
                 canonical_project / "tmp/../staged-copy",
             )
             for target in targets:
-                self._assert_rejected_without_canonical_mutation(repository_root, canonical_project, target)
+                self._assert_rejected_without_canonical_mutation(
+                    repository_root, canonical_project, target
+                )
             self.assertFalse((canonical_project / "staged-copy").exists())
             self.assertFalse((canonical_project / "tmp").exists())
 
@@ -149,8 +206,12 @@ class TestProductProfiles(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             repository_root, canonical_project = self._isolated_repository(temporary)
             partial_copy = canonical_project / "partial-copy"
-            shutil.copytree(canonical_project, partial_copy, ignore=shutil.ignore_patterns(".godot"))
-            self._assert_rejected_without_canonical_mutation(repository_root, canonical_project, partial_copy)
+            shutil.copytree(
+                canonical_project, partial_copy, ignore=shutil.ignore_patterns(".godot")
+            )
+            self._assert_rejected_without_canonical_mutation(
+                repository_root, canonical_project, partial_copy
+            )
 
             symlink_target = canonical_project / "symlink-target"
             symlink_target.mkdir()
@@ -161,8 +222,12 @@ class TestProductProfiles(unittest.TestCase):
                 root_link.symlink_to(canonical_project, target_is_directory=True)
             except OSError as exc:
                 self.skipTest(f"symlinks are unavailable: {exc}")
-            self._assert_rejected_without_canonical_mutation(repository_root, canonical_project, descendant_link)
-            self._assert_rejected_without_canonical_mutation(repository_root, canonical_project, root_link)
+            self._assert_rejected_without_canonical_mutation(
+                repository_root, canonical_project, descendant_link
+            )
+            self._assert_rejected_without_canonical_mutation(
+                repository_root, canonical_project, root_link
+            )
 
     def test_staging_allows_prefixed_sibling_and_external_target(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -173,11 +238,22 @@ class TestProductProfiles(unittest.TestCase):
                 canonical_project.with_name("Tet4D.Godot-staged"),
                 Path(temporary) / "external-project",
             ):
-                shutil.copytree(canonical_project, staged_root, ignore=shutil.ignore_patterns(".godot"))
+                shutil.copytree(
+                    canonical_project,
+                    staged_root,
+                    ignore=shutil.ignore_patterns(".godot"),
+                )
                 staging.apply_profile(repository_root, staged_root, "godot_game")
-                self.assertIn('config/tet4d_product_id="godot_game"', (staged_root / "project.godot").read_text())
-            self.assertEqual(before_project, (canonical_project / "project.godot").read_bytes())
-            self.assertEqual(before_presets, (canonical_project / "export_presets.cfg").read_bytes())
+                self.assertIn(
+                    'config/tet4d_product_id="godot_game"',
+                    (staged_root / "project.godot").read_text(),
+                )
+            self.assertEqual(
+                before_project, (canonical_project / "project.godot").read_bytes()
+            )
+            self.assertEqual(
+                before_presets, (canonical_project / "export_presets.cfg").read_bytes()
+            )
 
     def test_rejected_target_diagnostics_are_sanitized(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -193,7 +269,11 @@ class TestProductProfiles(unittest.TestCase):
     def test_profiles_reject_cross_product_identity(self) -> None:
         policy = json.loads((ROOT / "config/project/policy_pack.json").read_text())
         altered = copy.deepcopy(policy)
-        altered["product_platform_contract"]["products"]["godot_game"]["application_identity"] = altered["product_platform_contract"]["products"]["godot_designer"]["application_identity"]
+        altered["product_platform_contract"]["products"]["godot_game"][
+            "application_identity"
+        ] = altered["product_platform_contract"]["products"]["godot_designer"][
+            "application_identity"
+        ]
         issues = matrix.validate_contract(
             altered,
             (ROOT / ".github/workflows/release-packaging.yml").read_text(),
@@ -202,7 +282,9 @@ class TestProductProfiles(unittest.TestCase):
             (ROOT / "docs/rds/RDS_PACKAGING.md").read_text(),
             (ROOT / "docs/BACKLOG.md").read_text(),
         )
-        self.assertIn("Godot product profiles must use distinct application_identity", issues)
+        self.assertIn(
+            "Godot product profiles must use distinct application_identity", issues
+        )
 
 
 if __name__ == "__main__":

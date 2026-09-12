@@ -3,7 +3,10 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-PYTHON_BIN="$(./scripts/resolve_python_env.sh)"
+# CI invokes this directly, so it resolves the governed environment itself
+# rather than relying on a parent gate to have exported it.
+GOVERNED_ENV="$(./gov env)"
+eval "$GOVERNED_ENV"
 
 required_files=(
   "AGENTS.md"

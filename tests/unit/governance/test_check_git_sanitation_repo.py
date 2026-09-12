@@ -18,7 +18,6 @@ REQUIRED_ENTRYPOINTS = (
     "scripts/check_architecture_boundaries.sh",
     "scripts/check_architecture_metric_budgets.sh",
     "scripts/check_architecture_metrics_soft_gate.sh",
-    "scripts/check_editable_install.sh",
     "scripts/check_engine_core_purity.sh",
     "scripts/check_git_sanitation.sh",
     "scripts/check_git_sanitation_repo.sh",

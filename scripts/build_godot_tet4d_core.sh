@@ -14,7 +14,13 @@ fi
 if [[ -n "${SCONS:-}" ]]; then
   read -r -a SCONS_CMD <<< "$SCONS"
 else
-  SCONS_PYTHON="$("$ROOT_DIR/scripts/resolve_python_env.sh")"
+  # Resolve only when the caller supplied nothing. Packaging passes an explicit
+  # interpreter precisely so a release does not depend on machine-local
+  # governance configuration, and overwriting it here would invert that.
+  if [[ -z "${PYTHON_BIN:-}" ]]; then
+    eval "$("$ROOT_DIR/gov" env)"
+  fi
+  SCONS_PYTHON="$PYTHON_BIN"
   if ! "$SCONS_PYTHON" -c "import SCons" >/dev/null 2>&1; then
     echo "SCons is missing from the approved environment: $SCONS_PYTHON" >&2
     echo "Install it with: $SCONS_PYTHON -m pip install -e \".[dev]\"" >&2

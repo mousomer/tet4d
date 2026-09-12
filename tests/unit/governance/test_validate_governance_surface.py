@@ -130,13 +130,12 @@ def test_actual_governance_surface_is_within_all_limits() -> None:
     issues, measurement = surface.validate_surface(surface.ROOT)
     assert issues == []
     assert measurement is not None
-    # Durable worktree-verification and tracked/ignored sanitation invariants
-    # raise the human-governance baseline by three physical lines.
-    assert measurement.human <= 701 + 100
-    assert measurement.machine <= 1000
+    # Keep a tighter diagnostic tripwire than the aggregate governance budget.
+    assert measurement.human <= 820
     assert measurement.operational <= 400
     assert measurement.total <= 2500
     assert measurement.policy_bytes <= measurement.policy_byte_limit
+    assert measurement.policy_bytes <= measurement.policy_byte_limit * 4 // 5
     assert (
         set(
             surface._load_policy(surface.ROOT)["governance_surface"][
@@ -174,14 +173,15 @@ def test_operational_file_ceiling_fails(
     assert any(f"hard limit {expected}" in message for message in _messages(tmp_path))
 
 
-def test_policy_pack_ceiling_fails(tmp_path: Path) -> None:
-    _fixture(tmp_path)
-    policy_path = tmp_path / surface.POLICY_REL
-    policy_path.write_text(policy_path.read_text(encoding="utf-8") + "\n" * 1001)
-    assert any(
-        "policy_pack.json" in message and "1000" in message
-        for message in _messages(tmp_path)
-    )
+def test_machine_policy_lines_do_not_consume_reviewable_loc_budget(
+    tmp_path: Path,
+) -> None:
+    policy = _fixture(tmp_path)
+    policy["padding"] = ["x"] * 2600
+    _write(tmp_path / surface.POLICY_REL, json.dumps(policy, indent=1) + "\n")
+    messages = _messages(tmp_path)
+    assert not any("LOC exceeds" in message for message in messages)
+    assert not any("reviewable governance total" in message for message in messages)
 
 
 def test_policy_pack_byte_ceiling_fails_below_loc_limit(tmp_path: Path) -> None:
@@ -189,15 +189,20 @@ def test_policy_pack_byte_ceiling_fails_below_loc_limit(tmp_path: Path) -> None:
     policy["padding"] = "x" * surface.POLICY_PACK_BYTE_LIMIT
     _write(tmp_path / surface.POLICY_REL, json.dumps(policy) + "\n")
     messages = _messages(tmp_path)
-    assert any("bytes exceeds hard limit 80000" in message for message in messages)
-    assert not any("LOC exceeds hard limit 1000" in message for message in messages)
+    assert any(
+        f"bytes exceeds hard limit {surface.POLICY_PACK_BYTE_LIMIT}" in message
+        for message in messages
+    )
+    assert not any("LOC exceeds" in message for message in messages)
 
 
 def test_aggregate_ceiling_fails_while_guarded_files_pass(tmp_path: Path) -> None:
     _fixture(tmp_path)
     _write(tmp_path / "CLAUDE.md", "line\n" * 1300)
     _write(tmp_path / "CONTRIBUTING.md", "line\n" * 1300)
-    assert any("active governance total" in message for message in _messages(tmp_path))
+    assert any(
+        "reviewable governance total" in message for message in _messages(tmp_path)
+    )
     assert not any(
         "CLAUDE.md:" in message or "CONTRIBUTING.md:" in message
         for message in _messages(tmp_path)

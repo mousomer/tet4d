@@ -69,8 +69,31 @@ and needs no package at all. The constraint is permanent while the interpreter
 is shared, and it is invisible from inside the repository, because the same
 import succeeds under a private `.venv` that lacks the offending distribution.
 
+Interpreter and source selection are separate decisions. One environment holds
+exactly one distribution of a given name, so an installed project makes a single
+checkout authoritative for every other; the invoking checkout decides instead,
+through a binding derived from `environment.editable_source`. `gov env` emits the
+interpreter, resolved execution mode, and, in source mode, that binding as shell assignments, because shell
+cannot import the resolver and `resolve_python_env.sh` prints one interpreter and
+rejects arguments. Gates consume it rather than deriving their own, which could
+verify a different environment than `doctor` certified.
+
+Injection happens only in source mode: injected everywhere, import origin would
+equal the expectation by construction and `editable_install` could never observe
+a foreign install again. Source mode instead adds two assertions that check
+cannot make -- the bound source is this checkout, and no project distribution is
+installed. Importability cannot see the second, because the binding wins the
+import while the distribution remains a silent second answer.
+
+One environment serves only checkouts with compatible dependencies; nothing
+detects when two stop agreeing. That is the limit of consolidation, so
+divergence should fail clearly before anything keys environments by fingerprint.
+
 Execution mode is declared, never inferred. `environment.execution_mode` names
-the variable that carries it and the default when that variable is unset;
+the variable that carries it and the default when that variable is unset, and
+the machine-wide overlay may declare it beside the interpreter -- a shared
+environment owning no distribution is in source mode for every checkout on it.
+Precedence is override, then overlay, then project default;
 `source` means the project is imported from a checkout, `installed` that it
 comes from a distribution. Which one holds decides whether `pyproject.toml` or
 distribution metadata is the truthful dependency record, so reading it back
@@ -140,17 +163,23 @@ nothing more. `check`, `resolve`, and `explain` need no third-party libraries.
 bootstrap started it, returning `ENVIRONMENT_INVALID` with
 `ENVIRONMENT_MISMATCH` when that interpreter is unavailable.
 
-`verify_local.sh --rebuild-venv` additionally refuses before deletion when the
-selected bootstrap path is inside the worktree `.venv` being replaced. The
-operator must select an approved external bootstrap explicitly; there is no
-implicit system-Python fallback.
+`bootstrap_env.sh` consumes `gov env --allow-missing-interpreter`, so it mutates
+exactly the interpreter and mode selected by the resolver. The missing-interpreter
+exception is resolver-owned and limited to the declared installed-mode local
+environment, which bootstrap may create. What it builds follows the declared mode:
+installed mode an environment belonging to
+this checkout, source mode declared dependencies in the shared toolchain and no
+project. Its fingerprint and mutation lock sit beside that environment, since a
+shared one is reachable from every worktree while a worktree's verify lock
+guards only its own tree. `verify_local.sh` owns nothing and creates nothing.
 The selected project interpreter evaluates the full Python specifier using
 `packaging`, explicitly declared in `pyproject.toml`. Missing packages and broken
 metadata produce diagnostics, not forwarded subprocess tracebacks.
 
 `resolve_python_env.sh` prints only the approved interpreter and rejects all
-arguments. Execute a script with `"$(./scripts/resolve_python_env.sh)" script.py`.
-`PYTHON_BIN` remains an output alias, never an independent selection input.
+arguments. Shell entry points that may import project code consume `gov env`
+instead, so they receive its source binding as well as `PYTHON_BIN`; neither
+value is an independent selection input.
 
 `canonical_owner_set` references the existing compatibility authority's
 `authority_model.canonical_human_owners`. Graph validation requires exactly one
@@ -194,3 +223,20 @@ for the full repository invocation remains legacy compatibility debt; that
 namespace does not describe the gate's ownership. No further policy family is
 extracted here. Pack hashing ignores platform `.DS_Store` files through the
 manifest exclusion mechanism, alongside bytecode caches.
+
+## Canonical upstream boundary
+
+The vendored pack lock proves the identity of bytes consumed inside Tet4D; it
+does not identify an external canonical source. No current workspace or project
+manifest declares the external package/repository, its immutable release
+identity, or the trust owner allowed to publish it. The local Git remote named
+`origin` and the policy pack's GitHub publication target are mutable publication
+mechanisms, not governance-source authority, and cannot derive this contract
+across forks, worktrees, CI checkouts, or alternate local checkouts.
+
+Canonical extraction is blocked until governance decides the external
+package/repository identity and release/version model. The external pack should
+own that identity and publishing trust; the workspace manifest and schema are
+the candidate owners for Tet4D's immutable consumer reference. Only after that
+decision can extraction, deterministic pinning, drift protection, and offline
+consumption proceed without inventing policy in resolver logic.

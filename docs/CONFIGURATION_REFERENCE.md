@@ -304,12 +304,12 @@ Parameters:
 ### `config/governance/workspace.lock.json`
 Top-level keys: `content_sha256`, `files`, `lock_algorithm`, `pack_name`, `pack_path`, `revision`, `schema_version`, `version`
 Parameters:
-- `content_sha256`: `"9ef762742a10936226fa7869f30cc8e14a1d29692665283eda10ee450462ab3b"` (`string`)
+- `content_sha256`: `"ddb6540cb74bd857638ca39cac59030f3ed50261ffc69e76652babd5dae04b93"` (`string`)
 - `files[]`: array[`string`]; examples: `"MANIFEST.json"`, `"VERSION"`, `"__init__.py"`
 - `lock_algorithm`: `"sha256-path-and-content-v1"` (`string`)
 - `pack_name`: `"workspace-governance"` (`string`)
 - `pack_path`: `"tools/workspace_governance"` (`string`)
-- `revision`: `"v0.1-integrity-5"` (`string`)
+- `revision`: `"v0.1-integrity-6"` (`string`)
 - `schema_version`: `1` (`int`)
 - `version`: `"0.1.0"` (`string`)
 
@@ -2169,6 +2169,8 @@ Parameters:
 - `code_rules.sanitation.entrypoints[].required_any_tokens[]`: array[`string`]; examples: `"sanitize_text_runtime"`, `"_sanitize_text("`, `"sanitize_text("`
 - `code_rules.sanitation.entrypoints[].severity`: varies (`string`); examples: `"error"`, `"warning"`
 - `code_rules.schema_version`: `1` (`int`)
+- `code_rules.static_analysis.ruff_check_scope[]`: array[`string`]; examples: `"."`
+- `code_rules.static_analysis.ruff_format_scope[]`: array[`string`]; examples: `"."`
 - `code_rules.wheel_reuse.exception_marker`: `"Wheel Exception:"` (`string`)
 - `code_rules.wheel_reuse.rules[]`: array[`object`]
 - `code_rules.wheel_reuse.rules[].ast_detectors[]`: array[`empty, string`]; examples: `"custom_bool_parser"`, `"custom_numeric_text_parser"`
@@ -2423,10 +2425,9 @@ Parameters:
 - `governance_surface.document_roles.template[]`: array[`string`]; examples: `"tools/templates/governance"`
 - `governance_surface.lifecycle.forbidden_active_heading_regex[]`: array[`string`]; examples: `"^#{1,6}\\s+(?:(?:Previous|Prior|Earlier|Last)\\s+){1,2}(?:Tasks?|Sta...`
 - `governance_surface.lifecycle.volatile_test_count_regex`: `"(?i)(?:\\bpytest(?:\\s+result)?\\s*:\\s*\\d[\\d,]*\\s+passed\\b|\\b\...` (`string`)
-- `governance_surface.per_file_byte_limits.config/project/policy_pack.json`: `80000` (`int`)
+- `governance_surface.per_file_byte_limits.config/project/policy_pack.json`: `98304` (`int`)
 - `governance_surface.per_file_limits.AGENTS.md`: `150` (`int`)
 - `governance_surface.per_file_limits.CURRENT_STATE.md`: `150` (`int`)
-- `governance_surface.per_file_limits.config/project/policy_pack.json`: `1000` (`int`)
 - `governance_surface.per_file_limits.docs/BACKLOG.md`: `250` (`int`)
 - `governance_surface.per_file_limits.docs/governance/CHANGE_GOVERNANCE.md`: `300` (`int`)
 - `governance_surface.per_file_limits.docs/governance/CONFIG_AND_GENERATED_DATA.md`: `300` (`int`)
@@ -2517,7 +2518,7 @@ Parameters:
 - `maintenance_docs.symbol_index.max_symbols_per_file`: `12` (`int`)
 - `maintenance_docs.symbol_index.source_roots[]`: array[`string`]; examples: `"src/tet4d"`, `"cli"`
 - `maintenance_docs.verification.ci_entrypoint`: `"./scripts/ci_check.sh"` (`string`)
-- `maintenance_docs.verification.enforcers[]`: array[`string`]; examples: `"scripts/check_editable_install.sh"`, `"scripts/check_architecture_boundaries.sh"`, `"scripts/check_engine_core_purity.sh"`
+- `maintenance_docs.verification.enforcers[]`: array[`string`]; examples: `"scripts/check_architecture_boundaries.sh"`, `"scripts/check_engine_core_purity.sh"`, `"scripts/arch_metrics.py"`
 - `maintenance_docs.verification.local_gate`: `"CODEX_MODE=1 ./scripts/verify.sh"` (`string`)
 - `product_platform_contract.authority.change_governance`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
 - `product_platform_contract.authority.change_route`: `"product_planning"` (`string`)

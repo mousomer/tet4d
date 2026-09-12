@@ -3,7 +3,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-PYTHON_BIN="$(./scripts/resolve_python_env.sh)"
+eval "$(./gov env)"
 
 "$PYTHON_BIN" - <<'PY'
 from __future__ import annotations

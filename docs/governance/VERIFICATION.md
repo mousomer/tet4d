@@ -98,6 +98,12 @@ the fallback.
   owner is invalid policy.
 - After a non-patch source rewrite, check encoding and literal escape artifacts,
   then run focused lint before broader tests.
+- Tests of governance scripts, environment mutation, worktrees, Git state,
+  repository discovery, or repository-relative shell behaviour use the
+  `canonical_gate_environment` classification. Their authoritative result is
+  under `CODEX_MODE=1`, where temporary paths use the canonical gate's
+  repository-contained state root; a standalone pytest pass is diagnostic only.
+  The classification is selective and does not alter pure unit-test execution.
 
 ## Commands and escalation
 
@@ -119,8 +125,9 @@ CODEX_MODE=1 ./scripts/verify.sh
 ./scripts/ci_preflight.sh
 ```
 
-Governed project checks resolve Python once through
-`scripts/resolve_python_env.sh`. Priority is the explicit `TET4D_PYTHON`
+Governed project checks consume `gov env` once, receiving the resolver-selected
+interpreter, execution mode, and source binding when source mode is active.
+Priority is the explicit `TET4D_PYTHON`
 override, then the ignored workspace-local interpreter, then `.venv`; no valid
 candidate is `ENVIRONMENT_INVALID`. `PYTHON_BIN` only carries the resolved
 output to child processes. `./scripts/verify.sh` and

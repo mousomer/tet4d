@@ -13,7 +13,9 @@ RELEASE_CANDIDATE_ROOT = ROOT / "release-candidates/windows"
 
 
 def _module():
-    spec = importlib.util.spec_from_file_location("windows_package_validator", VALIDATOR_PATH)
+    spec = importlib.util.spec_from_file_location(
+        "windows_package_validator", VALIDATOR_PATH
+    )
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -92,7 +94,9 @@ def test_game_identity_marker_cannot_pass_as_designer(tmp_path: Path) -> None:
         validator.validate(_archive(tmp_path, resources=resources), ROOT)
 
 
-def test_source_configuration_text_is_not_exported_identity_evidence(tmp_path: Path) -> None:
+def test_source_configuration_text_is_not_exported_identity_evidence(
+    tmp_path: Path,
+) -> None:
     validator = _module()
     with pytest.raises(ValueError, match="Designer identity marker"):
         validator.validate(

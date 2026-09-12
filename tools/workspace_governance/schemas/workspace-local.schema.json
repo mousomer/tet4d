@@ -6,6 +6,7 @@
   "properties": {
     "schema_version": {"const": 1, "x-governance-use": "validation-only", "x-governance-behavior": "schema"},
     "interpreter": {"type": "string", "minLength": 1, "x-governance-use": "consumed", "x-governance-behavior": "local"},
+    "execution_mode": {"type": "string", "minLength": 1, "x-governance-use": "consumed", "x-governance-behavior": "local"},
     "tool_paths": {
       "type": "object",
       "x-governance-use": "consumed",

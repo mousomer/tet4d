@@ -31,9 +31,13 @@ else
 fi
 STABILITY_SEED_BASE="${STABILITY_SEED_BASE:-0}"
 
-# Resolve once. Every Python subprocess receives this exact interpreter.
-PYTHON_BIN="$(./scripts/resolve_python_env.sh)"
-export PYTHON_BIN
+# Resolve once. Every Python subprocess receives this exact interpreter, and in
+# source mode the binding that decides which checkout it imports. Both come from
+# the governance resolver rather than being reconstructed here: a gate that
+# derived its own binding could verify a different environment than `gov doctor`
+# certified. A failure here aborts under `set -e` with the resolver's diagnostic.
+GOVERNED_ENV="$(./gov env)"
+eval "$GOVERNED_ENV"
 
 VERIFY_LOCK_DIR="state/.verify.lock"
 VERIFY_STATE_ROOT_OWNED=0
@@ -91,6 +95,21 @@ require_module() {
 
 run_module() { "$PYTHON_BIN" -m "$@"; }
 
+# Both gates read their Ruff scope from one authority. Carrying separate target
+# lists is how repository-wide formatting drift stayed invisible to whichever
+# list was narrower.
+static_analysis_scope() {
+  "$PYTHON_BIN" - "$1" <<'SCOPE'
+import json
+import pathlib
+import sys
+
+rules = json.loads(pathlib.Path("config/project/policy_pack.json").read_text())
+print(" ".join(rules["code_rules"]["static_analysis"][sys.argv[1]]))
+SCOPE
+}
+
+
 require_repo_package() {
   if "$PYTHON_BIN" -c "import tet4d" >/dev/null 2>&1; then
     return 0
@@ -130,7 +149,6 @@ require_repo_package
 
 run_step "workspace_governance" ./gov check
 run_step "environment_doctor" ./gov doctor
-run_step "editable_install" ./scripts/check_editable_install.sh
 run_governance_step "policy_compliance" ./scripts/check_policy_compliance.sh
 run_governance_step "policy_compliance_repo" ./scripts/check_policy_compliance_repo.sh
 run_governance_step "git_sanitation_repo" ./scripts/check_git_sanitation_repo.sh
@@ -143,9 +161,11 @@ run_governance_step "secret_scan" "$PYTHON_BIN" tools/governance/scan_secrets.py
 run_governance_step "pygame_ce" "$PYTHON_BIN" tools/governance/check_pygame_ce.py
 run_governance_step "godot_settings_externalization" "$PYTHON_BIN" tools/governance/check_godot_settings_externalization.py
 
-run_governance_step "ruff" run_module ruff check .
-run_governance_step "ruff_format" run_module ruff format --check scripts tools
-run_governance_step "ruff_c901" run_module ruff check --select C901 .
+read -r -a RUFF_CHECK_SCOPE <<<"$(static_analysis_scope ruff_check_scope)"
+read -r -a RUFF_FORMAT_SCOPE <<<"$(static_analysis_scope ruff_format_scope)"
+run_governance_step "ruff" run_module ruff check "${RUFF_CHECK_SCOPE[@]}"
+run_governance_step "ruff_format" run_module ruff format --check "${RUFF_FORMAT_SCOPE[@]}"
+run_governance_step "ruff_c901" run_module ruff check --select C901 "${RUFF_CHECK_SCOPE[@]}"
 run_step "arch_metrics"   "$PYTHON_BIN" scripts/arch_metrics.py
 run_governance_step "arch_metrics_soft_gate" ./scripts/check_architecture_metrics_soft_gate.sh
 run_governance_step "arch_metrics_budgets" ./scripts/check_architecture_metric_budgets.sh
@@ -158,7 +178,7 @@ fi
 
 run_step "pytest"         run_module pytest "${PYTEST_ARGS[@]}"
 
-run_step "playbot_stability"   env PYTHONPATH=".${PYTHONPATH:+:$PYTHONPATH}" "$PYTHON_BIN" tools/stability/check_playbot_stability.py --repeats "$STABILITY_REPEATS" --seed-base "$STABILITY_SEED_BASE"
+run_step "playbot_stability" "$PYTHON_BIN" tools/stability/check_playbot_stability.py --repeats "$STABILITY_REPEATS" --seed-base "$STABILITY_SEED_BASE"
 
 run_step "compileall"     "$PYTHON_BIN" -m compileall -q front.py cli/__init__.py cli/front.py cli/front2d.py cli/front3d.py cli/front4d.py src/tet4d src/tet4d/engine
 run_step "bench_playbot"  "$PYTHON_BIN" tools/benchmarks/bench_playbot.py --assert --record-trend

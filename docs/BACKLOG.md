@@ -21,28 +21,29 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ## Active Work
 
-### Worktree-local verification bootstrap
+### Environment ownership
 
-Provide `scripts/verify_local.sh` as a worktree-local `.venv` cache and
-launcher for the canonical `scripts/verify.sh` gate. It must fingerprint only
-packaging inputs and interpreter major/minor version, preserve the existing
-editable-install ownership check, avoid repeat network/bootstrap work, and
-never duplicate the verification graph.
+`bootstrap_env.sh` is the single owner of environment mutation and follows the
+declared execution mode: installed mode builds a `.venv` belonging to this
+checkout, source mode synchronises declared dependencies into the shared
+toolchain and installs no project. Its fingerprint and mutation lock live beside
+that environment, because a shared one is reachable from every worktree at once
+while each worktree's verify lock guards only its own tree.
 
-`--rebuild-venv` now refuses before deletion when its selected bootstrap is
-inside the `.venv` being replaced. Follow-up: separately review operator
-confirmation and recovery messaging for other destructive recreation cases.
+Bootstrap and every project-importing verification entry point consume `gov env`
+for the resolver-selected interpreter, mode, and source binding. The obsolete shell
+editable-install checker is retired: `gov doctor` is the one mode-aware environment
+certification authority, checking installed origin in installed mode and checkout binding plus distribution neutrality in source mode.
 
-The inherited workspace interpreter overlay now serves both bootstrap and
-certified selection, so a fresh worktree starts governance from it alone.
-Multi-worktree shared editable-environment certification remains deferred.
+`verify_local.sh` owns nothing: it reports an unready environment and execs the
+canonical gate. `--rebuild-venv` is gone with the venv it rebuilt, which also
+retires the finding that inherited bootstrap had made that refusal permissive.
 
-With inherited bootstrap active, the selected bootstrap is external to the
-worktree, so `--rebuild-venv` may now regard it as safe and permit rebuilding
-`.venv`, including replacing a symlink-farm entry with a real environment. That
-refusal previously fired on every worktree here. Deferred to the `verify_local`
-retirement/rework rather than patched under bootstrap inheritance; symlink-farm
-removal remains blocked until then.
+The inherited overlay serves bootstrap, certified selection and execution mode;
+two-worktree operation is certified sequentially and concurrently, and no
+worktree carries a `.venv` symlink farm. A checkout on a branch predating the
+overlay needs one back -- four symlinks into the shared environment -- or an
+exported `WORKSPACE_VENV`.
 
 Constraint for any future dependency fingerprint over an inherited environment:
 a digest of project inputs records what this repository declares, not what the
@@ -178,8 +179,8 @@ Godot game/iPadOS target gap.
 - The v0.1 integrity repair makes project routes canonical and retains legacy
   routes only as a parity-validated facade. Do not extract another policy family
   until the repaired contract receives independent review.
-- The vendored v0.1 pack is internally integrity-checked here; upstream
-  canonical reconstruction or export of that pack remains deferred.
+- The vendored v0.1 pack is internally checked here. Canonical extraction is
+  blocked until authority names the external package/repository and release identity; Tet4D manifests cannot derive either from mutable Git remotes.
 
 ### Release and platform
 

@@ -14,16 +14,19 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 PACK = ROOT / "tools/workspace_governance"
 
-# Every variable that can decide an interpreter. A test exercising a lower tier
-# must scrub them: CI exports TET4D_PYTHON and GOVERNANCE_PYTHON for the whole
-# job, so an inherited environment would otherwise answer instead of the tier
-# under test.
+# Every variable that can decide an interpreter or the source it imports. A test
+# exercising a lower tier must scrub them: CI exports TET4D_PYTHON and
+# GOVERNANCE_PYTHON for the whole job, and the gate exports PYTHONPATH in source
+# mode, so an inherited environment would otherwise answer instead of the tier
+# under test. PYTHONPATH matters most: a checkout under test must resolve its own
+# binding, not inherit the one belonging to the worktree running the suite.
 INTERPRETER_SELECTORS = (
     "TET4D_PYTHON",
     "GOVERNANCE_PYTHON",
     "WORKSPACE_VENV",
     "PYTHON_BIN",
     "TET4D_RESOLVED_PYTHON",
+    "PYTHONPATH",
 )
 
 
