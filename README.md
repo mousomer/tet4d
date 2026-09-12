@@ -150,9 +150,7 @@ reports an unready environment and runs the gate.
 from. It uses `GOVERNANCE_PYTHON`, else `$WORKSPACE_VENV/bin/python`, else the
 inherited workspace overlay interpreter, else an existing `.venv`; on a machine
 with none of those, declare the overlay above, export `WORKSPACE_VENV`, or set
-`PYTHON_BOOTSTRAP_BIN` to a Python satisfying `requires-python`. Likewise,
-`verify_local.sh --rebuild-venv` requires an external bootstrap; it refuses a
-bootstrap selected from the `.venv` it would replace. See
+`PYTHON_BOOTSTRAP_BIN` to a Python satisfying `requires-python`. See
 `docs/architecture/workspace_governance_v0_1.md` for the full contract.
 
 ## Run Commands
@@ -193,8 +191,9 @@ native/tet4d_core/build/tests/query_core_tests --query-parity
 Python-golden gameplay parity checks:
 
 ```bash
-.venv/bin/python tools/migration/compare_cpp_gameplay_trace.py --all-plain-2d
-.venv/bin/python tools/migration/compare_cpp_gameplay_trace.py --all-plain-nd
+eval "$(./gov env)"
+"$PYTHON_BIN" tools/migration/compare_cpp_gameplay_trace.py --all-plain-2d
+"$PYTHON_BIN" tools/migration/compare_cpp_gameplay_trace.py --all-plain-nd
 ```
 
 Primary verification gate:

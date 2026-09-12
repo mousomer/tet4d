@@ -163,10 +163,12 @@ nothing more. `check`, `resolve`, and `explain` need no third-party libraries.
 bootstrap started it, returning `ENVIRONMENT_INVALID` with
 `ENVIRONMENT_MISMATCH` when that interpreter is unavailable.
 
-`verify_local.sh --rebuild-venv` additionally refuses before deletion when the
-selected bootstrap path is inside the worktree `.venv` being replaced. The
-operator must select an approved external bootstrap explicitly; there is no
-implicit system-Python fallback.
+`bootstrap_env.sh` is the only path that mutates a Python environment, and what
+it builds follows the declared mode: installed mode an environment belonging to
+this checkout, source mode declared dependencies in the shared toolchain and no
+project. Its fingerprint and mutation lock sit beside that environment, since a
+shared one is reachable from every worktree while a worktree's verify lock
+guards only its own tree. `verify_local.sh` owns nothing and creates nothing.
 The selected project interpreter evaluates the full Python specifier using
 `packaging`, explicitly declared in `pyproject.toml`. Missing packages and broken
 metadata produce diagnostics, not forwarded subprocess tracebacks.
