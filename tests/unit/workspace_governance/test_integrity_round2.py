@@ -4,7 +4,6 @@ import copy
 import importlib.metadata
 import json
 import os
-import shutil
 import subprocess
 import sys
 import tomllib
@@ -577,10 +576,7 @@ def test_malformed_facade_target_is_a_diagnostic(
 
 @pytest.mark.parametrize(
     "script,override",
-    [
-        ("bootstrap_env.sh", "PYTHON_BOOTSTRAP_BIN"),
-        ("verify_local.sh", "BOOTSTRAP_PYTHON"),
-    ],
+    [("bootstrap_env.sh", "PYTHON_BOOTSTRAP_BIN")],
 )
 def test_environment_creators_reject_unsupported_bootstrap_before_creating_venv(
     checkout: Path, script: str, override: str
@@ -595,51 +591,53 @@ def test_environment_creators_reject_unsupported_bootstrap_before_creating_venv(
     assert "Traceback" not in result.stdout + result.stderr
 
 
-def test_verify_local_rebuild_refuses_bootstrap_inside_venv_before_deletion(
+def test_verify_local_owns_no_environment(checkout: Path) -> None:
+    """It reports an unready environment; it never creates or repairs one.
+
+    Owning a venv made verification a process that could change the environment
+    it was about to verify, so the whole path is gone along with the
+    `--rebuild-venv` flag that deleted one.
+    """
+    result = run(checkout, "./scripts/verify_local.sh", env=environment())
+
+    assert result.returncode == 1
+    assert "bootstrap_env.sh" in result.stderr
+    assert not (checkout / ".venv").exists()
+    assert "Traceback" not in result.stdout + result.stderr
+
+
+def test_verify_local_rejects_the_flag_that_rebuilt_an_environment(
     checkout: Path,
 ) -> None:
-    internal_python = checkout / ".venv/bin/python"
-    internal_python.parent.mkdir(parents=True)
-    internal_python.write_text(f'#!/bin/sh\nexec "{sys.executable}" "$@"\n')
-    internal_python.chmod(0o755)
-    sentinel = checkout / ".venv/keep-before-refusal"
-    sentinel.write_text("must survive\n")
-
     result = run(
-        checkout,
-        "./scripts/verify_local.sh",
-        "--bootstrap-only",
-        "--rebuild-venv",
-        env=environment(BOOTSTRAP_PYTHON=str(internal_python)),
+        checkout, "./scripts/verify_local.sh", "--rebuild-venv", env=environment()
     )
 
     assert result.returncode == 2
-    assert sentinel.read_text() == "must survive\n"
-    assert "refusing --rebuild-venv" in result.stderr
-    assert "BOOTSTRAP_PYTHON" in result.stderr
+    assert "Usage" in result.stderr
+    assert not (checkout / ".venv").exists()
 
 
-def test_verify_local_rebuild_accepts_external_bootstrap(checkout: Path) -> None:
-    # The general governance fixture links source trees read-only. Rebuild
-    # acceptance also verifies editable-origin ownership, so give this checkout
-    # its own source tree like a real worktree has.
-    (checkout / "src").unlink()
-    shutil.copytree(ROOT / "src", checkout / "src")
-    external_python = wrapper(checkout)
+def test_shared_bootstrap_never_falls_back_to_building_a_local_environment(
+    checkout: Path,
+) -> None:
+    """Source mode has no interpreter of its own to build.
 
+    Silently creating a worktree `.venv` here would reintroduce exactly the
+    per-checkout environment the shared toolchain replaces.
+    """
     result = run(
         checkout,
-        "./scripts/verify_local.sh",
-        "--bootstrap-only",
-        "--rebuild-venv",
+        "./scripts/bootstrap_env.sh",
         env=environment(
-            BOOTSTRAP_PYTHON=str(external_python),
-            TET4D_ENVIRONMENT_MODE="installed",
+            PYTHON_BOOTSTRAP_BIN=sys.executable,
+            TET4D_ENVIRONMENT_MODE="source",
         ),
     )
 
-    assert result.returncode == 0, result.stdout + result.stderr
-    assert (checkout / ".venv/bin/python").is_file()
+    assert result.returncode == 1
+    assert "source mode needs an interpreter" in result.stderr
+    assert not (checkout / ".venv").exists()
 
 
 def test_exclusive_file_identity_normalizes_equivalent_paths(checkout: Path) -> None:
