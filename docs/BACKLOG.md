@@ -33,9 +33,8 @@ never duplicate the verification graph.
 inside the `.venv` being replaced. Follow-up: separately review operator
 confirmation and recovery messaging for other destructive recreation cases.
 
-The inherited workspace interpreter overlay now serves both bootstrap and
-certified selection, so a fresh worktree starts governance from it alone.
-Multi-worktree shared editable-environment certification remains deferred.
+The inherited overlay now serves bootstrap, certified selection and execution
+mode; two-worktree operation is certified sequentially and concurrently.
 
 With inherited bootstrap active, the selected bootstrap is external to the
 worktree, so `--rebuild-venv` may now regard it as safe and permit rebuilding

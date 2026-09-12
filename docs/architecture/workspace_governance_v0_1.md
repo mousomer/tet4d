@@ -69,8 +69,31 @@ and needs no package at all. The constraint is permanent while the interpreter
 is shared, and it is invisible from inside the repository, because the same
 import succeeds under a private `.venv` that lacks the offending distribution.
 
+Interpreter and source selection are separate decisions. One environment holds
+exactly one distribution of a given name, so an installed project makes a single
+checkout authoritative for every other; the invoking checkout decides instead,
+through a binding derived from `environment.editable_source`. `gov env` emits the
+interpreter and, in source mode, that binding as shell assignments, because shell
+cannot import the resolver and `resolve_python_env.sh` prints one interpreter and
+rejects arguments. Gates consume it rather than deriving their own, which could
+verify a different environment than `doctor` certified.
+
+Injection happens only in source mode: injected everywhere, import origin would
+equal the expectation by construction and `editable_install` could never observe
+a foreign install again. Source mode instead adds two assertions that check
+cannot make -- the bound source is this checkout, and no project distribution is
+installed. Importability cannot see the second, because the binding wins the
+import while the distribution remains a silent second answer.
+
+One environment serves only checkouts with compatible dependencies; nothing
+detects when two stop agreeing. That is the limit of consolidation, so
+divergence should fail clearly before anything keys environments by fingerprint.
+
 Execution mode is declared, never inferred. `environment.execution_mode` names
-the variable that carries it and the default when that variable is unset;
+the variable that carries it and the default when that variable is unset, and
+the machine-wide overlay may declare it beside the interpreter -- a shared
+environment owning no distribution is in source mode for every checkout on it.
+Precedence is override, then overlay, then project default;
 `source` means the project is imported from a checkout, `installed` that it
 comes from a distribution. Which one holds decides whether `pyproject.toml` or
 distribution metadata is the truthful dependency record, so reading it back

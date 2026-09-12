@@ -123,6 +123,14 @@ cat > "${XDG_CONFIG_HOME:-$HOME/.config}/workspace-governance/tet4d-workspace.lo
 JSON
 ```
 
+Add `"execution_mode": "source"` there when that interpreter holds no editable
+install of this project: every worktree then imports its own `src`, and
+switching between them costs no reinstall. Ask the resolver for both at once:
+
+```bash
+eval "$(./gov env)"
+```
+
 It is keyed by workspace identity, so a worktree inherits it wherever it lives,
 and it both starts governance and is certified: a fresh worktree with no `.venv`
 and no bootstrap variables can run `./gov check` and `./gov doctor` from this
