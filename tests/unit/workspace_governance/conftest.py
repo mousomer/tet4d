@@ -24,6 +24,13 @@ def isolated_user_overlay(
     # repository would be reported relative rather than absolute.
     config_root = tmp_path.parent / f"{tmp_path.name}-xdg-config"
     monkeypatch.setenv("XDG_CONFIG_HOME", str(config_root))
+    # Isolating the overlay also hides whatever mode the host declares, so state
+    # it instead of inheriting it. A shared environment owning no project
+    # distribution is in source mode, which is what these subprocess cases need
+    # to import the project at all. Cases asserting installed-mode behaviour pass
+    # an explicit environment rather than relying on this default, and CI
+    # declares installed mode for the whole job.
+    monkeypatch.setenv("TET4D_ENVIRONMENT_MODE", "source")
     try:
         yield config_root
     finally:

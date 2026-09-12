@@ -1047,6 +1047,7 @@ def binding_environment(
     root: Path,
     project: dict[str, Any],
     environ: dict[str, str] | None = None,
+    local: dict[str, Any] | None = None,
 ) -> dict[str, str]:
     """Variables that bind execution to this checkout, for the declared mode.
 
@@ -1056,7 +1057,7 @@ def binding_environment(
     a path would make `editable_install` unable to observe a wrong one.
     """
     env = os.environ if environ is None else environ
-    mode, _, issues = resolve_execution_mode(project, env)
+    mode, _, issues = resolve_execution_mode(project, env, local)
     if issues or mode != "source":
         return {}
     binding = str(source_binding_path(root, project))
@@ -1065,7 +1066,9 @@ def binding_environment(
 
 
 def resolve_execution_mode(
-    project: dict[str, Any], environ: dict[str, str] | None = None
+    project: dict[str, Any],
+    environ: dict[str, str] | None = None,
+    local: dict[str, Any] | None = None,
 ) -> tuple[str, str, list[Diagnostic]]:
     """Declare whether the project runs from a checkout or an installed dist.
 
@@ -1080,6 +1083,11 @@ def resolve_execution_mode(
     override = spec["override"]
     if env.get(override):
         mode, reason = env[override], f"explicit override {override}"
+    elif local and local.get("execution_mode"):
+        # A machine whose shared environment owns no source binding is in source
+        # mode for every checkout on it, so the declaration belongs beside the
+        # interpreter it describes rather than in each shell that starts a gate.
+        mode, reason = local["execution_mode"], "approved local overlay"
     else:
         mode, reason = spec["default"], "declared project default"
     if mode not in EXECUTION_MODES:
@@ -1114,7 +1122,7 @@ def doctor(  # noqa: C901 - environment probes remain one deterministic transact
         root, project, local, env, local_tiers=local_tiers
     )
     execution_mode, execution_mode_reason, mode_issues = resolve_execution_mode(
-        project, env
+        project, env, local
     )
     issues.extend(mode_issues)
     try:
@@ -1156,18 +1164,23 @@ def doctor(  # noqa: C901 - environment probes remain one deterministic transact
     modules = list(
         dict.fromkeys([package_import, *project["environment"]["critical_packages"]])
     )
+    # Importability and installed-distribution ownership are different claims,
+    # and source mode turns on the second, so the probe reports both.
     probe_code = (
-        "import importlib,json,pathlib,platform; mods=[importlib.import_module(n) for n in "
-        + repr(modules)
-        + "]; root=importlib.import_module("
-        + repr(package_import)
-        + "); print(json.dumps({'version':platform.python_version(),'package':str(pathlib.Path(root.__file__).resolve()),'critical_packages':"
-        + repr(modules)
-        + "}))"
+        "import importlib,importlib.metadata,json,pathlib,platform; "
+        "mods=[importlib.import_module(n) for n in " + repr(modules) + "]; "
+        "root=importlib.import_module(" + repr(package_import) + "); "
+        "names={(d.metadata['Name'] or '').lower().replace('_','-') "
+        "for d in importlib.metadata.distributions()}; "
+        "print(json.dumps({'version':platform.python_version(),"
+        "'package':str(pathlib.Path(root.__file__).resolve()),"
+        "'critical_packages':" + repr(modules) + ","
+        "'distribution':" + repr(package_import.lower().replace("_", "-")) + " in names"
+        "}))"
     )
     # The probe must run under the same binding the gate will use, or doctor
     # answers a question about a different environment than the one verified.
-    binding = binding_environment(root, project, env)
+    binding = binding_environment(root, project, env, local)
     result["source_binding"] = binding.get("PYTHONPATH")
     try:
         probe = subprocess.run(
@@ -1177,7 +1190,7 @@ def doctor(  # noqa: C901 - environment probes remain one deterministic transact
             capture_output=True,
             timeout=20,
             check=False,
-            env={**os.environ, **binding},
+            env={**os.environ, **env, **binding},
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
         probe = None
@@ -1239,6 +1252,21 @@ def doctor(  # noqa: C901 - environment probes remain one deterministic transact
                     "correct environment.editable_source or the injected binding"
                     if source_bound
                     else "reinstall editable from the current checkout",
+                )
+            )
+        elif execution_mode == "source" and data.get("distribution"):
+            # An installed distribution keeps one checkout authoritative for
+            # every other, which is the ownership source mode exists to remove.
+            # Importability alone cannot see it: the binding wins the import and
+            # the distribution stays, silently, as a second answer.
+            issues.append(
+                _diag(
+                    "ENVIRONMENT_MISMATCH",
+                    "source_neutrality",
+                    "environment",
+                    [str(interpreter)],
+                    "source mode requires no installed project distribution",
+                    "uninstall the project distribution from the shared environment",
                 )
             )
         elif execution_mode == "source" and not binding:

@@ -304,7 +304,7 @@ Parameters:
 ### `config/governance/workspace.lock.json`
 Top-level keys: `content_sha256`, `files`, `lock_algorithm`, `pack_name`, `pack_path`, `revision`, `schema_version`, `version`
 Parameters:
-- `content_sha256`: `"f92e544c28cafac21c11f32810501136b97b06ad42d5bae72471310bd9e8c15e"` (`string`)
+- `content_sha256`: `"6b3af756539df6615f01521be376528b96041ea56163b61b0bd629a005de896c"` (`string`)
 - `files[]`: array[`string`]; examples: `"MANIFEST.json"`, `"VERSION"`, `"__init__.py"`
 - `lock_algorithm`: `"sha256-path-and-content-v1"` (`string`)
 - `pack_name`: `"workspace-governance"` (`string`)

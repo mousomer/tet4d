@@ -88,7 +88,7 @@ def _env(root: Path, resolver: GovernanceResolver, *, as_json: bool) -> int:
             _emit([item.to_dict() for item in issues], as_json=as_json)
         return 1
     assignments = {"PYTHON_BIN": str(interpreter)}
-    assignments.update(binding_environment(root, project))
+    assignments.update(binding_environment(root, project, None, local))
     if as_json:
         _emit(assignments, as_json=True)
         return 0

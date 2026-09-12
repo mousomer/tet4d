@@ -183,7 +183,10 @@ def test_metadata_failure_classes_are_controlled(
     monkeypatch.setattr(core, "_python_specifier", fail)
     _, project, _ = GovernanceResolver.for_root(checkout).load()
     data, issues = core.doctor(
-        checkout, project, None, {"TET4D_PYTHON": sys.executable}
+        checkout,
+        project,
+        None,
+        {"TET4D_PYTHON": sys.executable, "TET4D_ENVIRONMENT_MODE": "source"},
     )
     assert data["status"] == "ENVIRONMENT_INVALID"
     assert {i.code for i in issues} == {"ENVIRONMENT_MISMATCH"}
@@ -243,7 +246,10 @@ def apply_case(root: Path, mutation: str) -> set[str]:  # noqa: C901 - explicit 
         "wrong-editable-checkout",
         "valid-local-override",
     }:
-        env = {"TET4D_PYTHON": sys.executable}
+        env = {
+            "TET4D_PYTHON": sys.executable,
+            "TET4D_ENVIRONMENT_MODE": "source",
+        }
         if mutation == "missing-interpreter":
             env["TET4D_PYTHON"] = str(root / "missing")
         elif mutation == "wrong-python-version":
@@ -253,7 +259,10 @@ def apply_case(root: Path, mutation: str) -> set[str]:  # noqa: C901 - explicit 
         elif mutation == "wrong-editable-checkout":
             project["environment"]["editable_source"] = "wrong/source"
         else:
-            local, env = {"interpreter": sys.executable}, {}
+            local, env = (
+                {"interpreter": sys.executable, "execution_mode": "source"},
+                {},
+            )
         _, issues = core.doctor(root, project, local, env)
         return {i.code for i in issues}
     elif mutation == "valid-local-fix-resolution":
@@ -430,23 +439,34 @@ def test_registered_behavior_paths_have_mutation_evidence(  # noqa: C901 - expli
         project["generated_surfaces"][0]["target"] += "/missing"
     elif family == "environment":
         data, issues = core.doctor(
-            checkout, project, None, {"TET4D_PYTHON": sys.executable}
+            checkout,
+            project,
+            None,
+            {"TET4D_PYTHON": sys.executable, "TET4D_ENVIRONMENT_MODE": "source"},
         )
         assert data["status"] == "ok" and not issues
         project["environment"]["critical_packages"].append(
             "missing_governance_test_package"
         )
         data, issues = core.doctor(
-            checkout, project, None, {"TET4D_PYTHON": sys.executable}
+            checkout,
+            project,
+            None,
+            {"TET4D_PYTHON": sys.executable, "TET4D_ENVIRONMENT_MODE": "source"},
         )
         assert data["status"] == "ENVIRONMENT_INVALID" and issues
         return
     elif family == "sanitation":
         project["sanitation"]["secret_scanner"] = "missing-scanner.py"
     elif family == "local":
-        assert not core.doctor(checkout, project, {"interpreter": sys.executable}, {})[
-            1
-        ]
+        # The overlay carries the mode as well as the interpreter, so this
+        # asserts a healthy environment rather than the project default's.
+        assert not core.doctor(
+            checkout,
+            project,
+            {"interpreter": sys.executable, "execution_mode": "source"},
+            {},
+        )[1]
         a = core.resolve_interpreter(
             checkout, project, {"interpreter": sys.executable}, {}
         )
@@ -481,7 +501,10 @@ def test_route_tool_fields_and_local_tool_override_are_consumed(checkout: Path) 
     tool = checkout / "fake-godot"
     tool.write_text('#!/bin/sh\nprintf "test-tool:%s\\n" "$1"\n')
     tool.chmod(0o755)
-    env = {"TET4D_PYTHON": sys.executable}
+    env = {
+        "TET4D_PYTHON": sys.executable,
+        "TET4D_ENVIRONMENT_MODE": "source",
+    }
     local = {"tool_paths": {"godot": str(tool)}}
     data, issues = core.doctor(
         checkout, project, local, env, route="godot_product_shell"
@@ -603,7 +626,10 @@ def test_verify_local_rebuild_accepts_external_bootstrap(checkout: Path) -> None
         "./scripts/verify_local.sh",
         "--bootstrap-only",
         "--rebuild-venv",
-        env=environment(BOOTSTRAP_PYTHON=str(external_python)),
+        env=environment(
+            BOOTSTRAP_PYTHON=str(external_python),
+            TET4D_ENVIRONMENT_MODE="installed",
+        ),
     )
 
     assert result.returncode == 0, result.stdout + result.stderr

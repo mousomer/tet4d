@@ -74,17 +74,27 @@ def test_an_unimplemented_mode_binds_nothing(checkout: Path) -> None:
     )
 
 
-def test_installed_mode_still_observes_a_foreign_editable_install(
-    checkout: Path,
+def test_installed_mode_still_observes_a_foreign_source(
+    checkout: Path, tmp_path: Path
 ) -> None:
     """The check that injection would otherwise silence must keep its teeth.
 
     A binding injected in every mode would make import origin equal the
-    expectation by construction, and this diagnostic could never fire again.
+    expectation by construction, and this diagnostic could never fire again. The
+    foreign origin is constructed here rather than taken from the machine, whose
+    shared environment deliberately owns no project distribution.
     """
     own_source(checkout)
-    project = project_of(checkout)
-    _, issues = core.doctor(checkout, project, None, {"TET4D_PYTHON": sys.executable})
+    foreign = tmp_path.parent / f"{tmp_path.name}-foreign"
+    (foreign / "tet4d").mkdir(parents=True, exist_ok=True)
+    (foreign / "tet4d/__init__.py").write_text('"""Another checkout."""\n')
+
+    _, issues = core.doctor(
+        checkout,
+        project_of(checkout),
+        None,
+        {"TET4D_PYTHON": sys.executable, "PYTHONPATH": str(foreign)},
+    )
     assert "editable_install" in {item.fact for item in issues}
 
 
@@ -119,7 +129,7 @@ def test_gov_env_is_the_one_interface_for_non_python_callers(
         assert result.returncode == 0, result.stdout + result.stderr
         return json.loads(result.stdout)
 
-    installed = emitted(TET4D_PYTHON=sys.executable)
+    installed = emitted(TET4D_PYTHON=sys.executable, TET4D_ENVIRONMENT_MODE="installed")
     assert installed["PYTHON_BIN"] == str(Path(sys.executable).absolute())
     assert "PYTHONPATH" not in installed
 
