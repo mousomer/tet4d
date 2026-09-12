@@ -2425,10 +2425,9 @@ Parameters:
 - `governance_surface.document_roles.template[]`: array[`string`]; examples: `"tools/templates/governance"`
 - `governance_surface.lifecycle.forbidden_active_heading_regex[]`: array[`string`]; examples: `"^#{1,6}\\s+(?:(?:Previous|Prior|Earlier|Last)\\s+){1,2}(?:Tasks?|Sta...`
 - `governance_surface.lifecycle.volatile_test_count_regex`: `"(?i)(?:\\bpytest(?:\\s+result)?\\s*:\\s*\\d[\\d,]*\\s+passed\\b|\\b\...` (`string`)
-- `governance_surface.per_file_byte_limits.config/project/policy_pack.json`: `80000` (`int`)
+- `governance_surface.per_file_byte_limits.config/project/policy_pack.json`: `98304` (`int`)
 - `governance_surface.per_file_limits.AGENTS.md`: `150` (`int`)
 - `governance_surface.per_file_limits.CURRENT_STATE.md`: `150` (`int`)
-- `governance_surface.per_file_limits.config/project/policy_pack.json`: `1000` (`int`)
 - `governance_surface.per_file_limits.docs/BACKLOG.md`: `250` (`int`)
 - `governance_surface.per_file_limits.docs/governance/CHANGE_GOVERNANCE.md`: `300` (`int`)
 - `governance_surface.per_file_limits.docs/governance/CONFIG_AND_GENERATED_DATA.md`: `300` (`int`)

@@ -658,6 +658,7 @@ def without_hook_installation(checkout: Path) -> None:
     (checkout / "scripts/install_git_hooks.sh").write_text("#!/bin/sh\nexit 0\n")
 
 
+@pytest.mark.canonical_gate_environment
 def test_installed_bootstrap_reuses_an_existing_interpreter(checkout: Path) -> None:
     """An interpreter that already exists must not be rebuilt over.
 
@@ -691,6 +692,7 @@ def test_installed_bootstrap_reuses_an_existing_interpreter(checkout: Path) -> N
     assert str(checkout / "existing-env") in result.stdout
 
 
+@pytest.mark.canonical_gate_environment
 def test_installed_bootstrap_creates_at_exactly_the_derived_prefix(
     checkout: Path,
 ) -> None:
@@ -718,6 +720,7 @@ def test_installed_bootstrap_creates_at_exactly_the_derived_prefix(
     assert "pip" in recorded, recorded
 
 
+@pytest.mark.canonical_gate_environment
 def test_shared_bootstrap_never_falls_back_to_building_a_local_environment(
     checkout: Path,
 ) -> None:
@@ -740,6 +743,7 @@ def test_shared_bootstrap_never_falls_back_to_building_a_local_environment(
     assert not (checkout / ".venv").exists()
 
 
+@pytest.mark.canonical_gate_environment
 def test_source_bootstrap_mutates_the_explicitly_governed_interpreter(
     checkout: Path,
 ) -> None:

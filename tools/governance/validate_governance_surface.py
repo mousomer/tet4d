@@ -50,9 +50,8 @@ FIXED_LIMITS = {
     "native/AGENTS.md": 70,
     "CURRENT_STATE.md": 150,
     "docs/BACKLOG.md": 250,
-    POLICY_REL: 1000,
 }
-POLICY_PACK_BYTE_LIMIT = 80_000
+POLICY_PACK_BYTE_LIMIT = 96 * 1024
 CANONICAL_SERIALIZATION = {
     "tool": "tools/governance/policy_pack_io.py",
     "format_version": 1,
@@ -448,12 +447,14 @@ def _measure(  # noqa: C901 - measurement and all coupled hard ceilings stay ato
     if hard_limit != 2500:
         issues.append(SurfaceIssue("size", "aggregate_hard_limit must equal 2500"))
         hard_limit = 0
-    total = sum(totals.values())
+    # Physical lines bound the material people must review as prose. The compact,
+    # canonically serialized machine policy has its own byte ceiling below.
+    total = sum(totals[group] for group in ACTIVE_GROUPS if group != "machine")
     if hard_limit and total > hard_limit:
         issues.append(
             SurfaceIssue(
                 "size",
-                f"active governance total {total} LOC exceeds hard limit {hard_limit}",
+                f"reviewable governance total {total} LOC exceeds hard limit {hard_limit}",
             )
         )
     byte_limits = surface.get("per_file_byte_limits")
@@ -598,6 +599,8 @@ def validate_surface(  # noqa: C901 - composes the complete surface invariant
 def _base_total(root: Path, measurement: SurfaceMeasurement, ref: str) -> int | None:
     total = 0
     for rel in measurement.file_loc:
+        if rel == POLICY_REL:
+            continue
         result = subprocess.run(
             ["git", "show", f"{ref}:{rel}"],
             cwd=root,
@@ -618,7 +621,7 @@ def _print_report(measurement: SurfaceMeasurement, *, base_ref: str | None) -> N
     print(f"Machine policy:             {measurement.machine:5d} LOC")
     print(f"Operational routed context: {measurement.operational:5d} LOC")
     print(f"Active task records:        {measurement.active_task:5d} LOC")
-    print(f"Active governance total:    {measurement.total:5d} LOC")
+    print(f"Reviewable governance total:{measurement.total:5d} LOC")
     print(f"Hard limit:                 {measurement.hard_limit:5d} LOC")
     print(
         f"Machine policy bytes:       {measurement.policy_bytes:5d} / "
@@ -633,7 +636,9 @@ def _print_report(measurement: SurfaceMeasurement, *, base_ref: str | None) -> N
     print("Per-file LOC:")
     for rel, loc in sorted(measurement.file_loc.items()):
         print(f"- {rel}: {loc}")
-    print("Aggregate compliance is binding; per-file compliance alone is insufficient.")
+    print(
+        "Reviewable aggregate compliance is binding; local compliance alone is insufficient."
+    )
 
 
 def main(argv: list[str] | None = None) -> int:

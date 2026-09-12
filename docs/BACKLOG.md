@@ -179,8 +179,8 @@ Godot game/iPadOS target gap.
 - The v0.1 integrity repair makes project routes canonical and retains legacy
   routes only as a parity-validated facade. Do not extract another policy family
   until the repaired contract receives independent review.
-- The vendored v0.1 pack is internally integrity-checked here; upstream
-  canonical reconstruction or export of that pack remains deferred.
+- The vendored v0.1 pack is internally checked here. Canonical extraction is
+  blocked until authority names the external package/repository and release identity; Tet4D manifests cannot derive either from mutable Git remotes.
 
 ### Release and platform
 

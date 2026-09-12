@@ -223,3 +223,20 @@ for the full repository invocation remains legacy compatibility debt; that
 namespace does not describe the gate's ownership. No further policy family is
 extracted here. Pack hashing ignores platform `.DS_Store` files through the
 manifest exclusion mechanism, alongside bytecode caches.
+
+## Canonical upstream boundary
+
+The vendored pack lock proves the identity of bytes consumed inside Tet4D; it
+does not identify an external canonical source. No current workspace or project
+manifest declares the external package/repository, its immutable release
+identity, or the trust owner allowed to publish it. The local Git remote named
+`origin` and the policy pack's GitHub publication target are mutable publication
+mechanisms, not governance-source authority, and cannot derive this contract
+across forks, worktrees, CI checkouts, or alternate local checkouts.
+
+Canonical extraction is blocked until governance decides the external
+package/repository identity and release/version model. The external pack should
+own that identity and publishing trust; the workspace manifest and schema are
+the candidate owners for Tet4D's immutable consumer reference. Only after that
+decision can extraction, deterministic pinning, drift protection, and offline
+consumption proceed without inventing policy in resolver logic.

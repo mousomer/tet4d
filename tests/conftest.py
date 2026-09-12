@@ -37,3 +37,16 @@ if _USE_TMP_WORKAROUND:
             yield path
         finally:
             shutil.rmtree(path, ignore_errors=True)
+
+
+@pytest.fixture(autouse=True)
+def _canonical_gate_environment_contract(request: pytest.FixtureRequest) -> None:
+    """Prove classified repository-sensitive tests use the gate temp topology."""
+    if (
+        request.node.get_closest_marker("canonical_gate_environment") is None
+        or os.environ.get("CODEX_MODE") != "1"
+    ):
+        return
+    path = request.getfixturevalue("tmp_path").resolve()
+    expected_root = _pytest_tmp_root().resolve()
+    assert path == expected_root or expected_root in path.parents

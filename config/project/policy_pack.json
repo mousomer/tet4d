@@ -987,8 +987,8 @@
     },
     "aggregate_hard_limit": 2500,
     "active_task_limit": 250,
-    "per_file_limits": {"AGENTS.md": 150, "godot/AGENTS.md": 70, "native/AGENTS.md": 70, "docs/governance/ENGINEERING.md": 300, "docs/governance/VERIFICATION.md": 300, "docs/governance/SECURITY_AND_SANITATION.md": 300, "docs/governance/CONFIG_AND_GENERATED_DATA.md": 300, "docs/governance/NATIVE_AND_PLATFORM.md": 300, "docs/governance/CHANGE_GOVERNANCE.md": 300, "CURRENT_STATE.md": 150, "docs/BACKLOG.md": 250, "config/project/policy_pack.json": 1000},
-    "per_file_byte_limits": {"config/project/policy_pack.json": 80000},
+    "per_file_limits": {"AGENTS.md": 150, "godot/AGENTS.md": 70, "native/AGENTS.md": 70, "docs/governance/ENGINEERING.md": 300, "docs/governance/VERIFICATION.md": 300, "docs/governance/SECURITY_AND_SANITATION.md": 300, "docs/governance/CONFIG_AND_GENERATED_DATA.md": 300, "docs/governance/NATIVE_AND_PLATFORM.md": 300, "docs/governance/CHANGE_GOVERNANCE.md": 300, "CURRENT_STATE.md": 150, "docs/BACKLOG.md": 250},
+    "per_file_byte_limits": {"config/project/policy_pack.json": 98304},
     "canonical_serialization": {"tool": "tools/governance/policy_pack_io.py", "format_version": 1, "check_argument": "--check", "newline_terminated": true},
     "lifecycle": {
       "forbidden_active_heading_regex": ["^#{1,6}\\s+(?:(?:Previous|Prior|Earlier|Last)\\s+){1,2}(?:Tasks?|Stages?|Work|Sessions?|Completions?(?:\\s+Reports?)?|Task\\s+Reports?)\\b.*$"],

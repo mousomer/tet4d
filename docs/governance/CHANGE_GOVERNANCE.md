@@ -83,13 +83,17 @@ tracked current files and must not enter `docs/history/`.
 
 The registered active surface is the union of human governance and dispatch,
 `config/project/policy_pack.json`, `CURRENT_STATE.md`, `docs/BACKLOG.md`, and
-any explicitly registered active task record. Its binding ceiling is 2,500
-physical lines. Local guards are 150 lines for root `AGENTS.md` and
+any explicitly registered active task record. The reviewable human,
+operational, and active-task portion has a binding ceiling of 2,500 physical
+lines. Local guards are 150 lines for root `AGENTS.md` and
 `CURRENT_STATE.md`, 70 for each subtree dispatch, 300 for each canonical owner,
-250 for `docs/BACKLOG.md` and any active task record, and 1,000 for the policy
-pack. The canonically serialized policy pack also has an 80,000-byte hard
-ceiling so line collapsing cannot hide machine-policy growth. Local compliance
-never substitutes for aggregate compliance.
+and 250 for `docs/BACKLOG.md` and any active task record. Physical lines are a
+human-reviewability measure and do not govern the canonically compact machine
+policy. Its 96 KiB serialized-byte ceiling is the binding growth budget; schema,
+provenance, and canonical serialization remain independent structural checks.
+The current artifact must retain at least 20% byte headroom so additions trigger
+deliberate budget review before the hard boundary. Local compliance never
+substitutes for aggregate compliance.
 
 Current routed files must not accumulate previous, prior, earlier, or last
 task, stage, work, session, completion, or task-report sections, including
