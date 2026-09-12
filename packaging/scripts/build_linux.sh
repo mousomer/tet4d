@@ -2,7 +2,18 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-PYTHON_BIN="${PYTHON_BIN:-python3}"
+# Packaging resolves its own interpreter and never consults the governed
+# local resolver: that reads machine configuration, which a release must not
+# depend on. System Python on PATH is not an approved packaging interpreter.
+if [[ -z "${PYTHON_BIN:-}" ]]; then
+  if [[ -x "${ROOT_DIR}/.venv/bin/python" ]]; then
+    PYTHON_BIN="${ROOT_DIR}/.venv/bin/python"
+  else
+  echo "packaging: no approved Python. Set PYTHON_BIN to an absolute interpreter" >&2
+  echo "packaging: path, or create .venv. System Python on PATH is not approved." >&2
+  exit 1
+  fi
+fi
 ARTIFACT_DIR="${ROOT_DIR}/artifacts/installers"
 BUILD_DIR="${ROOT_DIR}/build/packaging/linux"
 PKG_ROOT="${BUILD_DIR}/tet4d"

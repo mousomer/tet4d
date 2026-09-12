@@ -37,7 +37,9 @@ if [[ -n "${PYTHON_BIN:-}" ]]; then
 elif [[ -x "$ROOT_DIR/.venv/bin/python" ]]; then
   PYTHON_BIN="$ROOT_DIR/.venv/bin/python"
 else
-  PYTHON_BIN="$(command -v python3)"
+  echo "packaging: no approved Python. Set PYTHON_BIN to an absolute interpreter" >&2
+  echo "packaging: path, or create .venv. System Python on PATH is not approved." >&2
+  exit 1
 fi
 
 version="$("$PYTHON_BIN" -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])' 2>/dev/null || (cd "$ROOT_DIR" && "$PYTHON_BIN" -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])'))"

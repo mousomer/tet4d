@@ -12,7 +12,9 @@ if [[ -n "${PYTHON_BIN:-}" ]]; then
 elif [[ -x "$ROOT_DIR/.venv/bin/python" ]]; then
   PYTHON_BIN="$ROOT_DIR/.venv/bin/python"
 else
-  PYTHON_BIN="python3"
+  echo "packaging: no approved Python. Set PYTHON_BIN to an absolute interpreter" >&2
+  echo "packaging: path, or create .venv. System Python on PATH is not approved." >&2
+  exit 1
 fi
 
 if [[ -z "${GODOT_BIN:-}" ]]; then
