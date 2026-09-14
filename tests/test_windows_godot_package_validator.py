@@ -78,6 +78,42 @@ def test_current_windows_portable_inventory_validates(tmp_path: Path) -> None:
     assert result["godot_editor_required"] is False
 
 
+@pytest.mark.parametrize("offset,size", [(2**60, 4096), (0, 2**60)])
+def test_out_of_file_resource_is_rejected(
+    tmp_path: Path, offset: int, size: int
+) -> None:
+    archive_path = _archive(tmp_path)
+    with zipfile.ZipFile(archive_path) as archive:
+        payloads = {name: archive.read(name) for name in archive.namelist()}
+    member = "Tet4D Designer/Tet4DDesigner.pck"
+    pck = bytearray(payloads[member])
+    path_length = struct.unpack_from("<I", pck, 100)[0]
+    struct.pack_into("<QQ", pck, 104 + path_length, offset, size)
+    payloads[member] = bytes(pck)
+    with zipfile.ZipFile(archive_path, "w") as archive:
+        for name, data in payloads.items():
+            archive.writestr(name, data)
+    with pytest.raises(ValueError, match="outside the pack"):
+        _module().validate(archive_path, ROOT)
+
+
+@pytest.mark.parametrize("length", range(32, 40))
+def test_truncated_format_four_header_fails_closed(length: int) -> None:
+    pck = bytearray(length)
+    pck[:4] = b"GDPC"
+    struct.pack_into("<I", pck, 4, 4)
+    with pytest.raises(ValueError, match="header is truncated"):
+        _module()._validate_pck_resources(bytes(pck))
+
+
+def test_format_four_resource_range_includes_file_base() -> None:
+    pck = bytearray(_godot_pck({"probe"}))
+    struct.pack_into("<I", pck, 4, 4)
+    struct.pack_into("<QQ", pck, 24, len(pck) + 1, 96)
+    with pytest.raises(ValueError, match="outside the pack"):
+        _module()._validate_pck_resources(bytes(pck))
+
+
 def test_structured_pck_without_designer_marker_is_rejected(tmp_path: Path) -> None:
     validator = _module()
     with pytest.raises(ValueError, match="Designer identity marker"):

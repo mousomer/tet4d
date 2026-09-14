@@ -134,9 +134,9 @@ candidate workflow accepts registered `consumer_id` scope and records the exact
 selected bytes in a v2 manifest before it creates a draft. A separate manual
 publication workflow can publish only that inspected, byte-validated draft.
 
-The initial full-matrix candidate remains blocked until the Windows Designer
-validator proves exported identity through the PCK resource table rather than
-source configuration text. This narrow blocker is tracked by the active task
+The initial full-matrix candidate remains blocked on Windows Designer package
+identity acceptance. PCK validation now rejects out-of-file resource ranges and
+truncated format-4 headers. This narrow blocker is tracked by the active task
 record `docs/tasks/windows_designer_package_identity_validation.md`; it does
 not authorize another candidate dispatch or alter release scope.
 
