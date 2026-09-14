@@ -97,11 +97,46 @@ func run() -> Array:
 		failures.append("New Random Game should still reconstruct gameplay with a new effective seed")
 
 	await _assert_reset_view_is_reachable_by_input(tree, app, mode_shapes, failures)
+	await _assert_mouse_translation_direction(tree, app, mode_shapes, failures)
 
 	root.queue_free()
 	await tree.process_frame
 	tree.root.size = original_size
 	return failures
+
+
+# One apparent screen convention covers pointer drag in every live mode: the
+# rendered volume moves the way the input moves. The architecture states it for
+# left-drag orientation and for right-drag framing alike, so a mode that
+# negates its own delta is a defect even though it is self-consistent. The
+# projected position of a fixed world point is the observable, since it is what
+# the convention is actually about.
+func _assert_mouse_translation_direction(tree: SceneTree, app, mode_shapes: Dictionary, failures: Array) -> void:
+	for mode in ["live_2d", "live_3d", "live_4d"]:
+		app._start_configured_live_game(_setup(mode, mode_shapes[mode]))
+		await tree.process_frame
+		await tree.process_frame
+		var rig = app._camera_rig
+		var hash_before := _live_state_hash(app, mode)
+		var control_before: Dictionary = app._live_4d_local_orientation.snapshot() if mode == "live_4d" else {}
+		var button := InputEventMouseButton.new()
+		button.button_index = MOUSE_BUTTON_RIGHT
+		button.pressed = true
+		app._handle_camera_input(button)
+		for delta in [Vector2(12, 0), Vector2(-12, 0), Vector2(0, 12), Vector2(0, -12)]:
+			var before: Vector2 = rig.project_world_point(Vector3.ZERO)
+			var motion := InputEventMouseMotion.new()
+			motion.relative = delta
+			app._handle_camera_input(motion)
+			var displacement: Vector2 = rig.project_world_point(Vector3.ZERO) - before
+			if displacement.distance_to(delta) > 0.5:
+				failures.append("%s right-drag %s moved the rendered volume by %s" % [mode, delta, displacement])
+		button.pressed = false
+		app._handle_camera_input(button)
+		if _live_state_hash(app, mode) != hash_before:
+			failures.append("%s mouse translation must not mutate gameplay identity" % mode)
+		if mode == "live_4d" and app._live_4d_local_orientation.snapshot() != control_before:
+			failures.append("Live-4D mouse translation must not mutate local control orientation")
 
 
 # Reset View has to be reachable by the player in every live mode, not just

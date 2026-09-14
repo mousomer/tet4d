@@ -357,8 +357,9 @@ Relevant tests:
     driven by the authoritative exact basis, continuous shared-L render basis,
     and resolved control-frame labels. Initial state, XZ/XW/ZW exact turns,
     yaw, pitch, and Reset View update that passive marker without dispatching
-    gameplay commands. Ctrl owns soft drop; Shift has no normal Live-4D camera
-    or soft-drop binding.
+    gameplay commands. Left-drag and right-drag both move the rendered volume
+    in the same apparent direction as the input, in every live mode. Ctrl owns
+    soft drop; Shift has no normal Live-4D camera or soft-drop binding.
 15. Live-4D slice tiling is a deterministic function of visible slice count,
     board viewport geometry, and the stable local-board envelope. It maximizes
     projected per-slice scale, strongly prefers at most two rows in the

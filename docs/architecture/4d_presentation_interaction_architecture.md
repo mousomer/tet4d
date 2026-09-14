@@ -21,11 +21,13 @@ The following refinements make its visible consequences explicit:
    depth-writing structural render path so camera-angle changes cannot make
    authoritative faces disappear through transparent-object sorting. Ghost and
    environmental transparency remain separate, subordinate roles.
-2. Live-4D left-drag follows the same apparent screen convention as Live 3D:
-   physical right/left and up/down input move the rendered volume in the
-   corresponding apparent direction. `camera.invert_y` reverses vertical input
-   only. The adapter accounts for the passive `L` render transform; it does not
-   move this interaction into outer `V/P`.
+2. Pointer drag follows one apparent screen convention in every live mode and
+   for both gestures: physical right/left and up/down input move the rendered
+   volume in the corresponding apparent direction. This binds Live-4D left-drag
+   to the Live-3D convention and binds right-drag framing to the same one, so no
+   mode may invert either gesture for itself. `camera.invert_y` reverses
+   vertical input only. The adapter accounts for the passive `L` render
+   transform; it does not move this interaction into outer `V/P`.
 3. Normal-gameplay `L` is bounded to `-40..+80` degrees pitch. The positive
    extension remains strictly short of the semantic-Forward inversion boundary;
    yaw remains unrestricted and the exact basis `B` remains unchanged.
