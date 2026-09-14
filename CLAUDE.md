@@ -19,6 +19,7 @@ then the repository `.venv`, else `ENVIRONMENT_INVALID`. Declare a machine's
 shared venv in the inherited overlay once and every worktree picks it up; the
 repository overlay is for overriding a single checkout. It never falls back, so
 a broken higher tier fails rather than silently selecting another interpreter.
+Declare `execution_mode` there too; source mode also binds `<repo>/src`.
 
 `config/governance/project.json#/environment` and
 `docs/architecture/workspace_governance_v0_1.md` are the authority; this file is

@@ -32,6 +32,8 @@ def _pack_directory_location(data: bytes) -> tuple[int, int, int, int]:
     # Format 4 stores the directory at an explicit offset after the file data;
     # earlier formats place it immediately behind the reserved header block.
     if pack_format >= 4:
+        if len(data) < 40:
+            raise PackFormatError("pack header is truncated")
         file_base, directory_offset = struct.unpack_from("<QQ", data, 24)
         cursor = directory_offset
     else:
@@ -43,7 +45,9 @@ def _pack_directory_location(data: bytes) -> tuple[int, int, int, int]:
     return pack_format, file_base, cursor + 4, file_count
 
 
-def _read_pack_directory_data(data: bytes) -> tuple[bytes, int, list[tuple[str, int, int, int]]]:
+def _read_pack_directory_data(
+    data: bytes,
+) -> tuple[bytes, int, list[tuple[str, int, int, int]]]:
     pack_format, file_base, cursor, file_count = _pack_directory_location(data)
     entries: list[tuple[str, int, int, int]] = []
     for _ in range(file_count):
@@ -64,6 +68,8 @@ def _read_pack_directory_data(data: bytes) -> tuple[bytes, int, list[tuple[str, 
             cursor += 4  # per-entry flags
         if cursor > len(data):
             raise PackFormatError("pack directory is truncated")
+        if file_base + offset + size > len(data):
+            raise PackFormatError(f"resource {path!r} is outside the pack")
         entries.append((path, file_base + offset, size, entry_flags))
     return data, pack_format, entries
 

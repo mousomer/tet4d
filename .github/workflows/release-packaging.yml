@@ -421,7 +421,7 @@ jobs:
             ./scripts/build_godot_tet4d_core.sh
           "$GODOT_BIN" --headless --path godot/Tet4D.Godot \
             --script tests/run_design_laboratory_tests.gd
-          GODOT_BIN="$GODOT_BIN" GODOT_TEMPLATE_ROOT="$GODOT_TEMPLATE_ROOT" \
+          PYTHON_BIN="${{ steps.setup-python.outputs.python-path }}" GODOT_BIN="$GODOT_BIN" GODOT_TEMPLATE_ROOT="$GODOT_TEMPLATE_ROOT" \
             packaging/godot/build_windows.sh
 
       - name: Smoke packaged Windows runtime

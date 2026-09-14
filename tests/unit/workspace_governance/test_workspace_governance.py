@@ -232,7 +232,19 @@ def test_environment_priority_is_override_then_local_then_repository_and_never_p
     assert codes(issues) == {"ENVIRONMENT_MISMATCH"}
 
 
-def test_shell_and_doctor_share_explicit_and_default_resolution() -> None:
+def test_shell_and_doctor_share_explicit_and_default_resolution(
+    isolated_user_overlay: Path,
+) -> None:
+    # Declare the inherited tier this case treats as "default". The suite
+    # isolates the host overlay, and a worktree need no longer carry a `.venv`,
+    # so without a declaration here there is no tier left to resolve and the
+    # comparison would have nothing to compare.
+    overlay = isolated_user_overlay / "workspace-governance/tet4d-workspace.local.json"
+    overlay.parent.mkdir(parents=True, exist_ok=True)
+    overlay.write_text(
+        json.dumps({"schema_version": 1, "interpreter": sys.executable}) + "\n"
+    )
+
     expected_default = subprocess.check_output(
         [str(ROOT / "gov"), "doctor", "--print-interpreter"], cwd=ROOT, text=True
     ).strip()
@@ -387,10 +399,14 @@ def test_sync_refuses_to_invent_a_missing_pack_path(tmp_path: Path) -> None:
 def test_cli_accepts_json_in_both_positions_and_missing_explain_is_usage_error() -> (
     None
 ):
+    # `resolve` needs no project environment, but `gov` still needs something to
+    # start under, and a worktree need no longer carry a `.venv`.
+    env = scrubbed_environment(GOVERNANCE_PYTHON=sys.executable)
     for args in (["--json", "resolve"], ["resolve", "--json"]):
         result = subprocess.run(
             [str(ROOT / "gov"), *args],
             cwd=ROOT,
+            env=env,
             text=True,
             capture_output=True,
             check=False,
@@ -400,6 +416,7 @@ def test_cli_accepts_json_in_both_positions_and_missing_explain_is_usage_error()
     missing = subprocess.run(
         [str(ROOT / "gov"), "explain"],
         cwd=ROOT,
+        env=env,
         text=True,
         capture_output=True,
         check=False,

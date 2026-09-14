@@ -56,7 +56,12 @@ class TestControlGroups(unittest.TestCase):
         self.assertTrue(any("\tpause menu\t" in row for row in main_rows))
         self.assertTrue(any("\trestart\t" in row for row in main_rows))
         self.assertFalse(any("\tprojection\t" in row for row in camera_rows))
-        self.assertTrue(any("\texact camera rotation: XZ CCW/CW, XW CCW/CW, ZW CCW/CW\t" in row for row in camera_rows))
+        self.assertTrue(
+            any(
+                "\texact camera rotation: XZ CCW/CW, XW CCW/CW, ZW CCW/CW\t" in row
+                for row in camera_rows
+            )
+        )
         self.assertTrue(any("\tlocked cells alpha [,]\t" in row for row in camera_rows))
 
     def test_dim4_hides_exploration_rows_when_disabled(self) -> None:

@@ -171,7 +171,8 @@ class TestWindowsPackagingScript(unittest.TestCase):
 
         self.assertRegex(
             workflow,
-            r"release_scope:" r"\n"
+            r"release_scope:"
+            r"\n"
             r"        description: current_all selects the full registered matrix; "
             r"a comma-separated list of registered consumer_id values explicitly "
             r"selects a submatrix\n"

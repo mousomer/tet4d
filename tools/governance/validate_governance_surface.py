@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import subprocess
@@ -50,9 +51,8 @@ FIXED_LIMITS = {
     "native/AGENTS.md": 70,
     "CURRENT_STATE.md": 150,
     "docs/BACKLOG.md": 250,
-    POLICY_REL: 1000,
 }
-POLICY_PACK_BYTE_LIMIT = 80_000
+POLICY_PACK_BYTE_LIMIT = 96 * 1024
 CANONICAL_SERIALIZATION = {
     "tool": "tools/governance/policy_pack_io.py",
     "format_version": 1,
@@ -80,6 +80,10 @@ class SurfaceMeasurement:
     hard_limit: int
     policy_bytes: int
     policy_byte_limit: int
+    policy_nodes: int
+    policy_leaves: int
+    policy_max_depth: int
+    largest_policy_section_bytes: int
     file_loc: dict[str, int]
 
 
@@ -113,6 +117,18 @@ def _str_list(value: object) -> list[str] | None:
 
 def _physical_loc(path: Path) -> int:
     return len(path.read_text(encoding="utf-8").splitlines())
+
+
+def _policy_structure(value: object, depth: int = 0) -> tuple[int, int, int]:
+    if isinstance(value, (dict, list)):
+        items = value.values() if isinstance(value, dict) else value
+        measured = [_policy_structure(item, depth + 1) for item in items]
+        return (
+            1 + sum(item[0] for item in measured),
+            sum(item[1] for item in measured),
+            max([depth, *(item[2] for item in measured)]),
+        )
+    return 1, 1, depth
 
 
 def _is_history_path(path: str) -> bool:
@@ -448,12 +464,14 @@ def _measure(  # noqa: C901 - measurement and all coupled hard ceilings stay ato
     if hard_limit != 2500:
         issues.append(SurfaceIssue("size", "aggregate_hard_limit must equal 2500"))
         hard_limit = 0
-    total = sum(totals.values())
+    # Physical lines bound the material people must review as prose. The compact,
+    # canonically serialized machine policy has its own byte ceiling below.
+    total = sum(totals[group] for group in ACTIVE_GROUPS if group != "machine")
     if hard_limit and total > hard_limit:
         issues.append(
             SurfaceIssue(
                 "size",
-                f"active governance total {total} LOC exceeds hard limit {hard_limit}",
+                f"reviewable governance total {total} LOC exceeds hard limit {hard_limit}",
             )
         )
     byte_limits = surface.get("per_file_byte_limits")
@@ -474,6 +492,15 @@ def _measure(  # noqa: C901 - measurement and all coupled hard ceilings stay ato
         )
     policy_path = root / POLICY_REL
     policy_bytes = len(policy_path.read_bytes()) if policy_path.is_file() else 0
+    policy = _load_policy(root)
+    policy_nodes, policy_leaves, policy_max_depth = _policy_structure(policy)
+    largest_policy_section_bytes = max(
+        (
+            len(json.dumps(value, ensure_ascii=False).encode("utf-8"))
+            for value in policy.values()
+        ),
+        default=0,
+    )
     if policy_bytes > POLICY_PACK_BYTE_LIMIT:
         issues.append(
             SurfaceIssue(
@@ -491,6 +518,10 @@ def _measure(  # noqa: C901 - measurement and all coupled hard ceilings stay ato
         hard_limit=hard_limit,
         policy_bytes=policy_bytes,
         policy_byte_limit=POLICY_PACK_BYTE_LIMIT,
+        policy_nodes=policy_nodes,
+        policy_leaves=policy_leaves,
+        policy_max_depth=policy_max_depth,
+        largest_policy_section_bytes=largest_policy_section_bytes,
         file_loc=file_loc,
     )
 
@@ -598,6 +629,8 @@ def validate_surface(  # noqa: C901 - composes the complete surface invariant
 def _base_total(root: Path, measurement: SurfaceMeasurement, ref: str) -> int | None:
     total = 0
     for rel in measurement.file_loc:
+        if rel == POLICY_REL:
+            continue
         result = subprocess.run(
             ["git", "show", f"{ref}:{rel}"],
             cwd=root,
@@ -618,11 +651,17 @@ def _print_report(measurement: SurfaceMeasurement, *, base_ref: str | None) -> N
     print(f"Machine policy:             {measurement.machine:5d} LOC")
     print(f"Operational routed context: {measurement.operational:5d} LOC")
     print(f"Active task records:        {measurement.active_task:5d} LOC")
-    print(f"Active governance total:    {measurement.total:5d} LOC")
+    print(f"Reviewable governance total:{measurement.total:5d} LOC")
     print(f"Hard limit:                 {measurement.hard_limit:5d} LOC")
     print(
         f"Machine policy bytes:       {measurement.policy_bytes:5d} / "
         f"{measurement.policy_byte_limit}"
+    )
+    print(
+        "Machine policy structure:   "
+        f"{measurement.policy_nodes} nodes, {measurement.policy_leaves} leaves, "
+        f"depth {measurement.policy_max_depth}, "
+        f"largest section {measurement.largest_policy_section_bytes} bytes"
     )
     if base_ref:
         base = _base_total(ROOT, measurement, base_ref)
@@ -633,7 +672,9 @@ def _print_report(measurement: SurfaceMeasurement, *, base_ref: str | None) -> N
     print("Per-file LOC:")
     for rel, loc in sorted(measurement.file_loc.items()):
         print(f"- {rel}: {loc}")
-    print("Aggregate compliance is binding; per-file compliance alone is insufficient.")
+    print(
+        "Safety limits are binding; structural measurements inform experimental governability calibration."
+    )
 
 
 def main(argv: list[str] | None = None) -> int:

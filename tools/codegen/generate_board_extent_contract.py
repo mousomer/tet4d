@@ -5,6 +5,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import subprocess
+import sys
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
@@ -391,13 +393,38 @@ def render_schema(payload: Mapping[str, object]) -> str:
     return json.dumps(schema, ensure_ascii=False, indent=2) + "\n"
 
 
+def formatted(path: Path, content: str) -> str:
+    """Hold generated Python to the same formatting policy as handwritten code.
+
+    The renderers emit `repr()` output, which left a generated module
+    permanently in violation. That stayed invisible only while the canonical
+    gate checked a narrower scope than the focused one, so the fix belongs here
+    rather than in a per-file exception.
+    """
+    if path.suffix != ".py":
+        return content
+    result = subprocess.run(
+        [sys.executable, "-m", "ruff", "format", "-", "--stdin-filename", str(path)],
+        input=content,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise ValueError(f"could not format generated {path.name}: {result.stderr}")
+    return result.stdout
+
+
 def expected_outputs(payload: Mapping[str, object]) -> dict[Path, str]:
-    return {
+    outputs = {
         PYTHON_OUTPUT_PATH: render_python(payload),
         CPP_OUTPUT_PATH: render_cpp(payload),
         GODOT_OUTPUT_PATH: render_godot(payload),
         SCHEMA_OUTPUT_PATH: render_schema(payload),
     }
+    # Format where the outputs are produced, so `--check` and the writer cannot
+    # disagree about what correct generated content is.
+    return {path: formatted(path, content) for path, content in outputs.items()}
 
 
 def check_outputs(outputs: Mapping[Path, str]) -> int:

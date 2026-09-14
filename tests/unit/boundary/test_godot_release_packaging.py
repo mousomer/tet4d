@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import os
 import re
+import subprocess
+import sys
 import tomllib
 from pathlib import Path
 
@@ -22,6 +25,24 @@ DISPOSABLE_PLATFORM_BUILD_SCRIPTS = (
 )
 NATIVE_SCONSTRUCT = ROOT / "native/tet4d_core/SConstruct"
 NATIVE_BUILD_WRAPPER = ROOT / "scripts/build_godot_tet4d_core.sh"
+PYTHON_VALIDATOR = ROOT / "packaging/require_python.sh"
+
+
+def _validate_packaging_python(value: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [
+            "bash",
+            "-c",
+            'source "$1"; require_packaging_python "$2"',
+            "--",
+            str(PYTHON_VALIDATOR),
+            str(ROOT),
+        ],
+        env={**os.environ, "PYTHON_BIN": value},
+        text=True,
+        capture_output=True,
+        check=False,
+    )
 
 
 def _project_version() -> str:
@@ -55,6 +76,23 @@ def test_godot_release_metadata_is_consistent() -> None:
     assert 'application/min_macos_version_arm64="13.0"' in preset
     assert preset.count('exclude_filter=".godot/*,tests/*"') == 4
     assert 'exclude_filter="tests/*"' not in preset
+
+
+def test_packaging_python_requires_an_explicit_usable_path(tmp_path: Path) -> None:
+    accepted = _validate_packaging_python(str(Path(sys.executable).absolute()))
+    assert accepted.returncode == 0, accepted.stderr
+    for bare in ("python", "python3"):
+        rejected = _validate_packaging_python(bare)
+        assert rejected.returncode != 0
+        assert "explicit absolute" in rejected.stderr
+    missing = _validate_packaging_python(str(tmp_path / "missing-python"))
+    assert missing.returncode != 0
+    assert "not an executable interpreter file" in missing.stderr
+    non_executable = tmp_path / "not-executable"
+    non_executable.write_text("not a program", encoding="utf-8")
+    rejected = _validate_packaging_python(str(non_executable))
+    assert rejected.returncode != 0
+    assert "not an executable interpreter file" in rejected.stderr
 
 
 def test_godot_macos_build_checks_release_boundary() -> None:

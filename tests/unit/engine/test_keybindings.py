@@ -1058,10 +1058,16 @@ class TestShippedProfileKeyCollisions(unittest.TestCase):
                 for action, keys in bindings.items():
                     for key in keys:
                         bound.setdefault(key, []).append(action)
-                for key, actions in sorted(bound.items(), key=lambda item: str(item[0])):
+                for key, actions in sorted(
+                    bound.items(), key=lambda item: str(item[0])
+                ):
                     if len(actions) < 2:
                         continue
-                    if (label, context, str(key)) in DOCUMENTED_KEY_COLLISION_EXCEPTIONS:
+                    if (
+                        label,
+                        context,
+                        str(key),
+                    ) in DOCUMENTED_KEY_COLLISION_EXCEPTIONS:
                         continue
                     collisions.append(
                         f"{label}{context}: key {key!r} bound to {sorted(actions)}"
@@ -1094,7 +1100,9 @@ class TestShippedProfileKeyCollisions(unittest.TestCase):
                         continuous_keys.update(keys)
                 shared = exact_keys & continuous_keys
                 if shared:
-                    overlaps.append(f"{label}{context}: shared {sorted(map(str, shared))}")
+                    overlaps.append(
+                        f"{label}{context}: shared {sorted(map(str, shared))}"
+                    )
         self.assertEqual(overlaps, [], "exact basis turns share keys with yaw/pitch")
 
     def test_shipped_keybinding_files_are_canonically_formatted(self) -> None:

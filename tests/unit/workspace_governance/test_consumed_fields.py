@@ -17,6 +17,9 @@ from tools.workspace_governance.validators import core
 LOCAL = {
     "schema_version": 1,
     "interpreter": sys.executable,
+    # A declared overlay key needs a representative value here, or mutating it
+    # has nothing to observe.
+    "execution_mode": "source",
     "tool_paths": {"godot": sys.executable},
 }
 
@@ -156,12 +159,16 @@ def test_every_consumed_leaf_changes_execution(
         calls.append(command)
         if "from packaging.specifiers" in command[-1]:
             stdout = "3.14.0"
-        elif "import importlib,json" in command[-1]:
+        elif "critical_packages" in command[-1]:
+            # Discriminate on a fact the probe reports, not on its exact opening
+            # imports: matching the prelude made this fixture silently answer the
+            # wrong branch when the probe gained a field.
             stdout = json.dumps(
                 {
                     "version": "3.14.0",
                     "package": str((checkout / "src/tet4d/__init__.py").resolve()),
                     "critical_packages": [],
+                    "distribution": False,
                 }
             )
         else:

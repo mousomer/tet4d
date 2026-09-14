@@ -123,6 +123,14 @@ cat > "${XDG_CONFIG_HOME:-$HOME/.config}/workspace-governance/tet4d-workspace.lo
 JSON
 ```
 
+Add `"execution_mode": "source"` there when that interpreter holds no editable
+install of this project: every worktree then imports its own `src`, and
+switching between them costs no reinstall. Ask the resolver for both at once:
+
+```bash
+eval "$(./gov env)"
+```
+
 It is keyed by workspace identity, so a worktree inherits it wherever it lives,
 and it both starts governance and is certified: a fresh worktree with no `.venv`
 and no bootstrap variables can run `./gov check` and `./gov doctor` from this
@@ -131,13 +139,18 @@ overrides the certified selection per checkout. It does not certify one shared
 editable environment for multiple worktrees: each checkout still needs its own
 editable-origin-valid environment.
 
+`bootstrap_env.sh` is the only command that changes a Python environment, and
+what it builds follows the declared mode: installed mode creates `.venv` and
+installs this checkout editable into it, source mode synchronises declared
+dependencies into the shared interpreter and installs no project, so no
+worktree needs a `.venv` of its own. `verify_local.sh` creates nothing; it
+reports an unready environment and runs the gate.
+
 `bootstrap_env.sh` needs an approved interpreter to create the environment
 from. It uses `GOVERNANCE_PYTHON`, else `$WORKSPACE_VENV/bin/python`, else the
 inherited workspace overlay interpreter, else an existing `.venv`; on a machine
 with none of those, declare the overlay above, export `WORKSPACE_VENV`, or set
-`PYTHON_BOOTSTRAP_BIN` to a Python satisfying `requires-python`. Likewise,
-`verify_local.sh --rebuild-venv` requires an external bootstrap; it refuses a
-bootstrap selected from the `.venv` it would replace. See
+`PYTHON_BOOTSTRAP_BIN` to a Python satisfying `requires-python`. See
 `docs/architecture/workspace_governance_v0_1.md` for the full contract.
 
 ## Run Commands
@@ -178,8 +191,9 @@ native/tet4d_core/build/tests/query_core_tests --query-parity
 Python-golden gameplay parity checks:
 
 ```bash
-.venv/bin/python tools/migration/compare_cpp_gameplay_trace.py --all-plain-2d
-.venv/bin/python tools/migration/compare_cpp_gameplay_trace.py --all-plain-nd
+eval "$(./gov env)"
+"$PYTHON_BIN" tools/migration/compare_cpp_gameplay_trace.py --all-plain-2d
+"$PYTHON_BIN" tools/migration/compare_cpp_gameplay_trace.py --all-plain-nd
 ```
 
 Primary verification gate:

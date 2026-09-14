@@ -53,18 +53,28 @@ def validate(archive_path: Path, repository_root: Path) -> dict[str, object]:
         if missing:
             raise AndroidPackageError(f"missing required APK members: {missing}")
         development_only = sorted(
-            name for name in names
+            name
+            for name in names
             if name.endswith((".py", ".pyc", ".gd.uid")) or "/tests/" in name
         )
         if development_only:
-            raise AndroidPackageError(f"development-only files entered the APK: {development_only[:5]}")
+            raise AndroidPackageError(
+                f"development-only files entered the APK: {development_only[:5]}"
+            )
         # An installable evaluation artifact must be signed. Debug/test signing
         # is acceptable; the key itself is never committed.
-        if not any(name.startswith("META-INF/") and name.endswith(SIGNING_SUFFIXES) for name in names):
-            raise AndroidPackageError("APK is unsigned and cannot be installed for evaluation")
+        if not any(
+            name.startswith("META-INF/") and name.endswith(SIGNING_SUFFIXES)
+            for name in names
+        ):
+            raise AndroidPackageError(
+                "APK is unsigned and cannot be installed for evaluation"
+            )
         missing_assets = [name for name in PROJECT_ASSET_MEMBERS if name not in names]
         if missing_assets:
-            raise AndroidPackageError(f"APK is missing required project assets: {missing_assets}")
+            raise AndroidPackageError(
+                f"APK is missing required project assets: {missing_assets}"
+            )
         manifest = archive.read("AndroidManifest.xml")
         project_payloads = {
             name: archive.read(name)
@@ -72,7 +82,10 @@ def validate(archive_path: Path, repository_root: Path) -> dict[str, object]:
             if name.startswith("assets/") and not name.startswith("assets/dexopt/")
         }
     # The application ID appears in the binary manifest string pool as UTF-16.
-    if APPLICATION_ID.encode("utf-16-le") not in manifest and APPLICATION_ID.encode() not in manifest:
+    if (
+        APPLICATION_ID.encode("utf-16-le") not in manifest
+        and APPLICATION_ID.encode() not in manifest
+    ):
         raise AndroidPackageError(f"APK manifest does not declare {APPLICATION_ID}")
     for name, payload in project_payloads.items():
         for marker in FORBIDDEN_PATH_MARKERS:
@@ -93,7 +106,9 @@ def validate(archive_path: Path, repository_root: Path) -> dict[str, object]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("archive", type=Path)
-    parser.add_argument("--repository-root", type=Path, default=Path(__file__).resolve().parents[2])
+    parser.add_argument(
+        "--repository-root", type=Path, default=Path(__file__).resolve().parents[2]
+    )
     args = parser.parse_args()
     try:
         result = validate(args.archive.resolve(), args.repository_root.resolve())

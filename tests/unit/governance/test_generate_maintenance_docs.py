@@ -76,7 +76,6 @@ def _maintenance_contract() -> dict[str, object]:
             "local_gate": "CODEX_MODE=1 ./scripts/verify.sh",
             "ci_entrypoint": "./scripts/ci_check.sh",
             "enforcers": [
-                "scripts/check_editable_install.sh",
                 "scripts/check_architecture_boundaries.sh",
             ],
         },

@@ -100,16 +100,32 @@ done
 
 
 
+# An empty target list defaults to the declared scope once the interpreter is
+# resolved below, so this gate cannot be narrower than the canonical one.
+
+
+
+
+eval "$(./gov env)"
+
+# Both gates read their Ruff scope from one authority. Carrying separate target
+# lists is how repository-wide formatting drift stayed invisible to whichever
+# list was narrower.
+static_analysis_scope() {
+  "$PYTHON_BIN" - "$1" <<'SCOPE'
+import json
+import pathlib
+import sys
+
+rules = json.loads(pathlib.Path("config/project/policy_pack.json").read_text())
+print(" ".join(rules["code_rules"]["static_analysis"][sys.argv[1]]))
+SCOPE
+}
+
 if [[ ${#RUFF_TARGETS[@]} -eq 0 ]]; then
-
-  RUFF_TARGETS=(".")
-
+  read -r -a RUFF_TARGETS <<<"$(static_analysis_scope ruff_format_scope)"
 fi
 
-
-
-PYTHON_BIN="$(./scripts/resolve_python_env.sh)"
-export PYTHON_BIN
 
 
 
@@ -179,11 +195,17 @@ require_module ruff ruff
 
 require_repo_package
 
+# Importability is not origin. `gov doctor` owns that assertion -- interpreter,
+# binding, and which checkout the import resolved from -- so the focused gate
+# cannot report success against another worktree's source.
+./gov doctor >/dev/null
 
 
-./scripts/check_editable_install.sh
 
-mapfile -t RUFF_CHECK_TARGETS < <(filter_python_targets "${RUFF_TARGETS[@]}")
+RUFF_CHECK_TARGETS=()
+while IFS= read -r target; do
+  [[ -n "$target" ]] && RUFF_CHECK_TARGETS+=("$target")
+done < <(filter_python_targets "${RUFF_TARGETS[@]}")
 
 if [[ ${#RUFF_CHECK_TARGETS[@]} -gt 0 ]]; then
 
@@ -193,7 +215,10 @@ fi
 
 
 
-mapfile -t FORMAT_TARGETS < <(filter_python_targets "${RUFF_TARGETS[@]}")
+FORMAT_TARGETS=()
+while IFS= read -r target; do
+  [[ -n "$target" ]] && FORMAT_TARGETS+=("$target")
+done < <(filter_python_targets "${RUFF_TARGETS[@]}")
 
 if [[ ${#FORMAT_TARGETS[@]} -gt 0 ]]; then
 

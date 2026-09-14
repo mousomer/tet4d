@@ -7,7 +7,7 @@ GODOT_PROJECT="$ROOT_DIR/godot/Tet4D.Godot"
 GODOT_CPP_DIR="$ROOT_DIR/native/third_party/godot-cpp"
 
 cd "$ROOT_DIR"
-PYTHON_BIN="$(./scripts/resolve_python_env.sh)"
+eval "$(./gov env)"
 
 if [[ -z "${GODOT_BIN:-}" ]]; then
   echo "Set GODOT_BIN to the exact supported Godot executable." >&2
@@ -118,7 +118,7 @@ TOPOLOGY_TRANSPORT_PARITY_LOG="$VERIFY_ROOT/topology_transport_parity.log"
 env "${GODOT_ENV[@]}" "$GODOT_BIN" \
   --headless --path "$PROJECT_COPY" --script tests/run_topology_transport_parity.gd \
   >"$TOPOLOGY_TRANSPORT_PARITY_LOG" 2>&1
-PYTHONPATH="$ROOT_DIR/src${PYTHONPATH:+:$PYTHONPATH}" "$PYTHON_BIN" \
+"$PYTHON_BIN" \
   "$ROOT_DIR/tools/migration/compare_topology_transport.py" \
   --native-output "$TOPOLOGY_TRANSPORT_PARITY_LOG"
 env "${GODOT_ENV[@]}" "$GODOT_BIN" \

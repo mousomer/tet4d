@@ -4,7 +4,6 @@ import copy
 import importlib.metadata
 import json
 import os
-import shutil
 import subprocess
 import sys
 import tomllib
@@ -183,7 +182,10 @@ def test_metadata_failure_classes_are_controlled(
     monkeypatch.setattr(core, "_python_specifier", fail)
     _, project, _ = GovernanceResolver.for_root(checkout).load()
     data, issues = core.doctor(
-        checkout, project, None, {"TET4D_PYTHON": sys.executable}
+        checkout,
+        project,
+        None,
+        {"TET4D_PYTHON": sys.executable, "TET4D_ENVIRONMENT_MODE": execution_mode()},
     )
     assert data["status"] == "ENVIRONMENT_INVALID"
     assert {i.code for i in issues} == {"ENVIRONMENT_MISMATCH"}
@@ -243,7 +245,10 @@ def apply_case(root: Path, mutation: str) -> set[str]:  # noqa: C901 - explicit 
         "wrong-editable-checkout",
         "valid-local-override",
     }:
-        env = {"TET4D_PYTHON": sys.executable}
+        env = {
+            "TET4D_PYTHON": sys.executable,
+            "TET4D_ENVIRONMENT_MODE": execution_mode(),
+        }
         if mutation == "missing-interpreter":
             env["TET4D_PYTHON"] = str(root / "missing")
         elif mutation == "wrong-python-version":
@@ -253,7 +258,10 @@ def apply_case(root: Path, mutation: str) -> set[str]:  # noqa: C901 - explicit 
         elif mutation == "wrong-editable-checkout":
             project["environment"]["editable_source"] = "wrong/source"
         else:
-            local, env = {"interpreter": sys.executable}, {}
+            local, env = (
+                {"interpreter": sys.executable, "execution_mode": execution_mode()},
+                {},
+            )
         _, issues = core.doctor(root, project, local, env)
         return {i.code for i in issues}
     elif mutation == "valid-local-fix-resolution":
@@ -430,23 +438,40 @@ def test_registered_behavior_paths_have_mutation_evidence(  # noqa: C901 - expli
         project["generated_surfaces"][0]["target"] += "/missing"
     elif family == "environment":
         data, issues = core.doctor(
-            checkout, project, None, {"TET4D_PYTHON": sys.executable}
+            checkout,
+            project,
+            None,
+            {
+                "TET4D_PYTHON": sys.executable,
+                "TET4D_ENVIRONMENT_MODE": execution_mode(),
+            },
         )
         assert data["status"] == "ok" and not issues
         project["environment"]["critical_packages"].append(
             "missing_governance_test_package"
         )
         data, issues = core.doctor(
-            checkout, project, None, {"TET4D_PYTHON": sys.executable}
+            checkout,
+            project,
+            None,
+            {
+                "TET4D_PYTHON": sys.executable,
+                "TET4D_ENVIRONMENT_MODE": execution_mode(),
+            },
         )
         assert data["status"] == "ENVIRONMENT_INVALID" and issues
         return
     elif family == "sanitation":
         project["sanitation"]["secret_scanner"] = "missing-scanner.py"
     elif family == "local":
-        assert not core.doctor(checkout, project, {"interpreter": sys.executable}, {})[
-            1
-        ]
+        # The overlay carries the mode as well as the interpreter, so this
+        # asserts a healthy environment rather than the project default's.
+        assert not core.doctor(
+            checkout,
+            project,
+            {"interpreter": sys.executable, "execution_mode": execution_mode()},
+            {},
+        )[1]
         a = core.resolve_interpreter(
             checkout, project, {"interpreter": sys.executable}, {}
         )
@@ -481,7 +506,10 @@ def test_route_tool_fields_and_local_tool_override_are_consumed(checkout: Path) 
     tool = checkout / "fake-godot"
     tool.write_text('#!/bin/sh\nprintf "test-tool:%s\\n" "$1"\n')
     tool.chmod(0o755)
-    env = {"TET4D_PYTHON": sys.executable}
+    env = {
+        "TET4D_PYTHON": sys.executable,
+        "TET4D_ENVIRONMENT_MODE": execution_mode(),
+    }
     local = {"tool_paths": {"godot": str(tool)}}
     data, issues = core.doctor(
         checkout, project, local, env, route="godot_product_shell"
@@ -497,15 +525,15 @@ def test_route_tool_fields_and_local_tool_override_are_consumed(checkout: Path) 
 def test_verify_and_project_test_use_the_doctor_selected_interpreter(
     checkout: Path,
 ) -> None:
-    # Real verify startup and module checks; stop intentionally at the editable-install
-    # shell entrypoint so this regression does not recursively run the full test suite.
+    # Real verify startup and module checks; stop at the first policy boundary
+    # so this regression does not recursively run the full test suite.
     selected = checkout / "traced-python"
     log = checkout / "calls.jsonl"
     selected.write_text(
         f'#!/bin/sh\nprintf "%s\\n" "$*" >> "{log}"\nexec "{sys.executable}" "$@"\n'
     )
     selected.chmod(0o755)
-    stop = checkout / "scripts/check_editable_install.sh"
+    stop = checkout / "scripts/check_policy_compliance.sh"
     stop.write_text("#!/bin/sh\necho intentional-test-boundary >&2\nexit 79\n")
     env = environment(
         TET4D_PYTHON=str(selected),
@@ -548,10 +576,7 @@ def test_malformed_facade_target_is_a_diagnostic(
 
 @pytest.mark.parametrize(
     "script,override",
-    [
-        ("bootstrap_env.sh", "PYTHON_BOOTSTRAP_BIN"),
-        ("verify_local.sh", "BOOTSTRAP_PYTHON"),
-    ],
+    [("bootstrap_env.sh", "PYTHON_BOOTSTRAP_BIN")],
 )
 def test_environment_creators_reject_unsupported_bootstrap_before_creating_venv(
     checkout: Path, script: str, override: str
@@ -566,48 +591,422 @@ def test_environment_creators_reject_unsupported_bootstrap_before_creating_venv(
     assert "Traceback" not in result.stdout + result.stderr
 
 
-def test_verify_local_rebuild_refuses_bootstrap_inside_venv_before_deletion(
+def test_verify_local_owns_no_environment(checkout: Path) -> None:
+    """It reports an unready environment; it never creates or repairs one.
+
+    Owning a venv made verification a process that could change the environment
+    it was about to verify, so the whole path is gone along with the
+    `--rebuild-venv` flag that deleted one.
+    """
+    result = run(checkout, "./scripts/verify_local.sh", env=environment())
+
+    assert result.returncode == 1
+    assert "bootstrap_env.sh" in result.stderr
+    assert not (checkout / ".venv").exists()
+    assert "Traceback" not in result.stdout + result.stderr
+
+
+def test_verify_local_rejects_the_flag_that_rebuilt_an_environment(
     checkout: Path,
 ) -> None:
-    internal_python = checkout / ".venv/bin/python"
-    internal_python.parent.mkdir(parents=True)
-    internal_python.write_text(f'#!/bin/sh\nexec "{sys.executable}" "$@"\n')
-    internal_python.chmod(0o755)
-    sentinel = checkout / ".venv/keep-before-refusal"
-    sentinel.write_text("must survive\n")
-
     result = run(
-        checkout,
-        "./scripts/verify_local.sh",
-        "--bootstrap-only",
-        "--rebuild-venv",
-        env=environment(BOOTSTRAP_PYTHON=str(internal_python)),
+        checkout, "./scripts/verify_local.sh", "--rebuild-venv", env=environment()
     )
 
     assert result.returncode == 2
-    assert sentinel.read_text() == "must survive\n"
-    assert "refusing --rebuild-venv" in result.stderr
-    assert "BOOTSTRAP_PYTHON" in result.stderr
+    assert "Usage" in result.stderr
+    assert not (checkout / ".venv").exists()
 
 
-def test_verify_local_rebuild_accepts_external_bootstrap(checkout: Path) -> None:
-    # The general governance fixture links source trees read-only. Rebuild
-    # acceptance also verifies editable-origin ownership, so give this checkout
-    # its own source tree like a real worktree has.
-    (checkout / "src").unlink()
-    shutil.copytree(ROOT / "src", checkout / "src")
-    external_python = wrapper(checkout)
+def recording_interpreter(path: Path, calls: Path, source_root: Path) -> Path:
+    """A Python that records environment mutation instead of performing it.
+
+    `-m pip` and `-m venv` are the only boundaries that change an environment;
+    everything else passes through to a real interpreter so `gov` and `doctor`
+    behave exactly as they would. That keeps these cases about shell control
+    flow and the derived prefix rather than about pip, and keeps them off the
+    gate's critical path -- a real editable install costs a minute per run.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "#!/bin/sh\n"
+        f'CALLS="{calls}"\n'
+        'if [ "$1" = "-m" ] && [ "$2" = "pip" ]; then\n'
+        '  printf "pip\\n" >> "$CALLS"\n'
+        "  exit 0\n"
+        "fi\n"
+        'if [ "$1" = "-m" ] && [ "$2" = "venv" ]; then\n'
+        '  printf "venv %s\\n" "$3" >> "$CALLS"\n'
+        '  mkdir -p "$3/bin"\n'
+        '  cp "$0" "$3/bin/python"\n'
+        '  chmod +x "$3/bin/python"\n'
+        "  exit 0\n"
+        "fi\n"
+        f'PYTHONPATH="{source_root}" exec "{sys.executable}" "$@"\n'
+    )
+    path.chmod(0o755)
+    return path
+
+
+def without_hook_installation(checkout: Path) -> None:
+    """Stop bootstrap at the environment boundary these cases are about.
+
+    Hook installation resolves paths against the enclosing git repository, and
+    under CODEX_MODE the temporary checkout sits inside this one, so the real
+    script would report on a tree that is not under test.
+    """
+    (checkout / "scripts/install_git_hooks.sh").write_text("#!/bin/sh\nexit 0\n")
+
+
+@pytest.mark.canonical_gate_environment
+def test_installed_bootstrap_reuses_an_existing_interpreter(checkout: Path) -> None:
+    """An interpreter that already exists must not be rebuilt over.
+
+    Regression: the prefix was derived only inside the branch that creates an
+    environment, so every re-run installed dependencies, wrote the git hooks,
+    and then died reporting an unset variable.
+    """
+    calls = checkout / "mutation-calls.txt"
+    calls.write_text("")
+    stub = recording_interpreter(
+        checkout / "existing-env/bin/python", calls, checkout / "src"
+    )
+    without_hook_installation(checkout)
 
     result = run(
         checkout,
-        "./scripts/verify_local.sh",
-        "--bootstrap-only",
-        "--rebuild-venv",
-        env=environment(BOOTSTRAP_PYTHON=str(external_python)),
+        "./scripts/bootstrap_env.sh",
+        env=environment(
+            PYTHON_BOOTSTRAP_BIN=str(stub),
+            GOVERNANCE_PYTHON=sys.executable,
+            TET4D_PYTHON=str(stub),
+            TET4D_ENVIRONMENT_MODE="installed",
+        ),
     )
 
     assert result.returncode == 0, result.stdout + result.stderr
-    assert (checkout / ".venv/bin/python").is_file()
+    recorded = calls.read_text()
+    assert "venv " not in recorded, recorded
+    assert "pip" in recorded, recorded
+    # The prefix is still derived and reported on the path that creates nothing.
+    assert str(checkout / "existing-env") in result.stdout
+
+
+@pytest.mark.canonical_gate_environment
+def test_installed_bootstrap_creates_at_exactly_the_derived_prefix(
+    checkout: Path,
+) -> None:
+    calls = checkout / "mutation-calls.txt"
+    calls.write_text("")
+    stub = recording_interpreter(checkout / "seed/bin/python", calls, checkout / "src")
+    without_hook_installation(checkout)
+
+    # No interpreter override and no overlay, so the repository-local tier names
+    # a path that does not exist yet.
+    result = run(
+        checkout,
+        "./scripts/bootstrap_env.sh",
+        env=environment(
+            PYTHON_BOOTSTRAP_BIN=str(stub),
+            GOVERNANCE_PYTHON=sys.executable,
+            TET4D_ENVIRONMENT_MODE="installed",
+        ),
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    recorded = calls.read_text()
+    assert f"venv {checkout / '.venv'}\n" in recorded, recorded
+    assert recorded.count("venv ") == 1, recorded
+    assert "pip" in recorded, recorded
+
+
+@pytest.mark.canonical_gate_environment
+def test_shared_bootstrap_never_falls_back_to_building_a_local_environment(
+    checkout: Path,
+) -> None:
+    """Source mode has no interpreter of its own to build.
+
+    Silently creating a worktree `.venv` here would reintroduce exactly the
+    per-checkout environment the shared toolchain replaces.
+    """
+    result = run(
+        checkout,
+        "./scripts/bootstrap_env.sh",
+        env=environment(
+            PYTHON_BOOTSTRAP_BIN=sys.executable,
+            TET4D_ENVIRONMENT_MODE="source",
+        ),
+    )
+
+    assert result.returncode == 1
+    assert "bootstrap.interpreter" in result.stderr
+    assert not (checkout / ".venv").exists()
+
+
+@pytest.mark.canonical_gate_environment
+def test_source_bootstrap_mutates_the_explicitly_governed_interpreter(
+    checkout: Path,
+) -> None:
+    """An override outranks an overlay for both `gov env` and bootstrap."""
+    overlay = wrapper(checkout)
+    selected = checkout / "explicit-python"
+    prefix = checkout / "explicit-prefix"
+    prefix.mkdir()
+    calls = checkout / "explicit-python.calls"
+    selected.write_text(
+        "#!/bin/sh\n"
+        f'printf "%s\\n" "$*" >> "{calls}"\n'
+        'if [ "$1" = "-c" ] && case "$2" in *"print(sys.prefix)"*) true;; *) false;; esac; then\n'
+        f'  printf "%s\\n" "{prefix}"\n'
+        "  exit 0\n"
+        "fi\n"
+        'if [ "$1" = "-m" ] && [ "$2" = "pip" ]; then exit 0; fi\n'
+        f'exec "{sys.executable}" "$@"\n'
+    )
+    selected.chmod(0o755)
+    (checkout / ".governance/workspace.local.json").write_text(
+        json.dumps({"schema_version": 1, "interpreter": str(overlay)}),
+        encoding="utf-8",
+    )
+    hooks = checkout / "scripts/install_git_hooks.sh"
+    hooks.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+    hooks.chmod(0o755)
+    env = environment(
+        GOVERNANCE_PYTHON=sys.executable,
+        PYTHON_BOOTSTRAP_BIN=sys.executable,
+        TET4D_ENVIRONMENT_MODE="source",
+        TET4D_PYTHON=str(selected),
+    )
+
+    resolved = run(checkout, "./gov", "env", "--json", env=env)
+    assert resolved.returncode == 0, resolved.stdout + resolved.stderr
+    assert json.loads(resolved.stdout)["PYTHON_BIN"] == str(selected)
+
+    bootstrapped = run(checkout, "./scripts/bootstrap_env.sh", env=env)
+    assert bootstrapped.returncode == 0, bootstrapped.stdout + bootstrapped.stderr
+    assert "-m pip install" in calls.read_text(encoding="utf-8")
+
+
+def _dependency_probe_interpreter(
+    checkout: Path, prefix: Path, *, installs: str
+) -> Path:
+    """A stub interpreter whose only modelled distribution is `bootstrap-probe`.
+
+    `installs` is the version its `pip install` leaves behind, so a test can
+    model pip exiting zero while the declaration stays unsatisfied. Everything
+    else passes through to a real interpreter, which keeps the cost at a
+    subprocess rather than an editable install.
+    """
+    version = prefix / "installed-version"
+    calls = prefix / "pip-calls"
+    selected = checkout / "selected-python"
+    selected.write_text(
+        f"#!{sys.executable}\n"
+        "import importlib.metadata as metadata, pathlib, sys\n"
+        f"prefix = pathlib.Path({str(prefix)!r})\n"
+        f"version = pathlib.Path({str(version)!r})\n"
+        f"calls = pathlib.Path({str(calls)!r})\n"
+        "if sys.argv[1:3] == ['-m', 'pip']:\n"
+        "    calls.write_text(calls.read_text() + 'install\\n' if calls.exists() else 'install\\n')\n"
+        f"    version.write_text({installs!r})\n"
+        "    sys.exit(0)\n"
+        "if sys.argv[1] == '-c':\n"
+        "    code = sys.argv[2]\n"
+        "    if 'print(sys.prefix)' in code:\n"
+        "        print(prefix); sys.exit(0)\n"
+        "    real_version = metadata.version\n"
+        "    def probe_version(name):\n"
+        "        if name != 'bootstrap-probe': return real_version(name)\n"
+        "        value = version.read_text() if version.exists() else ''\n"
+        "        if not value: raise metadata.PackageNotFoundError(name)\n"
+        "        return value\n"
+        "    metadata.version = probe_version\n"
+        "    exec(code)\n"
+    )
+    selected.chmod(0o755)
+    return selected
+
+
+def _probe_environment(selected: Path) -> dict[str, str]:
+    return environment(
+        GOVERNANCE_PYTHON=sys.executable,
+        PYTHON_BOOTSTRAP_BIN=sys.executable,
+        TET4D_ENVIRONMENT_MODE="source",
+        TET4D_PYTHON=str(selected),
+    )
+
+
+@pytest.mark.canonical_gate_environment
+@pytest.mark.parametrize("installed_version", ["", "0.5", "1.0"])
+def test_source_bootstrap_checks_contents_on_cache_hit(
+    checkout: Path, installed_version: str
+) -> None:
+    (checkout / "pyproject.toml").write_text(
+        '[project]\nrequires-python = ">=3.11"\ndependencies = ["bootstrap-probe>=1"]\n'
+    )
+    prefix = checkout / "shared-prefix"
+    prefix.mkdir()
+    version = prefix / "installed-version"
+    calls = prefix / "pip-calls"
+    selected = _dependency_probe_interpreter(checkout, prefix, installs="1.0")
+    hooks = checkout / "scripts/install_git_hooks.sh"
+    hooks.write_text("#!/bin/sh\nexit 0\n")
+    env = _probe_environment(selected)
+    first = run(checkout, "./scripts/bootstrap_env.sh", env=env)
+    assert first.returncode == 0, first.stdout + first.stderr
+    fingerprint = (prefix / ".tet4d-dependency-fingerprint").read_text()
+    version.write_text(installed_version)
+    second = run(checkout, "./scripts/bootstrap_env.sh", env=env)
+    assert second.returncode == 0, second.stdout + second.stderr
+    assert version.read_text() == "1.0"
+    assert len(calls.read_text().splitlines()) == (
+        1 if installed_version == "1.0" else 2
+    )
+    assert (prefix / ".tet4d-dependency-fingerprint").read_text() == fingerprint
+
+
+@pytest.mark.canonical_gate_environment
+def test_source_bootstrap_refuses_an_installation_that_does_not_satisfy(
+    checkout: Path,
+) -> None:
+    """`pip install` can exit zero and still leave a declaration unsatisfied.
+
+    A shared toolchain is the case that produces it: another project's pin wins
+    the resolution and pip reports a conflict warning rather than a failure. The
+    fingerprint is the cache key every later run consults, so recording it here
+    would turn one bad installation into a permanently skipped check.
+    """
+    (checkout / "pyproject.toml").write_text(
+        '[project]\nrequires-python = ">=3.11"\ndependencies = ["bootstrap-probe>=1"]\n'
+    )
+    prefix = checkout / "shared-prefix"
+    prefix.mkdir()
+    selected = _dependency_probe_interpreter(checkout, prefix, installs="0.5")
+    hooks = checkout / "scripts/install_git_hooks.sh"
+    hooks.write_text("#!/bin/sh\nexit 0\n")
+
+    result = run(
+        checkout, "./scripts/bootstrap_env.sh", env=_probe_environment(selected)
+    )
+
+    assert result.returncode != 0, result.stdout + result.stderr
+    assert (prefix / "pip-calls").exists(), "installation must have been attempted"
+    assert "bootstrap-probe>=1: installed 0.5" in result.stderr, (
+        "the failure must name the requirement and what is installed, "
+        f"not exit silently: {result.stderr!r}"
+    )
+    assert not (prefix / ".tet4d-dependency-fingerprint").exists(), (
+        "an unsatisfied installation must not record a cache hit for later runs"
+    )
+    assert not (prefix / ".tet4d-sync.lock").exists(), (
+        "the shared-environment lock must be released so a retry is not blocked"
+    )
+
+
+@pytest.mark.canonical_gate_environment
+def test_shared_bootstrap_certifies_synthetic_checkout_dependencies(
+    tmp_path: Path,
+) -> None:
+    """The shared snapshot compares declarations, never Python metadata.
+
+    These are separate mutable checkouts sharing one synthetic prefix.  The
+    third checkout is the negative control: reversing the compatibility result
+    would let its contradictory declaration reach mutation.
+    """
+    first, second, incompatible = (
+        build_checkout(tmp_path / name) for name in ("first", "second", "bad")
+    )
+    prefix = tmp_path / "shared-prefix"
+    prefix.mkdir()
+
+    def prepare(
+        checkout: Path, requirement: str, python_requires: str
+    ) -> dict[str, str]:
+        (checkout / "pyproject.toml").write_text(
+            "[project]\n"
+            f'requires-python = "{python_requires}"\n'
+            f'dependencies = ["{requirement}"]\n',
+            encoding="utf-8",
+        )
+        selected = _dependency_probe_interpreter(checkout, prefix, installs="1.0")
+        hooks = checkout / "scripts/install_git_hooks.sh"
+        hooks.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+        hooks.chmod(0o755)
+        return _probe_environment(selected)
+
+    first_env = prepare(first, "bootstrap-probe>=1", ">=3.11")
+    second_env = prepare(second, "bootstrap-probe>=1", ">=3.10")
+    incompatible_env = prepare(incompatible, "bootstrap-probe<1", ">=3.11")
+    assert run(first, "./scripts/bootstrap_env.sh", env=first_env).returncode == 0
+    # Changing only Python metadata must not become the compatibility signal.
+    accepted = run(second, "./scripts/bootstrap_env.sh", env=second_env)
+    assert accepted.returncode == 0, accepted.stdout + accepted.stderr
+    rejected = run(incompatible, "./scripts/bootstrap_env.sh", env=incompatible_env)
+    assert rejected.returncode != 0
+    assert "not certifiably compatible" in rejected.stderr
+    assert "contradictory" in rejected.stderr
+
+    # Negative control: temporarily bypass the copied checkout's guard. The
+    # assertion above must then fail because mutation reaches the later content
+    # check instead of being stopped by declaration compatibility.
+    bootstrap = incompatible / "scripts/bootstrap_env.sh"
+    guarded = (
+        'if ! report="$(compatibility_report "$PYTHON_BOOTSTRAP_BIN" '
+        '"$SNAPSHOT_PATH" "$requested_snapshot")"; then'
+    )
+    bootstrap.write_text(
+        bootstrap.read_text(encoding="utf-8").replace(guarded, "if false; then"),
+        encoding="utf-8",
+    )
+    bypassed = run(incompatible, "./scripts/bootstrap_env.sh", env=incompatible_env)
+    assert "installation did not satisfy" in bypassed.stderr
+    with pytest.raises(AssertionError):
+        assert "not certifiably compatible" in bypassed.stderr
+
+
+@pytest.mark.canonical_gate_environment
+def test_shared_bootstrap_lock_recovers_only_proven_stale_local_owners(
+    tmp_path: Path,
+) -> None:
+    checkout = build_checkout(tmp_path / "checkout")
+    (checkout / "pyproject.toml").write_text(
+        '[project]\nrequires-python = ">=3.11"\ndependencies = ["bootstrap-probe>=1"]\n',
+        encoding="utf-8",
+    )
+    prefix = tmp_path / "shared-prefix"
+    prefix.mkdir()
+    selected = _dependency_probe_interpreter(checkout, prefix, installs="1.0")
+    hooks = checkout / "scripts/install_git_hooks.sh"
+    hooks.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+    hooks.chmod(0o755)
+    lock = prefix / ".tet4d-sync.lock"
+    lock.mkdir()
+    host = subprocess.check_output(["hostname"], text=True).strip()
+    (lock / "owner").write_text(
+        f"pid=99999999\nhost={host}\nstart=unavailable\n", encoding="utf-8"
+    )
+    recovered = run(
+        checkout, "./scripts/bootstrap_env.sh", env=_probe_environment(selected)
+    )
+    assert recovered.returncode == 0, recovered.stdout + recovered.stderr
+    assert "stale; recovering" in recovered.stderr
+    assert not lock.exists()
+
+    lock.mkdir()
+    (lock / "owner").write_text(
+        f"pid={os.getpid()}\nhost={host}\nstart=unavailable\n", encoding="utf-8"
+    )
+    live = run(checkout, "./scripts/bootstrap_env.sh", env=_probe_environment(selected))
+    assert live.returncode != 0
+    assert "live owner" in live.stderr
+    (lock / "owner").write_text(
+        "pid=99999999\nhost=another-host\nstart=unavailable\n", encoding="utf-8"
+    )
+    foreign = run(
+        checkout, "./scripts/bootstrap_env.sh", env=_probe_environment(selected)
+    )
+    assert foreign.returncode != 0
+    assert "foreign, refusing recovery" in foreign.stderr
 
 
 def test_exclusive_file_identity_normalizes_equivalent_paths(checkout: Path) -> None:

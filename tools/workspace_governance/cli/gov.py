@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shlex
 import sys
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -12,9 +13,13 @@ if __package__ in {None, ""}:
 
 from tools.workspace_governance.resolver.core import GovernanceError, GovernanceResolver
 from tools.workspace_governance.validators.core import (
+    binding_environment,
     doctor,
+    interpreter_candidate,
     load_manifest_json,
     pack_hash,
+    resolve_execution_mode,
+    resolve_interpreter,
 )
 
 
@@ -66,6 +71,74 @@ def _sync(root: Path, resolver: GovernanceResolver) -> dict[str, object]:
     return lock
 
 
+def _env(
+    root: Path,
+    resolver: GovernanceResolver,
+    *,
+    as_json: bool,
+    allow_missing_interpreter: bool = False,
+) -> int:
+    """Emit the execution environment for callers that are not Python.
+
+    Shell cannot import the resolver, and `resolve_python_env.sh` prints one
+    interpreter and rejects arguments, so a second output would break its
+    contract. This is the one place a non-Python caller learns both the
+    interpreter and the source binding, keeping that derivation out of every
+    script that starts a subprocess.
+    """
+    _, project, _ = resolver.load()
+    local, local_tiers = resolver.local_overlay()
+    interpreter, _, issues = resolve_interpreter(
+        root, project, local, local_tiers=local_tiers
+    )
+    execution_mode, _, mode_issues = resolve_execution_mode(project, None, local)
+    issues.extend(mode_issues)
+    if (
+        interpreter is None
+        and allow_missing_interpreter
+        and execution_mode == "installed"
+    ):
+        candidate, selection_reason = interpreter_candidate(
+            root, project, local, local_tiers=local_tiers
+        )
+        if selection_reason == "repository-local environment":
+            interpreter, issues = candidate, mode_issues
+    if issues or interpreter is None:
+        with redirect_stdout(sys.stderr):
+            _emit([item.to_dict() for item in issues], as_json=as_json)
+        return 1
+    assignments = {
+        "PYTHON_BIN": str(interpreter),
+        "TET4D_ENVIRONMENT_MODE": execution_mode,
+    }
+    assignments.update(binding_environment(root, project, None, local))
+    if as_json:
+        _emit(assignments, as_json=True)
+        return 0
+    for name, value in assignments.items():
+        print(f"export {name}={shlex.quote(value)}")
+    return 0
+
+
+def _doctor_command(
+    root: Path, resolver: GovernanceResolver, args: argparse.Namespace
+) -> int:
+    _, project, _ = resolver.load()
+    local, local_tiers = resolver.local_overlay()
+    result, issues = doctor(
+        root, project, local, route=args.route, local_tiers=local_tiers
+    )
+    if args.print_interpreter and not issues:
+        print(result["interpreter"])
+    elif args.print_interpreter:
+        with redirect_stdout(sys.stderr):
+            _emit([item.to_dict() for item in issues], as_json=False)
+    else:
+        payload = {**result, "diagnostics": [item.to_dict() for item in issues]}
+        _emit(payload, as_json=args.json)
+    return 1 if issues else 0
+
+
 def main(argv: list[str] | None = None) -> int:
     raw_argv = list(sys.argv[1:] if argv is None else argv)
     as_json = "--json" in raw_argv
@@ -89,6 +162,8 @@ def main(argv: list[str] | None = None) -> int:
     doctor_parser.add_argument("--print-interpreter", action="store_true")
     doctor_parser.add_argument("--route")
     sub.add_parser("sync")
+    env_parser = sub.add_parser("env")
+    env_parser.add_argument("--allow-missing-interpreter", action="store_true")
     args = parser.parse_args(raw_argv)
     args.json = as_json or args.json
     root = args.root.resolve()
@@ -113,20 +188,14 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "sync":
             _emit(_sync(root, resolver), as_json=args.json)
             return 0
-        _, project, _ = resolver.load()
-        local, local_tiers = resolver.local_overlay()
-        result, issues = doctor(
-            root, project, local, route=args.route, local_tiers=local_tiers
-        )
-        if args.print_interpreter and not issues:
-            print(result["interpreter"])
-        elif args.print_interpreter:
-            with redirect_stdout(sys.stderr):
-                _emit([item.to_dict() for item in issues], as_json=False)
-        else:
-            payload = {**result, "diagnostics": [item.to_dict() for item in issues]}
-            _emit(payload, as_json=args.json)
-        return 1 if issues else 0
+        if args.command == "env":
+            return _env(
+                root,
+                resolver,
+                as_json=args.json,
+                allow_missing_interpreter=args.allow_missing_interpreter,
+            )
+        return _doctor_command(root, resolver, args)
     except (
         GovernanceError,
         OSError,

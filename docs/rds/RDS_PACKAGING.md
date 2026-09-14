@@ -87,7 +87,9 @@ resource in the exported PCK table as
 `config/tet4d_product_identity/godot_designer.tres.remap`; the Windows
 validator requires that exact exported Designer marker (and rejects the Game
 marker). It never treats a source `project.godot` assignment found as arbitrary
-PCK bytes as exported identity evidence.
+PCK bytes as exported identity evidence. Directory inventory validation must
+reject resource offset/size ranges outside the pack, including file-base
+offsets, and truncated format-specific headers before accepting identity.
 The Windows artifact has passed local cross-build, PE/resource/package
 validation, and the laboratory's local Godot tests on macOS. Direct launch on
 a clean Windows machine remains pending and must not be inferred from those

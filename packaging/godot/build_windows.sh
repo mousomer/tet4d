@@ -2,6 +2,8 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+source "$ROOT_DIR/packaging/require_python.sh"
+require_packaging_python "$ROOT_DIR"
 PROJECT_DIR="$ROOT_DIR/godot/Tet4D.Godot"
 ARTIFACT_DIR="$ROOT_DIR/artifacts/godot/windows"
 APP_DIR="$ARTIFACT_DIR/Tet4D Designer"
@@ -17,7 +19,7 @@ if [[ "$actual_version" != "4.7.2.stable.official.ed1daf0bf" ]]; then
   exit 1
 fi
 
-version="$(cd "$ROOT_DIR" && python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+version="$(cd "$ROOT_DIR" && "$PYTHON_BIN" -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
 
 if [[ "$(uname -s)" == "Darwin" && -z "${SCONS_MINGW_PREFIX:-}" ]]; then
   if command -v x86_64-w64-mingw32-g++ >/dev/null 2>&1; then

@@ -243,7 +243,9 @@ def test_apk_without_the_native_extension_is_rejected(tmp_path: Path) -> None:
     archive = _apk(
         tmp_path, omit="lib/arm64-v8a/libtet4d_core.android.template_release.arm64.so"
     )
-    with pytest.raises(module.AndroidPackageError, match="missing required APK members"):
+    with pytest.raises(
+        module.AndroidPackageError, match="missing required APK members"
+    ):
         module.validate(archive, ROOT)
 
 
@@ -265,7 +267,9 @@ def test_apk_without_sparse_project_metadata_is_rejected(tmp_path: Path) -> None
 def test_apk_without_a_required_project_asset_is_rejected(tmp_path: Path) -> None:
     module = _module(PACKAGE_VALIDATOR, "android_package_validator")
     archive = _apk(tmp_path, omit=module.PROJECT_ASSET_MEMBERS[0])
-    with pytest.raises(module.AndroidPackageError, match="missing required project assets"):
+    with pytest.raises(
+        module.AndroidPackageError, match="missing required project assets"
+    ):
         module.validate(archive, ROOT)
 
 
@@ -275,5 +279,7 @@ def test_apk_project_assets_must_not_leak_machine_paths(tmp_path: Path) -> None:
     with zipfile.ZipFile(archive, "a") as apk:
         machine_path = b"/" + b"home/" + b"runner/work/tet4d"
         apk.writestr("assets/generated.cache", machine_path)
-    with pytest.raises(module.AndroidPackageError, match="generated.cache.*path marker"):
+    with pytest.raises(
+        module.AndroidPackageError, match="generated.cache.*path marker"
+    ):
         module.validate(archive, ROOT)

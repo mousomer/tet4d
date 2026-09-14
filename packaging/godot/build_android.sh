@@ -12,6 +12,8 @@ set -euo pipefail
 #                          SDK (platform-tools and build-tools), and the NDK.
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+source "$ROOT_DIR/packaging/require_python.sh"
+require_packaging_python "$ROOT_DIR"
 PROJECT_DIR="$ROOT_DIR/godot/Tet4D.Godot"
 ARTIFACT_DIR="$ROOT_DIR/artifacts/godot/android"
 PRESET_NAME="Android Tablet"
@@ -29,16 +31,6 @@ fi
 actual_version="$($GODOT_BIN --version | head -n 1 | tr -d '\r')"
 if [[ "$actual_version" != "4.7.2.stable.official.ed1daf0bf" ]]; then
   echo "Expected Godot 4.7.2.stable.official.ed1daf0bf, got $actual_version" >&2
-  exit 1
-fi
-
-if [[ -n "${PYTHON_BIN:-}" ]]; then
-  :
-elif [[ -x "$ROOT_DIR/.venv/bin/python" ]]; then
-  PYTHON_BIN="$ROOT_DIR/.venv/bin/python"
-else
-  echo "packaging: no approved Python. Set PYTHON_BIN to an absolute interpreter" >&2
-  echo "packaging: path, or create .venv. System Python on PATH is not approved." >&2
   exit 1
 fi
 
