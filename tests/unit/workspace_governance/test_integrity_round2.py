@@ -903,6 +903,112 @@ def test_source_bootstrap_refuses_an_installation_that_does_not_satisfy(
     )
 
 
+@pytest.mark.canonical_gate_environment
+def test_shared_bootstrap_certifies_synthetic_checkout_dependencies(
+    tmp_path: Path,
+) -> None:
+    """The shared snapshot compares declarations, never Python metadata.
+
+    These are separate mutable checkouts sharing one synthetic prefix.  The
+    third checkout is the negative control: reversing the compatibility result
+    would let its contradictory declaration reach mutation.
+    """
+    first, second, incompatible = (
+        build_checkout(tmp_path / name) for name in ("first", "second", "bad")
+    )
+    prefix = tmp_path / "shared-prefix"
+    prefix.mkdir()
+
+    def prepare(
+        checkout: Path, requirement: str, python_requires: str
+    ) -> dict[str, str]:
+        (checkout / "pyproject.toml").write_text(
+            "[project]\n"
+            f'requires-python = "{python_requires}"\n'
+            f'dependencies = ["{requirement}"]\n',
+            encoding="utf-8",
+        )
+        selected = _dependency_probe_interpreter(checkout, prefix, installs="1.0")
+        hooks = checkout / "scripts/install_git_hooks.sh"
+        hooks.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+        hooks.chmod(0o755)
+        return _probe_environment(selected)
+
+    first_env = prepare(first, "bootstrap-probe>=1", ">=3.11")
+    second_env = prepare(second, "bootstrap-probe>=1", ">=3.10")
+    incompatible_env = prepare(incompatible, "bootstrap-probe<1", ">=3.11")
+    assert run(first, "./scripts/bootstrap_env.sh", env=first_env).returncode == 0
+    # Changing only Python metadata must not become the compatibility signal.
+    accepted = run(second, "./scripts/bootstrap_env.sh", env=second_env)
+    assert accepted.returncode == 0, accepted.stdout + accepted.stderr
+    rejected = run(incompatible, "./scripts/bootstrap_env.sh", env=incompatible_env)
+    assert rejected.returncode != 0
+    assert "not certifiably compatible" in rejected.stderr
+    assert "contradictory" in rejected.stderr
+
+    # Negative control: temporarily bypass the copied checkout's guard. The
+    # assertion above must then fail because mutation reaches the later content
+    # check instead of being stopped by declaration compatibility.
+    bootstrap = incompatible / "scripts/bootstrap_env.sh"
+    guarded = (
+        'if ! report="$(compatibility_report "$PYTHON_BOOTSTRAP_BIN" '
+        '"$SNAPSHOT_PATH" "$requested_snapshot")"; then'
+    )
+    bootstrap.write_text(
+        bootstrap.read_text(encoding="utf-8").replace(guarded, "if false; then"),
+        encoding="utf-8",
+    )
+    bypassed = run(incompatible, "./scripts/bootstrap_env.sh", env=incompatible_env)
+    assert "installation did not satisfy" in bypassed.stderr
+    with pytest.raises(AssertionError):
+        assert "not certifiably compatible" in bypassed.stderr
+
+
+@pytest.mark.canonical_gate_environment
+def test_shared_bootstrap_lock_recovers_only_proven_stale_local_owners(
+    tmp_path: Path,
+) -> None:
+    checkout = build_checkout(tmp_path / "checkout")
+    (checkout / "pyproject.toml").write_text(
+        '[project]\nrequires-python = ">=3.11"\ndependencies = ["bootstrap-probe>=1"]\n',
+        encoding="utf-8",
+    )
+    prefix = tmp_path / "shared-prefix"
+    prefix.mkdir()
+    selected = _dependency_probe_interpreter(checkout, prefix, installs="1.0")
+    hooks = checkout / "scripts/install_git_hooks.sh"
+    hooks.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+    hooks.chmod(0o755)
+    lock = prefix / ".tet4d-sync.lock"
+    lock.mkdir()
+    host = subprocess.check_output(["hostname"], text=True).strip()
+    (lock / "owner").write_text(
+        f"pid=99999999\nhost={host}\nstart=unavailable\n", encoding="utf-8"
+    )
+    recovered = run(
+        checkout, "./scripts/bootstrap_env.sh", env=_probe_environment(selected)
+    )
+    assert recovered.returncode == 0, recovered.stdout + recovered.stderr
+    assert "stale; recovering" in recovered.stderr
+    assert not lock.exists()
+
+    lock.mkdir()
+    (lock / "owner").write_text(
+        f"pid={os.getpid()}\nhost={host}\nstart=unavailable\n", encoding="utf-8"
+    )
+    live = run(checkout, "./scripts/bootstrap_env.sh", env=_probe_environment(selected))
+    assert live.returncode != 0
+    assert "live owner" in live.stderr
+    (lock / "owner").write_text(
+        "pid=99999999\nhost=another-host\nstart=unavailable\n", encoding="utf-8"
+    )
+    foreign = run(
+        checkout, "./scripts/bootstrap_env.sh", env=_probe_environment(selected)
+    )
+    assert foreign.returncode != 0
+    assert "foreign, refusing recovery" in foreign.stderr
+
+
 def test_exclusive_file_identity_normalizes_equivalent_paths(checkout: Path) -> None:
     _, project, _ = GovernanceResolver.for_root(checkout).load()
     duplicate = {

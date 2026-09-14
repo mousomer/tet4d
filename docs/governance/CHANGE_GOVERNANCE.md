@@ -89,12 +89,20 @@ lines. Local guards are 150 lines for root `AGENTS.md` and
 `CURRENT_STATE.md`, 70 for each subtree dispatch, 300 for each canonical owner,
 and 250 for `docs/BACKLOG.md` and any active task record. Physical lines are a
 human-reviewability measure and do not govern the canonically compact machine
-policy. Its 96 KiB serialized-byte ceiling is the binding growth budget; schema,
-provenance, and canonical serialization remain independent structural checks.
-The current artifact must retain at least 20% byte headroom so additions trigger
-deliberate budget review before the hard boundary. Local compliance never
+policy. Its 96 KiB serialized-byte ceiling is a provisional hard safety limit,
+not a demonstrated governability threshold. Schema, provenance, canonical
+serialization, and structural measurements remain independent checks. The
+current artifact must retain at least 20% byte headroom so additions trigger
+deliberate safety-budget review before the hard boundary. Local compliance never
 substitutes for aggregate compliance.
 
+Hard safety limits prevent pathological growth and tooling failure: the
+aggregate reviewable LOC ceiling, guarded per-file ceilings, serialized-byte
+ceiling, and byte headroom are binding. Governability targets are experimental:
+the surface validator records policy bytes, structural node and leaf counts,
+nesting depth, and largest top-level section, but no threshold for those
+measurements is claimed until the manifest-quality evaluation in
+`docs/BACKLOG.md` establishes it.
 Current routed files must not accumulate previous, prior, earlier, or last
 task, stage, work, session, completion, or task-report sections, including
 plural, repeated-qualifier, date, and identifier variants. Durable current

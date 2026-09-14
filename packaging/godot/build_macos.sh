@@ -6,16 +6,8 @@ PROJECT_DIR="$ROOT_DIR/godot/Tet4D.Godot"
 POLICY_PACK="$ROOT_DIR/config/project/policy_pack.json"
 OUTPUT_DIR="$ROOT_DIR/artifacts/godot/macos"
 APP_PATH="$OUTPUT_DIR/Tet4D.app"
-
-if [[ -n "${PYTHON_BIN:-}" ]]; then
-  :
-elif [[ -x "$ROOT_DIR/.venv/bin/python" ]]; then
-  PYTHON_BIN="$ROOT_DIR/.venv/bin/python"
-else
-  echo "packaging: no approved Python. Set PYTHON_BIN to an absolute interpreter" >&2
-  echo "packaging: path, or create .venv. System Python on PATH is not approved." >&2
-  exit 1
-fi
+source "$ROOT_DIR/packaging/require_python.sh"
+require_packaging_python "$ROOT_DIR"
 
 if [[ -z "${GODOT_BIN:-}" ]]; then
   GODOT_BIN="$(command -v godot || true)"

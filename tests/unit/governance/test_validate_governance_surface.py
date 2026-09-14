@@ -136,6 +136,9 @@ def test_actual_governance_surface_is_within_all_limits() -> None:
     assert measurement.total <= 2500
     assert measurement.policy_bytes <= measurement.policy_byte_limit
     assert measurement.policy_bytes <= measurement.policy_byte_limit * 4 // 5
+    assert measurement.policy_nodes > measurement.policy_leaves > 0
+    assert measurement.policy_max_depth > 0
+    assert measurement.largest_policy_section_bytes > 0
     assert (
         set(
             surface._load_policy(surface.ROOT)["governance_surface"][

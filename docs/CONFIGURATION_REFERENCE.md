@@ -304,12 +304,12 @@ Parameters:
 ### `config/governance/workspace.lock.json`
 Top-level keys: `content_sha256`, `files`, `lock_algorithm`, `pack_name`, `pack_path`, `revision`, `schema_version`, `version`
 Parameters:
-- `content_sha256`: `"ddb6540cb74bd857638ca39cac59030f3ed50261ffc69e76652babd5dae04b93"` (`string`)
+- `content_sha256`: `"9b7c1ba75150c0f63fcf559322044d2a813f02da922c52ae34cd945fbddab1c8"` (`string`)
 - `files[]`: array[`string`]; examples: `"MANIFEST.json"`, `"VERSION"`, `"__init__.py"`
 - `lock_algorithm`: `"sha256-path-and-content-v1"` (`string`)
 - `pack_name`: `"workspace-governance"` (`string`)
 - `pack_path`: `"tools/workspace_governance"` (`string`)
-- `revision`: `"v0.1-integrity-6"` (`string`)
+- `revision`: `"v0.1-integrity-7"` (`string`)
 - `schema_version`: `1` (`int`)
 - `version`: `"0.1.0"` (`string`)
 
@@ -2423,6 +2423,10 @@ Parameters:
 - `governance_surface.document_roles.planning[]`: array[`string`]; examples: `"docs/plans"`
 - `governance_surface.document_roles.product_contract[]`: array[`string`]; examples: `"docs/rds"`
 - `governance_surface.document_roles.template[]`: array[`string`]; examples: `"tools/templates/governance"`
+- `governance_surface.governability.calibration_authority`: `"docs/BACKLOG.md#governance-manifest-quality-calibration"` (`string`)
+- `governance_surface.governability.hard_safety_limits[]`: array[`string`]; examples: `"aggregate_hard_limit"`, `"per_file_limits"`, `"per_file_byte_limits"`
+- `governance_surface.governability.status`: `"experimental_calibration_required"` (`string`)
+- `governance_surface.governability.structural_measurements[]`: array[`string`]; examples: `"serialized_bytes"`, `"node_count"`, `"leaf_count"`
 - `governance_surface.lifecycle.forbidden_active_heading_regex[]`: array[`string`]; examples: `"^#{1,6}\\s+(?:(?:Previous|Prior|Earlier|Last)\\s+){1,2}(?:Tasks?|Sta...`
 - `governance_surface.lifecycle.volatile_test_count_regex`: `"(?i)(?:\\bpytest(?:\\s+result)?\\s*:\\s*\\d[\\d,]*\\s+passed\\b|\\b\...` (`string`)
 - `governance_surface.per_file_byte_limits.config/project/policy_pack.json`: `98304` (`int`)

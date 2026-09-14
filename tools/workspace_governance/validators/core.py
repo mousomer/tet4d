@@ -1207,7 +1207,10 @@ def doctor(  # noqa: C901 - environment probes remain one deterministic transact
             capture_output=True,
             timeout=20,
             check=False,
-            env={**os.environ, **env, **binding},
+            # A supplied environment is a complete probe environment.  Merging
+            # ambient variables back in here made `doctor(environ=...)` answer
+            # a different question from its caller's explicit environment.
+            env={**env, **binding},
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
         probe = None

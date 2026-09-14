@@ -58,7 +58,6 @@ a repository overlay naming only `tool_paths` keeps the inherited interpreter.
 `PYTHON_BIN` is output
 compatibility state only. `GOVERNANCE_PYTHON` selects only the CLI bootstrap and
 cannot affect certification. `resolve_python_env.sh` delegates to `gov doctor`.
-
 An inherited interpreter may be shared with projects outside this workspace, so
 its `site-packages` is not inert and is not governed from here. A third-party
 distribution can ship a generic top-level package, and a regular package
@@ -69,10 +68,11 @@ and needs no package at all. The constraint is permanent while the interpreter
 is shared, and it is invisible from inside the repository, because the same
 import succeeds under a private `.venv` that lacks the offending distribution.
 
-Interpreter and source selection are separate decisions. One environment holds
-exactly one distribution of a given name, so an installed project makes a single
-checkout authoritative for every other; the invoking checkout decides instead,
-through a binding derived from `environment.editable_source`. `gov env` emits the
+Interpreter and source selection are separate decisions. Tet4D's distribution
+and import package both normalize to `tet4d`; no distinct-name abstraction is
+claimed. An installed project makes one checkout authoritative for every other;
+the invoking checkout decides instead through a binding derived from
+`environment.editable_source`. `gov env` emits the
 interpreter, resolved execution mode, and, in source mode, that binding as shell assignments, because shell
 cannot import the resolver and `resolve_python_env.sh` prints one interpreter and
 rejects arguments. Gates consume it rather than deriving their own, which could
@@ -85,9 +85,16 @@ cannot make -- the bound source is this checkout, and no project distribution is
 installed. Importability cannot see the second, because the binding wins the
 import while the distribution remains a silent second answer.
 
-One environment serves only checkouts with compatible dependencies; nothing
-detects when two stop agreeing. That is the limit of consolidation, so
-divergence should fail clearly before anything keys environments by fingerprint.
+One environment serves only checkouts whose declared requirements are
+certifiably compatible. Before source-mode bootstrap mutates the shared
+interpreter, it compares the requesting checkout with the shared declaration
+snapshot using `packaging` requirement/specifier semantics. Identical and
+simple overlapping interval constraints are accepted; disjoint intervals are
+rejected; direct references, exclusions, compatible-release clauses, and other
+intersections outside this conservative proof subset are rejected as unknown.
+Python-version metadata is not a proxy for dependency compatibility. The shared
+snapshot merges accepted declarations, so later bootstrap validates the full
+environment requirement set rather than the last checkout's fingerprint.
 
 Execution mode is declared, never inferred. `environment.execution_mode` names
 the variable that carries it and the default when that variable is unset, and
@@ -176,7 +183,11 @@ The fingerprint is only an optimization: source bootstrap validates installed
 versions against applicable base and optional dependency requirements on every
 cache hit and after installation before recording success. An installation that
 leaves a declaration unsatisfied records no fingerprint and names each
-unsatisfied requirement on stderr.
+unsatisfied requirement on stderr. Its source-mode atomic directory lock stores
+PID, hostname, and process-start identity when available. A live or ambiguous
+owner is never stolen; only a proven-dead local owner (or detected PID reuse
+when the platform exposes identity) is recovered. Foreign or malformed locks
+remain diagnostic failures for an operator to inspect.
 The selected project interpreter evaluates the full Python specifier using
 `packaging`, explicitly declared in `pyproject.toml`. Missing packages and broken
 metadata produce diagnostics, not forwarded subprocess tracebacks.
@@ -240,8 +251,13 @@ mechanisms, not governance-source authority, and cannot derive this contract
 across forks, worktrees, CI checkouts, or alternate local checkouts.
 
 Canonical extraction is blocked until governance decides the external
-package/repository identity and release/version model. The external pack should
-own that identity and publishing trust; the workspace manifest and schema are
-the candidate owners for Tet4D's immutable consumer reference. Only after that
-decision can extraction, deterministic pinning, drift protection, and offline
-consumption proceed without inventing policy in resolver logic.
+package/repository identity and release/version model. The smallest missing
+authority is an immutable canonical-upstream identity with a publisher/trust
+owner and deterministic export procedure; Tet4D's current lock is only a
+consumer byte identity. The available choices are: (1) declare a governed
+upstream repository plus immutable revision and export algorithm, then pin that
+identity here; or (2) establish a versioned distribution/release identity with
+equivalent publisher and reconstruction rules. Choosing either publication and
+trust model requires owner/architecture review. Only after that decision can
+extraction, deterministic pinning, drift protection, and offline consumption
+proceed without inventing policy in resolver logic.

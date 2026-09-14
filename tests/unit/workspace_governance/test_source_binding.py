@@ -127,6 +127,32 @@ def test_source_mode_binds_the_invoking_checkout(checkout: Path) -> None:
     assert Path(data["package"]).parent == (checkout / "src/tet4d").resolve()
 
 
+def test_doctor_explicit_environment_does_not_reintroduce_ambient_values(
+    checkout: Path, monkeypatch
+) -> None:
+    """`environ` is a complete probe contract, not an ambient override map."""
+    own_source(checkout)
+    project = project_of(checkout)
+    monkeypatch.setenv("TET4D_UNEXPECTED_AMBIENT", "must-not-leak")
+    observed: list[dict[str, str]] = []
+    real_run = core.subprocess.run
+
+    def recording_run(*args, **kwargs):
+        if "env" in kwargs:
+            observed.append(kwargs["env"])
+        return real_run(*args, **kwargs)
+
+    monkeypatch.setattr(core.subprocess, "run", recording_run)
+    _, issues = core.doctor(
+        checkout,
+        project,
+        None,
+        {"TET4D_PYTHON": sys.executable, "TET4D_ENVIRONMENT_MODE": "source"},
+    )
+    assert "TET4D_UNEXPECTED_AMBIENT" not in observed[-1]
+    assert "source_binding" not in {issue.fact for issue in issues}
+
+
 def test_gov_env_is_the_one_interface_for_non_python_callers(
     checkout: Path, isolated_user_overlay: Path
 ) -> None:

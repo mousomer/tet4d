@@ -32,25 +32,26 @@ while each worktree's verify lock guards only its own tree.
 
 Bootstrap and every project-importing verification entry point consume `gov env`
 for the resolver-selected interpreter, mode, and source binding. The obsolete shell
-editable-install checker is retired: `gov doctor` is the one mode-aware environment
-certification authority, checking installed origin in installed mode and checkout binding plus distribution neutrality in source mode.
+editable-install checker is retired: `gov doctor` certifies installed origin or source-mode checkout binding/distribution neutrality.
 
 `verify_local.sh` owns nothing: it reports an unready environment and execs the
 canonical gate. `--rebuild-venv` is gone with the venv it rebuilt, which also
 retires the finding that inherited bootstrap had made that refusal permissive.
 
-The inherited overlay serves bootstrap, certified selection and execution mode;
-two-worktree operation is certified sequentially and concurrently, and no
-worktree carries a `.venv` symlink farm. A checkout on a branch predating the
-overlay needs one back -- four symlinks into the shared environment -- or an
-exported `WORKSPACE_VENV`.
+The inherited overlay serves bootstrap, certified selection, and execution mode;
+two-worktree operation is certified without a `.venv` symlink farm. A checkout
+predating the overlay needs its four shared-environment symlinks or `WORKSPACE_VENV`.
 
-Source bootstrap now checks installed dependency versions on fingerprint cache
-hits and after installation. The digest records declared inputs, not shared
-environment contents; outside projects can still mutate those contents.
-Regression coverage requires repair of missing or incompatible dependencies
-with an unchanged fingerprint and avoids installation for a satisfied cache.
-`packaging>=24` remains the worked example of this content-check boundary.
+Source bootstrap validates installed dependency versions on cache hits and after
+installation; its declaration digest never claims to describe shared contents.
+Regression coverage repairs missing/incompatible dependencies without an
+unneeded install when requirements are satisfied; `packaging>=24` is the example.
+### Governance-manifest quality calibration
+
+Safety ceilings are provisional. A manifest/harness experiment must vary bytes,
+rules/authorities, depth, concentration, and context burden; measure retrieval,
+selection, reconstruction, isolated mutation, contradiction detection, and
+performance; then set targets from quality degradation, never capacity alone.
 
 ### Camera and relative-control contract
 
