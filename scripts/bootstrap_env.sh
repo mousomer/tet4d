@@ -55,6 +55,36 @@ print(digest.hexdigest())
 '
 }
 
+# Print one line per declaration this interpreter does not satisfy, and nothing
+# at all when it satisfies every one. A predicate could only report that
+# something is wrong; the caller has to be able to say which requirement it was.
+unsatisfied_dependencies() {
+  "$1" -c '
+import importlib.metadata as metadata
+import pathlib, tomllib
+try:
+    from packaging.requirements import Requirement
+except ImportError:
+    print("packaging is not importable, so declarations cannot be evaluated")
+    raise SystemExit(0)
+project = tomllib.loads(pathlib.Path("pyproject.toml").read_text())["project"]
+groups = [("", project.get("dependencies", []))]
+groups.extend(project.get("optional-dependencies", {}).items())
+for extra, declarations in groups:
+    for declaration in declarations:
+        requirement = Requirement(declaration)
+        if requirement.marker and not requirement.marker.evaluate({"extra": extra}):
+            continue
+        try:
+            installed = metadata.version(requirement.name)
+        except metadata.PackageNotFoundError:
+            print(f"{declaration}: not installed")
+            continue
+        if installed not in requirement.specifier:
+            print(f"{declaration}: installed {installed}")
+'
+}
+
 if [[ "$MODE" == "source" ]]; then
   TARGET_PYTHON="$PYTHON_BIN"
   PREFIX="$("$TARGET_PYTHON" -c 'import sys; print(sys.prefix)')"
@@ -72,7 +102,18 @@ if [[ "$MODE" == "source" ]]; then
   trap 'rmdir "$LOCK_DIR" 2>/dev/null || true' EXIT
 
   fingerprint="$(dependency_fingerprint "$TARGET_PYTHON")"
+  # Assign before testing rather than substituting inside `[[ ]]`, where `set -e`
+  # does not apply: a crashing probe would yield an empty string and read as a
+  # satisfied environment, which is the one answer it must never produce.
   if [[ -f "$FINGERPRINT_PATH" && "$(<"$FINGERPRINT_PATH")" == "$fingerprint" ]]; then
+    # The digest records what this repository declares, never what a shared
+    # environment contains, so a match is only ever an optimisation.
+    sync_reason="$(unsatisfied_dependencies "$TARGET_PYTHON")"
+  else
+    sync_reason="the declared dependency digest does not match"
+  fi
+
+  if [[ -z "$sync_reason" ]]; then
     echo "Dependencies already synchronised: ${PREFIX}"
   else
     # `mapfile` is bash 4+, and macOS ships 3.2, so read the list portably.
@@ -83,6 +124,17 @@ if [[ "$MODE" == "source" ]]; then
       fi
     done < <(declared_dependencies)
     "$TARGET_PYTHON" -m pip install "${PIP_ARGS[@]}" "${requirements[@]}"
+    # pip exits zero when another project's pin wins the resolution, and the
+    # fingerprint is the cache key every later run consults. Refuse to record
+    # one, and name what is wrong instead of failing without saying why.
+    remaining="$(unsatisfied_dependencies "$TARGET_PYTHON")"
+    if [[ -n "$remaining" ]]; then
+      echo "bootstrap: installation did not satisfy the declaration: ${PREFIX}" >&2
+      while IFS= read -r gap; do
+        echo "bootstrap: ${gap}" >&2
+      done <<<"$remaining"
+      exit 1
+    fi
     printf '%s\n' "$fingerprint" >"$FINGERPRINT_PATH"
     echo "Dependencies synchronised: ${PREFIX}"
   fi

@@ -45,12 +45,12 @@ worktree carries a `.venv` symlink farm. A checkout on a branch predating the
 overlay needs one back -- four symlinks into the shared environment -- or an
 exported `WORKSPACE_VENV`.
 
-Constraint for any future dependency fingerprint over an inherited environment:
-a digest of project inputs records what this repository declares, not what the
-shared environment contains, and projects outside this workspace mutate that
-environment. Treat an unchanged fingerprint as an optimisation, never as
-evidence the environment still satisfies the declaration; keep a content check
-as the correctness statement. `packaging>=24` is the worked example.
+Source bootstrap now checks installed dependency versions on fingerprint cache
+hits and after installation. The digest records declared inputs, not shared
+environment contents; outside projects can still mutate those contents.
+Regression coverage requires repair of missing or incompatible dependencies
+with an unchanged fingerprint and avoids installation for a satisfied cache.
+`packaging>=24` remains the worked example of this content-check boundary.
 
 ### Camera and relative-control contract
 

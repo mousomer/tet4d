@@ -172,6 +172,11 @@ this checkout, source mode declared dependencies in the shared toolchain and no
 project. Its fingerprint and mutation lock sit beside that environment, since a
 shared one is reachable from every worktree while a worktree's verify lock
 guards only its own tree. `verify_local.sh` owns nothing and creates nothing.
+The fingerprint is only an optimization: source bootstrap validates installed
+versions against applicable base and optional dependency requirements on every
+cache hit and after installation before recording success. An installation that
+leaves a declaration unsatisfied records no fingerprint and names each
+unsatisfied requirement on stderr.
 The selected project interpreter evaluates the full Python specifier using
 `packaging`, explicitly declared in `pyproject.toml`. Missing packages and broken
 metadata produce diagnostics, not forwarded subprocess tracebacks.

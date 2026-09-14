@@ -787,6 +787,122 @@ def test_source_bootstrap_mutates_the_explicitly_governed_interpreter(
     assert "-m pip install" in calls.read_text(encoding="utf-8")
 
 
+def _dependency_probe_interpreter(
+    checkout: Path, prefix: Path, *, installs: str
+) -> Path:
+    """A stub interpreter whose only modelled distribution is `bootstrap-probe`.
+
+    `installs` is the version its `pip install` leaves behind, so a test can
+    model pip exiting zero while the declaration stays unsatisfied. Everything
+    else passes through to a real interpreter, which keeps the cost at a
+    subprocess rather than an editable install.
+    """
+    version = prefix / "installed-version"
+    calls = prefix / "pip-calls"
+    selected = checkout / "selected-python"
+    selected.write_text(
+        f"#!{sys.executable}\n"
+        "import importlib.metadata as metadata, pathlib, sys\n"
+        f"prefix = pathlib.Path({str(prefix)!r})\n"
+        f"version = pathlib.Path({str(version)!r})\n"
+        f"calls = pathlib.Path({str(calls)!r})\n"
+        "if sys.argv[1:3] == ['-m', 'pip']:\n"
+        "    calls.write_text(calls.read_text() + 'install\\n' if calls.exists() else 'install\\n')\n"
+        f"    version.write_text({installs!r})\n"
+        "    sys.exit(0)\n"
+        "if sys.argv[1] == '-c':\n"
+        "    code = sys.argv[2]\n"
+        "    if 'print(sys.prefix)' in code:\n"
+        "        print(prefix); sys.exit(0)\n"
+        "    real_version = metadata.version\n"
+        "    def probe_version(name):\n"
+        "        if name != 'bootstrap-probe': return real_version(name)\n"
+        "        value = version.read_text() if version.exists() else ''\n"
+        "        if not value: raise metadata.PackageNotFoundError(name)\n"
+        "        return value\n"
+        "    metadata.version = probe_version\n"
+        "    exec(code)\n"
+    )
+    selected.chmod(0o755)
+    return selected
+
+
+def _probe_environment(selected: Path) -> dict[str, str]:
+    return environment(
+        GOVERNANCE_PYTHON=sys.executable,
+        PYTHON_BOOTSTRAP_BIN=sys.executable,
+        TET4D_ENVIRONMENT_MODE="source",
+        TET4D_PYTHON=str(selected),
+    )
+
+
+@pytest.mark.canonical_gate_environment
+@pytest.mark.parametrize("installed_version", ["", "0.5", "1.0"])
+def test_source_bootstrap_checks_contents_on_cache_hit(
+    checkout: Path, installed_version: str
+) -> None:
+    (checkout / "pyproject.toml").write_text(
+        '[project]\nrequires-python = ">=3.11"\ndependencies = ["bootstrap-probe>=1"]\n'
+    )
+    prefix = checkout / "shared-prefix"
+    prefix.mkdir()
+    version = prefix / "installed-version"
+    calls = prefix / "pip-calls"
+    selected = _dependency_probe_interpreter(checkout, prefix, installs="1.0")
+    hooks = checkout / "scripts/install_git_hooks.sh"
+    hooks.write_text("#!/bin/sh\nexit 0\n")
+    env = _probe_environment(selected)
+    first = run(checkout, "./scripts/bootstrap_env.sh", env=env)
+    assert first.returncode == 0, first.stdout + first.stderr
+    fingerprint = (prefix / ".tet4d-dependency-fingerprint").read_text()
+    version.write_text(installed_version)
+    second = run(checkout, "./scripts/bootstrap_env.sh", env=env)
+    assert second.returncode == 0, second.stdout + second.stderr
+    assert version.read_text() == "1.0"
+    assert len(calls.read_text().splitlines()) == (
+        1 if installed_version == "1.0" else 2
+    )
+    assert (prefix / ".tet4d-dependency-fingerprint").read_text() == fingerprint
+
+
+@pytest.mark.canonical_gate_environment
+def test_source_bootstrap_refuses_an_installation_that_does_not_satisfy(
+    checkout: Path,
+) -> None:
+    """`pip install` can exit zero and still leave a declaration unsatisfied.
+
+    A shared toolchain is the case that produces it: another project's pin wins
+    the resolution and pip reports a conflict warning rather than a failure. The
+    fingerprint is the cache key every later run consults, so recording it here
+    would turn one bad installation into a permanently skipped check.
+    """
+    (checkout / "pyproject.toml").write_text(
+        '[project]\nrequires-python = ">=3.11"\ndependencies = ["bootstrap-probe>=1"]\n'
+    )
+    prefix = checkout / "shared-prefix"
+    prefix.mkdir()
+    selected = _dependency_probe_interpreter(checkout, prefix, installs="0.5")
+    hooks = checkout / "scripts/install_git_hooks.sh"
+    hooks.write_text("#!/bin/sh\nexit 0\n")
+
+    result = run(
+        checkout, "./scripts/bootstrap_env.sh", env=_probe_environment(selected)
+    )
+
+    assert result.returncode != 0, result.stdout + result.stderr
+    assert (prefix / "pip-calls").exists(), "installation must have been attempted"
+    assert "bootstrap-probe>=1: installed 0.5" in result.stderr, (
+        "the failure must name the requirement and what is installed, "
+        f"not exit silently: {result.stderr!r}"
+    )
+    assert not (prefix / ".tet4d-dependency-fingerprint").exists(), (
+        "an unsatisfied installation must not record a cache hit for later runs"
+    )
+    assert not (prefix / ".tet4d-sync.lock").exists(), (
+        "the shared-environment lock must be released so a retry is not blocked"
+    )
+
+
 def test_exclusive_file_identity_normalizes_equivalent_paths(checkout: Path) -> None:
     _, project, _ = GovernanceResolver.for_root(checkout).load()
     duplicate = {
