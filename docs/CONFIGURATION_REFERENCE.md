@@ -256,7 +256,7 @@ Parameters:
 - `execution.profiles.STRUCTURAL_CHANGE.final_evidence_rule`: `"resolved-from-diff-authority-risk"` (`string`)
 - `execution.profiles.STRUCTURAL_CHANGE.routes[]`: array[`string`]; examples: `"governance_and_tooling"`
 - `execution.representative_scenarios[]`: array[`object`]
-- `execution.representative_scenarios[].id`: varies (`string`); examples: `"small-godot-ui-defect"`, `"small-python-defect"`, `"moderate-feature"`
+- `execution.representative_scenarios[].id`: varies (`string`); examples: `"small-godot-ui-defect"`, `"godot-presentation-feature"`, `"godot-validation-label-regression"`
 - `execution.representative_scenarios[].match_all[]`: array[`string`]; examples: `"small"`, `"godot"`, `"defect"`
 - `execution.representative_scenarios[].mode`: varies (`string`); examples: `"LOCAL_FIX"`, `"FEATURE"`, `"STRUCTURAL_CHANGE"`
 - `execution.representative_scenarios[].routes[]`: array[`string`]; examples: `"godot_product_shell"`, `"python_reference_engine"`, `"native_deterministic_core"`

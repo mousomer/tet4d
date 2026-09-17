@@ -120,13 +120,16 @@ PR/stage/run references and historical evidence remain valid.
    explicit deferrals. Cross-layer work includes a provider/consumer scope
    matrix.
    Track the LOC delta and prefer net reduction for non-feature refactors.
-4. Update the relevant design authority before finalizing implementation.
-   Behaviour changes update tests and the owning RDS; boundary changes update
-   architecture; scope/debt changes update the backlog.
-5. Use additive staged migrations where feasible: add the path, route one flow,
+4. A behaviour change requires appropriate regression or behavioural evidence in every execution mode.
+   If an owning RDS, design authority, or contract normatively documents the behaviour and that documented behaviour changes, update that authority.
+   A defect repair that restores already-documented behaviour does not require an authority rewrite solely because its implementation changed.
+5. Update documentation, design authorities, RDS material, and the backlog when the patch changes documented behaviour, architecture, semantic or implementation authority, public or cross-layer contracts, tracked technical debt, the validity of existing documentation, or when the task explicitly requires an update.
+   A behaviour-preserving local fix that restores intended behaviour does not require documentation or backlog churn solely because source changed.
+   Execution mode controls discovery and exploration cost; it neither imposes nor waives evidence or authority-update duties.
+6. Use additive staged migrations where feasible: add the path, route one flow,
    verify, then retire the superseded path. Do not silently continue into the
    next task or stage.
-6. Preserve unrelated worktree changes, generated provenance, sanitation,
+7. Preserve unrelated worktree changes, generated provenance, sanitation,
    deterministic identity, replay/trace compatibility, and explicit
    deferrals.
 

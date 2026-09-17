@@ -115,6 +115,157 @@ def test_representative_scenarios(task: str, mode: str, route: str) -> None:
     assert route in entries["routes"]["value"]
 
 
+@pytest.mark.parametrize(
+    ("task", "mode", "routes"),
+    [
+        (
+            (
+                "Fix the validation-label styling regression in the Godot shell. "
+                "This is a small presentation bug. Reproduce it, patch the owning "
+                "scene/script, and run focused Godot tests."
+            ),
+            "LOCAL_FIX",
+            {"godot_product_shell"},
+        ),
+        (
+            (
+                "Add a bounded Godot presentation feature for the setup flow. "
+                "It must not change gameplay semantics."
+            ),
+            "FEATURE",
+            {"godot_product_shell"},
+        ),
+        (
+            (
+                "Repair product/platform routing so CI classification selects "
+                "the correct platform checks and conservative fallback."
+            ),
+            "STRUCTURAL_CHANGE",
+            {"governance_and_tooling", "packaging_and_release"},
+        ),
+        (
+            "CI/product-platform routing repair",
+            "STRUCTURAL_CHANGE",
+            {"governance_and_tooling", "packaging_and_release"},
+        ),
+    ],
+    ids=(
+        "godot-local-fix",
+        "godot-feature",
+        "ci-routing-repair",
+        "product-platform-routing-repair",
+    ),
+)
+def test_corrected_representative_scenarios(
+    task: str, mode: str, routes: set[str]
+) -> None:
+    entries = GovernanceResolver.for_root(ROOT).resolve(task=task)["entries"]
+    assert entries["execution.mode"]["value"] == mode
+    assert set(entries["routes"]["value"]) == routes
+
+
+@pytest.mark.parametrize(
+    ("task", "mode", "routes", "scenario"),
+    [
+        (
+            "Add a small Godot debug overlay presentation feature",
+            "FEATURE",
+            {"godot_product_shell"},
+            "godot-presentation-feature",
+        ),
+        (
+            "Cross-layer change to the decision platform routing",
+            "STRUCTURAL_CHANGE",
+            {
+                "python_reference_engine",
+                "godot_product_shell",
+                "native_deterministic_core",
+            },
+            "cross-layer-change",
+        ),
+        (
+            "Governance change: specific platform routing table",
+            "STRUCTURAL_CHANGE",
+            {"governance_and_tooling"},
+            "governance-change",
+        ),
+        (
+            "Small Python bug fix in godot export notes",
+            "LOCAL_FIX",
+            {"python_reference_engine"},
+            "python-bug-fix",
+        ),
+        (
+            "Cross-layer CI classification repair for platform routing",
+            "STRUCTURAL_CHANGE",
+            {
+                "python_reference_engine",
+                "godot_product_shell",
+                "native_deterministic_core",
+            },
+            "cross-layer-change",
+        ),
+    ],
+    ids=(
+        "debug-not-bug",
+        "decision-not-ci",
+        "specific-not-ci",
+        "python-not-godot",
+        "cross-layer-precedence",
+    ),
+)
+def test_representative_scenario_shadowing_regressions(
+    task: str, mode: str, routes: set[str], scenario: str
+) -> None:
+    entries = GovernanceResolver.for_root(ROOT).resolve(task=task)["entries"]
+    assert entries["execution.mode"]["value"] == mode
+    assert set(entries["routes"]["value"]) == routes
+    assert entries["matched_scenario"]["value"] == scenario
+
+
+def _normalized_markdown(path: Path) -> str:
+    return " ".join(path.read_text(encoding="utf-8").split())
+
+
+def test_dispatcher_points_to_canonical_impact_driven_documentation_rule() -> None:
+    dispatcher = _normalized_markdown(ROOT / "AGENTS.md")
+    governance = _normalized_markdown(ROOT / "docs/governance/CHANGE_GOVERNANCE.md")
+
+    assert (
+        "Update the owning design source and `docs/BACKLOG.md` for repository changes."
+        not in dispatcher
+    )
+    assert "defined canonically in `docs/governance/CHANGE_GOVERNANCE.md`" in dispatcher
+    assert (
+        "A behaviour change requires appropriate regression or behavioural evidence in every execution mode"
+        in governance
+    )
+    assert "documented behaviour changes, update that authority" in governance
+    assert (
+        "does not require an authority rewrite solely because its implementation changed"
+        in governance
+    )
+    assert (
+        "Update documentation, design authorities, RDS material, and the backlog when the patch changes documented behaviour"
+        in governance
+    )
+    assert (
+        "does not require documentation or backlog churn solely because source changed"
+        in governance
+    )
+    assert "Execution mode controls discovery and exploration cost" in governance
+
+
+def test_dispatcher_treats_resolved_stable_facts_as_sufficient() -> None:
+    dispatcher = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+
+    assert "Resolved stable facts with provenance are sufficient" in dispatcher
+    assert "ambiguity/conflict" in dispatcher
+    assert "boundary/escalation" in dispatcher
+    assert "provenance audit" in dispatcher
+    assert "authority edits" in dispatcher
+
+
 def test_authority_identity_ambiguity_and_structured_reachability() -> None:
     workspace, project = manifests()
     duplicate = copy.deepcopy(project["authorities"][0])

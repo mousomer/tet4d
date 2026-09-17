@@ -52,6 +52,72 @@ def test_compute_legal_moves_function_fails(tmp_path: Path) -> None:
     assert "compute_legal_moves" in findings[0].message
 
 
+def test_semantic_named_helper_in_recognized_test_fixture_does_not_fail(
+    tmp_path: Path,
+) -> None:
+    script = tmp_path / "godot" / "tests" / "test_shell.gd"
+    _write_text(
+        script,
+        "func _check_game_setup_validation_role():\n\treturn true\n",
+    )
+
+    findings, _ = boundary.validate(tmp_path / "godot")
+
+    assert findings == []
+
+
+def test_semantic_named_helper_in_nested_tests_directory_still_fails(
+    tmp_path: Path,
+) -> None:
+    script = tmp_path / "godot" / "scripts" / "tests" / "test_shell.gd"
+    _write_text(
+        script,
+        "func _check_game_setup_validation_role():\n\treturn true\n",
+    )
+
+    findings, _ = boundary.validate(tmp_path / "godot")
+
+    assert len(findings) == 1
+    assert "_check_game_setup_validation_role" in findings[0].message
+
+
+def test_same_semantic_named_helper_in_production_still_fails(tmp_path: Path) -> None:
+    script = tmp_path / "godot" / "scripts" / "shell.gd"
+    _write_text(
+        script,
+        "func _check_game_setup_validation_role():\n\treturn true\n",
+    )
+
+    findings, _ = boundary.validate(tmp_path / "godot")
+
+    assert len(findings) == 1
+    assert "_check_game_setup_validation_role" in findings[0].message
+
+
+def test_explicit_test_fixture_suppression_remains_supported(tmp_path: Path) -> None:
+    script = tmp_path / "godot" / "tests" / "test_shell.gd"
+    _write_text(
+        script,
+        "# tet4d-semantic-boundary: allow test-fixture\nvar collision_map = {}\n",
+    )
+
+    findings, _ = boundary.validate(tmp_path / "godot")
+
+    assert findings == []
+
+
+def test_recognized_test_fixture_does_not_bypass_semantic_assignments(
+    tmp_path: Path,
+) -> None:
+    script = tmp_path / "godot" / "tests" / "test_shell.gd"
+    _write_text(script, "var collision_map = {}\n")
+
+    findings, _ = boundary.validate(tmp_path / "godot")
+
+    assert len(findings) == 1
+    assert "semantic assignment" in findings[0].message
+
+
 def test_local_collision_map_assignment_fails(tmp_path: Path) -> None:
     script = tmp_path / "godot" / "scripts" / "rules.gd"
     _write_text(script, "var collision_map = {}\n")

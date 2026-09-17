@@ -90,8 +90,26 @@
         "routes": ["godot_product_shell"]
       },
       {
+        "id": "godot-presentation-feature",
+        "match_all": ["godot", "presentation feature"],
+        "mode": "FEATURE",
+        "routes": ["godot_product_shell"]
+      },
+      {
+        "id": "godot-validation-label-regression",
+        "match_all": ["godot", "validation-label styling"],
+        "mode": "LOCAL_FIX",
+        "routes": ["godot_product_shell"]
+      },
+      {
         "id": "small-python-defect",
         "match_all": ["small", "python", "defect"],
+        "mode": "LOCAL_FIX",
+        "routes": ["python_reference_engine"]
+      },
+      {
+        "id": "python-bug-fix",
+        "match_all": ["python bug fix"],
         "mode": "LOCAL_FIX",
         "routes": ["python_reference_engine"]
       },
@@ -112,6 +130,18 @@
         "match_all": ["governance", "change"],
         "mode": "STRUCTURAL_CHANGE",
         "routes": ["governance_and_tooling"]
+      },
+      {
+        "id": "ci-platform-routing-repair",
+        "match_all": ["ci classification", "platform routing"],
+        "mode": "STRUCTURAL_CHANGE",
+        "routes": ["governance_and_tooling", "packaging_and_release"]
+      },
+      {
+        "id": "product-platform-routing-repair",
+        "match_all": ["product-platform routing", "repair"],
+        "mode": "STRUCTURAL_CHANGE",
+        "routes": ["governance_and_tooling", "packaging_and_release"]
       },
       {
         "id": "packaging-release-change",
