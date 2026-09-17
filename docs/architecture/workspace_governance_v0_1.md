@@ -30,6 +30,15 @@ view. `gov explain` returns one resolved value or stable authority identity.
 Exclusive-scope collisions fail as `AMBIGUOUS_AUTHORITY`; no discovery-order or
 generic layer precedence exists.
 
+A provenance-bearing resolved stable fact is sufficient for task decisions and
+must not be rediscovered by reopening its backing manifest. Read the backing
+authority when the resolved projection omits semantic detail needed by the
+task, ownership is ambiguous or conflicting, a diff crosses an authority
+boundary or escalation trigger, a provenance audit is required, or the task
+modifies that authority. The backing source remains canonical; sufficiency of
+its resolved projection is not an ownership transfer or a replacement of the
+source.
+
 `gov check` loads the versioned JSON schemas as structural authority, then
 extends them with stable-ID uniqueness, authority reachability, route
 reachability, route-facade parity, generated relationships, path sanitation,
@@ -120,8 +129,10 @@ with existing Tet4D tooling; v0.1 does not duplicate its platform contract.
 `LOCAL_FIX`, `FEATURE`, and `STRUCTURAL_CHANGE` bound discovery breadth. They do
 not select or waive final evidence: the task, referenced authority, actual diff,
 claims, and risk still determine verification. The representative scenarios in
-the project manifest exercise this separation. Automatic general-purpose prompt
-classification is intentionally out of scope.
+the project manifest exercise this separation, including distinct Godot
+presentation fixes and features plus structural CI/product-platform routing
+repairs. Automatic general-purpose prompt classification is intentionally out
+of scope.
 
 ## Pack updates and sanitation
 

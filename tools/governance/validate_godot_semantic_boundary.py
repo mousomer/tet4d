@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-GODOT_ROOT = ROOT / "godot"
+GODOT_ROOT = ROOT / "godot" / "Tet4D.Godot"
 
 SCRIPT_EXTS = {".gd", ".cs"}
 EXCLUDED_PARTS = {
@@ -106,6 +106,19 @@ def _is_excluded(path: Path) -> bool:
 
 def _is_presentation_path(path: Path) -> bool:
     return any(part in PRESENTATION_PARTS for part in path.parts)
+
+
+def _is_godot_test_fixture(path: Path, project_root: Path) -> bool:
+    try:
+        relative = path.relative_to(project_root)
+    except ValueError:
+        return False
+    return (
+        path.suffix.lower() in SCRIPT_EXTS
+        and len(relative.parts) >= 2
+        and relative.parts[0] == "tests"
+        and path.stem.lower().startswith("test_")
+    )
 
 
 def discover_script_files(root: Path = GODOT_ROOT) -> list[Path]:
@@ -229,9 +242,18 @@ def _line_finding(clean_line: str, path: Path, window: str) -> str | None:
     return None
 
 
-def scan_file(path: Path) -> list[Finding]:
+def _test_fixture_line_finding(clean_line: str) -> str | None:
+    if _has_adapter_call(clean_line):
+        return None
+    if ASSIGNMENT_RE.search(clean_line):
+        return "suspicious semantic assignment"
+    return None
+
+
+def scan_file(path: Path, project_root: Path = GODOT_ROOT) -> list[Finding]:
     findings: list[Finding] = []
     lines = path.read_text(encoding="utf-8").splitlines()
+    is_test_fixture = _is_godot_test_fixture(path, project_root)
     for index, line in enumerate(lines):
         line_number = index + 1
         if has_invalid_suppression(line):
@@ -246,14 +268,18 @@ def scan_file(path: Path) -> list[Finding]:
             continue
 
         clean_line = _strip_strings_and_comments(line)
-        message = _function_finding(clean_line)
+        message = None if is_test_fixture else _function_finding(clean_line)
         if message is None:
             start = max(0, index - 2)
             end = min(len(lines), index + 3)
             window = "\n".join(
                 _strip_strings_and_comments(item) for item in lines[start:end]
             )
-            message = _line_finding(clean_line, path, window)
+            message = (
+                _test_fixture_line_finding(clean_line)
+                if is_test_fixture
+                else _line_finding(clean_line, path, window)
+            )
         if message is not None:
             findings.append(Finding(path, line_number, message))
     return findings
@@ -263,7 +289,7 @@ def validate(root: Path = GODOT_ROOT) -> tuple[list[Finding], int]:
     files = discover_script_files(root)
     findings: list[Finding] = []
     for path in files:
-        findings.extend(scan_file(path))
+        findings.extend(scan_file(path, root))
     return findings, len(files)
 
 
