@@ -70,7 +70,21 @@ ADAPTER_TOKENS = (
     "trace_player.",
     "replay_player.",
 )
-PRESENTATION_PARTS = {"presentation", "rendering", "traces", "ui", "bundle", "tests"}
+PRESENTATION_PARTS = {"presentation", "rendering", "traces", "ui", "bundle"}
+TEST_FIXTURE_HELPER_PREFIXES = (
+    "_assert_",
+    "_check_",
+    "_expect_",
+    "_setup_",
+    "assert_",
+    "check_",
+    "expect_",
+    "setup_",
+)
+REQUIRED_SCAN_DOMAINS = {
+    "production": Path("scripts"),
+    "test": Path("tests"),
+}
 
 SUPPRESSION_RE = re.compile("tet4d-semantic-boundary:" + r"\s*allow\s+([a-z0-9-]+)")
 FUNC_RE = re.compile(r"^\s*func\s+([A-Za-z0-9_]+)")
@@ -100,23 +114,27 @@ class Finding:
     message: str
 
 
+def _require_project_relative(path: Path) -> None:
+    if path.is_absolute() or ".." in path.parts:
+        raise ValueError(f"expected Godot-project-relative path, got {path}")
+
+
 def _is_excluded(path: Path) -> bool:
+    _require_project_relative(path)
     return any(part in EXCLUDED_PARTS for part in path.parts)
 
 
 def _is_presentation_path(path: Path) -> bool:
+    _require_project_relative(path)
     return any(part in PRESENTATION_PARTS for part in path.parts)
 
 
-def _is_godot_test_fixture(path: Path, project_root: Path) -> bool:
-    try:
-        relative = path.relative_to(project_root)
-    except ValueError:
-        return False
+def _is_godot_test_fixture(path: Path) -> bool:
+    _require_project_relative(path)
     return (
         path.suffix.lower() in SCRIPT_EXTS
-        and len(relative.parts) >= 2
-        and relative.parts[0] == "tests"
+        and len(path.parts) >= 2
+        and path.parts[0] == "tests"
         and path.stem.lower().startswith("test_")
     )
 
@@ -133,6 +151,22 @@ def discover_script_files(root: Path = GODOT_ROOT) -> list[Path]:
             continue
         files.append(path)
     return sorted(files)
+
+
+def coverage_failure_reason(files: list[Path], root: Path) -> str | None:
+    """Return why discovery cannot support a successful repository validation."""
+    if not files:
+        return "no eligible Godot script files were discovered"
+
+    discovered_paths = [path.relative_to(root) for path in files]
+    missing_domains = [
+        name
+        for name, directory in REQUIRED_SCAN_DOMAINS.items()
+        if not any(directory in path.parents for path in discovered_paths)
+    ]
+    if missing_domains:
+        return "required scan domain(s) not represented: " + ", ".join(missing_domains)
+    return None
 
 
 def suppression_reason(line: str) -> str | None:
@@ -186,7 +220,7 @@ def _has_adapter_call(text: str) -> bool:
     return any(token in lower for token in ADAPTER_TOKENS)
 
 
-def _function_finding(line: str) -> str | None:
+def _function_finding(line: str, *, is_test_fixture: bool = False) -> str | None:
     match = FUNC_RE.search(line)
     if match is None:
         return None
@@ -221,11 +255,19 @@ def _function_finding(line: str) -> str | None:
         )
     ):
         return f"suspicious semantic computation: function name `{match.group(1)}`"
+    if is_test_fixture and name.startswith(TEST_FIXTURE_HELPER_PREFIXES):
+        return None
     return None
 
 
-def _line_finding(clean_line: str, path: Path, window: str) -> str | None:
+def _line_finding(
+    clean_line: str, path: Path, window: str, *, is_test_fixture: bool = False
+) -> str | None:
     if _has_adapter_call(clean_line):
+        return None
+    if is_test_fixture:
+        if ASSIGNMENT_RE.search(clean_line):
+            return "suspicious semantic assignment"
         return None
     if _is_presentation_path(path):
         return None
@@ -233,7 +275,7 @@ def _line_finding(clean_line: str, path: Path, window: str) -> str | None:
         return "suspicious semantic data structure"
     if ASSIGNMENT_RE.search(clean_line):
         return "suspicious semantic assignment"
-    if BRANCH_RE.search(clean_line) and not _is_presentation_path(path):
+    if BRANCH_RE.search(clean_line):
         return "suspicious semantic branch"
     if MANUAL_LOOP_RE.search(clean_line) and _has_semantic_term(window):
         return "suspicious manual rule loop"
@@ -242,18 +284,12 @@ def _line_finding(clean_line: str, path: Path, window: str) -> str | None:
     return None
 
 
-def _test_fixture_line_finding(clean_line: str) -> str | None:
-    if _has_adapter_call(clean_line):
-        return None
-    if ASSIGNMENT_RE.search(clean_line):
-        return "suspicious semantic assignment"
-    return None
-
-
 def scan_file(path: Path, project_root: Path = GODOT_ROOT) -> list[Finding]:
     findings: list[Finding] = []
     lines = path.read_text(encoding="utf-8").splitlines()
-    is_test_fixture = _is_godot_test_fixture(path, project_root)
+    project_path = path.relative_to(project_root)
+    _require_project_relative(project_path)
+    is_test_fixture = _is_godot_test_fixture(project_path)
     for index, line in enumerate(lines):
         line_number = index + 1
         if has_invalid_suppression(line):
@@ -268,17 +304,18 @@ def scan_file(path: Path, project_root: Path = GODOT_ROOT) -> list[Finding]:
             continue
 
         clean_line = _strip_strings_and_comments(line)
-        message = None if is_test_fixture else _function_finding(clean_line)
+        message = _function_finding(clean_line, is_test_fixture=is_test_fixture)
         if message is None:
             start = max(0, index - 2)
             end = min(len(lines), index + 3)
             window = "\n".join(
                 _strip_strings_and_comments(item) for item in lines[start:end]
             )
-            message = (
-                _test_fixture_line_finding(clean_line)
-                if is_test_fixture
-                else _line_finding(clean_line, path, window)
+            message = _line_finding(
+                clean_line,
+                project_path,
+                window,
+                is_test_fixture=is_test_fixture,
             )
         if message is not None:
             findings.append(Finding(path, line_number, message))
@@ -294,10 +331,19 @@ def validate(root: Path = GODOT_ROOT) -> tuple[list[Finding], int]:
 
 
 def main() -> int:
-    findings, scanned = validate(GODOT_ROOT)
-    if scanned == 0:
-        print("No Godot scripts found; semantic-boundary validation skipped.")
-        return 0
+    files = discover_script_files(GODOT_ROOT)
+    scanned = len(files)
+    coverage_failure = coverage_failure_reason(files, GODOT_ROOT)
+    print(f"Scanned {scanned} Godot script files.")
+    if coverage_failure is not None:
+        print(
+            f"Godot semantic-boundary coverage-integrity failure: {coverage_failure}."
+        )
+        return 1
+
+    findings: list[Finding] = []
+    for path in files:
+        findings.extend(scan_file(path, GODOT_ROOT))
     if findings:
         print("Godot semantic-boundary validation failed:")
         for finding in findings:
@@ -305,7 +351,6 @@ def main() -> int:
             print(f"- {rel}:{finding.line} {finding.message}")
         return 1
     print("Godot semantic-boundary validation passed.")
-    print(f"Scanned {scanned} Godot script files.")
     return 0
 
 
