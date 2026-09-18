@@ -26,10 +26,10 @@ movement, collision, gravity, rotation legality, scoring, trace, or replay
 truth.
 
 Validator classification uses canonical Godot-project-relative paths only.
-Explicit allow annotations precede semantic-risk classification; semantic risk
-precedes ordinary fixture-helper and presentation-path treatment. Named test
-fixtures may drive APIs with entrypoints and ordinary assertion/setup helpers,
-but gain no semantics; allow annotations remain exceptional. Successful
+Explicit allow annotations apply first; semantic-risk names are then flagged
+everywhere, including named test fixtures, before fixture and presentation-path
+line rules apply. Named test fixtures may drive APIs and define ordinary
+assertion/setup helpers, but gain no semantics; allow annotations remain exceptional. Successful
 semantic-boundary validation also requires coverage integrity: discovery must
 find eligible scripts in both the canonical `scripts/` production and
 `tests/` Godot-test domains. The validator reports its scan count and rejects
