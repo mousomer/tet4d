@@ -134,6 +134,23 @@ presentation fixes and features plus structural CI/product-platform routing
 repairs. Automatic general-purpose prompt classification is intentionally out
 of scope.
 
+Scenario resolution evaluates every scenario whose `match_all` tokens occur in
+the task, then selects the unique match with the highest numeric `priority`.
+Manifest declaration order has no semantic effect. If multiple applicable
+scenarios share the highest priority, resolution fails as
+`AMBIGUOUS_AUTHORITY`; the manifest must express an unambiguous precedence
+instead of relying on serialization order. Priorities encode known overlap
+intent, not a total ordering of every scenario. The project uses four broad
+semantic tiers: cross-layer work; constrained defects and routing repairs;
+subsystem features and release work; and broad generic feature or governance
+wording. The constrained-repair and subsystem-feature tiers each have one
+specificity level above their generic level. This preserves structural scope,
+lets a named repair beat a generic defect, and lets a named subsystem feature
+beat generic planning or presentation wording. Peers remain equal where neither
+authority subsumes the other, so a task that genuinely combines them fails
+closed. The resolved view reports both the matched scenario ID and its priority
+with project provenance.
+
 ## Pack updates and sanitation
 
 `VERSION`, `MANIFEST.json`, and `config/governance/workspace.lock.json` identify
@@ -142,6 +159,13 @@ exclusions; sync copies manifest version/revision into the lock.
 `gov sync` is the explicit local acceptance operation;
 ordinary checks report `PACK_DRIFT`. Generic path checks complement, rather than
 replace, Tet4D's existing bounded secret scanner and sanitation entrypoint.
+The pack has no published compatibility-versioning contract beyond those
+identity fields. Requiring scenario `priority` is nevertheless a
+compatibility-significant project-schema change: consumers updating to this
+revision must add an integer priority to every representative scenario. The
+pack remains version `0.1.0` because the repository defines no rule mapping
+schema compatibility to `VERSION`; the content revision advances for the
+changed bytes and contract.
 
 ## Deferred
 

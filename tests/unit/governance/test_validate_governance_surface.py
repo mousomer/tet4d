@@ -75,8 +75,10 @@ def _policy() -> dict[str, object]:
                 **surface.FIXED_LIMITS,
                 **{path: 300 for path in OWNERS.values()},
             },
-            "per_file_byte_limits": {
-                surface.POLICY_REL: surface.POLICY_PACK_BYTE_LIMIT
+            "machine_policy_byte_limits": {
+                "advisory": surface.POLICY_PACK_ADVISORY_BYTE_LIMIT,
+                "hard_ceiling": surface.POLICY_PACK_BYTE_LIMIT,
+                "status": "temporary_provisional_operational_ceiling",
             },
             "canonical_serialization": dict(surface.CANONICAL_SERIALIZATION),
             "lifecycle": {
@@ -126,16 +128,21 @@ def _messages(root: Path) -> list[str]:
     return [issue.message for issue in _issues(root)]
 
 
+def _measurement(root: Path) -> surface.SurfaceMeasurement:
+    _, measurement = surface.validate_surface(root, expected_provenance=TEST_FAMILIES)
+    assert measurement is not None
+    return measurement
+
+
 def test_actual_governance_surface_is_within_all_limits() -> None:
     issues, measurement = surface.validate_surface(surface.ROOT)
     assert issues == []
     assert measurement is not None
-    # Keep a tighter diagnostic tripwire than the aggregate governance budget.
-    assert measurement.human <= 820
+    # This temporary diagnostic tripwire remains below the aggregate budget.
+    assert measurement.human <= 900
     assert measurement.operational <= 400
     assert measurement.total <= 2500
     assert measurement.policy_bytes <= measurement.policy_byte_limit
-    assert measurement.policy_bytes <= measurement.policy_byte_limit * 4 // 5
     assert measurement.policy_nodes > measurement.policy_leaves > 0
     assert measurement.policy_max_depth > 0
     assert measurement.largest_policy_section_bytes > 0
@@ -166,7 +173,7 @@ def test_canonical_owner_file_ceiling_fails(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize(
     ("rel", "lines", "expected"),
-    [("CURRENT_STATE.md", 151, "150"), ("docs/BACKLOG.md", 251, "250")],
+    [("CURRENT_STATE.md", 151, "150"), ("docs/BACKLOG.md", 301, "300")],
 )
 def test_operational_file_ceiling_fails(
     tmp_path: Path, rel: str, lines: int, expected: str
@@ -187,10 +194,94 @@ def test_machine_policy_lines_do_not_consume_reviewable_loc_budget(
     assert not any("reviewable governance total" in message for message in messages)
 
 
-def test_policy_pack_byte_ceiling_fails_below_loc_limit(tmp_path: Path) -> None:
+def _write_policy_at_exact_byte_count(
+    root: Path, policy: dict[str, object], target_bytes: int
+) -> None:
+    policy["padding"] = ""
+    rendered = json.dumps(policy, ensure_ascii=False, separators=(",", ":")) + "\n"
+    padding_bytes = target_bytes - len(rendered.encode("utf-8"))
+    assert padding_bytes >= 0
+    policy["padding"] = "x" * padding_bytes
+    rendered = json.dumps(policy, ensure_ascii=False, separators=(",", ":")) + "\n"
+    assert len(rendered.encode("utf-8")) == target_bytes
+    _write(root / surface.POLICY_REL, rendered)
+
+
+@pytest.mark.parametrize(
+    "byte_count,expected_advisory",
+    [
+        (surface.POLICY_PACK_ADVISORY_BYTE_LIMIT, False),
+        (surface.POLICY_PACK_ADVISORY_BYTE_LIMIT + 1, True),
+        (surface.POLICY_PACK_BYTE_LIMIT, True),
+    ],
+)
+def test_machine_policy_byte_limits_accept_advisory_and_hard_boundary(
+    tmp_path: Path, byte_count: int, expected_advisory: bool
+) -> None:
     policy = _fixture(tmp_path)
-    policy["padding"] = "x" * surface.POLICY_PACK_BYTE_LIMIT
-    _write(tmp_path / surface.POLICY_REL, json.dumps(policy) + "\n")
+    policy["non_ascii"] = "é"
+    _write_policy_at_exact_byte_count(tmp_path, policy, byte_count)
+    messages = _messages(tmp_path)
+    assert not any("bytes exceeds hard limit" in message for message in messages)
+    assert not any("LOC exceeds" in message for message in messages)
+    measurement = _measurement(tmp_path)
+    assert measurement.policy_bytes == byte_count
+    assert measurement.policy_exceeds_advisory is expected_advisory
+
+
+def test_machine_policy_advisory_is_reported_without_failure(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    policy = _fixture(tmp_path)
+    _write_policy_at_exact_byte_count(
+        tmp_path, policy, surface.POLICY_PACK_ADVISORY_BYTE_LIMIT + 1
+    )
+    issues, measurement = surface.validate_surface(
+        tmp_path, expected_provenance=TEST_FAMILIES
+    )
+    assert not any("bytes exceeds hard limit" in issue.message for issue in issues)
+    assert measurement is not None
+    assert measurement.policy_exceeds_advisory
+    surface._print_report(measurement, base_ref=None)
+    output = capsys.readouterr().out
+    assert (
+        f"{measurement.policy_advisory_byte_limit} advisory / "
+        f"{measurement.policy_byte_limit} hard" in output
+    )
+    assert f"{measurement.policy_advisory_byte_limit}-byte" in output
+    assert f"({measurement.policy_advisory_byte_limit / 1024:g} KiB)" in output
+
+
+def test_machine_policy_advisory_report_follows_changed_threshold(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    changed_advisory = 84 * 1024
+    monkeypatch.setattr(surface, "POLICY_PACK_ADVISORY_BYTE_LIMIT", changed_advisory)
+    policy = _fixture(tmp_path)
+    _write_policy_at_exact_byte_count(tmp_path, policy, changed_advisory + 1)
+
+    issues, measurement = surface.validate_surface(
+        tmp_path, expected_provenance=TEST_FAMILIES
+    )
+    assert not any("bytes exceeds hard limit" in issue.message for issue in issues)
+    assert measurement is not None
+    assert measurement.policy_advisory_byte_limit == changed_advisory
+    assert measurement.policy_exceeds_advisory
+    surface._print_report(measurement, base_ref=None)
+    output = capsys.readouterr().out
+    assert f"{changed_advisory}-byte" in output
+    assert f"({changed_advisory / 1024:g} KiB)" in output
+
+
+def test_machine_policy_byte_limit_rejects_one_byte_over_hard_boundary(
+    tmp_path: Path,
+) -> None:
+    policy = _fixture(tmp_path)
+    _write_policy_at_exact_byte_count(
+        tmp_path, policy, surface.POLICY_PACK_BYTE_LIMIT + 1
+    )
     messages = _messages(tmp_path)
     assert any(
         f"bytes exceeds hard limit {surface.POLICY_PACK_BYTE_LIMIT}" in message

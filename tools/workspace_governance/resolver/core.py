@@ -177,17 +177,52 @@ class GovernanceResolver:
         profiles = project["execution"]["profiles"]
         selected = mode or project["execution"]["default_mode"]
         matched_scenario: str | None = None
+        matched_scenario_priority: int | None = None
         scenario_routes: list[str] | None = None
         if task:
             task_lower = task.lower()
-            for scenario in project["execution"]["representative_scenarios"]:
-                if all(token.lower() in task_lower for token in scenario["match_all"]):
-                    selected, matched_scenario, scenario_routes = (
-                        scenario["mode"],
-                        scenario["id"],
-                        scenario["routes"],
+            applicable = [
+                scenario
+                for scenario in project["execution"]["representative_scenarios"]
+                if all(token.lower() in task_lower for token in scenario["match_all"])
+            ]
+            if applicable:
+                highest_priority = max(scenario["priority"] for scenario in applicable)
+                highest = [
+                    scenario
+                    for scenario in applicable
+                    if scenario["priority"] == highest_priority
+                ]
+                if len(highest) != 1:
+                    scenario_ids = sorted(scenario["id"] for scenario in highest)
+                    raise GovernanceError(
+                        [
+                            Diagnostic(
+                                "AMBIGUOUS_AUTHORITY",
+                                "execution.representative_scenarios",
+                                "project",
+                                (project_source,),
+                                (
+                                    "multiple applicable scenarios share highest "
+                                    f"priority {highest_priority}: "
+                                    f"{', '.join(scenario_ids)}"
+                                ),
+                                "assign distinct priorities to overlapping scenarios",
+                            )
+                        ]
                     )
-                    break
+                scenario = highest[0]
+                (
+                    selected,
+                    matched_scenario,
+                    matched_scenario_priority,
+                    scenario_routes,
+                ) = (
+                    scenario["mode"],
+                    scenario["id"],
+                    scenario["priority"],
+                    scenario["routes"],
+                )
         if selected not in profiles:
             raise GovernanceError(
                 [
@@ -277,6 +312,11 @@ class GovernanceResolver:
             ),
             "matched_scenario": entry(
                 matched_scenario,
+                "project",
+                f"{project_source}#/execution/representative_scenarios",
+            ),
+            "matched_scenario_priority": entry(
+                matched_scenario_priority,
                 "project",
                 f"{project_source}#/execution/representative_scenarios",
             ),

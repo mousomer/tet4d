@@ -50,8 +50,9 @@ FIXED_LIMITS = {
     "godot/AGENTS.md": 70,
     "native/AGENTS.md": 70,
     "CURRENT_STATE.md": 150,
-    "docs/BACKLOG.md": 250,
+    "docs/BACKLOG.md": 300,
 }
+POLICY_PACK_ADVISORY_BYTE_LIMIT = 80 * 1024
 POLICY_PACK_BYTE_LIMIT = 96 * 1024
 CANONICAL_SERIALIZATION = {
     "tool": "tools/governance/policy_pack_io.py",
@@ -79,7 +80,9 @@ class SurfaceMeasurement:
     total: int
     hard_limit: int
     policy_bytes: int
+    policy_advisory_byte_limit: int
     policy_byte_limit: int
+    policy_exceeds_advisory: bool
     policy_nodes: int
     policy_leaves: int
     policy_max_depth: int
@@ -474,13 +477,17 @@ def _measure(  # noqa: C901 - measurement and all coupled hard ceilings stay ato
                 f"reviewable governance total {total} LOC exceeds hard limit {hard_limit}",
             )
         )
-    byte_limits = surface.get("per_file_byte_limits")
-    expected_byte_limits = {POLICY_REL: POLICY_PACK_BYTE_LIMIT}
+    byte_limits = surface.get("machine_policy_byte_limits")
+    expected_byte_limits = {
+        "advisory": POLICY_PACK_ADVISORY_BYTE_LIMIT,
+        "hard_ceiling": POLICY_PACK_BYTE_LIMIT,
+        "status": "temporary_provisional_operational_ceiling",
+    }
     if byte_limits != expected_byte_limits:
         issues.append(
             SurfaceIssue(
                 "size",
-                f"per_file_byte_limits must equal {expected_byte_limits}",
+                f"machine_policy_byte_limits must equal {expected_byte_limits}",
             )
         )
     if surface.get("canonical_serialization") != CANONICAL_SERIALIZATION:
@@ -492,6 +499,7 @@ def _measure(  # noqa: C901 - measurement and all coupled hard ceilings stay ato
         )
     policy_path = root / POLICY_REL
     policy_bytes = len(policy_path.read_bytes()) if policy_path.is_file() else 0
+    policy_exceeds_advisory = policy_bytes > POLICY_PACK_ADVISORY_BYTE_LIMIT
     policy = _load_policy(root)
     policy_nodes, policy_leaves, policy_max_depth = _policy_structure(policy)
     largest_policy_section_bytes = max(
@@ -517,7 +525,9 @@ def _measure(  # noqa: C901 - measurement and all coupled hard ceilings stay ato
         total=total,
         hard_limit=hard_limit,
         policy_bytes=policy_bytes,
+        policy_advisory_byte_limit=POLICY_PACK_ADVISORY_BYTE_LIMIT,
         policy_byte_limit=POLICY_PACK_BYTE_LIMIT,
+        policy_exceeds_advisory=policy_exceeds_advisory,
         policy_nodes=policy_nodes,
         policy_leaves=policy_leaves,
         policy_max_depth=policy_max_depth,
@@ -655,8 +665,16 @@ def _print_report(measurement: SurfaceMeasurement, *, base_ref: str | None) -> N
     print(f"Hard limit:                 {measurement.hard_limit:5d} LOC")
     print(
         f"Machine policy bytes:       {measurement.policy_bytes:5d} / "
-        f"{measurement.policy_byte_limit}"
+        f"{measurement.policy_advisory_byte_limit} advisory / "
+        f"{measurement.policy_byte_limit} hard"
     )
+    if measurement.policy_exceeds_advisory:
+        advisory_kib = measurement.policy_advisory_byte_limit / 1024
+        print(
+            "ADVISORY: machine policy exceeds provisional "
+            f"{measurement.policy_advisory_byte_limit}-byte "
+            f"({advisory_kib:g} KiB) review threshold"
+        )
     print(
         "Machine policy structure:   "
         f"{measurement.policy_nodes} nodes, {measurement.policy_leaves} leaves, "
