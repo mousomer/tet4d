@@ -1,5 +1,5 @@
 {
-  "content_sha256": "9b7c1ba75150c0f63fcf559322044d2a813f02da922c52ae34cd945fbddab1c8",
+  "content_sha256": "6a3ca68304589a367b0eacfb593336ceef13c80221c1ff4bd7e9775432c3ccae",
   "files": [
     "MANIFEST.json",
     "VERSION",
@@ -22,7 +22,7 @@
   "lock_algorithm": "sha256-path-and-content-v1",
   "pack_name": "workspace-governance",
   "pack_path": "tools/workspace_governance",
-  "revision": "v0.1-integrity-7",
+  "revision": "v0.1-integrity-8",
   "schema_version": 1,
   "version": "0.1.0"
 }

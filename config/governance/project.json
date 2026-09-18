@@ -87,84 +87,98 @@
         "id": "small-godot-ui-defect",
         "match_all": ["small", "godot", "defect"],
         "mode": "LOCAL_FIX",
+        "priority": 300,
         "routes": ["godot_product_shell"]
       },
       {
         "id": "godot-presentation-feature",
         "match_all": ["godot", "presentation feature"],
         "mode": "FEATURE",
+        "priority": 200,
         "routes": ["godot_product_shell"]
       },
       {
         "id": "godot-validation-label-regression",
         "match_all": ["godot", "validation-label styling"],
         "mode": "LOCAL_FIX",
+        "priority": 350,
         "routes": ["godot_product_shell"]
       },
       {
         "id": "small-python-defect",
         "match_all": ["small", "python", "defect"],
         "mode": "LOCAL_FIX",
+        "priority": 300,
         "routes": ["python_reference_engine"]
       },
       {
         "id": "python-bug-fix",
         "match_all": ["python bug fix"],
         "mode": "LOCAL_FIX",
+        "priority": 350,
         "routes": ["python_reference_engine"]
       },
       {
         "id": "moderate-feature",
         "match_all": ["moderate", "feature"],
         "mode": "FEATURE",
+        "priority": 100,
         "routes": ["python_reference_engine"]
       },
       {
         "id": "cross-layer-change",
         "match_all": ["cross-layer"],
         "mode": "STRUCTURAL_CHANGE",
+        "priority": 400,
         "routes": ["python_reference_engine", "godot_product_shell", "native_deterministic_core"]
       },
       {
         "id": "governance-change",
         "match_all": ["governance", "change"],
         "mode": "STRUCTURAL_CHANGE",
+        "priority": 100,
         "routes": ["governance_and_tooling"]
       },
       {
         "id": "ci-platform-routing-repair",
         "match_all": ["ci classification", "platform routing"],
         "mode": "STRUCTURAL_CHANGE",
+        "priority": 350,
         "routes": ["governance_and_tooling", "packaging_and_release"]
       },
       {
         "id": "product-platform-routing-repair",
         "match_all": ["product-platform routing", "repair"],
         "mode": "STRUCTURAL_CHANGE",
+        "priority": 300,
         "routes": ["governance_and_tooling", "packaging_and_release"]
       },
       {
         "id": "packaging-release-change",
         "match_all": ["packaging", "release"],
         "mode": "STRUCTURAL_CHANGE",
+        "priority": 200,
         "routes": ["packaging_and_release"]
       },
       {
         "id": "product-planning-change",
         "match_all": ["product", "planning"],
         "mode": "FEATURE",
+        "priority": 200,
         "routes": ["product_planning"]
       },
       {
         "id": "topology-explorer-change",
         "match_all": ["topology", "explorer"],
         "mode": "FEATURE",
+        "priority": 250,
         "routes": ["topology_and_explorer"]
       },
       {
         "id": "live-4d-rosette-fix",
         "match_all": ["fix", "live", "4d", "rosette"],
         "mode": "LOCAL_FIX",
+        "priority": 350,
         "routes": ["godot_product_shell"]
       }
     ]

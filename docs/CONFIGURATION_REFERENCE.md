@@ -259,6 +259,7 @@ Parameters:
 - `execution.representative_scenarios[].id`: varies (`string`); examples: `"small-godot-ui-defect"`, `"godot-presentation-feature"`, `"godot-validation-label-regression"`
 - `execution.representative_scenarios[].match_all[]`: array[`string`]; examples: `"small"`, `"godot"`, `"defect"`
 - `execution.representative_scenarios[].mode`: varies (`string`); examples: `"LOCAL_FIX"`, `"FEATURE"`, `"STRUCTURAL_CHANGE"`
+- `execution.representative_scenarios[].priority`: varies (`int`); examples: `300`, `200`, `350`
 - `execution.representative_scenarios[].routes[]`: array[`string`]; examples: `"godot_product_shell"`, `"python_reference_engine"`, `"native_deterministic_core"`
 - `generated_surfaces[]`: array[`object`]
 - `generated_surfaces[].kind`: `"compatibility_facade"` (`string`)
@@ -304,12 +305,12 @@ Parameters:
 ### `config/governance/workspace.lock.json`
 Top-level keys: `content_sha256`, `files`, `lock_algorithm`, `pack_name`, `pack_path`, `revision`, `schema_version`, `version`
 Parameters:
-- `content_sha256`: `"9b7c1ba75150c0f63fcf559322044d2a813f02da922c52ae34cd945fbddab1c8"` (`string`)
+- `content_sha256`: `"6a3ca68304589a367b0eacfb593336ceef13c80221c1ff4bd7e9775432c3ccae"` (`string`)
 - `files[]`: array[`string`]; examples: `"MANIFEST.json"`, `"VERSION"`, `"__init__.py"`
 - `lock_algorithm`: `"sha256-path-and-content-v1"` (`string`)
 - `pack_name`: `"workspace-governance"` (`string`)
 - `pack_path`: `"tools/workspace_governance"` (`string`)
-- `revision`: `"v0.1-integrity-7"` (`string`)
+- `revision`: `"v0.1-integrity-8"` (`string`)
 - `schema_version`: `1` (`int`)
 - `version`: `"0.1.0"` (`string`)
 

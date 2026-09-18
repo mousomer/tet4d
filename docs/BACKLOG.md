@@ -46,6 +46,12 @@ Source bootstrap validates installed dependency versions on cache hits and after
 installation; its declaration digest never claims to describe shared contents.
 Regression coverage repairs missing/incompatible dependencies without an
 unneeded install when requirements are satisfied; `packaging>=24` is the example.
+
+### Routing and scenario precedence
+
+Scenario routing tiers cross-layer, constrained repair, subsystem work, then
+generic wording; equal-tier maxima fail closed and matrix tests cover invariants.
+
 ### Governance-manifest quality calibration
 
 Safety ceilings, including the machine-policy 80 KiB advisory and 96 KiB hard
@@ -236,6 +242,9 @@ Godot game/iPadOS target gap.
 
 ## Governance Watchlist
 
+- Define governance-pack `VERSION` versus revision semantics for schema
+  compatibility changes, including required-field additions. Trigger: before
+  the next compatibility-significant schema change.
 - Keep one semantic objective per PR and use scope matrices for cross-layer
   integration.
 - Never weaken tests, deterministic identity, replay/schema compatibility,

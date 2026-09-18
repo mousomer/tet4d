@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import itertools
 import json
 import os
 import shutil
@@ -13,7 +14,7 @@ import pytest
 from support import scrubbed_environment
 
 from tools.workspace_governance.cli.gov import _sync
-from tools.workspace_governance.resolver.core import GovernanceResolver
+from tools.workspace_governance.resolver.core import GovernanceError, GovernanceResolver
 from tools.workspace_governance.validators import core
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -221,6 +222,269 @@ def test_representative_scenario_shadowing_regressions(
     assert entries["execution.mode"]["value"] == mode
     assert set(entries["routes"]["value"]) == routes
     assert entries["matched_scenario"]["value"] == scenario
+
+
+@pytest.mark.parametrize(
+    ("task", "mode", "routes", "scenario"),
+    [
+        (
+            "Cross-layer Python bug fix",
+            "STRUCTURAL_CHANGE",
+            {
+                "python_reference_engine",
+                "godot_product_shell",
+                "native_deterministic_core",
+            },
+            "cross-layer-change",
+        ),
+        (
+            "Cross-layer Godot presentation feature",
+            "STRUCTURAL_CHANGE",
+            {
+                "python_reference_engine",
+                "godot_product_shell",
+                "native_deterministic_core",
+            },
+            "cross-layer-change",
+        ),
+        (
+            "Small Godot defect in the presentation feature for setup",
+            "LOCAL_FIX",
+            {"godot_product_shell"},
+            "small-godot-ui-defect",
+        ),
+        (
+            "Moderate Godot presentation feature for the setup flow",
+            "FEATURE",
+            {"godot_product_shell"},
+            "godot-presentation-feature",
+        ),
+        (
+            "Governance change for the packaging release pipeline",
+            "STRUCTURAL_CHANGE",
+            {"packaging_and_release"},
+            "packaging-release-change",
+        ),
+        (
+            "Python bug fix in scoring",
+            "LOCAL_FIX",
+            {"python_reference_engine"},
+            "python-bug-fix",
+        ),
+        (
+            "Godot presentation feature for setup",
+            "FEATURE",
+            {"godot_product_shell"},
+            "godot-presentation-feature",
+        ),
+    ],
+    ids=(
+        "cross-layer-python-bug-fix",
+        "cross-layer-godot-presentation-feature",
+        "small-godot-defect-over-presentation-feature",
+        "godot-presentation-feature-over-moderate-feature",
+        "packaging-release-over-governance",
+        "ordinary-python-bug-fix",
+        "ordinary-godot-presentation-feature",
+    ),
+)
+def test_scenario_priority_matrix(
+    task: str, mode: str, routes: set[str], scenario: str
+) -> None:
+    entries = GovernanceResolver.for_root(ROOT).resolve(task=task)["entries"]
+    assert entries["execution.mode"]["value"] == mode
+    assert set(entries["routes"]["value"]) == routes
+    assert entries["matched_scenario"]["value"] == scenario
+
+
+@pytest.mark.parametrize(
+    ("task", "expected_scenario", "decision"),
+    [
+        (
+            "Fix the small godot defect in validation-label styling",
+            "godot-validation-label-regression",
+            "named validation-label repair over generic Godot defect",
+        ),
+        (
+            "Small godot defect: fix the live 4d rosette seam",
+            "live-4d-rosette-fix",
+            "named rosette repair over generic Godot defect",
+        ),
+        (
+            "CI classification and platform routing repair for product-platform routing",
+            "ci-platform-routing-repair",
+            "CI classification repair over broader product-platform routing repair",
+        ),
+        (
+            "Small python defect; this is a python bug fix",
+            "python-bug-fix",
+            "explicit Python bug-fix contract over generic Python defect",
+        ),
+        (
+            "Product planning for the topology explorer",
+            "topology-explorer-change",
+            "named topology subsystem over generic product planning",
+        ),
+        (
+            "Godot presentation feature for the topology explorer",
+            "topology-explorer-change",
+            "named topology subsystem over generic Godot presentation feature",
+        ),
+    ],
+    ids=(
+        "validation-label-over-generic-godot",
+        "rosette-over-generic-godot",
+        "ci-over-product-platform-routing",
+        "python-bug-over-generic-python",
+        "topology-over-product-planning",
+        "topology-over-godot-presentation",
+    ),
+)
+def test_deliberately_reviewed_overlap_policy(
+    task: str, expected_scenario: str, decision: str
+) -> None:
+    del decision  # Documents why the expected winner is policy, not arithmetic.
+    entries = GovernanceResolver.for_root(ROOT).resolve(task=task)["entries"]
+    assert entries["matched_scenario"]["value"] == expected_scenario
+
+
+def test_packaging_and_godot_presentation_overlap_is_intentionally_ambiguous() -> None:
+    task = "Godot presentation feature for the packaging release bundle"
+
+    with pytest.raises(GovernanceError) as error:
+        GovernanceResolver.for_root(ROOT).resolve(task=task)
+
+    diagnostic = error.value.diagnostics[0]
+    assert diagnostic.code == "AMBIGUOUS_AUTHORITY"
+    assert "godot-presentation-feature" in diagnostic.reason
+    assert "packaging-release-change" in diagnostic.reason
+
+
+def test_every_declared_scenario_resolves_standalone() -> None:
+    resolver = GovernanceResolver.for_root(ROOT)
+    scenarios = manifests()[1]["execution"]["representative_scenarios"]
+    for scenario in scenarios:
+        task = " ".join(scenario["match_all"])
+        entries = resolver.resolve(task=task)["entries"]
+        assert entries["matched_scenario"]["value"] == scenario["id"]
+        assert entries["execution.mode"]["value"] == scenario["mode"]
+        assert set(entries["routes"]["value"]) == set(scenario["routes"])
+
+
+def test_all_declared_scenario_pairs_have_explicit_overlap_outcomes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace, project = manifests()
+    scenarios = project["execution"]["representative_scenarios"]
+    resolver = GovernanceResolver.for_root(ROOT)
+    monkeypatch.setattr(GovernanceResolver, "check", lambda self: [])
+
+    for left, right in itertools.combinations(scenarios, 2):
+        pair_project = copy.deepcopy(project)
+        pair_project["execution"]["representative_scenarios"] = [left, right]
+        monkeypatch.setattr(
+            GovernanceResolver,
+            "load",
+            lambda self, pair_project=pair_project: (workspace, pair_project, None),
+        )
+        representative = " ".join(dict.fromkeys(left["match_all"] + right["match_all"]))
+
+        if left["priority"] == right["priority"]:
+            with pytest.raises(GovernanceError) as error:
+                resolver.resolve(task=representative)
+            assert error.value.diagnostics[0].code == "AMBIGUOUS_AUTHORITY"
+        else:
+            winner = max((left, right), key=lambda scenario: scenario["priority"])
+            entries = resolver.resolve(task=representative)["entries"]
+            assert entries["matched_scenario"]["value"] == winner["id"]
+            assert entries["matched_scenario_priority"]["value"] == winner["priority"]
+
+
+def test_flattened_priorities_break_representative_overlap_resolution(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace, project = manifests()
+    flattened = copy.deepcopy(project)
+    for scenario in flattened["execution"]["representative_scenarios"]:
+        scenario["priority"] = 100
+    monkeypatch.setattr(GovernanceResolver, "check", lambda self: [])
+    monkeypatch.setattr(
+        GovernanceResolver, "load", lambda self: (workspace, flattened, None)
+    )
+
+    overlaps = (
+        "Cross-layer Python bug fix",
+        "Cross-layer Godot presentation feature",
+        "Small Godot defect in the presentation feature for setup",
+        "Moderate Godot presentation feature for the setup flow",
+        "Governance change for the packaging release pipeline",
+    )
+    resolver = GovernanceResolver.for_root(ROOT)
+    for task in overlaps:
+        with pytest.raises(GovernanceError) as error:
+            resolver.resolve(task=task)
+        assert error.value.diagnostics[0].code == "AMBIGUOUS_AUTHORITY"
+
+
+def test_scenario_declaration_reordering_does_not_change_resolution(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    resolver = GovernanceResolver.for_root(ROOT)
+    task = "Cross-layer Godot presentation feature"
+    expected = resolver.resolve(task=task)
+    workspace, project, local = resolver.load()
+    project["execution"]["representative_scenarios"].reverse()
+    monkeypatch.setattr(GovernanceResolver, "check", lambda self: [])
+    monkeypatch.setattr(
+        GovernanceResolver, "load", lambda self: (workspace, project, local)
+    )
+    assert resolver.resolve(task=task) == expected
+
+
+def test_equal_highest_scenario_priorities_are_ambiguous(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace, project = manifests()
+    project["execution"]["representative_scenarios"].extend(
+        [
+            {
+                "id": "tie-a",
+                "match_all": ["deliberate tie"],
+                "mode": "LOCAL_FIX",
+                "priority": 999,
+                "routes": ["python_reference_engine"],
+            },
+            {
+                "id": "tie-b",
+                "match_all": ["deliberate tie"],
+                "mode": "FEATURE",
+                "priority": 999,
+                "routes": ["godot_product_shell"],
+            },
+        ]
+    )
+    monkeypatch.setattr(GovernanceResolver, "check", lambda self: [])
+    monkeypatch.setattr(
+        GovernanceResolver, "load", lambda self: (workspace, project, None)
+    )
+
+    with pytest.raises(GovernanceError) as error:
+        GovernanceResolver.for_root(ROOT).resolve(task="A deliberate tie")
+
+    assert error.value.diagnostics[0].code == "AMBIGUOUS_AUTHORITY"
+    assert "tie-a, tie-b" in error.value.diagnostics[0].reason
+
+
+@pytest.mark.parametrize("priority", [-1, True, "high", None])
+def test_scenario_priority_schema_rejects_invalid_values(priority: object) -> None:
+    workspace, project = manifests()
+    project["execution"]["representative_scenarios"][0]["priority"] = priority
+    issues = validate(workspace, project)
+    assert any(
+        issue.fact.endswith("representative_scenarios[0].priority")
+        and issue.code == "CONFLICTING_VALUE"
+        for issue in issues
+    )
 
 
 def _normalized_markdown(path: Path) -> str:
