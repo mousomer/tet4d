@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-09-07
+Updated: 2026-09-18
 Scope: active work, explicit deferrals, and near-term acceptance boundaries.
 
 Completed chronology is recoverable from Git, merged PRs, CI, and
@@ -48,10 +48,13 @@ Regression coverage repairs missing/incompatible dependencies without an
 unneeded install when requirements are satisfied; `packaging>=24` is the example.
 ### Governance-manifest quality calibration
 
-Safety ceilings are provisional. A manifest/harness experiment must vary bytes,
-rules/authorities, depth, concentration, and context burden; measure retrieval,
-selection, reconstruction, isolated mutation, contradiction detection, and
-performance; then set targets from quality degradation, never capacity alone.
+Safety ceilings, including the machine-policy 80 KiB advisory and 96 KiB hard
+ceiling, are provisional rather than experimentally optimal. Physical LOC is a
+reviewability proxy, not a reason to compress normative authority. A
+manifest/harness experiment must vary bytes, rules/authorities, depth,
+concentration, and context burden; measure retrieval, selection,
+reconstruction, isolated mutation, contradiction detection, and performance;
+then set targets from quality degradation, never capacity alone.
 
 ### Camera and relative-control contract
 

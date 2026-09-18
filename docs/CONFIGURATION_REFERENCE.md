@@ -2424,15 +2424,16 @@ Parameters:
 - `governance_surface.document_roles.product_contract[]`: array[`string`]; examples: `"docs/rds"`
 - `governance_surface.document_roles.template[]`: array[`string`]; examples: `"tools/templates/governance"`
 - `governance_surface.governability.calibration_authority`: `"docs/BACKLOG.md#governance-manifest-quality-calibration"` (`string`)
-- `governance_surface.governability.hard_safety_limits[]`: array[`string`]; examples: `"aggregate_hard_limit"`, `"per_file_limits"`, `"per_file_byte_limits"`
 - `governance_surface.governability.status`: `"experimental_calibration_required"` (`string`)
 - `governance_surface.governability.structural_measurements[]`: array[`string`]; examples: `"serialized_bytes"`, `"node_count"`, `"leaf_count"`
 - `governance_surface.lifecycle.forbidden_active_heading_regex[]`: array[`string`]; examples: `"^#{1,6}\\s+(?:(?:Previous|Prior|Earlier|Last)\\s+){1,2}(?:Tasks?|Sta...`
 - `governance_surface.lifecycle.volatile_test_count_regex`: `"(?i)(?:\\bpytest(?:\\s+result)?\\s*:\\s*\\d[\\d,]*\\s+passed\\b|\\b\...` (`string`)
-- `governance_surface.per_file_byte_limits.config/project/policy_pack.json`: `98304` (`int`)
+- `governance_surface.machine_policy_byte_limits.advisory`: `81920` (`int`)
+- `governance_surface.machine_policy_byte_limits.hard_ceiling`: `98304` (`int`)
+- `governance_surface.machine_policy_byte_limits.status`: `"temporary_provisional_operational_ceiling"` (`string`)
 - `governance_surface.per_file_limits.AGENTS.md`: `150` (`int`)
 - `governance_surface.per_file_limits.CURRENT_STATE.md`: `150` (`int`)
-- `governance_surface.per_file_limits.docs/BACKLOG.md`: `250` (`int`)
+- `governance_surface.per_file_limits.docs/BACKLOG.md`: `300` (`int`)
 - `governance_surface.per_file_limits.docs/governance/CHANGE_GOVERNANCE.md`: `300` (`int`)
 - `governance_surface.per_file_limits.docs/governance/CONFIG_AND_GENERATED_DATA.md`: `300` (`int`)
 - `governance_surface.per_file_limits.docs/governance/ENGINEERING.md`: `300` (`int`)
