@@ -71,16 +71,6 @@ ADAPTER_TOKENS = (
     "replay_player.",
 )
 PRESENTATION_PARTS = {"presentation", "rendering", "traces", "ui", "bundle"}
-TEST_FIXTURE_HELPER_PREFIXES = (
-    "_assert_",
-    "_check_",
-    "_expect_",
-    "_setup_",
-    "assert_",
-    "check_",
-    "expect_",
-    "setup_",
-)
 REQUIRED_SCAN_DOMAINS = {
     "production": Path("scripts"),
     "test": Path("tests"),
@@ -220,7 +210,7 @@ def _has_adapter_call(text: str) -> bool:
     return any(token in lower for token in ADAPTER_TOKENS)
 
 
-def _function_finding(line: str, *, is_test_fixture: bool = False) -> str | None:
+def _function_finding(line: str) -> str | None:
     match = FUNC_RE.search(line)
     if match is None:
         return None
@@ -255,8 +245,6 @@ def _function_finding(line: str, *, is_test_fixture: bool = False) -> str | None
         )
     ):
         return f"suspicious semantic computation: function name `{match.group(1)}`"
-    if is_test_fixture and name.startswith(TEST_FIXTURE_HELPER_PREFIXES):
-        return None
     return None
 
 
@@ -304,7 +292,7 @@ def scan_file(path: Path, project_root: Path = GODOT_ROOT) -> list[Finding]:
             continue
 
         clean_line = _strip_strings_and_comments(line)
-        message = _function_finding(clean_line, is_test_fixture=is_test_fixture)
+        message = _function_finding(clean_line)
         if message is None:
             start = max(0, index - 2)
             end = min(len(lines), index + 3)
