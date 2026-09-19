@@ -32,7 +32,10 @@ the workspace-governance package identity under
 `6a3ca683...`; the machine-policy raw SHA-256 is `44c126b6...` and its exact
 length is 74,150 bytes. Regression tests reject either digest in the other
 domain. The current checkout may advance beyond PR118, but PR118 must remain an
-ancestor and every frozen treatment path must remain byte-identical to it.
+ancestor and every frozen treatment path must remain byte-identical to it. The
+canonical Python CI checkout therefore retains full history so the gate can
+verify the declared commit and ancestry instead of treating a shallow checkout
+as evidence that the baseline is absent.
 
 The generated fingerprint includes repository commit, pack revision and lock
 digest, raw policy SHA-256, serialized policy bytes, structural policy metrics,
