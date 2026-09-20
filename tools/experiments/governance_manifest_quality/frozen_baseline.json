@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "experiment_id": "stage-c1-pr118",
+  "repository": {
+    "baseline_commit": "7ca7f2e0697068ac0113c12d2d0a0a9d9ac14875"
+  },
+  "workspace_governance": {
+    "pack_name": "workspace-governance",
+    "pack_path": "tools/workspace_governance",
+    "lock_algorithm": "sha256-path-and-content-v1",
+    "revision": "v0.1-integrity-8",
+    "content_sha256": "6a3ca68304589a367b0eacfb593336ceef13c80221c1ff4bd7e9775432c3ccae"
+  },
+  "machine_policy": {
+    "path": "config/project/policy_pack.json",
+    "raw_sha256": "44c126b6a80e9b37a9b2300badcaae1dfb124cc9cf605a247f508a68c4b798a3",
+    "serialized_bytes": 74150
+  },
+  "thresholds": {
+    "machine_policy_advisory_bytes": 81920,
+    "machine_policy_hard_ceiling_bytes": 98304,
+    "human_governance_diagnostic_loc": 900,
+    "backlog_ceiling_loc": 300
+  }
+}

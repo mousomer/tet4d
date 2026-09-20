@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tet4d.local/experiments/governance-manifest-quality/frozen-baseline-v1.schema.json",
+  "title": "Stage C1 frozen treatment declaration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "experiment_id",
+    "repository",
+    "workspace_governance",
+    "machine_policy",
+    "thresholds"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "experiment_id": {"const": "stage-c1-pr118"},
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["baseline_commit"],
+      "properties": {
+        "baseline_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+      }
+    },
+    "workspace_governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pack_name",
+        "pack_path",
+        "lock_algorithm",
+        "revision",
+        "content_sha256"
+      ],
+      "properties": {
+        "pack_name": {"const": "workspace-governance"},
+        "pack_path": {"const": "tools/workspace_governance"},
+        "lock_algorithm": {"const": "sha256-path-and-content-v1"},
+        "revision": {"type": "string", "minLength": 1},
+        "content_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "machine_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "raw_sha256", "serialized_bytes"],
+      "properties": {
+        "path": {"const": "config/project/policy_pack.json"},
+        "raw_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "serialized_bytes": {"type": "integer", "minimum": 1}
+      }
+    },
+    "thresholds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "machine_policy_advisory_bytes",
+        "machine_policy_hard_ceiling_bytes",
+        "human_governance_diagnostic_loc",
+        "backlog_ceiling_loc"
+      ],
+      "properties": {
+        "machine_policy_advisory_bytes": {"type": "integer", "minimum": 1},
+        "machine_policy_hard_ceiling_bytes": {"type": "integer", "minimum": 1},
+        "human_governance_diagnostic_loc": {"type": "integer", "minimum": 1},
+        "backlog_ceiling_loc": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}

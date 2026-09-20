@@ -1,0 +1,283 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "id": "bounded_governance_read",
+      "trajectory": {
+        "schema_version": 1,
+        "source": {"source_id": "bounded", "source_format": "synthetic_event_stream"},
+        "events": [
+          {
+            "event_type": "retrieval",
+            "path": "docs/governance/ENGINEERING.md",
+            "source_class": "governance",
+            "access_mode": "bounded",
+            "materialized_bytes": 100,
+            "byte_range": {"start": 0, "end": 100},
+            "content_identity": "engineering-v1"
+          }
+        ]
+      },
+      "expected": {
+        "governance_read_events": 1,
+        "governance_bounded_reads": 1,
+        "governance_whole_file_reads": 0,
+        "governance_total_materialized_bytes": 100,
+        "governance_unique_materialized_bytes": 100,
+        "governance_repeated_materialized_bytes": 0,
+        "governance_mutation_events": 0
+      }
+    },
+    {
+      "id": "whole_file_governance_read",
+      "trajectory": {
+        "schema_version": 1,
+        "source": {"source_id": "whole", "source_format": "synthetic_event_stream"},
+        "events": [
+          {
+            "event_type": "retrieval",
+            "path": "AGENTS.md",
+            "source_class": "governance",
+            "access_mode": "whole_file",
+            "materialized_bytes": 200,
+            "byte_range": {"start": 0, "end": 200},
+            "content_identity": "agents-v1"
+          }
+        ]
+      },
+      "expected": {
+        "governance_read_events": 1,
+        "governance_bounded_reads": 0,
+        "governance_whole_file_reads": 1,
+        "governance_total_materialized_bytes": 200,
+        "governance_unique_materialized_bytes": 200,
+        "governance_repeated_materialized_bytes": 0
+      }
+    },
+    {
+      "id": "repeated_identical_read",
+      "trajectory": {
+        "schema_version": 1,
+        "source": {"source_id": "repeat", "source_format": "synthetic_event_stream"},
+        "events": [
+          {
+            "event_type": "retrieval",
+            "path": "docs/governance/VERIFICATION.md",
+            "source_class": "governance",
+            "access_mode": "bounded",
+            "materialized_bytes": 100,
+            "byte_range": {"start": 0, "end": 100},
+            "content_identity": "verification-v1"
+          },
+          {
+            "event_type": "retrieval",
+            "path": "docs/governance/VERIFICATION.md",
+            "source_class": "governance",
+            "access_mode": "bounded",
+            "materialized_bytes": 100,
+            "byte_range": {"start": 0, "end": 100},
+            "content_identity": "verification-v1"
+          }
+        ]
+      },
+      "expected": {
+        "governance_read_events": 2,
+        "governance_unique_files_read": 1,
+        "governance_total_materialized_bytes": 200,
+        "governance_unique_materialized_bytes": 100,
+        "governance_repeated_materialized_bytes": 100
+      }
+    },
+    {
+      "id": "overlapping_range_reads",
+      "trajectory": {
+        "schema_version": 1,
+        "source": {"source_id": "overlap", "source_format": "synthetic_event_stream"},
+        "events": [
+          {
+            "event_type": "retrieval",
+            "path": "config/project/policy_pack.json",
+            "source_class": "governance",
+            "access_mode": "bounded",
+            "materialized_bytes": 100,
+            "byte_range": {"start": 0, "end": 100},
+            "content_identity": "policy-v1"
+          },
+          {
+            "event_type": "retrieval",
+            "path": "config/project/policy_pack.json",
+            "source_class": "governance",
+            "access_mode": "bounded",
+            "materialized_bytes": 100,
+            "byte_range": {"start": 50, "end": 150},
+            "content_identity": "policy-v1"
+          }
+        ]
+      },
+      "expected": {
+        "governance_total_materialized_bytes": 200,
+        "governance_unique_materialized_bytes": 150,
+        "governance_repeated_materialized_bytes": 50
+      }
+    },
+    {
+      "id": "governance_edit_after_read",
+      "trajectory": {
+        "schema_version": 1,
+        "source": {"source_id": "read-edit", "source_format": "synthetic_event_stream"},
+        "events": [
+          {
+            "event_type": "retrieval",
+            "path": "docs/governance/ENGINEERING.md",
+            "source_class": "governance",
+            "access_mode": "bounded",
+            "materialized_bytes": 50,
+            "byte_range": {"start": 0, "end": 50},
+            "content_identity": "engineering-v1"
+          },
+          {
+            "event_type": "mutation",
+            "path": "docs/governance/ENGINEERING.md",
+            "source_class": "governance",
+            "operation": "edit",
+            "bytes_changed": 8,
+            "lines_added": 1,
+            "lines_deleted": 0,
+            "generated_file": false,
+            "intentional": true
+          }
+        ]
+      },
+      "expected": {
+        "governance_read_events": 1,
+        "governance_total_materialized_bytes": 50,
+        "governance_unique_materialized_bytes": 50,
+        "governance_repeated_materialized_bytes": 0,
+        "governance_mutation_events": 1
+      }
+    },
+    {
+      "id": "governance_edit_without_read",
+      "trajectory": {
+        "schema_version": 1,
+        "source": {"source_id": "edit-only", "source_format": "synthetic_event_stream"},
+        "events": [
+          {
+            "event_type": "mutation",
+            "path": "config/project/policy_pack.json",
+            "source_class": "governance",
+            "operation": "edit",
+            "bytes_changed": 10,
+            "lines_added": 1,
+            "lines_deleted": 1,
+            "generated_file": false,
+            "intentional": true
+          }
+        ]
+      },
+      "expected": {
+        "governance_read_events": 0,
+        "governance_total_materialized_bytes": 0,
+        "governance_unique_materialized_bytes": 0,
+        "governance_repeated_materialized_bytes": 0,
+        "governance_mutation_events": 1
+      }
+    },
+    {
+      "id": "non_governance_source_read",
+      "trajectory": {
+        "schema_version": 1,
+        "source": {"source_id": "ordinary", "source_format": "synthetic_event_stream"},
+        "events": [
+          {
+            "event_type": "retrieval",
+            "path": "src/tet4d/engine/core/model.py",
+            "source_class": "non_governance",
+            "access_mode": "bounded",
+            "materialized_bytes": 80,
+            "byte_range": {"start": 10, "end": 90},
+            "content_identity": "model-v1"
+          }
+        ]
+      },
+      "expected": {
+        "governance_read_events": 0,
+        "governance_total_materialized_bytes": 0,
+        "non_governance_materialized_bytes": 80
+      }
+    },
+    {
+      "id": "missing_byte_and_range_metadata",
+      "trajectory": {
+        "schema_version": 1,
+        "source": {"source_id": "missing", "source_format": "synthetic_event_stream"},
+        "events": [
+          {
+            "event_type": "retrieval",
+            "path": "docs/governance/CHANGE_GOVERNANCE.md",
+            "source_class": "governance",
+            "access_mode": "unknown",
+            "materialized_bytes": null,
+            "byte_range": null,
+            "content_identity": null
+          }
+        ]
+      },
+      "expected": {
+        "governance_read_events": 1,
+        "governance_total_materialized_bytes": null,
+        "governance_known_materialized_bytes": 0,
+        "governance_unique_materialized_bytes": null,
+        "governance_repeated_materialized_bytes": null,
+        "measurement_complete": false
+      }
+    },
+    {
+      "id": "malformed_incomplete_trajectory",
+      "trajectory": {
+        "schema_version": 1,
+        "source": {"source_id": "malformed", "source_format": "synthetic_event_stream"},
+        "events": [
+          {
+            "event_type": "retrieval",
+            "source_class": "governance",
+            "access_mode": "bounded",
+            "materialized_bytes": 2,
+            "byte_range": {"start": 0, "end": 2},
+            "content_identity": "missing-path"
+          }
+        ]
+      },
+      "expected_error": "event path must be a non-empty string"
+    },
+    {
+      "id": "equivalent_grouped_format",
+      "equivalent_to": "bounded_governance_read",
+      "trajectory": {
+        "schema_version": 1,
+        "source": {"source_id": "bounded", "source_format": "synthetic_grouped"},
+        "retrieval_activity": [
+          {
+            "path": "docs/governance/ENGINEERING.md",
+            "source_class": "governance",
+            "access_mode": "bounded",
+            "materialized_bytes": 100,
+            "byte_range": {"start": 0, "end": 100},
+            "content_identity": "engineering-v1"
+          }
+        ],
+        "mutation_activity": [],
+        "tool_activity": []
+      },
+      "expected": {
+        "governance_read_events": 1,
+        "governance_bounded_reads": 1,
+        "governance_whole_file_reads": 0,
+        "governance_total_materialized_bytes": 100,
+        "governance_unique_materialized_bytes": 100,
+        "governance_repeated_materialized_bytes": 0,
+        "governance_mutation_events": 0
+      }
+    }
+  ]
+}

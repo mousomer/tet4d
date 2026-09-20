@@ -62,6 +62,20 @@ concentration, and context burden; measure retrieval, selection,
 reconstruction, isolated mutation, contradiction detection, and performance;
 then set targets from quality degradation, never capacity alone.
 
+Stage C1 is limited to non-authoritative observational instrumentation under
+`tools/experiments/governance_manifest_quality/` and the protocol in
+`docs/experiments/governance_manifest_quality_stage_c1.md`. C1 is complete: its
+baseline gate independently proves the PR118 repository identity, locked
+workspace-governance package digest, and raw machine-policy bytes; all 556
+historical candidates have reconciled statuses; and the compact observational
+result records recoverable distributions and evidence limitations. No threshold,
+route, scenario, resolver, authority, or active-surface change was made.
+
+The PR118-baseline migration-bundle check separately reproduces stale generated metadata,
+including the old `da6e2dd6...` policy digest. Regeneration also adds governance
+config inputs and refreshes authority-document hashes, so that broader generated
+artifact repair remains deferred from C1.
+
 ### Camera and relative-control contract
 
 Unify the Godot presentation contract for exact camera basis turns, slice

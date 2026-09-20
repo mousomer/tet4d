@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "result_kind": "non_authoritative_observational_summary",
+  "experiment_id": "stage-c1-pr118",
+  "baseline": {
+    "repository_commit": "7ca7f2e0697068ac0113c12d2d0a0a9d9ac14875",
+    "workspace_governance_revision": "v0.1-integrity-8",
+    "workspace_governance_content_sha256": "6a3ca68304589a367b0eacfb593336ceef13c80221c1ff4bd7e9775432c3ccae",
+    "machine_policy_raw_sha256": "44c126b6a80e9b37a9b2300badcaae1dfb124cc9cf605a247f508a68c4b798a3",
+    "machine_policy_serialized_bytes": 74150
+  },
+  "corpus": {
+    "discovered": 556,
+    "successfully_measured": 302,
+    "complete_measurements": 163,
+    "incomplete_measurements": 139,
+    "rejected_during_ingestion": 0,
+    "excluded_other_repository": 250,
+    "excluded_after_normalization": 4,
+    "unsupported_format": 0,
+    "missing_required_provenance": 0,
+    "other_unprocessed": 0,
+    "status_reconciled": true,
+    "excluded_after_normalization_reasons": {
+      "incomplete_tool_calls": 3,
+      "trajectory_validation_error": 1
+    },
+    "incomplete_measurement_reason_counts": {
+      "governance_materialized_bytes_unavailable": 122,
+      "governance_unique_ranges_or_identity_unavailable": 122,
+      "non_governance_materialized_bytes_unavailable": 133,
+      "non_governance_unique_ranges_or_identity_unavailable": 133,
+      "command_materialization_unresolved": 4,
+      "command_and_search_materialization_unresolved": 126,
+      "search_materialization_unresolved": 9
+    }
+  },
+  "materialization": {
+    "exact_governance_total_bytes": {
+      "count": 163,
+      "minimum": 0,
+      "q1": 0.0,
+      "median": 0.0,
+      "q3": 0.0,
+      "maximum": 0
+    },
+    "exact_governance_unique_bytes": {
+      "count": 163,
+      "minimum": 0,
+      "q1": 0.0,
+      "median": 0.0,
+      "q3": 0.0,
+      "maximum": 0
+    },
+    "exact_governance_repeated_bytes": {
+      "count": 163,
+      "minimum": 0,
+      "q1": 0.0,
+      "median": 0.0,
+      "q3": 0.0,
+      "maximum": 0
+    },
+    "known_governance_byte_lower_bound": {
+      "count": 302,
+      "sum": 16888308,
+      "minimum": 0,
+      "q1": 0.0,
+      "median": 0.0,
+      "q3": 45684.25,
+      "maximum": 1229474
+    },
+    "known_non_governance_byte_lower_bound_sum": 55150284,
+    "governance_read_events": 4283,
+    "bounded_governance_reads": 4214,
+    "whole_file_governance_reads": 69,
+    "unknown_mode_governance_reads": 0,
+    "governance_mutation_events": 1714,
+    "governance_mutation_trajectories": 103
+  },
+  "dominant_governance_retrieval": [
+    {
+      "path": "docs/BACKLOG.md",
+      "known_bytes": 5854818,
+      "read_events": 1230,
+      "mutation_events": 514
+    },
+    {
+      "path": "CURRENT_STATE.md",
+      "known_bytes": 5711399,
+      "read_events": 1031,
+      "mutation_events": 382
+    },
+    {
+      "path": "tools/governance/validate_project_contracts.py",
+      "known_bytes": 1658182,
+      "read_events": 343,
+      "mutation_events": 67
+    },
+    {
+      "path": "config/project/policy_pack.json",
+      "known_bytes": 713805,
+      "read_events": 244,
+      "mutation_events": 75
+    },
+    {
+      "path": "AGENTS.md",
+      "known_bytes": 445011,
+      "read_events": 231,
+      "mutation_events": 54
+    }
+  ],
+  "policy_pack_activity": {
+    "trajectories_with_read": 57,
+    "trajectories_with_mutation": 23,
+    "read_events": 244,
+    "bounded_reads": 244,
+    "whole_file_reads": 0,
+    "known_bytes": 713805,
+    "mutation_events": 75
+  },
+  "outliers": {
+    "lower_bound_outlier_count": 40,
+    "known_governance_bytes": 12948517,
+    "with_governance_mutation": 31,
+    "without_governance_mutation": 9,
+    "with_any_whole_file_governance_read": 6,
+    "with_more_than_1000_tool_calls": 11
+  },
+  "source_metadata_availability": {
+    "repository_revision": 302,
+    "task_identity": 287,
+    "model": 290,
+    "recorded_token_information": 284,
+    "started_at": 302,
+    "elapsed_ms": 258,
+    "non_null_outcome_evidence": 0
+  },
+  "execution_activity": {
+    "tool_calls": 81778,
+    "shell_commands": 47827,
+    "searches": 8053,
+    "test_invocations": 3804,
+    "failed_commands": 3266,
+    "repeated_failed_commands": 457
+  },
+  "determinism": {
+    "two_full_runs_normalized_artifacts_byte_identical": true,
+    "forward_reverse_normalized_replay_outputs_byte_identical": true,
+    "aggregate_sha256": "47ce59a187e2452c9287a1943103cfea2689bf66655828c9d262b39c77722d86"
+  },
+  "limitations": [
+    "Exact total, unique, and repeated byte distributions are unavailable for trajectories with unresolved search or command materialization.",
+    "Known-byte values are lower bounds and must not be interpreted as exact totals.",
+    "Historical outcome fields are null because the rollout format does not provide independent outcome evidence suitable for causal inference.",
+    "Stage C1 observations do not justify governance threshold, routing, or authority changes."
+  ],
+  "migration_bundle": {
+    "outcome": "B",
+    "classification": "pre_existing_generated_artifact_defect",
+    "canonical_check_reproduced_policy_digest_change": true,
+    "regenerated_policy_digest": "44c126b6a80e9b37a9b2300badcaae1dfb124cc9cf605a247f508a68c4b798a3",
+    "action": "deferred_broad_bundle_regeneration"
+  }
+}

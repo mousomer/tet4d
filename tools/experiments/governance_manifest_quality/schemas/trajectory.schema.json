@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tet4d.local/experiments/governance-manifest-quality/trajectory-v1.schema.json",
+  "title": "Stage C1 normalized trajectory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "source",
+    "retrieval_events",
+    "mutation_events",
+    "execution_events",
+    "outcome_evidence",
+    "evidence_limitations"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_id",
+        "source_format",
+        "repository_revision",
+        "task_identity",
+        "model",
+        "token_information",
+        "started_at",
+        "elapsed_ms"
+      ],
+      "properties": {
+        "source_id": {"type": "string", "minLength": 1},
+        "source_format": {"type": ["string", "null"]},
+        "repository_revision": {"type": ["string", "null"]},
+        "task_identity": {"type": ["string", "null"]},
+        "model": {"type": ["string", "null"]},
+        "token_information": {"type": ["object", "null"]},
+        "started_at": {"type": ["string", "null"]},
+        "elapsed_ms": {"type": ["integer", "null"], "minimum": 0}
+      }
+    },
+    "retrieval_events": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/retrieval_event"}
+    },
+    "mutation_events": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/mutation_event"}
+    },
+    "execution_events": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/execution_event"}
+    },
+    "outcome_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "required_tests_passed",
+        "full_gate_passed",
+        "regression_count",
+        "scope_violations",
+        "authority_violations",
+        "unnecessary_files_changed",
+        "technical_debt_introduced",
+        "technical_debt_removed",
+        "acceptance_criteria_completed",
+        "review_findings"
+      ],
+      "properties": {
+        "required_tests_passed": {},
+        "full_gate_passed": {},
+        "regression_count": {},
+        "scope_violations": {},
+        "authority_violations": {},
+        "unnecessary_files_changed": {},
+        "technical_debt_introduced": {},
+        "technical_debt_removed": {},
+        "acceptance_criteria_completed": {},
+        "review_findings": {}
+      }
+    },
+    "evidence_limitations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "event_sequence"],
+        "properties": {
+          "kind": {"type": "string", "minLength": 1},
+          "event_sequence": {"type": ["integer", "null"], "minimum": 1}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "source_class": {
+      "enum": ["governance", "non_governance", "unknown"]
+    },
+    "byte_range": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["start", "end"],
+          "properties": {
+            "start": {"type": "integer", "minimum": 0},
+            "end": {"type": "integer", "minimum": 0}
+          }
+        }
+      ]
+    },
+    "retrieval_event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "path",
+        "source_class",
+        "governance_kind",
+        "access_mode",
+        "materialized_bytes",
+        "byte_range",
+        "content_identity",
+        "route",
+        "authority",
+        "evidence"
+      ],
+      "properties": {
+        "sequence": {"type": "integer", "minimum": 1},
+        "path": {"type": "string", "minLength": 1},
+        "source_class": {"$ref": "#/$defs/source_class"},
+        "governance_kind": {"type": ["string", "null"]},
+        "access_mode": {"enum": ["bounded", "whole_file", "unknown"]},
+        "materialized_bytes": {"type": ["integer", "null"], "minimum": 0},
+        "byte_range": {"$ref": "#/$defs/byte_range"},
+        "content_identity": {"type": ["string", "null"]},
+        "route": {"type": ["string", "null"]},
+        "authority": {"type": ["string", "null"]},
+        "evidence": {"type": ["string", "null"]}
+      }
+    },
+    "mutation_event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "path",
+        "source_class",
+        "governance_kind",
+        "operation",
+        "bytes_changed",
+        "lines_added",
+        "lines_deleted",
+        "generated_file",
+        "intentional",
+        "evidence"
+      ],
+      "properties": {
+        "sequence": {"type": "integer", "minimum": 1},
+        "path": {"type": "string", "minLength": 1},
+        "source_class": {"$ref": "#/$defs/source_class"},
+        "governance_kind": {"type": ["string", "null"]},
+        "operation": {"enum": ["create", "edit", "delete", "unknown"]},
+        "bytes_changed": {"type": ["integer", "null"], "minimum": 0},
+        "lines_added": {"type": ["integer", "null"], "minimum": 0},
+        "lines_deleted": {"type": ["integer", "null"], "minimum": 0},
+        "generated_file": {"type": ["boolean", "null"]},
+        "intentional": {"type": ["boolean", "null"]},
+        "evidence": {"type": ["string", "null"]}
+      }
+    },
+    "execution_event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "tool",
+        "command_kind",
+        "is_search",
+        "is_test",
+        "exit_code",
+        "duration_ms",
+        "repeated_failure",
+        "command_identity"
+      ],
+      "properties": {
+        "sequence": {"type": "integer", "minimum": 1},
+        "tool": {"type": ["string", "null"]},
+        "command_kind": {"type": ["string", "null"]},
+        "is_search": {"type": ["boolean", "null"]},
+        "is_test": {"type": ["boolean", "null"]},
+        "exit_code": {"type": ["integer", "null"]},
+        "duration_ms": {"type": ["integer", "null"], "minimum": 0},
+        "repeated_failure": {"type": ["boolean", "null"]},
+        "command_identity": {"type": ["string", "null"]}
+      }
+    }
+  }
+}

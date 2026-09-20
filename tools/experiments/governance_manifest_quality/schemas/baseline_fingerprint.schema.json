@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tet4d.local/experiments/governance-manifest-quality/baseline-v1.schema.json",
+  "title": "Stage C1 frozen-baseline fingerprint",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "fingerprint_kind",
+    "repository",
+    "workspace_governance",
+    "machine_policy",
+    "human_governance_loc",
+    "active_governance_files",
+    "schema_identity",
+    "thresholds",
+    "governance_surface_issues"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "fingerprint_kind": {"const": "non_authoritative_experiment_record"},
+    "repository": {
+      "type": "object",
+      "required": [
+        "baseline_commit",
+        "checkout_commit",
+        "baseline_commit_exists",
+        "baseline_is_ancestor_of_checkout",
+        "frozen_treatment_paths_match_baseline"
+      ]
+    },
+    "workspace_governance": {"type": "object"},
+    "machine_policy": {"type": "object"},
+    "human_governance_loc": {"type": "integer", "minimum": 0},
+    "active_governance_files": {"type": "object"},
+    "schema_identity": {"type": "object"},
+    "thresholds": {"type": "object"},
+    "governance_surface_issues": {"type": "array"},
+    "baseline_validation": {"type": "object"}
+  }
+}
