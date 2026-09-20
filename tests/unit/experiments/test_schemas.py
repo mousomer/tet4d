@@ -5,7 +5,7 @@ import json
 from tools.experiments.governance_manifest_quality.baseline import (
     BASELINE_PATH,
     ROOT,
-    require_frozen_baseline,
+    require_frozen_baseline_snapshot,
 )
 from tools.experiments.governance_manifest_quality.measurement import (
     measure_trajectory,
@@ -41,7 +41,7 @@ def test_frozen_declaration_matches_its_structural_schema() -> None:
 
 
 def test_generated_records_match_declared_top_level_contracts() -> None:
-    fingerprint = require_frozen_baseline(ROOT)
+    fingerprint = require_frozen_baseline_snapshot(ROOT)
     trajectory = normalize_trajectory(
         {
             "schema_version": 1,

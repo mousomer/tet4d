@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import fnmatch
 import hashlib
 import json
 import subprocess
@@ -8,7 +9,11 @@ from pathlib import Path
 from typing import Any
 
 from tools.governance.policy_pack_io import load_policy_pack
-from tools.governance.validate_governance_surface import validate_surface
+from tools.governance.validate_governance_surface import (
+    physical_loc_of,
+    policy_structure_metrics,
+    validate_surface,
+)
 from tools.workspace_governance.validators.core import (
     load_manifest_json,
     pack_hash,
@@ -22,6 +27,10 @@ WORKSPACE_LOCK_PATH = Path("config/governance/workspace.lock.json")
 PROJECT_SCHEMA_PATH = Path("tools/workspace_governance/schemas/project.schema.json")
 RESOLVER_PATH = Path("tools/workspace_governance/resolver/core.py")
 WORKSPACE_PACK_PATH = Path("tools/workspace_governance")
+# Mirrors the only algorithm validators.core.content_hash implements. The
+# historical hasher reads Git blobs, so it cannot call content_hash directly
+# and must enforce the same guard itself.
+PACK_HASH_ALGORITHM = "sha256-path-and-content-v1"
 FROZEN_TREATMENT_PATHS = (
     ".governance/workspace.json",
     "config/governance/project.json",
@@ -141,6 +150,70 @@ def _git_is_ancestor(root: Path, ancestor: str, descendant: str) -> bool:
     )
 
 
+def _git_show(root: Path, commit: str, path: str) -> bytes:
+    result = subprocess.run(
+        ["git", "show", f"{commit}:{path}"],
+        cwd=root,
+        check=False,
+        capture_output=True,
+    )
+    if result.returncode:
+        raise ValueError(f"historical path is unavailable: {commit}:{path}")
+    return result.stdout
+
+
+def _git_tree_files(root: Path, commit: str, directory: str) -> list[str]:
+    result = subprocess.run(
+        ["git", "ls-tree", "-r", "-z", "--name-only", commit, "--", directory],
+        cwd=root,
+        check=False,
+        capture_output=True,
+    )
+    if result.returncode:
+        raise ValueError(f"historical tree is unavailable: {commit}:{directory}")
+    prefix = directory.rstrip("/") + "/"
+    return sorted(
+        path.removeprefix(prefix)
+        for path in result.stdout.decode("utf-8").split("\0")
+        if path
+    )
+
+
+def _git_path_exists(root: Path, commit: str, path: str) -> bool:
+    return (
+        subprocess.run(
+            ["git", "cat-file", "-e", f"{commit}:{path}"],
+            cwd=root,
+            check=False,
+            capture_output=True,
+        ).returncode
+        == 0
+    )
+
+
+def _historical_pack_hash(
+    root: Path, commit: str, pack_path: str, manifest: dict[str, Any]
+) -> tuple[str, list[str]]:
+    """Hash the pack from one Git tree, never from current working-tree bytes."""
+    algorithm = manifest["lock_algorithm"]
+    if algorithm != PACK_HASH_ALGORITHM:
+        raise ValueError(f"unsupported pack hash algorithm: {algorithm}")
+    files = [
+        path
+        for path in _git_tree_files(root, commit, pack_path)
+        if not any(
+            fnmatch.fnmatch(path, pattern) or fnmatch.fnmatch(f"/{path}", pattern)
+            for pattern in manifest["pack_hash_excludes"]
+        )
+    ]
+    digest = hashlib.sha256()
+    for path in files:
+        digest.update(path.encode("utf-8") + b"\0")
+        digest.update(_git_show(root, commit, f"{pack_path}/{path}"))
+        digest.update(b"\0")
+    return digest.hexdigest(), files
+
+
 def _frozen_paths_match(root: Path, baseline_commit: str) -> bool:
     if not _git_commit_exists(root, baseline_commit):
         return False
@@ -171,6 +244,25 @@ def _schema_identity(root: Path, project: dict[str, Any]) -> dict[str, Any]:
         "project_manifest_schema_version": project.get("schema_version"),
         "project_schema_sha256": _sha256(root / PROJECT_SCHEMA_PATH),
         "resolver_sha256": _sha256(root / RESOLVER_PATH),
+        "scenario_definitions_sha256": hashlib.sha256(scenario_bytes).hexdigest(),
+    }
+
+
+def _snapshot_schema_identity(
+    root: Path, commit: str, project: dict[str, Any]
+) -> dict[str, Any]:
+    scenarios = project.get("execution", {}).get("representative_scenarios")
+    scenario_bytes = json.dumps(
+        scenarios, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+    return {
+        "project_manifest_schema_version": project.get("schema_version"),
+        "project_schema_sha256": hashlib.sha256(
+            _git_show(root, commit, PROJECT_SCHEMA_PATH.as_posix())
+        ).hexdigest(),
+        "resolver_sha256": hashlib.sha256(
+            _git_show(root, commit, RESOLVER_PATH.as_posix())
+        ).hexdigest(),
         "scenario_definitions_sha256": hashlib.sha256(scenario_bytes).hexdigest(),
     }
 
@@ -208,6 +300,7 @@ def measure_fingerprint(
     return {
         "schema_version": 1,
         "fingerprint_kind": "non_authoritative_experiment_record",
+        "fingerprint_source": "current_checkout",
         "repository": {
             "baseline_commit": baseline_commit,
             "checkout_commit": checkout_commit,
@@ -256,6 +349,116 @@ def measure_fingerprint(
         "governance_surface_issues": [
             {"kind": issue.kind, "message": issue.message} for issue in issues
         ],
+    }
+
+
+def _historical_human_loc(root: Path, commit: str, active: dict[str, Any]) -> int:
+    paths = active.get("human", [])
+    if not isinstance(paths, list) or not all(isinstance(path, str) for path in paths):
+        raise ValueError("historical active human governance paths are invalid")
+    return sum(
+        physical_loc_of(_git_show(root, commit, path).decode("utf-8")) for path in paths
+    )
+
+
+def measure_frozen_baseline_snapshot(
+    root: Path = ROOT, baseline_path: Path = BASELINE_PATH
+) -> dict[str, Any]:
+    """Measure the immutable C1 treatment directly from its named Git commit.
+
+    This answers whether the recorded treatment remains reproducible. It is
+    intentionally distinct from ``measure_fingerprint``, which measures the
+    checkout and remains the strict C1 reproduction gate.
+    """
+    baseline = load_frozen_baseline(baseline_path)
+    commit = baseline.baseline_repository_commit
+    if not _git_commit_exists(root, commit):
+        raise ValueError(f"frozen baseline commit is unavailable: {commit}")
+    policy_bytes = _git_show(root, commit, POLICY_PATH.as_posix())
+    policy = json.loads(policy_bytes)
+    project = json.loads(_git_show(root, commit, PROJECT_MANIFEST_PATH.as_posix()))
+    workspace_lock = json.loads(_git_show(root, commit, WORKSPACE_LOCK_PATH.as_posix()))
+    pack_path = str(workspace_lock["pack_path"])
+    workspace_manifest = json.loads(
+        _git_show(root, commit, f"{pack_path}/MANIFEST.json")
+    )
+    workspace_digest, workspace_files = _historical_pack_hash(
+        root, commit, pack_path, workspace_manifest
+    )
+    governance_surface = policy.get("governance_surface")
+    if not isinstance(governance_surface, dict):
+        raise TypeError("historical governance surface is invalid")
+    active = governance_surface.get("active_governance")
+    if not isinstance(active, dict):
+        raise TypeError("historical active governance declaration is invalid")
+    active_files = {
+        group: sorted(str(path) for path in paths)
+        for group, paths in sorted(active.items())
+        if isinstance(paths, list)
+    }
+    policy_nodes, policy_leaves, policy_depth = policy_structure_metrics(policy)
+    largest_name = max(
+        policy,
+        key=lambda key: len(
+            json.dumps(policy[key], ensure_ascii=False).encode("utf-8")
+        ),
+    )
+    machine_limits = governance_surface.get("machine_policy_byte_limits", {})
+    per_file_limits = governance_surface.get("per_file_limits", {})
+    return {
+        "schema_version": 1,
+        "fingerprint_kind": "non_authoritative_experiment_record",
+        "fingerprint_source": "historical_git_snapshot",
+        "repository": {
+            "baseline_commit": commit,
+            "snapshot_commit": commit,
+            "checkout_commit": _git_head(root),
+            "baseline_commit_exists": True,
+            "baseline_is_ancestor_of_checkout": _git_is_ancestor(
+                root, commit, _git_head(root)
+            ),
+            "frozen_treatment_paths_match_baseline": all(
+                _git_path_exists(root, commit, path) for path in FROZEN_TREATMENT_PATHS
+            ),
+        },
+        "workspace_governance": {
+            "revision": workspace_manifest.get("revision"),
+            "content_sha256": workspace_digest,
+            "locked_revision": workspace_lock.get("revision"),
+            "locked_content_sha256": workspace_lock.get("content_sha256"),
+            "lock_algorithm": workspace_lock.get("lock_algorithm"),
+            "pack_name": workspace_lock.get("pack_name"),
+            "pack_path": pack_path,
+            "locked_files_match_computed": workspace_lock.get("files")
+            == workspace_files,
+        },
+        "machine_policy": {
+            "path": POLICY_PATH.as_posix(),
+            "raw_sha256": hashlib.sha256(policy_bytes).hexdigest(),
+            "serialized_bytes": len(policy_bytes),
+            "node_count": policy_nodes,
+            "leaf_count": policy_leaves,
+            "maximum_nesting_depth": policy_depth,
+            "largest_top_level_section": {
+                "name": largest_name,
+                "bytes": len(
+                    json.dumps(policy[largest_name], ensure_ascii=False).encode("utf-8")
+                ),
+            },
+        },
+        "human_governance_loc": _historical_human_loc(root, commit, active),
+        "active_governance_files": active_files,
+        "schema_identity": _snapshot_schema_identity(root, commit, project),
+        "thresholds": {
+            "machine_policy_advisory_bytes": machine_limits.get("advisory"),
+            "machine_policy_hard_ceiling_bytes": machine_limits.get("hard_ceiling"),
+            "human_governance_diagnostic_loc": 900,
+            "backlog_ceiling_loc": per_file_limits.get("docs/BACKLOG.md"),
+        },
+        # null, not []: the contemporary surface validator is not run against a
+        # historical treatment, so this fingerprint source has no verdict to give.
+        # An empty list would claim a clean result that was never measured.
+        "governance_surface_issues": None,
     }
 
 
@@ -368,6 +571,18 @@ def validate_fingerprint(
         for name, actual, expected in comparisons
         if actual != expected
     ]
+
+
+def require_frozen_baseline_snapshot(
+    root: Path = ROOT, baseline_path: Path = BASELINE_PATH
+) -> dict[str, Any]:
+    """Verify that the historical C1 Git snapshot still matches its declaration."""
+    baseline = load_frozen_baseline(baseline_path)
+    fingerprint = measure_frozen_baseline_snapshot(root, baseline_path)
+    mismatches = validate_fingerprint(fingerprint, baseline)
+    if mismatches:
+        raise BaselineMismatchError(fingerprint, mismatches)
+    return fingerprint
 
 
 def require_frozen_baseline(

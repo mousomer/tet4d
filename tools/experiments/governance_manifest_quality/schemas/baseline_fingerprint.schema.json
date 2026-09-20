@@ -6,6 +6,7 @@
   "required": [
     "schema_version",
     "fingerprint_kind",
+    "fingerprint_source",
     "repository",
     "workspace_governance",
     "machine_policy",
@@ -18,6 +19,9 @@
   "properties": {
     "schema_version": {"const": 1},
     "fingerprint_kind": {"const": "non_authoritative_experiment_record"},
+    "fingerprint_source": {
+      "enum": ["current_checkout", "historical_git_snapshot"]
+    },
     "repository": {
       "type": "object",
       "required": [
@@ -34,7 +38,10 @@
     "active_governance_files": {"type": "object"},
     "schema_identity": {"type": "object"},
     "thresholds": {"type": "object"},
-    "governance_surface_issues": {"type": "array"},
+    "governance_surface_issues": {
+      "type": ["array", "null"],
+      "description": "Issue list for a current_checkout fingerprint; null for a historical_git_snapshot, where the contemporary surface validator is deliberately not run."
+    },
     "baseline_validation": {"type": "object"}
   }
 }
