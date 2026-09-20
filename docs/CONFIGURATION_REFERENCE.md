@@ -305,14 +305,14 @@ Parameters:
 ### `config/governance/workspace.lock.json`
 Top-level keys: `content_sha256`, `files`, `lock_algorithm`, `pack_name`, `pack_path`, `revision`, `schema_version`, `version`
 Parameters:
-- `content_sha256`: `"6a3ca68304589a367b0eacfb593336ceef13c80221c1ff4bd7e9775432c3ccae"` (`string`)
+- `content_sha256`: `"971e5bc010287bf7e87379cdc4032bfa599a3374a124f88b150a10f57cbb8fff"` (`string`)
 - `files[]`: array[`string`]; examples: `"MANIFEST.json"`, `"VERSION"`, `"__init__.py"`
 - `lock_algorithm`: `"sha256-path-and-content-v1"` (`string`)
 - `pack_name`: `"workspace-governance"` (`string`)
 - `pack_path`: `"tools/workspace_governance"` (`string`)
-- `revision`: `"v0.1-integrity-8"` (`string`)
+- `revision`: `"v0.2-work-type-schema-1"` (`string`)
 - `schema_version`: `1` (`int`)
-- `version`: `"0.1.0"` (`string`)
+- `version`: `"0.2.0"` (`string`)
 
 ### `config/help/action_map.json`
 Top-level keys: `action_topics`, `default_topic`, `version`

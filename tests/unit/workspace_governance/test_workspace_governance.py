@@ -41,6 +41,46 @@ def test_repository_manifests_and_pack_are_valid() -> None:
     assert GovernanceResolver.for_root(ROOT).check() == []
 
 
+def test_work_type_and_artifact_role_schema_is_additive_until_migration() -> None:
+    workspace, project = manifests()
+    project["work_types"] = ["Planning", "Coding", "Manifest"]
+    project["artifact_roles"] = {
+        "an/explicit/artifact": "planning_document",
+        "another/artifact": "bookkeeping",
+    }
+    assert validate(workspace, project) == []
+
+    project["work_types"] = ["Planning", "Coding", "Verification"]
+    assert any(issue.fact == "work_types[2]" for issue in validate(workspace, project))
+
+    project["work_types"] = ["Planning", "Coding", "Manifest"]
+    project["artifact_roles"]["another/artifact"] = "route_membership"
+    assert any(
+        issue.fact == "artifact_roles.another/artifact"
+        for issue in validate(workspace, project)
+    )
+
+
+def test_pack_metadata_is_complete_and_directional() -> None:
+    manifest = json.loads((PACK_ROOT / "MANIFEST.json").read_text())
+    _, files = core.pack_hash(PACK_ROOT)
+    assert core._pack_metadata_issues(manifest, files) == []
+
+    weakened = copy.deepcopy(manifest)
+    weakened["obligation_comparators"]["required_all_of"] = "set_subset"
+    assert any(
+        issue.fact == "MANIFEST.obligation_comparators"
+        for issue in core._pack_metadata_issues(weakened, files)
+    )
+
+    missing_role = copy.deepcopy(manifest)
+    missing_role["artifact_roles"].pop()
+    assert any(
+        issue.fact == "MANIFEST.artifact_roles"
+        for issue in core._pack_metadata_issues(missing_role, files)
+    )
+
+
 def test_resolution_entries_have_uniform_and_truthful_provenance() -> None:
     resolver = GovernanceResolver.for_root(ROOT)
     local_fix = resolver.resolve(mode="LOCAL_FIX")
@@ -780,6 +820,12 @@ def test_pack_hash_policy_excludes_declared_files_and_lock_identity_is_manifest_
         "pack_hash_excludes": ["**/*.pyc"],
         "commands": sorted(core.SUPPORTED_COMMANDS),
         "diagnostics": sorted(core.DIAGNOSTIC_CLASSES),
+        "work_types": ["Planning", "Coding", "Manifest"],
+        "artifact_roles": [
+            {"path": "MANIFEST.json", "role": "executable_machinery"},
+            {"path": "VERSION", "role": "executable_machinery"},
+        ],
+        "obligation_comparators": core.OBLIGATION_COMPARATORS,
     }
     manifest["field_usage"] = {key: "consumed" for key in (*manifest, "field_usage")}
     (pack / "MANIFEST.json").write_text(json.dumps(manifest))
