@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-09-18
+Updated: 2026-09-20
 Scope: active work, explicit deferrals, and near-term acceptance boundaries.
 
 Completed chronology is recoverable from Git, merged PRs, CI, and
@@ -75,6 +75,13 @@ The PR118-baseline migration-bundle check separately reproduces stale generated 
 including the old `da6e2dd6...` policy digest. Regeneration also adds governance
 config inputs and refreshes authority-document hashes, so that broader generated
 artifact repair remains deferred from C1.
+
+### Work-type classification rollout
+
+`docs/architecture/work_type_classification.md` owns the accepted ontology and
+its rollout. Open: upstream pack release (work-type vocabulary, artifact-role schema, pack roles and obligation comparators) and re-sync; log-only telemetry,
+attribution, role-driven classification and non-weakening comparison; a human-reviewed Tet4D role migration that preserves route resolution; stratified
+validation; then a separate Manifest change enabling blocking. `dispatch_paths` remains context metadata and never implies Manifest membership.
 
 ### Camera and relative-control contract
 
