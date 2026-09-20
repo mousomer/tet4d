@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "name": "workspace-governance",
-  "version": "0.1.0",
-  "revision": "v0.1-integrity-8",
+  "version": "0.2.0",
+  "revision": "v0.2-work-type-schema-1",
   "version_file": "VERSION",
   "lock_algorithm": "sha256-path-and-content-v1",
   "pack_hash_excludes": [
@@ -26,6 +26,43 @@
     "PACK_DRIFT",
     "ENVIRONMENT_MISMATCH"
   ],
+  "work_types": [
+    "Planning",
+    "Coding",
+    "Manifest"
+  ],
+  "artifact_roles": [
+    {"path": "MANIFEST.json", "role": "executable_machinery"},
+    {"path": "VERSION", "role": "executable_machinery"},
+    {"path": "__init__.py", "role": "executable_machinery"},
+    {"path": "cli/__init__.py", "role": "executable_machinery"},
+    {"path": "cli/bootstrap.py", "role": "executable_machinery"},
+    {"path": "cli/gov.py", "role": "executable_machinery"},
+    {"path": "dependency_compatibility.py", "role": "executable_machinery"},
+    {"path": "field-usage.json", "role": "executable_machinery"},
+    {"path": "policies/ownership.md", "role": "governance_treatment"},
+    {"path": "resolver/__init__.py", "role": "executable_machinery"},
+    {"path": "resolver/core.py", "role": "executable_machinery"},
+    {"path": "schemas/project.schema.json", "role": "executable_machinery"},
+    {"path": "schemas/workspace-local.schema.json", "role": "executable_machinery"},
+    {"path": "schemas/workspace.schema.json", "role": "executable_machinery"},
+    {"path": "synthetic-fixtures/contradictions.json", "role": "executable_machinery"},
+    {"path": "validators/__init__.py", "role": "executable_machinery"},
+    {"path": "validators/core.py", "role": "executable_machinery"}
+  ],
+  "obligation_comparators": {
+    "required_all_of": "set_superset",
+    "allowed_any_of": "set_subset",
+    "trigger_coverage": "set_superset",
+    "forbidden_set": "set_superset",
+    "permitted_set": "set_subset",
+    "exact_set": "equality",
+    "minimum": "numeric_gte",
+    "maximum": "numeric_lte",
+    "required_boolean": "false_to_true_only",
+    "identity": "equality",
+    "unknown": "human_review"
+  },
   "field_usage": {
     "schema_version": "validation-only",
     "name": "consumed",
@@ -36,6 +73,9 @@
     "pack_hash_excludes": "consumed",
     "commands": "validation-only",
     "diagnostics": "validation-only",
+    "work_types": "validation-only",
+    "artifact_roles": "validation-only",
+    "obligation_comparators": "validation-only",
     "field_usage": "validation-only"
   }
 }

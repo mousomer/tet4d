@@ -196,6 +196,35 @@
       },
       "x-governance-behavior": "execution"
     },
+    "work_types": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "x-governance-use": "validation-only",
+      "x-governance-behavior": "schema",
+      "items": {
+        "type": "string",
+        "enum": ["Planning", "Coding", "Manifest"]
+      }
+    },
+    "artifact_roles": {
+      "type": "object",
+      "minProperties": 1,
+      "x-governance-use": "validation-only",
+      "x-governance-behavior": "schema",
+      "additionalProperties": {
+        "type": "string",
+        "enum": [
+          "governance_treatment",
+          "executable_machinery",
+          "product_authority",
+          "planning_document",
+          "generated",
+          "bookkeeping"
+        ]
+      }
+    },
     "generated_surfaces": {
       "type": "array",
       "minItems": 1,

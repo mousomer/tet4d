@@ -25,6 +25,31 @@ SCHEMA_FILES = {
     "project": "schemas/project.schema.json",
     "local": "schemas/workspace-local.schema.json",
 }
+
+WORK_TYPES = frozenset({"Planning", "Coding", "Manifest"})
+ARTIFACT_ROLES = frozenset(
+    {
+        "governance_treatment",
+        "executable_machinery",
+        "product_authority",
+        "planning_document",
+        "generated",
+        "bookkeeping",
+    }
+)
+OBLIGATION_COMPARATORS = {
+    "required_all_of": "set_superset",
+    "allowed_any_of": "set_subset",
+    "trigger_coverage": "set_superset",
+    "forbidden_set": "set_superset",
+    "permitted_set": "set_subset",
+    "exact_set": "equality",
+    "minimum": "numeric_gte",
+    "maximum": "numeric_lte",
+    "required_boolean": "false_to_true_only",
+    "identity": "equality",
+    "unknown": "human_review",
+}
 # The modes the resolver implements. Not a per-project choice, so it is code
 # rather than manifest: a project may say which variable carries the mode and
 # what it defaults to, never invent a third meaning for it.
@@ -830,6 +855,74 @@ def pack_hash(pack_root: Path) -> tuple[str, list[str]]:
     return content_hash(pack_root, files, manifest["lock_algorithm"]), files
 
 
+def _pack_metadata_issues(
+    manifest: dict[str, Any], files: list[str]
+) -> list[Diagnostic]:
+    """Validate representation metadata without interpreting project semantics.
+
+    These declarations make the shared vocabulary and the pack's own artifact
+    identities explicit. They deliberately do not classify Tet4D artifacts,
+    derive a role from a path, or compare any project obligations; those are
+    later rollout stages.
+    """
+    issues: list[Diagnostic] = []
+    if set(manifest.get("work_types", [])) != WORK_TYPES or len(
+        manifest.get("work_types", [])
+    ) != len(WORK_TYPES):
+        issues.append(
+            _diag(
+                "PACK_DRIFT",
+                "MANIFEST.work_types",
+                "shared_pack",
+                ["MANIFEST.json"],
+                "pack must declare exactly Planning, Coding, and Manifest",
+                "restore the versioned work-type vocabulary",
+            )
+        )
+    declarations = manifest.get("artifact_roles")
+    if not isinstance(declarations, list):
+        declarations = []
+    declared_paths: list[str] = []
+    invalid_roles = False
+    for declaration in declarations:
+        if not isinstance(declaration, dict):
+            invalid_roles = True
+            continue
+        path, role = declaration.get("path"), declaration.get("role")
+        if not isinstance(path, str) or not isinstance(role, str):
+            invalid_roles = True
+            continue
+        declared_paths.append(path)
+        invalid_roles |= role not in ARTIFACT_ROLES
+    if (
+        invalid_roles
+        or set(declared_paths) != set(files)
+        or len(declared_paths) != len(set(declared_paths))
+    ):
+        issues.append(
+            _diag(
+                "PACK_DRIFT",
+                "MANIFEST.artifact_roles",
+                "shared_pack",
+                ["MANIFEST.json"],
+                "pack artifact-role declarations must assign one known role to every packed file",
+                "declare each packed artifact exactly once with a supported role",
+            )
+        )
+    if manifest.get("obligation_comparators") != OBLIGATION_COMPARATORS:
+        issues.append(
+            _diag(
+                "PACK_DRIFT",
+                "MANIFEST.obligation_comparators",
+                "shared_pack",
+                ["MANIFEST.json"],
+                "pack comparator metadata must retain every directional descriptor mapping",
+                "restore the versioned obligation-comparator metadata",
+            )
+        )
+    return issues
+
+
 def validate_pack(root: Path, workspace: dict[str, Any]) -> list[Diagnostic]:
     lock_rel = workspace["governance_pack"]["lock"]
     try:
@@ -868,6 +961,9 @@ def validate_pack(root: Path, workspace: dict[str, Any]) -> list[Diagnostic]:
                 "classify every manifest field",
             )
         ]
+    metadata_issues = _pack_metadata_issues(manifest, files)
+    if metadata_issues:
+        return metadata_issues
     identity = {
         "pack_name": manifest["name"],
         "version": manifest["version"],
