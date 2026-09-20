@@ -79,9 +79,14 @@ artifact repair remains deferred from C1.
 ### Work-type classification rollout
 
 `docs/architecture/work_type_classification.md` owns the accepted ontology and
-its rollout. Open: upstream pack release (work-type vocabulary, artifact-role schema, pack roles and obligation comparators) and re-sync; log-only telemetry,
-attribution, role-driven classification and non-weakening comparison; a human-reviewed Tet4D role migration that preserves route resolution; stratified
-validation; then a separate Manifest change enabling blocking. `dispatch_paths` remains context metadata and never implies Manifest membership.
+its rollout. The representation foundation is implemented in workspace-governance
+`0.2.0` / `v0.2-work-type-schema-1`: work-type vocabulary, explicit artifact-role
+schema, complete pack roles, obligation comparators, and Tet4D pack re-sync.
+Remaining: log-only telemetry, attribution, role-driven classification and
+non-weakening comparison; a human-reviewed Tet4D role migration that preserves
+route resolution; stratified validation; then a separate Manifest change enabling
+blocking. `dispatch_paths` remains context metadata and never implies Manifest
+membership.
 
 ### Camera and relative-control contract
 
