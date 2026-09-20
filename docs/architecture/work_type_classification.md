@@ -275,6 +275,29 @@ so Manifest writes are forbidden by protocol. If one happens, it's reported as a
 protocol event and the task is flagged. Its cost never counts toward the Coding
 numbers.
 
+### G1 log-only observer contract
+
+The first live instrument is deliberately smaller than the eventual enforcement
+layer. `tools/governance/observe_work_segment.py` records one declared segment
+from two repository-content snapshots. Its machine-readable result contains the
+segment boundaries, files written, change kinds, resolved artifact roles and
+their provenance, observational compatibility, and bounded telemetry supplied
+by the caller. A contradiction is data: it never changes the command's success
+status.
+
+Role resolution is exact and provenance-preserving. Project and pack role
+declarations resolve as `explicit_declared`; the accepted bootstrap sources in
+this decision resolve as `bootstrap_projected`; everything else resolves as
+`unclassified`. Routes, `dispatch_paths`, directory names, extensions and
+filename patterns are not role inputs. The bootstrap is observation machinery,
+not a semantic authority handoff, and its output records are non-authoritative.
+
+G1 does not implement the base/candidate non-self-relaxation comparison. That
+comparison needs two runnable treatments and immutable-root union semantics, so
+it remains a separate bounded Coding change if real observer evidence justifies
+it. G1 also introduces no committed log corpus, blocking, role migration,
+independent classifier or threshold calibration.
+
 ## Historical classification and segmentation reliability
 
 The main measurement depends on segment labels, so how segments get labeled is
