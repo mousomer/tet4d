@@ -2,12 +2,23 @@ extends VBoxContainer
 
 class_name LiveCockpit
 
+const PROFILE_WIDE := "wide"
+const PROFILE_STANDARD := "standard"
+const PROFILE_NARROW := "narrow"
+const PROFILE_SMALL := "small"
+const WIDE_MIN_WIDTH := 1680.0
+const STANDARD_MIN_WIDTH := 1180.0
+const NARROW_MIN_WIDTH := 800.0
+
 var header_slot: VBoxContainer
 var primary_board_surface: VBoxContainer
 var control_deck: HBoxContainer
 var piece_controls: VBoxContainer
 var view_controls: VBoxContainer
 var piece_state: VBoxContainer
+var _available_size := Vector2.ZERO
+var _density := "standard"
+var _responsive_profile := PROFILE_STANDARD
 
 
 func _init() -> void:
@@ -40,7 +51,24 @@ func _init() -> void:
 
 func set_control_deck_visible(enabled: bool, density: String = "standard") -> void:
 	control_deck.visible = enabled
-	control_deck.custom_minimum_size.y = 150.0 if density == "compact" else (220.0 if density == "detailed" else 190.0)
+	_density = density
+	_apply_responsive_policy()
+
+
+func set_available_size(available_size: Vector2, density: String = "standard") -> void:
+	_available_size = available_size
+	_density = density
+	_apply_responsive_policy()
+
+
+func responsive_profile_for_size(available_size: Vector2) -> String:
+	if available_size.x >= WIDE_MIN_WIDTH:
+		return PROFILE_WIDE
+	if available_size.x >= STANDARD_MIN_WIDTH:
+		return PROFILE_STANDARD
+	if available_size.x >= NARROW_MIN_WIDTH:
+		return PROFILE_NARROW
+	return PROFILE_SMALL
 
 
 func deterministic_snapshot() -> Dictionary:
@@ -50,11 +78,36 @@ func deterministic_snapshot() -> Dictionary:
 		"deck_modules": [str(piece_controls.name), str(view_controls.name), str(piece_state.name)],
 		"deck_ratios": [piece_controls.size_flags_stretch_ratio, view_controls.size_flags_stretch_ratio, piece_state.size_flags_stretch_ratio],
 		"deck_visible": control_deck.visible,
+		"responsive_profile": _responsive_profile,
+		"available_size": _available_size,
+		"deck_minimum_height": control_deck.custom_minimum_size.y,
+		"deck_separation": control_deck.get_theme_constant("separation"),
 		"rect": get_global_rect(),
 		"header_rect": header_slot.get_global_rect(),
 		"primary_rect": primary_board_surface.get_global_rect(),
 		"deck_rect": control_deck.get_global_rect(),
 	}
+
+
+func _apply_responsive_policy() -> void:
+	_responsive_profile = responsive_profile_for_size(_available_size) if _available_size.x > 0.0 else PROFILE_STANDARD
+	var deck_height := 150.0 if _density == "compact" else (220.0 if _density == "detailed" else 190.0)
+	var separation := 10
+	var ratios := [42.0, 33.0, 25.0]
+	match _responsive_profile:
+		PROFILE_NARROW:
+			deck_height = minf(deck_height, 180.0)
+			separation = 8
+			ratios = [44.0, 32.0, 24.0]
+		PROFILE_SMALL:
+			deck_height = 150.0
+			separation = 6
+			ratios = [46.0, 31.0, 23.0]
+	control_deck.custom_minimum_size.y = deck_height
+	control_deck.add_theme_constant_override("separation", separation)
+	piece_controls.size_flags_stretch_ratio = ratios[0]
+	view_controls.size_flags_stretch_ratio = ratios[1]
+	piece_state.size_flags_stretch_ratio = ratios[2]
 
 
 func _slot(slot_name: String) -> VBoxContainer:

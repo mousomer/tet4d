@@ -10,6 +10,7 @@ const SliceLocalOrientationScript = preload("res://scripts/presentation/slice_lo
 func run() -> Array:
 	var failures := []
 	_test_reference_viewport_policy(failures)
+	_test_responsive_viewport_matrix(failures)
 	for count in [3, 4, 8, 12]:
 		var layout = AdaptiveLayerLayoutScript.new()
 		layout.configure(count, 8.0, 16.0)
@@ -56,6 +57,30 @@ func run() -> Array:
 		failures.append("W=1 must remain a valid visible dimension after ZW re-slicing")
 	_test_anchor_only_layout(failures)
 	return failures
+
+
+func _test_responsive_viewport_matrix(failures: Array) -> void:
+	for viewport_size in [Vector2(1896.0, 724.0), Vector2(1416.0, 544.0), Vector2(936.0, 374.0), Vector2(610.0, 238.0)]:
+		for count in [6, 7, 8]:
+			var layout = AdaptiveLayerLayoutScript.new()
+			layout.configure(count, 8.0, 16.0, viewport_size.x / viewport_size.y, 1.0, 5.0, 0.0, viewport_size)
+			var snapshot: Dictionary = layout.snapshot()
+			var repeated = AdaptiveLayerLayoutScript.new()
+			repeated.configure(count, 8.0, 16.0, viewport_size.x / viewport_size.y, 1.0, 5.0, 0.0, viewport_size)
+			if repeated.snapshot() != snapshot:
+				failures.append("%d-slice allocation at %s must be deterministic" % [count, viewport_size])
+			if int(snapshot.get("rows", 0)) > 2:
+				failures.append("%d-slice allocation at %s should avoid a wasteful third row" % [count, viewport_size])
+			var content_rect: Rect2 = snapshot.get("content_rect", Rect2())
+			var tile_rects: Array = snapshot.get("tile_rects", [])
+			if tile_rects.size() != count:
+				failures.append("%d-slice allocation at %s must expose every tile" % [count, viewport_size])
+			for first in range(tile_rects.size()):
+				if not _rect_contains(content_rect, tile_rects[first]):
+					failures.append("%d-slice tile %d at %s must remain inside collection bounds" % [count, first, viewport_size])
+				for second in range(first + 1, tile_rects.size()):
+					if (tile_rects[first] as Rect2).intersects(tile_rects[second]):
+						failures.append("%d-slice tiles %d/%d at %s must not overlap" % [count, first, second, viewport_size])
 
 
 func _test_reference_viewport_policy(failures: Array) -> void:
