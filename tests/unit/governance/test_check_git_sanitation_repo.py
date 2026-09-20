@@ -68,8 +68,10 @@ def _sanitation_result(
             f"{repository_ignore_rule}\n", encoding="utf-8"
         )
 
-    env = {
-        **os.environ,
+    # This git must stay inside tmp_path. Inheriting any GIT_* variable would let
+    # it act on whatever repository the caller is in, so none of them survive.
+    env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+    env |= {
         "GIT_CONFIG_GLOBAL": os.devnull,
         "GIT_CONFIG_SYSTEM": os.devnull,
         "LC_ALL": "C",
@@ -196,3 +198,29 @@ def test_repo_sanitation_ignores_info_exclude_for_tracked_files(tmp_path: Path) 
         info_exclude_rule="*.png",
     )
     assert result.returncode == 0, result.stderr
+
+
+def test_sanitation_helper_never_touches_an_inherited_repository(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A leaked GIT_DIR must not redirect the helper's git onto the host repo."""
+    decoy = tmp_path.parent / f"{tmp_path.name}-decoy"
+    decoy.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=decoy, check=True)
+    decoy_config = decoy / ".git" / "config"
+    before = decoy_config.read_text(encoding="utf-8")
+    monkeypatch.setenv("GIT_DIR", str(decoy / ".git"))
+
+    result = _sanitation_result(tmp_path, _drive_path("C", "Users\\omer"))
+
+    assert result.returncode == 2
+    assert decoy_config.read_text(encoding="utf-8") == before
+    assert not (decoy / "payload.txt").exists()
+
+
+def test_session_does_not_inherit_a_git_repository_location(
+    git_location_env_vars: tuple[str, ...],
+) -> None:
+    """The suite runs under .githooks/pre-push, which exports GIT_DIR."""
+    leaked = [name for name in git_location_env_vars if name in os.environ]
+    assert leaked == []
