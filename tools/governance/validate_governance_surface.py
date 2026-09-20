@@ -118,14 +118,24 @@ def _str_list(value: object) -> list[str] | None:
     return value
 
 
+def physical_loc_of(text: str) -> int:
+    """Count physical lines. Shared so every producer measures LOC identically."""
+    return len(text.splitlines())
+
+
 def _physical_loc(path: Path) -> int:
-    return len(path.read_text(encoding="utf-8").splitlines())
+    return physical_loc_of(path.read_text(encoding="utf-8"))
 
 
-def _policy_structure(value: object, depth: int = 0) -> tuple[int, int, int]:
+def policy_structure_metrics(value: object, depth: int = 0) -> tuple[int, int, int]:
+    """Return node count, leaf count and maximum nesting for a JSON value.
+
+    Shared so every producer measures structure identically. A scalar is one
+    node and one leaf; changing that silently shifts every recorded node count.
+    """
     if isinstance(value, (dict, list)):
         items = value.values() if isinstance(value, dict) else value
-        measured = [_policy_structure(item, depth + 1) for item in items]
+        measured = [policy_structure_metrics(item, depth + 1) for item in items]
         return (
             1 + sum(item[0] for item in measured),
             sum(item[1] for item in measured),
@@ -501,7 +511,7 @@ def _measure(  # noqa: C901 - measurement and all coupled hard ceilings stay ato
     policy_bytes = len(policy_path.read_bytes()) if policy_path.is_file() else 0
     policy_exceeds_advisory = policy_bytes > POLICY_PACK_ADVISORY_BYTE_LIMIT
     policy = _load_policy(root)
-    policy_nodes, policy_leaves, policy_max_depth = _policy_structure(policy)
+    policy_nodes, policy_leaves, policy_max_depth = policy_structure_metrics(policy)
     largest_policy_section_bytes = max(
         (
             len(json.dumps(value, ensure_ascii=False).encode("utf-8"))
