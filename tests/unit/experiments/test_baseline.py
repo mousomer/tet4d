@@ -229,7 +229,14 @@ def test_checkout_producer_surfaces_an_evolved_pack_identity(
     fingerprint = _checkout_fingerprint()
     assert fingerprint["workspace_governance"]["content_sha256"] == "0" * 64
     assert fingerprint["machine_policy"]["raw_sha256"] == MACHINE_POLICY_SHA
-    assert _mismatch_names(fingerprint) == {"workspace-governance content SHA-256"}
+    # Domain isolation, not an exact global set: once the pack legitimately
+    # advances past the frozen declaration the checkout carries other, real
+    # workspace mismatches, and permitting exactly that is the point of the
+    # snapshot split.
+    mismatches = _mismatch_names(fingerprint)
+    assert "workspace-governance content SHA-256" in mismatches
+    assert "machine-policy raw SHA-256" not in mismatches
+    assert "machine-policy serialized bytes" not in mismatches
 
 
 def test_checkout_producer_surfaces_a_pack_file_list_mismatch(
