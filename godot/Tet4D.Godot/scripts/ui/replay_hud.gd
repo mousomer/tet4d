@@ -2154,7 +2154,10 @@ func _build_layout() -> void:
 	_game_area.custom_minimum_size = Vector2(ReplayVisuals.GAME_AREA_MIN_WIDTH, 0)
 	_game_area.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_game_area.theme_type_variation = "ViewportFrame"
-	_game_area.resized.connect(func() -> void:
+	# The Designer must follow both size and position changes. Linux font metrics
+	# can reflow the deck without changing the game area's size, moving the game
+	# area after the Designer was placed and leaving the overlay outside it.
+	_game_area.item_rect_changed.connect(func() -> void:
 		game_viewport_geometry_changed.emit(_game_area.size)
 		call_deferred("_layout_presentation_designer")
 	)
