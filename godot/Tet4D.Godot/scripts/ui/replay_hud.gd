@@ -326,7 +326,7 @@ func _ready() -> void:
 	_build_layout()
 	_build_presentation_designer()
 	_apply_shell_style()
-	call_deferred("_layout_presentation_designer")
+	call_deferred("_apply_responsive_layout")
 	call_deferred("_log_geometry_diagnostics", "ready")
 
 
@@ -341,7 +341,7 @@ func _process(delta: float) -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_inside_tree():
 		call_deferred("_apply_safe_area_insets")
-		call_deferred("_layout_presentation_designer")
+		call_deferred("_apply_responsive_layout")
 		call_deferred("_log_geometry_diagnostics", "resize")
 		call_deferred("_remember_current_windowed_size")
 		call_deferred("_sync_observed_window_mode")
@@ -1711,6 +1711,7 @@ func _apply_hud_density(density: String) -> void:
 		)
 	_set_live_inspector_density(_bottom_panel != null and not _bottom_panel.visible)
 	_update_live_view_action_labels()
+	_apply_responsive_layout()
 
 
 func _toggle_quick_settings() -> void:
@@ -3081,6 +3082,8 @@ func _apply_shell_style() -> void:
 
 
 func _apply_responsive_layout() -> void:
+	if _live_cockpit != null:
+		_live_cockpit.set_available_size(size, _hud_density)
 	_layout_presentation_designer()
 	_log_geometry_diagnostics("responsive-compat")
 

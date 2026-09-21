@@ -20,6 +20,19 @@ func _assert_component_grammar() -> Array:
 		failures.append("LiveCockpit must expose the three semantic deck modules")
 	if snapshot.get("deck_ratios") != [42.0, 33.0, 25.0]:
 		failures.append("LiveCockpit must preserve the accepted 42/33/25 allocation")
+	var expected_profiles := {
+		Vector2(1920.0, 1080.0): "wide",
+		Vector2(1440.0, 900.0): "standard",
+		Vector2(960.0, 640.0): "narrow",
+		Vector2(634.0, 624.0): "small",
+	}
+	for available_size in expected_profiles:
+		cockpit.set_available_size(available_size, "standard")
+		var responsive: Dictionary = cockpit.deterministic_snapshot()
+		if responsive.get("responsive_profile") != expected_profiles[available_size]:
+			failures.append("LiveCockpit must deterministically classify %s as %s" % [available_size, expected_profiles[available_size]])
+		if responsive.get("deck_modules") != ["PieceControls", "ViewControls", "PieceState"]:
+			failures.append("responsive policy must not fork or reorder the semantic modules")
 	var source := FileAccess.get_file_as_string("res://scripts/ui/live_cockpit.gd")
 	for forbidden in ["TraceSceneRenderer", "LiveInputContract", "CameraRig", "render_snapshot", "InputMap", "piece_control_groups"]:
 		if source.contains(forbidden):

@@ -122,8 +122,10 @@ has now migrated Live 3D with a larger primary board and dimension-filtered
 PIECE/VIEW rows. Stage 56F has now migrated Live 2D and has implementation and
 automated evidence complete; its regression evidence is independent of
 machine-local onboarding preferences while preserving the profile-owned
-guidance setting. Responsive acceptance, human playability/overlay acceptance,
-final polish, and the 190/200 human A/B choice remain gated as Stages 56G–56I.
+guidance setting. Stage 56G now supplies one deterministic wide/standard/narrow/small
+policy across all live dimensions, production-scene acceptance down to 634×624,
+repeated 6/7/8-slice evidence, and real-window visual review. Human playability,
+final polish, and the 190/200 human A/B choice remain gated as Stages 56H–56I.
 
 ### Three-product packaging gaps
 

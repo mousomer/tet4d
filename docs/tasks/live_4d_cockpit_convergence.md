@@ -1,8 +1,7 @@
 # Task Contract — Stage 56 Cockpit Completion
 
-Status: Stage 56F implementation and automated evidence are complete on
-`codex/workspace-governance-v0.1-integrity-repair`. Stages 56G–56I and final
-human acceptance remain incomplete.
+Status: Stages 56A–56G implementation and automated evidence are complete.
+Stages 56H–56I and final human acceptance remain incomplete.
 
 ## Objective
 
@@ -46,10 +45,10 @@ retain their current ownership.
    190/200 normal, full, compact, occupied Hold, Designer, and constrained
    states. The 190/200 choice remains a human A/B decision if both comply.
 
-Stage 56F satisfies its implementation and automated-evidence portion of these
-criteria. It does not accept the remaining programme: Stage 56G responsive
-acceptance, Stage 56H human playability/overlay acceptance, Stage 56I polish,
-and the 190/200 human A/B choice remain open.
+Stages 56F and 56G satisfy their implementation and automated-evidence
+portions of these criteria. They do not accept the remaining programme: Stage
+56H human playability/overlay acceptance, Stage 56I polish, and the 190/200
+human A/B choice remain open.
 
 ## Stage 56 execution contract
 
@@ -206,8 +205,30 @@ suite, the canonical Godot suite, and the repository verification gate cover
 the shared deck, row filtering, board allocation, onboarding placement, and
 deterministic isolation. The real-runtime captures and measurements are in
 `docs/design/stage_56f_live_2d_evidence.md`. This is not a Stage 56 programme
-acceptance: Stage 56G–56I and the final human A/B decision remain explicitly
-gated.
+acceptance: later completion of Stage 56G does not waive Stages 56H–56I or the
+final human A/B decision.
+
+### Stage 56G — responsive cockpit acceptance
+
+`LiveCockpit` now applies one deterministic width policy across Live 2D, Live
+3D, and Live 4D. Wide, standard, narrow, and small profiles adjust only deck
+height, spacing, and the existing module shares; they retain the single
+`PIECE | VIEW | PIECE STATE` hierarchy and never fork cockpit ownership by
+dimension.
+
+The production-scene acceptance matrix covers 1920×1080, 1440×900, 960×640,
+and the 634×624 supported floor in every live dimension. It requires a legible
+game viewport, board/deck separation, contained ordered modules, and grouped
+HOLD/NEXT. The single viewport-aware slice allocator is repeated across the
+matrix for 6, 7, and 8 slices, while the existing rosette gate retains exact
+XZ/XW/ZW/reset state-consumption and native-isolation coverage.
+
+Godot 4.7.2 real-window captures and the measured matrix are recorded in
+`docs/design/stage_56g_responsive_cockpit_evidence.md`. Visual review found no
+critical overlap, unreachable module, pathological deck wrap, or new dead
+zone. Stage 56G is complete; Stage 56H is now eligible to focus on sustained
+playability, key/action legibility, and HOLD/NEXT emphasis rather than geometry
+repair. Stage 56I and the final human A/B decision remain gated.
 
 ## Explicit non-goals for Stage 56A
 

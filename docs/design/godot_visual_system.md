@@ -179,6 +179,17 @@ actions use a stronger clickable-button treatment than passive key-reference
 tags. Windowed/fullscreen state, including OS-driven mode changes, is persisted
 and restored with the other shell presentation preferences.
 
+The shared live cockpit has one width-driven responsive policy for 2D, 3D,
+and 4D. `wide` begins at 1680 logical pixels, `standard` at 1180, `narrow` at
+800, and `small` below 800 down to the supported 634-pixel shell floor. The
+policy may tighten deck height, module shares, and inter-module spacing, but it
+must retain the single `PIECE | VIEW | PIECE STATE` deck, keep the primary
+board separate, and keep HOLD/NEXT together. It must not reparent content into
+dimension-specific cockpit variants or change gameplay, input, camera, or
+orientation ownership. Height and density may reduce deck height only through
+the same bounded policy; controls remain reachable rather than overlapping or
+silently disappearing.
+
 In 4D, each signed semantic slice ID is attached to its camera-relative rear vertical face.
 Selection is conveyed through visual emphasis, without adding "active" text.
 The compact basis indicator derives its horizontal/depth arrow labels and
