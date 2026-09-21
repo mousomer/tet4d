@@ -892,6 +892,12 @@ func _layout_presentation_designer() -> void:
 	var local_far: Vector2 = inverse * (game_rect.position + game_rect.size)
 	var local_rect := Rect2(local_origin, local_far - local_origin)
 	var inset := 8.0
+	# Linux and macOS font metrics differ slightly. When the board cannot hold
+	# the full editor's 260px floor plus insets, preserve the detached session in
+	# its established compact state instead of allowing the panel to escape the
+	# gameplay surface.
+	if _presentation_designer.state() == PresentationDesignerScript.STATE_FULL and local_rect.size.y < 276.0:
+		_presentation_designer.collapse_to_compact()
 	if _presentation_designer.state() == PresentationDesignerScript.STATE_COMPACT:
 		var compact_width := minf(maxf(320.0, local_rect.size.x * 0.38), maxf(220.0, local_rect.size.x - inset * 2.0))
 		_presentation_designer.position = local_rect.position + Vector2(inset, inset)

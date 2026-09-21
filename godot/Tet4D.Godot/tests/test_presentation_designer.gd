@@ -293,6 +293,8 @@ func _test_live_app_integration() -> Array:
 		hud._apply_responsive_layout()
 		await tree.process_frame
 		await tree.process_frame
+		await tree.process_frame
+		await tree.process_frame
 		var responsive_game: Rect2 = hud.layout_contract_snapshot().get("game_area", Rect2())
 		if not _rect_contains_rect(responsive_game, designer.get_global_rect()):
 			failures.append("Designer should remain inside the game area after resize to %s: state=%s designer=%s game=%s" % [viewport_size, designer.state(), designer.get_global_rect(), responsive_game])
