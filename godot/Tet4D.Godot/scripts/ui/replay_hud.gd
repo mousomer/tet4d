@@ -127,14 +127,15 @@ var _viewer_nav: VBoxContainer
 var _viewer_nav_label: Label
 var _replay_navigation_controls: Array[Control] = []
 var _live_view_actions: VBoxContainer
-var _live_view_action_row: HBoxContainer
-var _live_display_action_row: HBoxContainer
+var _live_view_action_row: HFlowContainer
+var _live_display_action_row: HFlowContainer
 var _live_fit_view_button: Button
 var _live_reset_view_button: Button
 var _quick_settings_button: Button
 var _grid_toggle_button: Button
 var _designer_button: Button
 var _presentation_designer: PresentationDesigner
+var _presentation_designer_game_rect := Rect2()
 var _design_laboratory
 var _frame_slider: HSlider
 var _frame_label: Label
@@ -215,7 +216,10 @@ var _piece_preview_row: HBoxContainer
 var _piece_control_strip: PanelContainer
 var _live_view_control_strip: PanelContainer
 var _live_cockpit
-var _live_4d_deck: HBoxContainer
+const DESIGN_RESOLUTION_MIN_WIDTH := 640.0
+const DESIGN_RESOLUTION_MIN_HEIGHT := 480.0
+
+var _live_4d_deck: VBoxContainer
 var _live_4d_piece_module: VBoxContainer
 var _live_4d_view_module: VBoxContainer
 var _live_4d_state_module: VBoxContainer
@@ -328,9 +332,28 @@ func _ready() -> void:
 	_apply_shell_style()
 	call_deferred("_apply_responsive_layout")
 	call_deferred("_log_geometry_diagnostics", "ready")
+	# Under canvas_items stretch a same-aspect window resize never changes this
+	# Control's size, so NOTIFICATION_RESIZED does not fire. The window's own
+	# size_changed signal is the only reliable trigger for a responsive
+	# recompute when the shell is resized without changing aspect.
+	var window := get_window()
+	if window != null and not window.size_changed.is_connected(_on_shell_window_size_changed):
+		window.size_changed.connect(_on_shell_window_size_changed)
 
 
 func _process(delta: float) -> void:
+	# Container sorting can move the game area without emitting a usable resize
+	# epoch (Linux font metrics exercise this path). Track only the visible
+	# Designer's owning rectangle so its overlay follows the final sorted frame.
+	if (
+		_presentation_designer != null
+		and _presentation_designer.visible
+		and _game_area != null
+		and _game_area.is_inside_tree()
+	):
+		var game_rect := _game_area.get_global_rect()
+		if game_rect != _presentation_designer_game_rect:
+			_layout_presentation_designer()
 	_window_mode_poll_accumulator += delta
 	if _window_mode_poll_accumulator < 0.2:
 		return
@@ -699,7 +722,24 @@ func _refresh_piece_control_strip() -> void:
 		_style_applier.apply_to_tree(_piece_control_strip, _style_manager)
 
 
+func _apply_shell_minimums(live: bool) -> void:
+	var minimum := ReplayVisuals.supported_live_shell_minimum_size() if live else ReplayVisuals.supported_shell_minimum_size()
+	custom_minimum_size = minimum
+	if _viewer_screen != null:
+		_viewer_screen.custom_minimum_size = minimum
+	if _viewer_screen != null and _viewer_screen.get_child_count() > 0:
+		var outer := _viewer_screen.get_child(0) as Control
+		if outer != null:
+			outer.custom_minimum_size = minimum
+	if _body_container != null:
+		_body_container.custom_minimum_size = Vector2(
+			minimum.x - (ReplayVisuals.OUTER_MARGIN * 2),
+			ReplayVisuals.LIVE_BODY_MIN_HEIGHT if live else ReplayVisuals.BODY_MIN_HEIGHT
+		)
+
+
 func _set_live_4d_deck_active(active: bool) -> void:
+	_apply_shell_minimums(active)
 	if _live_4d_deck == null:
 		return
 	if active:
@@ -860,11 +900,18 @@ func _layout_presentation_designer() -> void:
 	if _presentation_designer == null or _game_area == null or not _game_area.is_inside_tree():
 		return
 	var game_rect := _game_area.get_global_rect()
+	_presentation_designer_game_rect = game_rect
 	var inverse := get_global_transform().affine_inverse()
 	var local_origin: Vector2 = inverse * game_rect.position
 	var local_far: Vector2 = inverse * (game_rect.position + game_rect.size)
 	var local_rect := Rect2(local_origin, local_far - local_origin)
 	var inset := 8.0
+	# Linux and macOS font metrics differ slightly. When the board cannot hold
+	# the full editor's 260px floor plus insets, preserve the detached session in
+	# its established compact state instead of allowing the panel to escape the
+	# gameplay surface.
+	if _presentation_designer.state() == PresentationDesignerScript.STATE_FULL and local_rect.size.y < 276.0:
+		_presentation_designer.collapse_to_compact()
 	if _presentation_designer.state() == PresentationDesignerScript.STATE_COMPACT:
 		var compact_width := minf(maxf(320.0, local_rect.size.x * 0.38), maxf(220.0, local_rect.size.x - inset * 2.0))
 		_presentation_designer.position = local_rect.position + Vector2(inset, inset)
@@ -1059,6 +1106,11 @@ func layout_contract_snapshot() -> Dictionary:
 		"live_fit_view_button_rect": _control_rect(_live_fit_view_button),
 		"live_reset_view_button_visible": _live_reset_view_button.visible if _live_reset_view_button != null else false,
 		"live_reset_view_button_rect": _control_rect(_live_reset_view_button),
+		"live_view_actions_rect": _control_rect(_live_view_actions),
+		"quick_settings_button_rect": _control_rect(_quick_settings_button),
+		"grid_toggle_button_rect": _control_rect(_grid_toggle_button),
+		"designer_button_rect": _control_rect(_designer_button),
+		"top_summary_panel_rect": _control_rect(_summary_label.get_parent().get_parent() if _summary_label != null else null),
 		"view_action_menu_visible": _camera_view_action_menu.visible if _camera_view_action_menu != null else false,
 		"view_action_menu_text": _camera_view_action_menu.text if _camera_view_action_menu != null else "",
 		"view_action_menu_parent": str(_camera_view_action_menu.get_parent().name) if _camera_view_action_menu != null and _camera_view_action_menu.get_parent() != null else "",
@@ -1685,15 +1737,11 @@ func _apply_ui_scale(scale_id: String) -> void:
 		theme = ReplayVisuals.build_theme(_current_display_mode)
 		# A zero resource scale delegates to ThemeDB's runtime fallback scale.
 		theme.default_base_scale = 0.0
-	var viewport_size := get_viewport_rect().size
 	set_anchor(SIDE_LEFT, 0.0)
 	set_anchor(SIDE_TOP, 0.0)
 	set_anchor(SIDE_RIGHT, 0.0)
 	set_anchor(SIDE_BOTTOM, 0.0)
-	offset_left = 0.0
-	offset_top = 0.0
-	offset_right = viewport_size.x / _ui_scale_factor
-	offset_bottom = viewport_size.y / _ui_scale_factor
+	_apply_shell_extents()
 	scale = Vector2(_ui_scale_factor, _ui_scale_factor)
 	_apply_shell_style()
 	call_deferred("_focus_current_screen")
@@ -1868,6 +1916,7 @@ func _build_layout() -> void:
 	var viewer_nav := VBoxContainer.new()
 	_viewer_nav = viewer_nav
 	viewer_nav.custom_minimum_size = Vector2(270, ReplayVisuals.TOP_BAR_HEIGHT)
+	viewer_nav.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top_bar.add_child(viewer_nav)
 	var nav_row_a := HBoxContainer.new()
 	nav_row_a.add_theme_constant_override("separation", 6)
@@ -1926,7 +1975,11 @@ func _build_layout() -> void:
 	_live_view_actions.visible = false
 	_live_view_actions.add_theme_constant_override("separation", 4)
 	viewer_nav.add_child(_live_view_actions)
-	_live_view_action_row = HBoxContainer.new()
+	# These actions are part of the supported live shell, so their minimum
+	# widths must not force the fixed navigation column beyond the window.
+	# Flow preserves reading order while making every action reachable at the
+	# narrow and small profiles.
+	_live_view_action_row = HFlowContainer.new()
 	_live_view_action_row.name = "LiveViewActions"
 	_live_view_action_row.add_theme_constant_override("separation", 6)
 	_live_view_actions.add_child(_live_view_action_row)
@@ -2031,7 +2084,7 @@ func _build_layout() -> void:
 	_top_state_badge_label.theme_type_variation = "StatusAccentLabel"
 	_top_state_badge_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_top_state_badge_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	var live_actions := HBoxContainer.new()
+	var live_actions := HFlowContainer.new()
 	live_actions.name = "LiveActions"
 	live_actions.add_theme_constant_override("separation", 8)
 	live_actions.add_child(_top_state_badge_label)
@@ -2117,6 +2170,7 @@ func _build_layout() -> void:
 	_game_area.theme_type_variation = "ViewportFrame"
 	_game_area.resized.connect(func() -> void:
 		game_viewport_geometry_changed.emit(_game_area.size)
+		call_deferred("_layout_presentation_designer")
 	)
 	body.add_child(_game_area)
 	_viewport_frame = _game_area
@@ -3081,11 +3135,84 @@ func _apply_shell_style() -> void:
 	call_deferred("_layout_presentation_designer")
 
 
+func _on_shell_window_size_changed() -> void:
+	if not is_inside_tree():
+		return
+	call_deferred("_apply_responsive_layout")
+	call_deferred("_remember_current_windowed_size")
+
+
 func _apply_responsive_layout() -> void:
+	_sync_design_resolution()
+	_apply_shell_extents()
 	if _live_cockpit != null:
-		_live_cockpit.set_available_size(size, _hud_density)
+		_live_cockpit.set_available_size(size, apparent_layout_size(), _hud_density)
 	_layout_presentation_designer()
+	# Container allocation settles after this callback. Re-apply once against
+	# the final game-area rect so an already-open Designer follows a resize
+	# instead of retaining the previous viewport's height for one layout epoch.
+	call_deferred("_layout_presentation_designer")
 	_log_geometry_diagnostics("responsive-compat")
+
+
+# The design resolution tracks the window so layout coordinates and responsive
+# breakpoints share one domain. With a base pinned to a fixed resolution the
+# logical extent never shrinks - canvas_items stretch downscales instead - so a
+# small window could never reach a constrained layout however the breakpoints
+# were computed. Tracking the window also renders text at its intended size
+# rather than squeezing a fixed canvas into fewer pixels.
+# The shell is sized by explicit offsets rather than full-rect anchors because
+# it carries a UI-scale transform. Those offsets are therefore only correct for
+# the viewport they were computed against, and must be recomputed whenever the
+# viewport changes - which it now does, because the design resolution tracks
+# the window.
+func _apply_shell_extents() -> void:
+	var viewport_size := get_viewport_rect().size
+	var ui_scale := maxf(_ui_scale_factor, 0.01)
+	offset_left = 0.0
+	offset_top = 0.0
+	offset_right = viewport_size.x / ui_scale
+	offset_bottom = viewport_size.y / ui_scale
+
+
+func _sync_design_resolution() -> void:
+	# Headless and child-SubViewport tests own their logical root size directly.
+	# Importing the headless DisplayServer's synthetic window size would erase
+	# the fixture constraint and make structural tests non-deterministic.
+	if DisplayServer.get_name() == "headless":
+		return
+	var window := get_window()
+	if window == null:
+		return
+	var window_pixels := Vector2(DisplayServer.window_get_size())
+	if window_pixels.x <= 0.0 or window_pixels.y <= 0.0:
+		return
+	var display_scale := maxf(DisplayServer.screen_get_scale(), 0.01)
+	var points := window_pixels / display_scale
+	var target := Vector2i(
+		int(maxf(points.x, DESIGN_RESOLUTION_MIN_WIDTH)),
+		int(maxf(points.y, DESIGN_RESOLUTION_MIN_HEIGHT))
+	)
+	if window.content_scale_size != target:
+		window.content_scale_size = target
+
+
+# The responsive breakpoint domain is what the player actually sees, not the
+# logical viewport. Under canvas_items stretch the logical extent is pinned to
+# the design resolution, so `size` is constant across every window size and
+# only moves with the UI-scale preference, which inverts the intent. Window
+# client pixels are divided by the display scale so a HiDPI backing store does
+# not read as a larger shell, then by the UI scale so a larger requested text
+# size reaches constrained profiles earlier.
+func apparent_layout_size() -> Vector2:
+	if DisplayServer.get_name() == "headless":
+		return size
+	var window_pixels := Vector2(DisplayServer.window_get_size())
+	if window_pixels.x <= 0.0 or window_pixels.y <= 0.0:
+		return size
+	var display_scale := maxf(DisplayServer.screen_get_scale(), 0.01)
+	var ui_scale := maxf(_ui_scale_factor, 0.01)
+	return (window_pixels / display_scale) / ui_scale
 
 
 func _log_geometry_diagnostics(reason: String) -> void:

@@ -43,6 +43,10 @@ func current_bounds() -> Dictionary:
 	return projection.bounds
 
 
+func content_slice_boxes() -> Array:
+	return projection.content_slice_boxes()
+
+
 func render_world_position(coordinates: Array) -> Vector3:
 	return projection.oriented_world_position(coordinates)
 
