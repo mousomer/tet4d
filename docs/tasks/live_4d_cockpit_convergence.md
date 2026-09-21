@@ -210,23 +210,26 @@ final human A/B decision.
 
 ### Stage 56G — responsive cockpit acceptance
 
-`LiveCockpit` now applies one deterministic width policy across Live 2D, Live
-3D, and Live 4D. Wide, standard, narrow, and small profiles adjust only deck
-height, spacing, and the existing module shares; they retain the single
-`PIECE | VIEW | PIECE STATE` hierarchy and never fork cockpit ownership by
-dimension.
+`LiveCockpit` now applies one deterministic apparent-width policy across Live
+2D, Live 3D, and Live 4D. Wide, standard, narrow, and small profiles preserve
+the single `PIECE | VIEW | PIECE STATE` hierarchy. Measured module minimums
+flow that order into bounded rows, with vertical scrolling as the constrained
+height escape hatch; cockpit ownership never forks by dimension.
 
-The production-scene acceptance matrix covers 1920×1080, 1440×900, 960×640,
-and the 634×624 supported floor in every live dimension. It requires a legible
-game viewport, board/deck separation, contained ordered modules, and grouped
-HOLD/NEXT. The single viewport-aware slice allocator is repeated across the
-matrix for 6, 7, and 8 slices, while the existing rosette gate retains exact
-XZ/XW/ZW/reset state-consumption and native-isolation coverage.
+The original Stage 56G acceptance used child `SubViewport`s and therefore did
+not exercise the shipped `canvas_items` window-stretch path. Bounded repair
+56G-R replaces that claim with a real-window matrix at 1728×1080, 1440×900,
+1200×800, 1000×720, 860×640, and 720×600 in every live dimension, plus five
+active-session resize transitions. It requires the header, gameplay surface,
+deck, actions, ordered modules, and grouped HOLD/NEXT to remain contained and
+reachable. Per-slice content bounds also replace a sparse collection AABB for
+camera fitting so the responsive viewport remains usefully occupied.
 
 Godot 4.7.2 real-window captures and the measured matrix are recorded in
-`docs/design/stage_56g_responsive_cockpit_evidence.md`. Visual review found no
-critical overlap, unreachable module, pathological deck wrap, or new dead
-zone. Stage 56G is complete; Stage 56H is now eligible to focus on sustained
+`docs/design/stage_56g_responsive_cockpit_evidence.md`. Visual review of the
+repaired captures found no critical overlap, unreachable module, pathological
+deck wrap, or new dead zone. Stage 56G and 56G-R are complete; Stage 56H is now
+eligible to focus on sustained
 playability, key/action legibility, and HOLD/NEXT emphasis rather than geometry
 repair. Stage 56I and the final human A/B decision remain gated.
 

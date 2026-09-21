@@ -36,6 +36,7 @@ var _pending_delete_profile_id := ""
 var _pending_export_profile_id := ""
 
 var _full_root: VBoxContainer
+var _full_scroll: ScrollContainer
 var _compact_root: HBoxContainer
 var _groups_box: VBoxContainer
 var _slot_state_label: Label
@@ -504,10 +505,18 @@ func deterministic_snapshot() -> Dictionary:
 
 
 func _build_surface() -> void:
+	_full_scroll = ScrollContainer.new()
+	_full_scroll.name = "DesignerFullScroll"
+	_full_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_full_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_full_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_full_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	add_child(_full_scroll)
 	_full_root = VBoxContainer.new()
 	_full_root.name = "DesignerFull"
+	_full_root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_full_root.add_theme_constant_override("separation", 7)
-	add_child(_full_root)
+	_full_scroll.add_child(_full_root)
 
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 6)
@@ -1242,6 +1251,8 @@ func _set_state(next_state: String) -> void:
 
 func _refresh_state_visibility() -> void:
 	visible = _state != STATE_HIDDEN
+	if _full_scroll != null:
+		_full_scroll.visible = _state == STATE_FULL
 	if _full_root != null:
 		_full_root.visible = _state == STATE_FULL
 	if _compact_root != null:

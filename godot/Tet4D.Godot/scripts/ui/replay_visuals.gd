@@ -32,6 +32,9 @@ const GAME_AREA_MIN_WIDTH := 120
 const VIEWPORT_PANEL_MIN_WIDTH := GAME_AREA_MIN_WIDTH
 const VIEWPORT_PANEL_COMPACT_MIN_WIDTH := GAME_AREA_MIN_WIDTH
 const BODY_MIN_HEIGHT := 400
+const LIVE_BODY_MIN_HEIGHT := 240
+const LIVE_SHELL_MIN_WIDTH := 680
+const LIVE_SHELL_MIN_HEIGHT := 520
 const BODY_MIN_WIDTH := LEFT_PANEL_WIDTH + GAME_AREA_MIN_WIDTH + RIGHT_PANEL_MIN_WIDTH + (BODY_GAP * 2)
 const SHELL_MIN_WIDTH := BODY_MIN_WIDTH + (OUTER_MARGIN * 2)
 const SHELL_MIN_HEIGHT := TOP_BAR_HEIGHT + BODY_MIN_HEIGHT + TIMELINE_HEIGHT + (OUTER_MARGIN * 2)
@@ -168,6 +171,14 @@ static func default_display_mode() -> String:
 
 static func supported_shell_minimum_size() -> Vector2:
 	return Vector2(SHELL_MIN_WIDTH, SHELL_MIN_HEIGHT)
+
+
+# The replay floor is the sum of replay chrome: left case browser, right
+# inspector and timeline, none of which live mode shows. Applying it to live
+# play imported a 634x624 minimum from panels that are hidden, while the real
+# live constraint is the deck's own measured width plus one row and a board.
+static func supported_live_shell_minimum_size() -> Vector2:
+	return Vector2(LIVE_SHELL_MIN_WIDTH, LIVE_SHELL_MIN_HEIGHT)
 
 
 static func normalize_display_mode(mode: String) -> String:

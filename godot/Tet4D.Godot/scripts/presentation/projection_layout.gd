@@ -126,6 +126,41 @@ func oriented_slice_bounds(layer_index: int) -> Dictionary:
 	return {"ok": not first, "min": min_world, "max": max_world}
 
 
+# The per-slice boxes that `_collection_bounds` unions into one AABB. Camera
+# fitting needs these separately: the slice row is counter-rotated in world Y
+# so it renders level, which makes the union's extreme corners phantom - no
+# geometry occupies leftmost-X together with topmost-Y. Fitting the union
+# therefore solves for a span the render never draws.
+func content_slice_boxes() -> Array:
+	if board_shape.is_empty():
+		return []
+	var layer_count := mapper.current_layer_count() if dimension >= 4 else 1
+	var boxes: Array = []
+	for layer_index in range(layer_count):
+		var layer_bounds := oriented_slice_bounds(layer_index)
+		if not bool(layer_bounds.get("ok", false)):
+			continue
+		var box_min: Vector3 = layer_bounds.get("min", Vector3.ZERO)
+		var box_max: Vector3 = layer_bounds.get("max", Vector3.ZERO)
+		if dimension >= 4:
+			# Each slice carries its own W label below and to the near edge, and
+			# active pieces rise above the board. Padding PER SLICE keeps those
+			# attachments on screen without recreating the phantom corners that
+			# padding the collection AABB produces.
+			box_min = Vector3(
+				box_min.x - ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD,
+				box_min.y - ReplayVisuals.W_SLICE_LABEL_VERTICAL_BOUNDS_PAD,
+				box_min.z - ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
+			)
+			box_max = Vector3(
+				box_max.x + ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD,
+				box_max.y + ReplayVisuals.ABOVE_BOARD_ACTIVE_BOUNDS_PAD,
+				box_max.z + ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
+			)
+		boxes.append({"min": box_min, "max": box_max})
+	return boxes
+
+
 func _collection_bounds() -> Dictionary:
 	if board_shape.is_empty():
 		return {"ok": false}

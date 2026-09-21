@@ -113,7 +113,7 @@ func establish_outer_view(
 	_snap_orientation_to_targets()
 
 
-func fit_current_bounds(bounds: Dictionary, margin: float = 1.14) -> void:
+func fit_current_bounds(bounds: Dictionary, margin: float = 1.14, content_boxes: Array = []) -> void:
 	if not bounds.get("ok", false):
 		return
 	var min_pos: Vector3 = bounds.get("min", Vector3.ZERO)
@@ -126,7 +126,10 @@ func fit_current_bounds(bounds: Dictionary, margin: float = 1.14) -> void:
 	_base_distance = clampf(max_extent * 1.45 + 6.0, min_distance, max_distance)
 	_zoom_multiplier = 1.0
 	_target_distance = _base_distance
-	_base_orthographic_size = maxf(_projected_orthographic_size(min_pos, max_pos, _current_yaw, _current_pitch, margin), 4.0)
+	_base_orthographic_size = maxf(
+		_projected_orthographic_size(min_pos, max_pos, _current_yaw, _current_pitch, margin, content_boxes),
+		4.0
+	)
 	if _camera != null and _camera.projection == Camera3D.PROJECTION_ORTHOGONAL:
 		_camera.size = _base_orthographic_size
 	_snap_framing_to_targets()
@@ -776,15 +779,36 @@ func _update_orientation_gizmo() -> void:
 	_orientation_gizmo.global_basis = Basis.IDENTITY.scaled(Vector3.ONE * _camera.size * ORIENTATION_GIZMO_SCREEN_SCALE)
 
 
-func _projected_orthographic_size(min_pos: Vector3, max_pos: Vector3, yaw: float, pitch: float, margin: float) -> float:
+# Fitting the collection AABB solves for a span the render never draws: the
+# slice row is counter-rotated in world Y so it presents level, so the union's
+# leftmost-X/topmost-Y corners are phantom. Projecting each drawn box and
+# unioning in SCREEN space measures the geometry that actually exists. The AABB
+# remains the fallback for callers that have no per-box geometry to offer.
+func _projected_orthographic_size(
+	min_pos: Vector3,
+	max_pos: Vector3,
+	yaw: float,
+	pitch: float,
+	margin: float,
+	content_boxes: Array = []
+) -> float:
 	var projected_min := Vector2(INF, INF)
 	var projected_max := Vector2(-INF, -INF)
-	for corner in _box_corners(min_pos, max_pos):
-		var projected := _project_for_fit(corner, yaw, pitch)
-		projected_min.x = minf(projected_min.x, projected.x)
-		projected_min.y = minf(projected_min.y, projected.y)
-		projected_max.x = maxf(projected_max.x, projected.x)
-		projected_max.y = maxf(projected_max.y, projected.y)
+	var boxes: Array = []
+	for box in content_boxes:
+		var box_min = box.get("min", null)
+		var box_max = box.get("max", null)
+		if box_min is Vector3 and box_max is Vector3:
+			boxes.append([box_min, box_max])
+	if boxes.is_empty():
+		boxes.append([min_pos, max_pos])
+	for box in boxes:
+		for corner in _box_corners(box[0], box[1]):
+			var projected := _project_for_fit(corner, yaw, pitch, _current_roll)
+			projected_min.x = minf(projected_min.x, projected.x)
+			projected_min.y = minf(projected_min.y, projected.y)
+			projected_max.x = maxf(projected_max.x, projected.x)
+			projected_max.y = maxf(projected_max.y, projected.y)
 	var span := projected_max - projected_min
 	var aspect := _viewport_aspect()
 	return maxf(span.y, span.x / maxf(aspect, 0.001)) * margin
@@ -803,15 +827,30 @@ func _box_corners(min_pos: Vector3, max_pos: Vector3) -> Array:
 	]
 
 
-func _project_for_fit(point: Vector3, yaw: float, pitch: float) -> Vector2:
-	var yaw_cos := cos(yaw)
-	var yaw_sin := sin(yaw)
-	var pitch_cos := cos(pitch)
-	var pitch_sin := sin(pitch)
-	var x_after_yaw := yaw_cos * point.x + yaw_sin * point.z
-	var z_after_yaw := -yaw_sin * point.x + yaw_cos * point.z
-	var y_after_pitch := pitch_cos * point.y - pitch_sin * z_after_yaw
-	return Vector2(x_after_yaw, y_after_pitch)
+# Screen-space projection for fitting, built from the same basis _update_camera
+# installs. The previous hand-rolled yaw/pitch rotation dropped roll entirely,
+# so the fit measured a different frame than the one that renders and solved
+# for a span the camera never shows.
+func _project_for_fit(point: Vector3, yaw: float, pitch: float, roll: float = 0.0) -> Vector2:
+	var basis := _fit_camera_basis(yaw, pitch, roll)
+	return Vector2(point.dot(basis.x), point.dot(basis.y))
+
+
+func _fit_camera_basis(yaw: float, pitch: float, roll: float) -> Basis:
+	var horizontal_radius := cos(pitch)
+	var offset := Vector3(sin(yaw) * horizontal_radius, sin(pitch), cos(yaw) * horizontal_radius)
+	if offset.length_squared() < 0.000001:
+		return Basis.IDENTITY
+	# Camera sits at focus + offset and looks back at focus, as _update_camera does.
+	var forward := (-offset).normalized()
+	var rolled_up := (Basis(forward, roll) * Vector3.UP)
+	# Godot cameras look down local -Z, so +Z is the reverse of the view direction.
+	var basis_z := -forward
+	if absf(rolled_up.dot(basis_z)) > 0.9999:
+		rolled_up = Vector3.FORWARD if absf(basis_z.y) > 0.9 else Vector3.UP
+	var basis_x := rolled_up.cross(basis_z).normalized()
+	var basis_y := basis_z.cross(basis_x).normalized()
+	return Basis(basis_x, basis_y, basis_z)
 
 
 func _viewport_aspect() -> float:

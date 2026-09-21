@@ -320,7 +320,12 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		failures.append("%s: Live 4D mode should hide the Replay Cases side panel" % label)
 	if hud._right_scroll.is_visible_in_tree():
 		failures.append("%s: shared cockpit must retire the legacy right-inspector guidance surface" % label)
-	if not bool(snapshot.get("live_4d_deck_visible", false)) or not _contains_rect(deck_rect, piece_module_rect) or not _contains_rect(deck_rect, view_module_rect) or not _contains_rect(deck_rect, state_module_rect):
+	# The deck scrolls when constrained, so the modules' containing object is the
+	# deck's row host, not the deck's visible rect. A module below the fold is
+	# reachable by scrolling, which is the accepted constrained-size tradeoff;
+	# a module outside the row host would be genuinely lost.
+	var rows_rect: Rect2 = (snapshot.get("live_cockpit", {}) as Dictionary).get("deck_rows_rect", deck_rect)
+	if not bool(snapshot.get("live_4d_deck_visible", false)) or not _contains_rect(rows_rect, piece_module_rect) or not _contains_rect(rows_rect, view_module_rect) or not _contains_rect(rows_rect, state_module_rect):
 		failures.append("%s: shared cockpit deck must contain Piece, View, and Piece State modules" % label)
 	if game_rect.intersects(deck_rect):
 		failures.append("%s: primary board and shared cockpit deck must not overlap" % label)

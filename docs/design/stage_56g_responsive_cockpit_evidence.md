@@ -1,68 +1,79 @@
 # Stage 56G responsive cockpit evidence
 
-Stage 56G makes the existing shared `LiveCockpit` responsive without creating
-dimension-specific layouts. The policy is presentation-only: available width
-selects one of four deterministic profiles, and the profile adjusts deck
-height, spacing, and the three existing module shares. Module identity and
-order remain `PIECE | VIEW | PIECE STATE` in 2D, 3D, and 4D.
+Stage 56G-R repairs the responsive acceptance claim while preserving one
+shared `LiveCockpit` for Live 2D, 3D, and 4D. Apparent client width selects the
+wide, standard, narrow, or small profile. Measured module minimums then flow
+the existing `PIECE | VIEW | PIECE STATE` order across bounded rows; a capped
+vertical scroller keeps the whole deck reachable without overlapping the
+primary board. Header actions use ordered flow containers for the same reason.
 
-## Automated matrix
+## Why the first evidence was insufficient
 
-`test_stage_56g_responsive_cockpit.gd` renders the production scene inside
-real per-case `SubViewport`s. This avoids the fixed 1600×960 headless root that
-previously made a resized child `Control` look responsive without changing its
-actual viewport.
+The original Stage 56G matrix mounted the production scene under child
+`SubViewport`s. That was useful structural coverage, but it did not reproduce
+the shipped root-window `canvas_items` stretch behavior: the logical shell
+could remain 1600×960 while a smaller window merely scaled it. The three
+capture sizes consequently showed scaled versions of effectively one layout,
+and the containment assertions checked modules inside an already-overflowing
+deck rather than the deck inside the usable window. Those results are not used
+as responsive acceptance.
 
-| Case | Viewport | Profile | Required result |
-| --- | ---: | --- | --- |
-| Wide desktop | 1920×1080 | `wide` | Full 42/33/25 deck allocation. |
-| Standard desktop/laptop | 1440×900 | `standard` | Full deck with standard height and spacing. |
-| Narrow window | 960×640 | `narrow` | Tighter spacing and bounded deck height. |
-| Small supported viewport | 634×624 | `small` | Compact deck at the declared shell floor. |
+## Production-equivalent matrix
 
-Every case enters Live 2D, Live 3D, and Live 4D and verifies a nonzero legible
-game viewport, board/deck separation, module containment and ordering, and a
-visible HOLD/NEXT row contained by PIECE STATE. The same gate retains the
-existing source-boundary and deterministic-state checks.
+Run the focused gate with a windowed DisplayServer:
 
-The single `AdaptiveLayerLayout` allocator is also exercised at four board
-areas for 6, 7, and 8 slices. Every result is repeated for deterministic
-equality, keeps at most two rows, contains all tile rectangles, and has no tile
-overlap. The reference 1600×960 choices remain 6→3×2, 7→4×2, and 8→4×2.
+```sh
+/Applications/Godot.app/Contents/MacOS/Godot \
+  --path godot/Tet4D.Godot \
+  --script res://tests/run_responsive_acceptance.gd
+```
 
-The existing `test_live_4d_orientation_rosette.gd` remains the authoritative
-state-consumption acceptance. It covers XZ, XW, and ZW exact turns, continuous
-yaw and pitch, passive redraw, and Reset View against the app-owned
-presentation snapshot while proving native state/hash isolation. Stage 56G
-does not introduce another orientation model.
+The gate explicitly rejects headless execution. It drives the real root
+window through six point sizes in every live dimension, then checks five
+additional transitions while a live session is already active.
+
+| Client size | Expected profile |
+| ---: | --- |
+| 1728×1080 | `wide` |
+| 1440×900 | `standard` |
+| 1200×800 | `standard` |
+| 1000×720 | `narrow` |
+| 860×640 | `narrow` |
+| 720×600 | `small` |
+
+Every case requires the live header, gameplay viewport, control deck, and all
+visible header actions to remain inside the usable window. It also requires
+board/deck separation, at least 55% window width and 30% window height for the
+gameplay viewport, preserved module order and containment, grouped HOLD/NEXT,
+and scrolling only when the deck's natural height genuinely exceeds its cap.
+
+The headless suite retains deterministic source, structure, input, and state
+coverage. Camera fitting now consumes per-slice content boxes rather than one
+sparse collection AABB, so a multi-slice 4D board occupies the responsive
+viewport without changing camera, basis, or gameplay ownership.
 
 ## Real-window visual review
 
-The captures below were produced by Godot 4.7.2 through the macOS DisplayServer
-and Metal on Apple M1 Pro. Standard and narrow captures cover representative
-desktop widths. The 634-pixel capture is an additional constrained-height
-stress case; exact 634×624 supported-floor geometry is covered by the automated
-matrix above.
+The captures below were produced by Godot 4.7.2 through the macOS
+DisplayServer and Metal on Apple M1 Pro. Sizes are client points; the PNGs use
+the corresponding 2× Retina backing dimensions.
 
-| Mode | Standard | Narrow | Constrained stress |
+| Mode | Standard 1440×900 | Narrow 1000×720 | Small 720×600 |
 | --- | --- | --- | --- |
-| Live 2D | [1440×864](screenshots/stage_56g_responsive_cockpit/live_2d_standard.png) | [960×576](screenshots/stage_56g_responsive_cockpit/live_2d_narrow.png) | [634×380](screenshots/stage_56g_responsive_cockpit/live_2d_small.png) |
-| Live 3D | [1440×864](screenshots/stage_56g_responsive_cockpit/live_3d_standard.png) | [960×576](screenshots/stage_56g_responsive_cockpit/live_3d_narrow.png) | [634×380](screenshots/stage_56g_responsive_cockpit/live_3d_small.png) |
-| Live 4D | [1440×864](screenshots/stage_56g_responsive_cockpit/live_4d_standard.png) | [960×576](screenshots/stage_56g_responsive_cockpit/live_4d_narrow.png) | [634×380](screenshots/stage_56g_responsive_cockpit/live_4d_small.png) |
+| Live 2D | [capture](screenshots/stage_56g_responsive_cockpit/live_2d_standard.png) | [capture](screenshots/stage_56g_responsive_cockpit/live_2d_narrow.png) | [capture](screenshots/stage_56g_responsive_cockpit/live_2d_small.png) |
+| Live 3D | [capture](screenshots/stage_56g_responsive_cockpit/live_3d_standard.png) | [capture](screenshots/stage_56g_responsive_cockpit/live_3d_narrow.png) | [capture](screenshots/stage_56g_responsive_cockpit/live_3d_small.png) |
+| Live 4D | [capture](screenshots/stage_56g_responsive_cockpit/live_4d_standard.png) | [capture](screenshots/stage_56g_responsive_cockpit/live_4d_narrow.png) | [capture](screenshots/stage_56g_responsive_cockpit/live_4d_small.png) |
 
-Visual inspection found the primary game surface dominant at standard and
-narrow widths, all three semantic modules reachable, HOLD/NEXT visually
-adjacent, and no board/deck or module overlap. The 3D and 4D orientation
-rosettes remain visible at the lower left. The 4D W slices retain monotonic
-left-to-right order and legible active-slice emphasis. Even the below-floor
-height stress retains the structural hierarchy without wrapping the deck into
-a second cockpit framework. Key-chip weight and long-play scan comfort remain
-Stage 56H concerns rather than geometry repairs.
+Visual inspection confirms that the standard layout uses two deck rows, the
+narrow and small layouts flow to additional ordered rows, and vertical deck
+scrolling exposes content that cannot fit simultaneously. Header actions wrap
+inside the small shell. The primary board remains distinct and useful; 4D
+slices keep monotonic left-to-right order and visible active-slice emphasis.
 
 ## Boundary result
 
-No gameplay command, binding, camera/basis semantic, renderer owner, native
-session, queue/Hold model, deterministic state, or profile persistence contract
-changes in Stage 56G. The layout is stable enough for Stage 56H to focus on
-playability and control-deck presentation rather than another structural
-layout redesign.
+The repair changes presentation geometry and evidence only. It does not add a
+gameplay command, binding, camera/basis semantic, renderer owner, native
+session mutation, queue/Hold model, deterministic-state change, or profile
+persistence contract. Stage 56H remains the human long-play and key/action
+legibility gate; Stage 56I and the final human A/B decision remain separate.

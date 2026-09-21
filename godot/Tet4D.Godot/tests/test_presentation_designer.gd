@@ -137,7 +137,9 @@ func _test_live_app_integration() -> Array:
 	if tree == null or scene == null:
 		return ["Presentation Designer integration requires the trace replay scene"]
 	var original_size := tree.root.size
-	tree.root.size = Vector2i(1280, 800)
+	var original_content_scale_size := tree.root.content_scale_size
+	tree.root.content_scale_size = Vector2i(1600, 960)
+	tree.root.size = Vector2i(1600, 960)
 	var root := scene.instantiate() as Control
 	tree.root.add_child(root)
 	await tree.process_frame
@@ -147,6 +149,7 @@ func _test_live_app_integration() -> Array:
 	var app = root.get_node_or_null("App")
 	if hud == null or app == null:
 		root.queue_free()
+		tree.root.content_scale_size = original_content_scale_size
 		tree.root.size = original_size
 		return ["Presentation Designer integration requires ReplayHud and TraceReplayApp"]
 	app._enter_live_2d_mode()
@@ -172,13 +175,16 @@ func _test_live_app_integration() -> Array:
 	if not _rect_contains_rect(game_rect, designer_rect) or designer_rect.size.x >= game_rect.size.x * 0.65:
 		failures.append("full Designer should remain bounded inside the board area without obscuring the whole board")
 	var deck_rect: Rect2 = layout.get("live_4d_deck", Rect2())
+	# The deck scrolls when constrained, so modules are contained by its row
+	# host rather than its visible rect.
+	var rows_rect: Rect2 = (layout.get("live_cockpit", {}) as Dictionary).get("deck_rows_rect", deck_rect)
 	var piece_module_rect: Rect2 = layout.get("piece_module_rect", Rect2())
 	var state_module_rect: Rect2 = layout.get("piece_state_module_rect", Rect2())
 	if (
 		not hud._next_piece_panel.is_visible_in_tree()
 		or not hud._hold_piece_panel.is_visible_in_tree()
 		or not hud._piece_control_strip.is_visible_in_tree()
-		or not _rect_contains_rect(deck_rect, state_module_rect)
+		or not _rect_contains_rect(rows_rect, state_module_rect)
 		or not _rect_contains_rect(state_module_rect, hud._next_piece_panel.get_global_rect())
 		or not _rect_contains_rect(state_module_rect, hud._hold_piece_panel.get_global_rect())
 		or not _rect_contains_rect(piece_module_rect, hud._piece_control_strip.get_global_rect())
@@ -282,12 +288,14 @@ func _test_live_app_integration() -> Array:
 		failures.append("hide/reopen should preserve working B and immutable A")
 
 	for viewport_size in [Vector2i(960, 720), Vector2i(1440, 900)]:
+		tree.root.content_scale_size = viewport_size
 		tree.root.size = viewport_size
+		hud._apply_responsive_layout()
 		await tree.process_frame
 		await tree.process_frame
 		var responsive_game: Rect2 = hud.layout_contract_snapshot().get("game_area", Rect2())
 		if not _rect_contains_rect(responsive_game, designer.get_global_rect()):
-			failures.append("full Designer should remain inside the game area after resize to %s" % str(viewport_size))
+			failures.append("Designer should remain inside the game area after resize to %s: state=%s designer=%s game=%s" % [viewport_size, designer.state(), designer.get_global_rect(), responsive_game])
 		designer.collapse_to_compact()
 		await tree.process_frame
 		if not _rect_contains_rect(responsive_game, designer.get_global_rect()):
@@ -335,6 +343,7 @@ func _test_live_app_integration() -> Array:
 		failures.append("Revert & Hide should restore the opening baseline and close the surface")
 	root.queue_free()
 	await tree.process_frame
+	tree.root.content_scale_size = original_content_scale_size
 	tree.root.size = original_size
 	return failures
 

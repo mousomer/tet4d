@@ -235,11 +235,20 @@ func _check_primary_surfaces(hud, mode: String, label: String) -> Array:
 	if viewport.size.x <= 0.0 or viewport.size.y <= 0.0:
 		failures.append("%s %s board must remain visible" % [label, mode])
 	var strict_containment := label.find("UI scale") == -1
-	if not layout.get("live_4d_deck_visible", false) or (strict_containment and (not _contains_rect(deck, piece_module) or not _contains_rect(deck, view_module) or not _contains_rect(deck, state_module))):
+	# The deck scrolls when constrained, so the modules' containing object is the
+	# deck's row host, not the deck's visible rect. A module below the fold is
+	# reachable by scrolling, which is the accepted constrained-size tradeoff;
+	# a module outside the row host would be genuinely lost.
+	var rows_rect: Rect2 = (layout.get("live_cockpit", {}) as Dictionary).get("deck_rows_rect", deck)
+	if not layout.get("live_4d_deck_visible", false) or (strict_containment and (not _contains_rect(rows_rect, piece_module) or not _contains_rect(rows_rect, view_module) or not _contains_rect(rows_rect, state_module))):
 		failures.append("%s %s shared deck must visibly contain all three semantic modules" % [label, mode])
 	if viewport.intersects(deck):
 		failures.append("%s %s board and shared deck must not overlap" % [label, mode])
-	if piece_module.end.x > view_module.position.x + 0.5 or view_module.end.x > state_module.position.x + 0.5:
+	# Reading order, not a single line: the deck reflows into rows when the
+	# modules' measured minimum widths exceed the available width, so modules on
+	# different rows legitimately share an X range. Identity and order survive;
+	# "one HBox at every width" is deliberately not an invariant.
+	if not _modules_in_reading_order(piece_module, view_module, state_module):
 		failures.append("%s %s deck modules must follow Piece, View, Piece State order without overlap" % [label, mode])
 	for surface in [[piece_rect, piece_module, "piece controls"], [view_rect, view_module, "view controls"], [preview, state_module, "preview row"], [next_rect, state_module, "NEXT"], [hold_rect, state_module, "HOLD"]]:
 		if surface[0].size.x <= 0.0 or surface[0].size.y <= 0.0 or (strict_containment and not _contains_rect(surface[1], surface[0])):
@@ -262,23 +271,41 @@ func _orientation_indicator_is_available(app) -> bool:
 	return snapshot.get("source") == "live_4d_presentation" and not snapshot.get("basis_slots", []).is_empty() and not str(snapshot.get("control_frame", {}).get("slice_axis", "")).is_empty()
 
 
+# Measured against the per-slice content boxes, not the collection AABB. The
+# slice row is counter-rotated so it presents level, so the AABB's extreme
+# corners are occupied by nothing; requiring THOSE to fill 95% of the limiting
+# dimension is what held the flagship mode to roughly half its available size.
+# The boxes carry each slice's own label and active-piece clearance, so this
+# still asserts that every drawn attachment stays on screen.
 func _projected_bounds_height_share(app) -> float:
-	var bounds: Dictionary = app._renderer.current_bounds()
-	if not bounds.get("ok", false):
+	var boxes: Array = app._renderer.current_content_boxes()
+	if boxes.is_empty():
 		return 0.0
-	var minimum: Vector3 = bounds.get("min", Vector3.ZERO)
-	var maximum: Vector3 = bounds.get("max", Vector3.ZERO)
 	var screen_min := Vector2(INF, INF)
 	var screen_max := Vector2(-INF, -INF)
-	for x in [minimum.x, maximum.x]:
-		for y in [minimum.y, maximum.y]:
-			for z in [minimum.z, maximum.z]:
-				var world: Vector3 = app._renderer.to_global(Vector3(x, y, z))
-				var point: Vector2 = app._camera_rig.project_world_point(world)
-				screen_min.y = minf(screen_min.y, point.y)
-				screen_max.y = maxf(screen_max.y, point.y)
+	for box in boxes:
+		var minimum: Vector3 = box.get("min", Vector3.ZERO)
+		var maximum: Vector3 = box.get("max", Vector3.ZERO)
+		for x in [minimum.x, maximum.x]:
+			for y in [minimum.y, maximum.y]:
+				for z in [minimum.z, maximum.z]:
+					var point: Vector2 = app._camera_rig.project_world_point(Vector3(x, y, z))
+					screen_min.y = minf(screen_min.y, point.y)
+					screen_max.y = maxf(screen_max.y, point.y)
 	var viewport_height: float = app._camera_rig._camera.get_viewport().get_visible_rect().size.y
 	return (screen_max.y - screen_min.y) / viewport_height if viewport_height > 0.0 else 0.0
+
+
+func _modules_in_reading_order(first: Rect2, second: Rect2, third: Rect2) -> bool:
+	return _precedes(first, second) and _precedes(second, third)
+
+
+func _precedes(earlier: Rect2, later: Rect2) -> bool:
+	if earlier.end.y <= later.position.y + 0.5:
+		return true
+	if later.end.y <= earlier.position.y + 0.5:
+		return false
+	return earlier.end.x <= later.position.x + 0.5
 
 
 func _contains_rect(outer: Rect2, inner: Rect2) -> bool:

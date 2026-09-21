@@ -766,6 +766,10 @@ func _load_design_laboratory_scenario(scenario: Dictionary) -> Dictionary:
 
 func _design_laboratory_fingerprint() -> Dictionary:
 	var camera: Dictionary = _camera_rig.presentation_snapshot() if _camera_rig != null else {}
+	# Fit distance and orthographic size are derived from the current viewport.
+	# Responsive layout may settle them a frame later without changing the
+	# user's pose or zoom; treating those scalars as authored comparison state
+	# makes a window resize look like a gameplay/style mutation.
 	return {
 		"mode": _mode,
 		"trace_type": _state.selected_trace_type,
@@ -784,11 +788,8 @@ func _design_laboratory_fingerprint() -> Dictionary:
 			"current_roll": camera.get("current_roll", 0.0),
 			"target_focus": str(camera.get("target_focus", Vector3.ZERO)),
 			"current_focus": str(camera.get("current_focus", Vector3.ZERO)),
-			"target_distance": camera.get("target_distance", 0.0),
-			"current_distance": camera.get("current_distance", 0.0),
 			"zoom_multiplier": camera.get("zoom_multiplier", 1.0),
 			"projection": camera.get("projection", -1),
-			"orthographic_size": camera.get("orthographic_size", 0.0),
 			"view_context": camera.get("view_context", ""),
 		},
 	}
@@ -991,14 +992,20 @@ func _refresh_render() -> void:
 	_renderer.render_interpolated_snapshot(_current_snapshot, next_snapshot, _state.interpolation_alpha)
 
 
+# Every live mode refits. Gating this on Live 4D was masked only while the
+# logical viewport was pinned to the design resolution: once the shell reflows,
+# a 2D/3D aspect change that makes width the limiting axis leaves the camera
+# solving for the previous aspect, which clips the board.
 func _on_game_viewport_geometry_changed(viewport_size: Vector2) -> void:
 	if not _route_layout_viewport_size(viewport_size):
 		return
-	if _mode == MODE_LIVE_4D and not _current_snapshot.is_empty():
-		var framing_status := str(_camera_rig.presentation_snapshot().get("framing_status", "")) if _camera_rig != null else ""
+	if _mode not in [MODE_LIVE_2D, MODE_LIVE_3D, MODE_LIVE_4D] or _current_snapshot.is_empty():
+		return
+	var framing_status := str(_camera_rig.presentation_snapshot().get("framing_status", "")) if _camera_rig != null else ""
+	if _mode == MODE_LIVE_4D:
 		_refresh_live_4d_presentation(true)
-		if not _presentation_layout_guard_active and not framing_status.begins_with("manual"):
-			_fit_view()
+	if not _presentation_layout_guard_active and not framing_status.begins_with("manual"):
+		_fit_view()
 
 
 func _route_layout_viewport_size(viewport_size: Vector2) -> bool:
@@ -1088,7 +1095,7 @@ func _fit_view() -> void:
 		margin = CameraRigScript.LIVE_3D_FIT_MARGIN
 	elif _mode == MODE_LIVE_4D:
 		margin = CameraRigScript.LIVE_4D_FIT_MARGIN
-	_camera_rig.fit_current_bounds(bounds, margin)
+	_camera_rig.fit_current_bounds(bounds, margin, _renderer.current_content_boxes())
 	_camera_rig.set_orientation_gizmo_visible(_mode in [MODE_LIVE_3D, MODE_LIVE_4D])
 	_pending_fit_view = false
 	_refresh_camera_status()
