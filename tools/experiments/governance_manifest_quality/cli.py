@@ -20,6 +20,14 @@ from .measurement import (
     measure_trajectory,
     normalize_trajectory,
 )
+from .postmortem import (
+    PostmortemValidationError,
+    bind_overlay_records,
+    build_postmortem_aggregate,
+    postmortem_from_trajectory,
+    read_json_records,
+    render_task_summary,
+)
 from .reporting import write_outputs
 
 
@@ -67,6 +75,61 @@ def _measure_command(args: argparse.Namespace) -> int:
     return 0
 
 
+def _trajectory_id(trajectory: dict[str, Any]) -> str | None:
+    source = trajectory.get("source")
+    source_id = source.get("source_id") if isinstance(source, dict) else None
+    return source_id if isinstance(source_id, str) else None
+
+
+def _postmortem_command(args: argparse.Namespace) -> int:
+    try:
+        trajectories = [
+            trajectory
+            for path in args.trajectory
+            for trajectory in read_json_records(path)
+        ]
+        known = {_trajectory_id(trajectory) for trajectory in trajectories} - {None}
+        overlays = {
+            payload_key: bind_overlay_records(
+                [record for path in paths or [] for record in read_json_records(path)],
+                payload_key,
+                known,
+            )
+            for payload_key, paths in (
+                ("evaluation", args.evaluator),
+                ("work_segment", args.segment),
+                ("resolver_evidence", args.resolver_evidence),
+            )
+        }
+        postmortems = []
+        for trajectory in trajectories:
+            trajectory_id = _trajectory_id(trajectory)
+            postmortems.append(
+                postmortem_from_trajectory(
+                    trajectory,
+                    evaluator=overlays["evaluation"].get(trajectory_id),
+                    segment=overlays["work_segment"].get(trajectory_id),
+                    resolver_evidence=overlays["resolver_evidence"].get(trajectory_id),
+                )
+            )
+        aggregate = build_postmortem_aggregate(postmortems)
+    except (
+        OSError,
+        json.JSONDecodeError,
+        PostmortemValidationError,
+        TrajectoryValidationError,
+    ) as exc:
+        _write_json(args.output, {"status": "invalid", "error": str(exc)})
+        return 2
+    payload = {
+        "postmortems": postmortems,
+        "aggregate": aggregate,
+        "summaries": [render_task_summary(record) for record in postmortems],
+    }
+    _write_json(args.output, payload)
+    return 0
+
+
 def _corpus_command(args: argparse.Namespace) -> int:
     fingerprint, status = _baseline(args)
     if fingerprint is None:
@@ -111,6 +174,38 @@ def _parser() -> argparse.ArgumentParser:
     corpus.add_argument("--source-root", type=Path, action="append", required=True)
     corpus.add_argument("--output-dir", type=Path, required=True)
     corpus.set_defaults(handler=_corpus_command)
+
+    postmortem = subparsers.add_parser(
+        "postmortem",
+        help="derive evidence-preserving task post-mortems from normalized trajectories",
+    )
+    postmortem.add_argument(
+        "--trajectory",
+        type=Path,
+        action="append",
+        required=True,
+        help="normalized trajectory JSON or JSONL; repeat for multiple tasks",
+    )
+    postmortem.add_argument(
+        "--evaluator",
+        type=Path,
+        action="append",
+        help="optional {source_trajectory_id, evaluation} records",
+    )
+    postmortem.add_argument(
+        "--segment",
+        type=Path,
+        action="append",
+        help="optional {source_trajectory_id, work_segment} G1 records",
+    )
+    postmortem.add_argument(
+        "--resolver-evidence",
+        type=Path,
+        action="append",
+        help="optional {source_trajectory_id, resolver_evidence} captured gov output",
+    )
+    postmortem.add_argument("--output", type=Path)
+    postmortem.set_defaults(handler=_postmortem_command)
     return parser
 
 

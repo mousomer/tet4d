@@ -1,0 +1,64 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://tet4d.local/experiments/governance-manifest-quality/postmortem-v2.schema.json",
+    "title": "Production governance post-mortem",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "schema_version",
+        "task",
+        "outcome",
+        "activity_total",
+        "activity",
+        "manifest_effects",
+        "missing_guidance",
+        "evidence_limitations",
+        "encounter_coverage",
+        "resolver_projection",
+        "projected_read_comparison",
+        "route_work_alignment",
+        "artifact_coverage"
+    ],
+    "properties": {
+        "schema_version": {"const": 2},
+        "task": {"type": "object"},
+        "outcome": {"type": "object"},
+        "activity_total": {"type": "object"},
+        "activity": {"type": "object"},
+        "manifest_effects": {"type": "array"},
+        "missing_guidance": {"type": "array"},
+        "evidence_limitations": {"type": "array", "items": {"type": "string"}},
+        "encounter_coverage": {"$ref": "#/$defs/encounter_coverage"},
+        "resolver_projection": {"type": "object"},
+        "projected_read_comparison": {"type": "object"},
+        "route_work_alignment": {"type": "object"},
+        "artifact_coverage": {"type": "object"}
+    },
+    "$defs": {
+        "encounter_coverage": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "channels",
+                "completeness",
+                "execution_events",
+                "execution_events_without_recovered_command"
+            ],
+            "properties": {
+                "channels": {
+                    "const": {
+                        "file_reads": "partial",
+                        "governance_cli_output": "not_observed",
+                        "injected_instructions": "not_observed"
+                    }
+                },
+                "completeness": {"const": "partial"},
+                "execution_events": {"type": "integer", "minimum": 0},
+                "execution_events_without_recovered_command": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        }
+    }
+}
