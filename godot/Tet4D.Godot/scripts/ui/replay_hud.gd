@@ -135,6 +135,7 @@ var _quick_settings_button: Button
 var _grid_toggle_button: Button
 var _designer_button: Button
 var _presentation_designer: PresentationDesigner
+var _presentation_designer_game_rect := Rect2()
 var _design_laboratory
 var _frame_slider: HSlider
 var _frame_label: Label
@@ -341,6 +342,18 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	# Container sorting can move the game area without emitting a usable resize
+	# epoch (Linux font metrics exercise this path). Track only the visible
+	# Designer's owning rectangle so its overlay follows the final sorted frame.
+	if (
+		_presentation_designer != null
+		and _presentation_designer.visible
+		and _game_area != null
+		and _game_area.is_inside_tree()
+	):
+		var game_rect := _game_area.get_global_rect()
+		if game_rect != _presentation_designer_game_rect:
+			_layout_presentation_designer()
 	_window_mode_poll_accumulator += delta
 	if _window_mode_poll_accumulator < 0.2:
 		return
@@ -887,6 +900,7 @@ func _layout_presentation_designer() -> void:
 	if _presentation_designer == null or _game_area == null or not _game_area.is_inside_tree():
 		return
 	var game_rect := _game_area.get_global_rect()
+	_presentation_designer_game_rect = game_rect
 	var inverse := get_global_transform().affine_inverse()
 	var local_origin: Vector2 = inverse * game_rect.position
 	var local_far: Vector2 = inverse * (game_rect.position + game_rect.size)
@@ -2154,10 +2168,7 @@ func _build_layout() -> void:
 	_game_area.custom_minimum_size = Vector2(ReplayVisuals.GAME_AREA_MIN_WIDTH, 0)
 	_game_area.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_game_area.theme_type_variation = "ViewportFrame"
-	# The Designer must follow both size and position changes. Linux font metrics
-	# can reflow the deck without changing the game area's size, moving the game
-	# area after the Designer was placed and leaving the overlay outside it.
-	_game_area.item_rect_changed.connect(func() -> void:
+	_game_area.resized.connect(func() -> void:
 		game_viewport_geometry_changed.emit(_game_area.size)
 		call_deferred("_layout_presentation_designer")
 	)
