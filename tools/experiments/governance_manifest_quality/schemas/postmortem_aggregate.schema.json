@@ -1,13 +1,14 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://tet4d.local/experiments/governance-manifest-quality/postmortem-aggregate-v2.schema.json",
+    "$id": "https://tet4d.local/experiments/governance-manifest-quality/postmortem-aggregate-v3.schema.json",
     "title": "Production governance post-mortem aggregate",
     "type": "object",
     "additionalProperties": false,
     "required": [
         "schema_version",
         "interpretation",
-        "task_count",
+        "interaction_segment_count",
+        "task_group_count",
         "encounter_coverage",
         "overall",
         "by_manifest",
@@ -16,11 +17,15 @@
         "missing_guidance"
     ],
     "properties": {
-        "schema_version": {"const": 2},
+        "schema_version": {"const": 3},
         "interpretation": {
             "const": "descriptive_postmortem_evidence_not_causal_estimate"
         },
-        "task_count": {"type": "integer", "minimum": 0},
+        "interaction_segment_count": {"type": "integer", "minimum": 0},
+        "task_group_count": {
+            "description": "Reserved: segments are human turns, not engineering tasks, so no task count is claimed.",
+            "type": "null"
+        },
         "encounter_coverage": {
             "type": "object",
             "additionalProperties": false,

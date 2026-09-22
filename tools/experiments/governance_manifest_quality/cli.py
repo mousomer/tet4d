@@ -24,9 +24,10 @@ from .postmortem import (
     PostmortemValidationError,
     bind_overlay_records,
     build_postmortem_aggregate,
+    plan_interaction_postmortems,
     postmortem_from_trajectory,
     read_json_records,
-    render_task_summary,
+    render_interaction_summary,
 )
 from .reporting import write_outputs
 
@@ -88,7 +89,20 @@ def _postmortem_command(args: argparse.Namespace) -> int:
             for path in args.trajectory
             for trajectory in read_json_records(path)
         ]
-        known = {_trajectory_id(trajectory) for trajectory in trajectories} - {None}
+        # One post-mortem per human-turn interaction segment.  A trajectory
+        # without one is reported, not guessed at, and never aborts the
+        # post-mortems of the other trajectories.
+        bindings = []
+        diagnostics = []
+        for trajectory in trajectories:
+            segments, trajectory_diagnostics = plan_interaction_postmortems(trajectory)
+            bindings += [(trajectory, segment) for segment in segments]
+            diagnostics += trajectory_diagnostics
+        known = {
+            (str(_trajectory_id(trajectory)), str(segment["id"]))
+            for trajectory, segment in bindings
+            if _trajectory_id(trajectory) is not None
+        }
         overlays = {
             payload_key: bind_overlay_records(
                 [record for path in paths or [] for record in read_json_records(path)],
@@ -102,14 +116,15 @@ def _postmortem_command(args: argparse.Namespace) -> int:
             )
         }
         postmortems = []
-        for trajectory in trajectories:
-            trajectory_id = _trajectory_id(trajectory)
+        for trajectory, segment in bindings:
+            key = (str(_trajectory_id(trajectory)), str(segment["id"]))
             postmortems.append(
                 postmortem_from_trajectory(
                     trajectory,
-                    evaluator=overlays["evaluation"].get(trajectory_id),
-                    segment=overlays["work_segment"].get(trajectory_id),
-                    resolver_evidence=overlays["resolver_evidence"].get(trajectory_id),
+                    interaction_segment_id=str(segment["id"]),
+                    evaluator=overlays["evaluation"].get(key),
+                    segment=overlays["work_segment"].get(key),
+                    resolver_evidence=overlays["resolver_evidence"].get(key),
                 )
             )
         aggregate = build_postmortem_aggregate(postmortems)
@@ -124,7 +139,8 @@ def _postmortem_command(args: argparse.Namespace) -> int:
     payload = {
         "postmortems": postmortems,
         "aggregate": aggregate,
-        "summaries": [render_task_summary(record) for record in postmortems],
+        "summaries": [render_interaction_summary(record) for record in postmortems],
+        "diagnostics": diagnostics,
     }
     _write_json(args.output, payload)
     return 0
@@ -177,32 +193,34 @@ def _parser() -> argparse.ArgumentParser:
 
     postmortem = subparsers.add_parser(
         "postmortem",
-        help="derive evidence-preserving task post-mortems from normalized trajectories",
+        help="derive evidence-preserving post-mortems, one per human-turn segment",
     )
     postmortem.add_argument(
         "--trajectory",
         type=Path,
         action="append",
         required=True,
-        help="normalized trajectory JSON or JSONL; repeat for multiple tasks",
+        help="normalized trajectory JSON or JSONL; repeat for more files",
     )
     postmortem.add_argument(
         "--evaluator",
         type=Path,
         action="append",
-        help="optional {source_trajectory_id, evaluation} records",
+        help="optional {source_trajectory_id, interaction_segment_id, evaluation} records",
     )
     postmortem.add_argument(
         "--segment",
         type=Path,
         action="append",
-        help="optional {source_trajectory_id, work_segment} G1 records",
+        help="optional {source_trajectory_id, interaction_segment_id, work_segment} "
+        "G1 records",
     )
     postmortem.add_argument(
         "--resolver-evidence",
         type=Path,
         action="append",
-        help="optional {source_trajectory_id, resolver_evidence} captured gov output",
+        help="optional {source_trajectory_id, interaction_segment_id, resolver_evidence} "
+        "captured gov output",
     )
     postmortem.add_argument("--output", type=Path)
     postmortem.set_defaults(handler=_postmortem_command)

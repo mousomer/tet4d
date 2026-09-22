@@ -218,7 +218,7 @@ def test_checkout_producer_reads_each_identity_from_its_own_source() -> None:
 def test_checkout_producer_surfaces_an_evolved_pack_identity(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """A changed pack must fail the workspace domain and only that domain."""
+    """A changed pack fails its domain without conflating current policy bytes."""
     original = baseline.pack_hash
 
     def evolved(*args: object, **kwargs: object) -> tuple[str, list[str]]:
@@ -228,15 +228,20 @@ def test_checkout_producer_surfaces_an_evolved_pack_identity(
     monkeypatch.setattr(baseline, "pack_hash", evolved)
     fingerprint = _checkout_fingerprint()
     assert fingerprint["workspace_governance"]["content_sha256"] == "0" * 64
-    assert fingerprint["machine_policy"]["raw_sha256"] == MACHINE_POLICY_SHA
+    assert (
+        fingerprint["machine_policy"]["raw_sha256"]
+        == hashlib.sha256((ROOT / POLICY_PATH).read_bytes()).hexdigest()
+    )
     # Domain isolation, not an exact global set: once the pack legitimately
     # advances past the frozen declaration the checkout carries other, real
     # workspace mismatches, and permitting exactly that is the point of the
     # snapshot split.
     mismatches = _mismatch_names(fingerprint)
     assert "workspace-governance content SHA-256" in mismatches
-    assert "machine-policy raw SHA-256" not in mismatches
-    assert "machine-policy serialized bytes" not in mismatches
+    # A policy evolution is independently visible against the frozen C1
+    # treatment; its identity is never substituted with the pack identity.
+    assert "machine-policy raw SHA-256" in mismatches
+    assert "machine-policy serialized bytes" in mismatches
 
 
 def test_checkout_producer_surfaces_a_pack_file_list_mismatch(

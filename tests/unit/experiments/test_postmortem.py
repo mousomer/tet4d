@@ -5,6 +5,9 @@ from pathlib import Path
 
 import pytest
 
+from tools.experiments.governance_manifest_quality import (
+    postmortem as postmortem_module,
+)
 from tools.experiments.governance_manifest_quality.cli import main
 from tools.experiments.governance_manifest_quality.measurement import (
     normalize_trajectory,
@@ -16,12 +19,14 @@ from tools.experiments.governance_manifest_quality.postmortem import (
     PostmortemValidationError,
     build_postmortem_aggregate,
     normalize_postmortem_record,
+    plan_interaction_postmortems,
     postmortem_from_trajectory,
     read_json_records,
-    render_task_summary,
+    render_interaction_summary,
 )
 
 VERIFICATION = "docs/governance/VERIFICATION.md"
+SEGMENT_ID = "trajectory-1:user-1"
 
 
 def _read(path: str, source_class: str = "governance") -> dict:
@@ -63,11 +68,13 @@ def _trajectory(
     tool_calls: int = 10,
 ) -> dict:
     """Reads come first, so the n-th read has event sequence n."""
+    segment_id = f"{source_id}:user-1"
     events = [_read(path, source_class) for path, source_class in reads]
     events.append(_execution(is_test=True, exit_code=0 if successful_test else 1))
     events.extend(_execution() for _ in range(tool_calls - 1))
+    events = [event | {"interaction_segment_id": segment_id} for event in events]
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "source": {
             "source_id": source_id,
             "task_identity": task_identity,
@@ -77,6 +84,16 @@ def _trajectory(
             "token_information": {"total_token_usage": {"total_tokens": 30}},
         },
         "events": events,
+        "interaction_segments": [
+            {
+                "id": segment_id,
+                "unit": "human_turn",
+                "start_row_index": 1,
+                "end_row_index": 100,
+                "turn_text_sha256": "f" * 64,
+                "boundary_evidence": "content_item_kinds",
+            }
+        ],
     }
 
 
@@ -93,7 +110,7 @@ def _effect(encountered_at: int, effect: str, source: str = VERIFICATION) -> dic
 
 def _evaluation(effect: str, *, model: str = "model-a") -> dict:
     return {
-        "task": {
+        "interaction": {
             "description": "responsive cockpit scaling",
             "task_class": "implementation",
             "model": model,
@@ -160,15 +177,49 @@ def _resolver_evidence(
     }
 
 
-def test_record_serializes_parses_and_preserves_mechanical_task_binding() -> None:
+def _edge_read(
+    path: str,
+    *,
+    role: str,
+    access_mode: str,
+    bytes_read: int,
+) -> dict:
+    return {
+        "file_class": "edge_state",
+        "registered_on_governance_surface": True,
+        "edge_state_role": role,
+        "edge_limit_rationale": ["human_reviewability"],
+        "access_mode": access_mode,
+        "materialized_bytes": bytes_read,
+        "byte_range": {"start": 0, "end": bytes_read},
+        "content_identity": f"fixture:{path}",
+    }
+
+
+def test_record_serializes_parses_and_preserves_mechanical_segment_binding() -> None:
     record = postmortem_from_trajectory(_trajectory(), evaluator=_evaluation("useful"))
     reparsed = normalize_postmortem_record(json.loads(json.dumps(record)))
     assert reparsed == record
-    assert record["task"]["id"] == {"value": "task-1", "evidence_state": "derived"}
-    assert record["task"]["manifest_revision"] == {
+    interaction = record["interaction"]
+    assert interaction["id"] == {"value": SEGMENT_ID, "evidence_state": "derived"}
+    assert interaction["segment"]["unit"] == "human_turn"
+    # A human turn is not asserted to be, or to share, an engineering task.
+    assert interaction["task_group_id"] == {
+        "value": None,
+        "evidence_state": "not_inferable",
+    }
+    assert interaction["manifest_revision"] == {
         "value": "a" * 40,
         "evidence_state": "derived",
     }
+    for field, value, message in (
+        ("task_group_id", {"value": "g", "evidence_state": "recorded"}, "reserved"),
+        ("id", {"value": "other:user-1", "evidence_state": "derived"}, "its segment"),
+    ):
+        claimed = json.loads(json.dumps(record))
+        claimed["interaction"][field] = value
+        with pytest.raises(PostmortemValidationError, match=message):
+            normalize_postmortem_record(claimed)
 
 
 def test_g1_segment_binds_boundaries_without_overriding_c1_totals() -> None:
@@ -188,10 +239,15 @@ def test_g1_segment_binds_boundaries_without_overriding_c1_totals() -> None:
     record = postmortem_from_trajectory(_trajectory(), segment=segment)
     assert record["activity"]["unknown"]["action_count"] == 10
     assert record["activity_total"]["elapsed_ms"] == 1000
-    assert record["task"]["id"]["value"] == "declared-task"
-    assert record["task"]["session_id"]["value"] == "session-1"
-    assert record["task"]["start_commit"]["value"] == "b" * 40
-    assert record["task"]["end_commit"]["value"] == "c" * 40
+    # The structural segment is the identity; G1's declared id is provenance.
+    assert record["interaction"]["id"]["value"] == "trajectory-1:user-1"
+    assert record["interaction"]["g1_task_id"] == {
+        "value": "declared-task",
+        "evidence_state": "recorded",
+    }
+    assert record["interaction"]["session_id"]["value"] == "session-1"
+    assert record["interaction"]["start_commit"]["value"] == "b" * 40
+    assert record["interaction"]["end_commit"]["value"] == "c" * 40
 
 
 def test_resolver_projection_preserves_exact_input_output_and_fallback_state() -> None:
@@ -248,6 +304,82 @@ def test_recorded_resolver_projection_requires_exact_task_text() -> None:
                 "resolver_output": _resolver_output(),
             },
         )
+
+
+def test_large_but_bounded_backlog_read_has_no_raw_size_quality_penalty() -> None:
+    trajectory = _trajectory(reads=(("docs/BACKLOG.md", "governance"),))
+    trajectory["events"][0].update(
+        _edge_read(
+            "docs/BACKLOG.md",
+            role="conditional_open_work_authority",
+            access_mode="bounded",
+            bytes_read=42,
+        )
+    )
+    evidence = _resolver_evidence()
+    evidence["resolver_output"]["entries"]["authorities"]["value"].append(
+        {"authority_id": "open-work", "source": "docs/BACKLOG.md"}
+    )
+    (assessment,) = postmortem_from_trajectory(trajectory, resolver_evidence=evidence)[
+        "edge_state_assessment"
+    ]
+    assert assessment["operational_role"] == "conditional_open_work_authority"
+    assert assessment["registered_on_governance_surface"] is True
+    assert assessment["routed_for_segment"] == "routed"
+    assert assessment["bounded_reads"] == 1
+    assert assessment["repeated_reads"] == 0
+    assert assessment["segment_local_materialized_bytes"] == 42
+    assert assessment["raw_size_is_quality_penalty"] is False
+
+
+def test_smaller_whole_file_current_state_read_reports_locality_not_size() -> None:
+    trajectory = _trajectory(reads=(("CURRENT_STATE.md", "governance"),))
+    trajectory["events"][0].update(
+        _edge_read(
+            "CURRENT_STATE.md",
+            role="restart_handoff_context",
+            access_mode="whole_file",
+            bytes_read=120,
+        )
+    )
+    (assessment,) = postmortem_from_trajectory(trajectory)["edge_state_assessment"]
+    assert assessment["operational_role"] == "restart_handoff_context"
+    assert assessment["routed_for_segment"] == "not_recorded"
+    assert assessment["whole_file_reads"] == 1
+    assert assessment["access_locality"] == "whole_file_observed"
+    # Historical/completed material is not called stale merely because it exists.
+    assert assessment["staleness"] == "not_recorded"
+    assert assessment["raw_size_is_quality_penalty"] is False
+
+
+def test_edge_state_overlay_keeps_retention_history_and_contradiction_visible() -> None:
+    trajectory = _trajectory(reads=(("docs/BACKLOG.md", "governance"),))
+    trajectory["events"][0].update(
+        _edge_read(
+            "docs/BACKLOG.md",
+            role="conditional_open_work_authority",
+            access_mode="bounded",
+            bytes_read=30,
+        )
+    )
+    record = postmortem_from_trajectory(
+        trajectory,
+        evaluator={
+            "edge_state_assessment": [
+                {
+                    "source": "docs/BACKLOG.md",
+                    "information_retention": "information_loss_observed",
+                    "contradictory_active_state": "problem_observed",
+                    "staleness": "not_observed",
+                }
+            ]
+        },
+    )
+    (assessment,) = record["edge_state_assessment"]
+    assert assessment["information_retention"] == "information_loss_observed"
+    assert assessment["contradictory_active_state"] == "problem_observed"
+    assert assessment["staleness"] == "not_observed"
+    assert assessment["raw_size_is_quality_penalty"] is False
 
 
 def test_projected_source_counts_as_read_whatever_its_c1_source_class() -> None:
@@ -360,12 +492,26 @@ def test_artifact_coverage_stays_migration_limited_and_non_normative() -> None:
         normalize_postmortem_record(record)
 
 
+@pytest.mark.parametrize(
+    "artifact",
+    [
+        {"path": "godot/foo.gd"},
+        {"path": "godot/foo.gd", "role": "made_up_role"},
+    ],
+)
+def test_g1_artifacts_require_explicit_supported_roles(artifact: dict) -> None:
+    with pytest.raises(PostmortemValidationError, match="explicit supported role"):
+        postmortem_from_trajectory(_trajectory(), segment={"artifacts": [artifact]})
+
+
 def test_incomplete_historical_record_is_usable_without_fabricating_evidence() -> None:
     record = postmortem_from_trajectory(
         _trajectory(task_identity=None, model=None, revision=None)
     )
-    assert record["task"]["id"]["evidence_state"] == "not_recorded"
-    assert record["task"]["manifest_revision"]["evidence_state"] == "not_recorded"
+    assert record["interaction"]["id"]["evidence_state"] == "derived"
+    assert (
+        record["interaction"]["manifest_revision"]["evidence_state"] == "not_recorded"
+    )
     assert record["activity"]["unknown"]["action_count"] == 10
     assert record["manifest_effects"][0]["effect"] == "unknown"
 
@@ -379,6 +525,67 @@ def test_c1_normalized_output_is_consumed_not_silently_emptied() -> None:
     assert from_normalized == postmortem_from_trajectory(raw)
     with pytest.raises(PostmortemValidationError, match="no recognizable event"):
         postmortem_from_trajectory({"schema_version": 1, "source": {"source_id": "t"}})
+
+
+def test_trajectories_without_human_turns_yield_diagnostics_not_postmortems() -> None:
+    legacy = _trajectory(source_id="legacy")
+    legacy["schema_version"] = 1
+    legacy.pop("interaction_segments")
+    for event in legacy["events"]:
+        event.pop("interaction_segment_id")
+    subagent = _trajectory(source_id="subagent")
+    subagent["interaction_segments"] = []
+    for event in subagent["events"]:
+        event["interaction_segment_id"] = None
+    for trajectory, reason in (
+        (legacy, "boundaries_not_recorded"),
+        (subagent, "no_structural_user_turn"),
+    ):
+        assert plan_interaction_postmortems(trajectory) == (
+            [],
+            [
+                {
+                    "source_trajectory_id": trajectory["source"]["source_id"],
+                    "status": "interaction_boundary_unavailable",
+                    "reason": reason,
+                    "postmortem_emitted": False,
+                }
+            ],
+        )
+        with pytest.raises(PostmortemValidationError, match=reason):
+            postmortem_from_trajectory(trajectory)
+
+    partial = _trajectory()
+    partial["events"][-1]["interaction_segment_id"] = None
+    segments, diagnostics = plan_interaction_postmortems(partial)
+    assert [segment["id"] for segment in segments] == [SEGMENT_ID]
+    assert diagnostics == [
+        {
+            "source_trajectory_id": "trajectory-1",
+            "status": "evidence_outside_interaction_segments",
+            "item_count": 1,
+            "postmortem_emitted": True,
+        }
+    ]
+
+
+def test_repeated_failure_without_command_identity_stays_unknown() -> None:
+    trajectory = _trajectory()
+    trajectory["events"] += [
+        _execution(is_test=True, exit_code=1) | {"interaction_segment_id": SEGMENT_ID},
+        _execution(is_test=True, exit_code=1) | {"interaction_segment_id": SEGMENT_ID},
+        _execution(exit_code=1)
+        | {"command_identity": None, "interaction_segment_id": SEGMENT_ID},
+    ]
+    normalized = normalize_trajectory(trajectory)
+    scoped = postmortem_module._segment_scoped_trajectory(
+        normalized, normalized["interaction_segments"][0]
+    )
+    assert [
+        event["repeated_failure"]
+        for event in scoped["execution_events"]
+        if event["exit_code"] == 1
+    ] == [False, True, None]
 
 
 def test_contribution_categories_are_exact_and_invalid_causal_claim_is_rejected() -> (
@@ -471,14 +678,14 @@ def test_burden_ratio_is_null_until_meta_activity_is_attributed() -> None:
     assert burden["governance_burden_ratio"]["action_count"] == 0.5
 
 
-def test_rereads_are_encounters_not_tasks() -> None:
+def test_rereads_are_encounters_not_segments() -> None:
     record = postmortem_from_trajectory(
         _trajectory(reads=((VERIFICATION, "governance"),) * 3),
         evaluator=_evaluation("useful"),
     )
     aggregate = build_postmortem_aggregate([record])
     (source,) = aggregate["by_manifest"].values()
-    assert source["task_count"] == 1
+    assert source["interaction_segment_count"] == 1
     assert source["activity"]["action_count"]["product"] == 6
     assert source["task_classes"] == {"implementation": 1}
     assert source["encounter_count"] == 3
@@ -487,11 +694,13 @@ def test_rereads_are_encounters_not_tasks() -> None:
         aggregate["by_model"]["model-a"],
         aggregate["by_task_class"]["implementation"],
     ):
-        assert group["task_count"] == 1
+        assert group["interaction_segment_count"] == 1
         assert group["activity"]["action_count"]["product"] == 6
 
 
-def test_aggregate_reports_manifest_model_task_class_and_burden_across_tasks() -> None:
+def test_aggregate_reports_manifest_model_task_class_and_burden_across_segments() -> (
+    None
+):
     decisive = postmortem_from_trajectory(
         _trajectory(), evaluator=_evaluation("decisive")
     )
@@ -501,18 +710,21 @@ def test_aggregate_reports_manifest_model_task_class_and_burden_across_tasks() -
     )
     aggregate = build_postmortem_aggregate([decisive, confirmatory])
     manifest = aggregate["by_manifest"][VERIFICATION]
-    assert aggregate["task_count"] == 2
-    assert manifest["task_count"] == 2
+    assert aggregate["interaction_segment_count"] == 2
+    assert aggregate["task_group_count"] is None
+    assert manifest["interaction_segment_count"] == 2
     assert manifest["contributions"]["decisive"] == 1
     assert manifest["contributions"]["confirmatory"] == 1
-    assert aggregate["by_model"]["model-a"]["task_count"] == 1
-    assert aggregate["by_task_class"]["implementation"]["task_count"] == 2
+    assert aggregate["by_model"]["model-a"]["interaction_segment_count"] == 1
+    assert (
+        aggregate["by_task_class"]["implementation"]["interaction_segment_count"] == 2
+    )
     assert aggregate["overall"]["governance_burden_ratio"]["action_count"] == 0.5
 
 
-def test_aggregate_rejects_repeated_trajectories() -> None:
+def test_aggregate_rejects_repeated_segments() -> None:
     record = postmortem_from_trajectory(_trajectory())
-    with pytest.raises(PostmortemValidationError, match="repeats trajectories"):
+    with pytest.raises(PostmortemValidationError, match="repeats interaction segments"):
         build_postmortem_aggregate([record, record])
 
 
@@ -601,6 +813,7 @@ def test_encounter_coverage_declares_partial_exposure() -> None:
             "is_test": None,
             "exit_code": None,
             "command_identity": None,
+            "interaction_segment_id": SEGMENT_ID,
         }
     )
     record = postmortem_from_trajectory(trajectory)
@@ -621,11 +834,36 @@ def test_encounter_coverage_declares_partial_exposure() -> None:
         normalize_postmortem_record(record)
 
 
-def test_evaluator_cannot_rebind_trajectory_or_annotate_an_encounter_twice() -> None:
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("source_trajectory_id", "trajectory-2"),
+        ("id", "trajectory-2:user-9"),
+        ("g1_task_id", "another-task"),
+        ("task_group_id", "stage-56g"),
+        (
+            "segment",
+            {
+                "id": "trajectory-1:user-50",
+                "unit": "human_turn",
+                "start_row_index": 50,
+                "end_row_index": 60,
+                "turn_text_sha256": None,
+                "boundary_evidence": "user_message_item",
+            },
+        ),
+    ],
+)
+def test_evaluator_cannot_rebind_interaction_identity_or_provenance(
+    field: str, value: object
+) -> None:
     rebind = _evaluation("useful")
-    rebind["task"]["source_trajectory_id"] = "trajectory-2"
+    rebind["interaction"][field] = value
     with pytest.raises(PostmortemValidationError, match="rebind"):
         postmortem_from_trajectory(_trajectory(), evaluator=rebind)
+
+
+def test_evaluator_cannot_annotate_an_encounter_twice() -> None:
     twice = _evaluation("useful")
     twice["manifest_effects"].append(_effect(1, "decisive"))
     with pytest.raises(PostmortemValidationError, match="more than once"):
@@ -645,12 +883,12 @@ def test_missing_guidance_and_compact_summary_remain_optional() -> None:
     assert record["missing_guidance"][0]["candidate_scope"] == (
         "Godot runtime/UI implementation guidance"
     )
-    summary = render_task_summary(record)
+    summary = render_interaction_summary(record)
     assert "responsive cockpit scaling" in summary
     assert f"{VERIFICATION}: 1 useful" in summary
     assert "partial exposure: 0 of 10 tool calls had no recovered command" in summary
     assert "  product: 6 actions" in summary
-    unattributed = render_task_summary(postmortem_from_trajectory(_trajectory()))
+    unattributed = render_interaction_summary(postmortem_from_trajectory(_trajectory()))
     assert "  product: not attributed" in unattributed
     assert "  unknown: 10 actions" in unattributed
 
@@ -677,12 +915,17 @@ def test_cli_reads_historical_jsonl_and_writes_machine_readable_aggregate(
     trajectory_path.write_text(json.dumps(_trajectory()) + "\n", encoding="utf-8")
     evaluator_path = _write(
         tmp_path / "evaluator.json",
-        {"source_trajectory_id": "trajectory-1", "evaluation": _evaluation("useful")},
+        {
+            "source_trajectory_id": "trajectory-1",
+            "interaction_segment_id": SEGMENT_ID,
+            "evaluation": _evaluation("useful"),
+        },
     )
     resolver_path = _write(
         tmp_path / "resolver.json",
         {
             "source_trajectory_id": "trajectory-1",
+            "interaction_segment_id": SEGMENT_ID,
             "resolver_evidence": _resolver_evidence(),
         },
     )
@@ -704,7 +947,7 @@ def test_cli_reads_historical_jsonl_and_writes_machine_readable_aggregate(
         == 0
     )
     payload = json.loads(output.read_text(encoding="utf-8"))
-    assert payload["aggregate"]["task_count"] == 1
+    assert payload["aggregate"]["interaction_segment_count"] == 1
     assert (
         payload["postmortems"][0]["resolver_projection"]["evidence_state"] == "recorded"
     )
@@ -716,7 +959,7 @@ def test_cli_reads_historical_jsonl_and_writes_machine_readable_aggregate(
 @pytest.mark.parametrize(
     ("flag", "payload_key", "payload"),
     [
-        ("--evaluator", "evaluation", {"task": {"description": "judged"}}),
+        ("--evaluator", "evaluation", {"interaction": {"description": "judged"}}),
         ("--resolver-evidence", "resolver_evidence", _resolver_evidence()),
         ("--segment", "work_segment", {"artifacts": []}),
     ],
@@ -727,28 +970,41 @@ def test_cli_fails_on_unmatched_overlay_ids_instead_of_dropping_them(
     overlay = _write(
         tmp_path / "overlay.json",
         [
-            {"source_trajectory_id": "trajectory-1 ", payload_key: payload},
-            {"source_trajectory_id": "missing", payload_key: payload},
+            {
+                "source_trajectory_id": "trajectory-1 ",
+                "interaction_segment_id": SEGMENT_ID,
+                payload_key: payload,
+            },
+            {
+                "source_trajectory_id": "missing",
+                "interaction_segment_id": SEGMENT_ID,
+                payload_key: payload,
+            },
         ],
     )
     code, result = _run_postmortem(tmp_path, flag, str(overlay))
     assert code == 2
-    assert "unknown trajectories: ['missing', 'trajectory-1 ']" in result["error"]
+    assert "unknown interaction segments" in result["error"]
 
 
 def test_cli_accepts_only_wrapped_overlay_records_bound_once(tmp_path: Path) -> None:
     flat = _write(
         tmp_path / "flat.json",
-        {"source_trajectory_id": "trajectory-1", **_evaluation("useful")},
+        {
+            "source_trajectory_id": "trajectory-1",
+            "interaction_segment_id": SEGMENT_ID,
+            **_evaluation("useful"),
+        },
     )
     code, result = _run_postmortem(tmp_path, "--evaluator", str(flat))
     assert code == 2
     assert "must contain exactly" in result["error"]
     wrapped = {
         "source_trajectory_id": "trajectory-1",
+        "interaction_segment_id": SEGMENT_ID,
         "evaluation": _evaluation("useful"),
     }
     repeated = _write(tmp_path / "repeated.json", [wrapped, wrapped])
     code, result = _run_postmortem(tmp_path, "--evaluator", str(repeated))
     assert code == 2
-    assert "repeat trajectories: ['trajectory-1']" in result["error"]
+    assert "repeat interaction segments" in result["error"]

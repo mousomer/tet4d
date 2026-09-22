@@ -1,7 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://tet4d.local/experiments/governance-manifest-quality/trajectory-v1.schema.json",
+  "$id": "https://tet4d.local/experiments/governance-manifest-quality/trajectory-v2.schema.json",
   "title": "Stage C1 normalized trajectory",
+  "description": "Version 2 adds prompt-free structural interaction segments, one per human turn. A version 1 input normalizes to version 2 with interaction_segments null (boundaries not captured).",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -11,10 +12,11 @@
     "mutation_events",
     "execution_events",
     "outcome_evidence",
-    "evidence_limitations"
+    "evidence_limitations",
+    "interaction_segments"
   ],
   "properties": {
-    "schema_version": {"const": 1},
+    "schema_version": {"const": 2},
     "source": {
       "type": "object",
       "additionalProperties": false,
@@ -84,12 +86,17 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["kind", "event_sequence"],
+        "required": ["kind", "event_sequence", "interaction_segment_id"],
         "properties": {
           "kind": {"type": "string", "minLength": 1},
-          "event_sequence": {"type": ["integer", "null"], "minimum": 1}
+          "event_sequence": {"type": ["integer", "null"], "minimum": 1},
+          "interaction_segment_id": {"type": ["string", "null"]}
         }
       }
+    },
+    "interaction_segments": {
+      "type": ["array", "null"],
+      "items": {"$ref": "#/$defs/interaction_segment"}
     }
   },
   "$defs": {
@@ -118,26 +125,36 @@
         "path",
         "source_class",
         "governance_kind",
+        "file_class",
+        "registered_on_governance_surface",
+        "edge_state_role",
+        "edge_limit_rationale",
         "access_mode",
         "materialized_bytes",
         "byte_range",
         "content_identity",
         "route",
         "authority",
-        "evidence"
+        "evidence",
+        "interaction_segment_id"
       ],
       "properties": {
         "sequence": {"type": "integer", "minimum": 1},
         "path": {"type": "string", "minLength": 1},
         "source_class": {"$ref": "#/$defs/source_class"},
         "governance_kind": {"type": ["string", "null"]},
+        "file_class": {"enum": ["stable_authoritative", "generated_derived", "edge_state", "archival_history", "unclassified"]},
+        "registered_on_governance_surface": {"type": ["boolean", "null"]},
+        "edge_state_role": {"type": ["string", "null"]},
+        "edge_limit_rationale": {"type": ["array", "null"], "items": {"type": "string"}},
         "access_mode": {"enum": ["bounded", "whole_file", "unknown"]},
         "materialized_bytes": {"type": ["integer", "null"], "minimum": 0},
         "byte_range": {"$ref": "#/$defs/byte_range"},
         "content_identity": {"type": ["string", "null"]},
         "route": {"type": ["string", "null"]},
         "authority": {"type": ["string", "null"]},
-        "evidence": {"type": ["string", "null"]}
+        "evidence": {"type": ["string", "null"]},
+        "interaction_segment_id": {"type": ["string", "null"]}
       }
     },
     "mutation_event": {
@@ -148,26 +165,36 @@
         "path",
         "source_class",
         "governance_kind",
+        "file_class",
+        "registered_on_governance_surface",
+        "edge_state_role",
+        "edge_limit_rationale",
         "operation",
         "bytes_changed",
         "lines_added",
         "lines_deleted",
         "generated_file",
         "intentional",
-        "evidence"
+        "evidence",
+        "interaction_segment_id"
       ],
       "properties": {
         "sequence": {"type": "integer", "minimum": 1},
         "path": {"type": "string", "minLength": 1},
         "source_class": {"$ref": "#/$defs/source_class"},
         "governance_kind": {"type": ["string", "null"]},
+        "file_class": {"enum": ["stable_authoritative", "generated_derived", "edge_state", "archival_history", "unclassified"]},
+        "registered_on_governance_surface": {"type": ["boolean", "null"]},
+        "edge_state_role": {"type": ["string", "null"]},
+        "edge_limit_rationale": {"type": ["array", "null"], "items": {"type": "string"}},
         "operation": {"enum": ["create", "edit", "delete", "unknown"]},
         "bytes_changed": {"type": ["integer", "null"], "minimum": 0},
         "lines_added": {"type": ["integer", "null"], "minimum": 0},
         "lines_deleted": {"type": ["integer", "null"], "minimum": 0},
         "generated_file": {"type": ["boolean", "null"]},
         "intentional": {"type": ["boolean", "null"]},
-        "evidence": {"type": ["string", "null"]}
+        "evidence": {"type": ["string", "null"]},
+        "interaction_segment_id": {"type": ["string", "null"]}
       }
     },
     "execution_event": {
@@ -182,7 +209,8 @@
         "exit_code",
         "duration_ms",
         "repeated_failure",
-        "command_identity"
+        "command_identity",
+        "interaction_segment_id"
       ],
       "properties": {
         "sequence": {"type": "integer", "minimum": 1},
@@ -193,7 +221,34 @@
         "exit_code": {"type": ["integer", "null"]},
         "duration_ms": {"type": ["integer", "null"], "minimum": 0},
         "repeated_failure": {"type": ["boolean", "null"]},
-        "command_identity": {"type": ["string", "null"]}
+        "command_identity": {"type": ["string", "null"]},
+        "interaction_segment_id": {"type": ["string", "null"]}
+      }
+    },
+    "interaction_segment": {
+      "description": "One human turn up to the next one. A human turn is not necessarily an engineering task.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "unit",
+        "start_row_index",
+        "end_row_index",
+        "turn_text_sha256",
+        "boundary_evidence"
+      ],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "unit": {"const": "human_turn"},
+        "start_row_index": {"type": "integer", "minimum": 1},
+        "end_row_index": {"type": "integer", "minimum": 2},
+        "turn_text_sha256": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "boundary_evidence": {
+          "enum": ["content_item_kinds", "user_message_item", "known_injected_forms"]
+        }
       }
     }
   }

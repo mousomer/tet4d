@@ -37,6 +37,17 @@ EXPECTED_OWNER_DOMAINS = {
     "change_governance",
 }
 ACTIVE_GROUPS = ("human", "machine", "operational", "active_task")
+REQUIRED_FILE_CLASSES = {
+    "stable_authoritative",
+    "generated_derived",
+    "edge_state",
+    "archival_history",
+}
+EDGE_STATE_PATHS = {"CURRENT_STATE.md", "docs/BACKLOG.md"}
+EDGE_STATE_ROLES = {
+    "conditional_open_work_authority",
+    "restart_handoff_context",
+}
 STATIC_HUMAN_PATHS = {
     "AGENTS.md",
     "CLAUDE.md",
@@ -283,6 +294,75 @@ def _active_paths(
                 )
             seen.add(rel)
     return result
+
+
+def _validate_file_classifications(  # noqa: C901 - validates one policy declaration
+    surface: dict[str, Any], active: dict[str, list[str]], issues: list[SurfaceIssue]
+) -> None:
+    """Keep edge roles authoritative without turning their size into a score."""
+    classes = surface.get("file_classifications")
+    if not isinstance(classes, dict) or set(classes) != REQUIRED_FILE_CLASSES:
+        issues.append(
+            SurfaceIssue("schema", "file_classifications must define all file classes")
+        )
+        return
+    declared: dict[str, set[str]] = {}
+    for file_class, paths in classes.items():
+        if not isinstance(paths, list) or any(
+            not isinstance(path, str) or not path for path in paths
+        ):
+            issues.append(
+                SurfaceIssue("schema", f"file class {file_class} must be list[str]")
+            )
+            continue
+        declared[file_class] = set(paths)
+    if declared.get("edge_state") != EDGE_STATE_PATHS:
+        issues.append(
+            SurfaceIssue(
+                "classification", "edge_state must be current-state and backlog"
+            )
+        )
+    if not EDGE_STATE_PATHS.issubset(set(active.get("operational", []))):
+        issues.append(
+            SurfaceIssue("classification", "edge-state files must remain operational")
+        )
+    profiles = surface.get("edge_state_profiles")
+    if not isinstance(profiles, dict) or set(profiles) != EDGE_STATE_PATHS:
+        issues.append(
+            SurfaceIssue(
+                "schema", "edge_state_profiles must cover current-state and backlog"
+            )
+        )
+        return
+    for path, profile in profiles.items():
+        if (
+            not isinstance(profile, dict)
+            or set(profile) != {"operational_role", "limit_rationale"}
+            or profile.get("operational_role") not in EDGE_STATE_ROLES
+            or not isinstance(profile.get("limit_rationale"), list)
+            or not all(
+                isinstance(item, str) and item for item in profile["limit_rationale"]
+            )
+        ):
+            issues.append(SurfaceIssue("schema", f"invalid edge-state profile: {path}"))
+    if (
+        profiles.get("CURRENT_STATE.md", {}).get("operational_role")
+        != "restart_handoff_context"
+    ):
+        issues.append(
+            SurfaceIssue(
+                "classification", "current-state must be restart/handoff context"
+            )
+        )
+    if (
+        profiles.get("docs/BACKLOG.md", {}).get("operational_role")
+        != "conditional_open_work_authority"
+    ):
+        issues.append(
+            SurfaceIssue(
+                "classification", "backlog must be conditional open-work authority"
+            )
+        )
 
 
 def _validate_routes(  # noqa: C901 - one bounded structural route audit
@@ -560,6 +640,7 @@ def validate_surface(  # noqa: C901 - composes the complete surface invariant
     roles = _validate_roles(root, surface, issues)
     owners = _validate_owners(root, policy, issues)
     active = _active_paths(surface, issues)
+    _validate_file_classifications(surface, active, issues)
     owner_paths = set(owners.values())
     authority = policy.get("authority_model")
     topology_authority = (

@@ -64,9 +64,19 @@ def test_generated_records_match_declared_top_level_contracts() -> None:
 def test_postmortem_records_match_declared_top_level_contracts() -> None:
     trajectory = normalize_trajectory(
         {
-            "schema_version": 1,
+            "schema_version": 2,
             "source": {"source_id": "postmortem-schema", "source_format": "test"},
             "events": [],
+            "interaction_segments": [
+                {
+                    "id": "postmortem-schema:user-1",
+                    "unit": "human_turn",
+                    "start_row_index": 1,
+                    "end_row_index": 2,
+                    "turn_text_sha256": None,
+                    "boundary_evidence": "content_item_kinds",
+                }
+            ],
         }
     )
     record = postmortem_from_trajectory(trajectory)

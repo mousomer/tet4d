@@ -88,13 +88,26 @@ operational, and active-task portion has a binding ceiling of 2,500 physical
 lines. Local guards are 150 lines for root `AGENTS.md` and
 `CURRENT_STATE.md`, 70 for each subtree dispatch, 300 for each canonical owner,
 300 for `docs/BACKLOG.md`, and 250 for any active task record. The temporary
-human-governance diagnostic is 900 LOC. Physical LOC is a provisional
-reviewability proxy: crossing a local or diagnostic limit triggers review; text
-must not be semantically compressed merely to satisfy it. Local/per-document
-compliance never substitutes for aggregate governance compliance. Physical lines
-do not govern machine policy. Aggregate and per-document limits must not
-encourage authority corruption; future experimentation must calibrate better
-reviewability metrics.
+human-governance diagnostic is 900 LOC. These limits retain their existing
+human-reviewability, structural-discipline, and restart/handoff-usability
+rationales; they are not evidence of ordinary agent-context cost. Physical LOC
+is a provisional reviewability proxy: crossing a local or diagnostic limit
+triggers review; text must not be semantically compressed merely to satisfy it.
+Local/per-document compliance never substitutes for aggregate governance
+compliance. Physical lines do not govern machine policy. Aggregate and
+per-document limits must not encourage authority corruption; future
+experimentation must calibrate better reviewability metrics.
+
+`CURRENT_STATE.md` and `docs/BACKLOG.md` are edge-state artifacts. Their size
+is descriptive, not directly normative for task quality: they are bounded by
+accessibility rather than raw length. `docs/BACKLOG.md` is a conditional routed
+authority for open work; a task incurs its access cost only when it is routed to
+or actually consumes it. `CURRENT_STATE.md` is restart/staged-handoff context,
+not ordinary task authority. Assess it for restart completeness, handoff
+correctness, information density, phase reconstruction, current-authority and
+next-boundary clarity, and absence of task-log/CI-diary accumulation when that
+path is exercised. Do not delete unresolved rationale, dependencies, deferred
+alternatives, or historical state merely to reduce either file's size.
 
 The old effective test-enforced threshold was 78,643 bytes (96 KiB * 4/5); it
 becomes an 81,920-byte advisory and temporary, provisional 98,304-byte hard
