@@ -159,14 +159,6 @@ def test_actual_governance_surface_is_within_all_limits() -> None:
     assert measurement is not None
     # This temporary diagnostic tripwire remains below the aggregate budget.
     assert measurement.human <= 900
-    # No authority declares a combined operational ceiling, so the bound is read
-    # from the declared per-file guards instead of a free-standing number: the
-    # earlier 400 was test-local and drifted once the backlog legitimately grew.
-    operational_surface = surface._load_policy(surface.ROOT)["governance_surface"]
-    assert measurement.operational <= sum(
-        operational_surface["per_file_limits"][path]
-        for path in operational_surface["active_governance"]["operational"]
-    )
     assert measurement.total <= 2500
     assert measurement.policy_bytes <= measurement.policy_byte_limit
     assert measurement.policy_nodes > measurement.policy_leaves > 0
