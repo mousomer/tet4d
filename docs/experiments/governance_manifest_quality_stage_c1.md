@@ -39,6 +39,14 @@ canonical Python CI checkout therefore retains full history so it can verify the
 declared commit and ancestry instead of treating a shallow checkout as evidence
 that the baseline is absent.
 
+The edge-state correction moved this checkout past that treatment: declaring
+file classes and edge-state profiles changed the machine policy, so the
+fingerprint and corpus commands now fail closed here and strict reproduction
+runs from the PR118 snapshot. The frozen declaration is not restated to match
+current policy. Measurement still runs under the historical rules: a policy
+that predates the declarations classifies every path as `unclassified` rather
+than failing, so the recorded corpus stays reproducible on its own terms.
+
 The generated fingerprint includes repository commit, pack revision and lock
 digest, raw policy SHA-256, serialized policy bytes, structural policy metrics,
 human-governance LOC, active governance files, and resolver/scenario schema
@@ -73,6 +81,15 @@ Each trajectory record has four independent evidence groups:
 Unavailable evidence is represented as `null` plus a completeness reason. No
 adapter estimates token counts, elapsed time, byte ranges, revisions, or
 outcomes that the source did not record.
+
+Metric additions stay backward compatible: `edge_state_file_activity` was added
+to the version 1 metric contract, is empty for a trajectory with no edge-state
+read, and changes no earlier metric, so the historical result remains
+comparable. Version 2 drops the source `task_identity`, which hashed the first
+user-role message and, in Codex Desktop rollouts, that message is injected
+context rather than a request; interaction segments now carry the structural
+identity. A stored version 1 record carrying the field still normalizes, and
+the historical result's availability count for it remains valid for version 1.
 
 Normalized trajectories are versioned separately from C1 metrics. Version 2,
 added after the frozen result for production post-mortems, records structural

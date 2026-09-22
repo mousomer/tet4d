@@ -166,6 +166,29 @@ def test_file_class_metrics_keep_stable_size_measurement_and_edge_access_separat
     ]
 
 
+def test_historical_v1_record_stays_readable_with_additive_metrics() -> None:
+    """Stored v1 evidence keeps its meaning: additions only, no silent rewrite."""
+    case = _cases()["bounded_governance_read"]
+    historical = deepcopy(case["trajectory"])
+    # v1 records carried a source task_identity that hashed the first user-role
+    # message.  Interaction segments replaced it, so reading old evidence must
+    # still work while the superseded field no longer comes back as identity.
+    historical["source"]["task_identity"] = "a" * 64
+    normalized = normalize_trajectory(historical)
+    assert "task_identity" not in normalized["source"]
+    assert normalized["interaction_segments"] is None
+    # A record written before file classes existed is explicitly unclassified.
+    assert {event["file_class"] for event in normalized["retrieval_events"]} == {
+        "unclassified"
+    }
+    metrics = measure_trajectory(normalized)
+    assert metrics["schema_version"] == 1
+    # Every frozen metric keeps its value; the edge-state key is purely additive.
+    assert_expected_metrics(metrics, case["expected"])
+    assert set(case["expected"]) <= set(metrics)
+    assert metrics["edge_state_file_activity"] == []
+
+
 def test_trajectory_versions_keep_human_turn_capture_explicit() -> None:
     legacy = {"schema_version": 1, "source": {"source_id": "legacy"}, "events": []}
     upgraded = normalize_trajectory(legacy)

@@ -60,7 +60,6 @@ def _execution(*, is_test: bool = False, exit_code: int | None = 0) -> dict:
 def _trajectory(
     *,
     source_id: str = "trajectory-1",
-    task_identity: str | None = "task-1",
     model: str | None = "model-a",
     revision: str | None = "a" * 40,
     successful_test: bool = True,
@@ -77,7 +76,6 @@ def _trajectory(
         "schema_version": 2,
         "source": {
             "source_id": source_id,
-            "task_identity": task_identity,
             "model": model,
             "repository_revision": revision,
             "elapsed_ms": 1000,
@@ -352,6 +350,46 @@ def test_smaller_whole_file_current_state_read_reports_locality_not_size() -> No
     assert assessment["raw_size_is_quality_penalty"] is False
 
 
+def test_registration_routing_and_reading_stay_independent_signals() -> None:
+    """Registered, routed, read, and whole-file read are four separate facts."""
+    trajectory = _trajectory(reads=(("docs/BACKLOG.md", "governance"),))
+    trajectory["events"][0].update(
+        _edge_read(
+            "docs/BACKLOG.md",
+            role="conditional_open_work_authority",
+            access_mode="bounded",
+            bytes_read=40,
+        )
+    )
+    # Registration does not imply routing: the file sits on the active surface
+    # while this segment's resolver evidence projects something else entirely.
+    (assessment,) = postmortem_from_trajectory(
+        trajectory, resolver_evidence=_resolver_evidence()
+    )["edge_state_assessment"]
+    assert assessment["registered_on_governance_surface"] is True
+    assert assessment["routed_for_segment"] == "not_routed"
+    # Reading does not imply whole-file reading.
+    assert (assessment["whole_file_reads"], assessment["access_locality"]) == (
+        0,
+        "bounded_only",
+    )
+
+    # Routing does not imply reading: a projected edge file that was never read
+    # stays an unobserved projection and gets no access assessment at all.
+    evidence = _resolver_evidence()
+    evidence["resolver_output"]["entries"]["authorities"]["value"].append(
+        {"authority_id": "restart-context", "source": "CURRENT_STATE.md"}
+    )
+    record = postmortem_from_trajectory(trajectory, resolver_evidence=evidence)
+    assert [item["source"] for item in record["edge_state_assessment"]] == [
+        "docs/BACKLOG.md"
+    ]
+    comparison = record["projected_read_comparison"]
+    assert "CURRENT_STATE.md" in {
+        entry["source"] for entry in comparison["projected_not_observed_read"]
+    }
+
+
 def test_edge_state_overlay_keeps_retention_history_and_contradiction_visible() -> None:
     trajectory = _trajectory(reads=(("docs/BACKLOG.md", "governance"),))
     trajectory["events"][0].update(
@@ -380,6 +418,22 @@ def test_edge_state_overlay_keeps_retention_history_and_contradiction_visible() 
     assert assessment["contradictory_active_state"] == "problem_observed"
     assert assessment["staleness"] == "not_observed"
     assert assessment["raw_size_is_quality_penalty"] is False
+    # Raw size can never become a penalty, by evaluator overlay or by hand.
+    with pytest.raises(PostmortemValidationError, match="unknown fields"):
+        postmortem_from_trajectory(
+            trajectory,
+            evaluator={
+                "edge_state_assessment": [
+                    {
+                        "source": "docs/BACKLOG.md",
+                        "raw_size_is_quality_penalty": True,
+                    }
+                ]
+            },
+        )
+    assessment["raw_size_is_quality_penalty"] = True
+    with pytest.raises(PostmortemValidationError, match="class semantics"):
+        normalize_postmortem_record(record)
 
 
 def test_projected_source_counts_as_read_whatever_its_c1_source_class() -> None:
@@ -505,9 +559,7 @@ def test_g1_artifacts_require_explicit_supported_roles(artifact: dict) -> None:
 
 
 def test_incomplete_historical_record_is_usable_without_fabricating_evidence() -> None:
-    record = postmortem_from_trajectory(
-        _trajectory(task_identity=None, model=None, revision=None)
-    )
+    record = postmortem_from_trajectory(_trajectory(model=None, revision=None))
     assert record["interaction"]["id"]["evidence_state"] == "derived"
     assert (
         record["interaction"]["manifest_revision"]["evidence_state"] == "not_recorded"
@@ -705,7 +757,7 @@ def test_aggregate_reports_manifest_model_task_class_and_burden_across_segments(
         _trajectory(), evaluator=_evaluation("decisive")
     )
     confirmatory = postmortem_from_trajectory(
-        _trajectory(source_id="trajectory-2", task_identity="task-2", model="model-b"),
+        _trajectory(source_id="trajectory-2", model="model-b"),
         evaluator=_evaluation("confirmatory", model="model-b"),
     )
     aggregate = build_postmortem_aggregate([decisive, confirmatory])

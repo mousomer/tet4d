@@ -26,9 +26,16 @@ EDGE_STATE_ROLES = {
 
 
 def declared_file_classes(policy: dict[str, Any]) -> dict[str, tuple[str, ...]]:
-    """Return validated class declarations without deriving authority from paths."""
+    """Return validated class declarations without deriving authority from paths.
+
+    A policy predating the declarations, such as the frozen PR118 treatment,
+    declares no class at all.  Measurement stays possible under the rules that
+    produced the historical result: every path is then ``unclassified``.
+    """
     surface = policy.get("governance_surface")
     raw = surface.get("file_classifications") if isinstance(surface, dict) else None
+    if raw is None:
+        return {}
     if not isinstance(raw, dict) or set(raw) != set(FILE_CLASSES):
         raise ValueError("governance_surface.file_classifications is invalid")
     result: dict[str, tuple[str, ...]] = {}
@@ -61,9 +68,14 @@ def file_class_for_path(path: str, declarations: dict[str, tuple[str, ...]]) -> 
 def declared_edge_state_profiles(
     policy: dict[str, Any],
 ) -> dict[str, dict[str, object]]:
-    """Read the edge-specific operational roles from machine governance."""
+    """Read the edge-specific operational roles from machine governance.
+
+    As with the classes, a policy that predates the profiles declares none.
+    """
     surface = policy.get("governance_surface")
     raw = surface.get("edge_state_profiles") if isinstance(surface, dict) else None
+    if raw is None:
+        return {}
     if not isinstance(raw, dict):
         raise TypeError("governance_surface.edge_state_profiles is invalid")
     expected = {"CURRENT_STATE.md", "docs/BACKLOG.md"}

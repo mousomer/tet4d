@@ -159,9 +159,14 @@ def test_actual_governance_surface_is_within_all_limits() -> None:
     assert measurement is not None
     # This temporary diagnostic tripwire remains below the aggregate budget.
     assert measurement.human <= 900
-    # Operational edge-state files retain independent per-file guards (150 +
-    # 300); their combined line count is not an ordinary agent-context budget.
-    assert measurement.operational <= 450
+    # No authority declares a combined operational ceiling, so the bound is read
+    # from the declared per-file guards instead of a free-standing number: the
+    # earlier 400 was test-local and drifted once the backlog legitimately grew.
+    operational_surface = surface._load_policy(surface.ROOT)["governance_surface"]
+    assert measurement.operational <= sum(
+        operational_surface["per_file_limits"][path]
+        for path in operational_surface["active_governance"]["operational"]
+    )
     assert measurement.total <= 2500
     assert measurement.policy_bytes <= measurement.policy_byte_limit
     assert measurement.policy_nodes > measurement.policy_leaves > 0
@@ -202,6 +207,27 @@ def test_operational_file_ceiling_preserves_non_context_rationale(
     _fixture(tmp_path)
     _write(tmp_path / rel, "line\n" * lines)
     assert any(f"hard limit {expected}" in message for message in _messages(tmp_path))
+
+
+def test_backlog_is_routable_authority_while_current_state_is_not() -> None:
+    """Both are registered edge state, but only one is routed task authority."""
+    profiles = surface._load_policy(surface.ROOT)["governance_surface"][
+        "edge_state_profiles"
+    ]
+    assert profiles["docs/BACKLOG.md"]["operational_role"] == (
+        "conditional_open_work_authority"
+    )
+    assert profiles["CURRENT_STATE.md"]["operational_role"] == "restart_handoff_context"
+    project = json.loads(
+        (surface.ROOT / "config/governance/project.json").read_text(encoding="utf-8")
+    )
+    sources = {authority["source"] for authority in project["authorities"]}
+    # Registration on the active surface does not make a file routed authority:
+    # the backlog is declared routable open-work authority, current-state is
+    # restart context and is named by no authority and no route.
+    assert "docs/BACKLOG.md" in sources
+    assert "CURRENT_STATE.md" not in sources
+    assert "CURRENT_STATE.md" not in json.dumps(project["routes"])
 
 
 def test_edge_state_profiles_require_distinct_operational_roles(tmp_path: Path) -> None:

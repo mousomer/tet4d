@@ -480,6 +480,40 @@ def test_known_injected_forms_are_only_the_last_resort(tmp_path: Path) -> None:
     )
 
 
+def test_frozen_policy_snapshot_measures_without_class_declarations(
+    tmp_path: Path,
+) -> None:
+    """The PR118 treatment predates file classes; C1 must still measure under it."""
+    frozen = json.loads(
+        subprocess.run(
+            [
+                "git",
+                "show",
+                "7ca7f2e0697068ac0113c12d2d0a0a9d9ac14875:config/project/policy_pack.json",
+            ],
+            cwd=ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+    )
+    surface = frozen["governance_surface"]
+    assert "file_classifications" not in surface
+    assert "edge_state_profiles" not in surface
+    path = tmp_path / "frozen-policy.jsonl"
+    _write_rows(
+        path, [_session_meta(), _user(HUMAN_REQUEST, ["user.text"])] + _read_call("c-1")
+    )
+    record = adapt_rollout(path, ROOT, frozen)
+    assert not isinstance(record, RejectedTrajectory)
+    # Historical rules classify nothing, and that is recorded, never guessed.
+    reads = record["retrieval_events"]
+    assert reads and all(event["file_class"] == "unclassified" for event in reads)
+    assert all(event["edge_state_role"] is None for event in reads)
+    # Ordinary materialization telemetry is unaffected by the missing classes.
+    assert measure_trajectory(record)["governance_read_events"] == len(reads)
+
+
 def test_rollout_without_a_human_turn_keeps_unsegmented_c1_evidence(
     tmp_path: Path,
 ) -> None:

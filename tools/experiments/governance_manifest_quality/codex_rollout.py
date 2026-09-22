@@ -452,20 +452,6 @@ def _matching_repository(cwd: object, repository_root: Path) -> bool:
     return isinstance(cwd, str) and Path(cwd).resolve() == repository_root.resolve()
 
 
-def _task_identity(payload: dict[str, Any]) -> str | None:
-    if payload.get("role") != "user":
-        return None
-    content = payload.get("content")
-    if not isinstance(content, list):
-        return None
-    text = "".join(
-        item.get("text", "")
-        for item in content
-        if isinstance(item, dict) and isinstance(item.get("text"), str)
-    )
-    return _text_sha256(text) if text else None
-
-
 def _message_text_parts(payload: dict[str, Any]) -> list[str]:
     content = payload.get("content")
     if not isinstance(content, list):
@@ -623,7 +609,6 @@ def adapt_rollout(  # noqa: C901 - one pass preserves ordering across rollout va
 
     saw_supported_envelope = False
     model = None
-    task_identity = None
     token_information = None
     elapsed_ms = 0
     elapsed_recorded = False
@@ -685,8 +670,6 @@ def adapt_rollout(  # noqa: C901 - one pass preserves ordering across rollout va
                     "boundary_evidence": boundary,
                 }
             )
-        message_identity = _task_identity(payload)
-        task_identity = task_identity or message_identity
         item_type = payload.get("type")
         if item_type in {
             "message",
@@ -779,7 +762,6 @@ def adapt_rollout(  # noqa: C901 - one pass preserves ordering across rollout va
             "source_id": source_id,
             "source_format": source_format,
             "repository_revision": revision,
-            "task_identity": task_identity,
             "model": model,
             "token_information": token_information,
             "started_at": started_at,

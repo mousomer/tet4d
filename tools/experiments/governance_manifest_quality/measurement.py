@@ -432,7 +432,6 @@ def normalize_trajectory(  # noqa: C901 - validates all normalized evidence grou
         "source_id": source["source_id"],
         "source_format": source.get("source_format"),
         "repository_revision": source.get("repository_revision"),
-        "task_identity": source.get("task_identity"),
         "model": source.get("model"),
         "token_information": deepcopy(source.get("token_information")),
         "started_at": source.get("started_at"),
