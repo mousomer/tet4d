@@ -105,25 +105,46 @@ GODOT_ENV=(
 # timeout: a test that loops forever is a defect, not an absence of evidence.
 GODOT_STEP_TIMEOUT_SECONDS="${GODOT_STEP_TIMEOUT_SECONDS:-900}"
 
+# The step's output is both shown and kept: an operator watching the terminal
+# needs progress as it happens, and the checks below need the whole log.
 run_godot_step() {
   local label="$1"
-  shift
-  "$@" &
+  local log_path="$2"
+  local visibility="$3"
+  shift 3
+  : >"$log_path"
+  "$@" >"$log_path" 2>&1 &
   local step_pid=$!
+  local tail_pid=""
+  if [[ "$visibility" == "stream" ]]; then
+    tail -f "$log_path" 2>/dev/null &
+    tail_pid=$!
+  fi
   local waited=0
+  local status=0
   while kill -0 "$step_pid" 2>/dev/null; do
     if ((waited >= GODOT_STEP_TIMEOUT_SECONDS)); then
       kill -9 "$step_pid" 2>/dev/null || true
       wait "$step_pid" 2>/dev/null || true
+      stop_follower "$tail_pid"
       echo "Godot step '$label' exceeded ${GODOT_STEP_TIMEOUT_SECONDS}s; terminated." >&2
       return 124
     fi
     sleep 5
     waited=$((waited + 5))
   done
-  local status=0
   wait "$step_pid" || status=$?
+  stop_follower "$tail_pid"
   return "$status"
+}
+
+stop_follower() {
+  local tail_pid="$1"
+  [[ -n "$tail_pid" ]] || return 0
+  # Let the follower drain the final lines before it is stopped.
+  sleep 1
+  kill "$tail_pid" 2>/dev/null || true
+  wait "$tail_pid" 2>/dev/null || true
 }
 
 # The GDScript runner prints its own success line, and an aborted test function
@@ -146,31 +167,24 @@ assert_no_script_error() {
   'import json,sys; engine=json.load(open(sys.argv[1])); binding=json.load(open(sys.argv[2])); engine.pop("header"); binding.pop("header"); raise SystemExit(0 if engine == binding else "Godot and godot-cpp extension APIs differ")' \
   "$API_DIR/extension_api.json" "$GODOT_CPP_DIR/gdextension/extension_api.json"
 
-run_godot_step "editor import" env "${GODOT_ENV[@]}" "$GODOT_BIN" \
+EDITOR_IMPORT_LOG="$VERIFY_ROOT/editor_import.log"
+run_godot_step "editor import" "$EDITOR_IMPORT_LOG" stream env "${GODOT_ENV[@]}" "$GODOT_BIN" \
   --headless --editor --path "$PROJECT_COPY" --quit
 REPLAY_TEST_LOG="$VERIFY_ROOT/run_tests.log"
-run_godot_step "replay tests" env "${GODOT_ENV[@]}" "$GODOT_BIN" \
-  --headless --path "$PROJECT_COPY" --script tests/run_tests.gd \
-  >"$REPLAY_TEST_LOG" 2>&1 || {
-  cat "$REPLAY_TEST_LOG"
-  exit 1
-}
-cat "$REPLAY_TEST_LOG"
+run_godot_step "replay tests" "$REPLAY_TEST_LOG" stream env "${GODOT_ENV[@]}" "$GODOT_BIN" \
+  --headless --path "$PROJECT_COPY" --script tests/run_tests.gd
 assert_no_script_error "replay tests" "$REPLAY_TEST_LOG"
 TOPOLOGY_TRANSPORT_PARITY_LOG="$VERIFY_ROOT/topology_transport_parity.log"
-run_godot_step "topology transport parity" env "${GODOT_ENV[@]}" "$GODOT_BIN" \
-  --headless --path "$PROJECT_COPY" --script tests/run_topology_transport_parity.gd \
-  >"$TOPOLOGY_TRANSPORT_PARITY_LOG" 2>&1
+run_godot_step "topology transport parity" "$TOPOLOGY_TRANSPORT_PARITY_LOG" quiet \
+  env "${GODOT_ENV[@]}" "$GODOT_BIN" \
+  --headless --path "$PROJECT_COPY" --script tests/run_topology_transport_parity.gd
 assert_no_script_error "topology transport parity" "$TOPOLOGY_TRANSPORT_PARITY_LOG"
 "$PYTHON_BIN" \
   "$ROOT_DIR/tools/migration/compare_topology_transport.py" \
   --native-output "$TOPOLOGY_TRANSPORT_PARITY_LOG"
 BOOT_LOG="$VERIFY_ROOT/boot.log"
-run_godot_step "headless boot" env "${GODOT_ENV[@]}" "$GODOT_BIN" \
-  --headless --path "$PROJECT_COPY" --quit-after 5 >"$BOOT_LOG" 2>&1 || {
-  cat "$BOOT_LOG"
-  exit 1
-}
+run_godot_step "headless boot" "$BOOT_LOG" stream env "${GODOT_ENV[@]}" "$GODOT_BIN" \
+  --headless --path "$PROJECT_COPY" --quit-after 5
 assert_no_script_error "headless boot" "$BOOT_LOG"
 
 echo "Godot 4.7.2 verification passed."
