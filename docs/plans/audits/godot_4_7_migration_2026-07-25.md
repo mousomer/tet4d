@@ -177,9 +177,9 @@ or memory harness was available, and none was introduced for this migration.
 
 - Expected negative-path test diagnostics: invalid shell settings and invalid
   native setup inputs are intentionally exercised and remain assertions.
-- Test-harness shutdown noise: ObjectDB/resource/rendering RID leak summaries
-  remain after the suite. This migration did not introduce a demonstrated
-  runtime regression; the counts are recorded for future harness cleanup.
+- The migration run also printed ObjectDB/resource/rendering RID leak summaries.
+  The later fixture-ownership audit below supersedes their provisional
+  classification as undifferentiated shutdown noise.
 - macOS sandbox noise: CA certificate discovery, system configuration probes,
   and editor profiler snapshot-directory creation can be denied in isolated
   temporary homes. Each is non-fatal and absent from project behavior.
@@ -188,6 +188,50 @@ or memory harness was available, and none was introduced for this migration.
   or crash was accepted.
 - GUI evidence is local macOS evidence. Linux headless evidence is blocking in
   CI. Windows remains a declared but unverified packaging target.
+
+### Godot 4.7.2 diagnostic ownership follow-up (2026-09-25)
+
+The isolated macOS baseline passed 67 replay scripts and 59 topology transport
+cases with no `SCRIPT ERROR`. A no-test headless SceneTree run had no exit
+diagnostics. Each of the 67 scripts was then run separately; five reproduced
+exit leaks. The same five run together had no leak diagnostics after their test
+fixtures explicitly freed nodes they had created. The isolated full 67-script
+suite then exited without any leak, resource-in-use, or allocator diagnostic;
+its 59-case topology parity and bounded boot also passed.
+
+| Exact diagnostic or signature | Phase and trigger | Classification and evidence |
+| --- | --- | --- |
+| `Shell settings could not be saved: installation failed with error 20 before an existing destination was modified.` | Headless replay; `test_shell_settings_store.gd` absent-destination failure | `EXPECTED_NEGATIVE_PATH`; injected rename failure and recovery assertions. Absent in the no-test probe. |
+| `Shell settings could not be saved: temporary write failed with error 13 before the destination was modified.` | Headless replay; same test, incomplete write | `EXPECTED_NEGATIVE_PATH`; injected write failure and file-preservation assertion. |
+| `Shell settings could not be saved: the previous destination could not be backed up (error 20) and was not modified.` | Headless replay; same test, backup failure | `EXPECTED_NEGATIVE_PATH`; injected rename failure and unchanged-destination assertion. |
+| `Shell settings could not be saved: installation failed with error 20; the previous content was restored by rename.` | Headless replay; same test, rename recovery | `EXPECTED_NEGATIVE_PATH`; restoration and diagnostic assertions remain. |
+| `Shell settings could not be saved: installation failed with error 20; the previous content was restored by copy.` | Headless replay; same test, copy recovery | `EXPECTED_NEGATIVE_PATH`; fallback and diagnostic assertions remain. |
+| `Unsupported 4D basis plane: xy` | Headless replay; `test_slice_basis_4d.gd` | `EXPECTED_NEGATIVE_PATH`; the test passes an unsupported plane and checks rejection. |
+| `Tet4D fixed-seed live setup requires seed.` | Headless replay; `test_configurable_live_sessions.gd` | `EXPECTED_NEGATIVE_PATH`; missing fixed seed is deliberately rejected. |
+| `Tet4D live setup seed must be an integer.` | Headless replay; same test | `EXPECTED_NEGATIVE_PATH`; non-integer seed is deliberately rejected. |
+| `Tet4D live setup contains unsupported field: unexpected` | Headless replay; same test | `EXPECTED_NEGATIVE_PATH`; unknown field is deliberately rejected. |
+| `Could not create ObjectDB Snapshots directory: user://private/var/...` at `modules/objectdb_profiler/editor/objectdb_profiler_panel.cpp:162` | `--editor` import in the normal macOS isolated `TMPDIR`; never emitted by headless replay or boot | `KNOWN_ENGINE_OR_HARNESS_ADVISORY`; an empty Godot project under that same temporary root reproduces it without Tet4D code or tests, while an empty project under `/private/tmp` does not. This is editor snapshot storage, separate from exit-time ObjectDB cleanup. Import still exits successfully. |
+| `CanvasItem` RIDs leaked (16 baseline) at `renderer_canvas_cull.cpp:2735` | Headless replay exit | `TET4D_OWNED_RESOURCE_LIFETIME_DEFECT`; standalone accessibility, navigation, and shell-style tests leaked 3, 2, and 11 detached CanvasItems respectively. Freeing their owned controls removed the warning in the combined focused run. |
+| ObjectDB instances leaked (238 baseline) at `core/object/object.cpp:2536`; verbose `Cannot get path of node as it is not in a scene tree` at `scene/main/node.cpp:2431` | Headless replay exit and verbose leak listing | `TET4D_OWNED_RESOURCE_LIFETIME_DEFECT`; verbose output listed detached controls and Node3D objects. Five isolated tests leaked objects; explicit fixture frees removed their warnings. The path errors were generated while verbose cleanup tried to describe detached leaked nodes. |
+| Resources still in use (22 baseline) at `core/io/resource.cpp:822` (`:817` with `--verbose`) | Headless replay exit | `TET4D_OWNED_RESOURCE_LIFETIME_DEFECT`; verbose output named retained GDScript resources, including `test_navigation_contract.gd`, along with themes/styles. The retained test nodes held these references; the combined focused run no longer reports them after node cleanup. |
+| `DummyTexture` (25), `ShapedTextDataAdvanced` (14), and `FontAdvanced` (2) RID allocations leaked | Headless replay exit | `TET4D_OWNED_RESOURCE_LIFETIME_DEFECT`; detached styled controls retained texture/text/font resources. The focused cleanup removed all three RID families. |
+| `Pages in use exist at exit in PagedAllocator: N12VariantPools12BucketMediumE` at `paged_allocator.h:170` | Headless replay exit | `TET4D_OWNED_RESOURCE_LIFETIME_DEFECT` downstream of retained test objects; reproduced by `test_display_presentation_runtime.gd` alone and removed when its detached camera rigs were freed. No allocator-specific workaround was added. |
+
+The owning fixtures were `test_presentation_parameter_contract.gd` (one
+`TraceSceneRenderer`), `test_display_presentation_runtime.gd` (five camera
+rigs), `test_accessibility_runtime.gd` (three buttons),
+`test_navigation_contract.gd` (HUD and unparented quit button), and
+`test_shell_style_application.gd` (unparented button and control group).
+`free()` is used only for these detached test nodes after their assertions;
+tree-attached scene fixtures retain their existing `queue_free()` plus frame
+advancement. No production ownership or gameplay semantics changed. The replay
+runner now prints per-script progress and labels the three tests expected to
+emit rejection errors. `SCRIPT ERROR` detection and the step deadline remain.
+The verification script now rejects only the established exit-time leak
+families in each Godot phase; a replay of the original baseline log exercises
+the rejecting branch, while the cleaned log is accepted. It does not allowlist
+generic `ERROR:` or `WARNING:` lines, and the separate editor snapshot-storage
+error remains visible during import.
 
 ## CI acceptance
 

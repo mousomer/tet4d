@@ -159,6 +159,20 @@ assert_no_script_error() {
   fi
 }
 
+# The fixture cleanup established a zero-leak baseline for these shutdown
+# signatures. Keep the editor's separate ObjectDB snapshot-directory advisory
+# visible; it is not an exit-time ObjectDB leak.
+assert_no_teardown_leak() {
+  local label="$1"
+  local log_path="$2"
+  local leak_pattern='^(WARNING: [0-9]+ RIDs of type ".*" were leaked\.|WARNING: [0-9]+ ObjectDB instances were leaked at exit|ERROR: [0-9]+ resources still in use at exit|ERROR: Pages in use exist at exit in PagedAllocator:|ERROR: [0-9]+ RID allocations of type .* were leaked at exit\.)'
+  if grep -Eq "$leak_pattern" "$log_path"; then
+    echo "Godot step '$label' reported an unexpected teardown leak:" >&2
+    grep -nE "$leak_pattern" "$log_path" >&2
+    return 1
+  fi
+}
+
 (
   cd "$API_DIR"
   env "${GODOT_ENV[@]}" "$GODOT_BIN" --headless --dump-extension-api
@@ -170,15 +184,18 @@ assert_no_script_error() {
 EDITOR_IMPORT_LOG="$VERIFY_ROOT/editor_import.log"
 run_godot_step "editor import" "$EDITOR_IMPORT_LOG" stream env "${GODOT_ENV[@]}" "$GODOT_BIN" \
   --headless --editor --path "$PROJECT_COPY" --quit
+assert_no_teardown_leak "editor import" "$EDITOR_IMPORT_LOG"
 REPLAY_TEST_LOG="$VERIFY_ROOT/run_tests.log"
 run_godot_step "replay tests" "$REPLAY_TEST_LOG" stream env "${GODOT_ENV[@]}" "$GODOT_BIN" \
   --headless --path "$PROJECT_COPY" --script tests/run_tests.gd
 assert_no_script_error "replay tests" "$REPLAY_TEST_LOG"
+assert_no_teardown_leak "replay tests" "$REPLAY_TEST_LOG"
 TOPOLOGY_TRANSPORT_PARITY_LOG="$VERIFY_ROOT/topology_transport_parity.log"
 run_godot_step "topology transport parity" "$TOPOLOGY_TRANSPORT_PARITY_LOG" quiet \
   env "${GODOT_ENV[@]}" "$GODOT_BIN" \
   --headless --path "$PROJECT_COPY" --script tests/run_topology_transport_parity.gd
 assert_no_script_error "topology transport parity" "$TOPOLOGY_TRANSPORT_PARITY_LOG"
+assert_no_teardown_leak "topology transport parity" "$TOPOLOGY_TRANSPORT_PARITY_LOG"
 "$PYTHON_BIN" \
   "$ROOT_DIR/tools/migration/compare_topology_transport.py" \
   --native-output "$TOPOLOGY_TRANSPORT_PARITY_LOG"
@@ -186,5 +203,6 @@ BOOT_LOG="$VERIFY_ROOT/boot.log"
 run_godot_step "headless boot" "$BOOT_LOG" stream env "${GODOT_ENV[@]}" "$GODOT_BIN" \
   --headless --path "$PROJECT_COPY" --quit-after 5
 assert_no_script_error "headless boot" "$BOOT_LOG"
+assert_no_teardown_leak "headless boot" "$BOOT_LOG"
 
 echo "Godot 4.7.2 verification passed."

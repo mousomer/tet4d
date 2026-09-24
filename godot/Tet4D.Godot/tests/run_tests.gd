@@ -70,6 +70,12 @@ const TEST_SCRIPTS := [
 	"res://tests/test_particle_renderer.gd",
 ]
 
+const EXPECTED_NEGATIVE_PATH_TESTS := {
+	"res://tests/test_shell_settings_store.gd": "settings write, backup, install, and restoration failures",
+	"res://tests/test_slice_basis_4d.gd": "unsupported basis input",
+	"res://tests/test_configurable_live_sessions.gd": "invalid fixed-seed setup inputs",
+}
+
 
 func _initialize() -> void:
 	call_deferred("_run_all")
@@ -82,7 +88,11 @@ func _run_all() -> void:
 	# SCRIPT ERROR check in scripts/verify_godot_4_7.sh, not here.
 	var failures: Array = _unregistered_scripts()
 	var executed := 0
-	for script_path in TEST_SCRIPTS:
+	for index in TEST_SCRIPTS.size():
+		var script_path: String = TEST_SCRIPTS[index]
+		print("Godot replay test %d/%d: %s" % [index + 1, TEST_SCRIPTS.size(), script_path])
+		if EXPECTED_NEGATIVE_PATH_TESTS.has(script_path):
+			print("EXPECTED_NEGATIVE_PATH: %s" % EXPECTED_NEGATIVE_PATH_TESTS[script_path])
 		var script: Resource = load(script_path)
 		if script == null or not script.can_instantiate():
 			failures.append("%s failed to load; parse error?" % script_path)
