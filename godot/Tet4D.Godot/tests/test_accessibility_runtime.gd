@@ -53,6 +53,7 @@ func _test_focus_and_contrast(failures: Array) -> void:
 			or focus.get_border_width(SIDE_LEFT) <= normal.get_border_width(SIDE_LEFT)
 		):
 			failures.append("%s focus should use a thicker static outline than hover or normal" % theme_id)
+		button.free()
 		style_manager.set_high_contrast_enabled(false)
 
 

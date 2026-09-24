@@ -38,6 +38,11 @@ func _test_camera_preferences(failures: Array) -> void:
 	panned.pan_focus(Vector3(1.0, 2.0, 0.0))
 	if panned.presentation_snapshot().get("target_focus", Vector3.ZERO) == pan_before:
 		failures.append("camera translation should update only the view focus")
+	low.free()
+	high.free()
+	normal.free()
+	inverted.free()
+	panned.free()
 
 
 func _test_shell_preferences() -> Array:
