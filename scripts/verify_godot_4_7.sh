@@ -81,10 +81,23 @@ if failed:
 PY
 
 VERIFY_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/tet4d-godot-4.7.XXXXXX")"
+# A non-interactive shell starts background jobs with SIGINT ignored, so an
+# interrupted run must stop the running step itself; otherwise Godot outlives
+# the gate inside a project copy that cleanup has already deleted.
+ACTIVE_STEP_PID=""
+ACTIVE_FOLLOWER_PID=""
 cleanup() {
+  if [[ -n "$ACTIVE_STEP_PID" ]]; then
+    kill -9 "$ACTIVE_STEP_PID" 2>/dev/null || true
+  fi
+  if [[ -n "$ACTIVE_FOLLOWER_PID" ]]; then
+    kill "$ACTIVE_FOLLOWER_PID" 2>/dev/null || true
+  fi
   rm -rf "$VERIFY_ROOT"
 }
-trap cleanup EXIT INT TERM
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 PROJECT_COPY="$VERIFY_ROOT/Tet4D.Godot"
 HOME_DIR="$VERIFY_ROOT/home"
@@ -114,37 +127,38 @@ run_godot_step() {
   shift 3
   : >"$log_path"
   "$@" >"$log_path" 2>&1 &
-  local step_pid=$!
-  local tail_pid=""
+  ACTIVE_STEP_PID=$!
   if [[ "$visibility" == "stream" ]]; then
     tail -f "$log_path" 2>/dev/null &
-    tail_pid=$!
+    ACTIVE_FOLLOWER_PID=$!
   fi
   local waited=0
   local status=0
-  while kill -0 "$step_pid" 2>/dev/null; do
+  while kill -0 "$ACTIVE_STEP_PID" 2>/dev/null; do
     if ((waited >= GODOT_STEP_TIMEOUT_SECONDS)); then
-      kill -9 "$step_pid" 2>/dev/null || true
-      wait "$step_pid" 2>/dev/null || true
-      stop_follower "$tail_pid"
+      kill -9 "$ACTIVE_STEP_PID" 2>/dev/null || true
+      wait "$ACTIVE_STEP_PID" 2>/dev/null || true
+      ACTIVE_STEP_PID=""
+      stop_follower
       echo "Godot step '$label' exceeded ${GODOT_STEP_TIMEOUT_SECONDS}s; terminated." >&2
       return 124
     fi
     sleep 5
     waited=$((waited + 5))
   done
-  wait "$step_pid" || status=$?
-  stop_follower "$tail_pid"
+  wait "$ACTIVE_STEP_PID" || status=$?
+  ACTIVE_STEP_PID=""
+  stop_follower
   return "$status"
 }
 
 stop_follower() {
-  local tail_pid="$1"
-  [[ -n "$tail_pid" ]] || return 0
+  [[ -n "$ACTIVE_FOLLOWER_PID" ]] || return 0
   # Let the follower drain the final lines before it is stopped.
   sleep 1
-  kill "$tail_pid" 2>/dev/null || true
-  wait "$tail_pid" 2>/dev/null || true
+  kill "$ACTIVE_FOLLOWER_PID" 2>/dev/null || true
+  wait "$ACTIVE_FOLLOWER_PID" 2>/dev/null || true
+  ACTIVE_FOLLOWER_PID=""
 }
 
 # The GDScript runner prints its own success line, and an aborted test function
