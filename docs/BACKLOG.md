@@ -136,7 +136,8 @@ machine-local onboarding preferences while preserving the profile-owned
 guidance setting. Stage 56G-R now supplies one apparent-size responsive policy
 across all live dimensions, real-window acceptance from 1728×1080 to 720×600,
 active-resize coverage, bounded ordered deck flow, and repaired visual evidence.
-Human playability, final polish, and the 190/200 human A/B choice remain gated as Stages 56H–56I.
+Stage 56H human playability gates the next release. Stage 56I polish, the
+190/200 human A/B choice, and any cockpit redesign wait until that release ships.
 
 ### Three-product packaging gaps
 
@@ -167,21 +168,20 @@ remain bound to their product's canonical `artifact_name_token`; the
 transitional tablet consumers retain Designer naming only under their closed,
 named status exception.
 
-### 0.9.0 release-control boundary
+### Release control and the next release
 
-The 0.9.0 release-control path may release an arbitrary validated subset of the
-seven registered packaging consumers without changing the ten-cell product
-target matrix. The expected first candidate is the Godot game macOS consumer
-and the Designer Windows consumer, but that pair is not hard-coded: the manual
-candidate workflow accepts registered `consumer_id` scope and records the exact
-selected bytes in a v2 manifest before it creates a draft. A separate manual
-publication workflow can publish only that inspected, byte-validated draft.
+`v0.9.0` was published on 2026-09-04 from `3d06bb96` with all seven registered
+consumers, after the Windows Designer package identity repair. Release control
+may release any validated subset of those consumers without changing the
+ten-cell product target matrix: the manual candidate workflow records the
+selected bytes in a v2 manifest before it creates a draft, and a separate
+manual workflow publishes only that inspected, byte-validated draft.
 
-The initial full-matrix candidate remains blocked on Windows Designer package
-identity acceptance. PCK validation now rejects out-of-file resource ranges and
-truncated format-4 headers. This narrow blocker is tracked by the active task
-record `docs/tasks/windows_designer_package_identity_validation.md`; it does
-not authorize another candidate dispatch or alter release scope.
+The next release is the Godot game macOS consumer alone, built from `master`
+after Stage 56H and dispatched with explicit `godot_game_macos` scope. It needs
+Developer ID signing and notarization of the app and its native framework in
+place of today's ad-hoc signature, which changes the packaging contract in
+`docs/rds/RDS_PACKAGING.md`. Design work waits until this release ships.
 
 This operational readiness does not close any missing target cell. Godot game
 Windows/Linux/Android/iPadOS and Designer macOS remain separate package and
@@ -191,8 +191,8 @@ identifiers; they do not become supported Designer platforms or game packages.
 
 ## Accepted Next Product Boundaries
 
-- Stage 54F-6 default style selection/polish must consume reviewed human Design
-  Laboratory evidence. See
+- Stage 54F-6 default style selection/polish is design work that waits for the
+  next release, and must consume reviewed human Design Laboratory evidence. See
   `docs/plans/design_evaluation_laboratory_acceptance.md`.
 - Topology, Explorer, challenge, and simulation work must begin as a new
   approved stage under the relevant plan and architecture owners.
@@ -233,8 +233,8 @@ identifiers; they do not become supported Designer platforms or game packages.
   Laboratory iPadOS acceptance, hosted CI evidence, and release scope. Packaging
   code, its unit tests, and the manual release job remain so it can resume;
   resuming restores the hosted CI job, routing tests, and gate wiring.
-- Developer ID signing/notarization and broader distribution are separate
-  release prerequisites.
+- Distribution beyond the notarized macOS game (Developer ID signing for other
+  packages, stores) remains a separate release prerequisite.
 
 ### Product and presentation
 
