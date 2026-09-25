@@ -234,6 +234,8 @@ deck wrap, or new dead zone. Stage 56G and 56G-R are complete; Stage 56H is now
 eligible to focus on sustained
 playability, key/action legibility, and HOLD/NEXT emphasis rather than geometry
 repair. Stage 56I and the final human A/B decision remain gated.
+An agent-playtest pre-review in `docs/design/stage_56h_playability_review.md`
+supplies Stage 56H findings; it is not the human acceptance.
 
 ## Explicit non-goals for Stage 56A
 
