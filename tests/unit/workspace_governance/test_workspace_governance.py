@@ -232,6 +232,45 @@ def test_representative_scenarios(task: str, mode: str, route: str) -> None:
     assert route in entries["routes"]["value"]
 
 
+# Unscenario'd wording taken from merged PR titles and the Stage 56 task
+# contract. The Godot game is the product, so ordinary product wording must reach
+# the Godot shell route; Python wording must still reach the reference engine.
+@pytest.mark.parametrize(
+    ("task", "route"),
+    [
+        (
+            "fix(godot): make Live-4D right-drag follow the pointer under reflection",
+            "godot_product_shell",
+        ),
+        ("Repair Stage 56G real-window responsive acceptance", "godot_product_shell"),
+        ("Complete Stage 56G responsive cockpit acceptance", "godot_product_shell"),
+        (
+            "Harden the Godot test harness and eliminate test-fixture teardown leaks",
+            "godot_product_shell",
+        ),
+        (
+            (
+                "Stage 56H: sustained playability, key/action legibility, and "
+                "HOLD/NEXT emphasis"
+            ),
+            "godot_product_shell",
+        ),
+        ("Stage 56I bounded cockpit polish", "godot_product_shell"),
+        ("Enforce strict Python topology domain invariants", "python_reference_engine"),
+        ("Harden Python reference deduplication", "python_reference_engine"),
+        ("Fix a rotation bug in the reference engine", "python_reference_engine"),
+    ],
+)
+def test_product_wording_reaches_its_route(task: str, route: str) -> None:
+    entries = GovernanceResolver.for_root(ROOT).resolve(task=task)["entries"]
+    assert list(entries["routes"]["value"]) == [route]
+
+
+def test_local_fix_without_a_scenario_routes_to_the_godot_product() -> None:
+    entries = GovernanceResolver.for_root(ROOT).resolve(mode="LOCAL_FIX")["entries"]
+    assert list(entries["routes"]["value"]) == ["godot_product_shell"]
+
+
 @pytest.mark.parametrize(
     ("task", "mode", "routes"),
     [

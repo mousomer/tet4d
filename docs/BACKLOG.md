@@ -17,7 +17,9 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 - Authority transfer: `docs/architecture/authority_transfer_protocol.md`
 - Topology/Explorer: `docs/architecture/topology_playground_current_authority.md`
 - Human governance: `AGENTS.md` and the six owners under `docs/governance/`
-- Machine governance: `config/project/policy_pack.json`
+- Machine governance: `config/governance/project.json` (routes, execution
+  profiles and scenarios) and `config/project/policy_pack.json` (unmigrated
+  facts)
 
 ## Active Work
 
@@ -25,37 +27,6 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 Recheck the isolated macOS ObjectDB profiler snapshot-storage advisory when the
 pinned engine or temporary-path strategy changes; see the Godot 4.7.2 audit.
-
-### Environment ownership
-
-`bootstrap_env.sh` is the single owner of environment mutation and follows the
-declared execution mode: installed mode builds a `.venv` belonging to this
-checkout, source mode synchronises declared dependencies into the shared
-toolchain and installs no project. Its fingerprint and mutation lock live beside
-that environment, because a shared one is reachable from every worktree at once
-while each worktree's verify lock guards only its own tree.
-
-Bootstrap and every project-importing verification entry point consume `gov env`
-for the resolver-selected interpreter, mode, and source binding. The obsolete shell
-editable-install checker is retired: `gov doctor` certifies installed origin or source-mode checkout binding/distribution neutrality.
-
-`verify_local.sh` owns nothing: it reports an unready environment and execs the
-canonical gate. `--rebuild-venv` is gone with the venv it rebuilt, which also
-retires the finding that inherited bootstrap had made that refusal permissive.
-
-The inherited overlay serves bootstrap, certified selection, and execution mode;
-two-worktree operation is certified without a `.venv` symlink farm. A checkout
-predating the overlay needs its four shared-environment symlinks or `WORKSPACE_VENV`.
-
-Source bootstrap validates installed dependency versions on cache hits and after
-installation; its declaration digest never claims to describe shared contents.
-Regression coverage repairs missing/incompatible dependencies without an
-unneeded install when requirements are satisfied; `packaging>=24` is the example.
-
-### Routing and scenario precedence
-
-Scenario routing tiers cross-layer, constrained repair, subsystem work, then
-generic wording; equal-tier maxima fail closed and matrix tests cover invariants.
 
 ### Governance-manifest quality calibration
 
@@ -94,6 +65,14 @@ digest is likewise stale since iPadOS left hosted CI; that repair refreshes both
 
 ### Governance pack, telemetry and work-type rollout
 
+**Status (2026-09-25): paused for product work.** The bounded pre-56H repair
+(routing default, handoff and authority text) is the last governance change
+before Stage 56H. Stage 56H then runs as the first instrumented coding task,
+with P1a telemetry enabled on the working machine and the raw agent transcripts
+retained. A task-scoped post-mortem of 56H decides whether P1b, P1c and P6
+continue. P2–P5 are dormant until explicitly reactivated; nothing below
+authorizes starting them.
+
 Authorities: `docs/architecture/work_type_classification.md` (work-type ontology, G1) and `docs/architecture/workspace_governance_v0_1.md` (pack ownership; its "Planned: portable agent telemetry" section, accepted 2026-09-25, owns P1). Done: pack `0.2.0` work-type schema; pack `0.3.0` / `v0.3-role-resolution-1` role resolution, project role-declaration checks, pack bootstrap roots and write-compatibility table, and the project `role_bootstrap` declaration; the G1 log-only observer (record schema 2) judging writes by the treatment captured at segment start.
 **P0** (planning, recorded in those authorities): the pack records generic agent activity and experiments interpret it; capture is passive; per-run labels never live in `project.json`; snapshots are evidence, not attribution; raw-transcript retention is separable from telemetry retention. **P1a** (done in pack `0.4.0` / `v0.4-telemetry-core-4`): the pack's Tet4D literals are gone and guarded against, and the frozen project-independent observation envelope has immutable observation identities, source and persistence times, command phases, and opt-in first-hand `gov` observations with workspace-keyed private identities. **P1b**: capture sources that all emit the one observation model and differ only in source and provenance: first a Codex transcript importer moved out of the C1 experiment without its policy lookups, then a Claude transcript/session importer and a filesystem-snapshot source. Claude hooks are not assumed; add them only if a real consumer needs evidence unavailable in transcripts. Snapshots establish observed state changes, not reads or attributed writes. **P1c**: generic reconstruction of segments, read/write timelines and invocation results, correlating observations only on explicit evidence with a recorded confidence and never merging them by resemblance.
 **P2**: consolidate `scripts/resolve_bootstrap_python.sh` into the pack. **P3**: move project values into `project.json` (canonical owner set, the toolchain commands behind `verification.full`, routing requirements and workflow modifiers) and register the work-type decision as a routed authority. **P4**: unify `governance_surface.document_roles`, `governance_surface.file_classifications` and artifact roles within the human-reviewed Tet4D role migration, which must also classify `CURRENT_STATE.md`, `docs/CONFIGURATION_REFERENCE.md` and the work-type decision. **P5**: move the governance-surface mechanism into the pack and its limits into `project.json`. **P6**: move C1 calibration, the G1 outcome and postmortem analysis onto the telemetry interface as outside consumers. P3 and P5 extract policy families, so each waits on the independent review required under Explicit Deferrals.
@@ -124,6 +103,9 @@ projection retains runtime provenance when generated wrappers are elided; it
 is not a canonical design workflow and its generated captures remain untracked.
 
 ### Stage 56 cockpit completion
+
+Task contract: `docs/tasks/live_4d_cockpit_convergence.md`. Stage 56H is the
+next acceptance boundary.
 
 Complete the accepted cockpit direction through serial green stages. Stage
 56A repaired the Live-4D orientation rosette as a passive consumer of the
@@ -280,9 +262,6 @@ identifiers; they do not become supported Designer platforms or game packages.
 
 ## Governance Watchlist
 
-- Define governance-pack `VERSION` versus revision semantics for schema
-  compatibility changes, including required-field additions. Trigger: before
-  the next compatibility-significant schema change.
 - Keep one semantic objective per PR and use scope matrices for cross-layer
   integration.
 - Never weaken tests, deterministic identity, replay/schema compatibility,

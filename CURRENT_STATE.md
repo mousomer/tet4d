@@ -40,17 +40,17 @@ No active handoff.
 - Architecture boundaries: `docs/ARCHITECTURE_CONTRACT.md`
 - Subsystem ownership: `docs/architecture/authority_map.md`
 - Open work and explicit deferrals: `docs/BACKLOG.md`
+- Stage 56 task contract: `docs/tasks/live_4d_cockpit_convergence.md`
 - Generated repository inventory: `docs/PROJECT_STRUCTURE.md`
 
 ## Next Acceptance Boundary
 
-Review the workspace-governance v0.1 round 2 repair. Every declared route is now
-reachable from an execution profile or representative scenario, and `gov check`
-reports that as `BROKEN_REFERENCE` when it is not. The live-cockpit component
-grammar helper uses the established `_assert_component_grammar` name, keeping
-the test outside the semantic-computation patterns enforced by the Godot
-boundary validator. Durable open work and release-matrix deferrals remain in
-`docs/BACKLOG.md`.
+Stage 56H: human playtest and playability acceptance of the Godot game, focused
+on sustained playability, key/action legibility, and HOLD/NEXT emphasis. It is
+a gameplay/product checkpoint, not a release gate; its task contract is
+`docs/tasks/live_4d_cockpit_convergence.md`. Stage 56I polish and the 190/200
+A/B decision follow it. Governance meta-work is paused (see `docs/BACKLOG.md`).
+Durable open work and release-matrix deferrals remain in `docs/BACKLOG.md`.
 
 Sections with `BEGIN/END GENERATED:*` markers are maintained by
 `tools/governance/generate_maintenance_docs.py`.
