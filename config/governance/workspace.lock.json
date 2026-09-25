@@ -1,5 +1,5 @@
 {
-  "content_sha256": "9f706b590b02832fbf73c5117d83ca7b15149ccf818b4eb66020259ceb4ee333",
+  "content_sha256": "81c7c474f546bbd8f70e7b999443c22c62c1f4a5c3c85b8d498dc9d5473a2c18",
   "files": [
     "MANIFEST.json",
     "VERSION",
@@ -23,7 +23,7 @@
   "lock_algorithm": "sha256-path-and-content-v1",
   "pack_name": "workspace-governance",
   "pack_path": "tools/workspace_governance",
-  "revision": "v0.3-role-resolution-1",
+  "revision": "v0.4-project-independence-1",
   "schema_version": 1,
-  "version": "0.3.0"
+  "version": "0.4.0"
 }

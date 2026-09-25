@@ -274,6 +274,30 @@ def project_manifest_paths(workspace: dict[str, Any]) -> list[tuple[int, str]]:
     return paths
 
 
+def default_project_manifest(workspace: dict[str, Any]) -> str | None:
+    """Repository path of the default project's manifest, when one is declared.
+
+    Several members sharing the default identity still yield the first, so
+    validation can load it and report the ambiguity instead of losing it.
+    """
+    defaults = workspace.get("defaults")
+    default_id = defaults.get("project") if isinstance(defaults, dict) else None
+    members = [
+        member
+        for member in workspace.get("projects", [])
+        if isinstance(member, dict) and member.get("id") == default_id
+    ]
+    if not members:
+        return None
+    joined = PurePosixPath(str(members[0].get("repository", "."))) / str(
+        members[0].get("manifest", "")
+    )
+    try:
+        return normalize_repo_path(joined.as_posix())
+    except RoleDeclarationError:
+        return None
+
+
 def role_bootstrap_lists(project: dict[str, Any]) -> dict[str, list[str]]:
     """The project's declared instruction roots and bookkeeping records."""
     declared = project.get("role_bootstrap", {})
@@ -469,6 +493,7 @@ __all__ = [
     "build_role_index",
     "compatibility",
     "declaration_path_defect",
+    "default_project_manifest",
     "fixed_root_roles",
     "normalize_repo_path",
     "project_manifest_paths",

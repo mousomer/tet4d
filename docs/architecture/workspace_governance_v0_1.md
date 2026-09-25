@@ -8,8 +8,10 @@ extension that is not yet implemented.
 
 The vendored pack at `tools/workspace_governance/` owns generic schema,
 resolution, diagnostics, pack-integrity, and environment-inspection mechanisms.
-It contains no Tet4D semantic values; three literals still breach this, and
-removing them is backlog item P1a. Portable agent telemetry is an accepted, not
+It contains no Tet4D semantic values: required authority IDs, the
+execution-mode variable and the project manifest location come from the
+workspace and project manifests, and `test_project_independence.py` rejects any
+pack file naming a value from them. Portable agent telemetry is an accepted, not
 yet implemented, extension of the pack's scope (see "Planned: portable agent
 telemetry"). `.governance/workspace.json` owns only
 membership, relationships, workspace defaults, and the pack-lock reference.

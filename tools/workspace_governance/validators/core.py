@@ -19,6 +19,7 @@ from tools.workspace_governance.resolver.roles import (
     WRITE_COMPATIBILITY,
     RoleDeclarationError,
     declaration_path_defect,
+    default_project_manifest,
     fixed_root_roles,
     role_bootstrap_lists,
 )
@@ -59,7 +60,9 @@ OVERLAY_REASONS = {
     "workspace": "inherited workspace overlay",
 }
 SUPPORTED_COMMANDS = {"check", "resolve", "explain", "doctor", "sync", "env"}
-REQUIRED_STABLE_AUTHORITIES = {"native-and-platform", "authority-transfer"}
+# Diagnostics name the manifest the workspace declares; this label stands in
+# only when the workspace names no default project at all.
+UNRESOLVED_PROJECT_SOURCE = "project manifest"
 
 
 @dataclass(frozen=True)
@@ -73,6 +76,10 @@ class Diagnostic:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+
+def _project_source(workspace: dict[str, Any]) -> str:
+    return default_project_manifest(workspace) or UNRESOLVED_PROJECT_SOURCE
 
 
 def _diag(
@@ -343,7 +350,11 @@ def _valid_authority_source(
     return valid
 
 
-def _authority_graph_issues(root: Path, project: dict[str, Any]) -> list[Diagnostic]:
+def _authority_graph_issues(
+    root: Path,
+    project: dict[str, Any],
+    project_source: str = UNRESOLVED_PROJECT_SOURCE,
+) -> list[Diagnostic]:
     issues: list[Diagnostic] = []
     authorities = project["authorities"]
     by_id = {item["authority_id"]: item for item in authorities}
@@ -377,11 +388,11 @@ def _authority_graph_issues(root: Path, project: dict[str, Any]) -> list[Diagnos
                     "use a nonexclusive alias or distinct typed source",
                 )
             )
-    return issues + _canonical_owner_issues(root, project, by_id)
+    return issues + _canonical_owner_issues(root, project, by_id, project_source)
 
 
 def _canonical_owner_issues(
-    root: Path, project: dict[str, Any], by_id: dict[str, Any]
+    root: Path, project: dict[str, Any], by_id: dict[str, Any], project_source: str
 ) -> list[Diagnostic]:
     issues: list[Diagnostic] = []
     authorities = project["authorities"]
@@ -428,7 +439,7 @@ def _canonical_owner_issues(
                 "BROKEN_REFERENCE",
                 "canonical_owner_set",
                 "project",
-                ["config/governance/project.json"],
+                [project_source],
                 str(exc),
                 "restore the existing owner-set reference",
             )
@@ -440,6 +451,7 @@ def _semantic_manifest_issues(  # noqa: C901 - cross-field integrity transaction
     root: Path, workspace: dict[str, Any], project: dict[str, Any]
 ) -> list[Diagnostic]:
     issues: list[Diagnostic] = []
+    source = _project_source(workspace)
     authorities = project["authorities"]
     by_id: dict[str, list[dict[str, Any]]] = {}
     for entry in authorities:
@@ -468,13 +480,13 @@ def _semantic_manifest_issues(  # noqa: C901 - cross-field integrity transaction
                         "restore or correct the authority source",
                     )
                 )
-    for required in sorted(REQUIRED_STABLE_AUTHORITIES - set(by_id)):
+    for required in sorted(set(project.get("required_authorities", [])) - set(by_id)):
         issues.append(
             _diag(
                 "BROKEN_REFERENCE",
                 f"authority:{required}",
                 "project",
-                ["config/governance/project.json"],
+                [source],
                 "required stable authority ID is missing",
                 "restore the stable authority ID",
             )
@@ -490,7 +502,7 @@ def _semantic_manifest_issues(  # noqa: C901 - cross-field integrity transaction
                     "BROKEN_REFERENCE",
                     f"authority:{entry['authority_id']}",
                     "project",
-                    ["config/governance/project.json"],
+                    [source],
                     f"alias target is missing: {alias}",
                     "restore or correct the alias",
                 )
@@ -516,7 +528,7 @@ def _semantic_manifest_issues(  # noqa: C901 - cross-field integrity transaction
                         "BROKEN_REFERENCE",
                         f"route:{route_id}",
                         "project",
-                        ["config/governance/project.json"],
+                        [source],
                         f"route references missing authority {authority_id}",
                         "correct the typed authority reference",
                     )
@@ -528,7 +540,7 @@ def _semantic_manifest_issues(  # noqa: C901 - cross-field integrity transaction
                         "BROKEN_REFERENCE",
                         f"route:{route_id}",
                         "project",
-                        ["config/governance/project.json"],
+                        [source],
                         f"routed authority lacks compatibility identity: {authority_id}",
                         "add its legacy_key before exposing it through the route facade",
                     )
@@ -552,7 +564,7 @@ def _semantic_manifest_issues(  # noqa: C901 - cross-field integrity transaction
                         "BROKEN_REFERENCE",
                         f"route:{route_id}",
                         "project",
-                        ["config/governance/project.json"],
+                        [source],
                         f"route references missing environment tool {tool_id}",
                         "declare the route tool or correct the reference",
                     )
@@ -586,7 +598,7 @@ def _semantic_manifest_issues(  # noqa: C901 - cross-field integrity transaction
                         "BROKEN_REFERENCE",
                         f"profile:{profile_id}",
                         "project",
-                        ["config/governance/project.json"],
+                        [source],
                         f"unknown route {route}",
                         "correct the route reference",
                     )
@@ -599,7 +611,7 @@ def _semantic_manifest_issues(  # noqa: C901 - cross-field integrity transaction
                         "BROKEN_REFERENCE",
                         f"scenario:{scenario['id']}",
                         "project",
-                        ["config/governance/project.json"],
+                        [source],
                         f"unknown route {route}",
                         "correct the route reference",
                     )
@@ -619,7 +631,7 @@ def _semantic_manifest_issues(  # noqa: C901 - cross-field integrity transaction
                 "BROKEN_REFERENCE",
                 f"route:{route_id}",
                 "project",
-                ["config/governance/project.json"],
+                [source],
                 "route is unreachable from every execution profile and scenario",
                 "add the route to a profile or declare a representative scenario",
             )
@@ -630,7 +642,7 @@ def _semantic_manifest_issues(  # noqa: C901 - cross-field integrity transaction
                 "BROKEN_REFERENCE",
                 "execution.default_mode",
                 "project",
-                ["config/governance/project.json"],
+                [source],
                 "default mode has no profile",
                 "declare the profile or correct the default",
             )
@@ -643,7 +655,7 @@ def _semantic_manifest_issues(  # noqa: C901 - cross-field integrity transaction
                     "BROKEN_REFERENCE",
                     f"verification.{fact}",
                     "project",
-                    ["config/governance/project.json"],
+                    [source],
                     f"verification fact references missing authority {authority_id}",
                     "correct the authority reference",
                 )
@@ -656,7 +668,7 @@ def _semantic_manifest_issues(  # noqa: C901 - cross-field integrity transaction
                     "BROKEN_REFERENCE",
                     f"environment.{fact}",
                     "project",
-                    ["config/governance/project.json"],
+                    [source],
                     f"environment fact references missing authority {authority_id}",
                     "correct the authority reference",
                 )
@@ -703,14 +715,14 @@ def _declared_path_problem(
     return None
 
 
-def _role_issue(code: str, fact: str, reason: str, repair: str) -> Diagnostic:
-    return _diag(
-        code, fact, "project", ["config/governance/project.json"], reason, repair
-    )
+def _role_issue(
+    source: str, code: str, fact: str, reason: str, repair: str
+) -> Diagnostic:
+    return _diag(code, fact, "project", [source], reason, repair)
 
 
 def _role_bootstrap_issues(
-    root: Path, lists: dict[str, list[str]], pack_rel: str | None
+    root: Path, lists: dict[str, list[str]], pack_rel: str | None, source: str
 ) -> list[Diagnostic]:
     issues: list[Diagnostic] = []
     seen: set[str] = set()
@@ -721,12 +733,17 @@ def _role_bootstrap_issues(
             if problem is not None:
                 issues.append(
                     _role_issue(
-                        problem[0], fact, problem[1], "declare one existing file"
+                        source,
+                        problem[0],
+                        fact,
+                        problem[1],
+                        "declare one existing file",
                     )
                 )
             elif path in seen:
                 issues.append(
                     _role_issue(
+                        source,
                         "CONFLICTING_VALUE",
                         fact,
                         "path is declared more than once in role_bootstrap",
@@ -752,22 +769,28 @@ def _artifact_role_issues(
         )
     except ValueError:
         pack_rel = None
+    source = _project_source(workspace)
     lists = role_bootstrap_lists(project)
-    issues = _role_bootstrap_issues(root, lists, pack_rel)
+    issues = _role_bootstrap_issues(root, lists, pack_rel, source)
     if issues:
         return issues
     try:
-        fixed = fixed_root_roles(workspace, project, "config/governance/project.json")
+        fixed = fixed_root_roles(workspace, project, source)
     except RoleDeclarationError as exc:
         return [
             _role_issue(
-                "CONFLICTING_VALUE", "role_bootstrap", str(exc), "declare valid roots"
+                source,
+                "CONFLICTING_VALUE",
+                "role_bootstrap",
+                str(exc),
+                "declare valid roots",
             )
         ]
     for index, path in enumerate(lists["bookkeeping"]):
         if path in fixed:
             issues.append(
                 _role_issue(
+                    source,
                     "CONFLICTING_VALUE",
                     f"role_bootstrap.bookkeeping[{index}]",
                     f"a bootstrap root keeps its fixed role {fixed[path][0]}",
@@ -780,12 +803,17 @@ def _artifact_role_issues(
         if problem is not None:
             issues.append(
                 _role_issue(
-                    problem[0], fact, problem[1], "declare one existing project file"
+                    source,
+                    problem[0],
+                    fact,
+                    problem[1],
+                    "declare one existing project file",
                 )
             )
         elif path in fixed and fixed[path][0] != role:
             issues.append(
                 _role_issue(
+                    source,
                     "CONFLICTING_VALUE",
                     fact,
                     f"a bootstrap root keeps its fixed role {fixed[path][0]}",
@@ -874,13 +902,14 @@ def validate_manifests(
     local_documents: list[tuple[dict[str, Any], str]] | None = None,
 ) -> list[Diagnostic]:
     schemas, issues = _load_schemas(pack_root)
+    source = _project_source(workspace)
     if local_documents is None:
         local_documents = (
             [(local, ".governance/workspace.local.json")] if local is not None else []
         )
     layers: list[tuple[str, dict[str, Any] | None, str]] = [
         ("workspace", workspace, ".governance/workspace.json"),
-        ("project", project, "config/governance/project.json"),
+        ("project", project, source),
         *(("local", payload, source) for payload, source in local_documents),
     ]
     for layer, value, source in layers:
@@ -890,7 +919,7 @@ def validate_manifests(
         return issues
     issues.extend(_semantic_manifest_issues(root, workspace, project))
     issues.extend(_artifact_role_issues(root, workspace, project, pack_root))
-    issues.extend(_authority_graph_issues(root, project))
+    issues.extend(_authority_graph_issues(root, project, source))
     if not issues:
         issues.extend(_generated_surface_issues(root, project))
     for rel in (
@@ -911,7 +940,7 @@ def validate_manifests(
     machine_path = re.compile(r'(?:^|[\s"\'])(?:/Users/|/home/|[A-Za-z]:[\\/])')
     for rel, payload in (
         (".governance/workspace.json", workspace),
-        ("config/governance/project.json", project),
+        (source, project),
     ):
         if machine_path.search(json.dumps(payload)):
             issues.append(
@@ -1322,8 +1351,8 @@ def resolve_execution_mode(
 ) -> tuple[str, str, list[Diagnostic]]:
     """Declare whether the project runs from a checkout or an installed dist.
 
-    This is declared and never inferred. Whether `tet4d` is imported from a
-    checkout or from an installed distribution decides which dependency
+    This is declared and never inferred. Whether the project package is
+    imported from a checkout or from an installed distribution decides which dependency
     metadata is truthful, and reading that back from whichever source happens
     to answer would make the check agree with any environment it runs in --
     including one holding another worktree's stale build artifacts.
@@ -1366,6 +1395,7 @@ def doctor(  # noqa: C901 - environment probes remain one deterministic transact
     route: str | None = None,
     *,
     local_tiers: dict[str, str] | None = None,
+    project_source: str = UNRESOLVED_PROJECT_SOURCE,
 ) -> tuple[dict[str, Any], list[Diagnostic]]:
     env = os.environ if environ is None else environ
     interpreter, reason, issues = resolve_interpreter(
@@ -1544,7 +1574,7 @@ def doctor(  # noqa: C901 - environment probes remain one deterministic transact
                     "BROKEN_REFERENCE",
                     f"route:{route}",
                     "project",
-                    ["config/governance/project.json"],
+                    [project_source],
                     "requested route is unknown",
                     "select a declared route",
                 )

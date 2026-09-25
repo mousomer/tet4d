@@ -19,6 +19,7 @@
     {"authority_id": "legacy-policy-pack", "authority_type": "compatibility", "scope": "unmigrated-machine-policy", "source": "config/project/policy_pack.json", "exclusive": true, "canonical_governance": false, "legacy_key": "machine_authority", "source_type": "file"},
     {"authority_id": "python-project-metadata", "authority_type": "project_metadata", "scope": "python-environment-contract", "source": "pyproject.toml", "exclusive": true, "canonical_governance": false, "source_type": "file"}
   ],
+  "required_authorities": ["native-and-platform", "authority-transfer"],
   "routes": {
     "product_planning": {
       "authority_refs": ["professional-product-programme", "product-requirements", "open-work-backlog", "change-governance", "verification"],

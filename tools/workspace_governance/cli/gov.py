@@ -107,9 +107,11 @@ def _env(
         with redirect_stdout(sys.stderr):
             _emit([item.to_dict() for item in issues], as_json=as_json)
         return 1
+    # The mode travels under the variable the project declares for it, so a
+    # child process reads the mode back through the same override it set.
     assignments = {
         "PYTHON_BIN": str(interpreter),
-        "TET4D_ENVIRONMENT_MODE": execution_mode,
+        project["environment"]["execution_mode"]["override"]: execution_mode,
     }
     assignments.update(binding_environment(root, project, None, local))
     if as_json:
@@ -126,7 +128,12 @@ def _doctor_command(
     _, project, _ = resolver.load()
     local, local_tiers = resolver.local_overlay()
     result, issues = doctor(
-        root, project, local, route=args.route, local_tiers=local_tiers
+        root,
+        project,
+        local,
+        route=args.route,
+        local_tiers=local_tiers,
+        project_source=resolver.project_source(),
     )
     if args.print_interpreter and not issues:
         print(result["interpreter"])
