@@ -13,6 +13,16 @@
       "additionalProperties": {"type": "string", "minLength": 1},
       "x-governance-behavior": "local"
     },
+    "telemetry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled"],
+      "x-governance-use": "consumed",
+      "x-governance-behavior": "telemetry",
+      "properties": {
+        "enabled": {"type": "boolean", "x-governance-use": "consumed", "x-governance-behavior": "telemetry"}
+      }
+    },
     "checkout_locations": {"type": "object", "maxProperties": 0, "x-governance-use": "reserved-for-future-use", "x-governance-behavior": "reserved"},
     "cache_locations": {"type": "object", "maxProperties": 0, "x-governance-use": "reserved-for-future-use", "x-governance-behavior": "reserved"}
   }

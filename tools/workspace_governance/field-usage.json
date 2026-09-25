@@ -13,5 +13,6 @@
   "environment": {"classification": "consumed", "handler": "doctor / resolve_interpreter", "test": "environment"},
   "sanitation": {"classification": "validation-only", "handler": "validate_manifests / _schema_issues", "test": "sanitation"},
   "local": {"classification": "consumed", "handler": "doctor / resolve_interpreter", "test": "local"},
-  "roles": {"classification": "consumed", "handler": "GovernanceResolver.role_index / _artifact_role_issues", "test": "roles"}
+  "roles": {"classification": "consumed", "handler": "GovernanceResolver.role_index / _artifact_role_issues", "test": "roles"},
+  "telemetry": {"classification": "consumed", "handler": "GovernanceResolver.telemetry_settings", "test": "telemetry"}
 }

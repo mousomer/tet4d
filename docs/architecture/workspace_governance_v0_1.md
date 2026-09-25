@@ -2,16 +2,18 @@
 
 Status: implemented architecture contract for the first bounded extraction,
 including the v0.1 integrity repair. The final section records an accepted
-extension that is not yet implemented.
+extension that is partly implemented.
 
 ## Ownership model
 
 The vendored pack at `tools/workspace_governance/` owns generic schema,
 resolution, diagnostics, pack-integrity, and environment-inspection mechanisms.
-It contains no Tet4D semantic values; three literals still breach this, and
-removing them is backlog item P1a. Portable agent telemetry is an accepted, not
-yet implemented, extension of the pack's scope (see "Planned: portable agent
-telemetry"). `.governance/workspace.json` owns only
+It contains no Tet4D semantic values: required authority IDs, the
+execution-mode variable and the project manifest location come from the
+workspace and project manifests, and `test_project_independence.py` rejects any
+pack file naming a value from them. Portable agent telemetry is an accepted, not
+fully implemented, extension of the pack's scope (see "Planned: portable
+agent telemetry"). `.governance/workspace.json` owns only
 membership, relationships, workspace defaults, and the pack-lock reference.
 `config/governance/project.json` owns Tet4D executable governance facts added by
 this extraction and stable references to human authorities. Human RDS,
@@ -303,8 +305,49 @@ proceed without inventing policy in resolver logic.
 
 ## Planned: portable agent telemetry
 
-Status: accepted planning decision (2026-09-25), not implemented. This section
-is the authority for backlog items P1a–P1c.
+Status: accepted planning decision (2026-09-25). This section is the authority
+for backlog items P1a–P1c; P1a is implemented and P1b–P1c are not.
+
+**Implemented in P1a.** `tools/workspace_governance/telemetry.py` records each
+`gov` execution as one first-hand immutable observation, validated against
+`schemas/telemetry-event.v1.schema.json`. The envelope has an
+`observation_id`, never an activity identifier: an observation is evidence
+about an activity, not the activity itself. It is a `command_execution`
+observation with a generic payload: a safe logical program identity, one
+structurally classified argument token per argument, a `completion` phase, and
+process and parent-process identities as correlation evidence. The current
+`gov` completion producer also records exit status and duration, but those
+result fields remain optional for future command observations. Its `source` is
+`self_instrumented` and its attribution basis is `first_hand`. A `governance`
+enrichment block adds what only `gov` knows about itself: the subcommand,
+diagnostic identities, and, for `resolve` and `explain`, which routes, scenario
+and authorities were handed out.
+Recording is off unless the machine's local overlay sets
+`"telemetry": {"enabled": true}`. Every observation records `observed_at`
+(when its underlying fact occurred) separately from `recorded_at` (when the
+pack persisted or imported it); daily files are selected by `recorded_at`. For
+a `completion`, `observed_at` is when the command finished; it started
+`duration_ms` earlier. Observations are appended to
+`${XDG_STATE_HOME:-~/.local/state}/workspace-governance/<workspace_id>/telemetry/`,
+one file per persistence day, readable only by their owner. A private,
+owner-readable telemetry key sits beside that directory, in
+`<workspace_id>/`, never inside it, so copying or pruning the events never
+carries the key. It is generated as needed, published whole or not at all, and
+never committed or printed. `gov` preserves only safe grammar
+literals (subcommands, option names, fixed execution modes and boolean
+switches); free-form values and machine paths, including an `explain` positional
+query, are keyed HMAC-SHA-256 identities with a key identifier and a
+normalization identifier (`gov-argv-1` for arguments). Length is retained only
+where useful. HMAC correlation is scoped to observations produced or imported
+with the same telemetry key: a transcript imported on another machine/key is
+not expected to produce matching private identities. The recorded key
+identifier makes key rotation or deletion detectable instead of silently
+looking like a different command. Per-run context comes from the
+`GOVERNANCE_TELEMETRY_CONTEXT` variable, a JSON object with optional
+`session_id`, `task_id`, `agent`, `model` and string `labels`;
+malformed
+context is recorded as `invalid`, never guessed. A failure to record prints one
+warning and never changes the command's outcome.
 
 The pack records generic agent activity; projects and experiments interpret it.
 Activity flows from agent execution through capture sources to the pack logger,
@@ -331,9 +374,54 @@ opaque labels that the schema carries and never interprets. It never comes from
 stored there would put the instrument inside the treatment and make switching
 arms a Manifest change.
 
-**Capture is passive.** Sources are the pack's own commands, which emit
-governance events first-hand; importers for agent transcripts; live agent
-hooks; and filesystem snapshots. Importers and hooks are specific to an agent
+**One observation model.** Every capture source emits observations in this one
+versioned schema, layered as activity semantics, then the observation, then its
+provenance and attribution, then optional domain enrichment. The event type
+and payload say what happened; the `source` block and attribution basis say how
+it was observed. An event type names the fact a source actually observed, never
+an inference about it. A structured read found in a Codex transcript and the
+same read found in a Claude Code transcript are the same kind of event, and a
+`gov` execution is a `command_execution` like any other command. A filesystem
+snapshot observes only that a path's state differed across an interval: it
+never yields a read or a write, and it names no actor. No source defines
+its own event type, top-level format or parallel telemetry stream, and domain
+detail only one observer can see goes in an enrichment block.
+
+`source_ref`, when present, identifies a source-native item or pairing such as
+a future Codex call ID. `evidence_ref`, when present, identifies underlying
+source evidence independently of the parser that derived the observation.
+Neither is required for self-instrumented `gov`. Generic run context carries
+opaque invocation labels only; it does not carry source-native call IDs.
+Process and parent-process IDs are local, ephemeral supplementary evidence,
+not generally reliable cross-source invocation identities. They do not replace
+an observation ID, `source_ref`, or `evidence_ref`.
+
+**Observations are never merged by resemblance.** Each record is one observation
+with its own stable `observation_id`, and a stored observation is never rewritten or
+combined. Two observations may describe the same activity, such as a
+first-hand `gov` event and a transcript's record of the same call. Matching
+program, arguments and approximate time is not enough to treat them as one.
+Reconstruction records a correlation only on explicit evidence, such as a
+shared source-native call identity in `source_ref`, together with that
+evidence and a confidence, and keeps both observations until the correlation is
+strong enough.
+The observed fact, its source/provenance, any attribution, and a later
+correlation conclusion remain distinct claims throughout that process.
+
+**v1 compatibility.** Telemetry schema v1 freezes the observation envelope and
+compatibility semantics, not an exhaustive set of activity payloads. Within v1,
+later work may compatibly add event-type values, attribution or provenance basis
+values, optional fields, and event-specific payload definitions. Readers must
+tolerate unknown optional fields and tolerate or skip event types they do not
+understand where appropriate; they must not treat the initial enums as
+exhaustive. A reader refuses a `schema_version` it does not support rather than
+reading it as v1, as `iter_events` does. No later payload type is implemented by
+this P1a work.
+
+**Capture is passive.** Sources are the pack's own commands, which observe
+their own executions first-hand; importers for agent transcripts; filesystem
+snapshots; and live agent hooks, only where a consumer needs evidence that
+transcripts lack. Importers and hooks are specific to an agent
 runtime, not to a project, so they belong in the pack. An agent declares only
 segment boundaries, which remain telemetry rather than ground truth; it does
 not call a logging command for ordinary activity.
@@ -353,9 +441,9 @@ keeping telemetry. Where the raw source is kept, a newer parser may re-derive
 earlier events; where it is not, the recorded events stand as parsed.
 
 **Storage.** Logs live outside the repository, keyed by workspace identity like
-the inherited overlay. Events record paths, ranges and hashes by default rather
-than contents, and anything retained passes secret scanning. There is no
-committed log corpus.
+the inherited overlay. Privacy-sensitive correlatable paths and free-form values
+use the local keyed identities described above rather than unkeyed hashes;
+anything retained passes secret scanning. There is no committed log corpus.
 
 **Reconstruction and analysis.** The pack reconstructs only what is semantically
 universal: segments from boundary events, read and write timelines, and

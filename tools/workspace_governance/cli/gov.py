@@ -4,13 +4,16 @@ import argparse
 import json
 import shlex
 import sys
+import time
 from contextlib import redirect_stdout
 from pathlib import Path
+from typing import Any
 
 if __package__ in {None, ""}:
     root_hint = Path(__file__).resolve().parents[3]
     sys.path.insert(0, str(root_hint))
 
+from tools.workspace_governance import telemetry
 from tools.workspace_governance.resolver.core import GovernanceError, GovernanceResolver
 from tools.workspace_governance.validators.core import (
     binding_environment,
@@ -77,6 +80,7 @@ def _env(
     *,
     as_json: bool,
     allow_missing_interpreter: bool = False,
+    observed: dict[str, Any] | None = None,
 ) -> int:
     """Emit the execution environment for callers that are not Python.
 
@@ -104,12 +108,16 @@ def _env(
         if selection_reason == "repository-local environment":
             interpreter, issues = candidate, mode_issues
     if issues or interpreter is None:
+        if observed is not None:
+            observed["diagnostics"] = [item.to_dict() for item in issues]
         with redirect_stdout(sys.stderr):
             _emit([item.to_dict() for item in issues], as_json=as_json)
         return 1
+    # The mode travels under the variable the project declares for it, so a
+    # child process reads the mode back through the same override it set.
     assignments = {
         "PYTHON_BIN": str(interpreter),
-        "TET4D_ENVIRONMENT_MODE": execution_mode,
+        project["environment"]["execution_mode"]["override"]: execution_mode,
     }
     assignments.update(binding_environment(root, project, None, local))
     if as_json:
@@ -121,13 +129,22 @@ def _env(
 
 
 def _doctor_command(
-    root: Path, resolver: GovernanceResolver, args: argparse.Namespace
+    root: Path,
+    resolver: GovernanceResolver,
+    args: argparse.Namespace,
+    observed: dict[str, Any],
 ) -> int:
     _, project, _ = resolver.load()
     local, local_tiers = resolver.local_overlay()
     result, issues = doctor(
-        root, project, local, route=args.route, local_tiers=local_tiers
+        root,
+        project,
+        local,
+        route=args.route,
+        local_tiers=local_tiers,
+        project_source=resolver.project_source(),
     )
+    observed["diagnostics"] = [item.to_dict() for item in issues]
     if args.print_interpreter and not issues:
         print(result["interpreter"])
     elif args.print_interpreter:
@@ -139,8 +156,49 @@ def _doctor_command(
     return 1 if issues else 0
 
 
+def _record(
+    args: argparse.Namespace,
+    argv: list[str],
+    root: Path,
+    status: int,
+    started: float,
+    observed: dict[str, Any],
+) -> None:
+    """Record this execution as a first-hand observation, if enabled."""
+    resolver = GovernanceResolver.for_root(root)
+    settings = resolver.telemetry_settings()
+
+    def event() -> dict[str, object]:
+        if settings.key_directory is None:
+            raise telemetry.TelemetryError("telemetry store has no directory")
+        key = telemetry.telemetry_key(settings.key_directory)
+        workspace = load_manifest_json(resolver.workspace_path)
+        try:
+            project_id = resolver.load()[1]["project"]["id"]
+        except (OSError, ValueError, TypeError, KeyError):
+            project_id = None
+        return telemetry.build_command_execution(
+            root=root,
+            workspace_id=workspace["workspace_id"],
+            project_id=project_id,
+            producer_version=telemetry.producer_version(),
+            program="gov",
+            arguments=telemetry.recorded_gov_arguments(argv, key),
+            key=key,
+            exit_status=status,
+            duration_ms=int((time.monotonic() - started) * 1000),
+            governance=telemetry.governance_enrichment(
+                args.command, observed["diagnostics"], key, observed["resolution"]
+            ),
+        )
+
+    telemetry.record(settings, event)
+
+
 def main(argv: list[str] | None = None) -> int:
-    raw_argv = list(sys.argv[1:] if argv is None else argv)
+    started = time.monotonic()
+    original_argv = list(sys.argv[1:] if argv is None else argv)
+    raw_argv = list(original_argv)
     as_json = "--json" in raw_argv
     raw_argv = [item for item in raw_argv if item != "--json"]
     parser = argparse.ArgumentParser(prog="gov")
@@ -167,23 +225,44 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(raw_argv)
     args.json = as_json or args.json
     root = args.root.resolve()
+    observed: dict[str, Any] = {"diagnostics": [], "resolution": None}
+    status = _dispatch(args, root, explain, observed)
+    try:
+        _record(args, original_argv, root, status, started, observed)
+    except Exception as exc:  # noqa: BLE001 - final telemetry-isolation boundary
+        # Recording is observational only. The command status above is final;
+        # do not catch BaseException so Ctrl-C and process termination remain
+        # visible to their callers.
+        print(f"gov: telemetry not recorded: {exc}", file=sys.stderr)
+    return status
+
+
+def _dispatch(
+    args: argparse.Namespace,
+    root: Path,
+    explain: argparse.ArgumentParser,
+    observed: dict[str, Any],
+) -> int:
     try:
         resolver = GovernanceResolver.for_root(root)
         if args.command == "check":
             issues = resolver.check()
+            observed["diagnostics"] = [item.to_dict() for item in issues]
             _emit(
                 [item.to_dict() for item in issues] if issues else {"status": "ok"},
                 as_json=args.json,
             )
             return 1 if issues else 0
         if args.command == "resolve":
-            _emit(resolver.resolve(mode=args.mode), as_json=args.json)
+            observed["resolution"] = resolver.resolve(mode=args.mode)
+            _emit(observed["resolution"], as_json=args.json)
             return 0
         if args.command == "explain":
             if args.query is None and args.task is None:
                 explain.print_usage(sys.stderr)
                 return 2
-            _emit(resolver.explain(args.query, task=args.task), as_json=args.json)
+            observed["resolution"] = resolver.explain(args.query, task=args.task)
+            _emit(observed["resolution"], as_json=args.json)
             return 0
         if args.command == "sync":
             _emit(_sync(root, resolver), as_json=args.json)
@@ -194,8 +273,9 @@ def main(argv: list[str] | None = None) -> int:
                 resolver,
                 as_json=args.json,
                 allow_missing_interpreter=args.allow_missing_interpreter,
+                observed=observed,
             )
-        return _doctor_command(root, resolver, args)
+        return _doctor_command(root, resolver, args, observed)
     except (
         GovernanceError,
         OSError,
@@ -206,6 +286,7 @@ def main(argv: list[str] | None = None) -> int:
         ImportError,
     ) as exc:
         diagnostics = exc.diagnostics if isinstance(exc, GovernanceError) else []
+        observed["diagnostics"] = [item.to_dict() for item in diagnostics]
         if diagnostics:
             _emit([item.to_dict() for item in diagnostics], as_json=args.json)
         else:
@@ -228,6 +309,7 @@ def main(argv: list[str] | None = None) -> int:
                     }
                 ],
             }
+            observed["diagnostics"] = payload["diagnostics"]
             with redirect_stdout(
                 sys.stderr if getattr(args, "print_interpreter", False) else sys.stdout
             ):

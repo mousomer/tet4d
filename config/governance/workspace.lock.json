@@ -1,5 +1,5 @@
 {
-  "content_sha256": "9f706b590b02832fbf73c5117d83ca7b15149ccf818b4eb66020259ceb4ee333",
+  "content_sha256": "c6470f9b5dd3922d844da8afe46f90d796f93f795dbba23512c6ae0778fef031",
   "files": [
     "MANIFEST.json",
     "VERSION",
@@ -14,16 +14,18 @@
     "resolver/core.py",
     "resolver/roles.py",
     "schemas/project.schema.json",
+    "schemas/telemetry-event.v1.schema.json",
     "schemas/workspace-local.schema.json",
     "schemas/workspace.schema.json",
     "synthetic-fixtures/contradictions.json",
+    "telemetry.py",
     "validators/__init__.py",
     "validators/core.py"
   ],
   "lock_algorithm": "sha256-path-and-content-v1",
   "pack_name": "workspace-governance",
   "pack_path": "tools/workspace_governance",
-  "revision": "v0.3-role-resolution-1",
+  "revision": "v0.4-telemetry-core-4",
   "schema_version": 1,
-  "version": "0.3.0"
+  "version": "0.4.0"
 }

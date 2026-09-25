@@ -2,6 +2,7 @@
   "schema_version": 1,
   "interpreter": "/absolute/path/to/workspace/venvs/venv314/bin/python",
   "tool_paths": {},
+  "telemetry": {"enabled": false},
   "checkout_locations": {},
   "cache_locations": {}
 }

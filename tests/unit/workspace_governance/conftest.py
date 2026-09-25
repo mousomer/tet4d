@@ -40,6 +40,10 @@ def isolated_user_overlay(
     declared = host_execution_mode()
     config_root = tmp_path.parent / f"{tmp_path.name}-xdg-config"
     monkeypatch.setenv("XDG_CONFIG_HOME", str(config_root))
+    # Telemetry stores events under the state directory; a test enabling it
+    # must write into its own sandbox, never into the machine's record.
+    state_root = tmp_path.parent / f"{tmp_path.name}-xdg-state"
+    monkeypatch.setenv("XDG_STATE_HOME", str(state_root))
     # Isolating the overlay also hides a mode declared there, so resolve the
     # host's declaration first and restate it. The suite must run in the mode
     # this machine is actually in: a runner installs the project and declares
@@ -51,6 +55,7 @@ def isolated_user_overlay(
         yield config_root
     finally:
         shutil.rmtree(config_root, ignore_errors=True)
+        shutil.rmtree(state_root, ignore_errors=True)
 
 
 @pytest.fixture

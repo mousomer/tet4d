@@ -21,6 +21,7 @@ LOCAL = {
     # has nothing to observe.
     "execution_mode": "source",
     "tool_paths": {"godot": sys.executable},
+    "telemetry": {"enabled": True},
 }
 
 # Optional consumed fields the repository manifests do not declare yet. Each is
@@ -133,6 +134,7 @@ def _observe(root: Path, calls: list) -> str:
             )
         )
         observed.append(resolver.role_index().to_dict())
+        observed.append(resolver.telemetry_settings().to_dict())
         for overlay in (None, local):
             for env in (
                 {},

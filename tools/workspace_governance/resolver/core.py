@@ -14,6 +14,7 @@ from tools.workspace_governance.resolver.roles import (
     normalize_repo_path,
 )
 from tools.workspace_governance.validators.core import (
+    UNRESOLVED_PROJECT_SOURCE,
     Diagnostic,
     load_manifest_json,
     validate_manifests,
@@ -54,7 +55,9 @@ class GovernanceError(ValueError):
 class GovernanceResolver:
     root: Path
     workspace_path: Path
-    project_path: Path
+    # None when the workspace names no default project; load() then fails
+    # with that reason instead of guessing a conventional location.
+    project_path: Path | None
     local_path: Path | None
     user_local_path: Path | None = None
 
@@ -62,7 +65,7 @@ class GovernanceResolver:
     def for_root(cls, root: Path) -> GovernanceResolver:
         root = root.resolve()
         workspace_path = root / WORKSPACE_MANIFEST
-        project_path = root / "config/governance/project.json"
+        project_path: Path | None = None
         user_local: Path | None = None
         try:
             workspace = load_manifest_json(workspace_path)
@@ -70,7 +73,10 @@ class GovernanceResolver:
             members = [
                 item for item in workspace["projects"] if item["id"] == default_id
             ]
-            if len(members) == 1:
+            # Several members sharing the default identity still load the
+            # first, so validation reports the ambiguity rather than a missing
+            # manifest.
+            if members:
                 project_path = root / members[0]["repository"] / members[0]["manifest"]
             inherited = user_overlay_path(str(workspace["workspace_id"]))
             if inherited is not None and inherited.is_file():
@@ -112,10 +118,21 @@ class GovernanceResolver:
                 merged[key], tiers[key] = value, tier
         return (merged or None), tiers
 
+    def _project_manifest(self) -> Path:
+        if self.project_path is None:
+            raise ValueError("the workspace declares no default project manifest")
+        return self.project_path
+
+    def project_source(self) -> str:
+        """The project manifest as diagnostics name it."""
+        if self.project_path is None:
+            return UNRESOLVED_PROJECT_SOURCE
+        return self._source(self.project_path)
+
     def load(self) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any] | None]:
         return (
             load_manifest_json(self.workspace_path),
-            load_manifest_json(self.project_path),
+            load_manifest_json(self._project_manifest()),
             self.local_overlay()[0],
         )
 
@@ -129,11 +146,30 @@ class GovernanceResolver:
         lock = load_manifest_json(self.root / workspace["governance_pack"]["lock"])
         pack_path = normalize_repo_path(lock["pack_path"])
         return TreatmentDocuments(
-            project_path=self._source(self.project_path),
-            project=load_manifest_json(self.project_path),
+            project_path=self.project_source(),
+            project=load_manifest_json(self._project_manifest()),
             workspace=workspace,
             pack_manifest=load_manifest_json(self.root / pack_path / "MANIFEST.json"),
             pack_path=pack_path,
+        )
+
+    def telemetry_settings(self, environ: dict[str, str] | None = None):
+        """Whether and where this checkout's workspace records telemetry.
+
+        Only the machine's local overlays can enable recording; an unreadable
+        workspace or overlay leaves it off rather than failing the command.
+        """
+        # Imported here: the telemetry module builds on this one.
+        from tools.workspace_governance.telemetry import resolve_settings
+
+        try:
+            workspace = load_manifest_json(self.workspace_path)
+            local, _ = self.local_overlay()
+        except (OSError, ValueError, TypeError, KeyError):
+            return resolve_settings(None, None, environ)
+        workspace_id = workspace.get("workspace_id")
+        return resolve_settings(
+            local, workspace_id if isinstance(workspace_id, str) else None, environ
         )
 
     def role_index(self) -> RoleIndex:
@@ -178,7 +214,7 @@ class GovernanceResolver:
                     "workspace/project",
                     (
                         self._source(self.workspace_path),
-                        self._source(self.project_path),
+                        self.project_source(),
                     ),
                     str(exc),
                     "restore valid strict JSON manifests and a resolvable pack lock",
@@ -200,7 +236,7 @@ class GovernanceResolver:
         if issues:
             raise GovernanceError(issues)
         workspace, project, local = self.load()
-        project_source = self._source(self.project_path)
+        project_source = self.project_source()
         workspace_source = self._source(self.workspace_path)
         profiles = project["execution"]["profiles"]
         selected = mode or project["execution"]["default_mode"]
@@ -371,7 +407,7 @@ class GovernanceResolver:
             _, project, _ = self.load()
             for value in project["authorities"]:
                 if value["authority_id"] == authority_id:
-                    source = self._source(self.project_path)
+                    source = self.project_source()
                     return {
                         "schema_version": 1,
                         "entries": {
@@ -388,7 +424,7 @@ class GovernanceResolver:
                         "BROKEN_REFERENCE",
                         query,
                         "project",
-                        (self._source(self.project_path),),
+                        (self.project_source(),),
                         "unknown authority ID",
                         "use a declared stable authority ID",
                     )

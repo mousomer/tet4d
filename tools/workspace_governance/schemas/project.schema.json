@@ -48,6 +48,13 @@
       },
       "x-governance-behavior": "authority"
     },
+    "required_authorities": {
+      "type": "array",
+      "uniqueItems": true,
+      "x-governance-use": "consumed",
+      "x-governance-behavior": "authority",
+      "items": {"type": "string", "minLength": 1}
+    },
     "routes": {
       "type": "object",
       "minProperties": 1,
