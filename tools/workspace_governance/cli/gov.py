@@ -169,9 +169,9 @@ def _record(
     settings = resolver.telemetry_settings()
 
     def event() -> dict[str, object]:
-        if settings.directory is None:
+        if settings.key_directory is None:
             raise telemetry.TelemetryError("telemetry store has no directory")
-        key = telemetry.telemetry_key(settings.directory)
+        key = telemetry.telemetry_key(settings.key_directory)
         workspace = load_manifest_json(resolver.workspace_path)
         try:
             project_id = resolver.load()[1]["project"]["id"]

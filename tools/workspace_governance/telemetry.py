@@ -14,6 +14,7 @@ failure here degrades to a single warning on stderr.
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import hmac
 import json
@@ -21,6 +22,7 @@ import os
 import secrets
 import subprocess
 import sys
+import tempfile
 import uuid
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -41,6 +43,7 @@ CONTEXT_VARIABLE = "GOVERNANCE_TELEMETRY_CONTEXT"
 STORE_DIR = "workspace-governance"
 CONTEXT_FIELDS = ("session_id", "task_id", "agent", "model")
 KEY_FILENAME = "telemetry-key-v1"
+KEY_BYTES = 32
 GOV_ARGV_NORMALIZATION = "gov-argv-1"
 WORKSPACE_PATH_NORMALIZATION = "workspace-path-1"
 GOVERNANCE_DIAGNOSTIC_FACT_NORMALIZATION = "governance-diagnostic-fact-1"
@@ -70,6 +73,16 @@ class TelemetrySettings:
     enabled: bool
     workspace_id: str | None
     directory: Path | None
+
+    @property
+    def key_directory(self) -> Path | None:
+        """Where the telemetry key lives: beside the events, never among them.
+
+        Copying or pruning the event files must not carry the key along;
+        with the key, every keyed identity in a copy could be tested against
+        guesses.
+        """
+        return self.directory.parent if self.directory is not None else None
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -109,31 +122,44 @@ def resolve_settings(
     return TelemetrySettings(enabled and directory is not None, workspace_id, directory)
 
 
-def telemetry_key(directory: Path) -> TelemetryKey:
-    """Load or securely create this workspace store's private telemetry key.
+def _publish_key(key_path: Path) -> None:
+    """Create the key whole or not at all.
 
-    The key lives beside the append-only observations, never in a checkout.
-    Its identifier lets a reader detect rotation or deletion without exposing
-    the secret or treating records made under a new key as comparable.
+    The secret is written and synced to a private staging file, then
+    hard-linked into place. Linking fails if another process published first,
+    and this one then uses that key. A reader therefore never sees a partial
+    key, and an interrupted creation never leaves one behind.
+    """
+    descriptor, staged = tempfile.mkstemp(
+        prefix=f".{KEY_FILENAME}.", dir=key_path.parent
+    )
+    try:
+        with os.fdopen(descriptor, "wb") as handle:
+            handle.write(secrets.token_bytes(KEY_BYTES))
+            handle.flush()
+            os.fsync(handle.fileno())
+        with contextlib.suppress(FileExistsError):
+            os.link(staged, key_path)
+    finally:
+        os.unlink(staged)
+
+
+def telemetry_key(directory: Path) -> TelemetryKey:
+    """Load or securely create the private telemetry key kept in `directory`.
+
+    For a workspace store that is `TelemetrySettings.key_directory`, beside the
+    append-only observations and never in a checkout. The identifier lets a
+    reader detect rotation or deletion without exposing the secret or treating
+    records made under a new key as comparable.
     """
     directory.mkdir(parents=True, exist_ok=True, mode=0o700)
     key_path = directory / KEY_FILENAME
-    try:
-        descriptor = os.open(key_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-    except FileExistsError:
-        descriptor = None
-    if descriptor is not None:
-        try:
-            secret = secrets.token_bytes(32)
-            os.write(descriptor, secret)
-        finally:
-            os.close(descriptor)
-    else:
-        # Ensure an old key cannot become group- or world-readable.
-        os.chmod(key_path, 0o600)
-        with key_path.open("rb") as handle:
-            secret = handle.read()
-    if len(secret) != 32:
+    if not key_path.exists():
+        _publish_key(key_path)
+    # Ensure an old key cannot become group- or world-readable.
+    os.chmod(key_path, 0o600)
+    secret = key_path.read_bytes()
+    if len(secret) != KEY_BYTES:
         raise TelemetryError("telemetry key has an invalid length")
     key_id = hmac.new(
         secret,
@@ -336,6 +362,9 @@ def build_command_execution(
 ) -> dict[str, object]:
     """A first-hand observation of a command this process executed.
 
+    A completion's `observed_at` is when the command finished; it started
+    `duration_ms` earlier. Both default to now, which is when `gov` records it.
+
     Process IDs are only local, ephemeral supplementary evidence. They can
     support a later correlation conclusion, but are not a cross-source
     invocation identity and never replace source_ref, evidence_ref, or this
@@ -458,14 +487,29 @@ def append_event(directory: Path, event: dict[str, Any]) -> Path:
 
 
 def iter_events(directory: Path) -> Iterator[dict[str, Any]]:
-    """Every stored event, oldest file first, in the order it was written."""
+    """Every stored event, oldest file first, in the order it was written.
+
+    A record in a schema version this reader does not support is refused, not
+    read as if it were v1. Unknown event types within v1 are yielded; callers
+    skip the types they do not interpret.
+    """
     if not directory.is_dir():
         return
     for path in sorted(directory.glob("events-*.jsonl")):
         with path.open(encoding="utf-8") as handle:
-            for line in handle:
-                if line.strip():
-                    yield json.loads(line)
+            for number, line in enumerate(handle, start=1):
+                if not line.strip():
+                    continue
+                event = json.loads(line)
+                version = (
+                    event.get("schema_version") if isinstance(event, dict) else None
+                )
+                if version != SCHEMA_VERSION:
+                    raise TelemetryError(
+                        f"{path.name}:{number}: unsupported telemetry "
+                        f"schema_version {version!r}"
+                    )
+                yield event
 
 
 def record(settings: TelemetrySettings, event_factory) -> Path | None:

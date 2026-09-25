@@ -98,7 +98,9 @@ def test_a_gov_run_is_observed_as_a_command_execution_with_enrichment(
     assert {item["authority_id"] for item in resolution["authorities"]}
     # Directory permissions keep the record private to its owner.
     assert directory.stat().st_mode & 0o077 == 0
-    assert (directory / telemetry.KEY_FILENAME).stat().st_mode & 0o077 == 0
+    # The key sits beside the events, so copying them never carries it along.
+    assert not (directory / telemetry.KEY_FILENAME).exists()
+    assert (directory.parent / telemetry.KEY_FILENAME).stat().st_mode & 0o077 == 0
 
 
 def test_free_text_and_machine_paths_are_keyed_private_identities(
@@ -211,6 +213,61 @@ def test_private_identities_correlate_only_with_the_same_telemetry_key(
     )
     assert first_identity["key_id"] != second_identity["key_id"]
     assert first_identity["hmac_sha256"] != second_identity["hmac_sha256"]
+
+
+def test_an_interrupted_key_creation_leaves_no_partial_key(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def interrupted(*_args: object) -> None:
+        raise OSError("interrupted before the key was published")
+
+    with monkeypatch.context() as patch:
+        patch.setattr(telemetry.os, "link", interrupted)
+        with pytest.raises(OSError, match="interrupted"):
+            telemetry.telemetry_key(tmp_path)
+    # Neither a partial key nor the staging file remains to block recording.
+    assert list(tmp_path.iterdir()) == []
+    key = telemetry.telemetry_key(tmp_path)
+    assert len(key.secret) == telemetry.KEY_BYTES
+
+
+def test_a_process_that_loses_the_key_race_uses_the_published_key(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    winner = bytes(range(telemetry.KEY_BYTES))
+    link = os.link
+
+    def published_first(source: str, destination: Path) -> None:
+        Path(destination).write_bytes(winner)
+        link(source, destination)
+
+    monkeypatch.setattr(telemetry.os, "link", published_first)
+    assert telemetry.telemetry_key(tmp_path).secret == winner
+    assert [path.name for path in tmp_path.iterdir()] == [telemetry.KEY_FILENAME]
+
+
+def test_the_reader_refuses_unsupported_schema_versions(tmp_path: Path) -> None:
+    key = telemetry.telemetry_key(tmp_path)
+    event = telemetry.build_command_execution(
+        root=tmp_path,
+        workspace_id="demo",
+        project_id=None,
+        producer_version="0.0.0",
+        program="demo",
+        arguments=[],
+        key=key,
+    )
+    # A later v1 revision may add event types; this reader still yields them.
+    future = {**event, "event_type": "future_observation"}
+    store = tmp_path / "store"
+    store.mkdir()
+    (store / "events-2026-09-25.jsonl").write_text(
+        json.dumps(future) + "\n" + json.dumps({**event, "schema_version": 2}) + "\n"
+    )
+    events = telemetry.iter_events(store)
+    assert next(events)["event_type"] == "future_observation"
+    with pytest.raises(telemetry.TelemetryError, match=r":2: unsupported .* 2"):
+        next(events)
 
 
 def test_optional_source_and_evidence_references_validate(tmp_path: Path) -> None:

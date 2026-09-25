@@ -325,12 +325,15 @@ and authorities were handed out.
 Recording is off unless the machine's local overlay sets
 `"telemetry": {"enabled": true}`. Every observation records `observed_at`
 (when its underlying fact occurred) separately from `recorded_at` (when the
-pack persisted or imported it); daily files are selected by `recorded_at`.
-Observations are appended to
+pack persisted or imported it); daily files are selected by `recorded_at`. For
+a `completion`, `observed_at` is when the command finished; it started
+`duration_ms` earlier. Observations are appended to
 `${XDG_STATE_HOME:-~/.local/state}/workspace-governance/<workspace_id>/telemetry/`,
 one file per persistence day, readable only by their owner. A private,
-owner-readable telemetry key in that state directory is securely generated as
-needed and never committed or printed. `gov` preserves only safe grammar
+owner-readable telemetry key sits beside that directory, in
+`<workspace_id>/`, never inside it, so copying or pruning the events never
+carries the key. It is generated as needed, published whole or not at all, and
+never committed or printed. `gov` preserves only safe grammar
 literals (subcommands, option names, fixed execution modes and boolean
 switches); free-form values and machine paths, including an `explain` positional
 query, are keyed HMAC-SHA-256 identities with a key identifier and a
@@ -375,10 +378,12 @@ arms a Manifest change.
 versioned schema, layered as activity semantics, then the observation, then its
 provenance and attribution, then optional domain enrichment. The event type
 and payload say what happened; the `source` block and attribution basis say how
-it was observed. An activity has one event type whichever source observed it:
-a file read found in a Codex transcript, reported by a Claude Code hook, or
-implied by a filesystem snapshot is the same kind of event, and a `gov`
-execution is a `command_execution` like any other command. No source defines
+it was observed. An event type names the fact a source actually observed, never
+an inference about it. A structured read found in a Codex transcript and the
+same read found in a Claude Code transcript are the same kind of event, and a
+`gov` execution is a `command_execution` like any other command. A filesystem
+snapshot observes only that a path's state differed across an interval: it
+never yields a read or a write, and it names no actor. No source defines
 its own event type, top-level format or parallel telemetry stream, and domain
 detail only one observer can see goes in an enrichment block.
 
@@ -397,8 +402,9 @@ combined. Two observations may describe the same activity, such as a
 first-hand `gov` event and a transcript's record of the same call. Matching
 program, arguments and approximate time is not enough to treat them as one.
 Reconstruction records a correlation only on explicit evidence, such as a
-shared tool-call or process identity, together with that evidence and a
-confidence, and keeps both observations until the correlation is strong enough.
+shared source-native call identity in `source_ref`, together with that
+evidence and a confidence, and keeps both observations until the correlation is
+strong enough.
 The observed fact, its source/provenance, any attribution, and a later
 correlation conclusion remain distinct claims throughout that process.
 
@@ -408,11 +414,14 @@ later work may compatibly add event-type values, attribution or provenance basis
 values, optional fields, and event-specific payload definitions. Readers must
 tolerate unknown optional fields and tolerate or skip event types they do not
 understand where appropriate; they must not treat the initial enums as
-exhaustive. No later payload type is implemented by this P1a work.
+exhaustive. A reader refuses a `schema_version` it does not support rather than
+reading it as v1, as `iter_events` does. No later payload type is implemented by
+this P1a work.
 
 **Capture is passive.** Sources are the pack's own commands, which observe
-their own executions first-hand; importers for agent transcripts; live agent
-hooks; and filesystem snapshots. Importers and hooks are specific to an agent
+their own executions first-hand; importers for agent transcripts; filesystem
+snapshots; and live agent hooks, only where a consumer needs evidence that
+transcripts lack. Importers and hooks are specific to an agent
 runtime, not to a project, so they belong in the pack. An agent declares only
 segment boundaries, which remain telemetry rather than ground truth; it does
 not call a logging command for ordinary activity.

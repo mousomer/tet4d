@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "workspace-governance telemetry observation envelope, version 1",
-  "description": "One immutable observation of an agent activity. event_type and payload describe what happened; source and attribution describe how it was observed; an optional enrichment block adds domain detail only the observer could see. Each observation keeps its own observation_id and is never merged with another or treated as the activity itself. Project-independent: no field names or enumerates a project's paths, authorities, experiments, or classifications; project values appear only as recorded data. A value that is unknown is omitted, never guessed.",
+  "description": "One immutable observation of an agent activity. event_type and payload describe what happened; source and attribution describe how it was observed; an optional enrichment block adds domain detail only the observer could see. Each observation keeps its own observation_id and is never merged with another or treated as the activity itself. Project-independent: no field names or enumerates a project's paths, authorities, experiments, or classifications; project values appear only as recorded data. A value that is unknown is omitted, never guessed. Within schema_version 1, later revisions may add event types, enum values, optional fields and event-specific payloads; readers skip event types they do not interpret and refuse a schema_version they do not support.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "observation_id", "event_type", "observed_at", "recorded_at", "workspace_id", "checkout", "context", "source", "attribution", "payload"],
@@ -9,8 +9,8 @@
     "schema_version": {"const": 1},
     "observation_id": {"type": "string", "minLength": 32},
     "event_type": {"enum": ["command_execution"]},
-    "observed_at": {"type": "string", "minLength": 20},
-    "recorded_at": {"type": "string", "minLength": 20},
+    "observed_at": {"type": "string", "minLength": 20, "description": "When the underlying fact occurred, according to its source. For a completion, when the command finished; it started duration_ms earlier."},
+    "recorded_at": {"type": "string", "minLength": 20, "description": "When workspace-governance persisted or imported this observation. Selects the daily store file."},
     "workspace_id": {"type": "string", "minLength": 1},
     "project_id": {"type": "string", "minLength": 1},
     "checkout": {
