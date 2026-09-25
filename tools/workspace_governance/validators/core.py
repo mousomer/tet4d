@@ -12,6 +12,17 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
+from tools.workspace_governance.resolver.roles import (
+    ARTIFACT_ROLES,
+    REQUIRED_PACK_ROOTS,
+    WORK_TYPES,
+    WRITE_COMPATIBILITY,
+    RoleDeclarationError,
+    declaration_path_defect,
+    fixed_root_roles,
+    role_bootstrap_lists,
+)
+
 DIAGNOSTIC_CLASSES = {
     "DUPLICATE_AUTHORITY",
     "CONFLICTING_VALUE",
@@ -26,17 +37,6 @@ SCHEMA_FILES = {
     "local": "schemas/workspace-local.schema.json",
 }
 
-WORK_TYPES = frozenset({"Planning", "Coding", "Manifest"})
-ARTIFACT_ROLES = frozenset(
-    {
-        "governance_treatment",
-        "executable_machinery",
-        "product_authority",
-        "planning_document",
-        "generated",
-        "bookkeeping",
-    }
-)
 OBLIGATION_COMPARATORS = {
     "required_all_of": "set_superset",
     "allowed_any_of": "set_subset",
@@ -690,6 +690,111 @@ def _semantic_manifest_issues(  # noqa: C901 - cross-field integrity transaction
     return issues
 
 
+def _declared_path_problem(
+    root: Path, path: str, pack_rel: str | None
+) -> tuple[str, str] | None:
+    defect = declaration_path_defect(path)
+    if defect is not None:
+        return "CONFLICTING_VALUE", defect
+    if pack_rel is not None and (path == pack_rel or path.startswith(pack_rel + "/")):
+        return "CONFLICTING_VALUE", "the pack declares the roles of its own files"
+    if not (root / path).is_file():
+        return "BROKEN_REFERENCE", "declared artifact does not exist"
+    return None
+
+
+def _role_issue(code: str, fact: str, reason: str, repair: str) -> Diagnostic:
+    return _diag(
+        code, fact, "project", ["config/governance/project.json"], reason, repair
+    )
+
+
+def _role_bootstrap_issues(
+    root: Path, lists: dict[str, list[str]], pack_rel: str | None
+) -> list[Diagnostic]:
+    issues: list[Diagnostic] = []
+    seen: set[str] = set()
+    for key, paths in lists.items():
+        for index, path in enumerate(paths):
+            fact = f"role_bootstrap.{key}[{index}]"
+            problem = _declared_path_problem(root, path, pack_rel)
+            if problem is not None:
+                issues.append(
+                    _role_issue(
+                        problem[0], fact, problem[1], "declare one existing file"
+                    )
+                )
+            elif path in seen:
+                issues.append(
+                    _role_issue(
+                        "CONFLICTING_VALUE",
+                        fact,
+                        "path is declared more than once in role_bootstrap",
+                        "give each bootstrap path exactly one role",
+                    )
+                )
+            seen.add(path)
+    return issues
+
+
+def _artifact_role_issues(
+    root: Path, workspace: dict[str, Any], project: dict[str, Any], pack_root: Path
+) -> list[Diagnostic]:
+    """Hold each role declaration to one existing project file.
+
+    The pack owns its own files' roles and a bootstrap root keeps its fixed
+    role, so a project declaration can relabel neither to move a write out of
+    the Manifest surface.
+    """
+    try:
+        pack_rel: str | None = (
+            pack_root.resolve().relative_to(root.resolve()).as_posix()
+        )
+    except ValueError:
+        pack_rel = None
+    lists = role_bootstrap_lists(project)
+    issues = _role_bootstrap_issues(root, lists, pack_rel)
+    if issues:
+        return issues
+    try:
+        fixed = fixed_root_roles(workspace, project, "config/governance/project.json")
+    except RoleDeclarationError as exc:
+        return [
+            _role_issue(
+                "CONFLICTING_VALUE", "role_bootstrap", str(exc), "declare valid roots"
+            )
+        ]
+    for index, path in enumerate(lists["bookkeeping"]):
+        if path in fixed:
+            issues.append(
+                _role_issue(
+                    "CONFLICTING_VALUE",
+                    f"role_bootstrap.bookkeeping[{index}]",
+                    f"a bootstrap root keeps its fixed role {fixed[path][0]}",
+                    "remove the root from the bookkeeping list",
+                )
+            )
+    for path, role in project.get("artifact_roles", {}).items():
+        fact = f"artifact_roles.{path}"
+        problem = _declared_path_problem(root, path, pack_rel)
+        if problem is not None:
+            issues.append(
+                _role_issue(
+                    problem[0], fact, problem[1], "declare one existing project file"
+                )
+            )
+        elif path in fixed and fixed[path][0] != role:
+            issues.append(
+                _role_issue(
+                    "CONFLICTING_VALUE",
+                    fact,
+                    f"a bootstrap root keeps its fixed role {fixed[path][0]}",
+                    "declare the root's fixed role or remove the declaration",
+                )
+            )
+    return issues
+
+
 def _normalized_facade(value: object) -> dict[str, Any] | None:
     if not isinstance(value, dict):
         return None
@@ -784,6 +889,7 @@ def validate_manifests(
     if issues:
         return issues
     issues.extend(_semantic_manifest_issues(root, workspace, project))
+    issues.extend(_artifact_role_issues(root, workspace, project, pack_root))
     issues.extend(_authority_graph_issues(root, project))
     if not issues:
         issues.extend(_generated_surface_issues(root, project))
@@ -858,17 +964,15 @@ def pack_hash(pack_root: Path) -> tuple[str, list[str]]:
 def _pack_metadata_issues(
     manifest: dict[str, Any], files: list[str]
 ) -> list[Diagnostic]:
-    """Validate representation metadata without interpreting project semantics.
+    """Validate the pack's own role, root, and comparison metadata.
 
-    These declarations make the shared vocabulary and the pack's own artifact
-    identities explicit. They deliberately do not classify Tet4D artifacts,
-    derive a role from a path, or compare any project obligations; those are
-    later rollout stages.
+    These declarations make the shared vocabulary, the pack's own artifact
+    identities, and the tables enforcement reads explicit. They do not classify
+    project artifacts; that is `resolver.roles` over project declarations.
     """
     issues: list[Diagnostic] = []
-    if set(manifest.get("work_types", [])) != WORK_TYPES or len(
-        manifest.get("work_types", [])
-    ) != len(WORK_TYPES):
+    work_types = manifest.get("work_types")
+    if not isinstance(work_types, list) or sorted(work_types) != sorted(WORK_TYPES):
         issues.append(
             _diag(
                 "PACK_DRIFT",
@@ -920,6 +1024,36 @@ def _pack_metadata_issues(
                 "restore the versioned obligation-comparator metadata",
             )
         )
+    if manifest.get("write_compatibility") != WRITE_COMPATIBILITY:
+        issues.append(
+            _diag(
+                "PACK_DRIFT",
+                "MANIFEST.write_compatibility",
+                "shared_pack",
+                ["MANIFEST.json"],
+                "pack write-compatibility metadata must match the table enforcement reads",
+                "restore the versioned write-compatibility table",
+            )
+        )
+    roots = manifest.get("bootstrap_roots")
+    if (
+        not isinstance(roots, list)
+        or not all(isinstance(root, str) for root in roots)
+        or len(roots) != len(set(roots))
+        or not set(roots) <= set(files)
+        or not REQUIRED_PACK_ROOTS <= set(roots)
+    ):
+        issues.append(
+            _diag(
+                "PACK_DRIFT",
+                "MANIFEST.bootstrap_roots",
+                "shared_pack",
+                ["MANIFEST.json"],
+                "pack bootstrap roots must be packed files that keep the enforcement roots",
+                "declare each root once and retain "
+                + ", ".join(sorted(REQUIRED_PACK_ROOTS)),
+            )
+        )
     return issues
 
 
@@ -961,9 +1095,9 @@ def validate_pack(root: Path, workspace: dict[str, Any]) -> list[Diagnostic]:
                 "classify every manifest field",
             )
         ]
-    metadata_issues = _pack_metadata_issues(manifest, files)
-    if metadata_issues:
-        return metadata_issues
+    # Report broken metadata and a stale lock together: repairing one must not
+    # be what first reveals the other.
+    issues = _pack_metadata_issues(manifest, files)
     identity = {
         "pack_name": manifest["name"],
         "version": manifest["version"],
@@ -974,7 +1108,7 @@ def validate_pack(root: Path, workspace: dict[str, Any]) -> list[Diagnostic]:
     }
     for key, expected in identity.items():
         if lock.get(key) != expected:
-            return [
+            issues.append(
                 _diag(
                     "PACK_DRIFT",
                     f"governance_pack.{key}",
@@ -983,7 +1117,10 @@ def validate_pack(root: Path, workspace: dict[str, Any]) -> list[Diagnostic]:
                     "pack lock identity does not match the pack manifest/content",
                     "run gov sync after reviewing the pack update",
                 )
-            ]
+            )
+            break
+    if issues:
+        return issues
     if (
         version != manifest["version"]
         or workspace["governance_pack"]["required_schema"] != manifest["schema_version"]

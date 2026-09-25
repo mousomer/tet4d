@@ -13,7 +13,7 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
-from tools.governance.observe_work_segment import ARTIFACT_ROLES
+from tools.workspace_governance.resolver.roles import ARTIFACT_ROLES
 
 from .measurement import (
     TrajectoryValidationError,

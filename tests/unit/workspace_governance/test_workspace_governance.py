@@ -45,8 +45,8 @@ def test_work_type_and_artifact_role_schema_is_additive_until_migration() -> Non
     workspace, project = manifests()
     project["work_types"] = ["Planning", "Coding", "Manifest"]
     project["artifact_roles"] = {
-        "an/explicit/artifact": "planning_document",
-        "another/artifact": "bookkeeping",
+        "docs/ARCHITECTURE_CONTRACT.md": "product_authority",
+        "CURRENT_STATE.md": "bookkeeping",
     }
     assert validate(workspace, project) == []
 
@@ -54,10 +54,67 @@ def test_work_type_and_artifact_role_schema_is_additive_until_migration() -> Non
     assert any(issue.fact == "work_types[2]" for issue in validate(workspace, project))
 
     project["work_types"] = ["Planning", "Coding", "Manifest"]
-    project["artifact_roles"]["another/artifact"] = "route_membership"
+    project["artifact_roles"]["CURRENT_STATE.md"] = "route_membership"
     assert any(
-        issue.fact == "artifact_roles.another/artifact"
+        issue.fact == "artifact_roles.CURRENT_STATE.md"
         for issue in validate(workspace, project)
+    )
+
+
+@pytest.mark.parametrize(
+    ("path", "role", "code"),
+    [
+        ("../outside.md", "planning_document", "CONFLICTING_VALUE"),
+        ("docs/**/*.md", "planning_document", "CONFLICTING_VALUE"),
+        ("/docs/BACKLOG.md", "bookkeeping", "CONFLICTING_VALUE"),
+        ("does/not/exist.md", "planning_document", "BROKEN_REFERENCE"),
+        (
+            "tools/workspace_governance/policies/ownership.md",
+            "executable_machinery",
+            "CONFLICTING_VALUE",
+        ),
+        ("config/governance/project.json", "executable_machinery", "CONFLICTING_VALUE"),
+        ("config/governance/workspace.lock.json", "bookkeeping", "CONFLICTING_VALUE"),
+        ("AGENTS.md", "bookkeeping", "CONFLICTING_VALUE"),
+        ("AGENTS.md", "governance_treatment", None),
+    ],
+)
+def test_project_role_declarations_cannot_escape_relabel_roots_or_claim_the_pack(
+    path: str, role: str, code: str | None
+) -> None:
+    workspace, project = manifests()
+    project["artifact_roles"] = {path: role}
+    issues = [
+        i for i in validate(workspace, project) if i.fact == f"artifact_roles.{path}"
+    ]
+    assert [i.code for i in issues] == ([code] if code else [])
+
+
+def test_role_bootstrap_paths_are_single_existing_files_outside_fixed_roots() -> None:
+    workspace, project = manifests()
+    assert validate(workspace, project) == []
+
+    duplicated = copy.deepcopy(project)
+    duplicated["role_bootstrap"]["bookkeeping"].append("AGENTS.md")
+    assert any(
+        i.fact.startswith("role_bootstrap.bookkeeping")
+        and i.code == "CONFLICTING_VALUE"
+        for i in validate(workspace, duplicated)
+    )
+    root_as_record = copy.deepcopy(project)
+    root_as_record["role_bootstrap"]["bookkeeping"].append(
+        "config/governance/project.json"
+    )
+    assert any(
+        i.fact.startswith("role_bootstrap.bookkeeping") and "fixed role" in i.reason
+        for i in validate(workspace, root_as_record)
+    )
+    missing = copy.deepcopy(project)
+    missing["role_bootstrap"]["instruction_roots"].append("missing/AGENTS.md")
+    assert any(
+        i.fact.startswith("role_bootstrap.instruction_roots")
+        and i.code == "BROKEN_REFERENCE"
+        for i in validate(workspace, missing)
     )
 
 
@@ -79,6 +136,25 @@ def test_pack_metadata_is_complete_and_directional() -> None:
         issue.fact == "MANIFEST.artifact_roles"
         for issue in core._pack_metadata_issues(missing_role, files)
     )
+
+    relaxed = copy.deepcopy(manifest)
+    relaxed["write_compatibility"]["Coding"]["governance_treatment"] = "allowed"
+    assert any(
+        issue.fact == "MANIFEST.write_compatibility"
+        for issue in core._pack_metadata_issues(relaxed, files)
+    )
+
+    for roots in (
+        [root for root in manifest["bootstrap_roots"] if root != "validators/core.py"],
+        [*manifest["bootstrap_roots"], "not/packed.py"],
+        [*manifest["bootstrap_roots"], manifest["bootstrap_roots"][0]],
+    ):
+        unrooted = copy.deepcopy(manifest)
+        unrooted["bootstrap_roots"] = roots
+        assert any(
+            issue.fact == "MANIFEST.bootstrap_roots"
+            for issue in core._pack_metadata_issues(unrooted, files)
+        )
 
 
 def test_resolution_entries_have_uniform_and_truthful_provenance() -> None:
@@ -810,6 +886,9 @@ def test_pack_hash_policy_excludes_declared_files_and_lock_identity_is_manifest_
     pack = tmp_path / "pack"
     (pack / "nested").mkdir(parents=True)
     (pack / "VERSION").write_text("0.1.0\n")
+    for enforcement in ("resolver/roles.py", "validators/core.py"):
+        (pack / enforcement).parent.mkdir(parents=True, exist_ok=True)
+        (pack / enforcement).write_text("")
     manifest = {
         "schema_version": 1,
         "name": "workspace-governance",
@@ -824,8 +903,12 @@ def test_pack_hash_policy_excludes_declared_files_and_lock_identity_is_manifest_
         "artifact_roles": [
             {"path": "MANIFEST.json", "role": "executable_machinery"},
             {"path": "VERSION", "role": "executable_machinery"},
+            {"path": "resolver/roles.py", "role": "executable_machinery"},
+            {"path": "validators/core.py", "role": "executable_machinery"},
         ],
+        "bootstrap_roots": sorted(core.REQUIRED_PACK_ROOTS),
         "obligation_comparators": core.OBLIGATION_COMPARATORS,
+        "write_compatibility": core.WRITE_COMPATIBILITY,
     }
     manifest["field_usage"] = {key: "consumed" for key in (*manifest, "field_usage")}
     (pack / "MANIFEST.json").write_text(json.dumps(manifest))

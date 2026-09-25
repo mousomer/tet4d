@@ -9,121 +9,34 @@ import subprocess
 import sys
 import tempfile
 from collections import Counter
-from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
-WORK_TYPES = ("Planning", "Coding", "Manifest")
-ARTIFACT_ROLES = (
-    "governance_treatment",
-    "executable_machinery",
-    "product_authority",
-    "planning_document",
-    "generated",
-    "bookkeeping",
+from tools.workspace_governance.resolver.core import GovernanceResolver
+from tools.workspace_governance.resolver.roles import (
+    COMPATIBILITY_RESULTS,
+    ROLE_PROVENANCE,
+    WORK_TYPES,
+    WORKSPACE_MANIFEST,
+    WRITE_COMPATIBILITY,
+    RoleDeclarationError,
+    RoleIndex,
+    compatibility,
+    normalize_repo_path,
+    validate_compatibility_table,
 )
-ROLE_PROVENANCE = ("explicit_declared", "bootstrap_projected", "unclassified")
-COMPATIBILITY_RESULTS = (
-    "compatible",
-    "contradiction",
-    "unclassified",
-    "indeterminate",
-)
+from tools.workspace_governance.validators.core import load_manifest_json, pack_hash
 
-_COMPATIBILITY = {
-    "Planning": {
-        "governance_treatment": "contradiction",
-        "executable_machinery": "contradiction",
-        "product_authority": "compatible",
-        "planning_document": "compatible",
-        "generated": "contradiction",
-        "bookkeeping": "compatible",
-    },
-    "Coding": {
-        "governance_treatment": "contradiction",
-        "executable_machinery": "compatible",
-        "product_authority": "compatible",
-        "planning_document": "compatible",
-        "generated": "compatible",
-        "bookkeeping": "compatible",
-    },
-    "Manifest": {
-        "governance_treatment": "compatible",
-        "executable_machinery": "contradiction",
-        "product_authority": "contradiction",
-        "planning_document": "compatible",
-        "generated": "compatible",
-        "bookkeeping": "compatible",
-    },
-}
-
-# These exact paths are bootstrap roots accepted by the work-type ADR. They are
-# not patterns and they do not turn the observer output into role authority.
-_INSTRUCTION_ROOTS = {
-    "AGENTS.md",
-    "CLAUDE.md",
-    "godot/AGENTS.md",
-    "native/AGENTS.md",
-}
-_COMPATIBILITY_TREATMENT = "config/project/policy_pack.json"
-_PROJECT_MANIFEST = "config/governance/project.json"
-_BOOTSTRAP_PRODUCT_AUTHORITIES = {
-    "docs/architecture/work_type_classification.md",
-}
-_BOOTSTRAP_GENERATED = {
-    "config/governance/workspace.lock.json",
-    "docs/CONFIGURATION_REFERENCE.md",
-}
+SCHEMA_VERSION = 2
 
 
 class ObservationError(ValueError):
     """Raised when an observation request or its local evidence is invalid."""
-
-
-@dataclass(frozen=True)
-class RoleResolution:
-    role: str
-    provenance: str
-    source: str | None
-
-    def to_dict(self) -> dict[str, object]:
-        return {
-            "role": self.role,
-            "role_provenance": self.provenance,
-            "role_source": self.source,
-        }
-
-
-@dataclass(frozen=True)
-class RoleIndex:
-    explicit: dict[str, RoleResolution]
-    bootstrap: dict[str, RoleResolution]
-    bootstrap_directories: tuple[tuple[str, RoleResolution], ...]
-
-    def resolve(self, path: str) -> RoleResolution:
-        normalized = _normalize_repo_path(path)
-        if normalized in self.explicit:
-            return self.explicit[normalized]
-        if normalized in self.bootstrap:
-            return self.bootstrap[normalized]
-        for directory, resolution in self.bootstrap_directories:
-            if normalized.startswith(f"{directory}/"):
-                return resolution
-        return RoleResolution("unclassified", "unclassified", None)
-
-
-def _normalize_repo_path(path: str) -> str:
-    normalized = Path(path).as_posix().removeprefix("./")
-    if not normalized or normalized == "." or normalized.startswith("../"):
-        raise ObservationError(f"path is not repository-relative: {path!r}")
-    return normalized.rstrip("/")
-
-
-def _json_pointer_token(value: str) -> str:
-    return value.replace("~", "~0").replace("/", "~1")
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -215,7 +128,7 @@ def repository_snapshot(root: Path) -> dict[str, dict[str, object]]:
         if not raw_path:
             continue
         relative = os.fsdecode(raw_path)
-        normalized = _normalize_repo_path(relative)
+        normalized = normalize_repo_path(relative)
         state = _file_state(root / relative)
         if state is not None:
             snapshot[normalized] = state
@@ -226,6 +139,12 @@ def classify_changes(
     before: dict[str, dict[str, object]],
     after: dict[str, dict[str, object]],
 ) -> list[dict[str, str]]:
+    """List every written path; a rename writes both of its paths.
+
+    A rename is reported from both ends so the path it vacates is judged by
+    its own role: moving an instruction file away removes it from the
+    governance surface even though its content survives elsewhere.
+    """
     before_paths = set(before)
     after_paths = set(after)
     deleted = before_paths - after_paths
@@ -259,6 +178,9 @@ def classify_changes(
                     "previous_path": old_path,
                 }
             )
+            changes.append(
+                {"path": old_path, "change_kind": "renamed_away", "next_path": new_path}
+            )
 
     for path in sorted(deleted - renamed_from):
         changes.append({"path": path, "change_kind": "deleted"})
@@ -270,190 +192,28 @@ def classify_changes(
     return sorted(changes, key=lambda item: (item["path"], item["change_kind"]))
 
 
-def _declared_pack_roles(root: Path) -> dict[str, RoleResolution]:
-    workspace = _load_json(root / ".governance/workspace.json")
-    governance_pack = workspace.get("governance_pack")
-    if not isinstance(governance_pack, dict):
-        raise ObservationError("workspace manifest lacks governance_pack")
-    lock_path = governance_pack.get("lock")
-    if not isinstance(lock_path, str):
-        raise ObservationError("workspace governance_pack.lock must be a path")
-    lock = _load_json(root / lock_path)
-    pack_path = lock.get("pack_path")
-    if not isinstance(pack_path, str):
-        raise ObservationError("workspace lock pack_path must be a path")
-    manifest_path = root / pack_path / "MANIFEST.json"
-    manifest = _load_json(manifest_path)
-    declarations = manifest.get("artifact_roles")
-    if not isinstance(declarations, list):
-        raise ObservationError("pack manifest artifact_roles must be a list")
-    roles: dict[str, RoleResolution] = {}
-    for index, declaration in enumerate(declarations):
-        if not isinstance(declaration, dict):
-            raise ObservationError(f"artifact_roles[{index}] must be an object")
-        relative, role = declaration.get("path"), declaration.get("role")
-        if not isinstance(relative, str) or role not in ARTIFACT_ROLES:
-            raise ObservationError(f"artifact_roles[{index}] is invalid")
-        path = _normalize_repo_path(f"{pack_path}/{relative}")
-        roles[path] = RoleResolution(
-            str(role),
-            "explicit_declared",
-            f"{Path(pack_path).as_posix()}/MANIFEST.json#/artifact_roles/{index}",
-        )
-    return roles
+def _pack_identity(root: Path) -> dict[str, str]:
+    workspace = _load_json(root / WORKSPACE_MANIFEST)
+    lock = _load_json(root / workspace["governance_pack"]["lock"])
+    pack_root = root / lock["pack_path"]
+    manifest = load_manifest_json(pack_root / "MANIFEST.json")
+    return {
+        "version": str(manifest["version"]),
+        "revision": str(manifest["revision"]),
+        "content_sha256": pack_hash(pack_root)[0],
+    }
 
 
-def _project_declared_roles(project: dict[str, Any]) -> dict[str, RoleResolution]:
-    explicit: dict[str, RoleResolution] = {}
-    project_roles = project.get("artifact_roles", {})
-    if not isinstance(project_roles, dict):
-        raise ObservationError("project artifact_roles must be an object")
-    for raw_path, role in project_roles.items():
-        if not isinstance(raw_path, str) or role not in ARTIFACT_ROLES:
-            raise ObservationError(
-                "project artifact_roles contains an invalid declaration"
-            )
-        path = _normalize_repo_path(raw_path)
-        explicit[path] = RoleResolution(
-            str(role),
-            "explicit_declared",
-            f"{_PROJECT_MANIFEST}#/artifact_roles/{_json_pointer_token(raw_path)}",
-        )
-    return explicit
-
-
-def _add_bootstrap_role(
-    bootstrap: dict[str, RoleResolution], path: str, role: str, source: str
-) -> None:
-    normalized = _normalize_repo_path(path.split("#", 1)[0])
-    bootstrap.setdefault(
-        normalized,
-        RoleResolution(role, "bootstrap_projected", source),
-    )
-
-
-def _base_bootstrap_roles() -> dict[str, RoleResolution]:
-    bootstrap: dict[str, RoleResolution] = {}
-    _add_bootstrap_role(
-        bootstrap,
-        _PROJECT_MANIFEST,
-        "governance_treatment",
-        "accepted bootstrap root",
-    )
-    _add_bootstrap_role(
-        bootstrap,
-        _COMPATIBILITY_TREATMENT,
-        "governance_treatment",
-        "accepted compatibility authority",
-    )
-    for path in sorted(_INSTRUCTION_ROOTS):
-        _add_bootstrap_role(
-            bootstrap,
-            path,
-            "governance_treatment",
-            "accepted instruction bootstrap root",
-        )
-    for path in sorted(_BOOTSTRAP_PRODUCT_AUTHORITIES):
-        _add_bootstrap_role(
-            bootstrap,
-            path,
-            "product_authority",
-            "accepted architecture authority",
-        )
-    for path in sorted(_BOOTSTRAP_GENERATED):
-        _add_bootstrap_role(bootstrap, path, "generated", "accepted generated surface")
-    return bootstrap
-
-
-def _apply_authority_bootstrap_role(
-    authority: dict[str, Any],
-    *,
-    index: int,
-    bootstrap: dict[str, RoleResolution],
-) -> tuple[str, RoleResolution] | None:
-    source = authority.get("source")
-    authority_id = authority.get("authority_id")
-    if not isinstance(source, str) or not isinstance(authority_id, str):
-        return None
-    provenance = f"{_PROJECT_MANIFEST}#/authorities/{index} ({authority_id})"
-    if authority.get("canonical_governance") is True:
-        if authority.get("source_type") == "file":
-            _add_bootstrap_role(bootstrap, source, "governance_treatment", provenance)
-        return None
-    if authority_id == "open-work-backlog":
-        _add_bootstrap_role(bootstrap, source, "bookkeeping", provenance)
-        return None
-    if authority.get("authority_type") != "human":
-        return None
-    resolution = RoleResolution("product_authority", "bootstrap_projected", provenance)
-    if authority.get("source_type") == "directory":
-        return (_normalize_repo_path(source), resolution)
-    if authority.get("source_type") == "file":
-        _add_bootstrap_role(bootstrap, source, "product_authority", provenance)
-    return None
-
-
-def _authority_bootstrap_roles(
-    project: dict[str, Any], bootstrap: dict[str, RoleResolution]
-) -> list[tuple[str, RoleResolution]]:
-    authorities = project.get("authorities")
-    if not isinstance(authorities, list):
-        raise ObservationError("project authorities must be a list")
-    directories: list[tuple[str, RoleResolution]] = []
-    for index, authority in enumerate(authorities):
-        if not isinstance(authority, dict):
-            raise ObservationError(f"authorities[{index}] must be an object")
-        directory = _apply_authority_bootstrap_role(
-            authority, index=index, bootstrap=bootstrap
-        )
-        if directory is not None:
-            directories.append(directory)
-    return directories
-
-
-def _add_generated_bootstrap_roles(
-    project: dict[str, Any], bootstrap: dict[str, RoleResolution]
-) -> None:
-    generated_surfaces = project.get("generated_surfaces", [])
-    if not isinstance(generated_surfaces, list):
-        raise ObservationError("project generated_surfaces must be a list")
-    for index, surface in enumerate(generated_surfaces):
-        if not isinstance(surface, dict) or not isinstance(surface.get("target"), str):
-            raise ObservationError(f"generated_surfaces[{index}] is invalid")
-        _add_bootstrap_role(
-            bootstrap,
-            str(surface["target"]),
-            "generated",
-            f"{_PROJECT_MANIFEST}#/generated_surfaces/{index}",
-        )
-
-
-def build_role_index(root: Path) -> RoleIndex:
-    root = root.resolve()
-    project = _load_json(root / _PROJECT_MANIFEST)
-    explicit = _declared_pack_roles(root)
-    explicit.update(_project_declared_roles(project))
-
-    bootstrap = _base_bootstrap_roles()
-    directories = _authority_bootstrap_roles(project, bootstrap)
-    _add_generated_bootstrap_roles(project, bootstrap)
-
-    return RoleIndex(
-        explicit=dict(sorted(explicit.items())),
-        bootstrap=dict(sorted(bootstrap.items())),
-        bootstrap_directories=tuple(
-            sorted(directories, key=lambda item: (-len(item[0]), item[0]))
-        ),
-    )
-
-
-def compatibility(work_type: str, role: str) -> str:
-    validate_work_type(work_type)
-    if role == "unclassified":
-        return "unclassified"
-    if role not in ARTIFACT_ROLES:
-        return "indeterminate"
-    return _COMPATIBILITY[work_type][role]
+def capture_treatment(root: Path) -> dict[str, object]:
+    """Capture the roles and table this checkout's treatment judges writes by."""
+    try:
+        return {
+            "pack": _pack_identity(root),
+            "role_index": GovernanceResolver.for_root(root).role_index().to_dict(),
+            "write_compatibility": WRITE_COMPATIBILITY,
+        }
+    except (OSError, KeyError, TypeError, ValueError) as exc:
+        raise ObservationError(f"treatment cannot be resolved: {exc}") from exc
 
 
 def _atomic_json_write(path: Path, payload: dict[str, object]) -> None:
@@ -492,22 +252,87 @@ def start_segment(
         "session_id": session_id,
     }
     boundary = {"head": _head(root), "observed_at": observed_at}
+    base = capture_treatment(root)
     state: dict[str, object] = {
-        "schema_version": 1,
+        "schema_version": SCHEMA_VERSION,
         "root": str(root),
         "segment": segment,
         "start_boundary": boundary,
         "start_snapshot": repository_snapshot(root),
+        "base_treatment": base,
     }
     _atomic_json_write(state_path, state)
     return {
-        "schema_version": 1,
+        "schema_version": SCHEMA_VERSION,
         "observer_mode": "log_only",
         "authoritative": False,
         "segment": segment,
         "start_boundary": boundary,
+        "base_pack": base["pack"],
         "state_path": str(state_path),
     }
+
+
+def _base_treatment(state: dict[str, Any]) -> tuple[RoleIndex, dict, dict]:
+    base = state.get("base_treatment")
+    if not isinstance(base, dict):
+        raise ObservationError("observer state lacks its base treatment")
+    try:
+        return (
+            RoleIndex.from_dict(base.get("role_index")),
+            validate_compatibility_table(base.get("write_compatibility")),
+            dict(base.get("pack") or {}),
+        )
+    except RoleDeclarationError as exc:
+        raise ObservationError(f"observer base treatment is invalid: {exc}") from exc
+
+
+def _candidate_treatment(root: Path) -> tuple[RoleIndex | None, dict[str, object]]:
+    """The treatment on disk at the end, or why it could not be resolved.
+
+    A segment may leave the governance documents broken. Its writes are still
+    judged by the base treatment, so an unresolvable candidate is recorded
+    rather than failing the observation.
+    """
+    try:
+        candidate = capture_treatment(root)
+    except ObservationError as exc:
+        return None, {"state": "unavailable", "pack": None, "reason": str(exc)}
+    index = RoleIndex.from_dict(candidate["role_index"])
+    return index, {"state": "resolved", "pack": candidate["pack"], "reason": None}
+
+
+def _judge(
+    change: dict[str, str],
+    work_type: str,
+    base: RoleIndex,
+    table: dict[str, dict[str, str]],
+    candidate: RoleIndex | None,
+) -> dict[str, object]:
+    path = change["path"]
+    resolution = base.resolve(path)
+    result, condition = compatibility(work_type, resolution.role, table)
+    artifact: dict[str, object] = {
+        **change,
+        **resolution.to_dict(),
+        "compatibility": result,
+        "condition": condition,
+        "bootstrap_root": base.is_root(path)
+        or (candidate is not None and candidate.is_root(path)),
+        "candidate_role": None,
+        "candidate_role_provenance": None,
+        "candidate_role_source": None,
+        "role_changed": None,
+    }
+    if candidate is not None:
+        moved = candidate.resolve(path)
+        artifact.update(
+            candidate_role=moved.role,
+            candidate_role_provenance=moved.provenance,
+            candidate_role_source=moved.source,
+            role_changed=moved.role != resolution.role,
+        )
+    return artifact
 
 
 def finish_segment(
@@ -520,7 +345,7 @@ def finish_segment(
     outcome: str | None = None,
 ) -> dict[str, object]:
     state = _load_json(state_path)
-    if state.get("schema_version") != 1:
+    if state.get("schema_version") != SCHEMA_VERSION:
         raise ObservationError("unsupported observer state schema")
     root_value = state.get("root")
     segment = state.get("segment")
@@ -539,6 +364,7 @@ def finish_segment(
             raise ObservationError(f"{field} must be non-negative")
 
     work_type = validate_work_type(str(segment.get("work_type")))
+    base_index, table, base_pack = _base_treatment(state)
     root = Path(root_value).resolve()
     observed_at = ended_at or _utc_now()
     end_time = _parse_time(observed_at, field="ended_at")
@@ -548,25 +374,15 @@ def finish_segment(
         raise ObservationError("ended_at must not precede started_at")
 
     end_boundary = {"head": _head(root), "observed_at": observed_at}
-    end_snapshot = repository_snapshot(root)
-    changes = classify_changes(start_snapshot, end_snapshot)
-    role_index = build_role_index(root)
-    artifacts: list[dict[str, object]] = []
-    for change in changes:
-        resolution = role_index.resolve(change["path"])
-        artifact: dict[str, object] = {
-            **change,
-            **resolution.to_dict(),
-            "compatibility": compatibility(work_type, resolution.role),
-        }
-        artifacts.append(artifact)
+    changes = classify_changes(start_snapshot, repository_snapshot(root))
+    candidate_index, candidate = _candidate_treatment(root)
+    artifacts = [
+        _judge(change, work_type, base_index, table, candidate_index)
+        for change in changes
+    ]
 
-    compatibility_counts = Counter(
-        str(artifact["compatibility"]) for artifact in artifacts
-    )
-    provenance_counts = Counter(
-        str(artifact["role_provenance"]) for artifact in artifacts
-    )
+    compatibility_counts = Counter(str(item["compatibility"]) for item in artifacts)
+    provenance_counts = Counter(str(item["role_provenance"]) for item in artifacts)
     telemetry: dict[str, object] = {
         "segment_count": 1,
         "files_written": len(artifacts),
@@ -578,21 +394,41 @@ def finish_segment(
     if outcome is not None:
         telemetry["final_outcome"] = outcome
     return {
-        "schema_version": 1,
+        "schema_version": SCHEMA_VERSION,
         "observer_mode": "log_only",
         "authoritative": False,
         "segment": segment,
         "start_boundary": start_boundary,
         "end_boundary": end_boundary,
+        # Writes are judged by the treatment in force when the segment began,
+        # so a segment cannot relabel its own writes.
+        "treatment": {
+            "judged_by": "base",
+            "base_pack": base_pack,
+            "candidate": candidate,
+        },
         "artifacts": artifacts,
         "summary": {
             "compatibility": {
                 result: compatibility_counts[result] for result in COMPATIBILITY_RESULTS
             },
+            "conditions": dict(
+                sorted(
+                    Counter(
+                        str(item["condition"])
+                        for item in artifacts
+                        if item["condition"] is not None
+                    ).items()
+                )
+            ),
             "role_provenance": {
                 provenance: provenance_counts[provenance]
                 for provenance in ROLE_PROVENANCE
             },
+            "role_changes": sum(item["role_changed"] is True for item in artifacts),
+            "bootstrap_root_writes": sum(
+                bool(item["bootstrap_root"]) for item in artifacts
+            ),
         },
         "telemetry": telemetry,
     }
@@ -656,7 +492,7 @@ def main(argv: list[str] | None = None) -> int:
                 outcome=args.outcome,
             )
         _emit(payload, args.output)
-    except (ObservationError, OSError) as exc:
+    except (ObservationError, RoleDeclarationError, OSError) as exc:
         print(f"observe-work-segment: {exc}", file=sys.stderr)
         return 2
     return 0

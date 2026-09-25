@@ -6,6 +6,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from tools.workspace_governance.resolver.roles import (
+    WORKSPACE_MANIFEST,
+    RoleIndex,
+    TreatmentDocuments,
+    build_role_index,
+    normalize_repo_path,
+)
 from tools.workspace_governance.validators.core import (
     Diagnostic,
     load_manifest_json,
@@ -54,7 +61,7 @@ class GovernanceResolver:
     @classmethod
     def for_root(cls, root: Path) -> GovernanceResolver:
         root = root.resolve()
-        workspace_path = root / ".governance/workspace.json"
+        workspace_path = root / WORKSPACE_MANIFEST
         project_path = root / "config/governance/project.json"
         user_local: Path | None = None
         try:
@@ -111,6 +118,27 @@ class GovernanceResolver:
             load_manifest_json(self.project_path),
             self.local_overlay()[0],
         )
+
+    def treatment_documents(self) -> TreatmentDocuments:
+        """Load the documents that decide artifact roles in this checkout.
+
+        Local overlays are deliberately not read: they select machine
+        locations and can never change what an artifact is.
+        """
+        workspace = load_manifest_json(self.workspace_path)
+        lock = load_manifest_json(self.root / workspace["governance_pack"]["lock"])
+        pack_path = normalize_repo_path(lock["pack_path"])
+        return TreatmentDocuments(
+            project_path=self._source(self.project_path),
+            project=load_manifest_json(self.project_path),
+            workspace=workspace,
+            pack_manifest=load_manifest_json(self.root / pack_path / "MANIFEST.json"),
+            pack_path=pack_path,
+        )
+
+    def role_index(self) -> RoleIndex:
+        """Artifact roles under the treatment currently in this checkout."""
+        return build_role_index(self.treatment_documents())
 
     def _source(self, path: Path) -> str:
         try:

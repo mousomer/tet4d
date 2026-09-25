@@ -207,5 +207,9 @@
     }
   },
   "sanitation": {"secret_scanner": "tools/governance/scan_secrets.py", "repository_check": "scripts/check_git_sanitation_repo.sh", "bounded_diagnostics": 50},
-  "canonical_owner_set": {"authority_ref": "legacy-policy-pack", "json_pointer": "/authority_model/canonical_human_owners"}
+  "canonical_owner_set": {"authority_ref": "legacy-policy-pack", "json_pointer": "/authority_model/canonical_human_owners"},
+  "role_bootstrap": {
+    "instruction_roots": ["AGENTS.md", "CLAUDE.md", "godot/AGENTS.md", "native/AGENTS.md"],
+    "bookkeeping": ["docs/BACKLOG.md"]
+  }
 }

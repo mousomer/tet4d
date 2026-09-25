@@ -233,6 +233,14 @@ redefine them. Otherwise a candidate could drop the checker from the root
 declaration before the comparison runs. Changing the root set itself needs a
 pack release, which is judged by the base pack under this same rule.
 
+Since workspace-governance `0.3.0` the pack declares its own roots in
+`MANIFEST.json#/bootstrap_roots`, which must keep the manifest, the role
+resolver and the validator, and fixes the generic roots in code: the workspace
+manifest, each project manifest and the pack lock. A project names only its
+agent instruction files, in `role_bootstrap.instruction_roots`. Roots are taken
+from base and candidate together, so a change cannot hide a root by removing
+it, and no project declaration can give a root a different role.
+
 ### 6. Relation to route and execution mode
 
 Work type, execution mode and route are **independent axes**:
@@ -285,12 +293,34 @@ their provenance, observational compatibility, and bounded telemetry supplied
 by the caller. A contradiction is data: it never changes the command's success
 status.
 
-Role resolution is exact and provenance-preserving. Project and pack role
-declarations resolve as `explicit_declared`; the accepted bootstrap sources in
-this decision resolve as `bootstrap_projected`; everything else resolves as
-`unclassified`. Routes, `dispatch_paths`, directory names, extensions and
-filename patterns are not role inputs. The bootstrap is observation machinery,
-not a semantic authority handoff, and its output records are non-authoritative.
+Writes are judged by the **base** treatment: the role index and compatibility
+table are captured when the segment starts, so a segment cannot relabel its own
+writes. The treatment on disk at the end is recorded alongside as the
+candidate. Each write reports its candidate role and whether it changed, and
+whether it touches a bootstrap root. A candidate that no longer resolves is
+recorded as unavailable and does not stop the observation. A rename is judged
+at both paths, so moving a file out of the Manifest surface is visible. The
+conditional cells of the compatibility table are reported as `conditional`
+with their named condition, never folded into a pass or a contradiction.
+
+Role resolution is exact and provenance-preserving, and lives in the pack
+(`tools/workspace_governance/resolver/roles.py`). Project and pack role
+declarations resolve as `explicit_declared`. The bootstrap projection resolves
+as `bootstrap_projected`:
+
+- the workspace manifest, each project manifest and the project's
+  `role_bootstrap.instruction_roots` are `governance_treatment`, and the pack
+  lock is `generated`;
+- `role_bootstrap.bookkeeping` records are `bookkeeping`;
+- `canonical_governance` and compatibility authorities are
+  `governance_treatment`, and other human file or directory authorities are
+  `product_authority`;
+- whole-file generated-surface targets are `generated`.
+
+Everything else resolves as `unclassified`. Routes, `dispatch_paths`, directory
+names, extensions and filename patterns are not role inputs. The bootstrap is
+observation machinery, not a semantic authority handoff, and its output records
+are non-authoritative.
 
 G1 does not implement the base/candidate non-self-relaxation comparison. That
 comparison needs two runnable treatments and immutable-root union semantics, so
@@ -425,8 +455,12 @@ because they belong to the artifact layer.
   sets `additionalProperties: false`, and
   `config/governance/workspace.lock.json` locks every pack file by content
   hash. The vocabulary, role metadata and comparator declarations therefore
-  need an upstream workspace-governance release and a re-sync. They can't be
-  edited locally.
+  change only through a workspace-governance release and a re-sync. The lock
+  identifies the bytes Tet4D consumes; it does not prove where they came from.
+  `gov sync` accepts whatever is vendored, so a local edit followed by a re-sync
+  passes `gov check`. Until a canonical upstream identity exists
+  (`workspace_governance_v0_1.md`, "Canonical upstream boundary"), release
+  discipline rests on owner review of every change to the pack and its lock.
 - **Classifying artifacts.** Resolving `governance_treatment`,
   `executable_machinery`, `product_authority`, `planning_document`, `generated`
   and `bookkeeping` needs declared role metadata. Until the migration exists,

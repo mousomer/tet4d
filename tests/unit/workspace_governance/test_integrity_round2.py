@@ -239,6 +239,10 @@ def apply_case(root: Path, mutation: str) -> set[str]:  # noqa: C901 - explicit 
         project["project"]["name"] = str(Path("/") / "Users" / "example" / "private")
     elif mutation == "ambiguous-project-routing":
         workspace["projects"].append(copy.deepcopy(workspace["projects"][0]))
+    elif mutation == "relabelled-bootstrap-root":
+        project["artifact_roles"] = {"AGENTS.md": "bookkeeping"}
+    elif mutation == "missing-role-declaration":
+        project["artifact_roles"] = {"docs/missing.md": "planning_document"}
     elif mutation in {
         "missing-interpreter",
         "wrong-python-version",
@@ -463,6 +467,16 @@ def test_registered_behavior_paths_have_mutation_evidence(  # noqa: C901 - expli
         return
     elif family == "sanitation":
         project["sanitation"]["secret_scanner"] = "missing-scanner.py"
+    elif family == "roles":
+        assert resolver.role_index().resolve("AGENTS.md").role == (
+            "governance_treatment"
+        )
+        project["role_bootstrap"]["instruction_roots"].remove("AGENTS.md")
+        write(resolver.project_path, project)
+        assert resolver.role_index().resolve("AGENTS.md").role == "unclassified"
+        project["artifact_roles"] = {
+            "config/governance/project.json": "executable_machinery"
+        }
     elif family == "local":
         # The overlay carries the mode as well as the interpreter, so this
         # asserts a healthy environment rather than the project default's.
