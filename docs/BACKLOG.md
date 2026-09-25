@@ -89,7 +89,8 @@ agent-context pressure or changing those limits.
 The PR118-baseline migration-bundle check separately reproduces stale generated metadata,
 including the old `da6e2dd6...` policy digest. Regeneration also adds governance
 config inputs and refreshes authority-document hashes, so that broader generated
-artifact repair remains deferred from C1.
+artifact repair remains deferred from C1. The bundles' `codex_ci_lanes.json`
+digest is likewise stale since iPadOS left hosted CI; that repair refreshes both.
 
 ### Work-type classification rollout
 
@@ -158,10 +159,9 @@ Acceptance boundary:
 
 - Godot game / Windows and Godot game / Linux need distinct distributable
   packages and acceptance; the existing Windows package is Designer only;
-- Godot game / Android and Godot game / iPadOS must replace the transitional
-  Designer-identity tablet exports with game identity and entry semantics;
-- the iPadOS game implementation must resolve godot-cpp static-link composition
-  and simulator architecture compatibility; and
+- Godot game / Android must replace the transitional Designer-identity tablet
+  export with game identity and entry semantics (Godot game / iPadOS is a
+  long-term option; see Release and platform); and
 - Designer / macOS needs a genuinely distinct application identity and entry
   contract; renaming the current `Tet4D.app` game ZIP is insufficient.
 
@@ -193,13 +193,6 @@ Windows/Linux/Android/iPadOS and Designer macOS remain separate package and
 acceptance work. The transitional Designer Android artifact and transitional
 Designer iPadOS artifact remain technical evidence under their machine
 identifiers; they do not become supported Designer platforms or game packages.
-
-The repaired grandfathered `legacy_designer_ipados` package path provides
-technical evidence for native archive composition, matching godot-cpp linkage,
-truthful `arm64` device and `x86_64` simulator slices, XCFramework/native-symbol
-validation, and an unsigned hosted simulator final link. It remains
-transitional evidence only; it does not promote Designer/iPadOS or close the
-Godot game/iPadOS target gap.
 
 ## Accepted Next Product Boundaries
 
@@ -234,11 +227,17 @@ Godot game/iPadOS target gap.
 
 - Clean-machine Windows and iPadOS runtime acceptance remain real-platform
   evidence, not claims inferred from macOS or package structure.
-- Hosted CI platform lanes exist for macOS and iPadOS only. `platform_windows`,
-  `platform_linux`, and `platform_android` are declared manual in
-  `config/project/codex_ci_lanes.json`: a change to those packaging paths
-  reports outstanding platform evidence instead of borrowing another platform's
-  job. Adding those hosted lanes needs their own scope and runner contract.
+- The hosted CI platform lane exists for macOS only. `platform_windows`,
+  `platform_linux`, `platform_android`, and `platform_ipados` are declared
+  manual in `config/project/codex_ci_lanes.json`: a change to those packaging
+  paths reports outstanding platform evidence instead of borrowing another
+  platform's job. Adding those hosted lanes needs their own scope and runner
+  contract.
+- iPadOS is a long-term option, not an immediate goal: the Godot game/iPadOS
+  target (godot-cpp static-link composition, simulator architecture), Design
+  Laboratory iPadOS acceptance, hosted CI evidence, and release scope. Packaging
+  code, its unit tests, and the manual release job remain so it can resume;
+  resuming restores the hosted CI job, routing tests, and gate wiring.
 - Developer ID signing/notarization and broader distribution are separate
   release prerequisites.
 

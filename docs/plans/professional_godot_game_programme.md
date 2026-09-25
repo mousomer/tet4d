@@ -1254,7 +1254,9 @@ APK and the compiled iPadOS application are blocked on toolchains absent from
 the implementation host and are produced by equipped CI paths; the local iPad
 configuration export is a separately named evidence class and never a release
 payload. No emulator, simulator, device, or physical-keyboard evidence is
-claimed on any platform.
+claimed on any platform. As of 2026-09-25 the iPadOS adapter is a long-term
+option outside the immediate goals: it has no hosted CI lane and its
+acceptance is not pending work (see `docs/BACKLOG.md`).
 
 The durable contract is
 `docs/architecture/design_evaluation_laboratory.md`; the human and platform
