@@ -23,6 +23,19 @@ LOCAL = {
     "tool_paths": {"godot": sys.executable},
 }
 
+# Optional consumed fields the repository manifests do not declare yet. Each is
+# seeded into the checkout so that mutating it has an effect to observe;
+# declaring it in the real manifest remains a separate governance decision.
+OPTIONAL_FIXTURES = {
+    "project": {
+        "artifact_roles": {"docs/ARCHITECTURE_CONTRACT.md": "product_authority"}
+    }
+}
+
+
+def _with_optional_fixtures(layer: str, data: dict) -> dict:
+    return {**OPTIONAL_FIXTURES.get(layer, {}), **data}
+
 
 def _leaves(node: dict, candidates: list, label: str):
     if "properties" in node:
@@ -72,6 +85,7 @@ def _cases():
         ("local", "workspace-local", LOCAL),
     ):
         schema = json.loads((PACK / "schemas" / (rel + ".schema.json")).read_text())
+        data = _with_optional_fixtures(layer, data)
         for label, path in _leaves(schema, [(data, ())], layer):
             yield label, layer, path
 
@@ -112,6 +126,13 @@ def _observe(root: Path, calls: list) -> str:
             i.to_dict() for i in core._authority_graph_issues(root, project)
         )
         observed.extend(i.to_dict() for i in core.validate_pack(root, workspace))
+        observed.extend(
+            i.to_dict()
+            for i in core._artifact_role_issues(
+                root, workspace, project, root / "tools/workspace_governance"
+            )
+        )
+        observed.append(resolver.role_index().to_dict())
         for overlay in (None, local):
             for env in (
                 {},
@@ -184,12 +205,15 @@ def test_every_consumed_leaf_changes_execution(
     preferred.chmod(0o755)
     local_path = checkout / ".governance/workspace.local.json"
     write(local_path, LOCAL)
-    before = _observe(checkout, calls)
     paths = {
         "workspace": checkout / ".governance/workspace.json",
         "project": checkout / "config/governance/project.json",
         "local": local_path,
     }
+    for fixture_layer in OPTIONAL_FIXTURES:
+        seeded = json.loads(paths[fixture_layer].read_text())
+        write(paths[fixture_layer], _with_optional_fixtures(fixture_layer, seeded))
+    before = _observe(checkout, calls)
     payload = json.loads(paths[layer].read_text())
     parent = payload
     for token in path[:-1]:

@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "name": "workspace-governance",
-  "version": "0.2.0",
-  "revision": "v0.2-work-type-schema-1",
+  "version": "0.3.0",
+  "revision": "v0.3-role-resolution-1",
   "version_file": "VERSION",
   "lock_algorithm": "sha256-path-and-content-v1",
   "pack_hash_excludes": [
@@ -43,12 +43,18 @@
     {"path": "policies/ownership.md", "role": "governance_treatment"},
     {"path": "resolver/__init__.py", "role": "executable_machinery"},
     {"path": "resolver/core.py", "role": "executable_machinery"},
+    {"path": "resolver/roles.py", "role": "executable_machinery"},
     {"path": "schemas/project.schema.json", "role": "executable_machinery"},
     {"path": "schemas/workspace-local.schema.json", "role": "executable_machinery"},
     {"path": "schemas/workspace.schema.json", "role": "executable_machinery"},
     {"path": "synthetic-fixtures/contradictions.json", "role": "executable_machinery"},
     {"path": "validators/__init__.py", "role": "executable_machinery"},
     {"path": "validators/core.py", "role": "executable_machinery"}
+  ],
+  "bootstrap_roots": [
+    "MANIFEST.json",
+    "resolver/roles.py",
+    "validators/core.py"
   ],
   "obligation_comparators": {
     "required_all_of": "set_superset",
@@ -63,6 +69,32 @@
     "identity": "equality",
     "unknown": "human_review"
   },
+  "write_compatibility": {
+    "Planning": {
+      "governance_treatment": "contradiction",
+      "executable_machinery": "contradiction",
+      "product_authority": "allowed",
+      "planning_document": "allowed",
+      "generated": "contradiction_unless_justified",
+      "bookkeeping": "allowed_if_subordinate"
+    },
+    "Coding": {
+      "governance_treatment": "contradiction",
+      "executable_machinery": "allowed",
+      "product_authority": "allowed_with_authority_obligations",
+      "planning_document": "allowed_if_subordinate",
+      "generated": "allowed_through_owning_generator",
+      "bookkeeping": "allowed"
+    },
+    "Manifest": {
+      "governance_treatment": "allowed",
+      "executable_machinery": "contradiction",
+      "product_authority": "contradiction_unless_justified",
+      "planning_document": "allowed_if_documenting_manifest_decision",
+      "generated": "allowed_through_owning_generator",
+      "bookkeeping": "allowed"
+    }
+  },
   "field_usage": {
     "schema_version": "validation-only",
     "name": "consumed",
@@ -74,8 +106,10 @@
     "commands": "validation-only",
     "diagnostics": "validation-only",
     "work_types": "validation-only",
-    "artifact_roles": "validation-only",
+    "artifact_roles": "consumed",
+    "bootstrap_roots": "consumed",
     "obligation_comparators": "validation-only",
+    "write_compatibility": "validation-only",
     "field_usage": "validation-only"
   }
 }

@@ -217,7 +217,7 @@ Parameters:
 - `version`: `1` (`int`)
 
 ### `config/governance/project.json`
-Top-level keys: `authorities`, `canonical_owner_set`, `environment`, `execution`, `generated_surfaces`, `project`, `routes`, `sanitation`, `schema_version`, `verification`
+Top-level keys: `authorities`, `canonical_owner_set`, `environment`, `execution`, `generated_surfaces`, `project`, `role_bootstrap`, `routes`, `sanitation`, `schema_version`, `verification`
 Parameters:
 - `authorities[]`: array[`object`]
 - `authorities[].alias_of`: `"subsystem-ownership"` (`string`)
@@ -269,6 +269,8 @@ Parameters:
 - `generated_surfaces[].transform`: `"authority-legacy-key-route-v1"` (`string`)
 - `project.id`: `"tet4d"` (`string`)
 - `project.name`: `"Tet4D"` (`string`)
+- `role_bootstrap.bookkeeping[]`: array[`string`]; examples: `"docs/BACKLOG.md"`
+- `role_bootstrap.instruction_roots[]`: array[`string`]; examples: `"AGENTS.md"`, `"CLAUDE.md"`, `"godot/AGENTS.md"`
 - `routes.godot_product_shell.authority_refs[]`: array[`string`]; examples: `"product-requirements"`, `"subsystem-ownership"`, `"native-and-platform"`
 - `routes.godot_product_shell.dispatch_paths[]`: array[`string`]; examples: `"godot/AGENTS.md"`
 - `routes.godot_product_shell.environment_tools[]`: array[`string`]; examples: `"godot"`
@@ -305,14 +307,14 @@ Parameters:
 ### `config/governance/workspace.lock.json`
 Top-level keys: `content_sha256`, `files`, `lock_algorithm`, `pack_name`, `pack_path`, `revision`, `schema_version`, `version`
 Parameters:
-- `content_sha256`: `"971e5bc010287bf7e87379cdc4032bfa599a3374a124f88b150a10f57cbb8fff"` (`string`)
+- `content_sha256`: `"9f706b590b02832fbf73c5117d83ca7b15149ccf818b4eb66020259ceb4ee333"` (`string`)
 - `files[]`: array[`string`]; examples: `"MANIFEST.json"`, `"VERSION"`, `"__init__.py"`
 - `lock_algorithm`: `"sha256-path-and-content-v1"` (`string`)
 - `pack_name`: `"workspace-governance"` (`string`)
 - `pack_path`: `"tools/workspace_governance"` (`string`)
-- `revision`: `"v0.2-work-type-schema-1"` (`string`)
+- `revision`: `"v0.3-role-resolution-1"` (`string`)
 - `schema_version`: `1` (`int`)
-- `version`: `"0.2.0"` (`string`)
+- `version`: `"0.3.0"` (`string`)
 
 ### `config/help/action_map.json`
 Top-level keys: `action_topics`, `default_topic`, `version`

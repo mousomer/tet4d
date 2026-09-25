@@ -11,6 +11,8 @@
     {"id": "wrong-python-version", "expected": "ENVIRONMENT_MISMATCH", "mutation": "wrong-python-version"},
     {"id": "wrong-editable-checkout", "expected": "ENVIRONMENT_MISMATCH", "mutation": "wrong-editable-checkout"},
     {"id": "ambiguous-project-routing", "expected": "AMBIGUOUS_AUTHORITY", "mutation": "ambiguous-project-routing"},
+    {"id": "relabelled-bootstrap-root", "expected": "CONFLICTING_VALUE", "mutation": "relabelled-bootstrap-root"},
+    {"id": "missing-role-declaration", "expected": "BROKEN_REFERENCE", "mutation": "missing-role-declaration"},
     {"id": "valid-local-override", "expected": "ok", "mutation": "valid-local-override"},
     {"id": "valid-local-fix-resolution", "expected": "ok", "mutation": "valid-local-fix-resolution"}
   ]

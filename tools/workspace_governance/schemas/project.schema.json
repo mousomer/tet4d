@@ -211,8 +211,8 @@
     "artifact_roles": {
       "type": "object",
       "minProperties": 1,
-      "x-governance-use": "validation-only",
-      "x-governance-behavior": "schema",
+      "x-governance-use": "consumed",
+      "x-governance-behavior": "roles",
       "additionalProperties": {
         "type": "string",
         "enum": [
@@ -223,6 +223,30 @@
           "generated",
           "bookkeeping"
         ]
+      }
+    },
+    "role_bootstrap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["instruction_roots"],
+      "x-governance-use": "consumed",
+      "x-governance-behavior": "roles",
+      "properties": {
+        "instruction_roots": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "x-governance-use": "consumed",
+          "x-governance-behavior": "roles",
+          "items": {"type": "string", "minLength": 1}
+        },
+        "bookkeeping": {
+          "type": "array",
+          "uniqueItems": true,
+          "x-governance-use": "consumed",
+          "x-governance-behavior": "roles",
+          "items": {"type": "string", "minLength": 1}
+        }
       }
     },
     "generated_surfaces": {

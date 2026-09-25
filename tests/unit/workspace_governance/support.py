@@ -47,7 +47,7 @@ def build_checkout(root: Path) -> Path:
     (root / ".governance/workspace.local.json").unlink(missing_ok=True)
     shutil.copytree(PACK, root / "tools/workspace_governance")
     shutil.copytree(ROOT / "scripts", root / "scripts")
-    for name in ("gov", "pyproject.toml", "AGENTS.md"):
+    for name in ("gov", "pyproject.toml", "AGENTS.md", "CLAUDE.md"):
         shutil.copy2(ROOT / name, root / name)
     for name in ("docs", "godot", "native", "src"):
         (root / name).symlink_to(ROOT / name, target_is_directory=True)
