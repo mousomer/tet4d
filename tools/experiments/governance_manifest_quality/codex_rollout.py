@@ -11,7 +11,16 @@ from functools import cache
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from .measurement import TrajectoryValidationError, normalize_trajectory
+from .file_classification import (
+    declared_edge_state_profiles,
+    declared_file_classes,
+    file_class_for_path,
+)
+from .measurement import (
+    TRAJECTORY_SCHEMA_VERSION,
+    TrajectoryValidationError,
+    normalize_trajectory,
+)
 
 _JS_CMD = re.compile(r"\bcmd\s*:\s*(\"(?:\\.|[^\"\\])*\")")
 _PATCH_PATH = re.compile(r"^\*\*\* (?:Add|Update|Delete) File: (.+)$", re.MULTILINE)
@@ -20,6 +29,16 @@ _EXIT_CODE = re.compile(r"(?:Process exited with code|exit_code[\"']?\s*:)\s*(\d
 _SHELL_SPLIT = re.compile(r"\s*(?:&&|;)\s*")
 _SEARCH_TOOLS = {"rg", "grep"}
 _OTHER_MATERIALIZING_TOOLS = {"find", "ls"}
+# Last-resort tier only: harness context forms observed in rollouts that carry
+# neither message content kinds nor UserMessage items.
+_KNOWN_INJECTED_PREFIXES = (
+    "<environment_context>",
+    "<recommended_plugins>",
+    "<turn_aborted>",
+    "<codex_internal_context",
+    "<skill>",
+    "# AGENTS.md instructions for ",
+)
 
 
 @dataclass(frozen=True)
@@ -131,6 +150,22 @@ def classify_repository_path(
     return "non_governance", None
 
 
+def _file_metadata(
+    path: str,
+    active_files: set[str],
+    file_classes: dict[str, tuple[str, ...]],
+    edge_profiles: dict[str, dict[str, object]],
+) -> dict[str, object]:
+    file_class = file_class_for_path(path, file_classes)
+    profile = edge_profiles.get(path) if file_class == "edge_state" else None
+    return {
+        "file_class": file_class,
+        "registered_on_governance_surface": path in active_files,
+        "edge_state_role": profile.get("operational_role") if profile else None,
+        "edge_limit_rationale": profile.get("limit_rationale") if profile else None,
+    }
+
+
 @cache
 def _git_file_bytes(root: Path, revision: str | None, path: str) -> bytes | None:
     if revision is None or not re.fullmatch(r"[0-9a-fA-F]{7,64}", revision):
@@ -209,6 +244,8 @@ def _retrieval_events(
     repository_root: Path,
     revision: str | None,
     active_files: set[str],
+    file_classes: dict[str, tuple[str, ...]],
+    edge_profiles: dict[str, dict[str, object]],
 ) -> list[dict[str, Any]]:
     events: list[dict[str, Any]] = []
     shell_commands = [
@@ -239,6 +276,7 @@ def _retrieval_events(
                 "path": path,
                 "source_class": source_class,
                 "governance_kind": governance_kind,
+                **_file_metadata(path, active_files, file_classes, edge_profiles),
                 "access_mode": access_mode,
                 "materialized_bytes": materialized,
                 "byte_range": byte_range,
@@ -256,6 +294,8 @@ def _search_retrieval_events(
     repository_root: Path,
     revision: str | None,
     active_files: set[str],
+    file_classes: dict[str, tuple[str, ...]],
+    edge_profiles: dict[str, dict[str, object]],
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     events: list[dict[str, Any]] = []
     limitations: list[dict[str, Any]] = []
@@ -288,6 +328,9 @@ def _search_retrieval_events(
                         "path": path,
                         "source_class": source_class,
                         "governance_kind": governance_kind,
+                        **_file_metadata(
+                            path, active_files, file_classes, edge_profiles
+                        ),
                         "access_mode": "bounded",
                         "materialized_bytes": None,
                         "byte_range": None,
@@ -313,6 +356,8 @@ def _mutation_events(
     tool_input: str,
     repository_root: Path,
     active_files: set[str],
+    file_classes: dict[str, tuple[str, ...]],
+    edge_profiles: dict[str, dict[str, object]],
 ) -> list[dict[str, Any]]:
     events = []
     patch_text = tool_input.replace("\\r\\n", "\n").replace("\\n", "\n")
@@ -351,6 +396,7 @@ def _mutation_events(
                 "path": path,
                 "source_class": source_class,
                 "governance_kind": governance_kind,
+                **_file_metadata(path, active_files, file_classes, edge_profiles),
                 "operation": operation,
                 "bytes_changed": bytes_changed,
                 "lines_added": len(added_lines),
@@ -406,18 +452,74 @@ def _matching_repository(cwd: object, repository_root: Path) -> bool:
     return isinstance(cwd, str) and Path(cwd).resolve() == repository_root.resolve()
 
 
-def _task_identity(payload: dict[str, Any]) -> str | None:
-    if payload.get("role") != "user":
-        return None
+def _message_text_parts(payload: dict[str, Any]) -> list[str]:
     content = payload.get("content")
     if not isinstance(content, list):
-        return None
-    text = "".join(
-        item.get("text", "")
+        return []
+    return [
+        item["text"]
         for item in content
         if isinstance(item, dict) and isinstance(item.get("text"), str)
-    )
-    return _text_sha256(text) if text else None
+    ]
+
+
+def _registered_user_inputs(rows: list[dict[str, Any]]) -> set[str]:
+    """Return texts the harness itself registered as user input."""
+    registered: set[str] = set()
+    for row in rows:
+        payload = row.get("payload")
+        item = payload.get("item") if isinstance(payload, dict) else None
+        if (
+            row.get("type") == "event_msg"
+            and payload.get("type") == "item_completed"
+            and isinstance(item, dict)
+            and item.get("type") == "UserMessage"
+            and isinstance(item.get("content"), list)
+        ):
+            registered.add(
+                "".join(
+                    part["text"]
+                    for part in item["content"]
+                    if isinstance(part, dict)
+                    and part.get("type") == "text"
+                    and isinstance(part.get("text"), str)
+                )
+            )
+    registered.discard("")
+    return registered
+
+
+def _human_turn_boundary(payload: dict[str, Any], registered: set[str]) -> str | None:
+    """Return the evidence tier that makes a user-role message a human turn.
+
+    Harness-injected context also uses the user role.  Prefer the message's own
+    content kinds, then the harness's UserMessage items (matched exactly against
+    the whole text or one text part, since image inputs split text), and only
+    then a closed list of known injected forms.
+    """
+    if payload.get("type") != "message" or payload.get("role") != "user":
+        return None
+    metadata = payload.get("internal_chat_message_metadata_passthrough")
+    kinds = metadata.get("content_item_kinds") if isinstance(metadata, dict) else None
+    if isinstance(kinds, list) and kinds:
+        user_content = any(
+            isinstance(kind, str) and kind.startswith("user.") for kind in kinds
+        )
+        return "content_item_kinds" if user_content else None
+    parts = _message_text_parts(payload)
+    text = "".join(parts)
+    if registered:
+        matched = text in registered or any(part in registered for part in parts)
+        return "user_message_item" if matched else None
+    if text and not text.lstrip().startswith(_KNOWN_INJECTED_PREFIXES):
+        return "known_injected_forms"
+    return None
+
+
+def _in_segment(
+    events: list[dict[str, Any]], segment_id: str | None
+) -> list[dict[str, Any]]:
+    return [event | {"interaction_segment_id": segment_id} for event in events]
 
 
 def _repository_context(
@@ -461,6 +563,8 @@ def adapt_rollout(  # noqa: C901 - one pass preserves ordering across rollout va
 ) -> dict[str, Any] | RejectedTrajectory:
     source_id = _file_sha256(path)
     active_files = _active_files(policy)
+    file_classes = declared_file_classes(policy)
+    edge_profiles = declared_edge_state_profiles(policy)
     rows: list[dict[str, Any]] = []
     try:
         with path.open(encoding="utf-8") as stream:
@@ -505,7 +609,6 @@ def adapt_rollout(  # noqa: C901 - one pass preserves ordering across rollout va
 
     saw_supported_envelope = False
     model = None
-    task_identity = None
     token_information = None
     elapsed_ms = 0
     elapsed_recorded = False
@@ -514,8 +617,11 @@ def adapt_rollout(  # noqa: C901 - one pass preserves ordering across rollout va
     events: list[dict[str, Any]] = []
     limitations: list[dict[str, Any]] = []
     failed_identities: set[str] = set()
+    segments: list[dict[str, object]] = []
+    segment_id: str | None = None
+    registered_inputs = _registered_user_inputs(rows)
 
-    for row in rows:
+    for row_index, row in enumerate(rows, 1):
         row_type = row.get("type")
         payload = row.get("payload")
         if not isinstance(payload, dict):
@@ -545,8 +651,25 @@ def adapt_rollout(  # noqa: C901 - one pass preserves ordering across rollout va
                 elapsed_recorded = True
         if row_type != "response_item":
             continue
-        message_identity = _task_identity(payload)
-        task_identity = task_identity or message_identity
+        boundary = _human_turn_boundary(payload, registered_inputs)
+        if boundary is not None:
+            if segments:
+                segments[-1]["end_row_index"] = row_index
+            segment_id = f"{source_id}:user-{row_index}"
+            turn_text = "".join(_message_text_parts(payload))
+            # C1 output carries no prompt text: only identity, bounds, and a
+            # fingerprint (see the C1 protocol's corpus-output contract).  A
+            # human turn is not necessarily an engineering task.
+            segments.append(
+                {
+                    "id": segment_id,
+                    "unit": "human_turn",
+                    "start_row_index": row_index,
+                    "end_row_index": len(rows) + 1,
+                    "turn_text_sha256": _text_sha256(turn_text) if turn_text else None,
+                    "boundary_evidence": boundary,
+                }
+            )
         item_type = payload.get("type")
         if item_type in {
             "message",
@@ -588,16 +711,42 @@ def adapt_rollout(  # noqa: C901 - one pass preserves ordering across rollout va
             elif execution["exit_code"] not in {None, 0} and identity is not None:
                 execution["repeated_failure"] = False
                 failed_identities.add(identity)
-            events.append(execution)
+            events.append(execution | {"interaction_segment_id": segment_id})
             events.extend(
-                _retrieval_events(commands, repository_root, revision, active_files)
+                _in_segment(
+                    _retrieval_events(
+                        commands,
+                        repository_root,
+                        revision,
+                        active_files,
+                        file_classes,
+                        edge_profiles,
+                    ),
+                    segment_id,
+                )
             )
             search_events, search_limitations = _search_retrieval_events(
-                commands, repository_root, revision, active_files
+                commands,
+                repository_root,
+                revision,
+                active_files,
+                file_classes,
+                edge_profiles,
             )
-            events.extend(search_events)
-            limitations.extend(search_limitations)
-            events.extend(_mutation_events(raw_input, repository_root, active_files))
+            events.extend(_in_segment(search_events, segment_id))
+            limitations.extend(_in_segment(search_limitations, segment_id))
+            events.extend(
+                _in_segment(
+                    _mutation_events(
+                        raw_input,
+                        repository_root,
+                        active_files,
+                        file_classes,
+                        edge_profiles,
+                    ),
+                    segment_id,
+                )
+            )
 
     if not saw_supported_envelope:
         return RejectedTrajectory(
@@ -608,18 +757,18 @@ def adapt_rollout(  # noqa: C901 - one pass preserves ordering across rollout va
             source_id, "excluded_after_normalization", "incomplete_tool_calls"
         )
     payload = {
-        "schema_version": 1,
+        "schema_version": TRAJECTORY_SCHEMA_VERSION,
         "source": {
             "source_id": source_id,
             "source_format": source_format,
             "repository_revision": revision,
-            "task_identity": task_identity,
             "model": model,
             "token_information": token_information,
             "started_at": started_at,
             "elapsed_ms": elapsed_ms if elapsed_recorded else None,
         },
         "events": events,
+        "interaction_segments": segments,
         "outcome_evidence": None,
         "evidence_limitations": limitations,
     }

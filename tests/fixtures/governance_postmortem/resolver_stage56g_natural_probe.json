@@ -1,0 +1,172 @@
+{
+  "provenance": {
+    "command": "./gov --json explain --task 'Stage 56G responsive cockpit scaling'",
+    "repository_revision": "a262bc3178448eb0ae7f4a54cea9d36d6a6a68a2",
+    "kind": "reconstructed_probe",
+    "note": "Captured resolver output for regression tests; the historical Stage 56G resolver input is not recorded."
+  },
+  "resolver_evidence": {
+    "task_text": "Stage 56G responsive cockpit scaling",
+    "resolver_output": {
+      "entries": {
+        "authorities": {
+          "owner": "project",
+          "source": "config/governance/project.json#/authorities",
+          "value": [
+            {
+              "authority_id": "architecture",
+              "authority_type": "human",
+              "canonical_governance": false,
+              "exclusive": true,
+              "legacy_key": "architecture_contract",
+              "scope": "architecture",
+              "source": "docs/ARCHITECTURE_CONTRACT.md",
+              "source_type": "file"
+            },
+            {
+              "authority_id": "config-generated-data",
+              "authority_type": "human",
+              "canonical_governance": true,
+              "exclusive": true,
+              "legacy_key": "config_and_generated_data_governance",
+              "scope": "config-generated-data",
+              "source": "docs/governance/CONFIG_AND_GENERATED_DATA.md",
+              "source_type": "file"
+            },
+            {
+              "authority_id": "engineering",
+              "authority_type": "human",
+              "canonical_governance": true,
+              "exclusive": true,
+              "legacy_key": "engineering_governance",
+              "scope": "engineering-practice",
+              "source": "docs/governance/ENGINEERING.md",
+              "source_type": "file"
+            },
+            {
+              "authority_id": "product-requirements",
+              "authority_type": "human",
+              "canonical_governance": false,
+              "exclusive": true,
+              "legacy_key": "product_requirements_root",
+              "scope": "product-behaviour",
+              "source": "docs/rds/",
+              "source_type": "directory"
+            },
+            {
+              "authority_id": "subsystem-ownership",
+              "authority_type": "human",
+              "canonical_governance": false,
+              "exclusive": true,
+              "legacy_key": "subsystem_authority_map",
+              "scope": "subsystem-ownership",
+              "source": "docs/architecture/authority_map.md",
+              "source_type": "file"
+            },
+            {
+              "authority_id": "verification",
+              "authority_type": "human",
+              "canonical_governance": true,
+              "exclusive": true,
+              "legacy_key": "verification_governance",
+              "scope": "verification-evidence",
+              "source": "docs/governance/VERIFICATION.md",
+              "source_type": "file"
+            }
+          ]
+        },
+        "execution.exploration": {
+          "owner": "project",
+          "source": "config/governance/project.json#/execution/profiles/FEATURE",
+          "value": [
+            "owner",
+            "neighboring-contracts",
+            "bounded-architecture-search"
+          ]
+        },
+        "execution.final_evidence_rule": {
+          "owner": "project",
+          "source": "config/governance/project.json#/execution/profiles/FEATURE",
+          "value": "resolved-from-diff-authority-risk"
+        },
+        "execution.mode": {
+          "owner": "project",
+          "source": "config/governance/project.json#/execution",
+          "value": "FEATURE"
+        },
+        "local_overlay": {
+          "owner": "local",
+          "source": ".governance/workspace.local.json",
+          "value": ".governance/workspace.local.json"
+        },
+        "matched_scenario": {
+          "owner": "project",
+          "source": "config/governance/project.json#/execution/representative_scenarios",
+          "value": null
+        },
+        "matched_scenario_priority": {
+          "owner": "project",
+          "source": "config/governance/project.json#/execution/representative_scenarios",
+          "value": null
+        },
+        "project.id": {
+          "owner": "project",
+          "source": "config/governance/project.json",
+          "value": "tet4d"
+        },
+        "project.name": {
+          "owner": "project",
+          "source": "config/governance/project.json",
+          "value": "Tet4D"
+        },
+        "routes": {
+          "owner": "project",
+          "source": "config/governance/project.json#/routes",
+          "value": {
+            "python_reference_engine": {
+              "authority_refs": [
+                "architecture",
+                "product-requirements",
+                "subsystem-ownership",
+                "engineering",
+                "verification",
+                "config-generated-data"
+              ],
+              "dispatch_paths": [],
+              "typical_verification_requirements": [
+                "python",
+                "deterministic"
+              ]
+            }
+          }
+        },
+        "verification.canonical": {
+          "owner": "legacy-policy-pack",
+          "source": "config/project/policy_pack.json#/governance/verification_command",
+          "value": "./scripts/verify.sh"
+        },
+        "verification.full": {
+          "owner": "legacy-policy-pack",
+          "source": "config/project/policy_pack.json#/governance/godot_toolchain/canonical_commands/full_repository",
+          "value": "CODEX_MODE=1 ./scripts/verify.sh"
+        },
+        "verification.rule": {
+          "owner": "project",
+          "source": "config/governance/project.json#/verification/rule",
+          "value": "task + authority + actual diff + risk"
+        },
+        "verification.targeted": {
+          "owner": "project",
+          "source": "config/governance/project.json#/verification/targeted",
+          "value": "./scripts/verify_focus.sh"
+        },
+        "workspace.id": {
+          "owner": "workspace",
+          "source": ".governance/workspace.json",
+          "value": "tet4d-workspace"
+        }
+      },
+      "schema_version": 1
+    }
+  }
+}

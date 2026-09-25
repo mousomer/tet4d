@@ -62,14 +62,24 @@ concentration, and context burden; measure retrieval, selection,
 reconstruction, isolated mutation, contradiction detection, and performance;
 then set targets from quality degradation, never capacity alone.
 
-Stage C1 is limited to non-authoritative observational instrumentation under
-`tools/experiments/governance_manifest_quality/` and the protocol in
-`docs/experiments/governance_manifest_quality_stage_c1.md`. C1 is complete: its
-baseline gate independently proves the PR118 repository identity, locked
-workspace-governance package digest, and raw machine-policy bytes; all 556
-historical candidates have reconciled statuses; and the compact observational
-result records recoverable distributions and evidence limitations. No threshold,
-route, scenario, resolver, authority, or active-surface change was made.
+Stage C1's non-authoritative instrumentation, frozen baseline, and historical
+corpus result are complete; its PR118 identity evidence and limitations remain
+in `docs/experiments/governance_manifest_quality_stage_c1.md`. C1 changed no
+threshold, route, scenario, resolver, authority, or active surface. Production
+post-mortems (`docs/experiments/governance_postmortem.md`) precede targeted
+experiments. Candidates needing explicit approval: grouping human-turn segments
+into engineering tasks (`task_group_id`); C1 encounters for `./gov` output,
+injected instructions, and quoted Codex `exec` commands; and review of
+phrase-sensitive fallback routing, observed for natural Stage 56G wording.
+
+The postmortem correction classifies `CURRENT_STATE.md` and `docs/BACKLOG.md`
+as edge-state files and records their distinct operational roles. Backlog is
+conditional routed open-work authority; current-state is restart/staged-handoff
+context. Raw size is descriptive rather than a task-quality penalty. Existing
+LOC guards remain for their declared human-reviewability, structural-discipline,
+or handoff-usability reasons. Follow-up calibration needs real task trajectories
+with resolver and bounded-read evidence before making any claim about actual
+agent-context pressure or changing those limits.
 
 The PR118-baseline migration-bundle check separately reproduces stale generated metadata,
 including the old `da6e2dd6...` policy digest. Regeneration also adds governance

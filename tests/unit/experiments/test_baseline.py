@@ -218,7 +218,7 @@ def test_checkout_producer_reads_each_identity_from_its_own_source() -> None:
 def test_checkout_producer_surfaces_an_evolved_pack_identity(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """A changed pack must fail the workspace domain and only that domain."""
+    """A changed pack fails its domain without conflating current policy bytes."""
     original = baseline.pack_hash
 
     def evolved(*args: object, **kwargs: object) -> tuple[str, list[str]]:
@@ -228,15 +228,59 @@ def test_checkout_producer_surfaces_an_evolved_pack_identity(
     monkeypatch.setattr(baseline, "pack_hash", evolved)
     fingerprint = _checkout_fingerprint()
     assert fingerprint["workspace_governance"]["content_sha256"] == "0" * 64
-    assert fingerprint["machine_policy"]["raw_sha256"] == MACHINE_POLICY_SHA
+    assert (
+        fingerprint["machine_policy"]["raw_sha256"]
+        == hashlib.sha256((ROOT / POLICY_PATH).read_bytes()).hexdigest()
+    )
     # Domain isolation, not an exact global set: once the pack legitimately
     # advances past the frozen declaration the checkout carries other, real
     # workspace mismatches, and permitting exactly that is the point of the
     # snapshot split.
     mismatches = _mismatch_names(fingerprint)
     assert "workspace-governance content SHA-256" in mismatches
-    assert "machine-policy raw SHA-256" not in mismatches
-    assert "machine-policy serialized bytes" not in mismatches
+    # A policy evolution is independently visible against the frozen C1
+    # treatment, and its identity is never substituted with the pack identity:
+    # the policy domain mismatches exactly when this checkout's bytes have
+    # moved past the frozen declaration, whichever way the checkout stands.
+    drifted = (
+        hashlib.sha256((ROOT / POLICY_PATH).read_bytes()).hexdigest()
+        != MACHINE_POLICY_SHA
+    )
+    for name in ("machine-policy raw SHA-256", "machine-policy serialized bytes"):
+        assert (name in mismatches) is drifted
+
+
+def test_frozen_historical_result_keeps_its_pr118_identity_and_counts() -> None:
+    """Current policy work must not restate what the frozen corpus measured."""
+    result = json.loads(
+        (
+            ROOT / "docs/experiments/governance_manifest_quality_stage_c1_results.json"
+        ).read_text(encoding="utf-8")
+    )
+    declared = load_frozen_baseline()
+    assert result["schema_version"] == 1
+    assert result["baseline"]["machine_policy_raw_sha256"] == MACHINE_POLICY_SHA
+    assert (
+        declared.machine_policy_raw_sha256
+        == result["baseline"]["machine_policy_raw_sha256"]
+    )
+    assert declared.machine_policy_serialized_bytes == 74150
+    assert result["baseline"]["machine_policy_serialized_bytes"] == 74150
+    # The v1 corpus counted source metadata it captured, including the
+    # superseded task_identity.  Removing that live field rewrites no history.
+    assert result["source_metadata_availability"]["task_identity"] == 287
+    edge = {item["path"]: item for item in result["dominant_governance_retrieval"]}
+    assert (
+        edge["docs/BACKLOG.md"]["read_events"],
+        edge["docs/BACKLOG.md"]["known_bytes"],
+    ) == (
+        1230,
+        5854818,
+    )
+    assert (
+        edge["CURRENT_STATE.md"]["read_events"],
+        edge["CURRENT_STATE.md"]["known_bytes"],
+    ) == (1031, 5711399)
 
 
 def test_checkout_producer_surfaces_a_pack_file_list_mismatch(

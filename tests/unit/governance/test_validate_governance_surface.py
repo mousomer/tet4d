@@ -69,6 +69,25 @@ def _policy() -> dict[str, object]:
                 "operational": ["CURRENT_STATE.md", "docs/BACKLOG.md"],
                 "active_task": [],
             },
+            "file_classifications": {
+                "stable_authoritative": [*HUMAN, surface.POLICY_REL],
+                "generated_derived": ["docs/PROJECT_STRUCTURE.md"],
+                "edge_state": ["CURRENT_STATE.md", "docs/BACKLOG.md"],
+                "archival_history": ["docs/history"],
+            },
+            "edge_state_profiles": {
+                "CURRENT_STATE.md": {
+                    "operational_role": "restart_handoff_context",
+                    "limit_rationale": [
+                        "human_reviewability",
+                        "restart_handoff_usability",
+                    ],
+                },
+                "docs/BACKLOG.md": {
+                    "operational_role": "conditional_open_work_authority",
+                    "limit_rationale": ["human_reviewability", "structural_discipline"],
+                },
+            },
             "aggregate_hard_limit": 2500,
             "active_task_limit": 250,
             "per_file_limits": {
@@ -140,7 +159,6 @@ def test_actual_governance_surface_is_within_all_limits() -> None:
     assert measurement is not None
     # This temporary diagnostic tripwire remains below the aggregate budget.
     assert measurement.human <= 900
-    assert measurement.operational <= 400
     assert measurement.total <= 2500
     assert measurement.policy_bytes <= measurement.policy_byte_limit
     assert measurement.policy_nodes > measurement.policy_leaves > 0
@@ -175,12 +193,44 @@ def test_canonical_owner_file_ceiling_fails(tmp_path: Path) -> None:
     ("rel", "lines", "expected"),
     [("CURRENT_STATE.md", 151, "150"), ("docs/BACKLOG.md", 301, "300")],
 )
-def test_operational_file_ceiling_fails(
+def test_operational_file_ceiling_preserves_non_context_rationale(
     tmp_path: Path, rel: str, lines: int, expected: str
 ) -> None:
     _fixture(tmp_path)
     _write(tmp_path / rel, "line\n" * lines)
     assert any(f"hard limit {expected}" in message for message in _messages(tmp_path))
+
+
+def test_backlog_is_routable_authority_while_current_state_is_not() -> None:
+    """Both are registered edge state, but only one is routed task authority."""
+    profiles = surface._load_policy(surface.ROOT)["governance_surface"][
+        "edge_state_profiles"
+    ]
+    assert profiles["docs/BACKLOG.md"]["operational_role"] == (
+        "conditional_open_work_authority"
+    )
+    assert profiles["CURRENT_STATE.md"]["operational_role"] == "restart_handoff_context"
+    project = json.loads(
+        (surface.ROOT / "config/governance/project.json").read_text(encoding="utf-8")
+    )
+    sources = {authority["source"] for authority in project["authorities"]}
+    # Registration on the active surface does not make a file routed authority:
+    # the backlog is declared routable open-work authority, current-state is
+    # restart context and is named by no authority and no route.
+    assert "docs/BACKLOG.md" in sources
+    assert "CURRENT_STATE.md" not in sources
+    assert "CURRENT_STATE.md" not in json.dumps(project["routes"])
+
+
+def test_edge_state_profiles_require_distinct_operational_roles(tmp_path: Path) -> None:
+    policy = _fixture(tmp_path)
+    profiles = policy["governance_surface"]["edge_state_profiles"]
+    profiles["CURRENT_STATE.md"]["operational_role"] = "conditional_open_work_authority"
+    _write(tmp_path / surface.POLICY_REL, json.dumps(policy, indent=2) + "\n")
+    assert any(
+        "current-state must be restart/handoff" in message
+        for message in _messages(tmp_path)
+    )
 
 
 def test_machine_policy_lines_do_not_consume_reviewable_loc_budget(

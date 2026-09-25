@@ -2424,6 +2424,14 @@ Parameters:
 - `governance_surface.document_roles.planning[]`: array[`string`]; examples: `"docs/plans"`
 - `governance_surface.document_roles.product_contract[]`: array[`string`]; examples: `"docs/rds"`
 - `governance_surface.document_roles.template[]`: array[`string`]; examples: `"tools/templates/governance"`
+- `governance_surface.edge_state_profiles.CURRENT_STATE.md.limit_rationale[]`: array[`string`]; examples: `"human_reviewability"`, `"restart_handoff_usability"`
+- `governance_surface.edge_state_profiles.CURRENT_STATE.md.operational_role`: `"restart_handoff_context"` (`string`)
+- `governance_surface.edge_state_profiles.docs/BACKLOG.md.limit_rationale[]`: array[`string`]; examples: `"human_reviewability"`, `"structural_discipline"`
+- `governance_surface.edge_state_profiles.docs/BACKLOG.md.operational_role`: `"conditional_open_work_authority"` (`string`)
+- `governance_surface.file_classifications.archival_history[]`: array[`string`]; examples: `"docs/history"`
+- `governance_surface.file_classifications.edge_state[]`: array[`string`]; examples: `"CURRENT_STATE.md"`, `"docs/BACKLOG.md"`
+- `governance_surface.file_classifications.generated_derived[]`: array[`string`]; examples: `"docs/CONFIGURATION_REFERENCE.md"`, `"docs/USER_SETTINGS_REFERENCE.md"`, `"docs/PROJECT_STRUCTURE.md"`
+- `governance_surface.file_classifications.stable_authoritative[]`: array[`string`]; examples: `"AGENTS.md"`, `"CLAUDE.md"`, `"CONTRIBUTING.md"`
 - `governance_surface.governability.calibration_authority`: `"docs/BACKLOG.md#governance-manifest-quality-calibration"` (`string`)
 - `governance_surface.governability.status`: `"experimental_calibration_required"` (`string`)
 - `governance_surface.governability.structural_measurements[]`: array[`string`]; examples: `"serialized_bytes"`, `"node_count"`, `"leaf_count"`

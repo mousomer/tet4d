@@ -7,6 +7,7 @@ from pathlib import PurePosixPath
 from typing import Any
 
 from . import SCHEMA_VERSION
+from .file_classification import DEFAULT_FILE_CLASS, FILE_CLASSES
 
 OUTCOME_FIELDS = (
     "required_tests_passed",
@@ -23,10 +24,58 @@ OUTCOME_FIELDS = (
 ACCESS_MODES = {"bounded", "whole_file", "unknown"}
 SOURCE_CLASSES = {"governance", "non_governance", "unknown"}
 MUTATION_OPERATIONS = {"create", "edit", "delete", "unknown"}
+# Normalized trajectories are versioned separately from C1 metrics.  Version 2
+# adds structural interaction segments; a version 1 input normalizes to version
+# 2 with interaction_segments null, meaning boundaries were not captured.
+TRAJECTORY_SCHEMA_VERSION = 2
+INTERACTION_SEGMENT_FIELDS = {
+    "id",
+    "unit",
+    "start_row_index",
+    "end_row_index",
+    "turn_text_sha256",
+    "boundary_evidence",
+}
+# A segment is one human turn, which is not necessarily one engineering task.
+INTERACTION_SEGMENT_UNITS = ("human_turn",)
+BOUNDARY_EVIDENCE = ("content_item_kinds", "user_message_item", "known_injected_forms")
 
 
 class TrajectoryValidationError(ValueError):
     """The source cannot be represented without inventing evidence."""
+
+
+def _file_class(value: object) -> str:
+    """Keep historical records explicit: unknown classification is not guessed."""
+    if value is None:
+        return DEFAULT_FILE_CLASS
+    if not isinstance(value, str) or value not in FILE_CLASSES | {DEFAULT_FILE_CLASS}:
+        raise TrajectoryValidationError("invalid governance file_class")
+    return value
+
+
+def _edge_state_metadata(event: dict[str, Any]) -> dict[str, object]:
+    registered = event.get("registered_on_governance_surface")
+    role = event.get("edge_state_role")
+    rationale = event.get("edge_limit_rationale")
+    if registered not in {True, False, None}:
+        raise TrajectoryValidationError(
+            "registered_on_governance_surface must be boolean or null"
+        )
+    if role is not None and not isinstance(role, str):
+        raise TrajectoryValidationError("edge_state_role must be a string or null")
+    if rationale is not None and (
+        not isinstance(rationale, list)
+        or any(not isinstance(item, str) or not item for item in rationale)
+    ):
+        raise TrajectoryValidationError(
+            "edge_limit_rationale must be a string array or null"
+        )
+    return {
+        "registered_on_governance_surface": registered,
+        "edge_state_role": role,
+        "edge_limit_rationale": deepcopy(rationale),
+    }
 
 
 def empty_outcome_evidence() -> dict[str, Any]:
@@ -52,6 +101,70 @@ def _optional_non_negative_int(value: object, field: str) -> int | None:
             f"{field} must be a non-negative integer or null"
         )
     return value
+
+
+def _optional_segment_id(value: object) -> str | None:
+    if value is None:
+        return None
+    if not isinstance(value, str) or not value:
+        raise TrajectoryValidationError(
+            "interaction_segment_id must be a non-empty string or null"
+        )
+    return value
+
+
+def _is_sha256(value: object) -> bool:
+    return (
+        isinstance(value, str)
+        and len(value) == 64
+        and all(char in "0123456789abcdef" for char in value)
+    )
+
+
+def normalize_interaction_segments(value: object) -> list[dict[str, object]] | None:
+    """Validate structural human-turn segments; they never carry prompt text."""
+    if value is None:
+        return None
+    if not isinstance(value, list):
+        raise TrajectoryValidationError("interaction_segments must be an array or null")
+    normalized: list[dict[str, object]] = []
+    previous_end = 1  # raw rollout rows are 1-based and segments never overlap
+    ids: set[str] = set()
+    for segment in value:
+        if not isinstance(segment, dict) or set(segment) != INTERACTION_SEGMENT_FIELDS:
+            raise TrajectoryValidationError("interaction segment has an invalid shape")
+        segment_id = _optional_segment_id(segment["id"])
+        start = segment["start_row_index"]
+        end = segment["end_row_index"]
+        fingerprint = segment["turn_text_sha256"]
+        if (
+            segment_id is None
+            or segment_id in ids
+            or segment["unit"] not in INTERACTION_SEGMENT_UNITS
+            or isinstance(start, bool)
+            or not isinstance(start, int)
+            or isinstance(end, bool)
+            or not isinstance(end, int)
+            or not previous_end <= start < end
+            or not (fingerprint is None or _is_sha256(fingerprint))
+            or segment["boundary_evidence"] not in BOUNDARY_EVIDENCE
+        ):
+            raise TrajectoryValidationError(
+                "interaction segment has invalid unit, bounds, identity, or evidence"
+            )
+        normalized.append(
+            {
+                "id": segment_id,
+                "unit": segment["unit"],
+                "start_row_index": start,
+                "end_row_index": end,
+                "turn_text_sha256": fingerprint,
+                "boundary_evidence": segment["boundary_evidence"],
+            }
+        )
+        ids.add(segment_id)
+        previous_end = end
+    return normalized
 
 
 def _normalize_byte_range(value: object) -> dict[str, int] | None:
@@ -99,6 +212,8 @@ def _normalize_retrieval(event: dict[str, Any], sequence: int) -> dict[str, Any]
         "path": _normalized_path(event.get("path")),
         "source_class": source_class,
         "governance_kind": event.get("governance_kind"),
+        "file_class": _file_class(event.get("file_class")),
+        **_edge_state_metadata(event),
         "access_mode": access_mode,
         "materialized_bytes": materialized,
         "byte_range": byte_range,
@@ -106,6 +221,9 @@ def _normalize_retrieval(event: dict[str, Any], sequence: int) -> dict[str, Any]
         "route": event.get("route"),
         "authority": event.get("authority"),
         "evidence": event.get("evidence"),
+        "interaction_segment_id": _optional_segment_id(
+            event.get("interaction_segment_id")
+        ),
     }
 
 
@@ -129,6 +247,8 @@ def _normalize_mutation(event: dict[str, Any], sequence: int) -> dict[str, Any]:
         "path": _normalized_path(event.get("path")),
         "source_class": source_class,
         "governance_kind": event.get("governance_kind"),
+        "file_class": _file_class(event.get("file_class")),
+        **_edge_state_metadata(event),
         "operation": operation,
         "bytes_changed": _optional_non_negative_int(
             event.get("bytes_changed"), "bytes_changed"
@@ -142,6 +262,9 @@ def _normalize_mutation(event: dict[str, Any], sequence: int) -> dict[str, Any]:
         "generated_file": generated,
         "intentional": intentional,
         "evidence": event.get("evidence"),
+        "interaction_segment_id": _optional_segment_id(
+            event.get("interaction_segment_id")
+        ),
     }
 
 
@@ -165,6 +288,9 @@ def _normalize_execution(event: dict[str, Any], sequence: int) -> dict[str, Any]
         "duration_ms": duration_ms,
         "repeated_failure": repeated_failure,
         "command_identity": event.get("command_identity"),
+        "interaction_segment_id": _optional_segment_id(
+            event.get("interaction_segment_id")
+        ),
     }
 
 
@@ -209,14 +335,31 @@ def normalize_trajectory(  # noqa: C901 - validates all normalized evidence grou
 ) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise TrajectoryValidationError("trajectory must be an object")
-    version = payload.get("schema_version", SCHEMA_VERSION)
-    if version != SCHEMA_VERSION:
+    version = payload.get("schema_version", 1)
+    if version not in {1, TRAJECTORY_SCHEMA_VERSION}:
         raise TrajectoryValidationError(f"unsupported schema_version: {version!r}")
     source = payload.get("source")
     if not isinstance(source, dict) or not isinstance(source.get("source_id"), str):
         raise TrajectoryValidationError("source.source_id is required")
 
     retrieval, mutation, execution = _event_groups(payload)
+    if version == 1:
+        labelled = [*retrieval, *mutation, *execution]
+        if "interaction_segments" in payload or any(
+            isinstance(item, dict) and item.get("interaction_segment_id") is not None
+            for item in [*labelled, *(payload.get("evidence_limitations") or [])]
+        ):
+            raise TrajectoryValidationError(
+                "interaction segments require trajectory schema_version 2"
+            )
+        segments = None
+    elif "interaction_segments" not in payload:
+        raise TrajectoryValidationError(
+            "trajectory schema_version 2 requires interaction_segments "
+            "(null when boundaries were not captured)"
+        )
+    else:
+        segments = normalize_interaction_segments(payload["interaction_segments"])
     sequence = 0
 
     def numbered(events: Iterable[Any], normalizer: Any) -> list[dict[str, Any]]:
@@ -258,7 +401,7 @@ def normalize_trajectory(  # noqa: C901 - validates all normalized evidence grou
     if not isinstance(limitations, list) or any(
         not isinstance(item, dict)
         or not isinstance(item.get("kind"), str)
-        or set(item) - {"kind", "event_sequence"}
+        or set(item) - {"kind", "event_sequence", "interaction_segment_id"}
         for item in limitations
     ):
         raise TrajectoryValidationError(
@@ -276,28 +419,52 @@ def normalize_trajectory(  # noqa: C901 - validates all normalized evidence grou
                 "limitation event_sequence must be a positive integer or null"
             )
         normalized_limitations.append(
-            {"kind": item["kind"], "event_sequence": event_sequence}
+            {
+                "kind": item["kind"],
+                "event_sequence": event_sequence,
+                "interaction_segment_id": _optional_segment_id(
+                    item.get("interaction_segment_id")
+                ),
+            }
         )
 
     normalized_source = {
         "source_id": source["source_id"],
         "source_format": source.get("source_format"),
         "repository_revision": source.get("repository_revision"),
-        "task_identity": source.get("task_identity"),
         "model": source.get("model"),
         "token_information": deepcopy(source.get("token_information")),
         "started_at": source.get("started_at"),
         "elapsed_ms": source.get("elapsed_ms"),
     }
-    return {
-        "schema_version": SCHEMA_VERSION,
+    result = {
+        "schema_version": TRAJECTORY_SCHEMA_VERSION,
         "source": normalized_source,
         "retrieval_events": numbered(retrieval, _normalize_retrieval),
         "mutation_events": numbered(mutation, _normalize_mutation),
         "execution_events": numbered(execution, _normalize_execution),
         "outcome_evidence": outcome,
         "evidence_limitations": normalized_limitations,
+        "interaction_segments": segments,
     }
+    # A null interaction_segment_id means the evidence lies outside any human
+    # turn; C1 measurement keeps it, and only a named segment must exist.
+    known_segments = {segment["id"] for segment in segments or []}
+    labels = [
+        item["interaction_segment_id"]
+        for group in (
+            result["retrieval_events"],
+            result["mutation_events"],
+            result["execution_events"],
+            result["evidence_limitations"],
+        )
+        for item in group
+    ]
+    if any(label is not None and label not in known_segments for label in labels):
+        raise TrajectoryValidationError(
+            "interaction_segment_id must name a known interaction segment"
+        )
+    return result
 
 
 def _union_length(intervals: Iterable[tuple[int, int]]) -> int:
@@ -423,6 +590,37 @@ def measure_trajectory(record: dict[str, Any]) -> dict[str, Any]:
         }
         for path in governance_paths
     ]
+    edge_state = [event for event in governance if event["file_class"] == "edge_state"]
+    edge_state_file_activity = [
+        {
+            "path": path,
+            "read_events": sum(event["path"] == path for event in edge_state),
+            "repeated_reads": max(
+                0, sum(event["path"] == path for event in edge_state) - 1
+            ),
+            "known_materialized_bytes": sum(
+                event["materialized_bytes"] or 0
+                for event in edge_state
+                if event["path"] == path and event["materialized_bytes"] is not None
+            ),
+            "bounded_reads": sum(
+                event["path"] == path and event["access_mode"] == "bounded"
+                for event in edge_state
+            ),
+            "whole_file_reads": sum(
+                event["path"] == path and event["access_mode"] == "whole_file"
+                for event in edge_state
+            ),
+            "unknown_mode_reads": sum(
+                event["path"] == path and event["access_mode"] == "unknown"
+                for event in edge_state
+            ),
+            # This is an explicit semantic guard, not a coefficient: edge-file
+            # raw size is descriptive telemetry and is never a quality penalty.
+            "raw_size_is_quality_penalty": False,
+        }
+        for path in sorted({event["path"] for event in edge_state})
+    ]
     reasons = (
         governance_materialization["reasons"]
         + non_governance_materialization["reasons"]
@@ -463,6 +661,7 @@ def measure_trajectory(record: dict[str, Any]) -> dict[str, Any]:
         ),
         "governance_mutation_events": len(governance_mutations),
         "governance_file_activity": governance_file_activity,
+        "edge_state_file_activity": edge_state_file_activity,
         "non_governance_materialized_bytes": non_governance_materialization["total"],
         "non_governance_known_materialized_bytes": non_governance_materialization[
             "known"

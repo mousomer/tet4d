@@ -39,6 +39,14 @@ canonical Python CI checkout therefore retains full history so it can verify the
 declared commit and ancestry instead of treating a shallow checkout as evidence
 that the baseline is absent.
 
+The edge-state correction moved this checkout past that treatment: declaring
+file classes and edge-state profiles changed the machine policy, so the
+fingerprint and corpus commands now fail closed here and strict reproduction
+runs from the PR118 snapshot. The frozen declaration is not restated to match
+current policy. Measurement still runs under the historical rules: a policy
+that predates the declarations classifies every path as `unclassified` rather
+than failing, so the recorded corpus stays reproducible on its own terms.
+
 The generated fingerprint includes repository commit, pack revision and lock
 digest, raw policy SHA-256, serialized policy bytes, structural policy metrics,
 human-governance LOC, active governance files, and resolver/scenario schema
@@ -56,7 +64,9 @@ implementation of every structural measurement, so their metrics are comparable.
 
 Each trajectory record has four independent evidence groups:
 
-1. `retrieval_events`: repository-relative path, governance classification,
+1. `retrieval_events`: repository-relative path, governance classification and
+   policy-declared file class, active-surface registration, and edge operational
+   role/limit rationale where applicable,
    access mode (`bounded`, `whole_file`, or `unknown`), materialized bytes,
    optional half-open byte range, content identity, and observable
    route/authority identity.
@@ -71,6 +81,35 @@ Each trajectory record has four independent evidence groups:
 Unavailable evidence is represented as `null` plus a completeness reason. No
 adapter estimates token counts, elapsed time, byte ranges, revisions, or
 outcomes that the source did not record.
+
+Metric additions stay backward compatible: `edge_state_file_activity` was added
+to the version 1 metric contract, is empty for a trajectory with no edge-state
+read, and changes no earlier metric, so the historical result remains
+comparable. Version 2 drops the source `task_identity`, which hashed the first
+user-role message and, in Codex Desktop rollouts, that message is injected
+context rather than a request; interaction segments now carry the structural
+identity. A stored version 1 record carrying the field still normalizes, and
+the historical result's availability count for it remains valid for version 1.
+
+Normalized trajectories are versioned separately from C1 metrics. Version 2,
+added after the frozen result for production post-mortems, records structural
+`interaction_segments`: one per human turn, each with a stable
+`<source SHA-256>:user-<row>` identity, an explicit `unit: human_turn`, the
+half-open raw-row interval up to the next human turn, the `turn_text_sha256` of
+the turn's text, and the `boundary_evidence` that established it. A human turn
+is an interaction, not necessarily an engineering task: a continuation such as
+"continue" opens its own segment, and C1 never groups segments into tasks.
+Harness-injected context such as `<environment_context>` or `AGENTS.md`
+instructions also arrives with the user role and opens no segment. A boundary is
+established, in order, by the message's own content kinds (`user.*`), by an
+exact match with a harness `UserMessage` item (whole text or one text part,
+since image inputs split text), and only in rollouts recording neither, by a
+closed list of known injected forms. Every event and limitation carries its
+`interaction_segment_id`, or `null` outside any human turn. A version 1 input
+normalizes to version 2 with `interaction_segments: null`, meaning boundaries
+were not captured. Segment capture changes no measured quantity: over the 567
+local rollouts it accepts and rejects exactly the same rollouts, and C1 metrics
+remain version 1.
 
 ## Materialization accounting
 
@@ -96,6 +135,7 @@ The Codex rollout adapter reads local JSONL files in place, accepts the legacy
 direct-function-call and current custom-tool-call envelopes, and never mutates
 the source. Sanitized source identity is the source file's SHA-256; output does
 not include the source path, raw prompt, raw command output, or conversation
+text. Interaction segments carry only the SHA-256 of a turn's text, never the
 text. Repository paths are relative; out-of-repository paths are redacted.
 
 A successful baseline-gated run writes to a caller-selected untracked directory:
@@ -111,6 +151,26 @@ retrieval, mutations, and conspicuous outliers. These are observations, not
 threshold recommendations. The compact, sanitized historical result is retained
 in `governance_manifest_quality_stage_c1_results.json`; detailed normalized
 trajectory files remain untracked.
+
+### Edge-state interpretation
+
+`CURRENT_STATE.md` and `docs/BACKLOG.md` are policy-declared `edge_state`
+files. Their raw size is descriptive telemetry, never a direct quality penalty.
+For each post-mortem segment, the relevant cost is observed consumption after
+routing, not active surface membership or file length. The postmortem records
+independently whether an edge file was registered on the surface, routed for
+the segment when resolver evidence exists, actually read,
+bounded/whole-file/repeated, and how much the segment materialized.
+
+The profiles are intentionally different. `docs/BACKLOG.md` is a conditional
+open-work authority, so retrieval locality, ambiguity, staleness, and authority
+duplication matter when routed work uses it. `CURRENT_STATE.md` is
+restart/staged-handoff context, assessed for restart completeness and handoff
+clarity only when that path is exercised. Existing LOC guards remain separately
+classified as human-reviewability, structural-discipline, or handoff-usability
+controls; they are not agent-context-size scores. Edge-file reduction is not a
+project goal, and unrecoverable loss of rationale, dependencies, or deferred
+state is information loss rather than simplification.
 
 ## Commands
 

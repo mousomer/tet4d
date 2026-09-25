@@ -1,0 +1,60 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://tet4d.local/experiments/governance-manifest-quality/postmortem-aggregate-v3.schema.json",
+    "title": "Production governance post-mortem aggregate",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "schema_version",
+        "interpretation",
+        "interaction_segment_count",
+        "task_group_count",
+        "encounter_coverage",
+        "overall",
+        "by_manifest",
+        "by_model",
+        "by_task_class",
+        "missing_guidance"
+    ],
+    "properties": {
+        "schema_version": {"const": 3},
+        "interpretation": {
+            "const": "descriptive_postmortem_evidence_not_causal_estimate"
+        },
+        "interaction_segment_count": {"type": "integer", "minimum": 0},
+        "task_group_count": {
+            "description": "Reserved: segments are human turns, not engineering tasks, so no task count is claimed.",
+            "type": "null"
+        },
+        "encounter_coverage": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "channels",
+                "completeness",
+                "execution_events",
+                "execution_events_without_recovered_command"
+            ],
+            "properties": {
+                "channels": {
+                    "const": {
+                        "file_reads": "partial",
+                        "governance_cli_output": "not_observed",
+                        "injected_instructions": "not_observed"
+                    }
+                },
+                "completeness": {"const": "partial"},
+                "execution_events": {"type": "integer", "minimum": 0},
+                "execution_events_without_recovered_command": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        },
+        "overall": {"type": "object"},
+        "by_manifest": {"type": "object"},
+        "by_model": {"type": "object"},
+        "by_task_class": {"type": "object"},
+        "missing_guidance": {"type": "array"}
+    }
+}

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import subprocess
 from pathlib import Path
@@ -275,7 +276,11 @@ def test_search_materialization_is_explicitly_incomplete(tmp_path: Path) -> None
     assert metrics["governance_known_materialized_bytes"] == 0
     assert metrics["measurement_complete"] is False
     assert record["evidence_limitations"] == [
-        {"kind": "search_materialization_unresolved", "event_sequence": None}
+        {
+            "kind": "search_materialization_unresolved",
+            "event_sequence": None,
+            "interaction_segment_id": None,
+        }
     ]
 
 
@@ -324,3 +329,204 @@ def test_recorded_model_tokens_and_duration_are_preserved(tmp_path: Path) -> Non
         },
         "model_context_window": 1000,
     }
+
+
+# Shapes below are copied from real Codex rollouts: the harness sends its own
+# context blocks with the user role, ahead of the human request, and names the
+# absolute repository root in them.
+INJECTED_CONTEXT = (
+    "<recommended_plugins>\nplugins\n</recommended_plugins>\n"
+    f"# AGENTS.md instructions for {ROOT}\n"
+    f"<environment_context>\n  <cwd>{ROOT}</cwd>\n</environment_context>"
+)
+HUMAN_REQUEST = "Stage 56G repair: keep this prompt text out of C1 output"
+
+
+def _user(text: str | list[str], kinds: list[str] | None = None) -> dict:
+    parts = [text] if isinstance(text, str) else text
+    payload: dict = {
+        "type": "message",
+        "role": "user",
+        "content": [{"type": "input_text", "text": part} for part in parts],
+    }
+    if kinds is not None:
+        payload["internal_chat_message_metadata_passthrough"] = {
+            "content_item_kinds": kinds
+        }
+    return {"type": "response_item", "payload": payload}
+
+
+def _user_message_item(text: str) -> dict:
+    return {
+        "type": "event_msg",
+        "payload": {
+            "type": "item_completed",
+            "item": {
+                "type": "UserMessage",
+                "content": [{"type": "text", "text": text}, {"type": "local_image"}],
+            },
+        },
+    }
+
+
+def _read_call(call_id: str) -> list[dict]:
+    return [
+        {
+            "type": "response_item",
+            "payload": {
+                "type": "function_call",
+                "name": "exec_command",
+                "arguments": json.dumps(
+                    {"cmd": "sed -n '1,2p' docs/governance/ENGINEERING.md"}
+                ),
+                "call_id": call_id,
+            },
+        },
+        {
+            "type": "response_item",
+            "payload": {
+                "type": "function_call_output",
+                "call_id": call_id,
+                "output": "Process exited with code 0",
+            },
+        },
+    ]
+
+
+def _adapt(tmp_path: Path, rows: list[dict]) -> dict:
+    path = tmp_path / "rollout.jsonl"
+    _write_rows(path, rows)
+    record = adapt_rollout(path, ROOT, load_policy_pack())
+    assert not isinstance(record, RejectedTrajectory)
+    return record
+
+
+def test_human_turns_use_content_kinds_and_keep_prompts_out_of_output(
+    tmp_path: Path,
+) -> None:
+    record = _adapt(
+        tmp_path,
+        [
+            _session_meta(),
+            _user(
+                INJECTED_CONTEXT,
+                [
+                    "plugins.recommendations",
+                    "agents_md.instructions",
+                    "environments.environment_context",
+                ],
+            ),
+            _user(HUMAN_REQUEST, ["user.text"]),
+            *_read_call("call-1"),
+        ],
+    )
+    (segment,) = record["interaction_segments"]
+    assert segment == {
+        "id": f"{record['source']['source_id']}:user-3",
+        "unit": "human_turn",
+        "start_row_index": 3,
+        "end_row_index": 6,
+        "turn_text_sha256": hashlib.sha256(HUMAN_REQUEST.encode()).hexdigest(),
+        "boundary_evidence": "content_item_kinds",
+    }
+    labelled = record["retrieval_events"] + record["execution_events"]
+    assert {event["interaction_segment_id"] for event in labelled} == {segment["id"]}
+    serialized = json.dumps(record, sort_keys=True)
+    for text in ("Stage 56G repair", "recommended_plugins", "AGENTS.md", str(ROOT)):
+        assert text not in serialized
+
+
+def test_human_turns_fall_back_to_harness_user_message_items(
+    tmp_path: Path,
+) -> None:
+    request = (
+        "\n# Files mentioned by the user:\n\n## shot.png\n\n## My request:\nfix it"
+    )
+    record = _adapt(
+        tmp_path,
+        [
+            _session_meta(),
+            _user(
+                "# AGENTS.md instructions for /repo\n\n<INSTRUCTIONS>x</INSTRUCTIONS>"
+            ),
+            _user("<environment_context>\n  <cwd>/repo</cwd>\n</environment_context>"),
+            # An image input splits the text around it; the item keeps one part.
+            _user([request, "<image name=[Image #1]>", "</image>"]),
+            _user_message_item(request),
+            *_read_call("call-1"),
+        ],
+    )
+    (segment,) = record["interaction_segments"]
+    assert (segment["start_row_index"], segment["boundary_evidence"]) == (
+        4,
+        "user_message_item",
+    )
+
+
+def test_known_injected_forms_are_only_the_last_resort(tmp_path: Path) -> None:
+    record = _adapt(
+        tmp_path,
+        [
+            _session_meta(),
+            _user("<recommended_plugins>\nplugins\n</recommended_plugins>"),
+            _user("commit and push"),
+            *_read_call("call-1"),
+        ],
+    )
+    (segment,) = record["interaction_segments"]
+    assert (segment["start_row_index"], segment["boundary_evidence"]) == (
+        3,
+        "known_injected_forms",
+    )
+
+
+def test_frozen_policy_snapshot_measures_without_class_declarations(
+    tmp_path: Path,
+) -> None:
+    """The PR118 treatment predates file classes; C1 must still measure under it."""
+    frozen = json.loads(
+        subprocess.run(
+            [
+                "git",
+                "show",
+                "7ca7f2e0697068ac0113c12d2d0a0a9d9ac14875:config/project/policy_pack.json",
+            ],
+            cwd=ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+    )
+    surface = frozen["governance_surface"]
+    assert "file_classifications" not in surface
+    assert "edge_state_profiles" not in surface
+    path = tmp_path / "frozen-policy.jsonl"
+    _write_rows(
+        path, [_session_meta(), _user(HUMAN_REQUEST, ["user.text"])] + _read_call("c-1")
+    )
+    record = adapt_rollout(path, ROOT, frozen)
+    assert not isinstance(record, RejectedTrajectory)
+    # Historical rules classify nothing, and that is recorded, never guessed.
+    reads = record["retrieval_events"]
+    assert reads and all(event["file_class"] == "unclassified" for event in reads)
+    assert all(event["edge_state_role"] is None for event in reads)
+    # Ordinary materialization telemetry is unaffected by the missing classes.
+    assert measure_trajectory(record)["governance_read_events"] == len(reads)
+
+
+def test_rollout_without_a_human_turn_keeps_unsegmented_c1_evidence(
+    tmp_path: Path,
+) -> None:
+    developer_task = {
+        "type": "response_item",
+        "payload": {
+            "type": "message",
+            "role": "developer",
+            "content": [{"type": "input_text", "text": "You are a sub-agent"}],
+        },
+    }
+    record = _adapt(tmp_path, [_session_meta(), developer_task, *_read_call("c-1")])
+    assert record["schema_version"] == 2
+    assert record["interaction_segments"] == []
+    assert record["retrieval_events"][0]["interaction_segment_id"] is None
+    assert measure_trajectory(record)["governance_read_events"] == 1

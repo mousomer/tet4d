@@ -11,6 +11,10 @@ from tools.experiments.governance_manifest_quality.measurement import (
     measure_trajectory,
     normalize_trajectory,
 )
+from tools.experiments.governance_manifest_quality.postmortem import (
+    build_postmortem_aggregate,
+    postmortem_from_trajectory,
+)
 from tools.experiments.governance_manifest_quality.reporting import build_aggregate
 
 SCHEMA_ROOT = ROOT / "tools/experiments/governance_manifest_quality/schemas"
@@ -55,3 +59,27 @@ def test_generated_records_match_declared_top_level_contracts() -> None:
     )
     _assert_required_properties(_schema("trajectory.schema.json"), trajectory)
     _assert_required_properties(_schema("aggregate.schema.json"), aggregate)
+
+
+def test_postmortem_records_match_declared_top_level_contracts() -> None:
+    trajectory = normalize_trajectory(
+        {
+            "schema_version": 2,
+            "source": {"source_id": "postmortem-schema", "source_format": "test"},
+            "events": [],
+            "interaction_segments": [
+                {
+                    "id": "postmortem-schema:user-1",
+                    "unit": "human_turn",
+                    "start_row_index": 1,
+                    "end_row_index": 2,
+                    "turn_text_sha256": None,
+                    "boundary_evidence": "content_item_kinds",
+                }
+            ],
+        }
+    )
+    record = postmortem_from_trajectory(trajectory)
+    aggregate = build_postmortem_aggregate([record])
+    _assert_required_properties(_schema("postmortem.schema.json"), record)
+    _assert_required_properties(_schema("postmortem_aggregate.schema.json"), aggregate)
