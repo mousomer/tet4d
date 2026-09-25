@@ -65,13 +65,14 @@ digest is likewise stale since iPadOS left hosted CI; that repair refreshes both
 
 ### Governance pack, telemetry and work-type rollout
 
-**Status (2026-09-25): paused for product work.** The bounded pre-56H repair
-(routing default, handoff and authority text) is the last governance change
-before Stage 56H. Stage 56H then runs as the first instrumented coding task,
-with P1a telemetry enabled on the working machine and the raw agent transcripts
-retained. A task-scoped post-mortem of 56H decides whether P1b, P1c and P6
-continue. P2–P5 are dormant until explicitly reactivated; nothing below
-authorizes starting them.
+**Status (2026-09-25): paused for product work.** The approved work is the
+bounded pre-56H repair (routing default, handoff and authority text), then
+Stage 56H as the first instrumented coding task, with P1a telemetry enabled on
+the working machine and the raw agent transcripts retained. A task-scoped
+post-mortem of 56H informs the owner's decision on whether P1b, P1c and P6
+continue. P2–P5 are dormant until the owner explicitly reactivates them. The
+items below are not executable backlog work: listing them here grants no agent
+permission to start them.
 
 Authorities: `docs/architecture/work_type_classification.md` (work-type ontology, G1) and `docs/architecture/workspace_governance_v0_1.md` (pack ownership; its "Planned: portable agent telemetry" section, accepted 2026-09-25, owns P1). Done: pack `0.2.0` work-type schema; pack `0.3.0` / `v0.3-role-resolution-1` role resolution, project role-declaration checks, pack bootstrap roots and write-compatibility table, and the project `role_bootstrap` declaration; the G1 log-only observer (record schema 2) judging writes by the treatment captured at segment start.
 **P0** (planning, recorded in those authorities): the pack records generic agent activity and experiments interpret it; capture is passive; per-run labels never live in `project.json`; snapshots are evidence, not attribution; raw-transcript retention is separable from telemetry retention. **P1a** (done in pack `0.4.0` / `v0.4-telemetry-core-4`): the pack's Tet4D literals are gone and guarded against, and the frozen project-independent observation envelope has immutable observation identities, source and persistence times, command phases, and opt-in first-hand `gov` observations with workspace-keyed private identities. **P1b**: capture sources that all emit the one observation model and differ only in source and provenance: first a Codex transcript importer moved out of the C1 experiment without its policy lookups, then a Claude transcript/session importer and a filesystem-snapshot source. Claude hooks are not assumed; add them only if a real consumer needs evidence unavailable in transcripts. Snapshots establish observed state changes, not reads or attributed writes. **P1c**: generic reconstruction of segments, read/write timelines and invocation results, correlating observations only on explicit evidence with a recorded confidence and never merging them by resemblance.

@@ -127,6 +127,13 @@
         "routes": ["python_reference_engine"]
       },
       {
+        "id": "oracle-work",
+        "match_all": ["oracle"],
+        "mode": "FEATURE",
+        "priority": 250,
+        "routes": ["python_reference_engine"]
+      },
+      {
         "id": "python-work",
         "match_all": ["python"],
         "mode": "FEATURE",

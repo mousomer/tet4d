@@ -157,11 +157,12 @@ authority subsumes the other, so a task that genuinely combines them fails
 closed. The resolved view reports both the matched scenario ID and its priority
 with project provenance.
 
-A task that matches no scenario takes its mode's profile routes. `FEATURE` and
-`LOCAL_FIX` default to `godot_product_shell`, because the Godot game is the
-product. Python reference-engine work is reached through the `python` scenario,
-in the broad-wording tier, and the `reference engine` scenario, in the
-subsystem-feature tier.
+A task that matches no scenario takes its mode's profile routes. Unqualified
+product work defaults to the shipped Godot product: `FEATURE` and `LOCAL_FIX`
+route to `godot_product_shell`. Work for the Python reference engine or oracle
+must name that surface. The `python`, `reference engine` and `oracle` scenarios
+sit at distinct priorities (100, 200 and 250), so naming several never ties.
+Generic feature nouns such as topology, replay or parity do not imply Python.
 
 ## Pack updates and sanitation
 
