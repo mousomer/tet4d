@@ -1,8 +1,9 @@
 # Task Contract — Stage 56 Cockpit Completion
 
 Status: Stages 56A–56G implementation and automated evidence are complete.
-Stages 56H–56I and final human acceptance remain incomplete. Stage 56H gates
-the next release; Stage 56I and the 190/200 A/B choice wait until it ships.
+Stages 56H–56I and final human acceptance remain incomplete. Stage 56H is a
+gameplay/product acceptance checkpoint, not a release gate; Stage 56I and the
+190/200 A/B choice follow it without waiting on release or distribution work.
 
 ## Objective
 
