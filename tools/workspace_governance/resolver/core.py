@@ -153,6 +153,25 @@ class GovernanceResolver:
             pack_path=pack_path,
         )
 
+    def telemetry_settings(self, environ: dict[str, str] | None = None):
+        """Whether and where this checkout's workspace records telemetry.
+
+        Only the machine's local overlays can enable recording; an unreadable
+        workspace or overlay leaves it off rather than failing the command.
+        """
+        # Imported here: the telemetry module builds on this one.
+        from tools.workspace_governance.telemetry import resolve_settings
+
+        try:
+            workspace = load_manifest_json(self.workspace_path)
+            local, _ = self.local_overlay()
+        except (OSError, ValueError, TypeError, KeyError):
+            return resolve_settings(None, None, environ)
+        workspace_id = workspace.get("workspace_id")
+        return resolve_settings(
+            local, workspace_id if isinstance(workspace_id, str) else None, environ
+        )
+
     def role_index(self) -> RoleIndex:
         """Artifact roles under the treatment currently in this checkout."""
         return build_role_index(self.treatment_documents())

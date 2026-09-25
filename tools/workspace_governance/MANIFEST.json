@@ -2,7 +2,7 @@
   "schema_version": 1,
   "name": "workspace-governance",
   "version": "0.4.0",
-  "revision": "v0.4-project-independence-1",
+  "revision": "v0.4-telemetry-core-1",
   "version_file": "VERSION",
   "lock_algorithm": "sha256-path-and-content-v1",
   "pack_hash_excludes": [
@@ -45,9 +45,11 @@
     {"path": "resolver/core.py", "role": "executable_machinery"},
     {"path": "resolver/roles.py", "role": "executable_machinery"},
     {"path": "schemas/project.schema.json", "role": "executable_machinery"},
+    {"path": "schemas/telemetry-event.v1.schema.json", "role": "executable_machinery"},
     {"path": "schemas/workspace-local.schema.json", "role": "executable_machinery"},
     {"path": "schemas/workspace.schema.json", "role": "executable_machinery"},
     {"path": "synthetic-fixtures/contradictions.json", "role": "executable_machinery"},
+    {"path": "telemetry.py", "role": "executable_machinery"},
     {"path": "validators/__init__.py", "role": "executable_machinery"},
     {"path": "validators/core.py", "role": "executable_machinery"}
   ],

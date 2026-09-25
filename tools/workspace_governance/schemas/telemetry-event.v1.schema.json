@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "workspace-governance telemetry event, version 1",
+  "description": "One recorded fact about agent activity. Project-independent: no field names or enumerates a project's paths, authorities, experiments, or classifications; project values appear only as recorded data. A value that is unknown is omitted, never guessed.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "event_id", "event_type", "observed_at", "workspace_id", "checkout", "context", "source", "attribution", "payload"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "event_id": {"type": "string", "minLength": 32},
+    "event_type": {"enum": ["governance_command"]},
+    "observed_at": {"type": "string", "minLength": 20},
+    "workspace_id": {"type": "string", "minLength": 1},
+    "project_id": {"type": "string", "minLength": 1},
+    "checkout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path_sha256"],
+      "properties": {
+        "path_sha256": {"type": "string", "minLength": 64},
+        "revision": {"type": "string", "minLength": 1},
+        "branch": {"type": "string", "minLength": 1}
+      }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "labels"],
+      "properties": {
+        "status": {"enum": ["absent", "supplied", "invalid"]},
+        "session_id": {"type": "string", "minLength": 1},
+        "task_id": {"type": "string", "minLength": 1},
+        "agent": {"type": "string", "minLength": 1},
+        "model": {"type": "string", "minLength": 1},
+        "labels": {"type": "object", "additionalProperties": {"type": "string"}}
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "producer", "producer_version"],
+      "properties": {
+        "kind": {"enum": ["gov_command", "transcript", "hook", "snapshot"]},
+        "producer": {"type": "string", "minLength": 1},
+        "producer_version": {"type": "string", "minLength": 1},
+        "transcript": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["identity", "sha256", "parser", "parser_version", "location"],
+          "properties": {
+            "identity": {"type": "string", "minLength": 1},
+            "sha256": {"type": "string", "minLength": 64},
+            "parser": {"type": "string", "minLength": 1},
+            "parser_version": {"type": "string", "minLength": 1},
+            "location": {"type": "string", "minLength": 1}
+          }
+        }
+      }
+    },
+    "attribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["basis"],
+      "properties": {
+        "basis": {"enum": ["first_hand", "tool_call", "interval", "declared"]}
+      }
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command", "arguments", "exit_status", "duration_ms", "diagnostics"],
+      "properties": {
+        "command": {"type": "string", "minLength": 1},
+        "arguments": {"type": "object"},
+        "exit_status": {"type": "integer"},
+        "duration_ms": {"type": "integer", "minimum": 0},
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["code", "fact", "owner"],
+            "properties": {
+              "code": {"type": "string", "minLength": 1},
+              "fact": {"type": "string"},
+              "owner": {"type": "string"}
+            }
+          }
+        },
+        "resolution": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["entries"],
+          "properties": {
+            "entries": {"type": "array", "items": {"type": "string"}},
+            "mode": {"type": "string", "minLength": 1},
+            "matched_scenario": {"type": "string", "minLength": 1},
+            "routes": {"type": "array", "items": {"type": "string"}},
+            "authorities": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["authority_id", "source"],
+                "properties": {
+                  "authority_id": {"type": "string", "minLength": 1},
+                  "source": {"type": "string", "minLength": 1}
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

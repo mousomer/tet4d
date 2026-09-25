@@ -467,6 +467,12 @@ def test_registered_behavior_paths_have_mutation_evidence(  # noqa: C901 - expli
         return
     elif family == "sanitation":
         project["sanitation"]["secret_scanner"] = "missing-scanner.py"
+    elif family == "telemetry":
+        overlay = checkout / ".governance/workspace.local.json"
+        write(overlay, {"schema_version": 1, "telemetry": {"enabled": True}})
+        assert GovernanceResolver.for_root(checkout).telemetry_settings().enabled
+        write(overlay, {"schema_version": 1, "telemetry": {"enabled": "yes"}})
+        assert not GovernanceResolver.for_root(checkout).telemetry_settings().enabled
     elif family == "roles":
         assert resolver.role_index().resolve("AGENTS.md").role == (
             "governance_treatment"

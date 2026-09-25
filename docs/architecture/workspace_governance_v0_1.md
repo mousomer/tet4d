@@ -2,7 +2,7 @@
 
 Status: implemented architecture contract for the first bounded extraction,
 including the v0.1 integrity repair. The final section records an accepted
-extension that is not yet implemented.
+extension that is partly implemented.
 
 ## Ownership model
 
@@ -12,8 +12,8 @@ It contains no Tet4D semantic values: required authority IDs, the
 execution-mode variable and the project manifest location come from the
 workspace and project manifests, and `test_project_independence.py` rejects any
 pack file naming a value from them. Portable agent telemetry is an accepted, not
-yet implemented, extension of the pack's scope (see "Planned: portable agent
-telemetry"). `.governance/workspace.json` owns only
+fully implemented, extension of the pack's scope (see "Planned: portable
+agent telemetry"). `.governance/workspace.json` owns only
 membership, relationships, workspace defaults, and the pack-lock reference.
 `config/governance/project.json` owns Tet4D executable governance facts added by
 this extraction and stable references to human authorities. Human RDS,
@@ -305,8 +305,23 @@ proceed without inventing policy in resolver logic.
 
 ## Planned: portable agent telemetry
 
-Status: accepted planning decision (2026-09-25), not implemented. This section
-is the authority for backlog items P1a–P1c.
+Status: accepted planning decision (2026-09-25). This section is the authority
+for backlog items P1a–P1c; P1a is implemented and P1b–P1c are not.
+
+**Implemented in P1a.** `tools/workspace_governance/telemetry.py` records one
+first-hand event per `gov` invocation, validated against
+`schemas/telemetry-event.v1.schema.json`. The event records the command, its
+arguments, exit status, duration and diagnostic identities, and, for `resolve`
+and `explain`, which routes, scenario and authorities were handed out.
+Recording is off unless the machine's local overlay sets
+`"telemetry": {"enabled": true}`. Events are appended to
+`${XDG_STATE_HOME:-~/.local/state}/workspace-governance/<workspace_id>/telemetry/`,
+one file per day, readable only by their owner. Free text and the checkout path
+are stored as a hash and a length. Per-run context comes from the
+`GOVERNANCE_TELEMETRY_CONTEXT` variable, a JSON object with optional
+`session_id`, `task_id`, `agent`, `model` and string `labels`; malformed
+context is recorded as `invalid`, never guessed. A failure to record prints one
+warning and never changes the command's outcome.
 
 The pack records generic agent activity; projects and experiments interpret it.
 Activity flows from agent execution through capture sources to the pack logger,

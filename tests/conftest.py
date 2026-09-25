@@ -3,7 +3,8 @@ from __future__ import annotations
 import os
 import re
 import shutil
-from collections.abc import MutableMapping
+import tempfile
+from collections.abc import Iterator, MutableMapping
 from pathlib import Path
 from uuid import uuid4
 
@@ -46,6 +47,27 @@ def git_location_env_vars() -> tuple[str, ...]:
 def _sandboxed_git_location() -> None:
     """Refuse an inherited git repository location for the whole session."""
     scrub_git_location_env(os.environ)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _sandboxed_state_home() -> Iterator[None]:
+    """Keep every test's governance telemetry out of the machine's record.
+
+    A machine that enables telemetry records its real `gov` invocations under
+    XDG_STATE_HOME. Tests spawn `gov` against synthetic checkouts, and those
+    invocations must not land in that record.
+    """
+    previous = os.environ.get("XDG_STATE_HOME")
+    sandbox = tempfile.mkdtemp(prefix="tet4d-test-state-")
+    os.environ["XDG_STATE_HOME"] = sandbox
+    try:
+        yield
+    finally:
+        if previous is None:
+            os.environ.pop("XDG_STATE_HOME", None)
+        else:
+            os.environ["XDG_STATE_HOME"] = previous
+        shutil.rmtree(sandbox, ignore_errors=True)
 
 
 def scrub_git_location_env(

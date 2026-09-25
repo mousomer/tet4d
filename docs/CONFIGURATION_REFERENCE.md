@@ -308,12 +308,12 @@ Parameters:
 ### `config/governance/workspace.lock.json`
 Top-level keys: `content_sha256`, `files`, `lock_algorithm`, `pack_name`, `pack_path`, `revision`, `schema_version`, `version`
 Parameters:
-- `content_sha256`: `"81c7c474f546bbd8f70e7b999443c22c62c1f4a5c3c85b8d498dc9d5473a2c18"` (`string`)
+- `content_sha256`: `"5f433c324a3fc0c3d990f769b354059d16b4cc1e9cb99a52830ad35f0db20c55"` (`string`)
 - `files[]`: array[`string`]; examples: `"MANIFEST.json"`, `"VERSION"`, `"__init__.py"`
 - `lock_algorithm`: `"sha256-path-and-content-v1"` (`string`)
 - `pack_name`: `"workspace-governance"` (`string`)
 - `pack_path`: `"tools/workspace_governance"` (`string`)
-- `revision`: `"v0.4-project-independence-1"` (`string`)
+- `revision`: `"v0.4-telemetry-core-1"` (`string`)
 - `schema_version`: `1` (`int`)
 - `version`: `"0.4.0"` (`string`)
 
