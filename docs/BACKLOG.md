@@ -80,11 +80,11 @@ phrase-sensitive fallback routing, observed for natural Stage 56G wording.
 The postmortem correction classifies `CURRENT_STATE.md` and `docs/BACKLOG.md`
 as edge-state files and records their distinct operational roles. Backlog is
 conditional routed open-work authority; current-state is restart/staged-handoff
-context. Raw size is descriptive rather than a task-quality penalty. Existing
-LOC guards remain for their declared human-reviewability, structural-discipline,
-or handoff-usability reasons. Follow-up calibration needs real task trajectories
-with resolver and bounded-read evidence before making any claim about actual
-agent-context pressure or changing those limits.
+context. Raw size is descriptive rather than a task-quality penalty. The
+backlog has no size limit: it is measured and reported, and items leave it when
+completed or obsolete. `CURRENT_STATE.md` keeps its 150-line handoff-usability
+guard. Claims about actual agent-context pressure still need real task
+trajectories with resolver and bounded-read evidence.
 
 The PR118-baseline migration-bundle check separately reproduces stale generated metadata,
 including the old `da6e2dd6...` policy digest. Regeneration also adds governance

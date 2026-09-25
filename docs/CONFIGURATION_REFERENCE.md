@@ -2420,7 +2420,7 @@ Parameters:
 - `governance_surface.document_roles.template[]`: array[`string`]; examples: `"tools/templates/governance"`
 - `governance_surface.edge_state_profiles.CURRENT_STATE.md.limit_rationale[]`: array[`string`]; examples: `"human_reviewability"`, `"restart_handoff_usability"`
 - `governance_surface.edge_state_profiles.CURRENT_STATE.md.operational_role`: `"restart_handoff_context"` (`string`)
-- `governance_surface.edge_state_profiles.docs/BACKLOG.md.limit_rationale[]`: array[`string`]; examples: `"human_reviewability"`, `"structural_discipline"`
+- `governance_surface.edge_state_profiles.docs/BACKLOG.md.limit_rationale[]`: array[`empty`]
 - `governance_surface.edge_state_profiles.docs/BACKLOG.md.operational_role`: `"conditional_open_work_authority"` (`string`)
 - `governance_surface.file_classifications.archival_history[]`: array[`string`]; examples: `"docs/history"`
 - `governance_surface.file_classifications.edge_state[]`: array[`string`]; examples: `"CURRENT_STATE.md"`, `"docs/BACKLOG.md"`
@@ -2436,7 +2436,6 @@ Parameters:
 - `governance_surface.machine_policy_byte_limits.status`: `"temporary_provisional_operational_ceiling"` (`string`)
 - `governance_surface.per_file_limits.AGENTS.md`: `150` (`int`)
 - `governance_surface.per_file_limits.CURRENT_STATE.md`: `150` (`int`)
-- `governance_surface.per_file_limits.docs/BACKLOG.md`: `300` (`int`)
 - `governance_surface.per_file_limits.docs/governance/CHANGE_GOVERNANCE.md`: `300` (`int`)
 - `governance_surface.per_file_limits.docs/governance/CONFIG_AND_GENERATED_DATA.md`: `300` (`int`)
 - `governance_surface.per_file_limits.docs/governance/ENGINEERING.md`: `300` (`int`)

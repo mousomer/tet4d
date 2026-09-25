@@ -48,6 +48,10 @@ EDGE_STATE_ROLES = {
     "conditional_open_work_authority",
     "restart_handoff_context",
 }
+# Open work is retired when it is completed or obsolete, never to satisfy a line
+# counter. The backlog is measured and reported, but it carries no size limit and
+# stays outside the reviewable aggregate ceiling.
+UNCAPPED_EDGE_STATE_PATHS = {"docs/BACKLOG.md"}
 STATIC_HUMAN_PATHS = {
     "AGENTS.md",
     "CLAUDE.md",
@@ -61,7 +65,6 @@ FIXED_LIMITS = {
     "godot/AGENTS.md": 70,
     "native/AGENTS.md": 70,
     "CURRENT_STATE.md": 150,
-    "docs/BACKLOG.md": 300,
 }
 POLICY_PACK_ADVISORY_BYTE_LIMIT = 80 * 1024
 POLICY_PACK_BYTE_LIMIT = 96 * 1024
@@ -345,6 +348,11 @@ def _validate_file_classifications(  # noqa: C901 - validates one policy declara
             )
         ):
             issues.append(SurfaceIssue("schema", f"invalid edge-state profile: {path}"))
+    for path in sorted(UNCAPPED_EDGE_STATE_PATHS):
+        if profiles.get(path, {}).get("limit_rationale") != []:
+            issues.append(
+                SurfaceIssue("classification", f"{path} has no size limit to justify")
+            )
     if (
         profiles.get("CURRENT_STATE.md", {}).get("operational_role")
         != "restart_handoff_context"
@@ -525,6 +533,8 @@ def _measure(  # noqa: C901 - measurement and all coupled hard ceilings stay ato
             issues.append(
                 SurfaceIssue("size", f"{rel} hard limit must equal {expected}")
             )
+    for rel in sorted(UNCAPPED_EDGE_STATE_PATHS.intersection(limits)):
+        issues.append(SurfaceIssue("size", f"{rel} must not carry a size limit"))
     for rel, limit in limits.items():
         if not isinstance(rel, str) or not isinstance(limit, int) or limit <= 0:
             issues.append(
@@ -558,8 +568,10 @@ def _measure(  # noqa: C901 - measurement and all coupled hard ceilings stay ato
         issues.append(SurfaceIssue("size", "aggregate_hard_limit must equal 2500"))
         hard_limit = 0
     # Physical lines bound the material people must review as prose. The compact,
-    # canonically serialized machine policy has its own byte ceiling below.
+    # canonically serialized machine policy has its own byte ceiling below, and
+    # the uncapped backlog is measured per file but not counted here.
     total = sum(totals[group] for group in ACTIVE_GROUPS if group != "machine")
+    total -= sum(file_loc.get(rel, 0) for rel in UNCAPPED_EDGE_STATE_PATHS)
     if hard_limit and total > hard_limit:
         issues.append(
             SurfaceIssue(
@@ -730,7 +742,7 @@ def validate_surface(  # noqa: C901 - composes the complete surface invariant
 def _base_total(root: Path, measurement: SurfaceMeasurement, ref: str) -> int | None:
     total = 0
     for rel in measurement.file_loc:
-        if rel == POLICY_REL:
+        if rel == POLICY_REL or rel in UNCAPPED_EDGE_STATE_PATHS:
             continue
         result = subprocess.run(
             ["git", "show", f"{ref}:{rel}"],
@@ -754,6 +766,9 @@ def _print_report(measurement: SurfaceMeasurement, *, base_ref: str | None) -> N
     print(f"Active task records:        {measurement.active_task:5d} LOC")
     print(f"Reviewable governance total:{measurement.total:5d} LOC")
     print(f"Hard limit:                 {measurement.hard_limit:5d} LOC")
+    for rel in sorted(UNCAPPED_EDGE_STATE_PATHS):
+        loc = measurement.file_loc.get(rel, 0)
+        print(f"Uncapped, outside total:    {loc:5d} LOC ({rel})")
     print(
         f"Machine policy bytes:       {measurement.policy_bytes:5d} / "
         f"{measurement.policy_advisory_byte_limit} advisory / "
