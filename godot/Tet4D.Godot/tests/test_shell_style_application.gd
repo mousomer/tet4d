@@ -96,6 +96,7 @@ func run() -> Array:
 			failures.append("Instrument focus should use the strong focus border token")
 		if instrument_normal.border_color != panel.style_manager().get_color(ShellStyleRolesScript.GRID_MINOR):
 			failures.append("unselected Instrument cards should use a quiet structural border")
+	instrument_button.free()
 	panel.queue_free()
 	await tree.process_frame
 	failures.append_array(_check_settings_registry())
@@ -192,6 +193,7 @@ func _check_control_hint_palette(manager) -> Array:
 		failures.append("game-over status should use state.game_over text")
 	if game_over_box == null or game_over_box.border_color != manager.get_color(ShellStyleRolesScript.STATE_GAME_OVER):
 		failures.append("game-over status should use state.game_over border")
+	group.free()
 	return failures
 
 

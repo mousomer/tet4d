@@ -18,4 +18,6 @@ func run() -> Array:
 	var quit_button := hud._make_quit_button("Quit Application")
 	quit_button.pressed.emit()
 	if quit_count[0] != 1: failures.append("every Quit Application button should emit the application quit request")
+	quit_button.free()
+	hud.free()
 	return failures
