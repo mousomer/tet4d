@@ -1,13 +1,17 @@
 # Workspace governance v0.1
 
 Status: implemented architecture contract for the first bounded extraction,
-including the v0.1 integrity repair.
+including the v0.1 integrity repair. The final section records an accepted
+extension that is not yet implemented.
 
 ## Ownership model
 
 The vendored pack at `tools/workspace_governance/` owns generic schema,
 resolution, diagnostics, pack-integrity, and environment-inspection mechanisms.
-It contains no Tet4D semantic values. `.governance/workspace.json` owns only
+It contains no Tet4D semantic values; three literals still breach this, and
+removing them is backlog item P1a. Portable agent telemetry is an accepted, not
+yet implemented, extension of the pack's scope (see "Planned: portable agent
+telemetry"). `.governance/workspace.json` owns only
 membership, relationships, workspace defaults, and the pack-lock reference.
 `config/governance/project.json` owns Tet4D executable governance facts added by
 this extraction and stable references to human authorities. Human RDS,
@@ -296,3 +300,66 @@ equivalent publisher and reconstruction rules. Choosing either publication and
 trust model requires owner/architecture review. Only after that decision can
 extraction, deterministic pinning, drift protection, and offline consumption
 proceed without inventing policy in resolver logic.
+
+## Planned: portable agent telemetry
+
+Status: accepted planning decision (2026-09-25), not implemented. This section
+is the authority for backlog items P1a–P1c.
+
+The pack records generic agent activity; projects and experiments interpret it.
+Activity flows from agent execution through capture sources to the pack logger,
+into a versioned raw event stream, through generic pack reconstruction, and
+only then to project- or experiment-specific analysis. A repository that
+installs the pack gets the same instrumentation without copying Tet4D scripts,
+and an experiment can be replaced while the historical record stays usable.
+
+**What is recorded.** Low-level facts, not answers to current questions: task,
+trajectory and session identity; agent and model identity when available;
+timestamps; file reads, with their range or whether they were bounded or full;
+mutations; command executions with status and duration; verification
+invocations and results; governance resolution and materialization; declared
+segment boundaries; and the provenance needed to reconstruct what happened. The
+logger is not designed around the C1 or G1 questions. A future experiment must
+be able to ask questions nobody has formulated yet.
+
+**Schema.** The event schema is versioned and project-independent. It declares
+no project paths, authority names, experiment identifiers, treatment or control
+concepts, or project classifications; project values appear only as recorded
+data. Per-run context, such as an experiment arm, is supplied at invocation as
+opaque labels that the schema carries and never interprets. It never comes from
+`config/governance/project.json`, which is a governance-treatment root: context
+stored there would put the instrument inside the treatment and make switching
+arms a Manifest change.
+
+**Capture is passive.** Sources are the pack's own commands, which emit
+governance events first-hand; importers for agent transcripts; live agent
+hooks; and filesystem snapshots. Importers and hooks are specific to an agent
+runtime, not to a project, so they belong in the pack. An agent declares only
+segment boundaries, which remain telemetry rather than ground truth; it does
+not call a logging command for ordinary activity.
+
+**Snapshots are evidence, not attribution.** A before/after filesystem delta
+establishes that state changed during an observation interval. It does not
+establish which agent or process caused the change. Every event records its
+source and the basis of any attribution, such as a tool call that names the
+write as opposed to a change seen only within the interval. Later analysis must
+not turn that correlation into attribution.
+
+**Retention is separable.** An event record carries the identity of the
+transcript it came from, its hash, the parser and parser version, and the source
+location. Keeping the raw transcript, which may hold prompts, file contents or
+secrets, is a configurable storage and retention policy, not a condition for
+keeping telemetry. Where the raw source is kept, a newer parser may re-derive
+earlier events; where it is not, the recorded events stand as parsed.
+
+**Storage.** Logs live outside the repository, keyed by workspace identity like
+the inherited overlay. Events record paths, ranges and hashes by default rather
+than contents, and anything retained passes secret scanning. There is no
+committed log corpus.
+
+**Reconstruction and analysis.** The pack reconstructs only what is semantically
+universal: segments from boundary events, read and write timelines, and
+invocation results. Calibration, treatment-versus-control comparison,
+governance-effectiveness metrics, the G1 compatibility outcome and postmortem
+aggregation stay outside the pack and consume its interface. They never decide
+what is logged.

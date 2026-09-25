@@ -328,6 +328,17 @@ it remains a separate bounded Coding change if real observer evidence justifies
 it. G1 also introduces no committed log corpus, blocking, role migration,
 independent classifier or threshold calibration.
 
+**Relation to pack telemetry.** Under the accepted telemetry plan
+(`workspace_governance_v0_1.md`, "Planned: portable agent telemetry"), G1's
+filesystem snapshots and declared segment boundaries become capture sources in
+the pack, and segment reconstruction becomes generic pack reconstruction. The
+compatibility judgement, role changes and any G1 outcome remain analysis that
+consumes those events. A snapshot shows that a path changed within the
+segment's interval, not that the segment's agent changed it. G1's `artifacts`
+are therefore interval evidence: a write is attributed to the segment's work
+only where another source, such as the tool call that made it, corroborates it,
+and an interval-only basis must stay visible to any later analysis.
+
 ## Historical classification and segmentation reliability
 
 The main measurement depends on segment labels, so how segments get labeled is
@@ -447,7 +458,8 @@ because they belong to the artifact layer.
 - **Write attribution.** Segments need timestamped boundaries, and writes need
   linking to a segment. Edit and Write tool calls are easy to attribute; writes
   made from shell commands or generators need a filesystem snapshot at each
-  segment boundary.
+  segment boundary. A snapshot only shows that a change happened within the
+  interval, so an attribution resting on it alone must be recorded as such.
 - **Segmentation reliability** is the main threat to validity (see Historical
   classification). It needs an independent labeler and a hand-labeled
   reference set before C2.
