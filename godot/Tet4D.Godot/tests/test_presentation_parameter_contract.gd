@@ -109,6 +109,7 @@ func _test_renderer_profile_application(failures: Array, profile) -> void:
 		failures.append("renderer should retain its active profile when a candidate profile is invalid")
 	if renderer.presentation_preferences_snapshot().get("profile") != snapshot:
 		failures.append("invalid renderer profile application should not mutate active presentation state")
+	renderer.free()
 
 
 func _assert_equal(failures: Array, actual, expected, label: String) -> void:

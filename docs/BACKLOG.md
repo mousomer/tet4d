@@ -21,6 +21,11 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ## Active Work
 
+### Godot editor diagnostic follow-up
+
+Recheck the isolated macOS ObjectDB profiler snapshot-storage advisory when the
+pinned engine or temporary-path strategy changes; see the Godot 4.7.2 audit.
+
 ### Environment ownership
 
 `bootstrap_env.sh` is the single owner of environment mutation and follows the

@@ -81,10 +81,23 @@ if failed:
 PY
 
 VERIFY_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/tet4d-godot-4.7.XXXXXX")"
+# A non-interactive shell starts background jobs with SIGINT ignored, so an
+# interrupted run must stop the running step itself; otherwise Godot outlives
+# the gate inside a project copy that cleanup has already deleted.
+ACTIVE_STEP_PID=""
+ACTIVE_FOLLOWER_PID=""
 cleanup() {
+  if [[ -n "$ACTIVE_STEP_PID" ]]; then
+    kill -9 "$ACTIVE_STEP_PID" 2>/dev/null || true
+  fi
+  if [[ -n "$ACTIVE_FOLLOWER_PID" ]]; then
+    kill "$ACTIVE_FOLLOWER_PID" 2>/dev/null || true
+  fi
   rm -rf "$VERIFY_ROOT"
 }
-trap cleanup EXIT INT TERM
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 PROJECT_COPY="$VERIFY_ROOT/Tet4D.Godot"
 HOME_DIR="$VERIFY_ROOT/home"
@@ -101,6 +114,78 @@ GODOT_ENV=(
   "XDG_CACHE_HOME=$CACHE_DIR"
   "XDG_DATA_HOME=$DATA_DIR"
 )
+# A stalled Godot step must fail the gate rather than block it until a CI
+# timeout: a test that loops forever is a defect, not an absence of evidence.
+GODOT_STEP_TIMEOUT_SECONDS="${GODOT_STEP_TIMEOUT_SECONDS:-900}"
+
+# The step's output is both shown and kept: an operator watching the terminal
+# needs progress as it happens, and the checks below need the whole log.
+run_godot_step() {
+  local label="$1"
+  local log_path="$2"
+  local visibility="$3"
+  shift 3
+  : >"$log_path"
+  "$@" >"$log_path" 2>&1 &
+  ACTIVE_STEP_PID=$!
+  if [[ "$visibility" == "stream" ]]; then
+    tail -f "$log_path" 2>/dev/null &
+    ACTIVE_FOLLOWER_PID=$!
+  fi
+  local waited=0
+  local status=0
+  while kill -0 "$ACTIVE_STEP_PID" 2>/dev/null; do
+    if ((waited >= GODOT_STEP_TIMEOUT_SECONDS)); then
+      kill -9 "$ACTIVE_STEP_PID" 2>/dev/null || true
+      wait "$ACTIVE_STEP_PID" 2>/dev/null || true
+      ACTIVE_STEP_PID=""
+      stop_follower
+      echo "Godot step '$label' exceeded ${GODOT_STEP_TIMEOUT_SECONDS}s; terminated." >&2
+      return 124
+    fi
+    sleep 5
+    waited=$((waited + 5))
+  done
+  wait "$ACTIVE_STEP_PID" || status=$?
+  ACTIVE_STEP_PID=""
+  stop_follower
+  return "$status"
+}
+
+stop_follower() {
+  [[ -n "$ACTIVE_FOLLOWER_PID" ]] || return 0
+  # Let the follower drain the final lines before it is stopped.
+  sleep 1
+  kill "$ACTIVE_FOLLOWER_PID" 2>/dev/null || true
+  wait "$ACTIVE_FOLLOWER_PID" 2>/dev/null || true
+  ACTIVE_FOLLOWER_PID=""
+}
+
+# The GDScript runner prints its own success line, and an aborted test function
+# leaves only a SCRIPT ERROR behind, so the log is evidence in its own right.
+assert_no_script_error() {
+  local label="$1"
+  local log_path="$2"
+  if grep -q "SCRIPT ERROR" "$log_path"; then
+    echo "Godot step '$label' reported SCRIPT ERROR; a test aborted mid-run:" >&2
+    grep -n -m 5 "SCRIPT ERROR" "$log_path" >&2
+    return 1
+  fi
+}
+
+# The fixture cleanup established a zero-leak baseline for these shutdown
+# signatures. Keep the editor's separate ObjectDB snapshot-directory advisory
+# visible; it is not an exit-time ObjectDB leak.
+assert_no_teardown_leak() {
+  local label="$1"
+  local log_path="$2"
+  local leak_pattern='^(WARNING: [0-9]+ RIDs of type ".*" were leaked\.|WARNING: [0-9]+ ObjectDB instances? (was|were) leaked at exit|ERROR: [0-9]+ resources still in use at exit|ERROR: Pages in use exist at exit in PagedAllocator:|ERROR: [0-9]+ RID allocations of type .* were leaked at exit\.)'
+  if grep -Eq "$leak_pattern" "$log_path"; then
+    echo "Godot step '$label' reported an unexpected teardown leak:" >&2
+    grep -nE "$leak_pattern" "$log_path" >&2
+    return 1
+  fi
+}
 
 (
   cd "$API_DIR"
@@ -110,18 +195,28 @@ GODOT_ENV=(
   'import json,sys; engine=json.load(open(sys.argv[1])); binding=json.load(open(sys.argv[2])); engine.pop("header"); binding.pop("header"); raise SystemExit(0 if engine == binding else "Godot and godot-cpp extension APIs differ")' \
   "$API_DIR/extension_api.json" "$GODOT_CPP_DIR/gdextension/extension_api.json"
 
-env "${GODOT_ENV[@]}" "$GODOT_BIN" \
+EDITOR_IMPORT_LOG="$VERIFY_ROOT/editor_import.log"
+run_godot_step "editor import" "$EDITOR_IMPORT_LOG" stream env "${GODOT_ENV[@]}" "$GODOT_BIN" \
   --headless --editor --path "$PROJECT_COPY" --quit
-env "${GODOT_ENV[@]}" "$GODOT_BIN" \
+assert_no_teardown_leak "editor import" "$EDITOR_IMPORT_LOG"
+REPLAY_TEST_LOG="$VERIFY_ROOT/run_tests.log"
+run_godot_step "replay tests" "$REPLAY_TEST_LOG" stream env "${GODOT_ENV[@]}" "$GODOT_BIN" \
   --headless --path "$PROJECT_COPY" --script tests/run_tests.gd
+assert_no_script_error "replay tests" "$REPLAY_TEST_LOG"
+assert_no_teardown_leak "replay tests" "$REPLAY_TEST_LOG"
 TOPOLOGY_TRANSPORT_PARITY_LOG="$VERIFY_ROOT/topology_transport_parity.log"
-env "${GODOT_ENV[@]}" "$GODOT_BIN" \
-  --headless --path "$PROJECT_COPY" --script tests/run_topology_transport_parity.gd \
-  >"$TOPOLOGY_TRANSPORT_PARITY_LOG" 2>&1
+run_godot_step "topology transport parity" "$TOPOLOGY_TRANSPORT_PARITY_LOG" quiet \
+  env "${GODOT_ENV[@]}" "$GODOT_BIN" \
+  --headless --path "$PROJECT_COPY" --script tests/run_topology_transport_parity.gd
+assert_no_script_error "topology transport parity" "$TOPOLOGY_TRANSPORT_PARITY_LOG"
+assert_no_teardown_leak "topology transport parity" "$TOPOLOGY_TRANSPORT_PARITY_LOG"
 "$PYTHON_BIN" \
   "$ROOT_DIR/tools/migration/compare_topology_transport.py" \
   --native-output "$TOPOLOGY_TRANSPORT_PARITY_LOG"
-env "${GODOT_ENV[@]}" "$GODOT_BIN" \
+BOOT_LOG="$VERIFY_ROOT/boot.log"
+run_godot_step "headless boot" "$BOOT_LOG" stream env "${GODOT_ENV[@]}" "$GODOT_BIN" \
   --headless --path "$PROJECT_COPY" --quit-after 5
+assert_no_script_error "headless boot" "$BOOT_LOG"
+assert_no_teardown_leak "headless boot" "$BOOT_LOG"
 
 echo "Godot 4.7.2 verification passed."
