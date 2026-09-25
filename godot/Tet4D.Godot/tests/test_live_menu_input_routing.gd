@@ -109,8 +109,15 @@ func run() -> Array:
 # rendered volume moves the way the input moves. The architecture states it for
 # left-drag orientation and for right-drag framing alike, so a mode that
 # negates its own delta is a defect even though it is self-consistent. The
-# projected position of a fixed world point is the observable, since it is what
-# the convention is actually about.
+# rendered position of a fixed collection point is the observable, since it is
+# what the convention is actually about: under the Live-4D presentation
+# reflection a raw world point and its rendered image move in opposite
+# horizontal directions.
+func _rendered_origin(rig) -> Vector2:
+	var root: Node3D = rig._world_presentation_root
+	return rig.project_world_point(root.to_global(Vector3.ZERO) if root != null else Vector3.ZERO)
+
+
 func _assert_mouse_translation_direction(tree: SceneTree, app, mode_shapes: Dictionary, failures: Array) -> void:
 	for mode in ["live_2d", "live_3d", "live_4d"]:
 		app._start_configured_live_game(_setup(mode, mode_shapes[mode]))
@@ -124,11 +131,11 @@ func _assert_mouse_translation_direction(tree: SceneTree, app, mode_shapes: Dict
 		button.pressed = true
 		app._handle_camera_input(button)
 		for delta in [Vector2(12, 0), Vector2(-12, 0), Vector2(0, 12), Vector2(0, -12)]:
-			var before: Vector2 = rig.project_world_point(Vector3.ZERO)
+			var before: Vector2 = _rendered_origin(rig)
 			var motion := InputEventMouseMotion.new()
 			motion.relative = delta
 			app._handle_camera_input(motion)
-			var displacement: Vector2 = rig.project_world_point(Vector3.ZERO) - before
+			var displacement: Vector2 = _rendered_origin(rig) - before
 			if displacement.distance_to(delta) > 0.5:
 				failures.append("%s right-drag %s moved the rendered volume by %s" % [mode, delta, displacement])
 		button.pressed = false

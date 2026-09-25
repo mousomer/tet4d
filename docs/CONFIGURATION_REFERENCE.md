@@ -1745,12 +1745,6 @@ Parameters:
 - `path_classification.unknown_path_policy`: `"full_repository_gate"` (`string`)
 - `platform_evidence.abstract_requirement`: `"platform"` (`string`)
 - `platform_evidence.description`: `"Platform verification carries explicit platform identity. The abstra...` (`string`)
-- `platform_evidence.hosted_lanes.platform_ipados.build_entrypoint`: `"packaging/godot/build_ipados.sh"` (`string`)
-- `platform_evidence.hosted_lanes.platform_ipados.canonical_command`: `"ipados_release_export"` (`string`)
-- `platform_evidence.hosted_lanes.platform_ipados.lane`: `"platform_ipados"` (`string`)
-- `platform_evidence.hosted_lanes.platform_ipados.packaging_consumer`: `"legacy_designer_ipados"` (`string`)
-- `platform_evidence.hosted_lanes.platform_ipados.platform_id`: `"ipados"` (`string`)
-- `platform_evidence.hosted_lanes.platform_ipados.workflow_job`: `"platform-ipados"` (`string`)
 - `platform_evidence.hosted_lanes.platform_macos.build_entrypoint`: `"packaging/godot/build_macos.sh"` (`string`)
 - `platform_evidence.hosted_lanes.platform_macos.canonical_command`: `"macos_release_export"` (`string`)
 - `platform_evidence.hosted_lanes.platform_macos.lane`: `"platform_macos"` (`string`)
@@ -1775,7 +1769,7 @@ Parameters:
 - `requirement_to_lanes.parity_or_conformance[]`: array[`string`]; examples: `"deterministic_parity"`
 - `requirement_to_lanes.platform[]`: array[`empty`]
 - `requirement_to_lanes.platform_android[]`: array[`empty`]
-- `requirement_to_lanes.platform_ipados[]`: array[`string`]; examples: `"platform_ipados"`
+- `requirement_to_lanes.platform_ipados[]`: array[`empty`]
 - `requirement_to_lanes.platform_linux[]`: array[`empty`]
 - `requirement_to_lanes.platform_macos[]`: array[`string`]; examples: `"platform_macos"`
 - `requirement_to_lanes.platform_windows[]`: array[`empty`]
@@ -2407,7 +2401,7 @@ Parameters:
 - `governance.tech_debt_budget.status_order.low`: `0` (`int`)
 - `governance.tech_debt_budget.status_order.moderate`: `1` (`int`)
 - `governance.verification_command`: `"./scripts/verify.sh"` (`string`)
-- `governance_surface.active_governance.active_task[]`: array[`string`]; examples: `"docs/tasks/windows_designer_package_identity_validation.md"`
+- `governance_surface.active_governance.active_task[]`: array[`empty`]
 - `governance_surface.active_governance.human[]`: array[`string`]; examples: `"AGENTS.md"`, `"CLAUDE.md"`, `"CONTRIBUTING.md"`
 - `governance_surface.active_governance.machine[]`: array[`string`]; examples: `"config/project/policy_pack.json"`
 - `governance_surface.active_governance.operational[]`: array[`string`]; examples: `"CURRENT_STATE.md"`, `"docs/BACKLOG.md"`
@@ -2417,7 +2411,7 @@ Parameters:
 - `governance_surface.canonical_serialization.format_version`: `1` (`int`)
 - `governance_surface.canonical_serialization.newline_terminated`: `true` (`bool`)
 - `governance_surface.canonical_serialization.tool`: `"tools/governance/policy_pack_io.py"` (`string`)
-- `governance_surface.document_roles.active_task[]`: array[`string`]; examples: `"docs/tasks/windows_designer_package_identity_validation.md"`
+- `governance_surface.document_roles.active_task[]`: array[`empty`]
 - `governance_surface.document_roles.architecture[]`: array[`string`]; examples: `"docs/ARCHITECTURE_CONTRACT.md"`, `"docs/architecture"`
 - `governance_surface.document_roles.current_state[]`: array[`string`]; examples: `"CURRENT_STATE.md"`
 - `governance_surface.document_roles.generated_reference[]`: array[`string`]; examples: `"docs/CONFIGURATION_REFERENCE.md"`, `"docs/USER_SETTINGS_REFERENCE.md"`, `"docs/PROJECT_STRUCTURE.md"`
@@ -2428,7 +2422,7 @@ Parameters:
 - `governance_surface.document_roles.template[]`: array[`string`]; examples: `"tools/templates/governance"`
 - `governance_surface.edge_state_profiles.CURRENT_STATE.md.limit_rationale[]`: array[`string`]; examples: `"human_reviewability"`, `"restart_handoff_usability"`
 - `governance_surface.edge_state_profiles.CURRENT_STATE.md.operational_role`: `"restart_handoff_context"` (`string`)
-- `governance_surface.edge_state_profiles.docs/BACKLOG.md.limit_rationale[]`: array[`string`]; examples: `"human_reviewability"`, `"structural_discipline"`
+- `governance_surface.edge_state_profiles.docs/BACKLOG.md.limit_rationale[]`: array[`empty`]
 - `governance_surface.edge_state_profiles.docs/BACKLOG.md.operational_role`: `"conditional_open_work_authority"` (`string`)
 - `governance_surface.file_classifications.archival_history[]`: array[`string`]; examples: `"docs/history"`
 - `governance_surface.file_classifications.edge_state[]`: array[`string`]; examples: `"CURRENT_STATE.md"`, `"docs/BACKLOG.md"`
@@ -2444,7 +2438,6 @@ Parameters:
 - `governance_surface.machine_policy_byte_limits.status`: `"temporary_provisional_operational_ceiling"` (`string`)
 - `governance_surface.per_file_limits.AGENTS.md`: `150` (`int`)
 - `governance_surface.per_file_limits.CURRENT_STATE.md`: `150` (`int`)
-- `governance_surface.per_file_limits.docs/BACKLOG.md`: `300` (`int`)
 - `governance_surface.per_file_limits.docs/governance/CHANGE_GOVERNANCE.md`: `300` (`int`)
 - `governance_surface.per_file_limits.docs/governance/CONFIG_AND_GENERATED_DATA.md`: `300` (`int`)
 - `governance_surface.per_file_limits.docs/governance/ENGINEERING.md`: `300` (`int`)

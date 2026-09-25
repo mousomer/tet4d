@@ -80,16 +80,17 @@ phrase-sensitive fallback routing, observed for natural Stage 56G wording.
 The postmortem correction classifies `CURRENT_STATE.md` and `docs/BACKLOG.md`
 as edge-state files and records their distinct operational roles. Backlog is
 conditional routed open-work authority; current-state is restart/staged-handoff
-context. Raw size is descriptive rather than a task-quality penalty. Existing
-LOC guards remain for their declared human-reviewability, structural-discipline,
-or handoff-usability reasons. Follow-up calibration needs real task trajectories
-with resolver and bounded-read evidence before making any claim about actual
-agent-context pressure or changing those limits.
+context. Raw size is descriptive rather than a task-quality penalty. The
+backlog has no size limit: it is measured and reported, and items leave it when
+completed or obsolete. `CURRENT_STATE.md` keeps its 150-line handoff-usability
+guard. Claims about actual agent-context pressure still need real task
+trajectories with resolver and bounded-read evidence.
 
 The PR118-baseline migration-bundle check separately reproduces stale generated metadata,
 including the old `da6e2dd6...` policy digest. Regeneration also adds governance
 config inputs and refreshes authority-document hashes, so that broader generated
-artifact repair remains deferred from C1.
+artifact repair remains deferred from C1. The bundles' `codex_ci_lanes.json`
+digest is likewise stale since iPadOS left hosted CI; that repair refreshes both.
 
 ### Governance pack, telemetry and work-type rollout
 
@@ -140,12 +141,13 @@ machine-local onboarding preferences while preserving the profile-owned
 guidance setting. Stage 56G-R now supplies one apparent-size responsive policy
 across all live dimensions, real-window acceptance from 1728×1080 to 720×600,
 active-resize coverage, bounded ordered deck flow, and repaired visual evidence.
-Human playability, final polish, and the 190/200 human A/B choice remain gated as Stages 56H–56I.
+Stage 56H is a gameplay/product acceptance checkpoint, not a release gate; Stage
+56I polish, the 190/200 A/B choice, and cockpit refinement continue after it.
 
 ### Three-product packaging gaps
 
-Implement the missing package identities required by the authoritative
-`product_platform_contract` without treating transitional jobs as support.
+The missing `product_platform_contract` package identities are future release work
+under the platform priority below; transitional jobs are not support.
 
 Acceptance boundary:
 
@@ -158,12 +160,11 @@ Acceptance boundary:
 
 - Godot game / Windows and Godot game / Linux need distinct distributable
   packages and acceptance; the existing Windows package is Designer only;
-- Godot game / Android and Godot game / iPadOS must replace the transitional
-  Designer-identity tablet exports with game identity and entry semantics;
-- the iPadOS game implementation must resolve godot-cpp static-link composition
-  and simulator architecture compatibility; and
-- Designer / macOS needs a genuinely distinct application identity and entry
-  contract; renaming the current `Tet4D.app` game ZIP is insufficient.
+- Godot game / Android must replace the transitional Designer-identity tablet
+  export with game identity and entry semantics (Godot game / iPadOS is a
+  long-term option; see Release and platform); and
+- Designer / macOS (deferred) needs a genuinely distinct application identity
+  and entry contract; renaming the current `Tet4D.app` game ZIP is insufficient.
 
 The existing Python macOS/Windows/Linux packages, Godot game macOS package, and
 Designer Windows package are implemented cells and remain separate evidence
@@ -172,34 +173,26 @@ remain bound to their product's canonical `artifact_name_token`; the
 transitional tablet consumers retain Designer naming only under their closed,
 named status exception.
 
-### 0.9.0 release-control boundary
+### Platform priority and release control
 
-The 0.9.0 release-control path may release an arbitrary validated subset of the
-seven registered packaging consumers without changing the ten-cell product
-target matrix. The expected first candidate is the Godot game macOS consumer
-and the Designer Windows consumer, but that pair is not hard-coded: the manual
-candidate workflow accepts registered `consumer_id` scope and records the exact
-selected bytes in a v2 manifest before it creates a draft. A separate manual
-publication workflow can publish only that inspected, byte-validated draft.
+- Near term: Stage 56H, then continued product and design work (see Stage 56).
+- Future release priority, once release work is justified: Windows, Linux, then
+  Android tablets, in strategic order with overlap allowed; this starts no
+  packaging, porting, monetization, or storefront work.
+- Deferred: macOS public distribution, then iPadOS, until distribution nears.
 
-The initial full-matrix candidate remains blocked on Windows Designer package
-identity acceptance. PCK validation now rejects out-of-file resource ranges and
-truncated format-4 headers. This narrow blocker is tracked by the active task
-record `docs/tasks/windows_designer_package_identity_validation.md`; it does
-not authorize another candidate dispatch or alter release scope.
+`v0.9.0` was published on 2026-09-04 from `3d06bb96` with all seven registered
+consumers, after the Windows Designer package identity repair. Release control
+may release any validated subset of those consumers without changing the
+ten-cell product target matrix: the manual candidate workflow records the
+selected bytes in a v2 manifest before it creates a draft, and a separate
+manual workflow publishes only that inspected, byte-validated draft.
 
 This operational readiness does not close any missing target cell. Godot game
 Windows/Linux/Android/iPadOS and Designer macOS remain separate package and
 acceptance work. The transitional Designer Android artifact and transitional
 Designer iPadOS artifact remain technical evidence under their machine
 identifiers; they do not become supported Designer platforms or game packages.
-
-The repaired grandfathered `legacy_designer_ipados` package path provides
-technical evidence for native archive composition, matching godot-cpp linkage,
-truthful `arm64` device and `x86_64` simulator slices, XCFramework/native-symbol
-validation, and an unsigned hosted simulator final link. It remains
-transitional evidence only; it does not promote Designer/iPadOS or close the
-Godot game/iPadOS target gap.
 
 ## Accepted Next Product Boundaries
 
@@ -234,13 +227,20 @@ Godot game/iPadOS target gap.
 
 - Clean-machine Windows and iPadOS runtime acceptance remain real-platform
   evidence, not claims inferred from macOS or package structure.
-- Hosted CI platform lanes exist for macOS and iPadOS only. `platform_windows`,
-  `platform_linux`, and `platform_android` are declared manual in
-  `config/project/codex_ci_lanes.json`: a change to those packaging paths
-  reports outstanding platform evidence instead of borrowing another platform's
-  job. Adding those hosted lanes needs their own scope and runner contract.
-- Developer ID signing/notarization and broader distribution are separate
-  release prerequisites.
+- The hosted CI platform lane exists for macOS only. `platform_windows`,
+  `platform_linux`, `platform_android`, and `platform_ipados` are declared
+  manual in `config/project/codex_ci_lanes.json`: a change to those packaging
+  paths reports outstanding platform evidence instead of borrowing another
+  platform's job. Adding those hosted lanes needs their own scope and runner
+  contract.
+- iPadOS is a long-term option, not an immediate goal: the Godot game/iPadOS
+  target (godot-cpp static-link composition, simulator architecture), Design
+  Laboratory iPadOS acceptance, hosted CI evidence, and release scope. Packaging
+  code, its unit tests, and the manual release job remain so it can resume;
+  resuming restores the hosted CI job, routing tests, and gate wiring.
+- macOS public distribution waits until commercialization nears: Developer ID
+  enrollment, signing, notarization, stapling, Apple release automation, and
+  App Store/provisioning. macOS stays a development, playtest, and CI platform.
 
 ### Product and presentation
 

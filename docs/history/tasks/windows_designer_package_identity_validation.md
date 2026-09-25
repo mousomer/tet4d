@@ -1,6 +1,8 @@
 # Task Contract — Windows Designer Package Identity Validation
 
-Status: active on `codex/fix-designer-package-identity-validation`.
+Status: HISTORICAL / NON-AUTHORITATIVE. Completed by mousomer/tet4d#101, merged
+on 2026-09-04 as `3d06bb96`; `v0.9.0` was published from that commit the same
+day with all seven registered consumers.
 
 ## Objective
 
