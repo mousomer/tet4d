@@ -446,10 +446,13 @@ func _assert_reflected_fit_enclosure(failures: Array, rig, presentation_root: No
 
 
 func _assert_pan_and_framing_reflection_contract(failures: Array, rig, presentation_root: Node3D) -> void:
-	var probe_world := presentation_root.to_global(Vector3(3.0, 0.0, 0.0))
-	var before_pan: Vector2 = rig.project_world_point(probe_world)
+	# The probe is a point of the rendered collection. The reflection plane moves
+	# with the focus, so its rendered position is recomputed after the pan;
+	# reusing the pre-pan position would measure the camera, not the collection.
+	var probe_local := Vector3(3.0, 0.0, 0.0)
+	var before_pan: Vector2 = rig.project_world_point(presentation_root.to_global(probe_local))
 	rig.pan_screen(Vector2(12.0, 0.0))
-	var after_pan: Vector2 = rig.project_world_point(probe_world)
+	var after_pan: Vector2 = rig.project_world_point(presentation_root.to_global(probe_local))
 	if after_pan.x - before_pan.x <= SCREEN_RIGHT_TOLERANCE_PX:
 		failures.append("right-drag-right pan must continue translating the collection screen-right")
 	rig.restore_fitted_framing()

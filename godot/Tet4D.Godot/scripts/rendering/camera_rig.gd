@@ -265,8 +265,12 @@ func pan_screen(delta: Vector2) -> void:
 		viewport_height = maxf(viewport.get_visible_rect().size.y, 1.0)
 	var world_units_per_pixel := _camera.size / viewport_height
 	var effective_camera_basis := _camera.get_camera_transform().basis
+	# The rendered volume follows the pointer. The presentation reflection
+	# mirrors the rendered world across the camera's vertical plane, so while it
+	# is active the focus must move with the pointer horizontally, not against it.
+	var horizontal_sign := 1.0 if _horizontal_reflection_active else -1.0
 	var offset := (
-		-effective_camera_basis.x * delta.x
+		effective_camera_basis.x * (horizontal_sign * delta.x)
 		+ effective_camera_basis.y * delta.y
 	) * world_units_per_pixel
 	_target_focus += offset
