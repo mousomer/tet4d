@@ -165,7 +165,7 @@ assert_no_script_error() {
 assert_no_teardown_leak() {
   local label="$1"
   local log_path="$2"
-  local leak_pattern='^(WARNING: [0-9]+ RIDs of type ".*" were leaked\.|WARNING: [0-9]+ ObjectDB instances were leaked at exit|ERROR: [0-9]+ resources still in use at exit|ERROR: Pages in use exist at exit in PagedAllocator:|ERROR: [0-9]+ RID allocations of type .* were leaked at exit\.)'
+  local leak_pattern='^(WARNING: [0-9]+ RIDs of type ".*" were leaked\.|WARNING: [0-9]+ ObjectDB instances? (was|were) leaked at exit|ERROR: [0-9]+ resources still in use at exit|ERROR: Pages in use exist at exit in PagedAllocator:|ERROR: [0-9]+ RID allocations of type .* were leaked at exit\.)'
   if grep -Eq "$leak_pattern" "$log_path"; then
     echo "Godot step '$label' reported an unexpected teardown leak:" >&2
     grep -nE "$leak_pattern" "$log_path" >&2
