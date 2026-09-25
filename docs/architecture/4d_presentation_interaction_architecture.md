@@ -27,7 +27,9 @@ The following refinements make its visible consequences explicit:
    to the Live-3D convention and binds right-drag framing to the same one, so no
    mode may invert either gesture for itself. `camera.invert_y` reverses
    vertical input only. The adapter accounts for the passive `L` render
-   transform; it does not move this interaction into outer `V/P`.
+   transform; it does not move this interaction into outer `V/P`. Right-drag
+   framing likewise accounts for the fixed Live-4D presentation reflection:
+   the rendered volume, not the unreflected world behind it, follows the pointer.
 3. Normal-gameplay `L` is bounded to `-40..+80` degrees pitch. The positive
    extension remains strictly short of the semantic-Forward inversion boundary;
    yaw remains unrestricted and the exact basis `B` remains unchanged.

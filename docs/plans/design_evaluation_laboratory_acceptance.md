@@ -1,8 +1,8 @@
 # Design Evaluation Laboratory Acceptance
 
-Status: AUTOMATED LOCAL ACCEPTANCE GREEN / HUMAN DESIGN ACCEPTANCE PENDING ON ALL THREE PLATFORMS
+Status: AUTOMATED LOCAL ACCEPTANCE GREEN / HUMAN DESIGN ACCEPTANCE PENDING ON WINDOWS AND ANDROID / IPADOS DEFERRED AS A LONG-TERM OPTION
 
-Last updated: 2026-08-31
+Last updated: 2026-09-25
 
 Authority: maintenance acceptance record for Stage 54F-5. The durable behavior
 and promotion boundary are owned by
@@ -87,9 +87,11 @@ feature.
   `ubuntu-latest`, which has all three.
 - **iPadOS build.** This host has Command Line Tools but not Xcode, so there is
   no iPhoneOS SDK for `xcodebuild` or for the iOS GDExtension. The Xcode project
-  itself exports and validates locally. The `package-ipados` CI job runs on
-  `macos-latest`, which has full Xcode, and compiles the exported project
-  unsigned for the simulator.
+  itself exports and validates locally. iPadOS is now a long-term option
+  outside the immediate goals and has no hosted CI lane; the manually
+  dispatched `package-transitional-designer-ipados` release job still runs on
+  `macos-latest` with full Xcode and compiles the exported project unsigned for
+  the simulator when a release scope selects it.
 - **Devices.** No Android tablet, emulator, `adb`, iPad, iOS Simulator, or
   external physical keyboard was available. No claim of emulator, simulator, or
   physical-keyboard acceptance is made anywhere in this record.
@@ -283,6 +285,9 @@ build. Do not begin until that artifact exists.
 - [ ] Uninstall and confirm no application files remain.
 
 ## iPadOS acceptance
+
+Deferred: iPadOS is a long-term option, not an immediate goal. This checklist
+is kept for when it resumes and is not pending work; see `docs/BACKLOG.md`.
 
 Configuration: an iPad in landscape with a Magic Keyboard, Bluetooth, or USB
 keyboard, optionally a trackpad. Touch and trackpad are supplementary.

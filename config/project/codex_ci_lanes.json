@@ -11,7 +11,6 @@
     "integration",
     "packaging",
     "platform_macos",
-    "platform_ipados",
     "release_acceptance"
   ],
   "always_run_lanes": [
@@ -53,9 +52,7 @@
     "platform_windows": [],
     "platform_linux": [],
     "platform_android": [],
-    "platform_ipados": [
-      "platform_ipados"
-    ],
+    "platform_ipados": [],
     "release_acceptance": [
       "release_acceptance"
     ]
@@ -64,7 +61,8 @@
     "human_visual",
     "platform_windows",
     "platform_linux",
-    "platform_android"
+    "platform_android",
+    "platform_ipados"
   ],
   "abstract_requirements": {
     "platform": [
@@ -94,20 +92,13 @@
         "packaging_consumer": "godot_game_macos",
         "canonical_command": "macos_release_export",
         "build_entrypoint": "packaging/godot/build_macos.sh"
-      },
-      "platform_ipados": {
-        "lane": "platform_ipados",
-        "platform_id": "ipados",
-        "workflow_job": "platform-ipados",
-        "packaging_consumer": "legacy_designer_ipados",
-        "canonical_command": "ipados_release_export",
-        "build_entrypoint": "packaging/godot/build_ipados.sh"
       }
     },
     "unhosted_platform_requirements": [
       "platform_windows",
       "platform_linux",
-      "platform_android"
+      "platform_android",
+      "platform_ipados"
     ]
   },
   "full_repository_gate_lanes": [
@@ -120,7 +111,6 @@
     "integration",
     "packaging",
     "platform_macos",
-    "platform_ipados",
     "release_acceptance"
   ],
   "path_classification": {
