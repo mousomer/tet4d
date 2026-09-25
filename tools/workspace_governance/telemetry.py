@@ -15,8 +15,10 @@ failure here degrades to a single warning on stderr.
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
 import os
+import secrets
 import subprocess
 import sys
 import uuid
@@ -37,11 +39,30 @@ SCHEMA_FILE = Path(__file__).parent / "schemas/telemetry-event.v1.schema.json"
 PRODUCER = "workspace-governance"
 CONTEXT_VARIABLE = "GOVERNANCE_TELEMETRY_CONTEXT"
 STORE_DIR = "workspace-governance"
-CONTEXT_FIELDS = ("session_id", "task_id", "tool_call_id", "agent", "model")
+CONTEXT_FIELDS = ("session_id", "task_id", "agent", "model")
+KEY_FILENAME = "telemetry-key-v1"
+GOV_ARGV_NORMALIZATION = "gov-argv-1"
+WORKSPACE_PATH_NORMALIZATION = "workspace-path-1"
+GOVERNANCE_DIAGNOSTIC_FACT_NORMALIZATION = "governance-diagnostic-fact-1"
+
+_GOV_COMMANDS = frozenset({"check", "resolve", "explain", "doctor", "sync", "env"})
+_GOV_BOOLEAN_OPTIONS = frozenset(
+    {"--json", "--print-interpreter", "--allow-missing-interpreter"}
+)
+_GOV_PRIVATE_VALUE_OPTIONS = frozenset({"--root", "--task", "--route"})
+_GOV_EXECUTION_MODES = frozenset({"LOCAL_FIX", "FEATURE", "STRUCTURAL_CHANGE"})
 
 
 class TelemetryError(ValueError):
     """An event cannot be recorded as a valid telemetry fact."""
+
+
+@dataclass(frozen=True)
+class TelemetryKey:
+    """A local secret and its non-secret rotation-detection identifier."""
+
+    secret: bytes
+    key_id: str
 
 
 @dataclass(frozen=True)
@@ -88,34 +109,123 @@ def resolve_settings(
     return TelemetrySettings(enabled and directory is not None, workspace_id, directory)
 
 
-def _hashed(value: str) -> dict[str, object]:
-    return {
-        "sha256": hashlib.sha256(value.encode("utf-8")).hexdigest(),
-        "length": len(value),
+def telemetry_key(directory: Path) -> TelemetryKey:
+    """Load or securely create this workspace store's private telemetry key.
+
+    The key lives beside the append-only observations, never in a checkout.
+    Its identifier lets a reader detect rotation or deletion without exposing
+    the secret or treating records made under a new key as comparable.
+    """
+    directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+    key_path = directory / KEY_FILENAME
+    try:
+        descriptor = os.open(key_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    except FileExistsError:
+        descriptor = None
+    if descriptor is not None:
+        try:
+            secret = secrets.token_bytes(32)
+            os.write(descriptor, secret)
+        finally:
+            os.close(descriptor)
+    else:
+        # Ensure an old key cannot become group- or world-readable.
+        os.chmod(key_path, 0o600)
+        with key_path.open("rb") as handle:
+            secret = handle.read()
+    if len(secret) != 32:
+        raise TelemetryError("telemetry key has an invalid length")
+    key_id = hmac.new(
+        secret,
+        b"workspace-governance telemetry key identifier v1",
+        hashlib.sha256,
+    ).hexdigest()
+    return TelemetryKey(secret=secret, key_id=key_id)
+
+
+def private_identity(
+    value: str,
+    key: TelemetryKey,
+    *,
+    normalization: str,
+    include_length: bool = False,
+) -> dict[str, object]:
+    """A key-scoped correlatable identity for a privacy-sensitive value."""
+    identity: dict[str, object] = {
+        "hmac_sha256": hmac.new(
+            key.secret, value.encode("utf-8"), hashlib.sha256
+        ).hexdigest(),
+        "key_id": key.key_id,
+        "normalization": normalization,
     }
+    if include_length:
+        identity["length"] = len(value)
+    return identity
 
 
-def recorded_arguments(
-    argv: list[str], sensitive_options: frozenset[str]
+def _gov_value_token(option: str, value: str, key: TelemetryKey) -> dict[str, object]:
+    if option == "--mode" and value in _GOV_EXECUTION_MODES:
+        return {"value": value}
+    return private_identity(
+        value, key, normalization=GOV_ARGV_NORMALIZATION, include_length=True
+    )
+
+
+def _gov_option_token(
+    token: str, key: TelemetryKey
+) -> tuple[dict[str, object], str | None] | None:
+    """Return a classified `gov` option and its pending value option, if any."""
+    if token in _GOV_BOOLEAN_OPTIONS:
+        return {"value": token}, None
+    option, separator, value = token.partition("=")
+    if option in _GOV_PRIVATE_VALUE_OPTIONS:
+        if separator:
+            return {
+                "prefix": option + separator,
+                **_gov_value_token(option, value, key),
+            }, None
+        return {"value": token}, option
+    if option == "--mode":
+        if separator:
+            value_token = _gov_value_token(option, value, key)
+            if value_token == {"value": value}:
+                return {"value": token}, None
+            return {"prefix": option + separator, **value_token}, None
+        return {"value": token}, option
+    return None
+
+
+def recorded_gov_arguments(
+    argv: list[str], key: TelemetryKey
 ) -> list[dict[str, object]]:
-    """One token per argument; the values of sensitive options only as hashes.
+    """Classify the owned `gov` grammar without retaining free-form values.
 
-    Free text and machine paths are recorded as a hash and a length, never as
-    content. Which options carry them is the observer's knowledge of the
-    program, so the caller names them.
+    This deliberately is not a shell parser. Only fixed command names, option
+    names, execution-mode values, and boolean switches are literals. Every
+    positional value, free-form option value, and machine path is an HMAC
+    identity using the explicitly versioned `gov-argv-1` normalization.
     """
     tokens: list[dict[str, object]] = []
-    hash_next = False
+    command: str | None = None
+    value_for: str | None = None
+
+    def private(value: str) -> dict[str, object]:
+        return _gov_value_token("", value, key)
+
     for token in argv:
-        option, separator, value = token.partition("=")
-        if hash_next:
-            tokens.append(_hashed(token))
-            hash_next = False
-        elif option in sensitive_options and separator:
-            tokens.append({"prefix": option + separator, **_hashed(value)})
-        else:
+        if value_for is not None:
+            tokens.append(_gov_value_token(value_for, token, key))
+            value_for = None
+            continue
+        option_token = _gov_option_token(token, key)
+        if option_token is not None:
+            classified, value_for = option_token
+            tokens.append(classified)
+        elif command is None and token in _GOV_COMMANDS:
+            command = token
             tokens.append({"value": token})
-            hash_next = token in sensitive_options
+        else:
+            tokens.append(private(token))
     return tokens
 
 
@@ -164,10 +274,12 @@ def _git(root: Path, *args: str) -> str | None:
     return value if completed.returncode == 0 and value else None
 
 
-def checkout_identity(root: Path) -> dict[str, object]:
+def checkout_identity(root: Path, key: TelemetryKey) -> dict[str, object]:
     """Which checkout acted, without recording where it lives on this machine."""
     identity: dict[str, object] = {
-        "path_sha256": hashlib.sha256(str(root.resolve()).encode("utf-8")).hexdigest()
+        "path": private_identity(
+            str(root.resolve()), key, normalization=WORKSPACE_PATH_NORMALIZATION
+        )
     }
     revision = _git(root, "rev-parse", "HEAD")
     branch = _git(root, "rev-parse", "--abbrev-ref", "HEAD")
@@ -181,6 +293,7 @@ def checkout_identity(root: Path) -> dict[str, object]:
 def governance_enrichment(
     subcommand: str,
     diagnostics: list[dict[str, Any]],
+    key: TelemetryKey,
     resolution: dict[str, Any] | None = None,
 ) -> dict[str, object]:
     """What only a first-hand `gov` observer knows about its own execution."""
@@ -189,7 +302,12 @@ def governance_enrichment(
         "diagnostics": [
             {
                 "code": str(item.get("code")),
-                "fact": str(item.get("fact")),
+                "fact": private_identity(
+                    str(item.get("fact")),
+                    key,
+                    normalization=GOVERNANCE_DIAGNOSTIC_FACT_NORMALIZATION,
+                    include_length=True,
+                ),
                 "owner": str(item.get("owner")),
             }
             for item in diagnostics
@@ -208,36 +326,49 @@ def build_command_execution(
     producer_version: str,
     program: str,
     arguments: list[dict[str, object]],
-    exit_status: int,
-    duration_ms: int,
+    key: TelemetryKey,
+    exit_status: int | None = None,
+    duration_ms: int | None = None,
+    observed_at: str | None = None,
+    recorded_at: str | None = None,
     governance: dict[str, object] | None = None,
     environ: dict[str, str] | None = None,
 ) -> dict[str, object]:
     """A first-hand observation of a command this process executed.
 
-    The process identities are correlation evidence: another observer of the
-    same execution, such as an agent transcript, can be matched to them
-    explicitly rather than by program, arguments and time.
+    Process IDs are only local, ephemeral supplementary evidence. They can
+    support a later correlation conclusion, but are not a cross-source
+    invocation identity and never replace source_ref, evidence_ref, or this
+    observation's own identity.
     """
+    program_identity = Path(program).name
+    if not program_identity:
+        raise TelemetryError("program must have a basename or logical name")
     payload: dict[str, object] = {
-        "program": program,
+        "program": program_identity,
         "arguments": arguments,
-        "exit_status": exit_status,
-        "duration_ms": max(0, duration_ms),
+        "phase": "completion",
         "invocation": {
             "process_id": os.getpid(),
             "parent_process_id": os.getppid(),
         },
     }
+    if exit_status is not None:
+        payload["exit_status"] = exit_status
+    if duration_ms is not None:
+        payload["duration_ms"] = max(0, duration_ms)
     if governance is not None:
         payload["governance"] = governance
+    observed = observed_at or datetime.now(UTC).isoformat().replace("+00:00", "Z")
     event: dict[str, object] = {
         "schema_version": SCHEMA_VERSION,
-        "event_id": uuid.uuid4().hex,
+        "observation_id": uuid.uuid4().hex,
         "event_type": "command_execution",
-        "observed_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+        "observed_at": observed,
+        "recorded_at": recorded_at
+        or datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "workspace_id": workspace_id,
-        "checkout": checkout_identity(root),
+        "checkout": checkout_identity(root, key),
         "context": run_context(environ),
         "source": {
             "kind": "self_instrumented",
@@ -281,18 +412,23 @@ def _schema() -> dict[str, Any]:
 
 
 def _argument_issues(event: dict[str, Any]) -> list[str]:
-    """Each token is a literal, or a hash with an optional literal prefix."""
+    """Each token is a safe literal or a keyed private identity."""
     payload = event.get("payload")
     tokens = payload.get("arguments") if isinstance(payload, dict) else None
     issues = []
     for index, token in enumerate(tokens if isinstance(tokens, list) else []):
         keys = set(token) if isinstance(token, dict) else set()
+        private = {"hmac_sha256", "key_id", "normalization"}
         if keys not in (
             {"value"},
-            {"sha256", "length"},
-            {"prefix", "sha256", "length"},
+            private,
+            private | {"length"},
+            private | {"prefix"},
+            private | {"prefix", "length"},
         ):
-            issues.append(f"payload.arguments[{index}]: not a literal or a hash")
+            issues.append(
+                f"payload.arguments[{index}]: not a literal or keyed private identity"
+            )
     return issues
 
 
@@ -310,7 +446,7 @@ def append_event(directory: Path, event: dict[str, Any]) -> Path:
     if problems:
         raise TelemetryError("; ".join(problems))
     directory.mkdir(parents=True, exist_ok=True, mode=0o700)
-    day = str(event["observed_at"])[:10]
+    day = str(event["recorded_at"])[:10]
     path = directory / f"events-{day}.jsonl"
     line = (json.dumps(event, sort_keys=True, separators=(",", ":")) + "\n").encode()
     descriptor = os.open(path, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o600)
@@ -345,8 +481,10 @@ def record(settings: TelemetrySettings, event_factory) -> Path | None:
 
 __all__ = [
     "CONTEXT_VARIABLE",
+    "GOVERNANCE_DIAGNOSTIC_FACT_NORMALIZATION",
     "SCHEMA_VERSION",
     "TelemetryError",
+    "TelemetryKey",
     "TelemetrySettings",
     "append_event",
     "build_command_execution",
@@ -354,11 +492,13 @@ __all__ = [
     "event_issues",
     "governance_enrichment",
     "iter_events",
+    "private_identity",
     "producer_version",
     "record",
-    "recorded_arguments",
+    "recorded_gov_arguments",
     "resolution_summary",
     "resolve_settings",
     "run_context",
     "store_directory",
+    "telemetry_key",
 ]

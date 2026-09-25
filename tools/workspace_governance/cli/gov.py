@@ -25,10 +25,6 @@ from tools.workspace_governance.validators.core import (
     resolve_interpreter,
 )
 
-# Options whose values are free text or machine paths; telemetry records them
-# only as hashes.
-SENSITIVE_OPTIONS = frozenset({"--task", "--root"})
-
 
 def _emit(value: object, *, as_json: bool) -> None:
     if as_json:
@@ -170,8 +166,12 @@ def _record(
 ) -> None:
     """Record this execution as a first-hand observation, if enabled."""
     resolver = GovernanceResolver.for_root(root)
+    settings = resolver.telemetry_settings()
 
     def event() -> dict[str, object]:
+        if settings.directory is None:
+            raise telemetry.TelemetryError("telemetry store has no directory")
+        key = telemetry.telemetry_key(settings.directory)
         workspace = load_manifest_json(resolver.workspace_path)
         try:
             project_id = resolver.load()[1]["project"]["id"]
@@ -183,15 +183,16 @@ def _record(
             project_id=project_id,
             producer_version=telemetry.producer_version(),
             program="gov",
-            arguments=telemetry.recorded_arguments(argv, SENSITIVE_OPTIONS),
+            arguments=telemetry.recorded_gov_arguments(argv, key),
+            key=key,
             exit_status=status,
             duration_ms=int((time.monotonic() - started) * 1000),
             governance=telemetry.governance_enrichment(
-                args.command, observed["diagnostics"], observed["resolution"]
+                args.command, observed["diagnostics"], key, observed["resolution"]
             ),
         )
 
-    telemetry.record(resolver.telemetry_settings(), event)
+    telemetry.record(settings, event)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -226,7 +227,13 @@ def main(argv: list[str] | None = None) -> int:
     root = args.root.resolve()
     observed: dict[str, Any] = {"diagnostics": [], "resolution": None}
     status = _dispatch(args, root, explain, observed)
-    _record(args, original_argv, root, status, started, observed)
+    try:
+        _record(args, original_argv, root, status, started, observed)
+    except Exception as exc:  # noqa: BLE001 - final telemetry-isolation boundary
+        # Recording is observational only. The command status above is final;
+        # do not catch BaseException so Ctrl-C and process termination remain
+        # visible to their callers.
+        print(f"gov: telemetry not recorded: {exc}", file=sys.stderr)
     return status
 
 
