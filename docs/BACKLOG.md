@@ -155,8 +155,8 @@ Acceptance boundary:
 - Godot game / Windows and Godot game / Linux need distinct distributable
   packages and acceptance; the existing Windows package is Designer only;
 - Godot game / Android must replace the transitional Designer-identity tablet
-  export with game identity and entry semantics (Godot game / iPadOS is
-  deferred; see Release and platform); and
+  export with game identity and entry semantics (Godot game / iPadOS is a
+  long-term option; see Release and platform); and
 - Designer / macOS needs a genuinely distinct application identity and entry
   contract; renaming the current `Tet4D.app` game ZIP is insufficient.
 
@@ -228,11 +228,11 @@ identifiers; they do not become supported Designer platforms or game packages.
   paths reports outstanding platform evidence instead of borrowing another
   platform's job. Adding those hosted lanes needs their own scope and runner
   contract.
-- All iPadOS work waits for the notarized macOS game release: the Godot
-  game/iPadOS target, its godot-cpp static-link composition and simulator
-  architecture compatibility, and hosted iPadOS CI evidence. The release
-  workflow's transitional Designer iPadOS job still builds on explicit scope.
-  Restoring the hosted lane restores its CI job, routing tests, and gate wiring.
+- iPadOS is a long-term option, not an immediate goal: the Godot game/iPadOS
+  target (godot-cpp static-link composition, simulator architecture), Design
+  Laboratory iPadOS acceptance, hosted CI evidence, and release scope. Packaging
+  code, its unit tests, and the manual release job remain so it can resume;
+  resuming restores the hosted CI job, routing tests, and gate wiring.
 - Developer ID signing/notarization and broader distribution are separate
   release prerequisites.
 

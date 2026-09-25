@@ -210,7 +210,7 @@ def test_ipados_packaging_change_reports_manual_platform_evidence() -> None:
     _classification, selection = _resolve(IPADOS_PACKAGING_DIFF)
     jobs = _workflow_jobs(CI_WORKFLOW_PATH)
 
-    # iPadOS is deferred until the macOS game release: its packaging paths
+    # iPadOS is a long-term option outside the immediate goals: its packaging paths
     # report outstanding platform evidence instead of running a hosted job.
     assert "platform_ipados" not in _hosted_lanes()
     assert "platform_ipados" in selection.verification_requirements
