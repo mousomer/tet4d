@@ -348,6 +348,14 @@ opaque labels that the schema carries and never interprets. It never comes from
 stored there would put the instrument inside the treatment and make switching
 arms a Manifest change.
 
+**One event model.** Every capture source emits events in this one versioned
+schema. An activity has one event type whichever source observed it: a file
+read found in a Codex transcript, reported by a Claude Code hook, or implied by
+a filesystem snapshot is the same kind of event. Sources differ only in the
+`source` block, its provenance and the attribution basis. No source defines its
+own top-level format or a parallel telemetry stream, so reconstruction reads a
+single model.
+
 **Capture is passive.** Sources are the pack's own commands, which emit
 governance events first-hand; importers for agent transcripts; live agent
 hooks; and filesystem snapshots. Importers and hooks are specific to an agent
