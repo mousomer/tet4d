@@ -1,9 +1,12 @@
 """Portable agent telemetry: record generic activity, never interpret it.
 
 The pack records low-level facts about what happened; projects and experiments
-interpret them elsewhere. Events follow a versioned, project-independent
-schema, live outside the repository keyed by workspace identity, and are
-written only on a machine whose local overlay enables telemetry.
+interpret them elsewhere. Each event is one observation: its type and payload
+say what happened, its source and attribution say how it was observed, and an
+optional enrichment block adds what only that observer could see. Events follow
+a versioned, project-independent schema, live outside the repository keyed by
+workspace identity, and are written only on a machine whose local overlay
+enables telemetry.
 
 Recording must never change the outcome of the command it observes: every
 failure here degrades to a single warning on stderr.
@@ -34,10 +37,7 @@ SCHEMA_FILE = Path(__file__).parent / "schemas/telemetry-event.v1.schema.json"
 PRODUCER = "workspace-governance"
 CONTEXT_VARIABLE = "GOVERNANCE_TELEMETRY_CONTEXT"
 STORE_DIR = "workspace-governance"
-CONTEXT_FIELDS = ("session_id", "task_id", "agent", "model")
-# Free text and machine paths are recorded as a hash and a length, never as
-# content: the default record holds identities, not what was said.
-HASHED_ARGUMENTS = frozenset({"task", "root"})
+CONTEXT_FIELDS = ("session_id", "task_id", "tool_call_id", "agent", "model")
 
 
 class TelemetryError(ValueError):
@@ -95,19 +95,28 @@ def _hashed(value: str) -> dict[str, object]:
     }
 
 
-def recorded_arguments(arguments: dict[str, Any]) -> dict[str, Any]:
-    recorded: dict[str, Any] = {}
-    for name, value in sorted(arguments.items()):
-        if value is None or name == "command":
-            continue
-        if isinstance(value, Path):
-            value = str(value)
-        recorded[name] = (
-            _hashed(value)
-            if name in HASHED_ARGUMENTS and isinstance(value, str)
-            else value
-        )
-    return recorded
+def recorded_arguments(
+    argv: list[str], sensitive_options: frozenset[str]
+) -> list[dict[str, object]]:
+    """One token per argument; the values of sensitive options only as hashes.
+
+    Free text and machine paths are recorded as a hash and a length, never as
+    content. Which options carry them is the observer's knowledge of the
+    program, so the caller names them.
+    """
+    tokens: list[dict[str, object]] = []
+    hash_next = False
+    for token in argv:
+        option, separator, value = token.partition("=")
+        if hash_next:
+            tokens.append(_hashed(token))
+            hash_next = False
+        elif option in sensitive_options and separator:
+            tokens.append({"prefix": option + separator, **_hashed(value)})
+        else:
+            tokens.append({"value": token})
+            hash_next = token in sensitive_options
+    return tokens
 
 
 def run_context(environ: dict[str, str] | None = None) -> dict[str, object]:
@@ -169,25 +178,14 @@ def checkout_identity(root: Path) -> dict[str, object]:
     return identity
 
 
-def build_command_event(
-    *,
-    root: Path,
-    workspace_id: str,
-    project_id: str | None,
-    producer_version: str,
-    command: str,
-    arguments: dict[str, Any],
-    exit_status: int,
-    duration_ms: int,
+def governance_enrichment(
+    subcommand: str,
     diagnostics: list[dict[str, Any]],
     resolution: dict[str, Any] | None = None,
-    environ: dict[str, str] | None = None,
 ) -> dict[str, object]:
-    payload: dict[str, object] = {
-        "command": command,
-        "arguments": recorded_arguments(arguments),
-        "exit_status": exit_status,
-        "duration_ms": max(0, duration_ms),
+    """What only a first-hand `gov` observer knows about its own execution."""
+    enrichment: dict[str, object] = {
+        "subcommand": subcommand,
         "diagnostics": [
             {
                 "code": str(item.get("code")),
@@ -198,17 +196,51 @@ def build_command_event(
         ],
     }
     if resolution is not None:
-        payload["resolution"] = resolution
+        enrichment["resolution"] = resolution_summary(resolution)
+    return enrichment
+
+
+def build_command_execution(
+    *,
+    root: Path,
+    workspace_id: str,
+    project_id: str | None,
+    producer_version: str,
+    program: str,
+    arguments: list[dict[str, object]],
+    exit_status: int,
+    duration_ms: int,
+    governance: dict[str, object] | None = None,
+    environ: dict[str, str] | None = None,
+) -> dict[str, object]:
+    """A first-hand observation of a command this process executed.
+
+    The process identities are correlation evidence: another observer of the
+    same execution, such as an agent transcript, can be matched to them
+    explicitly rather than by program, arguments and time.
+    """
+    payload: dict[str, object] = {
+        "program": program,
+        "arguments": arguments,
+        "exit_status": exit_status,
+        "duration_ms": max(0, duration_ms),
+        "invocation": {
+            "process_id": os.getpid(),
+            "parent_process_id": os.getppid(),
+        },
+    }
+    if governance is not None:
+        payload["governance"] = governance
     event: dict[str, object] = {
         "schema_version": SCHEMA_VERSION,
         "event_id": uuid.uuid4().hex,
-        "event_type": "governance_command",
+        "event_type": "command_execution",
         "observed_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "workspace_id": workspace_id,
         "checkout": checkout_identity(root),
         "context": run_context(environ),
         "source": {
-            "kind": "gov_command",
+            "kind": "self_instrumented",
             "producer": PRODUCER,
             "producer_version": producer_version,
         },
@@ -248,11 +280,28 @@ def _schema() -> dict[str, Any]:
     return load_manifest_json(SCHEMA_FILE)
 
 
+def _argument_issues(event: dict[str, Any]) -> list[str]:
+    """Each token is a literal, or a hash with an optional literal prefix."""
+    payload = event.get("payload")
+    tokens = payload.get("arguments") if isinstance(payload, dict) else None
+    issues = []
+    for index, token in enumerate(tokens if isinstance(tokens, list) else []):
+        keys = set(token) if isinstance(token, dict) else set()
+        if keys not in (
+            {"value"},
+            {"sha256", "length"},
+            {"prefix", "sha256", "length"},
+        ):
+            issues.append(f"payload.arguments[{index}]: not a literal or a hash")
+    return issues
+
+
 def event_issues(event: dict[str, Any]) -> list[str]:
-    return [
+    schema_issues = [
         f"{issue.fact}: {issue.reason}"
         for issue in _schema_issues(event, _schema(), path="", source=SCHEMA_FILE.name)
     ]
+    return schema_issues + _argument_issues(event)
 
 
 def append_event(directory: Path, event: dict[str, Any]) -> Path:
@@ -300,9 +349,10 @@ __all__ = [
     "TelemetryError",
     "TelemetrySettings",
     "append_event",
-    "build_command_event",
+    "build_command_execution",
     "checkout_identity",
     "event_issues",
+    "governance_enrichment",
     "iter_events",
     "producer_version",
     "record",

@@ -1,5 +1,5 @@
 {
-  "content_sha256": "5f433c324a3fc0c3d990f769b354059d16b4cc1e9cb99a52830ad35f0db20c55",
+  "content_sha256": "43c0baee9f14603f3c578bce08814759a47851acd0ed885dcc620b687219cb55",
   "files": [
     "MANIFEST.json",
     "VERSION",
@@ -25,7 +25,7 @@
   "lock_algorithm": "sha256-path-and-content-v1",
   "pack_name": "workspace-governance",
   "pack_path": "tools/workspace_governance",
-  "revision": "v0.4-telemetry-core-1",
+  "revision": "v0.4-telemetry-core-2",
   "schema_version": 1,
   "version": "0.4.0"
 }

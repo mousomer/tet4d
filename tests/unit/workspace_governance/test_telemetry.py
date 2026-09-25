@@ -51,7 +51,7 @@ def test_nothing_is_recorded_unless_the_machine_enables_it(checkout: Path) -> No
     assert not any(state.rglob("*.jsonl"))
 
 
-def test_an_enabled_checkout_records_one_valid_event_per_invocation(
+def test_a_gov_run_is_observed_as_a_command_execution_with_enrichment(
     checkout: Path,
 ) -> None:
     directory = _enable(checkout)
@@ -61,19 +61,27 @@ def test_an_enabled_checkout_records_one_valid_event_per_invocation(
     check, explain = _events(directory)
     for event in (check, explain):
         assert telemetry.event_issues(event) == []
+        # What happened is generic; how it was observed is provenance.
+        assert event["event_type"] == "command_execution"
+        assert event["payload"]["program"] == "gov"
         assert event["source"] == {
-            "kind": "gov_command",
+            "kind": "self_instrumented",
             "producer": "workspace-governance",
             "producer_version": telemetry.producer_version(),
         }
         assert event["attribution"] == {"basis": "first_hand"}
         assert event["context"] == {"status": "absent", "labels": {}}
         assert set(event["checkout"]) >= {"path_sha256"}
-    assert check["payload"]["command"] == "check"
+        assert set(event["payload"]["invocation"]) == {
+            "process_id",
+            "parent_process_id",
+        }
+    assert check["event_id"] != explain["event_id"]
+    assert check["payload"]["arguments"] == [{"value": "check"}]
     assert check["payload"]["exit_status"] == 0
-    assert "resolution" not in check["payload"]
+    assert check["payload"]["governance"] == {"subcommand": "check", "diagnostics": []}
 
-    resolution = explain["payload"]["resolution"]
+    resolution = explain["payload"]["governance"]["resolution"]
     assert resolution["matched_scenario"] == "governance-change"
     assert resolution["routes"] == ["governance_and_tooling"]
     assert {item["authority_id"] for item in resolution["authorities"]}
@@ -85,15 +93,48 @@ def test_free_text_and_machine_paths_are_recorded_only_as_hashes(
     checkout: Path,
 ) -> None:
     directory = _enable(checkout)
-    assert _gov(checkout, "explain", "--task", TASK).returncode == 0
-    (event,) = _events(directory)
-    arguments = event["payload"]["arguments"]
-    assert set(arguments["task"]) == {"sha256", "length"}
-    assert arguments["task"]["length"] == len(TASK)
-    assert set(arguments["root"]) == {"sha256", "length"}
+    assert (
+        _gov(checkout, "--root", str(checkout), "explain", "--task", TASK).returncode
+        == 0
+    )
+    assert _gov(checkout, "explain", f"--task={TASK}").returncode == 0
+    separate, joined = _events(directory)
+
+    literal, root, subcommand, option, task = separate["payload"]["arguments"]
+    assert (literal, subcommand, option) == (
+        {"value": "--root"},
+        {"value": "explain"},
+        {"value": "--task"},
+    )
+    assert set(root) == set(task) == {"sha256", "length"}
+    assert task["length"] == len(TASK)
+    assert joined["payload"]["arguments"][1] == {"prefix": "--task=", **task}
     raw = "".join(path.read_text() for path in directory.glob("*.jsonl"))
     assert TASK not in raw
     assert str(checkout) not in raw
+
+
+def test_argument_tokens_are_either_literal_or_hashed() -> None:
+    sensitive = frozenset({"--secret"})
+    tokens = telemetry.recorded_arguments(
+        ["run", "--secret", "x", "--secret=y"], sensitive
+    )
+    assert tokens[:2] == [{"value": "run"}, {"value": "--secret"}]
+    assert set(tokens[2]) == {"sha256", "length"}
+    assert tokens[3]["prefix"] == "--secret="
+    event = telemetry.build_command_execution(
+        root=Path.cwd(),
+        workspace_id="demo",
+        project_id=None,
+        producer_version="0.0.0",
+        program="demo",
+        arguments=[{"value": "a", "sha256": "0" * 64, "length": 1}],
+        exit_status=0,
+        duration_ms=0,
+    )
+    assert telemetry.event_issues(event) == [
+        "payload.arguments[0]: not a literal or a hash"
+    ]
 
 
 def test_a_failing_command_records_its_status_and_diagnostic_identities(
@@ -108,7 +149,7 @@ def test_a_failing_command_records_its_status_and_diagnostic_identities(
     assert _gov(checkout, "check").returncode == 1
     (event,) = _events(directory)
     assert event["payload"]["exit_status"] == 1
-    diagnostics = event["payload"]["diagnostics"]
+    diagnostics = event["payload"]["governance"]["diagnostics"]
     assert {"code", "fact", "owner"} == set(diagnostics[0])
     assert "BROKEN_REFERENCE" in {item["code"] for item in diagnostics}
 
@@ -126,12 +167,22 @@ def test_recording_can_never_change_the_command_outcome(checkout: Path) -> None:
 def test_run_context_is_carried_and_malformed_context_is_marked() -> None:
     variable = telemetry.CONTEXT_VARIABLE
     supplied = telemetry.run_context(
-        {variable: json.dumps({"agent": "a", "model": "m", "labels": {"arm": "B"}})}
+        {
+            variable: json.dumps(
+                {
+                    "agent": "a",
+                    "model": "m",
+                    "tool_call_id": "call-1",
+                    "labels": {"arm": "B"},
+                }
+            )
+        }
     )
     assert supplied == {
         "status": "supplied",
         "agent": "a",
         "model": "m",
+        "tool_call_id": "call-1",
         "labels": {"arm": "B"},
     }
     for malformed in (
@@ -160,16 +211,15 @@ def test_the_store_is_keyed_by_a_safe_workspace_identity() -> None:
 
 
 def test_an_event_that_breaks_the_schema_is_refused(tmp_path: Path) -> None:
-    event = telemetry.build_command_event(
+    event = telemetry.build_command_execution(
         root=tmp_path,
         workspace_id="demo",
         project_id=None,
         producer_version="0.0.0",
-        command="check",
-        arguments={},
+        program="demo",
+        arguments=[],
         exit_status=0,
         duration_ms=1,
-        diagnostics=[],
     )
     assert telemetry.event_issues(event) == []
     del event["attribution"]

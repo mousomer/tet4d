@@ -308,18 +308,23 @@ proceed without inventing policy in resolver logic.
 Status: accepted planning decision (2026-09-25). This section is the authority
 for backlog items P1a–P1c; P1a is implemented and P1b–P1c are not.
 
-**Implemented in P1a.** `tools/workspace_governance/telemetry.py` records one
-first-hand event per `gov` invocation, validated against
-`schemas/telemetry-event.v1.schema.json`. The event records the command, its
-arguments, exit status, duration and diagnostic identities, and, for `resolve`
-and `explain`, which routes, scenario and authorities were handed out.
+**Implemented in P1a.** `tools/workspace_governance/telemetry.py` records each
+`gov` execution as one first-hand observation, validated against
+`schemas/telemetry-event.v1.schema.json`. It is a `command_execution` event
+with a generic payload: the program, one token per argument, exit status,
+duration, and the process and parent-process identities as correlation
+evidence. Its `source` is `self_instrumented` and its attribution basis is
+`first_hand`. A `governance` enrichment block adds what only `gov` knows about
+itself: the subcommand, diagnostic identities, and, for `resolve` and
+`explain`, which routes, scenario and authorities were handed out.
 Recording is off unless the machine's local overlay sets
 `"telemetry": {"enabled": true}`. Events are appended to
 `${XDG_STATE_HOME:-~/.local/state}/workspace-governance/<workspace_id>/telemetry/`,
-one file per day, readable only by their owner. Free text and the checkout path
-are stored as a hash and a length. Per-run context comes from the
+one file per day, readable only by their owner. The values of `--task` and
+`--root` are stored as a hash and a length. Per-run context comes from the
 `GOVERNANCE_TELEMETRY_CONTEXT` variable, a JSON object with optional
-`session_id`, `task_id`, `agent`, `model` and string `labels`; malformed
+`session_id`, `task_id`, `tool_call_id`, `agent`, `model` and string `labels`;
+malformed
 context is recorded as `invalid`, never guessed. A failure to record prints one
 warning and never changes the command's outcome.
 
@@ -349,15 +354,27 @@ stored there would put the instrument inside the treatment and make switching
 arms a Manifest change.
 
 **One event model.** Every capture source emits events in this one versioned
-schema. An activity has one event type whichever source observed it: a file
-read found in a Codex transcript, reported by a Claude Code hook, or implied by
-a filesystem snapshot is the same kind of event. Sources differ only in the
-`source` block, its provenance and the attribution basis. No source defines its
-own top-level format or a parallel telemetry stream, so reconstruction reads a
-single model.
+schema, layered as activity semantics, then the observation, then its
+provenance and attribution, then optional domain enrichment. The event type
+and payload say what happened; the `source` block and attribution basis say how
+it was observed. An activity has one event type whichever source observed it:
+a file read found in a Codex transcript, reported by a Claude Code hook, or
+implied by a filesystem snapshot is the same kind of event, and a `gov`
+execution is a `command_execution` like any other command. No source defines
+its own event type, top-level format or parallel telemetry stream, and domain
+detail only one observer can see goes in an enrichment block.
 
-**Capture is passive.** Sources are the pack's own commands, which emit
-governance events first-hand; importers for agent transcripts; live agent
+**Observations are never merged by resemblance.** Each event is one observation
+with its own stable `event_id`, and a stored observation is never rewritten or
+combined. Two observations may describe the same activity, such as a
+first-hand `gov` event and a transcript's record of the same call. Matching
+program, arguments and approximate time is not enough to treat them as one.
+Reconstruction records a correlation only on explicit evidence, such as a
+shared tool-call or process identity, together with that evidence and a
+confidence, and keeps both observations until the correlation is strong enough.
+
+**Capture is passive.** Sources are the pack's own commands, which observe
+their own executions first-hand; importers for agent transcripts; live agent
 hooks; and filesystem snapshots. Importers and hooks are specific to an agent
 runtime, not to a project, so they belong in the pack. An agent declares only
 segment boundaries, which remain telemetry rather than ground truth; it does

@@ -25,6 +25,10 @@ from tools.workspace_governance.validators.core import (
     resolve_interpreter,
 )
 
+# Options whose values are free text or machine paths; telemetry records them
+# only as hashes.
+SENSITIVE_OPTIONS = frozenset({"--task", "--root"})
+
 
 def _emit(value: object, *, as_json: bool) -> None:
     if as_json:
@@ -158,12 +162,13 @@ def _doctor_command(
 
 def _record(
     args: argparse.Namespace,
+    argv: list[str],
     root: Path,
     status: int,
     started: float,
     observed: dict[str, Any],
 ) -> None:
-    """Record this invocation as a first-hand telemetry event, if enabled."""
+    """Record this execution as a first-hand observation, if enabled."""
     resolver = GovernanceResolver.for_root(root)
 
     def event() -> dict[str, object]:
@@ -172,20 +177,18 @@ def _record(
             project_id = resolver.load()[1]["project"]["id"]
         except (OSError, ValueError, TypeError, KeyError):
             project_id = None
-        resolution = observed["resolution"]
-        return telemetry.build_command_event(
+        return telemetry.build_command_execution(
             root=root,
             workspace_id=workspace["workspace_id"],
             project_id=project_id,
             producer_version=telemetry.producer_version(),
-            command=args.command,
-            arguments=vars(args),
+            program="gov",
+            arguments=telemetry.recorded_arguments(argv, SENSITIVE_OPTIONS),
             exit_status=status,
             duration_ms=int((time.monotonic() - started) * 1000),
-            diagnostics=observed["diagnostics"],
-            resolution=telemetry.resolution_summary(resolution)
-            if resolution is not None
-            else None,
+            governance=telemetry.governance_enrichment(
+                args.command, observed["diagnostics"], observed["resolution"]
+            ),
         )
 
     telemetry.record(resolver.telemetry_settings(), event)
@@ -193,7 +196,8 @@ def _record(
 
 def main(argv: list[str] | None = None) -> int:
     started = time.monotonic()
-    raw_argv = list(sys.argv[1:] if argv is None else argv)
+    original_argv = list(sys.argv[1:] if argv is None else argv)
+    raw_argv = list(original_argv)
     as_json = "--json" in raw_argv
     raw_argv = [item for item in raw_argv if item != "--json"]
     parser = argparse.ArgumentParser(prog="gov")
@@ -222,7 +226,7 @@ def main(argv: list[str] | None = None) -> int:
     root = args.root.resolve()
     observed: dict[str, Any] = {"diagnostics": [], "resolution": None}
     status = _dispatch(args, root, explain, observed)
-    _record(args, root, status, started, observed)
+    _record(args, original_argv, root, status, started, observed)
     return status
 
 

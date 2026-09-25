@@ -2,7 +2,7 @@
   "schema_version": 1,
   "name": "workspace-governance",
   "version": "0.4.0",
-  "revision": "v0.4-telemetry-core-1",
+  "revision": "v0.4-telemetry-core-2",
   "version_file": "VERSION",
   "lock_algorithm": "sha256-path-and-content-v1",
   "pack_hash_excludes": [
