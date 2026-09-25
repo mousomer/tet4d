@@ -1743,12 +1743,6 @@ Parameters:
 - `path_classification.unknown_path_policy`: `"full_repository_gate"` (`string`)
 - `platform_evidence.abstract_requirement`: `"platform"` (`string`)
 - `platform_evidence.description`: `"Platform verification carries explicit platform identity. The abstra...` (`string`)
-- `platform_evidence.hosted_lanes.platform_ipados.build_entrypoint`: `"packaging/godot/build_ipados.sh"` (`string`)
-- `platform_evidence.hosted_lanes.platform_ipados.canonical_command`: `"ipados_release_export"` (`string`)
-- `platform_evidence.hosted_lanes.platform_ipados.lane`: `"platform_ipados"` (`string`)
-- `platform_evidence.hosted_lanes.platform_ipados.packaging_consumer`: `"legacy_designer_ipados"` (`string`)
-- `platform_evidence.hosted_lanes.platform_ipados.platform_id`: `"ipados"` (`string`)
-- `platform_evidence.hosted_lanes.platform_ipados.workflow_job`: `"platform-ipados"` (`string`)
 - `platform_evidence.hosted_lanes.platform_macos.build_entrypoint`: `"packaging/godot/build_macos.sh"` (`string`)
 - `platform_evidence.hosted_lanes.platform_macos.canonical_command`: `"macos_release_export"` (`string`)
 - `platform_evidence.hosted_lanes.platform_macos.lane`: `"platform_macos"` (`string`)
@@ -1773,7 +1767,7 @@ Parameters:
 - `requirement_to_lanes.parity_or_conformance[]`: array[`string`]; examples: `"deterministic_parity"`
 - `requirement_to_lanes.platform[]`: array[`empty`]
 - `requirement_to_lanes.platform_android[]`: array[`empty`]
-- `requirement_to_lanes.platform_ipados[]`: array[`string`]; examples: `"platform_ipados"`
+- `requirement_to_lanes.platform_ipados[]`: array[`empty`]
 - `requirement_to_lanes.platform_linux[]`: array[`empty`]
 - `requirement_to_lanes.platform_macos[]`: array[`string`]; examples: `"platform_macos"`
 - `requirement_to_lanes.platform_windows[]`: array[`empty`]

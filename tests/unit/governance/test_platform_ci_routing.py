@@ -90,6 +90,16 @@ def _hosted_lanes() -> dict[str, dict[str, str]]:
     return hosted
 
 
+def _ipados_consumer() -> dict[str, str]:
+    contract = _policy()["product_platform_contract"]
+    assert isinstance(contract, dict)
+    return next(
+        item
+        for item in contract["packaging_consumers"]
+        if item["consumer_id"] == "legacy_designer_ipados"
+    )
+
+
 def _resolve(changed_paths: tuple[str, ...]):
     payload = _lane_payload()
     classification = classify_paths(
@@ -196,13 +206,24 @@ def test_hosted_platform_lanes_name_a_registered_packaging_consumer() -> None:
         assert consumer["platform_id"] == binding["platform_id"]
 
 
-def test_ipados_lane_executes_the_release_export_and_final_link() -> None:
+def test_ipados_packaging_change_reports_manual_platform_evidence() -> None:
     _classification, selection = _resolve(IPADOS_PACKAGING_DIFF)
-    binding = _hosted_lanes()["platform_ipados"]
-    job_text = _workflow_jobs(CI_WORKFLOW_PATH)[binding["workflow_job"]]
-    build_script = (ROOT / binding["build_entrypoint"]).read_text(encoding="utf-8")
+    jobs = _workflow_jobs(CI_WORKFLOW_PATH)
 
-    assert binding["lane"] in selection.selected_lanes
+    # iPadOS is deferred until the macOS game release: its packaging paths
+    # report outstanding platform evidence instead of running a hosted job.
+    assert "platform_ipados" not in _hosted_lanes()
+    assert "platform_ipados" in selection.verification_requirements
+    assert "platform_ipados" in selection.manual_requirements
+    assert not any("build_ipados.sh" in job for job in jobs.values())
+
+
+def test_ipados_release_job_executes_the_release_export_and_final_link() -> None:
+    job_text = _workflow_jobs(RELEASE_WORKFLOW_PATH)[_ipados_consumer()["workflow_job"]]
+    build_script = (ROOT / "packaging/godot/build_ipados.sh").read_text(
+        encoding="utf-8"
+    )
+
     # Release mode is the mode that produces final-link evidence; the
     # configuration-only mode would not compile the exported project.
     assert "build_ipados.sh" in job_text
@@ -219,15 +240,12 @@ def test_ipados_lane_executes_the_release_export_and_final_link() -> None:
 
 def test_macos_package_job_cannot_provide_ipados_evidence() -> None:
     jobs = _workflow_jobs(CI_WORKFLOW_PATH)
-    hosted = _hosted_lanes()
-    macos_job = jobs[hosted["platform_macos"]["workflow_job"]]
-    ipados_job = jobs[hosted["platform_ipados"]["workflow_job"]]
+    macos_job = jobs[_hosted_lanes()["platform_macos"]["workflow_job"]]
 
-    assert "build_ipados.sh" not in macos_job
-    assert "build_macos.sh" not in ipados_job
-    # Both run on macOS hosts; a shared runner is not shared evidence.
+    # The iPadOS build also runs on a macOS host; a shared runner is not
+    # shared evidence.
     assert "runs-on: macos-latest" in macos_job
-    assert "runs-on: macos-latest" in ipados_job
+    assert "build_ipados.sh" not in macos_job
 
 
 def test_substituting_the_macos_lane_does_not_satisfy_ipados_evidence() -> None:
@@ -235,10 +253,9 @@ def test_substituting_the_macos_lane_does_not_satisfy_ipados_evidence() -> None:
     mapping = payload["requirement_to_lanes"]
     assert isinstance(mapping, dict)
     macos_lane = _hosted_lanes()["platform_macos"]["lane"]
-    ipados_lane = _hosted_lanes()["platform_ipados"]["lane"]
 
-    assert macos_lane not in mapping["platform_ipados"]
-    assert ipados_lane not in mapping["platform_macos"]
+    assert mapping["platform_ipados"] == []
+    assert "platform_ipados" not in mapping["platform_macos"]
 
     _classification, selection = _resolve(IPADOS_PACKAGING_DIFF)
     assert "platform_ipados" in selection.verification_requirements
@@ -276,25 +293,17 @@ def test_target_platform_matrix_is_unchanged_by_ci_routing() -> None:
 
 
 def test_legacy_designer_ipados_remains_transitional() -> None:
-    contract = _policy()["product_platform_contract"]
-    assert isinstance(contract, dict)
-    consumer = next(
-        item
-        for item in contract["packaging_consumers"]
-        if item["consumer_id"] == "legacy_designer_ipados"
-    )
+    consumer = _ipados_consumer()
     release_jobs = _workflow_jobs(RELEASE_WORKFLOW_PATH)
-    ipados_ci_job = _workflow_jobs(CI_WORKFLOW_PATH)[
-        _hosted_lanes()["platform_ipados"]["workflow_job"]
-    ]
 
     assert consumer["status"] == "transitional_mismatch"
     assert consumer["product_id"] == "godot_designer"
     assert consumer["workflow_job"] in release_jobs
-    # The hosted CI lane names the transitional Designer artifact it builds and
-    # never claims the godot_game/ipados target or physical-device acceptance.
-    assert "transitional" in ipados_ci_job.casefold()
-    assert "not physical-device acceptance" in ipados_ci_job
+    # The release job names the transitional Designer artifact it builds and
+    # never claims the godot_game/ipados target.
+    release_job = release_jobs[consumer["workflow_job"]]
+    assert "transitional" in release_job.casefold()
+    assert "not a target" in release_job
 
 
 # --- Semantic gate E: the conservative fallback is untouched --------------
