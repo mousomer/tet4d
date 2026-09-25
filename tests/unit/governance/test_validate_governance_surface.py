@@ -85,7 +85,7 @@ def _policy() -> dict[str, object]:
                 },
                 "docs/BACKLOG.md": {
                     "operational_role": "conditional_open_work_authority",
-                    "limit_rationale": ["human_reviewability", "structural_discipline"],
+                    "limit_rationale": [],
                 },
             },
             "aggregate_hard_limit": 2500,
@@ -191,14 +191,52 @@ def test_canonical_owner_file_ceiling_fails(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize(
     ("rel", "lines", "expected"),
-    [("CURRENT_STATE.md", 151, "150"), ("docs/BACKLOG.md", 301, "300")],
+    [
+        ("CURRENT_STATE.md", 151, "150"),
+        ("AGENTS.md", 151, "150"),
+        ("godot/AGENTS.md", 71, "70"),
+        ("native/AGENTS.md", 71, "70"),
+    ],
 )
-def test_operational_file_ceiling_preserves_non_context_rationale(
+def test_capped_governance_files_keep_their_ceilings(
     tmp_path: Path, rel: str, lines: int, expected: str
 ) -> None:
     _fixture(tmp_path)
     _write(tmp_path / rel, "line\n" * lines)
     assert any(f"hard limit {expected}" in message for message in _messages(tmp_path))
+
+
+@pytest.mark.parametrize("lines", [301, 3000])
+def test_backlog_over_its_former_ceiling_passes(tmp_path: Path, lines: int) -> None:
+    # 3000 lines also exceeds the whole reviewable aggregate on its own.
+    _fixture(tmp_path)
+    _write(tmp_path / "docs/BACKLOG.md", "line\n" * lines)
+    assert _issues(tmp_path) == []
+
+
+def test_backlog_is_measured_but_outside_the_aggregate(tmp_path: Path) -> None:
+    _fixture(tmp_path)
+    baseline = _measurement(tmp_path)
+    _write(tmp_path / "docs/BACKLOG.md", "line\n" * 700)
+    grown = _measurement(tmp_path)
+
+    assert grown.file_loc["docs/BACKLOG.md"] == 700
+    assert grown.operational - baseline.operational == 700 - 1
+    assert grown.total == baseline.total
+
+
+def test_backlog_size_limit_cannot_return(tmp_path: Path) -> None:
+    policy = _fixture(tmp_path)
+    surface_policy = policy["governance_surface"]
+    surface_policy["per_file_limits"]["docs/BACKLOG.md"] = 300
+    surface_policy["edge_state_profiles"]["docs/BACKLOG.md"]["limit_rationale"] = [
+        "human_reviewability"
+    ]
+    _write(tmp_path / surface.POLICY_REL, json.dumps(policy, indent=2) + "\n")
+    messages = _messages(tmp_path)
+
+    assert "docs/BACKLOG.md must not carry a size limit" in messages
+    assert "docs/BACKLOG.md has no size limit to justify" in messages
 
 
 def test_backlog_is_routable_authority_while_current_state_is_not() -> None:

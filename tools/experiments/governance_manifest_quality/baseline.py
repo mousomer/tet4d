@@ -342,9 +342,11 @@ def measure_fingerprint(
             "machine_policy_advisory_bytes": surface.policy_advisory_byte_limit,
             "machine_policy_hard_ceiling_bytes": surface.policy_byte_limit,
             "human_governance_diagnostic_loc": 900,
-            "backlog_ceiling_loc": policy["governance_surface"]["per_file_limits"][
+            # None once the backlog is uncapped, as for a historical treatment
+            # without the limit; the frozen declaration still records its 300.
+            "backlog_ceiling_loc": policy["governance_surface"]["per_file_limits"].get(
                 "docs/BACKLOG.md"
-            ],
+            ),
         },
         "governance_surface_issues": [
             {"kind": issue.kind, "message": issue.message} for issue in issues
