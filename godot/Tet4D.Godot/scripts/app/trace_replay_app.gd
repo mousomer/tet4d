@@ -827,6 +827,8 @@ func _design_laboratory_build_identity() -> Dictionary:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
 		_handle_system_back_request()
+	elif what == NOTIFICATION_WM_WINDOW_FOCUS_OUT:
+		_ensure_live_game_paused_for_focus_loss()
 
 
 func _handle_system_back_request() -> bool:
@@ -1843,6 +1845,25 @@ func _toggle_live_3d_pause() -> void:
 
 func _toggle_live_4d_pause() -> void:
 	_live_4d_paused = not _live_4d_paused
+	_reset_live_repeat_state()
+	_refresh_hud()
+
+
+func _ensure_live_game_paused_for_focus_loss() -> void:
+	# Window focus loss is a one-way lifecycle event, not an invocation of the
+	# player's toggle: a paused or game-over session must remain exactly so.
+	# `NOTIFICATION_WM_WINDOW_FOCUS_OUT` is the cross-platform notification for
+	# the interactive Godot window, which is the app-shell boundary that owns
+	# these live pause flags. Focus-in deliberately does not resume gameplay.
+	if not _is_live_mode() or _live_mode_paused() or _live_snapshot_game_over():
+		return
+	match _mode:
+		MODE_LIVE_2D:
+			_live_2d_paused = true
+		MODE_LIVE_3D:
+			_live_3d_paused = true
+		MODE_LIVE_4D:
+			_live_4d_paused = true
 	_reset_live_repeat_state()
 	_refresh_hud()
 
