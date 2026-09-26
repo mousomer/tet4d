@@ -158,7 +158,7 @@ func _deferred_ready() -> void:
 	_hud.apply_shell_settings()
 	_load_bundle()
 	if not _is_designer_product():
-		_enter_live_2d_mode()
+		_start_ordinary_live_mode(MODE_LIVE_2D)
 
 
 func _is_designer_product() -> bool:
@@ -348,7 +348,7 @@ func _mouse_event_in_game_viewport(event: InputEvent) -> bool:
 
 func _handle_live_2d_input(event: InputEvent) -> bool:
 	if event.is_action_pressed("mode_toggle_replay_live"):
-		_enter_live_3d_mode()
+		_start_ordinary_live_mode(MODE_LIVE_3D)
 		return true
 	if _event_action_pressed(event, ["live_pause", "live_2d_pause"]):
 		_toggle_live_2d_pause()
@@ -396,7 +396,7 @@ func _handle_live_2d_input(event: InputEvent) -> bool:
 
 func _handle_live_3d_input(event: InputEvent) -> bool:
 	if event.is_action_pressed("mode_toggle_replay_live"):
-		_enter_live_4d_mode()
+		_start_ordinary_live_mode(MODE_LIVE_4D)
 		return true
 	if _event_action_pressed(event, ["live_pause", "live_3d_pause"]):
 		_toggle_live_3d_pause()
@@ -695,9 +695,15 @@ func _wire_hud() -> void:
 	_hud.reset_view_requested.connect(_reset_view)
 	_hud.quit_requested.connect(_quit_application)
 	_hud.main_menu_requested.connect(_return_to_main_menu)
-	_hud.live_2d_requested.connect(_enter_live_2d_mode)
-	_hud.live_3d_requested.connect(_enter_live_3d_mode)
-	_hud.live_4d_requested.connect(_enter_live_4d_mode)
+	_hud.live_2d_requested.connect(func() -> void:
+		_start_ordinary_live_mode(MODE_LIVE_2D)
+	)
+	_hud.live_3d_requested.connect(func() -> void:
+		_start_ordinary_live_mode(MODE_LIVE_3D)
+	)
+	_hud.live_4d_requested.connect(func() -> void:
+		_start_ordinary_live_mode(MODE_LIVE_4D)
+	)
 	_hud.live_game_start_requested.connect(_start_configured_live_game)
 	_hud.change_setup_requested.connect(_change_live_setup)
 	_hud.new_random_game_requested.connect(_start_new_random_game)
@@ -1463,6 +1469,17 @@ func _start_configured_live_game(setup: Dictionary, preserve_current_view: bool 
 			_enter_live_3d_mode(preserve_current_view)
 		MODE_LIVE_4D:
 			_enter_live_4d_mode(preserve_current_view)
+
+
+func _start_ordinary_live_mode(mode_name: String, preserve_current_view: bool = false) -> void:
+	if _hud == null or not _hud.has_method("configured_live_setup"):
+		push_error("Ordinary live entry requires the configured game setup provider")
+		return
+	var setup = _hud.configured_live_setup(mode_name)
+	if not (setup is Dictionary) or str(setup.get("mode", "")) != mode_name:
+		push_error("Ordinary live entry has no valid setup for %s" % mode_name)
+		return
+	_start_configured_live_game((setup as Dictionary).duplicate(true), preserve_current_view)
 
 
 func _start_new_random_game() -> void:

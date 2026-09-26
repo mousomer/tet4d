@@ -138,6 +138,17 @@ Add/extend Godot tests proving:
 - no ordinary-session snapshot/presentation contains `TRACE_*`;
 - replay/diagnostic fixture entry still works when explicitly selected.
 
+### Completion
+
+Complete: ordinary Game bootstrap, player-facing Live navigation, and Tab mode
+switches now request the HUD's validated mode-specific setup and route through
+`_start_configured_live_game(setup)`. The direct live-entry helpers remain the
+explicit internal fixture/replay seam.
+
+Regression: `godot/Tet4D.Godot/tests/test_ordinary_live_entry.gd` exercises
+Game bootstrap, Tab 2D→3D→4D, the menu Start signal, and explicit replay entry.
+It asserts that every ordinary live snapshot and player summary omit `TRACE_*`.
+
 ## R1.2 Fix blocked soft-drop lock starvation
 
 ### Problem
