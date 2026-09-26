@@ -218,8 +218,9 @@ These fixed bindings apply only to normal Godot Live-4D gameplay:
 
 1. Piece movement: `A/D` (or Left/Right) for visible Left/Right, `W/S` (or
    Up/Down) for Forward/Back, `Q/E` for the signed current slice axis.
-2. Drop/session: `Ctrl` Soft Drop, `Space` Hard Drop, `P` Pause, `Backspace`
-   Restart Game, `Esc` Main Menu. Shift is not Soft Drop.
+2. Drop/session: `Shift` Soft Drop (`Ctrl` is an undisplayed compatibility
+   binding; Stage 56H-R2.3), `Space` Hard Drop, `P` Pause, `Backspace`
+   Restart Game, `Esc` Main Menu.
 3. Piece rotation: `R/T` XY, `F/G` XZ, `V/B` YZ, `Y/U` XW, `H/J` YW, and
    `N/M` ZW.
 4. Exact 90-degree presentation basis: `1/2` XZ, `3/4` XW, `5/6` ZW, and

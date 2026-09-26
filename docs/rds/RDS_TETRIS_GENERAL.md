@@ -62,8 +62,13 @@ C++ ownership are established.
 
 ### 2.2 Godot live cockpit controls
 
-1. Godot Live 3D and Live 4D soft drop uses Ctrl only; Shift does not trigger
-   soft drop.
+1. Godot Live 3D and Live 4D soft drop uses Shift (either side), and every
+   live helper displays Shift. Ctrl remains an undisplayed compatibility
+   binding and must never be the only advertised path: on macOS, Ctrl with
+   the arrow keys or Space triggers default desktop, Mission Control, and
+   input-source shortcuts. Adopted by Stage 56H-R2.3
+   (`docs/plans/stage_56h_repair_plan.md`); the runtime binding changes in
+   that repair.
 2. Left mouse-button drag rotates the camera, right mouse-button drag
    translates it, and ordinary mouse wheel input zooms. Shift-wheel has no
    special translation behavior.

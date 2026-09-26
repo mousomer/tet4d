@@ -126,8 +126,9 @@ System:
    `90° Exact Camera Rotation`, Slice orientation, Framing, Drop, Session, and
    Navigation in the public help surface.
 2. Piece movement uses `A/D`, `W/S`, and `Q/E`; piece rotations use `R/T`,
-   `F/G`, `V/B`, `Y/U`, `H/J`, and `N/M`; `Ctrl` is Soft Drop and `Space` is
-   Hard Drop.
+   `F/G`, `V/B`, `Y/U`, `H/J`, and `N/M`; `Shift` is Soft Drop (`Ctrl` remains
+   an undisplayed compatibility binding; Stage 56H-R2.3) and `Space` is Hard
+   Drop.
 3. Exact `B` actions are `1/2` XZ, `3/4` XW, and `5/6` ZW. In every pair the
    left key is negative/CCW and the right key is positive/CW. `0` Reset View
    restores `B + L + V/P` without changing native gameplay.
@@ -358,8 +359,9 @@ Relevant tests:
     and resolved control-frame labels. Initial state, XZ/XW/ZW exact turns,
     yaw, pitch, and Reset View update that passive marker without dispatching
     gameplay commands. Left-drag and right-drag both move the rendered volume
-    in the same apparent direction as the input, in every live mode. Ctrl owns
-    soft drop; Shift has no normal Live-4D camera or soft-drop binding.
+    in the same apparent direction as the input, in every live mode. Shift
+    owns soft drop, with Ctrl as a compatibility binding; no modifier key has a
+    normal Live-4D camera binding.
 15. Live-4D slice tiling is a deterministic function of visible slice count,
     board viewport geometry, and the stable local-board envelope. It maximizes
     projected per-slice scale, strongly prefers at most two rows in the

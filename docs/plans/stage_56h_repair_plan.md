@@ -1,6 +1,9 @@
 # Stage 56H-R — bounded playability repair plan
 
-Status: approved planning input for Stage 56H; implementation not started.
+Status: approved planning input for Stage 56H. R1.3 is complete (PR #137,
+merge `30548ca3`); the other slices have not started. The Stage 56 task
+contract (`docs/tasks/live_4d_cockpit_convergence.md`, Stage 56H-R) authorizes
+this tranche as its only bounded cross-layer exception.
 
 Source evidence:
 - `docs/plans/stage_56h_playability_review.md`
@@ -185,8 +188,8 @@ The live state can be paused while the primary status badge still shows
 
 ### Required behavior
 
-- pause/unpause updates the authoritative UI snapshot in the same frame or the
-  next settled frame;
+- pause/unpause updates the displayed status in the same frame, from the app's
+  authoritative pause flags;
 - `[ PAUSED ]` is shown while paused;
 - `[ RUNNING ]` is shown only while gameplay is advancing;
 - game-over status remains distinct.
@@ -197,8 +200,34 @@ The live state can be paused while the primary status badge still shows
 - snapshot/HUD refresh path;
 - `replay_hud.gd` only if it is rendering stale state incorrectly.
 
-Do not patch the badge with an independent pause boolean. Repair the snapshot
-refresh/source-of-truth path.
+### Repair and owner decision
+
+This plan first required repairing the snapshot refresh path and ruled out an
+independent pause boolean in the HUD. The first commit did exactly that
+(`4dec403b`). The owner then chose to remove the redundant copy instead
+(`212157ba`):
+
+- The app no longer writes `_current_snapshot["paused"]`.
+- The HUD derives the status from the pause flags that `set_live_*_mode()`
+  already delivers on every refresh, and passes them explicitly to the summary
+  and feedback text helpers. The HUD holds no pause state of its own; it renders
+  the app's flags.
+
+Known consequence: the native snapshot still carries a constant
+`"paused": false` (`plain_2d_session.cpp`, `plain_nd_session.cpp`). No HUD
+surface reads it, but the Design Laboratory fingerprint copies the snapshot and
+so records that constant. Removing the native field is a separate native change.
+
+### Completion
+
+Complete: merged in PR #137 as `30548ca3`.
+
+- Regression: `godot/Tet4D.Godot/tests/test_live_pause_status.gd` presses P in
+  Live 2D, 3D, and 4D. It checks the badge, the `PAUSED` status word, and that
+  pausing leaves the native state hash unchanged. Against the previous HUD it
+  fails 6 checks.
+- The Godot 4.7.2 suite passes (68 scripts), and so does
+  `CODEX_MODE=1 ./scripts/verify.sh`.
 
 ---
 
@@ -286,6 +315,52 @@ the documentation to fit it.
 
 The chosen binding must have automated collision coverage against the existing
 piece, camera, Hold, restart, menu, and tutorial actions.
+
+### Binding decision (authority reconciliation, owner-approved)
+
+The collision audit covered every live 3D/4D binding in `LiveInputContract` and
+the live input handlers, plus default operating-system shortcuts.
+
+Keys already taken in 3D/4D:
+- WASD and the arrow keys (move); `Q/E` (W move);
+- `R/T`, `F/G`, `V/B`, `Y/U`, `H/J`, `N/M` (rotate); `I/K`, `O/L` (look);
+- `1`–`6` and `0` (exact camera and reset view); `-`/`=`/`+` (zoom);
+- `Space` (hard drop), `C` (Hold), `P` (pause), `Backspace` (restart);
+- `Tab` (mode switch), `Esc` (menu).
+
+In 2D only, `Z/X` rotate and `R`, `F`, and `H` are restart, fit, and help.
+
+| Candidate | In-game conflict | macOS | Windows / Linux |
+| --- | --- | --- | --- |
+| Ctrl (current) | None | Ctrl+←/→ switches Space, Ctrl+↑/↓ opens Mission Control and App Exposé, Ctrl+Space switches input source | None |
+| Shift | None; tests already assert Shift has no live camera role | Shift+arrows and Shift+Space have no system action | Windows shows its Sticky Keys prompt after five rapid Shift taps (default on, can be disabled) |
+| Z | None in 3D/4D, but Z rotates in 2D | None | None |
+| Alt/Option | None | None | Alt+Space opens the Windows window menu, and Space is hard drop |
+
+Ctrl+Space matters in practice: holding soft drop and then pressing hard drop
+switches the keyboard layout on any Mac with more than one input source.
+
+Decision:
+- **Shift** (either side) is the canonical 3D/4D soft-drop key, and every helper
+  and PIECE row displays it. It sits beside WASD and beside the arrows, and it
+  matches the Python runtime's LShift/RShift.
+- **Ctrl** remains an undisplayed compatibility binding. It is never the only
+  advertised path, because of the macOS collisions above.
+- Z was rejected as less ergonomic with WASD and inconsistent with 2D. Alt was
+  rejected because of the Windows window menu.
+
+This deliberately reverses the earlier "Ctrl only; Shift does not trigger soft
+drop" rule. The RDS documents and the Godot visual-system authority now state
+the new contract. The runtime binding changes in the R2.3 implementation, which
+must also:
+- update `LiveInputContract.ACTION_SPECS` (display key Shift, keys Shift and
+  Ctrl, no forbidden keys);
+- replace the Ctrl-only assertions in `tests/test_live_input_contract.gd` and
+  `tests/test_live_2d_shell.gd`;
+- add the collision coverage required above.
+
+No persisted-user migration is required, because Godot live bindings are a
+fixed code contract and are not stored as user state.
 
 ## R2.4 Open the initial window inside the supported responsive envelope
 
@@ -470,8 +545,9 @@ Each R slice requires focused tests before the canonical gate.
 Before declaring 56H-R complete:
 
 1. run the full Godot 4.7.2 suite;
-2. run the repository canonical gate:
-   `CODEX_MODE=1 ./scripts/ci_check.sh` or its current governed equivalent;
+2. run the canonical local full repository gate,
+   `CODEX_MODE=1 ./scripts/verify.sh`. CI workflows may run additional checks,
+   but they do not substitute for this gate;
 3. run the Stage 56G real-window responsive acceptance matrix;
 4. capture fresh 1440×900 2D/3D/4D play images with NEXT/HOLD visible;
 5. capture fresh first-launch Retina evidence;
