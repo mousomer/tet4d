@@ -34,7 +34,8 @@ func run() -> Array:
 func _start_ordinary_live_game(tree: SceneTree, app, mode: String) -> void:
 	app._start_ordinary_live_mode(mode)
 	await tree.process_frame
-	# The test is exercising keyboard gameplay, not an open HUD interaction.
+	# The test is exercising keyboard gameplay, not an open HUD interaction or guide.
+	app._hud._set_onboarding_visible(false)
 	app._hud._live_interaction_owns_input = false
 
 

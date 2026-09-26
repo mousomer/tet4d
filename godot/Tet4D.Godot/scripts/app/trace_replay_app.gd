@@ -170,6 +170,12 @@ func _process(delta: float) -> void:
 		_fit_view()
 	if _is_live_mode():
 		if not _live_mode_paused() and not _live_snapshot_game_over():
+			if _hud != null and _hud.onboarding_suspends_live_gameplay():
+				# Onboarding observes tutorial interaction outside this timing loop.
+				# Preserve the current gravity phase; no elapsed guide time becomes a
+				# native tick or a latent catch-up after dismissal.
+				_reset_live_repeat_state()
+				return
 			if _hud != null and _hud.live_interaction_owns_input():
 				_reset_live_repeat_state()
 			else:

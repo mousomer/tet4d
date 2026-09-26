@@ -128,8 +128,10 @@ Stage 56H-R1.1 now routes ordinary Game bootstrap, player-facing quick entry,
 and Tab 2D→3D→4D through validated configured sessions, while preserving the
 explicit replay/fixture seam. R1.2 now prevents held blocked soft drops from
 starving the normal native gravity tick/lock across Live 2D/3D/4D. R2.1 now
-pauses ordinary Live 2D/3D/4D play on focus loss without auto-resume; R2.2 is
-next, while R2.3/R2.4 remain unstarted. Stage 56H is a gameplay/product acceptance checkpoint,
+pauses ordinary Live 2D/3D/4D play on focus loss without auto-resume. R2.2
+implementation is complete locally and awaits PR/CI/merge; it suspends live
+timing while visible onboarding owns attention. R2.3 is next after R2.2 merges,
+while R2.4 remains unstarted. Stage 56H is a gameplay/product acceptance checkpoint,
 not a release gate; Stage 56I polish, the 190/200 A/B choice, and cockpit
 refinement continue after it.
 

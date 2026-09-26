@@ -43,6 +43,8 @@ func run() -> Array:
 func _start_live_game(tree: SceneTree, app, mode: String) -> void:
 	app._start_configured_live_game(_setup(mode))
 	await tree.process_frame
+	# This regression owns ordinary live timing; onboarding is covered separately.
+	app._hud._set_onboarding_visible(false)
 	app._hud._live_interaction_owns_input = false
 
 
