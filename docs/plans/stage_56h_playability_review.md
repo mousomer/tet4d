@@ -249,19 +249,19 @@ Real-window captures at a 1440×900-point client, downscaled to 1600 px wide.
 
 1. First launch of the game build: GAME OVER with no input, the tutorial still
    on step 1, and a small board.
-   ![First launch](../design/screenshots/stage_56h_playability_review/01_first_launch_game_over.png)
+   Evidence: `docs/design/screenshots/stage_56h_playability_review/01_first_launch_game_over.png`
 2. Paused immediately after a restart. The badge still says RUNNING.
-   ![Paused badge](../design/screenshots/stage_56h_playability_review/02_paused_badge_says_running.png)
+   Evidence: `docs/design/screenshots/stage_56h_playability_review/02_paused_badge_says_running.png`
 3. Main Menu, as reached from the game build.
-   ![Main menu](../design/screenshots/stage_56h_playability_review/03_main_menu.png)
+   Evidence: `docs/design/screenshots/stage_56h_playability_review/03_main_menu.png`
 4. Set-up 3D mid-game with the tutorial hidden: a small board and see-through
    locked cells.
-   ![3D mid-game](../design/screenshots/stage_56h_playability_review/04_live_3d_midgame.png)
+   Evidence: `docs/design/screenshots/stage_56h_playability_review/04_live_3d_midgame.png`
 5. Set-up 4D mid-game, with the NEXT thumbnails cut off.
-   ![4D mid-game](../design/screenshots/stage_56h_playability_review/05_live_4d_midgame_next_cut.png)
+   Evidence: `docs/design/screenshots/stage_56h_playability_review/05_live_4d_midgame_next_cut.png`
 6. 4D reached with Tab: `TRACE_4D_NEXT` active, paused, and the badge still
    says RUNNING.
-   ![Tab-path fixture session](../design/screenshots/stage_56h_playability_review/06_tab_path_trace_fixture_pieces.png)
+   Evidence: `docs/design/screenshots/stage_56h_playability_review/06_tab_path_trace_fixture_pieces.png`
 
 ## Limits of this review
 
