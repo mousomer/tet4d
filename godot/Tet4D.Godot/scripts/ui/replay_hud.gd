@@ -432,8 +432,9 @@ func set_snapshot(snapshot: Dictionary, diagnostics_visible: bool) -> void:
 			_render_onboarding()
 			var mode_label := "Live Plain 4D" if trace_type == "live_4d" else ("Live Plain 3D" if trace_type == "live_3d" else "Live Plain 2D")
 			var game_over := bool(snapshot.get("game_over", false))
-			var paused_fallback := _live_4d_paused if trace_type == "live_4d" else (_live_3d_paused if trace_type == "live_3d" else _live_2d_paused)
-			var state_label := "Game Over" if game_over else ("Paused" if bool(snapshot.get("paused", paused_fallback)) else "Running")
+			# Pause comes from set_live_*_mode(); the native snapshot's "paused" is always false.
+			var paused := _live_4d_paused if trace_type == "live_4d" else (_live_3d_paused if trace_type == "live_3d" else _live_2d_paused)
+			var state_label := "Game Over" if game_over else ("Paused" if paused else "Running")
 			var reason := str(snapshot.get("game_over_reason", ""))
 			var last_input := "%s / %s" % [str(snapshot.get("last_command", "none")), str(snapshot.get("last_command_status", "unknown"))]
 			var rotation_text := "Last rotation %s / %s" % [
@@ -454,7 +455,7 @@ func set_snapshot(snapshot: Dictionary, diagnostics_visible: bool) -> void:
 					str(_live_4d_basis_snapshot.get("visible_dimensions", [])),
 				]
 			_update_live_status_strip(mode_label, state_label, reason, trace_type)
-			_update_live_gameplay_summary(snapshot, mode_label)
+			_update_live_gameplay_summary(snapshot, mode_label, paused)
 			if _new_random_game_button != null:
 				_new_random_game_button.visible = str(snapshot.get("random_mode", "")) == GameSetupSpecScript.RANDOM_MODE_TRUE_RANDOM
 			_trace_integrity_label.text = _format_live_inspector_text(
@@ -1352,13 +1353,14 @@ func _update_live_status_strip(mode_label: String, state_label: String, reason: 
 		_restart_game_button.text = "Restart Game"
 
 
-func _update_live_gameplay_summary(snapshot: Dictionary, mode_label: String) -> void:
+func _update_live_gameplay_summary(snapshot: Dictionary, mode_label: String, paused: bool) -> void:
 	if _summary_label != null:
 		_summary_label.text = live_gameplay_summary_text(
 			snapshot,
 			mode_label,
 			_live_4d_basis_snapshot,
-			_hud_density == "detailed"
+			_hud_density == "detailed",
+			paused
 		)
 
 
@@ -1366,7 +1368,8 @@ static func live_gameplay_summary_text(
 	snapshot: Dictionary,
 	mode_label: String,
 	basis_snapshot: Dictionary = {},
-	detailed: bool = false
+	detailed: bool = false,
+	paused: bool = false
 ) -> String:
 	var current_piece := str(snapshot.get("current_piece", "-")).strip_edges()
 	var shape: Array = snapshot.get("board_shape", [])
@@ -1399,7 +1402,7 @@ static func live_gameplay_summary_text(
 		int(snapshot.get("lines", 0)),
 		current_piece if not current_piece.is_empty() else "-",
 		speed_text,
-		_live_feedback_short(snapshot),
+		_live_feedback_short(snapshot, paused),
 	]
 	if not detailed:
 		return primary
@@ -1412,10 +1415,10 @@ static func live_gameplay_summary_text(
 	]
 
 
-static func live_command_feedback_text(snapshot: Dictionary) -> String:
+static func live_command_feedback_text(snapshot: Dictionary, paused: bool = false) -> String:
 	if bool(snapshot.get("game_over", false)):
 		return "Game over · %s · Restart Game or Main Menu" % _game_over_reason_label(str(snapshot.get("game_over_reason", "")))
-	if bool(snapshot.get("paused", false)):
+	if paused:
 		return "Paused · P — Resume · Esc — Main Menu"
 	var command := str(snapshot.get("last_command", "none"))
 	var status := str(snapshot.get("last_command_status", "unknown"))
@@ -1441,10 +1444,10 @@ static func _blocked_command_feedback(command: String) -> String:
 	return "Cannot move there"
 
 
-static func _live_feedback_short(snapshot: Dictionary) -> String:
+static func _live_feedback_short(snapshot: Dictionary, paused: bool) -> String:
 	if bool(snapshot.get("game_over", false)):
 		return "GAME OVER"
-	if bool(snapshot.get("paused", false)):
+	if paused:
 		return "PAUSED"
 	var command := str(snapshot.get("last_command", "none"))
 	var status := str(snapshot.get("last_command_status", "unknown"))

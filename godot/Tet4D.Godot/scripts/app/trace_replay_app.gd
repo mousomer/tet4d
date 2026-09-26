@@ -1810,25 +1810,22 @@ func _reset_live_4d() -> void:
 	_refresh_live_4d_snapshot()
 
 
-# The HUD badge and status word read _current_snapshot["paused"], which only a
-# snapshot refresh copies from the pause flag. A bare _refresh_hud() here would
-# repaint the stale copy and show "[ RUNNING ]" over a frozen game.
 func _toggle_live_2d_pause() -> void:
 	_live_2d_paused = not _live_2d_paused
 	_reset_live_repeat_state()
-	_refresh_live_2d_snapshot()
+	_refresh_hud()
 
 
 func _toggle_live_3d_pause() -> void:
 	_live_3d_paused = not _live_3d_paused
 	_reset_live_repeat_state()
-	_refresh_live_3d_snapshot()
+	_refresh_hud()
 
 
 func _toggle_live_4d_pause() -> void:
 	_live_4d_paused = not _live_4d_paused
 	_reset_live_repeat_state()
-	_refresh_live_4d_snapshot()
+	_refresh_hud()
 
 
 func _process_live_input_repeat(delta: float) -> void:
@@ -2080,7 +2077,6 @@ func _refresh_live_2d_snapshot() -> void:
 			"energy_lines": [],
 			"game_over": false,
 			"game_over_reason": "",
-			"paused": _live_2d_paused,
 			"trace_name": "live_plain_2d",
 			"entity_count": 0,
 			"frame_count_matches_metadata": true,
@@ -2088,7 +2084,6 @@ func _refresh_live_2d_snapshot() -> void:
 		}
 	else:
 		_current_snapshot = parsed
-		_current_snapshot["paused"] = _live_2d_paused
 	_refresh_ghost_cache()
 	_refresh_render()
 	_refresh_hud()
@@ -2116,7 +2111,6 @@ func _refresh_live_3d_snapshot() -> void:
 			"energy_lines": [],
 			"game_over": false,
 			"game_over_reason": "",
-			"paused": _live_3d_paused,
 			"trace_name": "live_plain_3d",
 			"entity_count": 0,
 			"frame_count_matches_metadata": true,
@@ -2124,7 +2118,6 @@ func _refresh_live_3d_snapshot() -> void:
 		}
 	else:
 		_current_snapshot = parsed
-		_current_snapshot["paused"] = _live_3d_paused
 		_update_live_3d_rotation_feedback(_current_snapshot)
 	_refresh_ghost_cache()
 	_refresh_render()
@@ -2153,7 +2146,6 @@ func _refresh_live_4d_snapshot() -> void:
 			"energy_lines": [],
 			"game_over": false,
 			"game_over_reason": "",
-			"paused": _live_4d_paused,
 			"trace_name": "live_plain_4d",
 			"entity_count": 0,
 			"frame_count_matches_metadata": true,
@@ -2163,7 +2155,6 @@ func _refresh_live_4d_snapshot() -> void:
 		}
 	else:
 		_current_snapshot = parsed
-		_current_snapshot["paused"] = _live_4d_paused
 		_update_live_4d_rotation_feedback(_current_snapshot)
 	_refresh_ghost_cache()
 	_refresh_render()

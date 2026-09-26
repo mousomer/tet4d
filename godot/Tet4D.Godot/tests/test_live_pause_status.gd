@@ -1,9 +1,8 @@
 extends RefCounted
 
-# Pause is owned by the app's _live_*_paused flags, but the HUD badge and the
-# status word are rebuilt from _current_snapshot["paused"] on every refresh.
-# A pause toggle must therefore reach that copy too, or the next HUD refresh
-# repaints "[ RUNNING ]" over a frozen game.
+# Pause is owned by the app's _live_*_paused flags. The HUD once rebuilt the
+# badge and status word from a snapshot copy of that flag, which went stale on
+# every toggle and repainted "[ RUNNING ]" over a frozen game.
 
 
 func run() -> Array:
@@ -36,11 +35,11 @@ func run() -> Array:
 		# change the native hash between capture and comparison.
 		var hash_before := _live_state_hash(app, mode)
 		app._unhandled_input(_pause_event())
-		_assert_status(failures, mode, "paused", app, hud, true)
+		_assert_status(failures, mode, "paused", hud, true)
 		if _live_state_hash(app, mode) != hash_before:
 			failures.append("%s pausing must not change native gameplay state" % mode)
 		app._unhandled_input(_pause_event())
-		_assert_status(failures, mode, "resumed", app, hud, false)
+		_assert_status(failures, mode, "resumed", hud, false)
 
 	root.queue_free()
 	await tree.process_frame
@@ -48,9 +47,7 @@ func run() -> Array:
 	return failures
 
 
-func _assert_status(failures: Array, mode: String, phase: String, app, hud, paused: bool) -> void:
-	if bool(app._current_snapshot.get("paused", not paused)) != paused:
-		failures.append("%s %s: snapshot paused flag must follow the app pause state" % [mode, phase])
+func _assert_status(failures: Array, mode: String, phase: String, hud, paused: bool) -> void:
 	var badge := str(hud._top_state_badge_label.text)
 	var expected_badge := "[ PAUSED ]" if paused else "[ RUNNING ]"
 	if badge != expected_badge:

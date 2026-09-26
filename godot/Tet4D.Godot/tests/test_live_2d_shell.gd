@@ -1120,10 +1120,8 @@ func _assert_live_gameplay_hud_copy(failures: Array) -> void:
 	feedback = ReplayHudScript.live_command_feedback_text(live_snapshot)
 	if feedback != "Cannot move there":
 		failures.append("rejected live command should remain visible, got %s" % feedback)
-	live_snapshot["paused"] = true
-	if ReplayHudScript.live_command_feedback_text(live_snapshot) != "Paused · P — Resume · Esc — Main Menu":
+	if ReplayHudScript.live_command_feedback_text(live_snapshot, true) != "Paused · P — Resume · Esc — Main Menu":
 		failures.append("paused live HUD should explain that gameplay input is held")
-	live_snapshot["paused"] = false
 	live_snapshot["game_over"] = true
 	live_snapshot["game_over_reason"] = "spawn_blocked"
 	if ReplayHudScript.live_command_feedback_text(live_snapshot) != "Game over · Spawn blocked · Restart Game or Main Menu":
