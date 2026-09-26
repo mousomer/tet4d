@@ -95,6 +95,17 @@ duplicating it here.
   - unresolved cleanup seams
   - active follow-up debt for the playground path
 
+### `stage_56h_playability_repair_plan.md`
+- Role: `spec`
+- Status: `active`
+- Owns:
+  - bounded Stage 56H-R repair before human playability acceptance
+  - entry-path, input/timing, focus/onboarding, pause-state, startup-size, and
+    HOLD/NEXT repair criteria
+  - the explicit human-decision queue for unresolved gameplay choices
+- Input audit:
+  `audits/stage_56h_playability_review_2026-09-25.md`
+
 ## Ownership map
 
 The canonical ownership matrix lives in `plan_authority_map.md`.
