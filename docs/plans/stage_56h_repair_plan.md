@@ -193,7 +193,7 @@ Also prove:
 
 ### Completion
 
-Complete locally; the PR and merge evidence are the remaining delivery steps.
+Complete: merged in PR #142 as `9a3ee5fa`.
 
 - Finding and owner: native `Plain2DSession::tick()` and `PlainNDSession::tick()`
   already lock a piece when their next gravity/drop attempt is blocked. The
@@ -298,6 +298,29 @@ Simulate/drive the focus-loss notification and prove:
 - UI reports paused;
 - focus return leaves the game paused;
 - explicit resume restores play.
+
+### Completion
+
+Complete: `NOTIFICATION_WM_WINDOW_FOCUS_OUT` at the `TraceReplayApp` shell
+boundary ensures that a running Live 2D/3D/4D session is paused without
+toggling an already-paused session. This is the Godot cross-platform
+interactive-window focus-loss notification; it is preferred over polling or a
+platform adapter because the app owns the live pause flags at that boundary.
+Focus-in intentionally has no handler, so the player must explicitly resume.
+The existing pause gate freezes gravity accumulation, and the handler resets
+the existing held/repeat state so a key released while unfocused cannot produce
+a phantom repeated command.
+
+- Regression: `godot/Tet4D.Godot/tests/test_live_focus_loss_pause.gd` drives
+  the actual Node focus notifications across configured Live 2D, 3D, and 4D
+  sessions. It checks authoritative flags, HUD status, native state hashes,
+  gravity freeze/resume, manual-pause idempotence, held-input cleanup, game-over
+  preservation, replay, and Main Menu isolation.
+- Native-state invariant: focus transitions do not invoke the native bridge;
+  state hashes are equal immediately before and after focus pause and remain
+  equal while paused.
+
+R2.2–R2.4 remain unstarted.
 
 ## R2.2 Onboarding must not run a lethal background game
 
