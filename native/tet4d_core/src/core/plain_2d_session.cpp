@@ -304,7 +304,11 @@ std::string Plain2DSession::apply_command(const std::string &command) {
 	} else if (command == "rotate_ccw") {
 		GameStepper2D::apply(state_, {"rotate_ccw", GameCommandKind2D::Rotate, -1, 0});
 	} else if (command == "soft_drop") {
-		GameStepper2D::apply(state_, {"soft_drop", GameCommandKind2D::SoftDrop, 0, 1});
+		const CommandResult2D result = GameStepper2D::apply(state_, {"soft_drop", GameCommandKind2D::SoftDrop, 0, 1});
+		last_command_ = command;
+		last_command_status_ = result.return_value.value_or(false) ? "accepted" : "rejected";
+		++command_count_;
+		return command_status(command);
 	} else if (command == "hold") {
 		const bool accepted = apply_hold();
 		last_command_ = accepted ? command : "rejected:" + command;

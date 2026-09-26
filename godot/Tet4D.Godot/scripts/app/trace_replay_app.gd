@@ -1678,24 +1678,26 @@ func _clear_live_ui_focus() -> void:
 
 
 func _live_2d_command(command: String) -> void:
-	if command == "hard_drop" or command == "soft_drop":
-		_live_tick_accumulator = 0.0
-	_live_bridge.live_2d_apply_command(command)
+	var result := _live_bridge.live_2d_apply_command(command)
+	_update_live_drop_timing(command, result)
 	_refresh_live_2d_snapshot()
 
 
 func _live_3d_command(command: String) -> void:
-	if command == "hard_drop" or command == "soft_drop":
-		_live_tick_accumulator = 0.0
-	_live_bridge.live_3d_apply_command(command)
+	var result := _live_bridge.live_3d_apply_command(command)
+	_update_live_drop_timing(command, result)
 	_refresh_live_3d_snapshot()
 
 
 func _live_4d_command(command: String) -> void:
-	if command == "hard_drop" or command == "soft_drop":
-		_live_tick_accumulator = 0.0
-	_live_bridge.live_4d_apply_command(command)
+	var result := _live_bridge.live_4d_apply_command(command)
+	_update_live_drop_timing(command, result)
 	_refresh_live_4d_snapshot()
+
+
+func _update_live_drop_timing(command: String, result: String) -> void:
+	if command == "hard_drop" or (command == "soft_drop" and result.contains("last_command_status=accepted")):
+		_live_tick_accumulator = 0.0
 
 
 func _dispatch_live_gameplay_command(command: String) -> bool:

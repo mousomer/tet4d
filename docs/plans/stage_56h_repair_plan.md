@@ -1,9 +1,10 @@
 # Stage 56H-R — bounded playability repair plan
 
-Status: approved planning input for Stage 56H. R1.3 is complete (PR #137,
-merge `30548ca3`); the other slices have not started. The Stage 56 task
-contract (`docs/tasks/live_4d_cockpit_convergence.md`, Stage 56H-R) authorizes
-this tranche as its only bounded cross-layer exception.
+Status: approved planning input for Stage 56H. R1.1 is complete (PR #141,
+merge `fe108857`), R1.2 is complete locally and awaiting its narrow PR, and
+R1.3 is complete (PR #137, merge `30548ca3`). R2 has not started. The Stage 56
+task contract (`docs/tasks/live_4d_cockpit_convergence.md`, Stage 56H-R)
+authorizes this tranche as its only bounded cross-layer exception.
 
 Source evidence:
 - `docs/plans/stage_56h_playability_review.md`
@@ -189,6 +190,32 @@ Also prove:
 - hard drop still locks immediately;
 - deterministic state/hash expectations change only where the corrected timing
   semantics require it.
+
+### Completion
+
+Complete locally; the PR and merge evidence are the remaining delivery steps.
+
+- Finding and owner: native `Plain2DSession::tick()` and `PlainNDSession::tick()`
+  already lock a piece when their next gravity/drop attempt is blocked. The
+  starvation was Godot-owned timing orchestration: each live command helper
+  cleared `_live_tick_accumulator` before it knew whether a held soft drop had
+  moved. No native lock rule, lock delay, DAS/ARR, kick timing, speed curve, or
+  deterministic state was changed.
+- Fix: the three Godot live-command paths now consume the existing bridge command
+  result and reset the accumulator only for hard drop or an authoritative
+  `last_command_status=accepted` soft drop. The 2D session now propagates its
+  already-computed `GameStepper2D` soft-drop result as `accepted`/`rejected`,
+  matching the existing 3D/4D result contract; this is status fidelity needed
+  by the Godot owner, not a gameplay-locking change.
+- Regression: `test_blocked_soft_drop_locking.gd` starts ordinary 2D/3D/4D
+  sessions, drives the real held soft-drop action past each mode's normal
+  gravity interval, proves grounded pieces lock without release, verifies two
+  successful repeated drops still advance authoritative state and preserve the
+  accumulator cadence, and confirms hard drop still locks immediately with the
+  native next-piece spawn order.
+- Determinism: existing fixed command-stream hashes remain covered by
+  `test_live_loop_parity_acceptance.gd`; only the formerly-starved held-input
+  timing sequence gains its missing native tick/lock.
 
 ## R1.3 Pause status must be truthful
 

@@ -62,6 +62,7 @@ const TEST_SCRIPTS := [
 	"res://tests/test_live_menu_input_routing.gd",
 	"res://tests/test_live_pause_status.gd",
 	"res://tests/test_ordinary_live_entry.gd",
+	"res://tests/test_blocked_soft_drop_locking.gd",
 	"res://tests/test_live_viewer_restoration.gd",
 	"res://tests/test_live_2d_shell.gd",
 	"res://tests/test_scene_integrity.gd",
