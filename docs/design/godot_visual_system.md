@@ -161,8 +161,10 @@ orientation marker whose arrows track the world axes as the camera moves.
 
 Pointer controls in normal Live 4D use left drag for shared slice-local
 orientation `L`, right drag for outer-framing translation/pan, and the wheel
-for outer-framing zoom. Other modes may retain their camera interaction. Shift
-has no live camera or soft-drop binding; 3D/4D soft drop uses Ctrl only.
+for outer-framing zoom. Other modes may retain their camera interaction. No
+modifier key has a live camera binding. 3D/4D soft drop uses Shift, displayed
+in every helper, with Ctrl as an undisplayed compatibility binding (Stage
+56H-R2.3).
 
 The fixed fitted Live-4D horizontal presentation is applied once to the
 renderer-only `Live4DPresentationRoot`, across the active camera's

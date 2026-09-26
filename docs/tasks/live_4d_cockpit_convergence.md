@@ -1,7 +1,9 @@
 # Task Contract — Stage 56 Cockpit Completion
 
 Status: Stages 56A–56G implementation and automated evidence are complete.
-Stages 56H–56I and final human acceptance remain incomplete. Stage 56H is a
+Stages 56H–56I and final human acceptance remain incomplete. The bounded
+cross-layer repair tranche 56H-R precedes the Stage 56H human acceptance
+(see Stage 56H-R below). Stage 56H is a
 gameplay/product acceptance checkpoint, not a release gate; Stage 56I and the
 190/200 A/B choice follow it without waiting on release or distribution work.
 
@@ -9,7 +11,8 @@ gameplay/product acceptance checkpoint, not a release gate; Stage 56I and the
 
 Preserve and converge the proposed Live-4D cockpit implementation in the Godot product shell:
 a stable horizontal W1–W4 board sequence with one bottom deck ordered `PIECE |
-VIEW | PIECE STATE`.  The task is presentation-only.  It makes exact 4D view
+VIEW | PIECE STATE`.  The task is presentation-only, except for the bounded
+Stage 56H-R repair exception defined below.  It makes exact 4D view
 operations discoverable as passive, contract-derived View guidance and keeps
 the existing gameplay, input, camera, geometry, queue, Hold, and deterministic
 owners unchanged.
@@ -234,6 +237,49 @@ deck wrap, or new dead zone. Stage 56G and 56G-R are complete; Stage 56H is now
 eligible to focus on sustained
 playability, key/action legibility, and HOLD/NEXT emphasis rather than geometry
 repair. Stage 56I and the final human A/B decision remain gated.
+
+### Stage 56H-R — bounded cross-layer repair exception
+
+Stages 56A–56G were presentation-only, and that constraint still holds for
+every part of this programme except the repairs named here. The Stage 56H agent
+pre-review (`docs/plans/stage_56h_playability_review.md`) found product defects
+outside presentation that make a meaningful human Stage 56H acceptance
+impossible: fixture sessions on quick entry, a soft-drop path that suppresses
+locking, and lifecycle and platform input collisions. Stage 56H-R, planned in
+`docs/plans/stage_56h_repair_plan.md`, repairs them first. It is the only part
+of Stage 56 allowed to cross the presentation boundary, and its exception
+covers exactly the repairs below. Anything else needs a separate contract
+decision.
+
+| Repair | Expected owner | Permitted escalation | State and determinism effect |
+| --- | --- | --- | --- |
+| R1.1 ordinary session entry | Godot app/session orchestration | Native, only if the existing API cannot construct a correct session | Changes which legitimate session and catalog are selected; no gameplay rule changes |
+| R1.2 held soft-drop lock starvation | Godot repeat and gravity timing | Native, only if investigation proves the defect originates there | Intentionally changes gameplay timing in the blocked-soft-drop case |
+| R1.3 pause badge (complete: #137, `30548ca3`) | Godot HUD, fed the app's pause flags | None | No native gameplay mutation |
+| R2.1 focus loss | Godot application lifecycle | None | Changes authoritative pause state |
+| R2.2 onboarding suspension | Godot onboarding and lifecycle | None | Simulation stays frozen while the guide owns attention |
+| R2.3 OS-safe soft drop | `LiveInputContract` and the RDS | Input configuration owner only | Changes input mapping, not gameplay semantics |
+| R2.4 Retina launch sizing | Godot display/window owner | None | No deterministic gameplay effect |
+| R3 cockpit/player legibility | Presentation and cockpit | No gameplay authority transfer | Presentation-only |
+
+The matrix names expected owners; it does not force a repair into a listed
+file. If investigation shows that a different existing owner is authoritative,
+the repair follows that owner and records the evidence.
+
+Deterministic and replay constraints for 56H-R:
+
+1. R1.1 may change which legitimate session or catalog ordinary entry selects,
+   but must not alter the trace or replay fixtures themselves.
+2. R1.2 intentionally changes observable gameplay timing in one defective case:
+   a grounded piece under a held, blocked soft drop.
+3. Presentation-only repairs keep native snapshot and hash identity unchanged.
+4. Where gameplay semantics legitimately change, deterministic expectations are
+   updated deliberately and visibly, never hidden.
+5. Replay and diagnostic fixture paths stay available and deterministic.
+6. Ordinary game entry must not consume those fixture paths.
+
+56H-R does not accept Stage 56H. The human acceptance, Stage 56I, and the
+190/200 choice remain downstream of it.
 
 ## Explicit non-goals for Stage 56A
 
