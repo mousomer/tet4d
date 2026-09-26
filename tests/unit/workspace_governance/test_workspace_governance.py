@@ -232,6 +232,49 @@ def test_representative_scenarios(task: str, mode: str, route: str) -> None:
     assert route in entries["routes"]["value"]
 
 
+# Routing boundary: unqualified product work defaults to the shipped Godot
+# product; work for the Python reference engine or oracle must name that surface.
+# The old Python fallback was never pinned ("moderate feature" matches its own
+# scenario), so these tests pin the boundary itself.
+@pytest.mark.parametrize(
+    "task",
+    [
+        "fix(godot): make Live-4D right-drag follow the pointer under reflection",
+        "Repair Stage 56G real-window responsive acceptance",
+        "Complete Stage 56G responsive cockpit acceptance",
+        "Harden the Godot test harness and eliminate test-fixture teardown leaks",
+        (
+            "Stage 56H: sustained playability, key/action legibility, and "
+            "HOLD/NEXT emphasis"
+        ),
+        "Stage 56I bounded cockpit polish",
+        "improve topology replay parity",
+    ],
+)
+def test_unqualified_product_work_routes_to_the_godot_product(task: str) -> None:
+    entries = GovernanceResolver.for_root(ROOT).resolve(task=task)["entries"]
+    assert list(entries["routes"]["value"]) == ["godot_product_shell"]
+
+
+@pytest.mark.parametrize(
+    "task",
+    [
+        "improve Python oracle topology replay parity",
+        "Fix a rotation bug in the reference engine",
+        "Tighten the oracle trace comparison",
+        "Harden the Python reference engine oracle boundary",
+    ],
+)
+def test_naming_the_python_surface_routes_to_the_reference_engine(task: str) -> None:
+    entries = GovernanceResolver.for_root(ROOT).resolve(task=task)["entries"]
+    assert list(entries["routes"]["value"]) == ["python_reference_engine"]
+
+
+def test_local_fix_without_a_scenario_routes_to_the_godot_product() -> None:
+    entries = GovernanceResolver.for_root(ROOT).resolve(mode="LOCAL_FIX")["entries"]
+    assert list(entries["routes"]["value"]) == ["godot_product_shell"]
+
+
 @pytest.mark.parametrize(
     ("task", "mode", "routes"),
     [

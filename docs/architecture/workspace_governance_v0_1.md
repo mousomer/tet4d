@@ -157,21 +157,27 @@ authority subsumes the other, so a task that genuinely combines them fails
 closed. The resolved view reports both the matched scenario ID and its priority
 with project provenance.
 
+A task that matches no scenario takes its mode's profile routes. Unqualified
+product work defaults to the shipped Godot product: `FEATURE` and `LOCAL_FIX`
+route to `godot_product_shell`. Work for the Python reference engine or oracle
+must name that surface. The `python`, `reference engine` and `oracle` scenarios
+sit at distinct priorities (100, 200 and 250), so naming several never ties.
+Generic feature nouns such as topology, replay or parity do not imply Python.
+
 ## Pack updates and sanitation
 
 `VERSION`, `MANIFEST.json`, and `config/governance/workspace.lock.json` identify
-the vendored v0.1 bytes. Hashing consumes the manifest-declared algorithm and
+the vendored pack bytes. Hashing consumes the manifest-declared algorithm and
 exclusions; sync copies manifest version/revision into the lock.
 `gov sync` is the explicit local acceptance operation;
 ordinary checks report `PACK_DRIFT`. Generic path checks complement, rather than
 replace, Tet4D's existing bounded secret scanner and sanitation entrypoint.
-The pack has no published compatibility-versioning contract beyond those
-identity fields. Requiring scenario `priority` is nevertheless a
-compatibility-significant project-schema change: consumers updating to this
-revision must add an integer priority to every representative scenario. The
-pack remains version `0.1.0` because the repository defines no rule mapping
-schema compatibility to `VERSION`; the content revision advances for the
-changed bytes and contract.
+While the pack is 0.x, every change to a pack schema raises the minor
+`VERSION`, and its pull request states whether the change can invalidate an
+existing manifest. The `MANIFEST.json` revision advances with every change to
+pack bytes. Earlier v0.1 revisions predate this rule: `v0.1-integrity-1`, `-2`
+and `-8` made breaking project-schema changes, the last requiring scenario
+`priority`, while `VERSION` stayed `0.1.0`. They are not renumbered.
 
 ## Deferred
 
@@ -197,6 +203,9 @@ fallback past an unusable candidate. Explicit operator overrides stay strongest
 and machine-wide authority precedes the repository-local fallback; the
 repository overlay is deliberately absent from this chain, being per checkout
 and therefore never present in the fresh worktree this tier exists to start.
+Two-worktree operation is certified without a `.venv` symlink farm. A checkout
+predating the inherited overlay still needs its four shared-environment
+symlinks or `WORKSPACE_VENV`.
 Bootstrap cannot ask the interpreter it is selecting to parse the overlay, so
 the shell reads that one key itself with a depth-aware scan: an overlay may
 carry a `tool_paths` entry keyed `interpreter`, and matching it would start

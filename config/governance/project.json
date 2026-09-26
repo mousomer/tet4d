@@ -69,12 +69,12 @@
     "profiles": {
       "LOCAL_FIX": {
         "exploration": ["reproduce", "owning-source", "direct-tests"],
-        "routes": ["python_reference_engine"],
+        "routes": ["godot_product_shell"],
         "final_evidence_rule": "resolved-from-diff-authority-risk"
       },
       "FEATURE": {
         "exploration": ["owner", "neighboring-contracts", "bounded-architecture-search"],
-        "routes": ["python_reference_engine"],
+        "routes": ["godot_product_shell"],
         "final_evidence_rule": "resolved-from-diff-authority-risk"
       },
       "STRUCTURAL_CHANGE": {
@@ -117,6 +117,27 @@
         "match_all": ["python bug fix"],
         "mode": "LOCAL_FIX",
         "priority": 350,
+        "routes": ["python_reference_engine"]
+      },
+      {
+        "id": "reference-engine-work",
+        "match_all": ["reference engine"],
+        "mode": "FEATURE",
+        "priority": 200,
+        "routes": ["python_reference_engine"]
+      },
+      {
+        "id": "oracle-work",
+        "match_all": ["oracle"],
+        "mode": "FEATURE",
+        "priority": 250,
+        "routes": ["python_reference_engine"]
+      },
+      {
+        "id": "python-work",
+        "match_all": ["python"],
+        "mode": "FEATURE",
+        "priority": 100,
         "routes": ["python_reference_engine"]
       },
       {

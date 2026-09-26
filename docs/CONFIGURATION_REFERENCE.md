@@ -248,10 +248,10 @@ Parameters:
 - `execution.default_mode`: `"FEATURE"` (`string`)
 - `execution.profiles.FEATURE.exploration[]`: array[`string`]; examples: `"owner"`, `"neighboring-contracts"`, `"bounded-architecture-search"`
 - `execution.profiles.FEATURE.final_evidence_rule`: `"resolved-from-diff-authority-risk"` (`string`)
-- `execution.profiles.FEATURE.routes[]`: array[`string`]; examples: `"python_reference_engine"`
+- `execution.profiles.FEATURE.routes[]`: array[`string`]; examples: `"godot_product_shell"`
 - `execution.profiles.LOCAL_FIX.exploration[]`: array[`string`]; examples: `"reproduce"`, `"owning-source"`, `"direct-tests"`
 - `execution.profiles.LOCAL_FIX.final_evidence_rule`: `"resolved-from-diff-authority-risk"` (`string`)
-- `execution.profiles.LOCAL_FIX.routes[]`: array[`string`]; examples: `"python_reference_engine"`
+- `execution.profiles.LOCAL_FIX.routes[]`: array[`string`]; examples: `"godot_product_shell"`
 - `execution.profiles.STRUCTURAL_CHANGE.exploration[]`: array[`string`]; examples: `"authority-review"`, `"routing-review"`, `"repository-impact"`
 - `execution.profiles.STRUCTURAL_CHANGE.final_evidence_rule`: `"resolved-from-diff-authority-risk"` (`string`)
 - `execution.profiles.STRUCTURAL_CHANGE.routes[]`: array[`string`]; examples: `"governance_and_tooling"`

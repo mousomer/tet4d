@@ -6,7 +6,8 @@ completion, and publication workflow.
 ## Authority order
 
 Use newer explicit task instructions first. Then apply the machine-readable
-governance in `config/project/policy_pack.json`, the owning product or domain
+governance (`config/governance/project.json` for routes and the facts it owns,
+`config/project/policy_pack.json` for unmigrated facts), the owning product or domain
 contract, relevant RDS under `docs/rds/`, architecture and subsystem authority,
 these canonical governance owners, and finally applicable handoff/backlog state. When sources
 conflict, follow the higher owner and update or retire the stale lower text in
