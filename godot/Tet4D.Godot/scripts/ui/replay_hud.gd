@@ -292,6 +292,17 @@ func live_control_frames() -> Dictionary:
 	return _game_setup_model.selected_control_frames()
 
 
+func configured_live_setup(mode: String) -> Dictionary:
+	if (
+		_game_setup_model == null
+		or not _game_setup_model.has_method("is_valid")
+		or not _game_setup_model.has_method("canonical_session_setup")
+		or not _game_setup_model.is_valid(mode)
+	):
+		return {}
+	return _game_setup_model.canonical_session_setup(mode).duplicate(true)
+
+
 func set_control_frame_snapshot(snapshot: Dictionary) -> void:
 	_control_frame_snapshot = snapshot.duplicate(true)
 	_refresh_piece_control_strip()

@@ -124,8 +124,11 @@ machine-local onboarding preferences while preserving the profile-owned
 guidance setting. Stage 56G-R now supplies one apparent-size responsive policy
 across all live dimensions, real-window acceptance from 1728×1080 to 720×600,
 active-resize coverage, bounded ordered deck flow, and repaired visual evidence.
-Stage 56H is a gameplay/product acceptance checkpoint, not a release gate; Stage
-56I polish, the 190/200 A/B choice, and cockpit refinement continue after it.
+Stage 56H-R1.1 now routes ordinary Game bootstrap, player-facing quick entry,
+and Tab 2D→3D→4D through validated configured sessions, while preserving the
+explicit replay/fixture seam; R1.2 is next and remains unstarted. Stage 56H is
+a gameplay/product acceptance checkpoint, not a release gate; Stage 56I polish,
+the 190/200 A/B choice, and cockpit refinement continue after it.
 
 ### Three-product packaging gaps
 
