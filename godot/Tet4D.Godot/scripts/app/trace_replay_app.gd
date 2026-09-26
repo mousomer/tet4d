@@ -1810,22 +1810,25 @@ func _reset_live_4d() -> void:
 	_refresh_live_4d_snapshot()
 
 
+# The HUD badge and status word read _current_snapshot["paused"], which only a
+# snapshot refresh copies from the pause flag. A bare _refresh_hud() here would
+# repaint the stale copy and show "[ RUNNING ]" over a frozen game.
 func _toggle_live_2d_pause() -> void:
 	_live_2d_paused = not _live_2d_paused
 	_reset_live_repeat_state()
-	_refresh_hud()
+	_refresh_live_2d_snapshot()
 
 
 func _toggle_live_3d_pause() -> void:
 	_live_3d_paused = not _live_3d_paused
 	_reset_live_repeat_state()
-	_refresh_hud()
+	_refresh_live_3d_snapshot()
 
 
 func _toggle_live_4d_pause() -> void:
 	_live_4d_paused = not _live_4d_paused
 	_reset_live_repeat_state()
-	_refresh_hud()
+	_refresh_live_4d_snapshot()
 
 
 func _process_live_input_repeat(delta: float) -> void:

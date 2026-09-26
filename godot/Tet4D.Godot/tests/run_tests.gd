@@ -60,6 +60,7 @@ const TEST_SCRIPTS := [
 	"res://tests/test_stage_47b_acceptance_contract.gd",
 	"res://tests/test_stage_48_acceptance_regressions.gd",
 	"res://tests/test_live_menu_input_routing.gd",
+	"res://tests/test_live_pause_status.gd",
 	"res://tests/test_live_viewer_restoration.gd",
 	"res://tests/test_live_2d_shell.gd",
 	"res://tests/test_scene_integrity.gd",
