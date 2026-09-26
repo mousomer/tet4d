@@ -301,7 +301,8 @@ Simulate/drive the focus-loss notification and prove:
 
 ### Completion
 
-Complete: `NOTIFICATION_WM_WINDOW_FOCUS_OUT` at the `TraceReplayApp` shell
+Complete: merged in PR #143 as `df35ba11d9d9dfd276413c142a412aebd2c678fb`.
+`NOTIFICATION_WM_WINDOW_FOCUS_OUT` at the `TraceReplayApp` shell
 boundary ensures that a running Live 2D/3D/4D session is paused without
 toggling an already-paused session. This is the Godot cross-platform
 interactive-window focus-loss notification; it is preferred over polling or a
@@ -320,7 +321,7 @@ a phantom repeated command.
   state hashes are equal immediately before and after focus pause and remain
   equal while paused.
 
-R2.2–R2.4 remain unstarted.
+R2.2–R2.4 were unstarted at this point in the plan.
 
 ## R2.2 Onboarding must not run a lethal background game
 
@@ -349,6 +350,27 @@ simulation clock.
 A first-run 2D and 4D onboarding test must run for longer than the previous
 unattended game-over interval and prove no gravity/game-over progression occurs
 while the guide owns the interaction.
+
+### Completion
+
+Implementation complete locally; PR/CI/merge pending. Visible onboarding is a shell-owned suspension boundary. The live
+process loop clears existing repeat state and returns before accumulator
+advancement or native tick dispatch, preserving the current gravity phase for
+ordinary post-dismissal play. It does not change authoritative pause flags or
+introduce another clock. Tutorial command-result observation and 4D basis/view
+presentation continue outside the timing loop.
+
+- Regression: `test_live_onboarding_suspension.gd` covers 45-second unattended
+  2D/4D suspension, preserved manual pause, 2D tutorial progression, 4D
+  presentation-only progression with native hash invariance, held-input cleanup,
+  visible-panel ownership, and accumulator-phase preservation.
+
+Existing 2D `System controls` and 3D `Move the view` steps are informational,
+non-self-completing guide states. R2.2 does not redesign that flow: suspension
+ends on explicit dismissal or on natural completion where the current model
+supports it.
+
+R2.3 and R2.4 remain unstarted.
 
 ## R2.3 Provide an OS-safe soft-drop interaction on macOS
 

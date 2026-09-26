@@ -1574,6 +1574,12 @@ func onboarding_snapshot() -> Dictionary:
 	return _onboarding_model.snapshot()
 
 
+func onboarding_suspends_live_gameplay() -> bool:
+	# The guide continues to observe accepted tutorial commands and presentation
+	# actions, but elapsed time cannot advance a live session while it is visible.
+	return _onboarding_model.is_visible() and not _active_live_mode.is_empty() and _onboarding_panel != null and _onboarding_panel.visible
+
+
 func _set_onboarding_visible(visible: bool) -> void:
 	_onboarding_model.set_enabled(visible)
 	_render_onboarding()
