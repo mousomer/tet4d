@@ -239,12 +239,18 @@ human acceptance pass:
 
 ## Evidence captures
 
-1. [First launch / unattended game over](../../design/screenshots/stage_56h_playability_review/01_first_launch_game_over.png)
-2. [Paused gameplay with RUNNING badge](../../design/screenshots/stage_56h_playability_review/02_paused_badge_says_running.png)
-3. [Main menu](../../design/screenshots/stage_56h_playability_review/03_main_menu.png)
-4. [Live 3D mid-game](../../design/screenshots/stage_56h_playability_review/04_live_3d_midgame.png)
-5. [Live 4D mid-game with NEXT cut off](../../design/screenshots/stage_56h_playability_review/05_live_4d_midgame_next_cut.png)
-6. [Tab-path 4D fixture session](../../design/screenshots/stage_56h_playability_review/06_tab_path_trace_fixture_pieces.png)
+1. First launch / unattended game over:
+   `docs/design/screenshots/stage_56h_playability_review/01_first_launch_game_over.png`
+2. Paused gameplay with RUNNING badge:
+   `docs/design/screenshots/stage_56h_playability_review/02_paused_badge_says_running.png`
+3. Main menu:
+   `docs/design/screenshots/stage_56h_playability_review/03_main_menu.png`
+4. Live 3D mid-game:
+   `docs/design/screenshots/stage_56h_playability_review/04_live_3d_midgame.png`
+5. Live 4D mid-game with NEXT cut off:
+   `docs/design/screenshots/stage_56h_playability_review/05_live_4d_midgame_next_cut.png`
+6. Tab-path 4D fixture session:
+   `docs/design/screenshots/stage_56h_playability_review/06_tab_path_trace_fixture_pieces.png`
 
 ## Limits
 
