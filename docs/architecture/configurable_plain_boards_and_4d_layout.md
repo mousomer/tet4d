@@ -45,10 +45,12 @@ keyboard acceptance after those transitions.
 - Python defaults and pygame setup behavior are not changed by this stage.
 
 The Python RDS typical boards (`6x18x6` and `6x18x6x4`) are not the accepted
-Godot live defaults. Current native/Godot live play uses `6x6`, `6x10x6`, and
+Godot live defaults. Current native/Godot live play uses `10x20`, `6x10x6`, and
 `5x10x4x4`. Stage 49 preserves those accepted live shapes as its Standard
 presets rather than silently changing either Python defaults or accepted Godot
 behavior.
+Stage 56H later replaced the 2D Standard `6x6` with `10x20` by owner decision,
+moving Large from `10x20` to `12x24`.
 
 ### Native construction, algorithms, snapshots, and identity
 
@@ -109,7 +111,7 @@ Native integrity limits are intentionally separate from product support.
 
 | Mode | Native semantic minimum | Native safe maximum | Stage 49 presets |
 | --- | --- | --- | --- |
-| 2D | `4x6` | `16x30` | Compact `4x6`; Standard `6x6`; Large `10x20` |
+| 2D | `4x6` | `16x30` | Compact `4x6`; Standard `10x20`; Large `12x24` |
 | 3D | `4x6x2` | `10x24x10` | Compact `4x8x4`; Standard `6x10x6`; Large `8x16x8` |
 | 4D | `4x6x2x1` | `12x24x8x12` | Compact `4x8x3x3`; Standard `5x10x4x4`; Wide W `8x16x5x8` |
 

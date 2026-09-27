@@ -10,7 +10,7 @@
       "dimension": 2,
       "density": "sparse",
       "feature_tags": ["ghost", "next", "hold", "live_cockpit"],
-      "live_setup": {"schema_version": 2, "contract_version": 1, "mode": "live_2d", "board_preset_id": "standard", "board_shape": [6, 6], "piece_set_id": "classic", "random_mode": "fixed_seed", "seed": 540502, "initial_speed_level": 1, "topology_profile": {"contract_version": 1, "rank": 2, "dimensions": [6, 6], "seams": []}},
+      "live_setup": {"schema_version": 2, "contract_version": 1, "mode": "live_2d", "board_preset_id": "standard", "board_shape": [10, 20], "piece_set_id": "classic", "random_mode": "fixed_seed", "seed": 540502, "initial_speed_level": 1, "topology_profile": {"contract_version": 1, "rank": 2, "dimensions": [10, 20], "seams": []}},
       "commands": [],
       "presentation_profile": {"schema_version": 1, "values": {}}
     },

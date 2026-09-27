@@ -453,6 +453,7 @@ void Tet4DCoreApi::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_plain_nd_required_field_parity", "case_id"), &Tet4DCoreApi::get_plain_nd_required_field_parity);
 	ClassDB::bind_method(D_METHOD("live_2d_configure", "setup"), &Tet4DCoreApi::live_2d_configure);
 	ClassDB::bind_method(D_METHOD("live_2d_configure_checked", "setup"), &Tet4DCoreApi::live_2d_configure_checked);
+	ClassDB::bind_method(D_METHOD("live_2d_configure_fixture_board", "width", "height"), &Tet4DCoreApi::live_2d_configure_fixture_board);
 	ClassDB::bind_method(D_METHOD("live_2d_reset"), &Tet4DCoreApi::live_2d_reset);
 	ClassDB::bind_method(D_METHOD("live_2d_apply_command", "command"), &Tet4DCoreApi::live_2d_apply_command);
 	ClassDB::bind_method(D_METHOD("live_2d_tick"), &Tet4DCoreApi::live_2d_tick);
@@ -744,6 +745,10 @@ bool Tet4DCoreApi::live_2d_configure(const Dictionary &setup) {
 
 Dictionary Tet4DCoreApi::live_2d_configure_checked(const Dictionary &setup) {
 	return configure_checked(setup, "live_2d", live_2d_session_);
+}
+
+bool Tet4DCoreApi::live_2d_configure_fixture_board(int64_t width, int64_t height) {
+	return live_2d_session_.configure(static_cast<int>(width), static_cast<int>(height));
 }
 
 void Tet4DCoreApi::live_2d_reset() {

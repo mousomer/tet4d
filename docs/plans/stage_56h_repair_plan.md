@@ -80,7 +80,8 @@ Do not silently change these during 56H-R:
    use;
 6. final restart-key semantics/confirmation policy, except where a current
    collision makes normal play unsafe;
-11. whether 6×6 remains the default 2D board;
+11. whether 6×6 remains the default 2D board; **decided 2026-09-27: no, the
+    2D Standard board is 10×20 (Large 12×24)**;
 13. whether ordinary games should default to a fixed seed or a generated seed.
 
 The human 56H session should evaluate these with a functioning build.
@@ -724,7 +725,7 @@ Record explicit answers rather than letting implementation choose them:
 - Should level/speed progress during one game?
 - Is restart confirmation needed and should restart have one cross-mode
   binding?
-- Is 6×6 the desired default 2D board?
+- Is 6×6 the desired default 2D board? **Answered 2026-09-27: no, 10×20.**
 - Should ordinary games default to random/generated seed while still allowing
   an explicit fixed seed?
 - Does the board read as the primary object despite the permanent cockpit?

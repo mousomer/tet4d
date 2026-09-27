@@ -126,6 +126,12 @@ func live_2d_configure_checked(setup: Dictionary) -> Dictionary:
 	return _api().live_2d_configure_checked(setup)
 
 
+# Fixture seam only: resizes the unconfigured session's board while keeping its
+# fixed piece order. Ordinary play configures through live_2d_configure_checked.
+func live_2d_configure_fixture_board(width: int, height: int) -> bool:
+	return bool(_api().live_2d_configure_fixture_board(width, height))
+
+
 func live_2d_reset() -> void:
 	_api().live_2d_reset()
 

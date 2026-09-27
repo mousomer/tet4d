@@ -18,7 +18,7 @@ def test_authoritative_source_generates_current_bindings() -> None:
 
     assert generator.check_outputs(generator.expected_outputs(payload)) == 0
     assert generator.contract_fingerprint(payload) == (
-        "c0fca19302599068efc1e6c3e68c76b2b3ba9ca3c840bb928c534bf7552e5c3e"
+        "2eda3c114aaa43a5eca78d215c9d02f848cef38d9353587c2b45283ac58816d9"
     )
 
 

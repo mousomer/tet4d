@@ -14,6 +14,14 @@ func run() -> Array:
 		failures.append("native board-extent contract metadata must match generated binding")
 	elif ((contract.get("modes", []) as Array)[2] as Dictionary).get("axis_order", []) != ["X", "Y", "Z", "W"]:
 		failures.append("native board-extent contract must expose generated axis order")
+	# Stage 56H owner decision 11: 6x6 was too small for sustained 2D play.
+	var native_2d: Dictionary = (contract.get("modes", [{}]) as Array)[0]
+	if native_2d.get("canonical_default_shape", []) != [10, 20] or BoardExtentContractScript.canonical_default_shape("live_2d") != [10, 20]:
+		failures.append("the 2D canonical default board must be the 10x20 playfield in native and generated bindings")
+	var standard_2d: Array = GameSetupSpecScript.preset(GameSetupSpecScript.MODE_2D, GameSetupSpecScript.STANDARD_PRESET_ID).get("shape", [])
+	var large_2d: Array = GameSetupSpecScript.preset(GameSetupSpecScript.MODE_2D, "large").get("shape", [])
+	if standard_2d != [10, 20] or large_2d.size() != 2 or large_2d[0] * large_2d[1] <= standard_2d[0] * standard_2d[1]:
+		failures.append("the 2D Standard preset must be 10x20 and Large must stay larger, got %s / %s" % [standard_2d, large_2d])
 	var model = GameSetupModelScript.new()
 	for mode in GameSetupSpecScript.modes():
 		model.set_mode(mode)

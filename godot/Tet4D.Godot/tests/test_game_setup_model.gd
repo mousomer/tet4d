@@ -109,7 +109,8 @@ func run() -> Array:
 		file.store_string(JSON.stringify({"schema_version": 1, "last_selected": {"live_2d": "large", "live_3d": "unknown", "live_4d": "wide_w"}}))
 		file.close()
 	loaded = store.load_last_selected(path)
-	if loaded.get(GameSetupSpecScript.MODE_2D, {}).get("board_shape", []) != [10, 20] or loaded.get(GameSetupSpecScript.MODE_3D, {}).get("board_shape", []) != [6, 10, 6]:
+	# Schema 1 stored preset IDs; they resolve through the current preset table.
+	if loaded.get(GameSetupSpecScript.MODE_2D, {}).get("board_shape", []) != GameSetupSpecScript.preset(GameSetupSpecScript.MODE_2D, "large").get("shape", []) or loaded.get(GameSetupSpecScript.MODE_3D, {}).get("board_shape", []) != [6, 10, 6]:
 		failures.append("schema 1 preset IDs must migrate to concrete shapes with safe defaults")
 	if file != null:
 		file = FileAccess.open(path, FileAccess.WRITE)

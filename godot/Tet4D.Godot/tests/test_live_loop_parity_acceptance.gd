@@ -1,6 +1,7 @@
 extends RefCounted
 
 const Tet4DCoreBridgeScript = preload("res://scripts/native/tet4d_core_bridge.gd")
+const RECORDED_2D_BOARD := [6, 6]
 
 
 func run() -> Array:
@@ -10,6 +11,11 @@ func run() -> Array:
 		failures.append("Stage 41 live-loop parity acceptance requires Tet4DCoreApi")
 		return failures
 	_assert_python_oracle_parity_exports(failures, bridge)
+	# The 2D expectations were recorded on a 6x6 board. Pin it through the fixture
+	# seam (fixed piece order) instead of inheriting the product default, which
+	# Stage 56H decision 11 raised to 10x20.
+	if not bridge.live_2d_configure_fixture_board(RECORDED_2D_BOARD[0], RECORDED_2D_BOARD[1]):
+		failures.append("Stage 41 2D parity case must configure its recorded 6x6 board")
 	_assert_live_case(failures, bridge, _case_2d())
 	_assert_live_case(failures, bridge, _case_3d())
 	_assert_live_case(failures, bridge, _case_4d())

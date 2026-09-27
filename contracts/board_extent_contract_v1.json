@@ -6,7 +6,7 @@
       "axis_maxima": [16, 30],
       "axis_minima": [4, 6],
       "axis_order": ["X", "Y"],
-      "canonical_default_shape": [6, 6],
+      "canonical_default_shape": [10, 20],
       "id": "live_2d",
       "native_maximum_cells": 480,
       "rank": 2,

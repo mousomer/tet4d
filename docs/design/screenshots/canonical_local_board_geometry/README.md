@@ -8,7 +8,7 @@ window on Metal Forward+.
 
 | Frame | Evidence |
 | --- | --- |
-| `2d_default_6x6.png` | Default 2D remains immediately planar with full local one-cell depth. |
+| `2d_default_6x6.png` | Historical Stage 54F 6x6 default evidence, captured before the canonical 2D default changed to 10x20. |
 | `2d_asymmetric_4x7.png` | Asymmetric 2D centring, grid, boundary, active/Ghost/locked readability. |
 | `2d_narrow_4x6.png` | Minimum valid 2D board remains coherent. |
 | `3d_default_6x10x6.png` | Default 3D volume consumes canonical cells, face grid, floor, and boundary. |
