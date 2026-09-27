@@ -5,9 +5,9 @@ class_name BoardExtentContractV1
 
 const CONTRACT_NAME := "tet4d.board_extent_contract"
 const CONTRACT_VERSION := 1
-const CONTRACT_FINGERPRINT := "c0fca19302599068efc1e6c3e68c76b2b3ba9ca3c840bb928c534bf7552e5c3e"
+const CONTRACT_FINGERPRINT := "2eda3c114aaa43a5eca78d215c9d02f848cef38d9353587c2b45283ac58816d9"
 const MODE_SPECS := {
-	"live_2d": {"rank": 2, "axis_order": ["X", "Y"], "axis_minima": [4, 6], "axis_maxima": [16, 30], "canonical_default_shape": [6, 6], "native_maximum_cells": 480, "supported_topology_kind": "bounded"},
+	"live_2d": {"rank": 2, "axis_order": ["X", "Y"], "axis_minima": [4, 6], "axis_maxima": [16, 30], "canonical_default_shape": [10, 20], "native_maximum_cells": 480, "supported_topology_kind": "bounded"},
 	"live_3d": {"rank": 3, "axis_order": ["X", "Y", "Z"], "axis_minima": [4, 6, 2], "axis_maxima": [10, 24, 10], "canonical_default_shape": [6, 10, 6], "native_maximum_cells": 2400, "supported_topology_kind": "bounded"},
 	"live_4d": {"rank": 4, "axis_order": ["X", "Y", "Z", "W"], "axis_minima": [4, 6, 2, 1], "axis_maxima": [12, 24, 8, 12], "canonical_default_shape": [5, 10, 4, 4], "native_maximum_cells": 27648, "supported_topology_kind": "bounded"},
 }

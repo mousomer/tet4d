@@ -1,3 +1,4 @@
+#include "tet4d_core/board_extent_contract.hpp"
 #include "tet4d_core/core_api.hpp"
 #include "tet4d_core/plain_2d.hpp"
 #include "tet4d_core/plain_2d_session.hpp"
@@ -14,11 +15,23 @@
 
 namespace {
 
+// These cases were written against the unconfigured 6x6 session. The product
+// default board now comes from the board extent contract (10x20 since Stage 56H
+// decision 11), so fixture sessions state their board explicitly.
+constexpr int kFixtureWidth = 6;
+constexpr int kFixtureHeight = 6;
+
 void require(bool condition, const std::string &message) {
 	if (!condition) {
 		std::cerr << message << "\n";
 		std::exit(1);
 	}
+}
+
+tet4d::core::Plain2DSession fixture_session() {
+	auto session = tet4d::core::Plain2DSession::create_validated(kFixtureWidth, kFixtureHeight);
+	require(session.has_value(), "the 6x6 fixture board must stay supported");
+	return *session;
 }
 
 bool same_shape(
@@ -134,7 +147,7 @@ void test_authoritative_hard_drop_destination_2d() {
 	landed.game_over = true;
 	require(!landed.hard_drop_destination().has_value(), "terminal 2D query should be unavailable");
 
-	tet4d::core::Plain2DSession session;
+	tet4d::core::Plain2DSession session = fixture_session();
 	const std::string hash = session.state_hash();
 	const auto preview = session.peek_next_piece_shape();
 	require(session.hard_drop_destination().has_value(), "live 2D session should expose landing geometry");
@@ -175,7 +188,7 @@ void test_stage11_trace_exports() {
 }
 
 void test_live_plain_2d_session() {
-	tet4d::core::Plain2DSession session;
+	tet4d::core::Plain2DSession session = fixture_session();
 	const std::string initial_hash = session.state_hash();
 	std::string snapshot = session.snapshot_json();
 	require(snapshot.find("\"trace_type\":\"live_2d\"") != std::string::npos, "live session snapshot should be renderer-shaped");
@@ -205,7 +218,7 @@ void test_live_plain_2d_session() {
 }
 
 void test_live_plain_2d_gravity_tick_sequence() {
-	tet4d::core::Plain2DSession session;
+	tet4d::core::Plain2DSession session = fixture_session();
 	const std::string initial_hash = session.state_hash();
 	session.tick();
 	require(session.state_hash() != initial_hash, "gravity tick should change state hash when active piece can fall");
@@ -223,8 +236,15 @@ void test_live_plain_2d_gravity_tick_sequence() {
 	require(session.state_hash() == initial_hash, "reset after gravity sequence should restore deterministic initial hash");
 }
 
-void test_configurable_live_plain_2d_session() {
+void test_live_plain_2d_default_follows_contract() {
+	const std::vector<int> canonical = tet4d::core::canonical_live_board_shape("live_2d");
+	require(canonical == std::vector<int>({10, 20}), "live 2D canonical default board should be 10x20 (Stage 56H decision 11)");
 	tet4d::core::Plain2DSession session;
+	require(session.snapshot_json().find("\"board_shape\":[10,20]") != std::string::npos, "unconfigured live 2D session should use the contract default board");
+}
+
+void test_configurable_live_plain_2d_session() {
+	tet4d::core::Plain2DSession session = fixture_session();
 	const std::string standard_hash = session.state_hash();
 	require(session.configure(10, 20), "supported 2D shape should configure");
 	require(session.snapshot_json().find("\"board_shape\":[10,20]") != std::string::npos, "configured 2D snapshot shape missing");
@@ -253,7 +273,7 @@ tet4d::core::PlainGameSetup setup_2d(
 }
 
 void test_stage50_live_plain_2d_setup_identity() {
-	tet4d::core::Plain2DSession session;
+	tet4d::core::Plain2DSession session = fixture_session();
 	require(session.configure(setup_2d(1337)), "valid Stage 50 2D setup should configure");
 	const std::string initial = session.snapshot_json();
 	require(initial.find("\"current_piece\":\"Z\"") != std::string::npos, "seed 1337 should match Python shuffled 2D bag");
@@ -268,7 +288,7 @@ void test_stage50_live_plain_2d_setup_identity() {
 	session.reset();
 	require(session.state_hash() == initial_hash, "2D Stage 50 restart should restore setup, bag, RNG, and state");
 
-	tet4d::core::Plain2DSession other_seed;
+	tet4d::core::Plain2DSession other_seed = fixture_session();
 	require(other_seed.configure(setup_2d(2025, 7)), "alternate Stage 50 2D setup should configure");
 	require(other_seed.state_hash() != initial_hash, "different seed/speed must change native state identity");
 	require(other_seed.snapshot_json().find("\"initial_speed_level\":7") != std::string::npos, "alternate speed should be visible");
@@ -283,7 +303,7 @@ void test_stage50_live_plain_2d_setup_identity() {
 }
 
 void test_stage50_true_random_seed_and_restart() {
-	tet4d::core::Plain2DSession first;
+	tet4d::core::Plain2DSession first = fixture_session();
 	tet4d::core::PlainGameSetup setup = setup_2d(1337, 3, tet4d::core::RANDOM_MODE_TRUE_RANDOM);
 	require(first.configure(setup), "true-random 2D setup should configure");
 	const std::string snapshot = first.snapshot_json();
@@ -294,13 +314,13 @@ void test_stage50_true_random_seed_and_restart() {
 	first.reset();
 	require(first.state_hash() == initial_hash, "true-random restart must reuse the captured effective seed");
 
-	tet4d::core::Plain2DSession second;
+	tet4d::core::Plain2DSession second = fixture_session();
 	require(second.configure(setup), "second true-random 2D setup should configure");
 	require(second.state_hash() != initial_hash, "new true-random construction should receive a different effective seed");
 }
 
 void verify_2d_refill_boundary(const std::string &random_mode) {
-	tet4d::core::Plain2DSession shuffled;
+	tet4d::core::Plain2DSession shuffled = fixture_session();
 	tet4d::core::PlainGameSetup setup = setup_2d(1337, 1, random_mode);
 	setup.board_shape = {10, 30};
 	require(shuffled.configure(setup), "large valid 2D board should configure for nonterminal preview boundary test");
@@ -349,7 +369,7 @@ void verify_2d_refill_boundary(const std::string &random_mode) {
 }
 
 void test_next_piece_preview_is_exact_and_observational() {
-	tet4d::core::Plain2DSession legacy;
+	tet4d::core::Plain2DSession legacy = fixture_session();
 	const tet4d::core::PieceShape2D legacy_preview = legacy.peek_next_piece_shape();
 	require(legacy_preview.name == "O", "legacy 2D preview should report the exact next piece");
 	require(legacy_preview.color_id == 2 && legacy_preview.blocks.size() == 4, "legacy 2D preview should expose production color and cells");
@@ -371,7 +391,7 @@ std::string export_stage50_setup_case_2d(const std::string &case_id) {
 	} else if (case_id != "setup_plain_2d_standard") {
 		return "{}";
 	}
-	tet4d::core::Plain2DSession session;
+	tet4d::core::Plain2DSession session = fixture_session();
 	if (!session.configure(setup)) {
 		return "{}";
 	}
@@ -405,7 +425,7 @@ void test_game_over_spawn_blocked_and_rejected_commands() {
 	require(blocked_state.game_over, "spawn-blocked fixture should set game_over");
 	require(blocked_state.game_over_reason == "spawn_blocked", "spawn-blocked fixture should record reason");
 
-	tet4d::core::Plain2DSession session;
+	tet4d::core::Plain2DSession session = fixture_session();
 	for (int step = 0; step < 40 && session.snapshot_json().find("\"game_over\":true") == std::string::npos; ++step) {
 		session.apply_command("hard_drop");
 	}
@@ -422,11 +442,11 @@ void test_game_over_spawn_blocked_and_rejected_commands() {
 	snapshot = session.snapshot_json();
 	require(snapshot.find("\"game_over\":false") != std::string::npos, "reset should clear game_over");
 	require(snapshot.find("\"game_over_reason\":\"\"") != std::string::npos, "reset should clear game_over reason");
-	require(session.state_hash() == tet4d::core::Plain2DSession().state_hash(), "reset game_over session should restore deterministic hash");
+	require(session.state_hash() == fixture_session().state_hash(), "reset game_over session should restore deterministic hash");
 }
 
 void test_authoritative_hold_transition_2d() {
-	tet4d::core::Plain2DSession session;
+	tet4d::core::Plain2DSession session = fixture_session();
 	require(!session.held_piece_shape().has_value(), "new 2D session Hold must be empty");
 	require(session.hold_available(), "new 2D active lifecycle must allow Hold");
 	require(session.snapshot_json().find("\"held_piece\":null") != std::string::npos, "2D snapshot must expose intentional empty Hold");
@@ -472,8 +492,8 @@ void test_authoritative_hold_transition_2d() {
 	require(session.state_hash() == value_snapshot.state_hash() && session.held_piece_shape()->name == "T" && !session.hold_available(), "2D value snapshot/restore must preserve complete Hold state");
 
 	const std::vector<std::string> replay = {"hold", "hold", "hard_drop", "move_right", "rotate_cw", "hold"};
-	tet4d::core::Plain2DSession replay_a;
-	tet4d::core::Plain2DSession replay_b;
+	tet4d::core::Plain2DSession replay_a = fixture_session();
+	tet4d::core::Plain2DSession replay_b = fixture_session();
 	for (const std::string &command : replay) {
 		replay_a.apply_command(command);
 		replay_b.apply_command(command);
@@ -508,6 +528,7 @@ int main(int argc, char **argv) {
 	test_stage11_trace_exports();
 	test_live_plain_2d_session();
 	test_live_plain_2d_gravity_tick_sequence();
+	test_live_plain_2d_default_follows_contract();
 	test_configurable_live_plain_2d_session();
 	test_stage50_live_plain_2d_setup_identity();
 	test_stage50_true_random_seed_and_restart();

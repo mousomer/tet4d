@@ -124,6 +124,11 @@ machine-local onboarding preferences while preserving the profile-owned
 guidance setting. Stage 56G-R now supplies one apparent-size responsive policy
 across all live dimensions, real-window acceptance from 1728×1080 to 720×600,
 active-resize coverage, bounded ordered deck flow, and repaired visual evidence.
+Stage 56H owner decision 11: the 2D Standard board is now 10×20 instead of
+6×6 (Large moves to 12×24), set in the board extent contract and regenerated.
+Tests recorded on 6×6 (native plain-2D cases, the Stage 41 live-loop parity
+case) now state that board explicitly; Godot reaches it through the
+`live_2d_configure_fixture_board` fixture seam, which keeps the fixed piece order.
 Stage 56H-R1.1 now routes ordinary Game bootstrap, player-facing quick entry,
 and Tab 2D→3D→4D through validated configured sessions, while preserving the
 explicit replay/fixture seam. R1.2 now prevents held blocked soft drops from

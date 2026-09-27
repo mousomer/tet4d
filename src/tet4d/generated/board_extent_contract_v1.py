@@ -6,14 +6,14 @@ from typing import Final
 CONTRACT_NAME: Final = "tet4d.board_extent_contract"
 CONTRACT_VERSION: Final = 1
 CONTRACT_FINGERPRINT: Final = (
-    "c0fca19302599068efc1e6c3e68c76b2b3ba9ca3c840bb928c534bf7552e5c3e"
+    "2eda3c114aaa43a5eca78d215c9d02f848cef38d9353587c2b45283ac58816d9"
 )
 MODE_SPECS: Final = (
     {
         "axis_maxima": [16, 30],
         "axis_minima": [4, 6],
         "axis_order": ["X", "Y"],
-        "canonical_default_shape": [6, 6],
+        "canonical_default_shape": [10, 20],
         "id": "live_2d",
         "native_maximum_cells": 480,
         "rank": 2,

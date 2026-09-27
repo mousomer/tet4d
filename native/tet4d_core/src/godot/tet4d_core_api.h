@@ -49,6 +49,10 @@ public:
 	bool get_plain_nd_required_field_parity(const String &case_id) const;
 	bool live_2d_configure(const Dictionary &setup);
 	Dictionary live_2d_configure_checked(const Dictionary &setup);
+	// Fixture seam: changes only the board of the unconfigured session, keeping its
+	// fixed (unshuffled) piece order, so recorded traces stay independent of the
+	// product default board.
+	bool live_2d_configure_fixture_board(int64_t width, int64_t height);
 	void live_2d_reset();
 	String live_2d_apply_command(const String &command);
 	String live_2d_tick();

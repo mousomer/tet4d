@@ -18,9 +18,13 @@ the existing gameplay loop from Python.
 
 | Mode | Axis order | Inclusive ranges | Canonical default | Native cells |
 | --- | --- | --- | --- | ---: |
-| `live_2d` | X, Y | X 4–16; Y 6–30 | 6 × 6 | 480 |
+| `live_2d` | X, Y | X 4–16; Y 6–30 | 10 × 20 | 480 |
 | `live_3d` | X, Y, Z | X 4–10; Y 6–24; Z 2–10 | 6 × 10 × 6 | 2,400 |
 | `live_4d` | X, Y, Z, W | X 4–12; Y 6–24; Z 2–8; W 1–12 | 5 × 10 × 4 × 4 | 27,648 |
+
+The 2D default was 6 × 6 until the Stage 56H owner decision (human decision
+11 in `docs/plans/stage_56h_repair_plan.md`) raised it to the classic 10 × 20
+playfield.
 
 The Stage 49 4D W envelope remains 1–12. Axis bounds are intentionally
 separate from the selected piece set: a W=1 board is admissible for a 4D set

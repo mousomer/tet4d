@@ -2112,7 +2112,7 @@ func _refresh_live_2d_snapshot() -> void:
 			"frame_index": 0,
 			"frame_count": 1,
 			"state_hash": _live_bridge.live_2d_state_hash(),
-			"board_shape": [6, 6],
+			"board_shape": _active_live_setup.get("board_shape", BoardExtentContractV1.canonical_default_shape("live_2d")),
 			"active_cells": [],
 			"locked_cells": [],
 			"probe_markers": [],

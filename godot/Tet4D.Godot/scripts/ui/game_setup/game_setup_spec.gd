@@ -21,8 +21,8 @@ const RANDOM_MODE_TRUE_RANDOM := "true_random"
 const SPECS := {
 	MODE_2D: [
 		{"id": "compact", "label": "Compact", "shape": [4, 6], "description": "Tight native practice board"},
-		{"id": STANDARD_PRESET_ID, "label": "Standard", "shape": [6, 6], "description": "Accepted Godot live default"},
-		{"id": "large", "label": "Large", "shape": [10, 20], "description": "Classic tall playfield"},
+		{"id": STANDARD_PRESET_ID, "label": "Standard", "shape": [10, 20], "description": "Classic tall playfield"},
+		{"id": "large", "label": "Large", "shape": [12, 24], "description": "Expanded tall playfield"},
 	],
 	MODE_3D: [
 		{"id": "compact", "label": "Compact", "shape": [4, 8, 4], "description": "Readable compact volume"},
