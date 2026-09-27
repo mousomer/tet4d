@@ -1855,10 +1855,20 @@ func _restore_windowed_size() -> void:
 	var window := get_window()
 	if _settings_store == null or window == null or DisplayServer.get_name() == "headless" or window.mode != Window.MODE_WINDOWED:
 		return
-	var minimum := Vector2i(int(ReplayVisuals.SHELL_MIN_WIDTH), int(ReplayVisuals.SHELL_MIN_HEIGHT))
 	var requested := ShellPresentationPreferencesScript.size_from_value(_settings_store.value("display.windowed_size"))
 	var usable := DisplayServer.screen_get_usable_rect(window.current_screen)
-	var safe_size := ShellPresentationPreferencesScript.clamp_windowed_size(requested, minimum, usable)
+	var safe_size: Vector2i
+	if _settings_store.uses_unstored_defaults():
+		var live_minimum := Vector2i(int(ReplayVisuals.LIVE_SHELL_MIN_WIDTH), int(ReplayVisuals.LIVE_SHELL_MIN_HEIGHT))
+		safe_size = ShellPresentationPreferencesScript.fresh_windowed_size(
+			requested,
+			live_minimum,
+			DisplayServer.screen_get_scale(),
+			usable
+		)
+	else:
+		var minimum := Vector2i(int(ReplayVisuals.SHELL_MIN_WIDTH), int(ReplayVisuals.SHELL_MIN_HEIGHT))
+		safe_size = ShellPresentationPreferencesScript.clamp_windowed_size(requested, minimum, usable)
 	window.size = safe_size
 	window.position = usable.position + (usable.size - safe_size) / 2
 	if safe_size != requested:

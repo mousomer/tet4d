@@ -132,8 +132,12 @@ pauses ordinary Live 2D/3D/4D play on focus loss without auto-resume. R2.2 is
 complete (PR #144, `1ec9ffa756f8748eacd7fc0107d813405b4cfc9d`), suspending
 live timing while visible onboarding owns attention. R2.3 is complete (PR #145,
 `cb6860f9daaa4aef81eb2365549f37aee8d9ae53`): Shift is canonical/displayed for
-Live 3D/4D soft drop while Ctrl remains undisplayed compatibility. R2.4 is next
-and unstarted. Stage 56H is a gameplay/product acceptance checkpoint,
+Live 3D/4D soft drop while Ctrl remains undisplayed compatibility. R2.4
+implementation is complete locally and awaits PR/CI/merge: a fresh or
+recovered shell profile now opens at a display-scale-aware live-shell size,
+while valid remembered window sizes retain the existing restore path. Final
+fresh-profile Retina capture and manual Stage 56H acceptance remain deferred.
+Stage 56H is a gameplay/product acceptance checkpoint,
 not a release gate; Stage 56I polish, the 190/200 A/B choice, and cockpit
 refinement continue after it.
 

@@ -26,6 +26,8 @@ func run() -> Array:
 	for setting_id in expected_defaults:
 		if store.value(setting_id) != expected_defaults[setting_id]:
 			failures.append("%s should use its bounded Stage 51 default" % setting_id)
+	if not store.uses_unstored_defaults():
+		failures.append("a missing settings profile should identify its window size as an unstored default")
 	if PreferencesScript.window_mode_value(Window.MODE_WINDOWED) != PreferencesScript.WINDOWED:
 		failures.append("windowed OS state should canonicalize to the persistent windowed preference")
 	if PreferencesScript.window_mode_value(Window.MODE_FULLSCREEN) != PreferencesScript.FULLSCREEN or PreferencesScript.window_mode_value(Window.MODE_EXCLUSIVE_FULLSCREEN) != PreferencesScript.FULLSCREEN:
@@ -34,6 +36,8 @@ func run() -> Array:
 	mutable_size[0] = 1
 	if store.value("display.windowed_size") != [1280, 720]:
 		failures.append("settings values should return safe copies of mutable window sizes")
+	if not store.set_value("display.windowed_size", [1366, 768]) or store.uses_unstored_defaults():
+		failures.append("a saved window size must stop being treated as a fresh-profile default")
 
 	_write_json(GAME_SETUP_SENTINEL_PATH, {"setup": "untouched"})
 	for setting_change in [
@@ -146,6 +150,30 @@ func run() -> Array:
 	)
 	if minimum != Vector2i(634, 660):
 		failures.append("remembered window size should enforce the supported minimum")
+	var retina_fresh := PreferencesScript.fresh_windowed_size(
+		Vector2i(1280, 720),
+		Vector2i(680, 520),
+		2.0,
+		Rect2i(0, 0, 3024, 1964)
+	)
+	if retina_fresh != Vector2i(2560, 1440):
+		failures.append("a fresh Retina profile should convert the 1280x720 logical default to backing pixels")
+	var constrained_retina := PreferencesScript.fresh_windowed_size(
+		Vector2i(1280, 720),
+		Vector2i(680, 520),
+		2.0,
+		Rect2i(0, 0, 1440, 1040)
+	)
+	if constrained_retina != Vector2i(1440, 1040):
+		failures.append("a fresh Retina profile should clamp to the usable display while preserving the live-shell point floor")
+	var standard_fresh := PreferencesScript.fresh_windowed_size(
+		Vector2i(1280, 720),
+		Vector2i(680, 520),
+		1.0,
+		Rect2i(0, 0, 1600, 900)
+	)
+	if standard_fresh != Vector2i(1280, 720):
+		failures.append("a scale-one fresh profile should preserve the logical default as pixels")
 	_cleanup()
 	return failures
 
