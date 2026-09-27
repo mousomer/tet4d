@@ -169,6 +169,10 @@ func status_text() -> String:
 	return str(_diagnostics[-1]) if not _diagnostics.is_empty() else "Shell settings ready."
 
 
+func uses_unstored_defaults() -> bool:
+	return _load_state in ["defaults_missing_file", "recovered_defaults"]
+
+
 func deterministic_snapshot() -> Dictionary:
 	return {
 		"schema_version": SCHEMA_VERSION,
@@ -209,6 +213,7 @@ func _save_persistent_values() -> bool:
 		_report_save_failure(str(replacement.get("detail", "replacement failed")))
 		return false
 	_save_count += 1
+	_load_state = "loaded"
 	_diagnostics.append("Shell settings saved automatically.")
 	var warning := str(replacement.get("warning", ""))
 	if not warning.is_empty():

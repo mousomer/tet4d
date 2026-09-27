@@ -484,6 +484,22 @@ visible clipping.
 Add a deterministic sizing test where possible and record a real Retina
 first-launch capture with a fresh profile.
 
+### Implementation record
+
+Implementation is complete locally; PR/CI/merge remain pending. The shell now
+recognizes a missing or recovered settings profile and converts its logical
+1280×720 default into backing-store pixels using the active display scale
+before applying the ordinary usable-area clamp. Its minimum is the existing
+680×520 live-shell floor in the same logical coordinate domain. A valid stored
+window size remains a raw `Window.size` value and follows the existing restore
+and clamp path without rescaling.
+
+`test_shell_display_settings.gd` covers fresh 2× Retina sizing, a constrained
+2× usable rectangle that still meets the live floor, scale-one behavior, and
+the transition from an unstored default to a persisted size. The real
+fresh-profile Retina capture and final human Stage 56H session remain deferred
+for manual approval; they are not represented as automated evidence.
+
 ---
 
 # 56H-R3 — cockpit and player-facing legibility

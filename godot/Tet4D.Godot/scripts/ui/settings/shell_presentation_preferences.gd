@@ -44,6 +44,28 @@ static func clamp_windowed_size(requested: Vector2i, minimum: Vector2i, usable_r
 	)
 
 
+# The window server accepts backing-store pixels while the live-shell contract
+# is expressed in player-visible points. A settings profile with no valid prior
+# window size must therefore scale its logical default before the first restore.
+# Existing persisted sizes already came from Window.size and must not be scaled.
+static func fresh_windowed_size(
+	requested_points: Vector2i,
+	minimum_points: Vector2i,
+	display_scale: float,
+	usable_rect: Rect2i
+) -> Vector2i:
+	var scale := maxf(display_scale, 0.01)
+	var requested_pixels := Vector2i(
+		ceili(float(requested_points.x) * scale),
+		ceili(float(requested_points.y) * scale)
+	)
+	var minimum_pixels := Vector2i(
+		ceili(float(minimum_points.x) * scale),
+		ceili(float(minimum_points.y) * scale)
+	)
+	return clamp_windowed_size(requested_pixels, minimum_pixels, usable_rect)
+
+
 static func size_from_value(value) -> Vector2i:
 	if value is Array and value.size() == 2:
 		return Vector2i(int(value[0]), int(value[1]))
