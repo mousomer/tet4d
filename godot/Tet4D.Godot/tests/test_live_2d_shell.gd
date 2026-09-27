@@ -256,8 +256,8 @@ func run() -> Array:
 		app._dispatch_live_3d_gameplay_command("hard_drop")
 		if str(app._current_snapshot.get("current_piece", "")) != "O3":
 			failures.append("live 3D hard drop should route to C++ and spawn O3")
-		if str(app._hud._summary_label.text).find("Active O3") == -1 or str(app._hud._summary_label.text).find("LOCKED") == -1:
-			failures.append("Live 3D HUD should expose the active piece and lock feedback while NEXT owns queue presentation")
+		if str(app._hud._summary_label.text).find("Active") != -1 or str(app._hud._summary_label.text).find("LOCKED") == -1:
+			failures.append("Live 3D HUD should expose lock feedback without internal piece identifiers while NEXT owns queue presentation")
 		var popup_owned_hash := str(app._live_bridge.live_3d_state_hash())
 		app._hud._live_interaction_owns_input = true
 		var popup_move_event := InputEventAction.new()
@@ -1126,10 +1126,20 @@ func _assert_live_gameplay_hud_copy(failures: Array) -> void:
 		"initial_speed_level": 1,
 	}
 	var summary := ReplayHudScript.live_gameplay_summary_text(live_snapshot, "Live Plain 3D")
-	if summary != "Live Plain 3D | SCORE 45 | CLEARS 1 | Active O3 | Speed 1 | LOCKED":
-		failures.append("ordinary live summary should prioritize actionable gameplay state and leave NEXT to its panel, got %s" % summary)
+	if summary != "Live Plain 3D | SCORE 45 | CLEARS 1 | Speed 1 | LOCKED":
+		failures.append("ordinary live summary should carry only player state and leave NEXT to its panel, got %s" % summary)
+	live_snapshot["last_command"] = "move_x_pos"
+	var command_echo := ReplayHudScript.live_gameplay_summary_text(live_snapshot, "Live Plain 3D")
+	for developer_word in ["Active", "MOVE", "X POS", "C++"]:
+		if command_echo.find(developer_word) != -1:
+			failures.append("ordinary live summary must not expose developer vocabulary %s, got %s" % [developer_word, command_echo])
+	if not command_echo.ends_with("| PLAYING"):
+		failures.append("an accepted ordinary move should read as PLAYING, got %s" % command_echo)
+	if not ReplayHudScript.live_gameplay_summary_text(live_snapshot, "Live Plain 3D", {}, false, false, true).ends_with("| GUIDE"):
+		failures.append("an idle summary under the open guide should read GUIDE")
+	live_snapshot["last_command"] = "hard_drop"
 	var detailed_summary := ReplayHudScript.live_gameplay_summary_text(live_snapshot, "Live Plain 3D", {}, true)
-	if detailed_summary.find("Board 6 × 10 × 6") == -1 or detailed_summary.find("Seed 1337") == -1 or detailed_summary.find("O3 > L3") != -1:
+	if detailed_summary.find("Active O3") == -1 or detailed_summary.find("Board 6 × 10 × 6") == -1 or detailed_summary.find("Seed 1337") == -1 or detailed_summary.find("O3 > L3") != -1:
 		failures.append("detailed live summary should add setup detail without duplicating the NEXT queue")
 	var feedback := ReplayHudScript.live_command_feedback_text(live_snapshot)
 	if feedback != "Piece locked":

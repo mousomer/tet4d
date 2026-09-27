@@ -56,8 +56,11 @@ From the repo root:
 
 ```bash
 ./scripts/build_godot_tet4d_core.sh
-godot --path godot/Tet4D.Godot
+godot --path godot/Tet4D.Godot res://scenes/game_bootstrap.tscn
 ```
+
+This starts the game. For the Designer shell (Design Laboratory and
+Presentation Designer), pass `res://scenes/designer_bootstrap.tscn` instead.
 
 Godot provides:
 
@@ -171,7 +174,7 @@ Godot front end:
 
 ```bash
 ./scripts/build_godot_tet4d_core.sh
-godot --path godot/Tet4D.Godot
+godot --path godot/Tet4D.Godot res://scenes/game_bootstrap.tscn
 ```
 
 Godot tests:

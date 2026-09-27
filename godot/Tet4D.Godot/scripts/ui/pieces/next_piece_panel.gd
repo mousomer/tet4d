@@ -32,13 +32,19 @@ func _init() -> void:
 	title.text = "NEXT"
 	title.theme_type_variation = "AccentLabel"
 	title.add_theme_font_size_override("font_size", 13)
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
 	_piece_label = Label.new()
 	_piece_label.name = "NextPieceName"
 	_piece_label.text = "—"
 	_piece_label.theme_type_variation = "SecondaryLabel"
 	_piece_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	# Piece names run to nine characters. Letting the name set the panel minimum
+	# made the cockpit deck reflow whenever a longer name arrived, pushing
+	# NEXT/HOLD below the standard window (Stage 56H-R3.1). The name now yields
+	# to its panel; the full name stays in the tooltip.
+	_piece_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_piece_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_piece_label.mouse_filter = Control.MOUSE_FILTER_PASS
 	header.add_child(_piece_label)
 	_thumbnail = PieceThumbnailScript.new()
 	_content.add_child(_thumbnail)
@@ -59,6 +65,7 @@ func set_preview(payload: Dictionary) -> bool:
 		_preview_signature = ""
 		_thumbnail.clear()
 		_piece_label.text = "—"
+		_piece_label.tooltip_text = ""
 		_status_label.text = "Preview unavailable"
 		PiecePreviewLayoutScript.apply_compact(self, _margin, _content, _thumbnail, 0)
 		return false
@@ -68,6 +75,7 @@ func set_preview(payload: Dictionary) -> bool:
 		_preview_signature = candidate_signature
 		_thumbnail.set_model(_model)
 	_piece_label.text = _model.piece_name
+	_piece_label.tooltip_text = _model.piece_name
 	_status_label.text = "%dD · %d cells" % [_model.dimension, _model.canonical_cells.size()]
 	PiecePreviewLayoutScript.apply_compact(self, _margin, _content, _thumbnail, _model.dimension)
 	return true

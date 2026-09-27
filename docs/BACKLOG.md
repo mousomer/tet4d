@@ -146,6 +146,12 @@ still reads `[ RUNNING ]`.
 Stage 56H is a gameplay/product acceptance checkpoint,
 not a release gate; Stage 56I polish, the 190/200 A/B choice, and cockpit
 refinement continue after it.
+Stage 56H-R3 and the R1.3 guide-state follow-up are implemented together:
+NEXT/HOLD fit one unscrolled deck row at 1440×900 in 2D/3D/4D (R3.1), the
+primary live line carries only player state (R3.2), the game product hides
+Designer/Design Laboratory affordances and the READMEs launch the game scene
+(R3.3), and the open guide reads `[ GUIDE ] Gravity paused` instead of
+`[ RUNNING ]`. Manual Stage 56H acceptance remains deferred.
 
 ### Three-product packaging gaps
 

@@ -1,8 +1,9 @@
 # Stage 56H-R — bounded playability repair plan
 
-Status: approved planning input for Stage 56H. R1.1 is complete (PR #141,
-merge `fe108857`), R1.2 is complete locally and awaiting its narrow PR, and
-R1.3 is complete (PR #137, merge `30548ca3`). R2 has not started. The Stage 56
+Status: approved planning input for Stage 56H. R1 and R2 are complete (see
+each slice's record below); R3 and the R1.3 guide-state follow-up are
+implemented on `claude/stage-56h-r3-legibility`. The human Stage 56H session
+remains deferred. The Stage 56
 task contract (`docs/tasks/live_4d_cockpit_convergence.md`, Stage 56H-R)
 authorizes this tranche as its only bounded cross-layer exception.
 
@@ -266,6 +267,17 @@ Complete: merged in PR #137 as `30548ca3`.
   fails 6 checks.
 - The Godot 4.7.2 suite passes (68 scripts), and so does
   `CODEX_MODE=1 ./scripts/verify.sh`.
+
+Follow-up (guide state): the 56H pre-acceptance playtest found `[ RUNNING ]`
+while R2.2's visible guide held gravity. The guide is the other thing that
+freezes elapsed time, and it does so without a native command, so no snapshot
+repainted the badge. The HUD now derives one state label from the app's pause
+flags plus its own `onboarding_suspends_live_gameplay()`. The badge reads
+`[ GUIDE ] Gravity paused` while the guide is open, and it is re-derived
+whenever the guide renders, so showing or hiding the guide updates it in the
+same call. `test_live_pause_status.gd` previously ran with the guide open and
+asserted `[ RUNNING ]` over frozen gravity. It now closes the guide for the
+pause phases and asserts the guide state separately in 2D/3D/4D.
 
 ---
 
@@ -572,6 +584,36 @@ for Live 2D/3D/4D, with occupied and empty Hold states represented.
 
 1440×900 is a hard no-scroll acceptance for NEXT/HOLD.
 
+### Implementation record
+
+Measured at the real 1440×900 root window, the one-row deck needs
+PIECE + VIEW + PIECE STATE + gaps within 1416px. Before the change, 3D needed
+1442px and 4D 1467px, so PIECE STATE wrapped to a second row below the fold.
+Three causes, fixed in the plan's preferred order:
+
+- passive key/reference floors (step 2): the MOVE section floor was 190px for
+  ~121px of 3D/4D content, and the VIEW columns were 225px for ~136px. They are
+  now 160px and 205px. ROTATE keeps 285px because 2D already ellipsizes
+  "counter-clockwise".
+- the NEXT/HOLD piece-name label set the panel minimum, so a longer name (up to
+  nine characters, e.g. `RIBBON8_B`) reflowed the deck mid-game. With HOLD
+  occupied, 4D PIECE STATE grew from 303px to 343px. The name now ellipsizes
+  within its panel and keeps the full name as a tooltip. PIECE STATE is
+  222–239px whatever the pieces.
+
+The thumbnails are unchanged. At 1440×900 the deck is now one unscrolled row in
+2D/3D/4D, with 83px of spare width in 4D. The board surface grows from 466px to
+544px (4D) and 582px (3D).
+
+Evidence: `run_responsive_acceptance.gd` (real window) and
+`test_stage_56g_responsive_cockpit.gd` (headless suite) now fail if NEXT/HOLD
+need scrolling at 1440×900 or 1728×1080. The real-window runner also re-checks
+each mode with HOLD occupied, and accepts `-- capture_dir=<dir>` for evidence.
+Passing run: 18 mode entries + 5 active resizes. Captures of 2D/3D/4D with HOLD
+empty and occupied: `docs/design/screenshots/stage_56h_r3_cockpit/`. The
+constrained sizes (1200×800 down to 720×600) keep the scroll escape hatch and
+pass the existing containment checks.
+
 ## R3.2 Reduce player-visible developer vocabulary
 
 ### Problem
@@ -595,6 +637,26 @@ behind diagnostics/advanced surfaces, not in the primary player status.
 
 This is presentation-only. Do not change scoring or gameplay semantics here.
 
+### Implementation record
+
+The primary live line is now
+`<mode> | SCORE n | CLEARS n | Speed n | <state>`. The state is `PLAYING`,
+`PAUSED`, `GUIDE` or `GAME OVER`, plus the existing `LOCKED`/`BLOCKED`/`READY`
+feedback. Removed from the primary line: the internal active-piece identifier
+(`Active S3`) and the echoed command names (`MOVE RIGHT`, `ROTATE CW`,
+`MOVE W POS`, …). The active piece stays available in the detailed HUD density.
+The transient status-strip text no longer shows
+`C++ Session | Fit View | Reset | Esc`. Scoring and gameplay are unchanged.
+`test_live_2d_shell.gd` asserts the exact primary line and rejects `Active`,
+command echoes and `C++` in it.
+
+Not changed, recorded deliberately:
+- The 2D `SPAWN ENTRY ↘` cue is specified by
+  `docs/architecture/godot_vector_arcade_cockpit_overhaul.md` (§ Slice labels
+  and 2D spawn entry). It is not diagnostic output.
+- The mode label keeps `Live Plain nD`: "Plain" names the bounded topology
+  across menus and docs.
+
 ## R3.3 Enforce game/Designer product boundaries
 
 ### Problem
@@ -612,6 +674,25 @@ for the game product.
 - Designer behavior remains intact in the Designer product.
 
 Update README/documentation only after the executable entry points are correct.
+
+### Implementation record
+
+The game product (`scenes/game_bootstrap.tscn`) previously showed:
+- a DESIGN group with a Design Laboratory card, and an `L` shortcut, both wired
+  to nothing (the app connects that signal only in the Designer product);
+- a live `Designer: Open` button that opened the Presentation Designer authoring
+  tool inside ordinary play.
+
+The app now tells the HUD its product at startup. The game product hides all
+three, drops the card from main-menu focus order, ignores `L`, and refuses to
+open the Presentation Designer. The Designer product keeps them.
+`test_product_bootstraps.gd` asserts both sides.
+
+Entry points: `game_bootstrap.tscn` and `designer_bootstrap.tscn` already
+existed and are correct, so the documented from-source commands in `README.md`
+and `godot/Tet4D.Godot/README.md` now pass `res://scenes/game_bootstrap.tscn`.
+The project's default `run/main_scene` stays the Designer shell: changing it
+would change export/packaging behavior, which this tranche excludes.
 
 ---
 

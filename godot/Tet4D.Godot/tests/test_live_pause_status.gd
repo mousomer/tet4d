@@ -2,7 +2,8 @@ extends RefCounted
 
 # Pause is owned by the app's _live_*_paused flags. The HUD once rebuilt the
 # badge and status word from a snapshot copy of that flag, which went stale on
-# every toggle and repainted "[ RUNNING ]" over a frozen game.
+# every toggle and repainted "[ RUNNING ]" over a frozen game. The open guide
+# is the other thing that freezes gravity, so it gets the same check.
 
 
 func run() -> Array:
@@ -23,6 +24,9 @@ func run() -> Array:
 		root.queue_free()
 		return ["live pause status test requires ReplayHud and TraceReplayApp"]
 
+	# The guide suspends gravity on its own (R2.2), so it must be closed for the
+	# resumed phase to be genuinely running; its own state is asserted below.
+	hud._set_onboarding_visible(false)
 	var mode_shapes := {
 		"live_2d": [6, 6],
 		"live_3d": [6, 10, 6],
@@ -40,6 +44,7 @@ func run() -> Array:
 			failures.append("%s pausing must not change native gameplay state" % mode)
 		app._unhandled_input(_pause_event())
 		_assert_status(failures, mode, "resumed", hud, false)
+		_assert_guide_status(failures, mode, hud)
 
 	root.queue_free()
 	await tree.process_frame
@@ -55,6 +60,24 @@ func _assert_status(failures: Array, mode: String, phase: String, hud, paused: b
 	var summary := str(hud._summary_label.text)
 	if (summary.find("PAUSED") != -1) != paused:
 		failures.append("%s %s: status line PAUSED word must match the pause state, got %s" % [mode, phase, summary])
+
+
+# Opening the guide freezes elapsed time without a native command, so no snapshot
+# repaints the badge; it must still stop claiming RUNNING in the same call.
+func _assert_guide_status(failures: Array, mode: String, hud) -> void:
+	hud._set_onboarding_visible(true)
+	if not hud.onboarding_suspends_live_gameplay():
+		failures.append("%s guide phase requires a visible guide" % mode)
+		return
+	var badge := str(hud._top_state_badge_label.text)
+	if badge != "[ GUIDE ] Gravity paused":
+		failures.append("%s guide open: badge must not claim RUNNING, got %s" % [mode, badge])
+	if str(hud._summary_label.text).find("RUNNING") != -1:
+		failures.append("%s guide open: status line must not claim RUNNING" % mode)
+	hud._set_onboarding_visible(false)
+	badge = str(hud._top_state_badge_label.text)
+	if badge != "[ RUNNING ]":
+		failures.append("%s guide closed: badge must return to RUNNING, got %s" % [mode, badge])
 
 
 func _pause_event() -> InputEventKey:

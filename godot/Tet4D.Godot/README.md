@@ -25,8 +25,12 @@ From the repo root:
 git submodule update --init --recursive
 ./scripts/build_godot_tet4d_core.sh
 GODOT_BIN=/path/to/Godot
-"$GODOT_BIN" --path godot/Tet4D.Godot
+"$GODOT_BIN" --path godot/Tet4D.Godot res://scenes/game_bootstrap.tscn
 ```
+
+That launches the game product. The project's default main scene is the
+Designer shell (main menu, Design Laboratory, Presentation Designer); launch it
+explicitly with `res://scenes/designer_bootstrap.tscn`.
 
 The executable must report
 `4.7.2.stable.official.ed1daf0bf`. Official Linux and macOS archive URLs,
