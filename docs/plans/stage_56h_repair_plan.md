@@ -371,7 +371,8 @@ ends on explicit dismissal or on natural completion where the current model
 supports it.
 
 R2.3 is complete: PR #145 merged as
-`cb6860f9daaa4aef81eb2365549f37aee8d9ae53`. R2.4 remains unstarted.
+`cb6860f9daaa4aef81eb2365549f37aee8d9ae53`. R2.4 is complete as PR #147,
+merged `86de82f18f38b6e5511eaf908308363ddd57e15e`.
 
 ## R2.3 Provide an OS-safe soft-drop interaction on macOS
 
@@ -486,7 +487,7 @@ first-launch capture with a fresh profile.
 
 ### Implementation record
 
-Implementation is complete locally; PR/CI/merge remain pending. The shell now
+Complete: PR #147 merged as `86de82f18f38b6e5511eaf908308363ddd57e15e`. The shell now
 recognizes a missing or recovered settings profile and converts its logical
 1280×720 default into backing-store pixels using the active display scale
 before applying the ordinary usable-area clamp. Its minimum is the existing
