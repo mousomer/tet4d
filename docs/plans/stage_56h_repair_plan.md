@@ -370,8 +370,8 @@ non-self-completing guide states. R2.2 does not redesign that flow: suspension
 ends on explicit dismissal or on natural completion where the current model
 supports it.
 
-R2.3 implementation is complete locally; PR/CI/merge remain pending. R2.4
-remains unstarted.
+R2.3 is complete: PR #145 merged as
+`cb6860f9daaa4aef81eb2365549f37aee8d9ae53`. R2.4 remains unstarted.
 
 ## R2.3 Provide an OS-safe soft-drop interaction on macOS
 
@@ -448,8 +448,8 @@ fixed code contract and are not stored as user state.
 
 ### Completion
 
-Implementation complete locally; PR/CI/merge pending. `LiveInputContract`
-now displays Shift and registers Shift plus undisplayed Ctrl compatibility for
+Complete: PR #145 merged as `cb6860f9daaa4aef81eb2365549f37aee8d9ae53`.
+`LiveInputContract` now displays Shift and registers Shift plus undisplayed Ctrl compatibility for
 Live 3D and Live 4D soft drop. The existing InputMap materialization routes
 the shared `KEY_SHIFT` logical modifier for either physical Shift location;
 tests exercise both locations, Ctrl compatibility, contract-derived helper
