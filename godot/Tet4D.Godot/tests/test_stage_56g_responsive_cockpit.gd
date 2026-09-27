@@ -22,8 +22,8 @@ const MIN_GAME_WIDTH_SHARE := 0.60
 const MIN_GAME_HEIGHT_SHARE := 0.30
 
 const VIEWPORT_CASES := [
-	{"name": "wide desktop", "size": Vector2i(1920, 1080)},
-	{"name": "standard desktop", "size": Vector2i(1440, 900)},
+	{"name": "wide desktop", "size": Vector2i(1920, 1080), "next_hold_without_scroll": true},
+	{"name": "standard desktop", "size": Vector2i(1440, 900), "next_hold_without_scroll": true},
 	{"name": "narrow window", "size": Vector2i(960, 640)},
 	{"name": "small viewport", "size": Vector2i(800, 700)},
 ]
@@ -125,6 +125,13 @@ func _assert_live_geometry(hud: Node, viewport_case: Dictionary, mode: String, v
 	var preview_row: Rect2 = snapshot.get("piece_preview_row_rect", Rect2())
 	if not bool(snapshot.get("piece_preview_row_visible", false)) or not _contains_rect(modules[2], preview_row):
 		failures.append("%s must keep HOLD and NEXT grouped inside PIECE STATE" % label)
+	# Stage 56H-R3.1: scrolling is the constrained-size escape hatch only. At the
+	# standard window NEXT and HOLD must be on screen without scrolling.
+	if bool(viewport_case.get("next_hold_without_scroll", false)):
+		if bool(cockpit.get("deck_scroll_required", false)) or int(cockpit.get("deck_row_count", 0)) != 1:
+			failures.append("%s must fit PIECE / VIEW / PIECE STATE on one unscrolled deck row, got rows %s" % [label, str(cockpit.get("deck_row_assignment", []))])
+		if not _contains_rect(deck, preview_row) or not _contains_rect(usable, preview_row):
+			failures.append("%s must show NEXT and HOLD inside the visible deck: %s in %s" % [label, preview_row, deck])
 	return failures
 
 

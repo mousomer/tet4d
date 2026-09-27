@@ -14,6 +14,12 @@ storage owner, gameplay editor, scene editor, or new presentation-semantics
 owner. Stage 54F-3 integrates the separate library owner through the bounded
 surface and lifecycle defined by `presentation_profile_library.md`.
 
+Availability (Stage 56H-R3.3): the Designer product
+(`scenes/designer_bootstrap.tscn` and the project default scene) exposes the
+live `Designer` entry. The game product (`scenes/game_bootstrap.tscn`) hides it
+and refuses to open the Designer, along with the Design Laboratory menu card and
+`L` shortcut.
+
 The production flow is:
 
 ```text

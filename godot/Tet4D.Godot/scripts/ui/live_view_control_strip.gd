@@ -86,7 +86,10 @@ func _rebuild() -> void:
 		var role := str(group.get("cockpit_role", ""))
 		var section := PassiveControlComponentsScript.section(_section_title(role), role, _density)
 		section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		section.custom_minimum_size.x = 225.0
+		# The widest VIEW row ("Translate" + "Right Drag") needs ~136px; 205px
+		# keeps two aligned columns while leaving room for PIECE STATE on the
+		# first deck row at the standard 1440x900 window (Stage 56H-R3.1).
+		section.custom_minimum_size.x = 205.0
 		for item in group.get("items", []):
 			var semantic := _semantic_row(role, item)
 			section.add_child(PassiveControlComponentsScript.row(

@@ -305,8 +305,11 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		failures.append("%s: visible Change Setup action should fit above the live body, button=%s body=%s" % [label, change_setup_button_rect, body_rect])
 	if top_status_badge_text.find("out_of_bounds") != -1 or top_summary_text.find("out_of_bounds") != -1 or inspector_status_text.find("out_of_bounds") != -1:
 		failures.append("%s: user-facing live status should not expose raw out_of_bounds reason" % label)
-	if top_summary_text.find("SCORE") == -1 or top_summary_text.find("CLEARS") == -1 or top_summary_text.find("Active") == -1:
-		failures.append("%s: concise live summary should expose score, clears, and active piece" % label)
+	if top_summary_text.find("SCORE") == -1 or top_summary_text.find("CLEARS") == -1 or top_summary_text.find("Speed") == -1:
+		failures.append("%s: concise live summary should expose score, clears, and speed" % label)
+	# Stage 56H-R3.2: internal piece identifiers stay in the detailed density.
+	if top_summary_text.find("Active") != -1:
+		failures.append("%s: concise live summary must not expose the internal active-piece identifier" % label)
 	for diagnostic_copy in ["C++ PlainNDSession", "Godot shell", "Seed", "Topology", "Last input"]:
 		if top_summary_text.find(diagnostic_copy) != -1:
 			failures.append("%s: ordinary live summary should omit %s" % [label, diagnostic_copy])

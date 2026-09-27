@@ -97,7 +97,11 @@ func _rebuild() -> void:
 		var role := str(group.get("cockpit_role", ""))
 		var section := PassiveControlComponentsScript.section(_section_title(role), role, _density)
 		section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		section.custom_minimum_size.x = 115.0 if role == "drop" else (190.0 if role == "translate" else 285.0)
+		# Floors keep columns steady between modes; they are not content widths.
+		# MOVE rows need ~121px in 3D/4D (2D's four caps exceed any floor), so a
+		# 160px floor still leaves slack while letting PIECE STATE share the
+		# first deck row at the standard 1440x900 window (Stage 56H-R3.1).
+		section.custom_minimum_size.x = 115.0 if role == "drop" else (160.0 if role == "translate" else 285.0)
 		var row_parent: Container = section
 		if role == "rotate":
 			var rotation_grid := GridContainer.new()

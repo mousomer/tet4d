@@ -134,6 +134,12 @@ var _live_reset_view_button: Button
 var _quick_settings_button: Button
 var _grid_toggle_button: Button
 var _designer_button: Button
+var _design_menu_header: Control
+var _design_lab_button: Button
+var _main_menu_focus_order: Array[Control] = []
+# The game product hides Designer and Design Laboratory affordances (R3.3);
+# the Designer product keeps them. Defaults to the Designer shell.
+var _design_affordances_enabled := true
 var _presentation_designer: PresentationDesigner
 var _presentation_designer_game_rect := Rect2()
 var _design_laboratory
@@ -202,6 +208,9 @@ var _applying_initial_settings := false
 # default, not a player choice. Remembering it first would persist that raw
 # size and hide the fresh-profile Retina scaling in _restore_windowed_size().
 var _shell_settings_applied := false
+var _live_game_over_reason := ""
+var _last_live_summary_snapshot := {}
+var _last_live_mode_label := ""
 var _observed_window_mode := -1
 var _window_mode_poll_accumulator := 0.0
 var _bundle_status_text := ""
@@ -449,7 +458,7 @@ func set_snapshot(snapshot: Dictionary, diagnostics_visible: bool) -> void:
 			var game_over := bool(snapshot.get("game_over", false))
 			# Pause comes from set_live_*_mode(); the native snapshot's "paused" is always false.
 			var paused := _live_4d_paused if trace_type == "live_4d" else (_live_3d_paused if trace_type == "live_3d" else _live_2d_paused)
-			var state_label := "Game Over" if game_over else ("Paused" if paused else "Running")
+			var state_label := _live_state_label(game_over, paused)
 			var reason := str(snapshot.get("game_over_reason", ""))
 			var last_input := "%s / %s" % [str(snapshot.get("last_command", "none")), str(snapshot.get("last_command_status", "unknown"))]
 			var rotation_text := "Last rotation %s / %s" % [
@@ -523,7 +532,7 @@ func set_live_2d_mode(
 	_speed_value.text = "Game Over" if game_over else ("Paused Live" if paused else "Running Live")
 	if _summary_title != null:
 		_summary_title.text = "Live Session"
-	var state_text := "Game Over" if game_over else ("Paused" if paused else "Running")
+	var state_text := _live_state_label(game_over, paused)
 	_update_live_status_strip("Live Plain 2D", state_text, game_over_reason, "live_2d")
 	if _viewport_title != null:
 		_viewport_title.text = "Live Plain 2D"
@@ -572,7 +581,7 @@ func set_live_3d_mode(
 	_speed_value.text = "Game Over" if game_over else ("Paused Live 3D" if paused else "Running Live 3D")
 	if _summary_title != null:
 		_summary_title.text = "Live Session"
-	var state_text := "Game Over" if game_over else ("Paused" if paused else "Running")
+	var state_text := _live_state_label(game_over, paused)
 	_update_live_status_strip("Live Plain 3D", state_text, game_over_reason, "live_3d")
 	if _viewport_title != null:
 		_viewport_title.text = "Live Plain 3D"
@@ -621,7 +630,7 @@ func set_live_4d_mode(
 	_speed_value.text = "Game Over" if game_over else ("Paused Live 4D" if paused else "Running Live 4D")
 	if _summary_title != null:
 		_summary_title.text = "Live Session"
-	var state_text := "Game Over" if game_over else ("Paused" if paused else "Running")
+	var state_text := _live_state_label(game_over, paused)
 	_update_live_status_strip("Live Plain 4D", state_text, game_over_reason, "live_4d")
 	if _viewport_title != null:
 		_viewport_title.text = "Live Plain 4D"
@@ -840,6 +849,28 @@ func configure_design_laboratory(callbacks: Dictionary) -> bool:
 	return configured
 
 
+func set_design_affordances_enabled(enabled: bool) -> void:
+	_design_affordances_enabled = enabled
+	for control in [_design_menu_header, _design_lab_button, _designer_button]:
+		if control != null:
+			(control as Control).visible = enabled
+	if not enabled and _presentation_designer != null and _presentation_designer.state() != "hidden":
+		_presentation_designer.hide_preserving_preview()
+	_configure_main_menu_focus()
+
+
+func design_affordances_enabled() -> bool:
+	return _design_affordances_enabled
+
+
+func _configure_main_menu_focus() -> void:
+	var focus_order: Array[Control] = []
+	for control in _main_menu_focus_order:
+		if control != null and control.visible:
+			focus_order.append(control)
+	_configure_linear_focus(focus_order)
+
+
 func open_design_laboratory() -> void:
 	if _design_laboratory == null:
 		return
@@ -905,7 +936,7 @@ func _build_presentation_designer() -> void:
 
 
 func _open_presentation_designer() -> void:
-	if _presentation_designer == null or _active_live_mode.is_empty():
+	if _presentation_designer == null or _active_live_mode.is_empty() or not _design_affordances_enabled:
 		return
 	var active_profile = presentation_profile()
 	if _presentation_designer.open_with_profile(active_profile, _active_live_mode):
@@ -992,6 +1023,8 @@ func handle_main_menu_shortcut(event: InputEvent) -> bool:
 		KEY_4:
 			open_game_setup(GameSetupSpecScript.MODE_4D)
 		KEY_L:
+			if not _design_affordances_enabled:
+				return false
 			design_laboratory_requested.emit()
 		KEY_H:
 			show_screen(SCREEN_CONTROLS)
@@ -1356,42 +1389,86 @@ func _update_live_status_strip(mode_label: String, state_label: String, reason: 
 	if _bundle_status_label != null:
 		_bundle_status_label.text = "TET4D"
 	if _summary_label != null:
-		var state_part := "GAME OVER · %s" % _game_over_reason_label(reason) if state_label == "Game Over" else state_label
-		_summary_label.text = "%s | C++ Session | %s | Fit View | Reset | Esc" % [mode_label, state_part]
+		var state_part := "GAME OVER · %s" % _game_over_reason_label(reason) if state_label == "Game Over" else state_label.to_upper()
+		_summary_label.text = "%s | %s" % [mode_label, state_part]
 	if _authority_label != null:
 		_authority_label.text = "%s | C++ PlainNDSession | Godot shell" % mode_label
-	if _top_state_badge_label != null:
-		_top_state_badge_label.text = _status_badge_text(state_label, reason)
-		match state_label:
-			"Game Over":
-				_top_state_badge_label.theme_type_variation = "StatusGameOverLabel"
-			"Paused":
-				_top_state_badge_label.theme_type_variation = "StatusPausedLabel"
-			_:
-				_top_state_badge_label.theme_type_variation = "StatusAccentLabel"
-		_style_applier.apply_to_tree(_top_state_badge_label, _style_manager)
+	_live_game_over_reason = reason
+	_apply_live_state_badge(state_label, reason)
 	if _restart_game_button != null:
 		_restart_game_button.visible = not _active_live_mode.is_empty()
 		_restart_game_button.text = "Restart Game"
 
 
+# Pause flags come from the app; the guide is HUD-owned and suspends elapsed
+# time (onboarding_suspends_live_gameplay), so "Running" must exclude it too.
+func _live_state_label(game_over: bool, paused: bool) -> String:
+	if game_over:
+		return "Game Over"
+	if paused:
+		return "Paused"
+	if onboarding_suspends_live_gameplay():
+		return "Guide"
+	return "Running"
+
+
+func _apply_live_state_badge(state_label: String, reason: String) -> void:
+	if _top_state_badge_label == null:
+		return
+	_top_state_badge_label.text = _status_badge_text(state_label, reason)
+	match state_label:
+		"Game Over":
+			_top_state_badge_label.theme_type_variation = "StatusGameOverLabel"
+		"Paused", "Guide":
+			_top_state_badge_label.theme_type_variation = "StatusPausedLabel"
+		_:
+			_top_state_badge_label.theme_type_variation = "StatusAccentLabel"
+	_style_applier.apply_to_tree(_top_state_badge_label, _style_manager)
+
+
+# Showing or hiding the guide changes whether gravity advances without any
+# native command, so no snapshot arrives to repaint the status. Re-derive it
+# from the flags already held for the active mode.
+func _refresh_live_state_display() -> void:
+	if _active_live_mode.is_empty():
+		return
+	var game_over := _live_2d_game_over
+	var paused := _live_2d_paused
+	if _active_live_mode == GameSetupSpecScript.MODE_3D:
+		game_over = _live_3d_game_over
+		paused = _live_3d_paused
+	elif _active_live_mode == GameSetupSpecScript.MODE_4D:
+		game_over = _live_4d_game_over
+		paused = _live_4d_paused
+	_apply_live_state_badge(_live_state_label(game_over, paused), _live_game_over_reason)
+	if not _last_live_summary_snapshot.is_empty():
+		_update_live_gameplay_summary(_last_live_summary_snapshot, _last_live_mode_label, paused)
+
+
 func _update_live_gameplay_summary(snapshot: Dictionary, mode_label: String, paused: bool) -> void:
+	_last_live_summary_snapshot = snapshot
+	_last_live_mode_label = mode_label
 	if _summary_label != null:
 		_summary_label.text = live_gameplay_summary_text(
 			snapshot,
 			mode_label,
 			_live_4d_basis_snapshot,
 			_hud_density == "detailed",
-			paused
+			paused,
+			onboarding_suspends_live_gameplay()
 		)
 
 
+# The primary line carries only player state (R3.2): mode, score, clears,
+# speed, and play state. Piece identifiers and setup detail are opt-in through
+# the detailed HUD density; raw command names are never echoed.
 static func live_gameplay_summary_text(
 	snapshot: Dictionary,
 	mode_label: String,
 	basis_snapshot: Dictionary = {},
 	detailed: bool = false,
-	paused: bool = false
+	paused: bool = false,
+	guide_open: bool = false
 ) -> String:
 	var current_piece := str(snapshot.get("current_piece", "-")).strip_edges()
 	var shape: Array = snapshot.get("board_shape", [])
@@ -1418,18 +1495,18 @@ static func live_gameplay_summary_text(
 			int(basis_snapshot.get("layer_count", snapshot.get("w_slice_count", shape[3] if shape.size() > 3 else 1))),
 			",".join(active_labels),
 		]
-	var primary := "%s | SCORE %d | CLEARS %d | Active %s | %s | %s" % [
+	var primary := "%s | SCORE %d | CLEARS %d | %s | %s" % [
 		mode_label,
 		int(snapshot.get("score", 0)),
 		int(snapshot.get("lines", 0)),
-		current_piece if not current_piece.is_empty() else "-",
 		speed_text,
-		_live_feedback_short(snapshot, paused),
+		_live_feedback_short(snapshot, paused, guide_open),
 	]
 	if not detailed:
 		return primary
-	return "%s | Board %s%s | %s | %s" % [
+	return "%s | Active %s | Board %s%s | %s | %s" % [
 		primary,
+		current_piece if not current_piece.is_empty() else "-",
 		board_text,
 		layer_text,
 		piece_text,
@@ -1466,7 +1543,7 @@ static func _blocked_command_feedback(command: String) -> String:
 	return "Cannot move there"
 
 
-static func _live_feedback_short(snapshot: Dictionary, paused: bool) -> String:
+static func _live_feedback_short(snapshot: Dictionary, paused: bool, guide_open: bool = false) -> String:
 	if bool(snapshot.get("game_over", false)):
 		return "GAME OVER"
 	if paused:
@@ -1477,7 +1554,11 @@ static func _live_feedback_short(snapshot: Dictionary, paused: bool) -> String:
 		return "LOCKED"
 	if status not in ["accepted", "reset"]:
 		return "BLOCKED"
-	return "READY" if status == "reset" else _command_display_name(command)
+	if status == "reset":
+		return "READY"
+	# The guide still accepts tutorial input, so lock/blocked feedback above
+	# stays visible; only the idle word reflects that gravity is held.
+	return "GUIDE" if guide_open else "PLAYING"
 
 
 func _set_live_declutter_mode(live_mode: bool) -> void:
@@ -1579,6 +1660,7 @@ func set_live_4d_basis_snapshot(snapshot: Dictionary) -> void:
 func _render_onboarding() -> void:
 	if _onboarding_panel != null:
 		_onboarding_panel.render(_onboarding_model.snapshot())
+	_refresh_live_state_display()
 
 
 func onboarding_snapshot() -> Dictionary:
@@ -1672,6 +1754,8 @@ func _status_badge_text(state_label: String, reason: String) -> String:
 		return "[ GAME OVER ] %s" % _game_over_reason_label(reason)
 	if state_label == "Paused":
 		return "[ PAUSED ]"
+	if state_label == "Guide":
+		return "[ GUIDE ] Gravity paused"
 	return "[ RUNNING ]"
 
 
@@ -2639,11 +2723,13 @@ func _build_main_menu_screen(screen: Control) -> void:
 		open_game_setup(GameSetupSpecScript.MODE_4D)
 	)
 	layout.add_child(live_4d_button)
-	layout.add_child(_menu_group_header("DESIGN"))
+	_design_menu_header = _menu_group_header("DESIGN")
+	layout.add_child(_design_menu_header)
 	var design_lab_button := _make_command_card("Design Laboratory", "Deterministic A/B style evaluation, evidence, capture, and nomination", "L")
 	design_lab_button.pressed.connect(func() -> void:
 		design_laboratory_requested.emit()
 	)
+	_design_lab_button = design_lab_button
 	layout.add_child(design_lab_button)
 	layout.add_child(_menu_group_header("LEARN"))
 	var controls_button := _make_command_card("How to Play", "Mode-specific piece, camera, session, and navigation controls", "H")
@@ -2670,8 +2756,8 @@ func _build_main_menu_screen(screen: Control) -> void:
 	var quit_button := _make_command_card("Quit", "Close the Godot product shell", "Esc")
 	quit_button.pressed.connect(_emit_quit_requested)
 	layout.add_child(quit_button)
-	var focus_order: Array[Control] = [live_button, live_3d_button, live_4d_button, design_lab_button, controls_button, about_button, settings_button, advanced_button, quit_button]
-	_configure_linear_focus(focus_order)
+	_main_menu_focus_order = [live_button, live_3d_button, live_4d_button, design_lab_button, controls_button, about_button, settings_button, advanced_button, quit_button]
+	_configure_main_menu_focus()
 	_screen_focus_targets[SCREEN_MAIN_MENU] = live_button
 
 

@@ -16,8 +16,8 @@ const MIN_GAME_WIDTH_SHARE := 0.55
 const MIN_GAME_HEIGHT_SHARE := 0.30
 
 const CASES := [
-	{"points": Vector2i(1728, 1080), "profile": CockpitScript.PROFILE_WIDE},
-	{"points": Vector2i(1440, 900), "profile": CockpitScript.PROFILE_STANDARD},
+	{"points": Vector2i(1728, 1080), "profile": CockpitScript.PROFILE_WIDE, "next_hold_without_scroll": true},
+	{"points": Vector2i(1440, 900), "profile": CockpitScript.PROFILE_STANDARD, "next_hold_without_scroll": true},
 	{"points": Vector2i(1200, 800), "profile": CockpitScript.PROFILE_STANDARD},
 	{"points": Vector2i(1000, 720), "profile": CockpitScript.PROFILE_NARROW},
 	{"points": Vector2i(860, 640), "profile": CockpitScript.PROFILE_NARROW},
@@ -25,6 +25,8 @@ const CASES := [
 ]
 
 var _failures: Array = []
+# Optional evidence: pass `-- capture_dir=/abs/path` to save one PNG per assertion.
+var _capture_dir := ""
 
 
 func _initialize() -> void:
@@ -33,6 +35,9 @@ func _initialize() -> void:
 
 func _run() -> void:
 	await process_frame
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("capture_dir="):
+			_capture_dir = argument.trim_prefix("capture_dir=")
 	if DisplayServer.get_name() == "headless":
 		push_error("Stage 56G responsive acceptance requires a windowed DisplayServer, got headless")
 		quit(2)
@@ -70,6 +75,17 @@ func _run() -> void:
 			for i in range(8):
 				await process_frame
 			_assert_case(hud, case, mode)
+			_capture(case, mode, "hold_empty")
+			# NEXT/HOLD must also fit with an occupied HOLD preview (R3.1).
+			if bool(case.get("next_hold_without_scroll", false)):
+				match mode:
+					"2D": app._dispatch_live_gameplay_command("hold")
+					"3D": app._dispatch_live_3d_gameplay_command("hold")
+					"4D": app._dispatch_live_4d_gameplay_command("hold")
+				for i in range(4):
+					await process_frame
+				_assert_case(hud, case, "%s hold occupied" % mode)
+				_capture(case, mode, "hold_occupied")
 			active_mode = mode
 	if _failures.is_empty():
 		print("STAGE_56G_RESPONSIVE_ACCEPTANCE PASS (%d mode entries + %d active resizes)" % [CASES.size() * 3, CASES.size() - 1])
@@ -146,6 +162,15 @@ func _assert_case(hud, case: Dictionary, mode: String) -> void:
 	var preview_row: Rect2 = snapshot.get("piece_preview_row_rect", Rect2())
 	if not bool(snapshot.get("piece_preview_row_visible", false)) or not _contains(modules[2], preview_row):
 		_fail("%s must keep HOLD and NEXT grouped inside PIECE STATE" % label)
+	# Stage 56H-R3.1 overrides the standard-band allowance above for NEXT/HOLD:
+	# at the standard window they must be on screen without scrolling.
+	if bool(case.get("next_hold_without_scroll", false)):
+		if scroll_required or int(cockpit.get("deck_row_count", 0)) != 1:
+			_fail("%s must fit PIECE / VIEW / PIECE STATE on one unscrolled deck row, got rows %s" % [
+				label, str(cockpit.get("deck_row_assignment", [])),
+			])
+		if not _contains(deck, preview_row) or not _contains(usable, preview_row):
+			_fail("%s must show NEXT and HOLD inside the visible deck: %s in %s" % [label, preview_row, deck])
 	for action_key in [
 		"live_fit_view_button_rect",
 		"live_reset_view_button_rect",
@@ -159,6 +184,14 @@ func _assert_case(hud, case: Dictionary, mode: String) -> void:
 		var action_rect: Rect2 = snapshot.get(action_key, Rect2())
 		if action_rect.size != Vector2.ZERO and not _contains(usable, action_rect):
 			_fail("%s must keep %s reachable inside the window: %s in %s" % [label, action_key, action_rect, usable])
+
+
+func _capture(case: Dictionary, mode: String, hold_state: String) -> void:
+	if _capture_dir.is_empty():
+		return
+	var points: Vector2i = case["points"]
+	var image := root.get_texture().get_image()
+	image.save_png("%s/%dx%d_live_%s_%s.png" % [_capture_dir, points.x, points.y, mode.to_lower(), hold_state])
 
 
 func _fail(message: String) -> void:

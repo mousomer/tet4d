@@ -143,6 +143,7 @@ func _ready() -> void:
 
 func _deferred_ready() -> void:
 	_wire_hud()
+	_hud.set_design_affordances_enabled(_is_designer_product())
 	_build_world_in_game_viewport()
 	if _is_designer_product() and not _hud.configure_design_laboratory({
 		"load_scenario": Callable(self, "_load_design_laboratory_scenario"),
