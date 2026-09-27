@@ -501,6 +501,22 @@ the transition from an unstored default to a persisted size. The real
 fresh-profile Retina capture and final human Stage 56H session remain deferred
 for manual approval; they are not represented as automated evidence.
 
+Startup-order follow-up: the first real fresh-profile capture on a 2× built-in
+display (3456×2234) still opened at 800×480 pt. The shell's initial
+`NOTIFICATION_RESIZED` deferred `_remember_current_windowed_size` ahead of the
+app's deferred `apply_shell_settings`. That persisted the raw 1600×960 project
+viewport and marked the profile loaded, so `_restore_windowed_size` never took
+the fresh-profile branch. `ReplayHud` now persists observed window sizes only
+after shell settings have been applied. `test_shell_display_settings.gd`
+boots the game bootstrap scene and asserts that ordering. Real-window evidence
+from the same display with fresh isolated HOME/XDG profiles:
+- a fresh launch opens at 1280×720 pt client (2560×1440 stored);
+- a relaunch restores 1280×720 pt without re-scaling;
+- a user resize to 1440×896 pt client persists as 2880×1792 and restores on
+  relaunch.
+
+Captures: `docs/design/screenshots/stage_56h_r2_4_retina/`.
+
 ---
 
 # 56H-R3 — cockpit and player-facing legibility

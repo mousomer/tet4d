@@ -135,8 +135,14 @@ live timing while visible onboarding owns attention. R2.3 is complete (PR #145,
 Live 3D/4D soft drop while Ctrl remains undisplayed compatibility. R2.4 is
 complete (PR #147, `86de82f18f38b6e5511eaf908308363ddd57e15e`): a fresh or
 recovered shell profile now opens at a display-scale-aware live-shell size,
-while valid remembered window sizes retain the existing restore path. Final
-fresh-profile Retina capture and manual Stage 56H acceptance remain deferred.
+while valid remembered window sizes retain the existing restore path. A real
+fresh-profile launch showed that fix was bypassed: the shell's first deferred
+resize persisted the raw 1600×960 viewport before startup applied settings, so a
+2× display still opened at 800×480 pt. The R2.4 startup-order follow-up gates
+window-size persistence on applied shell settings; the real 2× fresh launch now
+opens at 1280×720 pt. Manual Stage 56H acceptance remains deferred. Open
+observation for R1.3/R3: during onboarding suspension the Live Session header
+still reads `[ RUNNING ]`.
 Stage 56H is a gameplay/product acceptance checkpoint,
 not a release gate; Stage 56I polish, the 190/200 A/B choice, and cockpit
 refinement continue after it.

@@ -198,6 +198,10 @@ var _camera_sensitivity_factor := 1.0
 var _camera_invert_y := false
 var _applying_window_change := false
 var _applying_initial_settings := false
+# Until the stored settings are applied, Window.size is the project viewport
+# default, not a player choice. Remembering it first would persist that raw
+# size and hide the fresh-profile Retina scaling in _restore_windowed_size().
+var _shell_settings_applied := false
 var _observed_window_mode := -1
 var _window_mode_poll_accumulator := 0.0
 var _bundle_status_text := ""
@@ -1197,11 +1201,18 @@ func set_live_keyboard_capture(enabled: bool) -> void:
 
 
 func apply_shell_settings() -> void:
-	if _settings_panel != null:
-		_applying_initial_settings = true
-		_settings_panel.apply_initial_settings()
-		_applying_initial_settings = false
-		presentation_profile_changed.emit(_profile_from_store())
+	if _settings_panel == null:
+		_shell_settings_applied = true
+		return
+	_applying_initial_settings = true
+	_settings_panel.apply_initial_settings()
+	_applying_initial_settings = false
+	_shell_settings_applied = true
+	presentation_profile_changed.emit(_profile_from_store())
+
+
+func windowed_size_persistence_ready() -> bool:
+	return _shell_settings_applied
 
 
 func presentation_profile():
@@ -1878,7 +1889,7 @@ func _restore_windowed_size() -> void:
 
 func _remember_current_windowed_size() -> void:
 	var window := get_window()
-	if _settings_store == null or _applying_window_change or window == null or DisplayServer.get_name() == "headless" or window.mode != Window.MODE_WINDOWED:
+	if _settings_store == null or not _shell_settings_applied or _applying_window_change or window == null or DisplayServer.get_name() == "headless" or window.mode != Window.MODE_WINDOWED:
 		return
 	var minimum := Vector2i(int(ReplayVisuals.SHELL_MIN_WIDTH), int(ReplayVisuals.SHELL_MIN_HEIGHT))
 	var usable := DisplayServer.screen_get_usable_rect(window.current_screen)

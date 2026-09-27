@@ -174,8 +174,35 @@ func run() -> Array:
 	)
 	if standard_fresh != Vector2i(1280, 720):
 		failures.append("a scale-one fresh profile should preserve the logical default as pixels")
+	await _assert_startup_does_not_remember_before_settings_apply(failures)
 	_cleanup()
 	return failures
+
+
+# The shell's first NOTIFICATION_RESIZED defers a window-size save that runs
+# before the app's deferred startup applies settings. On a real 2x display that
+# save persisted the raw 1600x960 viewport and disabled fresh-profile scaling.
+func _assert_startup_does_not_remember_before_settings_apply(failures: Array) -> void:
+	var scene := load("res://scenes/game_bootstrap.tscn") as PackedScene
+	var tree := Engine.get_main_loop() as SceneTree
+	if scene == null or tree == null:
+		failures.append("startup ordering check requires the game bootstrap scene and a SceneTree")
+		return
+	var root := scene.instantiate() as Control
+	tree.root.add_child(root)
+	var hud := root.get_node_or_null("ReplayHud")
+	if hud == null:
+		failures.append("game bootstrap should include ReplayHud for the startup ordering check")
+		root.queue_free()
+		return
+	if hud.windowed_size_persistence_ready():
+		failures.append("the shell must not remember window size before startup applies shell settings")
+	await tree.process_frame
+	await tree.process_frame
+	if not hud.windowed_size_persistence_ready():
+		failures.append("the shell should remember window size once startup has applied shell settings")
+	root.queue_free()
+	await tree.process_frame
 
 
 func _write_json(path: String, value) -> void:
