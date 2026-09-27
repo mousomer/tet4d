@@ -297,10 +297,10 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		failures.append("%s: top status badge should expose user-facing game-over reason" % label)
 	if status_badge_color != style_manager.get_color("state.error") or status_badge_border_color != style_manager.get_color("state.error"):
 		failures.append("%s: game-over status badge should use error styling" % label)
-	if not restart_game_button_visible or restart_game_button_text != "Restart Game":
-		failures.append("%s: live game-over status should expose a Restart Game button" % label)
+	if not restart_game_button_visible or restart_game_button_text != "Play Again":
+		failures.append("%s: live game-over status should expose a Play Again button" % label)
 	if restart_game_button_rect.size.x <= 0.0 or restart_game_button_rect.end.y > body_rect.position.y + 0.5:
-		failures.append("%s: visible Restart Game action should fit above the live body, button=%s body=%s" % [label, restart_game_button_rect, body_rect])
+		failures.append("%s: visible Play Again action should fit above the live body, button=%s body=%s" % [label, restart_game_button_rect, body_rect])
 	if not change_setup_button_visible or change_setup_button_rect.size.x <= 0.0 or change_setup_button_rect.end.y > body_rect.position.y + 0.5:
 		failures.append("%s: visible Change Setup action should fit above the live body, button=%s body=%s" % [label, change_setup_button_rect, body_rect])
 	if top_status_badge_text.find("out_of_bounds") != -1 or top_summary_text.find("out_of_bounds") != -1 or inspector_status_text.find("out_of_bounds") != -1:

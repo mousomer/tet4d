@@ -1,6 +1,7 @@
 extends RefCounted
 
 const TraceReplayAppScript = preload("res://scripts/app/trace_replay_app.gd")
+const GameSetupSpecScript = preload("res://scripts/ui/game_setup/game_setup_spec.gd")
 
 
 func run() -> Array:
@@ -18,7 +19,14 @@ func run() -> Array:
 		root.queue_free()
 		return ["game bootstrap must contain TraceReplayApp"]
 
-	_assert_ordinary_live_session(failures, app, TraceReplayAppScript.MODE_LIVE_2D, "game bootstrap")
+	# A user's saved last-valid setup is intentionally honored by the product.
+	# Establish the explicit no-previous-setup fixture before asserting the
+	# canonical first-run 2D entry, without reading or changing user:// storage.
+	app._hud._game_setup_model.set_mode(GameSetupSpecScript.MODE_2D)
+	app._hud._game_setup_model.reset_to_standard(GameSetupSpecScript.MODE_2D)
+	app._start_ordinary_live_mode(TraceReplayAppScript.MODE_LIVE_2D)
+	await tree.process_frame
+	_assert_ordinary_live_session(failures, app, TraceReplayAppScript.MODE_LIVE_2D, "canonical ordinary 2D entry")
 	await _toggle_mode(app)
 	_assert_ordinary_live_session(failures, app, TraceReplayAppScript.MODE_LIVE_3D, "Tab from Live 2D")
 	await _toggle_mode(app)

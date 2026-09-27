@@ -32,9 +32,10 @@ func run() -> Array:
 	if main_menu_text.find("semantic authority") != -1:
 		failures.append("main menu should avoid governance jargon")
 	for card_label in [
-		"Play 2D",
+		"Play",
 		"Play 3D",
 		"Play 4D",
+		"Change Setup",
 		"About Tet4D",
 		"How to Play",
 		"Settings",

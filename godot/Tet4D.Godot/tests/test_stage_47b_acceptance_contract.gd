@@ -15,21 +15,14 @@ func run() -> Array:
 	var hud = root.get_node("ReplayHud")
 	var snapshot: Dictionary = hud.layout_contract_snapshot()
 	_check_scroll(failures, snapshot.get("main_menu_scroll", {}), "main menu")
-	if str(snapshot.get("focused_control", "")) != "CommandCard__Play_2D":
-		failures.append("main menu should initially focus Play 2D")
+	if str(snapshot.get("focused_control", "")) != "CommandCard__Play":
+		failures.append("main menu should initially focus Play")
 	_send_key(KEY_DOWN)
 	await tree.process_frame
 	if tree.root.gui_get_focus_owner() == null or str(tree.root.gui_get_focus_owner().name) != "CommandCard__Play_3D":
-		failures.append("Down should move main-menu focus from Play 2D to Play 3D")
-	_send_key(KEY_ENTER)
+		failures.append("Down should move main-menu focus from Play to Play 3D")
+	hud.show_screen(hud.SCREEN_MAIN_MENU)
 	await tree.process_frame
-	await tree.process_frame
-	if str(hud.layout_contract_snapshot().get("current_screen", "")) != hud.SCREEN_GAME_SETUP:
-		failures.append("Enter should open setup for the focused Play 3D action")
-	_send_key(KEY_ESCAPE)
-	await tree.process_frame
-	if str(hud.layout_contract_snapshot().get("current_screen", "")) != hud.SCREEN_MAIN_MENU:
-		failures.append("Esc should return from game setup to Main Menu")
 	hud.show_screen(hud.SCREEN_CONTROLS)
 	await tree.process_frame
 	snapshot = hud.layout_contract_snapshot()

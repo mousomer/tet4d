@@ -55,6 +55,23 @@ dictionary after checked native configuration; active boards are never resized
 by later setup editing. Restart reconstructs that frozen setup, while Change
 Setup leaves the session and starts a future setup flow.
 
+## Fast session flow
+
+The Main Menu's primary `Play` action takes the current mode's validated setup
+directly to the existing checked live-session construction seam. A fresh model
+therefore starts the canonical 2D Standard `10×20` setup; a model with a valid
+current selection starts that selection without first opening Setup. The
+mode-specific `Play 3D` and `Play 4D` actions use the same direct seam after
+selecting their respective validated entries. None of these paths synthesize
+pieces, seeds, topology, speed, or board shape.
+
+`Change Setup` remains the explicit configuration-only path: it opens Setup
+and creates no session. Live `Restart Game` and terminal `Play Again` both use
+the existing native reset boundary over the frozen active setup, never a menu
+or Setup transition. The established 2D `R` and 3D/4D `Backspace` restart
+shortcuts retain that same direct behaviour, including while terminal state is
+displayed.
+
 ## Persistence schema 3
 
 `user://game_setup.json` is separate from shell preferences. Schema 3 writes

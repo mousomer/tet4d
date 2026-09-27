@@ -157,6 +157,11 @@ primary live line carries only player state (R3.2), the game product hides
 Designer/Design Laboratory affordances and the READMEs launch the game scene
 (R3.3), and the open guide reads `[ GUIDE ] Gravity paused` instead of
 `[ RUNNING ]`. Manual Stage 56H acceptance remains deferred.
+Stage 56H-R4A is the bounded fast-session-flow follow-up: Main Menu Play starts
+the current valid/default setup directly, Restart and terminal Play Again reuse
+the frozen active setup through the existing native reset boundary, and Change
+Setup remains the sole explicit configuration route. Replay and Designer flows
+remain out of scope.
 
 ### Three-product packaging gaps
 

@@ -1153,5 +1153,5 @@ func _assert_live_gameplay_hud_copy(failures: Array) -> void:
 		failures.append("paused live HUD should explain that gameplay input is held")
 	live_snapshot["game_over"] = true
 	live_snapshot["game_over_reason"] = "spawn_blocked"
-	if ReplayHudScript.live_command_feedback_text(live_snapshot) != "Game over · Spawn blocked · Restart Game or Main Menu":
+	if ReplayHudScript.live_command_feedback_text(live_snapshot) != "Game over · Spawn blocked · Play Again or Main Menu":
 		failures.append("game-over HUD should expose the native reason and restart action")
