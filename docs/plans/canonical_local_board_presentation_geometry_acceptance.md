@@ -121,12 +121,13 @@ The final capture run exited zero with no runtime errors. Evidence is stored in
 
 ### 2D findings
 
-Default `6x6`, asymmetric `4x7`, and minimum valid `4x6` boards remain
-immediately readable as planar games. The one-cell presentation depth is not
-perceived as a distracting slab under the accepted orthographic front-facing
-camera. Piece faces remain square, active/Ghost/locked hierarchy remains
-clear, the grid and outer boundary coincide with cell edges, the spawn cue
-remains outside play, and framing is stable.
+Historical Stage 54F `6x6` default evidence, captured before the canonical 2D
+default changed to `10x20`, plus asymmetric `4x7` and minimum valid `4x6`
+boards remain immediately readable as planar games. The one-cell presentation
+depth is not perceived as a distracting slab under the accepted orthographic
+front-facing camera. Piece faces remain square, active/Ghost/locked hierarchy
+remains clear, the grid and outer boundary coincide with cell edges, the spawn
+cue remains outside play, and framing is stable.
 
 Intentional visible change: edge-on inspection would now reveal a full local
 cell body rather than the removed `0.08` thin mesh. The normal 2D product view

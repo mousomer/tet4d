@@ -56,5 +56,13 @@ func _assert_ordinary_live_session(failures: Array, app, mode: String, entry: St
 	var snapshot: Dictionary = app._current_snapshot
 	if str(snapshot.get("trace_type", "")) != mode:
 		failures.append("%s must expose a %s snapshot, got %s" % [entry, mode, str(snapshot.get("trace_type", ""))])
+	var snapshot_shape: Array = []
+	for extent in (snapshot.get("board_shape", []) as Array):
+		snapshot_shape.append(int(extent))
+	if mode == TraceReplayAppScript.MODE_LIVE_2D and (
+		app._active_live_setup.get("board_shape", []) != [10, 20]
+		or snapshot_shape != [10, 20]
+	):
+		failures.append("%s must start Live 2D on the canonical 10x20 board" % entry)
 	if str(snapshot).find("TRACE_") != -1 or str(app._hud._summary_label.text).find("TRACE_") != -1:
 		failures.append("%s must not expose TRACE_* fixture content to ordinary players" % entry)
