@@ -107,8 +107,8 @@ func _test_physical_key_fallback() -> Array:
 	var positional := PhysicalKeyFallbackScript.synthesize(_key_event(KEY_COMMA, KEY_W), bound)
 	if positional == null or positional.keycode != KEY_W:
 		failures.append("an unclaimed typed character should resolve through its physical position")
-	# Modifiers survive the fallback: 4D soft drop is Ctrl and must not be
-	# confused with Shift+Ctrl.
+	# Modifier state survives the fallback without becoming a second binding
+	# authority for the canonical Shift soft drop action.
 	var modified := PhysicalKeyFallbackScript.synthesize(_key_event(KEY_COMMA, KEY_W, true), bound)
 	if modified == null or not modified.ctrl_pressed:
 		failures.append("modifier state must survive positional fallback")

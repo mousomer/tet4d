@@ -353,7 +353,7 @@ while the guide owns the interaction.
 
 ### Completion
 
-Implementation complete locally; PR/CI/merge pending. Visible onboarding is a shell-owned suspension boundary. The live
+Complete: PR #144 merged as `1ec9ffa756f8748eacd7fc0107d813405b4cfc9d`. Visible onboarding is a shell-owned suspension boundary. The live
 process loop clears existing repeat state and returns before accumulator
 advancement or native tick dispatch, preserving the current gravity phase for
 ordinary post-dismissal play. It does not change authoritative pause flags or
@@ -370,7 +370,8 @@ non-self-completing guide states. R2.2 does not redesign that flow: suspension
 ends on explicit dismissal or on natural completion where the current model
 supports it.
 
-R2.3 and R2.4 remain unstarted.
+R2.3 implementation is complete locally; PR/CI/merge remain pending. R2.4
+remains unstarted.
 
 ## R2.3 Provide an OS-safe soft-drop interaction on macOS
 
@@ -444,6 +445,22 @@ must also:
 
 No persisted-user migration is required, because Godot live bindings are a
 fixed code contract and are not stored as user state.
+
+### Completion
+
+Implementation complete locally; PR/CI/merge pending. `LiveInputContract`
+now displays Shift and registers Shift plus undisplayed Ctrl compatibility for
+Live 3D and Live 4D soft drop. The existing InputMap materialization routes
+the shared `KEY_SHIFT` logical modifier for either physical Shift location;
+tests exercise both locations, Ctrl compatibility, contract-derived helper
+rows, and the complete 3D/4D action inventory to prove no other live action
+claims Shift. No native gameplay, camera gesture, pause, onboarding, or 2D
+binding changed.
+
+Normal-window macOS validation was user-observed on macOS 26.6.2 with Godot
+4.7.2; the runtime was reported working with the Shift replacement. Automated
+event coverage remains the recorded proof for both normalized physical Shift
+locations, Ctrl compatibility, and native command dispatch.
 
 ## R2.4 Open the initial window inside the supported responsive envelope
 

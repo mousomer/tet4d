@@ -531,7 +531,7 @@ func _check_live_control_maps() -> Array:
 		"Pointer",
 		[["Left Drag", "Orient slices"], ["Right Drag", "Translate framing"], ["Wheel", "Zoom"]]
 	)
-	_assert_group_items(failures, group_items, "Drop", [["Ctrl", "Soft Drop"], ["Space", "Hard Drop"]])
+	_assert_group_items(failures, group_items, "Drop", [["Shift", "Soft Drop"], ["Space", "Hard Drop"]])
 	_assert_group_items(
 		failures,
 		group_items,

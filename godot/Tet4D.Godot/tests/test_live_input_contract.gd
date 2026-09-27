@@ -15,10 +15,18 @@ func run() -> Array:
 			failures.append("normal Live 4D must not register %s" % roll_action)
 	for action_id in ["live_3d_soft_drop", "live_4d_soft_drop"]:
 		var spec: Dictionary = specs.get(action_id, {})
-		if spec.is_empty() or int(spec.get("display_key", KEY_NONE)) != KEY_CTRL or KEY_SHIFT in spec.get("keys", []):
-			failures.append("%s must derive Ctrl-only soft drop from the action authority" % action_id)
-		if not KEY_SHIFT in spec.get("forbidden_keys", []):
-			failures.append("%s must explicitly reject Shift" % action_id)
+		if spec.is_empty() or int(spec.get("display_key", KEY_NONE)) != KEY_SHIFT:
+			failures.append("%s must display Shift as its canonical soft drop binding" % action_id)
+		if not KEY_SHIFT in spec.get("keys", []) or not KEY_CTRL in spec.get("keys", []):
+			failures.append("%s must accept Shift with undisplayed Ctrl compatibility" % action_id)
+		if not spec.get("forbidden_keys", []).is_empty():
+			failures.append("%s must not forbid its canonical Shift binding" % action_id)
+		for candidate_action in specs:
+			if candidate_action == action_id:
+				continue
+			var same_mode := str(candidate_action).begins_with("live_3d_") if action_id.begins_with("live_3d_") else str(candidate_action).begins_with("live_4d_")
+			if same_mode and KEY_SHIFT in specs.get(candidate_action, {}).get("keys", []):
+				failures.append("%s must be the only %s action that claims Shift, found %s" % [action_id, "3D" if action_id.begins_with("live_3d_") else "4D", candidate_action])
 	var camera_specs := LiveInputContractScript.camera_control_specs()
 	for control_id in ["camera_orbit", "camera_pan", "camera_zoom"]:
 		if not camera_specs.has(control_id) or not bool(camera_specs[control_id].get("public", false)):
@@ -32,7 +40,7 @@ func run() -> Array:
 	if not LiveInputContractScript.camera_control_for_button(MOUSE_BUTTON_MIDDLE).is_empty():
 		failures.append("middle drag must not retain an undocumented pan binding")
 	var helper := ReplayHudScript.live_4d_hint_text()
-	for required in ["Ctrl Soft Drop", "C Hold", "Reset View (basis, slice orientation, framing)", "Fit View (framing only)", "Left Drag Orient slices", "Right Drag Translate framing", "Wheel Zoom"]:
+	for required in ["Shift Soft Drop", "C Hold", "Reset View (basis, slice orientation, framing)", "Fit View (framing only)", "Left Drag Orient slices", "Right Drag Translate framing", "Wheel Zoom"]:
 		if not helper.contains(required):
 			failures.append("helper must render the authoritative control: %s" % required)
 	var group_names: Array = []
