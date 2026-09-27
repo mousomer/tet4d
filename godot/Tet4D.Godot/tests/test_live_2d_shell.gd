@@ -22,9 +22,9 @@ func run() -> Array:
 		failures.append("live 2D hint text should not expose replay frame controls")
 	if replay_hint.contains("Hard Drop") or replay_hint.contains("Rotate CW"):
 		failures.append("replay hint text should not expose live gameplay controls")
-	if not live_3d_hint.contains("R/T") or not live_3d_hint.contains("F/G") or not live_3d_hint.contains("V/B") or not live_3d_hint.contains("Backspace Restart Game"):
+	if not live_3d_hint.contains("R/T") or not live_3d_hint.contains("F/G") or not live_3d_hint.contains("V/B") or not live_3d_hint.contains("Shift Soft Drop") or not live_3d_hint.contains("Backspace Restart Game"):
 		failures.append("live 3D hint text should expose direct rotation and reset controls")
-	if not live_4d_hint.contains("Q / E Slice W - / +") or not live_4d_hint.contains("Y / U XW") or not live_4d_hint.contains("H / J YW") or not live_4d_hint.contains("N / M ZW") or not live_4d_hint.contains("1 / 2 XZ - / +") or not live_4d_hint.contains("3 / 4 XW - / + (re-slice)") or not live_4d_hint.contains("5 / 6 ZW - / + (re-slice)") or not live_4d_hint.contains("I / K") or not live_4d_hint.contains("O / L") or live_4d_hint.contains("Roll left / right") or not live_4d_hint.contains("Left Drag Orient slices") or not live_4d_hint.contains("Right Drag Translate framing") or live_4d_hint.contains("Shift + Left Drag") or not live_4d_hint.contains("Tab Replay Demos") or live_4d_hint.contains("Q/Esc Quit"):
+	if not live_4d_hint.contains("Q / E Slice W - / +") or not live_4d_hint.contains("Y / U XW") or not live_4d_hint.contains("H / J YW") or not live_4d_hint.contains("N / M ZW") or not live_4d_hint.contains("1 / 2 XZ - / +") or not live_4d_hint.contains("3 / 4 XW - / + (re-slice)") or not live_4d_hint.contains("5 / 6 ZW - / + (re-slice)") or not live_4d_hint.contains("I / K") or not live_4d_hint.contains("O / L") or not live_4d_hint.contains("Shift Soft Drop") or live_4d_hint.contains("Roll left / right") or not live_4d_hint.contains("Left Drag Orient slices") or not live_4d_hint.contains("Right Drag Translate framing") or live_4d_hint.contains("Shift + Left Drag") or not live_4d_hint.contains("Tab Replay Demos") or live_4d_hint.contains("Q/Esc Quit"):
 		failures.append("live 4D hint text should expose separated slice orientation, framing, exact basis, piece rotation, and Esc-only quit")
 	_assert_camera_command_help_is_executable_truth(live_hint, live_3d_hint, live_4d_hint, failures)
 	for roll_action in ["live_4d_camera_roll_left", "live_4d_camera_roll_right"]:
@@ -992,8 +992,9 @@ func run() -> Array:
 			if binding is InputEventKey:
 				has_ctrl = has_ctrl or (binding as InputEventKey).keycode == KEY_CTRL
 				has_shift = has_shift or (binding as InputEventKey).keycode == KEY_SHIFT
-		if not has_ctrl or has_shift:
-			failures.append("%s should bind Ctrl and must not bind Shift" % soft_drop_action)
+		if not has_ctrl or not has_shift:
+			failures.append("%s should bind Shift with Ctrl compatibility" % soft_drop_action)
+		_assert_shift_locations_and_ctrl_compatibility(failures, soft_drop_action)
 	for action_name in LiveInputContractScript.ACTION_SPECS:
 		var spec: Dictionary = LiveInputContractScript.ACTION_SPECS.get(action_name, {})
 		for required_key in spec.get("keys", []):
@@ -1088,6 +1089,24 @@ func _assert_camera_command_help_is_executable_truth(
 	for hint in [live_2d_hint, live_3d_hint, live_4d_hint]:
 		if hint.contains("Reset View button"):
 			failures.append("live control hints must not point at a Reset View button that live modes do not present")
+
+
+func _assert_shift_locations_and_ctrl_compatibility(failures: Array, action_name: String) -> void:
+	# Godot normalizes both physical Shift locations to KEY_SHIFT for InputMap
+	# matching; location remains available on the original event for consumers.
+	for location in [KEY_LOCATION_LEFT, KEY_LOCATION_RIGHT]:
+		var shift_event := InputEventKey.new()
+		shift_event.keycode = KEY_SHIFT
+		shift_event.physical_keycode = KEY_SHIFT
+		shift_event.location = location
+		shift_event.pressed = true
+		if not InputMap.event_is_action(shift_event, action_name, true):
+			failures.append("%s must accept physical %s Shift through InputMap" % [action_name, "left" if location == KEY_LOCATION_LEFT else "right"])
+	var ctrl_event := InputEventKey.new()
+	ctrl_event.keycode = KEY_CTRL
+	ctrl_event.pressed = true
+	if not InputMap.event_is_action(ctrl_event, action_name, true):
+		failures.append("%s must retain Ctrl as an undisplayed compatibility binding" % action_name)
 
 
 func _assert_live_gameplay_hud_copy(failures: Array) -> void:
