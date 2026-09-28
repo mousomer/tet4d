@@ -35,13 +35,13 @@ func run() -> Array:
 		await tree.process_frame
 		if hud.game_viewport_global_rect().has_area():
 			failures.append("%s Main Menu transition should disable the hidden game viewport hit target" % mode)
-		var play_button := _find_visible_button(hud, "CommandCard__Play_2D")
+		var play_button := _find_visible_button(hud, "CommandCard__Play")
 		if play_button == null:
-			failures.append("%s Main Menu transition should expose Play 2D" % mode)
+			failures.append("%s Main Menu transition should expose Play" % mode)
 		else:
 			await _click(tree, play_button)
-			if hud.current_screen() != hud.SCREEN_GAME_SETUP:
-				failures.append("%s Main Menu transition should leave Play 2D mouse-clickable" % mode)
+			if hud.current_screen() != hud.SCREEN_VIEWER:
+				failures.append("%s Main Menu transition should leave Play mouse-clickable" % mode)
 
 		app._change_live_setup(mode)
 		await tree.process_frame
@@ -62,23 +62,23 @@ func run() -> Array:
 		app._return_to_main_menu()
 		await tree.process_frame
 		var focused := tree.root.gui_get_focus_owner()
-		if focused == null or focused.name != "CommandCard__Play_2D":
+		if focused == null or focused.name != "CommandCard__Play":
 			failures.append("%s Main Menu transition should restore deterministic menu focus" % mode)
 		else:
 			_send_key(KEY_ENTER)
 			await tree.process_frame
-			if hud.current_screen() != hud.SCREEN_GAME_SETUP:
+			if hud.current_screen() != hud.SCREEN_VIEWER:
 				failures.append("%s Main Menu transition should activate the focused card with Enter" % mode)
 
 		app._return_to_main_menu()
 		await tree.process_frame
 		focused = tree.root.gui_get_focus_owner()
-		if focused == null or focused.name != "CommandCard__Play_2D":
+		if focused == null or focused.name != "CommandCard__Play":
 			failures.append("%s Main Menu transition should retain focus for Space activation" % mode)
 		else:
 			_send_key(KEY_SPACE)
 			await tree.process_frame
-			if hud.current_screen() != hud.SCREEN_GAME_SETUP:
+			if hud.current_screen() != hud.SCREEN_VIEWER:
 				failures.append("%s Main Menu transition should activate the focused card with Space" % mode)
 
 	var random_setup := _setup("live_2d", mode_shapes["live_2d"])

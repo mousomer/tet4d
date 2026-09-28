@@ -316,6 +316,18 @@ func configured_live_setup(mode: String) -> Dictionary:
 	return _game_setup_model.canonical_session_setup(mode).duplicate(true)
 
 
+# tet4d-semantic-boundary: allow adapter-routing
+func start_current_validated_setup(mode: String = "") -> bool:
+	var target_mode: String = _game_setup_model.current_mode if mode.is_empty() else mode
+	if not _game_setup_model.set_mode(target_mode):
+		return false
+	var setup := configured_live_setup(target_mode)
+	if setup.is_empty():
+		return false
+	live_game_start_requested.emit(setup)
+	return true
+
+
 func set_control_frame_snapshot(snapshot: Dictionary) -> void:
 	_control_frame_snapshot = snapshot.duplicate(true)
 	_refresh_piece_control_strip()
@@ -1397,7 +1409,8 @@ func _update_live_status_strip(mode_label: String, state_label: String, reason: 
 	_apply_live_state_badge(state_label, reason)
 	if _restart_game_button != null:
 		_restart_game_button.visible = not _active_live_mode.is_empty()
-		_restart_game_button.text = "Restart Game"
+		_restart_game_button.text = "Play Again" if state_label == "Game Over" else "Restart Game"
+		_restart_game_button.tooltip_text = "Start the same setup again immediately" if state_label == "Game Over" else "Restart the current game with the same setup"
 
 
 # Pause flags come from the app; the guide is HUD-owned and suspends elapsed
@@ -1516,7 +1529,7 @@ static func live_gameplay_summary_text(
 
 static func live_command_feedback_text(snapshot: Dictionary, paused: bool = false) -> String:
 	if bool(snapshot.get("game_over", false)):
-		return "Game over · %s · Restart Game or Main Menu" % _game_over_reason_label(str(snapshot.get("game_over_reason", "")))
+		return "Game over · %s · Play Again or Main Menu" % _game_over_reason_label(str(snapshot.get("game_over_reason", "")))
 	if paused:
 		return "Paused · P — Resume · Esc — Main Menu"
 	var command := str(snapshot.get("last_command", "none"))
@@ -2691,7 +2704,9 @@ func _build_main_menu_screen(screen: Control) -> void:
 	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	layout.alignment = BoxContainer.ALIGNMENT_CENTER
-	layout.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_4)
+	# The explicit secondary setup action adds one menu row; compact spacing keeps
+	# every primary command, including Quit, reachable in the supported viewport.
+	layout.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_2)
 	margin.add_child(layout)
 	var title := Label.new()
 	title.name = "MainMenuTitle"
@@ -2708,21 +2723,26 @@ func _build_main_menu_screen(screen: Control) -> void:
 	subtitle.add_theme_font_size_override("font_size", ShellDesignTokensScript.FONT_BODY)
 	layout.add_child(subtitle)
 	layout.add_child(_menu_group_header("PLAY"))
-	var live_button := _make_command_card("Play 2D", "Plain bounded board · best place to start", "2")
+	var live_button := _make_command_card("Play", "Start the current setup immediately · defaults to 2D Standard 10 × 20", "Enter")
 	live_button.pressed.connect(func() -> void:
-		open_game_setup(GameSetupSpecScript.MODE_2D)
+		start_current_validated_setup()
 	)
 	layout.add_child(live_button)
 	var live_3d_button := _make_command_card("Play 3D", "Plain bounded board · direct XY, XZ, and YZ rotations", "3")
 	live_3d_button.pressed.connect(func() -> void:
-		open_game_setup(GameSetupSpecScript.MODE_3D)
+		start_current_validated_setup(GameSetupSpecScript.MODE_3D)
 	)
 	layout.add_child(live_3d_button)
 	var live_4d_button := _make_command_card("Play 4D", "Plain bounded board · W-slice view and camera recovery", "4")
 	live_4d_button.pressed.connect(func() -> void:
-		open_game_setup(GameSetupSpecScript.MODE_4D)
+		start_current_validated_setup(GameSetupSpecScript.MODE_4D)
 	)
 	layout.add_child(live_4d_button)
+	var change_setup_button := _make_command_card("Change Setup", "Choose board, pieces, seed, speed, and controls for the next game", "C")
+	change_setup_button.pressed.connect(func() -> void:
+		open_game_setup(_game_setup_model.current_mode)
+	)
+	layout.add_child(change_setup_button)
 	_design_menu_header = _menu_group_header("DESIGN")
 	layout.add_child(_design_menu_header)
 	var design_lab_button := _make_command_card("Design Laboratory", "Deterministic A/B style evaluation, evidence, capture, and nomination", "L")
@@ -2756,7 +2776,7 @@ func _build_main_menu_screen(screen: Control) -> void:
 	var quit_button := _make_command_card("Quit", "Close the Godot product shell", "Esc")
 	quit_button.pressed.connect(_emit_quit_requested)
 	layout.add_child(quit_button)
-	_main_menu_focus_order = [live_button, live_3d_button, live_4d_button, design_lab_button, controls_button, about_button, settings_button, advanced_button, quit_button]
+	_main_menu_focus_order = [live_button, live_3d_button, live_4d_button, change_setup_button, design_lab_button, controls_button, about_button, settings_button, advanced_button, quit_button]
 	_configure_main_menu_focus()
 	_screen_focus_targets[SCREEN_MAIN_MENU] = live_button
 
