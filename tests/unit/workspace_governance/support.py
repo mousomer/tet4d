@@ -47,12 +47,20 @@ def build_checkout(root: Path) -> Path:
     (root / ".governance/workspace.local.json").unlink(missing_ok=True)
     shutil.copytree(PACK, root / "tools/workspace_governance")
     shutil.copytree(ROOT / "scripts", root / "scripts")
-    for name in ("gov", "pyproject.toml", "AGENTS.md", "CLAUDE.md"):
+    for name in ("gov", "pyproject.toml", "AGENTS.md", "CLAUDE.md", "CURRENT_STATE.md"):
         shutil.copy2(ROOT / name, root / name)
-    for name in ("docs", "godot", "native", "src"):
+    # Generated-output checkers execute checkout-local renderers and protect
+    # their outputs; sharing writable renderer/target files with ROOT would
+    # make this fixture violate the actual consumer boundary.
+    shutil.copytree(ROOT / "docs", root / "docs")
+    for name in ("godot", "native", "src"):
         (root / name).symlink_to(ROOT / name, target_is_directory=True)
-    # Non-pack tools are referenced by sanitation policy, not executed by check.
-    (root / "tools/governance").symlink_to(
-        ROOT / "tools/governance", target_is_directory=True
-    )
+    shutil.copytree(ROOT / "tools/governance", root / "tools/governance")
+    # Consumer integration copies only its versioned discovery adapter contract.
+    manifest = json.loads((root / "config/governance/project.json").read_text())
+    for adapter in manifest.get("skill_adapters", []):
+        source = ROOT / adapter["path"]
+        target = root / adapter["path"]
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
     return root

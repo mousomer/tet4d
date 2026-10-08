@@ -134,6 +134,16 @@ output to child processes. `./scripts/verify.sh` and
 `./scripts/verify.sh --verbose` execute identical checks with identical
 environment and pass/fail semantics; verbose mode changes logging only.
 
+The full gate's named steps retain the owning checker's actionable failure output
+and exit status through `run_step`. Only `git_sanitation_baseline`,
+`git_sanitation_repo`, `pack_sanitation` and `secret_scan` use the bounded
+diagnostics wrapper because their output can contain matched source content.
+The legacy-import guard reports relative file/line locations without copying
+source lines. Quiet mode suppresses ordinary successful output; verbose mode
+shows it. Both modes preserve scanner redaction and execute the same checks.
+Declared repository skill adapters must survive a Git-visible checkout export;
+ignored machine material cannot satisfy the checked-in adapter contract.
+
 Run `CODEX_MODE=1 ./scripts/verify.sh` for authority changes, governance,
 broad shared infrastructure, material uncertainty, reviewer requests, release
 claims, or when the route union requires it. Toolchain-specific commands remain
@@ -143,3 +153,14 @@ Report exact commands and results, typical checks omitted with rationale,
 manual evidence separately from automated evidence, warnings, remaining risks,
 and unverified areas. Never claim a check passed unless it ran successfully on
 the reported tree.
+
+The canonical full gate invokes `scripts/check_policy_compliance_extensions_repo.sh`
+under the existing `policy_compliance_repo` provenance family. This leaf preserves
+required/tracked policy sources, package certification, engine-purity and architecture
+boundaries, and the removed-import guard. The aggregate governance validator owns
+project contracts; the named `secret_scan` phase owns repository secret scanning.
+Each shared leaf executes once within that invocation. The standalone
+`scripts/check_policy_compliance_repo.sh` wrapper sources the same extensions and
+then executes both shared leaves, preserving its complete always-on CI contract.
+This factoring uses explicit call ownership, without skip flags or cached proof.
+Separate CI jobs retain their own required evidence and checkout scope.

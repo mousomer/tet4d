@@ -13,6 +13,7 @@ if __package__ in {None, ""}:
     root_hint = Path(__file__).resolve().parents[3]
     sys.path.insert(0, str(root_hint))
 
+from tools.workspace_governance import diagnostics as safe_diagnostics
 from tools.workspace_governance import telemetry
 from tools.workspace_governance.resolver.core import GovernanceError, GovernanceResolver
 from tools.workspace_governance.validators.core import (
@@ -117,8 +118,11 @@ def _env(
     # child process reads the mode back through the same override it set.
     assignments = {
         "PYTHON_BIN": str(interpreter),
-        project["environment"]["execution_mode"]["override"]: execution_mode,
     }
+    if project["environment"].get("profile", "python") == "python":
+        assignments[project["environment"]["execution_mode"]["override"]] = (
+            execution_mode
+        )
     assignments.update(binding_environment(root, project, None, local))
     if as_json:
         _emit(assignments, as_json=True)
@@ -209,7 +213,17 @@ def main(argv: list[str] | None = None) -> int:
         help="emit JSON (accepted before or after the subcommand)",
     )
     sub = parser.add_subparsers(dest="command", required=True)
-    sub.add_parser("check")
+    check_parser = sub.add_parser("check")
+    check_parser.add_argument(
+        "--summary",
+        action="store_true",
+        help="emit bounded rule IDs and repair classes without raw checker output",
+    )
+    check_parser.add_argument(
+        "--generated",
+        action="store_true",
+        help="also execute generated-output checks in the certified consumer environment",
+    )
     sub.add_parser("resolve").add_argument(
         "--mode", choices=("LOCAL_FIX", "FEATURE", "STRUCTURAL_CHANGE")
     )
@@ -222,19 +236,58 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("sync")
     env_parser = sub.add_parser("env")
     env_parser.add_argument("--allow-missing-interpreter", action="store_true")
+    telemetry_parser = sub.add_parser("telemetry")
+    telemetry_parser.add_argument("telemetry_action", choices=("status", "selftest"))
     args = parser.parse_args(raw_argv)
     args.json = as_json or args.json
     root = args.root.resolve()
     observed: dict[str, Any] = {"diagnostics": [], "resolution": None}
     status = _dispatch(args, root, explain, observed)
+    if args.command == "telemetry":
+        return status
     try:
         _record(args, original_argv, root, status, started, observed)
     except Exception as exc:  # noqa: BLE001 - final telemetry-isolation boundary
         # Recording is observational only. The command status above is final;
         # do not catch BaseException so Ctrl-C and process termination remain
         # visible to their callers.
-        print(f"gov: telemetry not recorded: {exc}", file=sys.stderr)
+        print(f"gov: telemetry not recorded ({type(exc).__name__})", file=sys.stderr)
     return status
+
+
+def _telemetry_command(resolver, root, args):
+    settings = resolver.telemetry_settings()
+    if args.telemetry_action == "status":
+        _emit(telemetry.status(settings), as_json=args.json)
+        return 0
+    payload, exit_status = telemetry.selftest(settings, root)
+    _emit(payload, as_json=args.json)
+    return exit_status
+
+
+def _check_command(resolver, args, observed):
+    issues = resolver.check(generated=args.generated)
+    observed["diagnostics"] = [item.to_dict() for item in issues]
+    if getattr(args, "summary", False):
+        allowed = [
+            source.partition("#")[0] for item in issues for source in item.sources
+        ]
+        payload = safe_diagnostics.summarize(
+            "workspace_check",
+            1 if issues else 0,
+            json.dumps([item.to_dict() for item in issues]).encode(),
+            allowed_locations=allowed,
+        )
+        if args.json:
+            _emit(payload, as_json=True)
+        else:
+            print(safe_diagnostics.render(payload))
+    else:
+        _emit(
+            [item.to_dict() for item in issues] if issues else {"status": "ok"},
+            as_json=args.json,
+        )
+    return 1 if issues else 0
 
 
 def _dispatch(
@@ -245,14 +298,10 @@ def _dispatch(
 ) -> int:
     try:
         resolver = GovernanceResolver.for_root(root)
+        if args.command == "telemetry":
+            return _telemetry_command(resolver, root, args)
         if args.command == "check":
-            issues = resolver.check()
-            observed["diagnostics"] = [item.to_dict() for item in issues]
-            _emit(
-                [item.to_dict() for item in issues] if issues else {"status": "ok"},
-                as_json=args.json,
-            )
-            return 1 if issues else 0
+            return _check_command(resolver, args, observed)
         if args.command == "resolve":
             observed["resolution"] = resolver.resolve(mode=args.mode)
             _emit(observed["resolution"], as_json=args.json)

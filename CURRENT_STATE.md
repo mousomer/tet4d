@@ -1,5 +1,20 @@
 # CURRENT_STATE (Restart Handoff)
 
+Governance repair checkpoint (2026-10-04): distribution 1.3.1 / runtime 0.6.1 is
+published; the frozen portable gate passed 552 cases. Durable private state and
+440-file backup restoration are complete. Native integration, guarded rollout
+and fresh evidence follow the saved repair plan; current results and remaining
+coverage belong to its checkpoint and private fleet audit. Product work and
+deferred telemetry gates retain their existing scope.
+
+Integration review checkpoint (2026-10-05): Claude discovery adapters are now
+Git-visible, and ordinary named gate failures retain checker diagnostics and
+exit status. Scanner redaction remains bounded. Focused integration checks,
+a Git-visible checkout export and the canonical full gate pass.
+Ambient evidence matching and Make ordering remain shared-kit follow-up.
+Native verifier edits need guarded re-review before fleet acceptance. Keep this
+repair uncommitted alongside the existing Stage 56H work.
+
 ## Purpose
 
 This file contains only the compact state needed to resume staged or
@@ -49,7 +64,21 @@ Stage 56H: human playtest and playability acceptance of the Godot game, focused
 on sustained playability, key/action legibility, and HOLD/NEXT emphasis. It is
 a gameplay/product checkpoint, not a release gate; its task contract is
 `docs/tasks/live_4d_cockpit_convergence.md`. Stage 56I polish and the 190/200
-A/B decision follow it. Governance meta-work is paused (see `docs/BACKLOG.md`).
+A/B decision follow it. The authorized governance distribution 1.3.1 is active;
+its rollout and proof limits are recorded in
+`docs/plans/all_repository_governance_rollout.md` and the private fleet audit.
+P1b/P1c/P6 continuation and separate comparison/blocking gates remain required.
+The implemented repair contract is recorded in
+`docs/plans/policy_kit_logging_and_meta_testing_repairs.md`; fresh successor
+evidence is separate from the retained historical records. The nested boundary,
+orphaned locations, sanitation conflicts and census gaps remain open. IQA and
+RMBG product execution stay held at their owner boundaries.
+The human session includes direct Play and `2`/`3`/`4` entry, `C` Change Setup,
+and frozen-setup Restart/Play Again under
+`docs/architecture/editable_board_setup_and_persistence.md`.
+Shell readability uses 24/22 px body/supporting/helper text and window-filling Main
+and Advanced menus with contained maximum-scale scrolling. Helper keycaps/actions
+retain 22 px in every density and scroll internally. Include typography/guide layout in the outstanding Stage 56H human acceptance.
 Durable open work and release-matrix deferrals remain in `docs/BACKLOG.md`.
 
 Sections with `BEGIN/END GENERATED:*` markers are maintained by
@@ -66,11 +95,11 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 28` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.98` (`low`)
+- `tech_debt.score = 5.99` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 3.07`
+1. `delivery_size_pressure = 3.09`
 2. `code_balance = 1.91`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -86,9 +115,9 @@ Top 8 live Python hotspots by real LOC:
 3. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `3194` real LOC
 4. `tools/governance/validate_project_contracts.py`: `2736` real LOC
 5. `src/tet4d/ui/pygame/front4d_render.py`: `2153` real LOC
-6. `scripts/arch_metrics.py`: `1899` real LOC
-7. `src/tet4d/ui/pygame/locked_cell_explosion/board_view.py`: `1883` real LOC
-8. `src/tet4d/ui/pygame/endgame_animation.py`: `1869` real LOC
+6. `tools/workspace_governance/validators/core.py`: `2104` real LOC
+7. `scripts/arch_metrics.py`: `1899` real LOC
+8. `src/tet4d/ui/pygame/locked_cell_explosion/board_view.py`: `1883` real LOC
 
 Thin-wrapper budgets:
 

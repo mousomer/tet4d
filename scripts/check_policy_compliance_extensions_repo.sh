@@ -92,7 +92,7 @@ for rel in result.stdout.splitlines():
         continue
     for lineno, line in enumerate(text.splitlines(), start=1):
         if legacy_import_re.search(line):
-            hits.append(f"{rel}:{lineno}: {line.strip()}")
+            hits.append(f"{rel}:{lineno}: legacy import")
 
 if hits:
     print(

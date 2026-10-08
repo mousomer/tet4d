@@ -73,6 +73,12 @@ These six canonical files are the complete human governance owner set. If a
 durable rule cannot fit without semantic distortion, stop and reassess the
 domain model rather than adding an overlapping owner.
 
+The `governance_inventory` verification family reconstructs the migration ledger
+from its immutable Git baseline and checks source anchors and runner families.
+It certifies inventory correspondence, not semantic completeness or migration
+acceptance. The ledger remains planning evidence and cannot retire an authority
+or verification family by declaration.
+
 ## Document roles and active surface
 
 Machine governance assigns routed documents one structural role: governance,

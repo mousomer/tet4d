@@ -1,237 +1,664 @@
 {
-  "schema_version": 1,
-  "project": {"id": "tet4d", "name": "Tet4D"},
-  "authorities": [
-    {"authority_id": "engineering", "authority_type": "human", "scope": "engineering-practice", "source": "docs/governance/ENGINEERING.md", "exclusive": true, "canonical_governance": true, "legacy_key": "engineering_governance", "source_type": "file"},
-    {"authority_id": "verification", "authority_type": "human", "scope": "verification-evidence", "source": "docs/governance/VERIFICATION.md", "exclusive": true, "canonical_governance": true, "legacy_key": "verification_governance", "source_type": "file"},
-    {"authority_id": "change-governance", "authority_type": "human", "scope": "change-governance", "source": "docs/governance/CHANGE_GOVERNANCE.md", "exclusive": true, "canonical_governance": true, "legacy_key": "change_governance", "source_type": "file"},
-    {"authority_id": "security-sanitation", "authority_type": "human", "scope": "security-sanitation", "source": "docs/governance/SECURITY_AND_SANITATION.md", "exclusive": true, "canonical_governance": true, "legacy_key": "security_and_sanitation_governance", "source_type": "file"},
-    {"authority_id": "config-generated-data", "authority_type": "human", "scope": "config-generated-data", "source": "docs/governance/CONFIG_AND_GENERATED_DATA.md", "exclusive": true, "canonical_governance": true, "legacy_key": "config_and_generated_data_governance", "source_type": "file"},
-    {"authority_id": "native-and-platform", "authority_type": "human", "scope": "native-platform-policy", "source": "docs/governance/NATIVE_AND_PLATFORM.md", "exclusive": true, "canonical_governance": true, "legacy_key": "native_and_platform_governance", "source_type": "file"},
-    {"authority_id": "authority-transfer", "authority_type": "human", "scope": "authority-transfer-establishment", "source": "docs/architecture/authority_transfer_protocol.md", "exclusive": true, "canonical_governance": false, "legacy_key": "authority_transfer_and_establishment_protocol", "source_type": "file"},
-    {"authority_id": "architecture", "authority_type": "human", "scope": "architecture", "source": "docs/ARCHITECTURE_CONTRACT.md", "exclusive": true, "canonical_governance": false, "legacy_key": "architecture_contract", "source_type": "file"},
-    {"authority_id": "subsystem-ownership", "authority_type": "human", "scope": "subsystem-ownership", "source": "docs/architecture/authority_map.md", "exclusive": true, "canonical_governance": false, "legacy_key": "subsystem_authority_map", "source_type": "file"},
-    {"authority_id": "godot-runtime", "authority_type": "alias", "scope": "godot-product-shell", "source": "docs/architecture/authority_map.md", "exclusive": false, "canonical_governance": false, "alias_of": "subsystem-ownership", "source_type": "alias"},
-    {"authority_id": "product-requirements", "authority_type": "human", "scope": "product-behaviour", "source": "docs/rds/", "exclusive": true, "canonical_governance": false, "legacy_key": "product_requirements_root", "source_type": "directory"},
-    {"authority_id": "professional-product-programme", "authority_type": "human", "scope": "product-programme", "source": "docs/plans/professional_godot_game_programme.md", "exclusive": true, "canonical_governance": false, "legacy_key": "professional_product_programme", "source_type": "file"},
-    {"authority_id": "open-work-backlog", "authority_type": "human", "scope": "open-work", "source": "docs/BACKLOG.md", "exclusive": true, "canonical_governance": false, "legacy_key": "open_work_backlog", "source_type": "file"},
-    {"authority_id": "topology-current-authority", "authority_type": "human", "scope": "topology-current-state", "source": "docs/architecture/topology_playground_current_authority.md", "exclusive": true, "canonical_governance": false, "legacy_key": "topology_current_authority", "source_type": "file"},
-    {"authority_id": "legacy-policy-pack", "authority_type": "compatibility", "scope": "unmigrated-machine-policy", "source": "config/project/policy_pack.json", "exclusive": true, "canonical_governance": false, "legacy_key": "machine_authority", "source_type": "file"},
-    {"authority_id": "python-project-metadata", "authority_type": "project_metadata", "scope": "python-environment-contract", "source": "pyproject.toml", "exclusive": true, "canonical_governance": false, "source_type": "file"}
-  ],
-  "required_authorities": ["native-and-platform", "authority-transfer"],
-  "routes": {
-    "product_planning": {
-      "authority_refs": ["professional-product-programme", "product-requirements", "open-work-backlog", "change-governance", "verification"],
-      "dispatch_paths": [],
-      "typical_verification_requirements": ["documentation"]
-    },
-    "python_reference_engine": {
-      "authority_refs": ["architecture", "product-requirements", "subsystem-ownership", "engineering", "verification", "config-generated-data"],
-      "dispatch_paths": [],
-      "typical_verification_requirements": ["python", "deterministic"]
-    },
-    "godot_product_shell": {
-      "authority_refs": ["product-requirements", "subsystem-ownership", "native-and-platform", "verification", "config-generated-data"],
-      "dispatch_paths": ["godot/AGENTS.md"],
-      "typical_verification_requirements": ["godot"],
-      "environment_tools": ["godot"]
-    },
-    "native_deterministic_core": {
-      "authority_refs": ["subsystem-ownership", "authority-transfer", "native-and-platform", "verification", "security-sanitation", "engineering"],
-      "dispatch_paths": ["native/AGENTS.md"],
-      "typical_verification_requirements": ["native", "deterministic"]
-    },
-    "topology_and_explorer": {
-      "authority_refs": ["topology-current-authority", "product-requirements", "subsystem-ownership", "engineering", "native-and-platform", "verification"],
-      "dispatch_paths": [],
-      "typical_verification_requirements": ["deterministic"]
-    },
-    "governance_and_tooling": {
-      "authority_refs": ["legacy-policy-pack", "change-governance", "verification", "engineering"],
-      "dispatch_paths": [],
-      "typical_verification_requirements": ["governance_structure"]
-    },
-    "packaging_and_release": {
-      "authority_refs": ["native-and-platform", "security-sanitation", "verification", "change-governance"],
-      "dispatch_paths": ["docs/rds/RDS_PACKAGING.md", "docs/RELEASE_CHECKLIST.md"],
-      "typical_verification_requirements": ["packaging", "platform"]
-    }
+  "artifact_roles": {
+    "docs/architecture/workspace_governance_distribution.md": "governance_treatment",
+    "docs/architecture/workspace_governance_distribution_review.md": "bookkeeping",
+    "docs/plans/all_repository_governance_ledger.json": "bookkeeping",
+    "docs/plans/all_repository_governance_rollout.md": "governance_treatment"
   },
-  "verification": {
-    "canonical": {"authority_ref": "legacy-policy-pack", "json_pointer": "/governance/verification_command"},
-    "full": {"authority_ref": "legacy-policy-pack", "json_pointer": "/governance/godot_toolchain/canonical_commands/full_repository"},
-    "targeted": "./scripts/verify_focus.sh",
-    "rule": "task + authority + actual diff + risk"
+  "authorities": [
+    {
+      "authority_id": "engineering",
+      "authority_type": "human",
+      "canonical_governance": true,
+      "exclusive": true,
+      "legacy_key": "engineering_governance",
+      "scope": "engineering-practice",
+      "source": "docs/governance/ENGINEERING.md",
+      "source_type": "file"
+    },
+    {
+      "authority_id": "verification",
+      "authority_type": "human",
+      "canonical_governance": true,
+      "exclusive": true,
+      "legacy_key": "verification_governance",
+      "scope": "verification-evidence",
+      "source": "docs/governance/VERIFICATION.md",
+      "source_type": "file"
+    },
+    {
+      "authority_id": "change-governance",
+      "authority_type": "human",
+      "canonical_governance": true,
+      "exclusive": true,
+      "legacy_key": "change_governance",
+      "scope": "change-governance",
+      "source": "docs/governance/CHANGE_GOVERNANCE.md",
+      "source_type": "file"
+    },
+    {
+      "authority_id": "security-sanitation",
+      "authority_type": "human",
+      "canonical_governance": true,
+      "exclusive": true,
+      "legacy_key": "security_and_sanitation_governance",
+      "scope": "security-sanitation",
+      "source": "docs/governance/SECURITY_AND_SANITATION.md",
+      "source_type": "file"
+    },
+    {
+      "authority_id": "config-generated-data",
+      "authority_type": "human",
+      "canonical_governance": true,
+      "exclusive": true,
+      "legacy_key": "config_and_generated_data_governance",
+      "scope": "config-generated-data",
+      "source": "docs/governance/CONFIG_AND_GENERATED_DATA.md",
+      "source_type": "file"
+    },
+    {
+      "authority_id": "native-and-platform",
+      "authority_type": "human",
+      "canonical_governance": true,
+      "exclusive": true,
+      "legacy_key": "native_and_platform_governance",
+      "scope": "native-platform-policy",
+      "source": "docs/governance/NATIVE_AND_PLATFORM.md",
+      "source_type": "file"
+    },
+    {
+      "authority_id": "authority-transfer",
+      "authority_type": "human",
+      "canonical_governance": false,
+      "exclusive": true,
+      "legacy_key": "authority_transfer_and_establishment_protocol",
+      "scope": "authority-transfer-establishment",
+      "source": "docs/architecture/authority_transfer_protocol.md",
+      "source_type": "file"
+    },
+    {
+      "authority_id": "architecture",
+      "authority_type": "human",
+      "canonical_governance": false,
+      "exclusive": true,
+      "legacy_key": "architecture_contract",
+      "scope": "architecture",
+      "source": "docs/ARCHITECTURE_CONTRACT.md",
+      "source_type": "file"
+    },
+    {
+      "authority_id": "subsystem-ownership",
+      "authority_type": "human",
+      "canonical_governance": false,
+      "exclusive": true,
+      "legacy_key": "subsystem_authority_map",
+      "scope": "subsystem-ownership",
+      "source": "docs/architecture/authority_map.md",
+      "source_type": "file"
+    },
+    {
+      "alias_of": "subsystem-ownership",
+      "authority_id": "godot-runtime",
+      "authority_type": "alias",
+      "canonical_governance": false,
+      "exclusive": false,
+      "scope": "godot-product-shell",
+      "source": "docs/architecture/authority_map.md",
+      "source_type": "alias"
+    },
+    {
+      "authority_id": "product-requirements",
+      "authority_type": "human",
+      "canonical_governance": false,
+      "exclusive": true,
+      "legacy_key": "product_requirements_root",
+      "scope": "product-behaviour",
+      "source": "docs/rds/",
+      "source_type": "directory"
+    },
+    {
+      "authority_id": "professional-product-programme",
+      "authority_type": "human",
+      "canonical_governance": false,
+      "exclusive": true,
+      "legacy_key": "professional_product_programme",
+      "scope": "product-programme",
+      "source": "docs/plans/professional_godot_game_programme.md",
+      "source_type": "file"
+    },
+    {
+      "authority_id": "open-work-backlog",
+      "authority_type": "human",
+      "canonical_governance": false,
+      "exclusive": true,
+      "legacy_key": "open_work_backlog",
+      "scope": "open-work",
+      "source": "docs/BACKLOG.md",
+      "source_type": "file"
+    },
+    {
+      "authority_id": "topology-current-authority",
+      "authority_type": "human",
+      "canonical_governance": false,
+      "exclusive": true,
+      "legacy_key": "topology_current_authority",
+      "scope": "topology-current-state",
+      "source": "docs/architecture/topology_playground_current_authority.md",
+      "source_type": "file"
+    },
+    {
+      "authority_id": "legacy-policy-pack",
+      "authority_type": "compatibility",
+      "canonical_governance": false,
+      "exclusive": true,
+      "legacy_key": "machine_authority",
+      "scope": "unmigrated-machine-policy",
+      "source": "config/project/policy_pack.json",
+      "source_type": "file"
+    },
+    {
+      "authority_id": "python-project-metadata",
+      "authority_type": "project_metadata",
+      "canonical_governance": false,
+      "exclusive": true,
+      "scope": "python-environment-contract",
+      "source": "pyproject.toml",
+      "source_type": "file"
+    }
+  ],
+  "canonical_owner_set": {
+    "authority_ref": "legacy-policy-pack",
+    "json_pointer": "/authority_model/canonical_human_owners"
+  },
+  "environment": {
+    "critical_packages": [
+      "tet4d",
+      "pytest",
+      "ruff",
+      "packaging"
+    ],
+    "dependency_authority": {
+      "authority_ref": "python-project-metadata",
+      "source": "pyproject.toml"
+    },
+    "editable_source": "src/tet4d",
+    "execution_mode": {
+      "default": "installed",
+      "override": "TET4D_ENVIRONMENT_MODE"
+    },
+    "interpreter_override": "TET4D_PYTHON",
+    "package_import": "tet4d",
+    "preferred": ".venv/bin/python",
+    "python_requires": {
+      "authority_ref": "python-project-metadata",
+      "source_field": "project.requires-python"
+    },
+    "route_tools": {
+      "godot": {
+        "candidates": [
+          "godot"
+        ],
+        "override": "GODOT_BIN",
+        "version_args": [
+          "--version"
+        ]
+      }
+    }
   },
   "execution": {
     "default_mode": "FEATURE",
     "profiles": {
-      "LOCAL_FIX": {
-        "exploration": ["reproduce", "owning-source", "direct-tests"],
-        "routes": ["godot_product_shell"],
-        "final_evidence_rule": "resolved-from-diff-authority-risk"
-      },
       "FEATURE": {
-        "exploration": ["owner", "neighboring-contracts", "bounded-architecture-search"],
-        "routes": ["godot_product_shell"],
-        "final_evidence_rule": "resolved-from-diff-authority-risk"
+        "exploration": [
+          "owner",
+          "neighboring-contracts",
+          "bounded-architecture-search"
+        ],
+        "final_evidence_rule": "resolved-from-diff-authority-risk",
+        "routes": [
+          "godot_product_shell"
+        ]
+      },
+      "LOCAL_FIX": {
+        "exploration": [
+          "reproduce",
+          "owning-source",
+          "direct-tests"
+        ],
+        "final_evidence_rule": "resolved-from-diff-authority-risk",
+        "routes": [
+          "godot_product_shell"
+        ]
       },
       "STRUCTURAL_CHANGE": {
-        "exploration": ["authority-review", "routing-review", "repository-impact", "generated-surfaces"],
-        "routes": ["governance_and_tooling"],
-        "final_evidence_rule": "resolved-from-diff-authority-risk"
+        "exploration": [
+          "authority-review",
+          "routing-review",
+          "repository-impact",
+          "generated-surfaces"
+        ],
+        "final_evidence_rule": "resolved-from-diff-authority-risk",
+        "routes": [
+          "governance_and_tooling"
+        ]
       }
     },
     "representative_scenarios": [
       {
         "id": "small-godot-ui-defect",
-        "match_all": ["small", "godot", "defect"],
+        "match_all": [
+          "small",
+          "godot",
+          "defect"
+        ],
         "mode": "LOCAL_FIX",
         "priority": 300,
-        "routes": ["godot_product_shell"]
+        "routes": [
+          "godot_product_shell"
+        ]
       },
       {
         "id": "godot-presentation-feature",
-        "match_all": ["godot", "presentation feature"],
+        "match_all": [
+          "godot",
+          "presentation feature"
+        ],
         "mode": "FEATURE",
         "priority": 200,
-        "routes": ["godot_product_shell"]
+        "routes": [
+          "godot_product_shell"
+        ]
       },
       {
         "id": "godot-validation-label-regression",
-        "match_all": ["godot", "validation-label styling"],
+        "match_all": [
+          "godot",
+          "validation-label styling"
+        ],
         "mode": "LOCAL_FIX",
         "priority": 350,
-        "routes": ["godot_product_shell"]
+        "routes": [
+          "godot_product_shell"
+        ]
       },
       {
         "id": "small-python-defect",
-        "match_all": ["small", "python", "defect"],
+        "match_all": [
+          "small",
+          "python",
+          "defect"
+        ],
         "mode": "LOCAL_FIX",
         "priority": 300,
-        "routes": ["python_reference_engine"]
+        "routes": [
+          "python_reference_engine"
+        ]
       },
       {
         "id": "python-bug-fix",
-        "match_all": ["python bug fix"],
+        "match_all": [
+          "python bug fix"
+        ],
         "mode": "LOCAL_FIX",
         "priority": 350,
-        "routes": ["python_reference_engine"]
+        "routes": [
+          "python_reference_engine"
+        ]
       },
       {
         "id": "reference-engine-work",
-        "match_all": ["reference engine"],
+        "match_all": [
+          "reference engine"
+        ],
         "mode": "FEATURE",
         "priority": 200,
-        "routes": ["python_reference_engine"]
+        "routes": [
+          "python_reference_engine"
+        ]
       },
       {
         "id": "oracle-work",
-        "match_all": ["oracle"],
+        "match_all": [
+          "oracle"
+        ],
         "mode": "FEATURE",
         "priority": 250,
-        "routes": ["python_reference_engine"]
+        "routes": [
+          "python_reference_engine"
+        ]
       },
       {
         "id": "python-work",
-        "match_all": ["python"],
+        "match_all": [
+          "python"
+        ],
         "mode": "FEATURE",
         "priority": 100,
-        "routes": ["python_reference_engine"]
+        "routes": [
+          "python_reference_engine"
+        ]
       },
       {
         "id": "moderate-feature",
-        "match_all": ["moderate", "feature"],
+        "match_all": [
+          "moderate",
+          "feature"
+        ],
         "mode": "FEATURE",
         "priority": 100,
-        "routes": ["python_reference_engine"]
+        "routes": [
+          "python_reference_engine"
+        ]
       },
       {
         "id": "cross-layer-change",
-        "match_all": ["cross-layer"],
+        "match_all": [
+          "cross-layer"
+        ],
         "mode": "STRUCTURAL_CHANGE",
         "priority": 400,
-        "routes": ["python_reference_engine", "godot_product_shell", "native_deterministic_core"]
+        "routes": [
+          "python_reference_engine",
+          "godot_product_shell",
+          "native_deterministic_core"
+        ]
       },
       {
         "id": "governance-change",
-        "match_all": ["governance", "change"],
+        "match_all": [
+          "governance",
+          "change"
+        ],
         "mode": "STRUCTURAL_CHANGE",
         "priority": 100,
-        "routes": ["governance_and_tooling"]
+        "routes": [
+          "governance_and_tooling"
+        ]
       },
       {
         "id": "ci-platform-routing-repair",
-        "match_all": ["ci classification", "platform routing"],
+        "match_all": [
+          "ci classification",
+          "platform routing"
+        ],
         "mode": "STRUCTURAL_CHANGE",
         "priority": 350,
-        "routes": ["governance_and_tooling", "packaging_and_release"]
+        "routes": [
+          "governance_and_tooling",
+          "packaging_and_release"
+        ]
       },
       {
         "id": "product-platform-routing-repair",
-        "match_all": ["product-platform routing", "repair"],
+        "match_all": [
+          "product-platform routing",
+          "repair"
+        ],
         "mode": "STRUCTURAL_CHANGE",
         "priority": 300,
-        "routes": ["governance_and_tooling", "packaging_and_release"]
+        "routes": [
+          "governance_and_tooling",
+          "packaging_and_release"
+        ]
       },
       {
         "id": "packaging-release-change",
-        "match_all": ["packaging", "release"],
+        "match_all": [
+          "packaging",
+          "release"
+        ],
         "mode": "STRUCTURAL_CHANGE",
         "priority": 200,
-        "routes": ["packaging_and_release"]
+        "routes": [
+          "packaging_and_release"
+        ]
       },
       {
         "id": "product-planning-change",
-        "match_all": ["product", "planning"],
+        "match_all": [
+          "product",
+          "planning"
+        ],
         "mode": "FEATURE",
         "priority": 200,
-        "routes": ["product_planning"]
+        "routes": [
+          "product_planning"
+        ]
       },
       {
         "id": "topology-explorer-change",
-        "match_all": ["topology", "explorer"],
+        "match_all": [
+          "topology",
+          "explorer"
+        ],
         "mode": "FEATURE",
         "priority": 250,
-        "routes": ["topology_and_explorer"]
+        "routes": [
+          "topology_and_explorer"
+        ]
       },
       {
         "id": "live-4d-rosette-fix",
-        "match_all": ["fix", "live", "4d", "rosette"],
+        "match_all": [
+          "fix",
+          "live",
+          "4d",
+          "rosette"
+        ],
         "mode": "LOCAL_FIX",
         "priority": 350,
-        "routes": ["godot_product_shell"]
+        "routes": [
+          "godot_product_shell"
+        ]
       }
     ]
   },
   "generated_surfaces": [
-    {"surface_id": "legacy-route-facade", "kind": "compatibility_facade", "source": "config/governance/project.json#/routes", "target": "config/project/policy_pack.json#/codex_routing/routes", "transform": "authority-legacy-key-route-v1"}
-  ],
-  "environment": {
-    "python_requires": {"authority_ref": "python-project-metadata", "source_field": "project.requires-python"},
-    "dependency_authority": {"authority_ref": "python-project-metadata", "source": "pyproject.toml"},
-    "preferred": ".venv/bin/python",
-    "interpreter_override": "TET4D_PYTHON",
-    "execution_mode": {
-      "override": "TET4D_ENVIRONMENT_MODE",
-      "default": "installed"
+    {
+      "check_command": [
+        "{python}",
+        "tools/governance/generate_configuration_reference.py",
+        "--check"
+      ],
+      "kind": "generated_output",
+      "source": "tools/governance/generate_configuration_reference.py",
+      "surface_id": "configuration-reference",
+      "target": "docs/CONFIGURATION_REFERENCE.md",
+      "timeout_seconds": 120
     },
-    "package_import": "tet4d",
-    "editable_source": "src/tet4d",
-    "critical_packages": ["tet4d", "pytest", "ruff", "packaging"],
-    "route_tools": {
-      "godot": {
-        "override": "GODOT_BIN",
-        "candidates": ["godot"],
-        "version_args": ["--version"]
-      }
+    {
+      "check_command": [
+        "{python}",
+        "tools/governance/generate_configuration_reference.py",
+        "--check"
+      ],
+      "kind": "generated_output",
+      "source": "tools/governance/generate_configuration_reference.py",
+      "surface_id": "user-settings-reference",
+      "target": "docs/USER_SETTINGS_REFERENCE.md",
+      "timeout_seconds": 120
+    },
+    {
+      "kind": "compatibility_facade",
+      "source": "config/governance/project.json#/routes",
+      "surface_id": "legacy-route-facade",
+      "target": "config/project/policy_pack.json#/codex_routing/routes",
+      "transform": "authority-legacy-key-route-v1"
+    }
+  ],
+  "project": {
+    "id": "tet4d",
+    "name": "Tet4D"
+  },
+  "required_authorities": [
+    "native-and-platform",
+    "authority-transfer"
+  ],
+  "role_bootstrap": {
+    "bookkeeping": [
+      "docs/BACKLOG.md",
+      "CURRENT_STATE.md"
+    ],
+    "instruction_roots": [
+      "AGENTS.md",
+      "CLAUDE.md",
+      "godot/AGENTS.md",
+      "native/AGENTS.md"
+    ]
+  },
+  "routes": {
+    "godot_product_shell": {
+      "authority_refs": [
+        "product-requirements",
+        "subsystem-ownership",
+        "native-and-platform",
+        "verification",
+        "config-generated-data"
+      ],
+      "dispatch_paths": [
+        "godot/AGENTS.md"
+      ],
+      "environment_tools": [
+        "godot"
+      ],
+      "typical_verification_requirements": [
+        "godot"
+      ]
+    },
+    "governance_and_tooling": {
+      "authority_refs": [
+        "legacy-policy-pack",
+        "change-governance",
+        "verification",
+        "engineering"
+      ],
+      "dispatch_paths": [],
+      "typical_verification_requirements": [
+        "governance_structure"
+      ]
+    },
+    "native_deterministic_core": {
+      "authority_refs": [
+        "subsystem-ownership",
+        "authority-transfer",
+        "native-and-platform",
+        "verification",
+        "security-sanitation",
+        "engineering"
+      ],
+      "dispatch_paths": [
+        "native/AGENTS.md"
+      ],
+      "typical_verification_requirements": [
+        "native",
+        "deterministic"
+      ]
+    },
+    "packaging_and_release": {
+      "authority_refs": [
+        "native-and-platform",
+        "security-sanitation",
+        "verification",
+        "change-governance"
+      ],
+      "dispatch_paths": [
+        "docs/rds/RDS_PACKAGING.md",
+        "docs/RELEASE_CHECKLIST.md"
+      ],
+      "typical_verification_requirements": [
+        "packaging",
+        "platform"
+      ]
+    },
+    "product_planning": {
+      "authority_refs": [
+        "professional-product-programme",
+        "product-requirements",
+        "open-work-backlog",
+        "change-governance",
+        "verification"
+      ],
+      "dispatch_paths": [],
+      "typical_verification_requirements": [
+        "documentation"
+      ]
+    },
+    "python_reference_engine": {
+      "authority_refs": [
+        "architecture",
+        "product-requirements",
+        "subsystem-ownership",
+        "engineering",
+        "verification",
+        "config-generated-data"
+      ],
+      "dispatch_paths": [],
+      "typical_verification_requirements": [
+        "python",
+        "deterministic"
+      ]
+    },
+    "topology_and_explorer": {
+      "authority_refs": [
+        "topology-current-authority",
+        "product-requirements",
+        "subsystem-ownership",
+        "engineering",
+        "native-and-platform",
+        "verification"
+      ],
+      "dispatch_paths": [],
+      "typical_verification_requirements": [
+        "deterministic"
+      ]
     }
   },
-  "sanitation": {"secret_scanner": "tools/governance/scan_secrets.py", "repository_check": "scripts/check_git_sanitation_repo.sh", "bounded_diagnostics": 50},
-  "canonical_owner_set": {"authority_ref": "legacy-policy-pack", "json_pointer": "/authority_model/canonical_human_owners"},
-  "role_bootstrap": {
-    "instruction_roots": ["AGENTS.md", "CLAUDE.md", "godot/AGENTS.md", "native/AGENTS.md"],
-    "bookkeeping": ["docs/BACKLOG.md"]
+  "sanitation": {
+    "bounded_diagnostics": 50,
+    "repository_check": "scripts/check_git_sanitation_repo.sh",
+    "secret_scanner": "tools/governance/scan_secrets.py"
+  },
+  "schema_version": 1,
+  "skill_adapters": [
+    {
+      "name": "governance-context",
+      "path": ".agents/skills/governance-context/SKILL.md",
+      "release_manifest_sha256": "0dbb35dc8fcccc60f32de726eb0131a24759a6c683a8a5a6ea6b4a2d6d405856",
+      "sha256": "013a4a955f5272545c9d000b0514fa10458dc1a31314ab4d3dfd1f6f2bfea9f9",
+      "target": "tools/workspace_governance/skills/governance-context/SKILL.md"
+    },
+    {
+      "name": "governance-context",
+      "path": ".claude/skills/governance-context/SKILL.md",
+      "release_manifest_sha256": "0dbb35dc8fcccc60f32de726eb0131a24759a6c683a8a5a6ea6b4a2d6d405856",
+      "sha256": "013a4a955f5272545c9d000b0514fa10458dc1a31314ab4d3dfd1f6f2bfea9f9",
+      "target": "tools/workspace_governance/skills/governance-context/SKILL.md"
+    },
+    {
+      "name": "governance-maintenance",
+      "path": ".agents/skills/governance-maintenance/SKILL.md",
+      "release_manifest_sha256": "0dbb35dc8fcccc60f32de726eb0131a24759a6c683a8a5a6ea6b4a2d6d405856",
+      "sha256": "fd416bb129ee2a2c758537a238adf09a0615694c951d4ced029fa5bab76af10b",
+      "target": "tools/workspace_governance/skills/governance-maintenance/SKILL.md"
+    },
+    {
+      "name": "governance-maintenance",
+      "path": ".claude/skills/governance-maintenance/SKILL.md",
+      "release_manifest_sha256": "0dbb35dc8fcccc60f32de726eb0131a24759a6c683a8a5a6ea6b4a2d6d405856",
+      "sha256": "fd416bb129ee2a2c758537a238adf09a0615694c951d4ced029fa5bab76af10b",
+      "target": "tools/workspace_governance/skills/governance-maintenance/SKILL.md"
+    }
+  ],
+  "verification": {
+    "canonical": {
+      "authority_ref": "legacy-policy-pack",
+      "json_pointer": "/governance/verification_command"
+    },
+    "full": {
+      "authority_ref": "legacy-policy-pack",
+      "json_pointer": "/governance/godot_toolchain/canonical_commands/full_repository"
+    },
+    "rule": "task + authority + actual diff + risk",
+    "targeted": "./scripts/verify_focus.sh"
   }
 }

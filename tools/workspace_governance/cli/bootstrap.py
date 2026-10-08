@@ -9,28 +9,44 @@ from pathlib import Path
 
 def main(check_only=False):
     root = Path(__file__).resolve().parents[3]
+    sources = ["tools/workspace_governance/MANIFEST.json#/runtime/python_requires"]
     try:
-        # Read only the existing project's lower bound before importing modern code.
-        text = (root / "pyproject.toml").read_text(encoding="utf-8")
-        project = re.search(r"(?ms)^\[project\]\s*$(.*?)(?=^\[|\Z)", text)
-        requirement = (
-            re.search(r'requires-python\s*=\s*["\']([^"\']+)', project.group(1))
-            if project
-            else None
-        )
+        # Governance has its own runtime. Native and documentation consumers do
+        # not need Python application metadata merely to load the pack.
+        manifest = json.loads((Path(__file__).parents[1] / "MANIFEST.json").read_text())
+        requirement = manifest.get("runtime", {}).get("python_requires", ">=3.11")
+        if check_only:
+            # Existing environment-creation callers explicitly ask to certify
+            # the application's bootstrap before creating its environment.
+            text = (root / "pyproject.toml").read_text(encoding="utf-8")
+            project = re.search(r"(?ms)^\[project\]\s*$(.*?)(?=^\[|\Z)", text)
+            declared = (
+                re.search(r'requires-python\s*=\s*["\']([^"\']+)', project.group(1))
+                if project
+                else None
+            )
+            if declared is None:
+                raise ValueError(
+                    "Cannot read project.requires-python lower bound for bootstrap"
+                )
+            requirement = declared.group(1)
+            sources = ["pyproject.toml"]
+        # Application specifiers may contain upper bounds and exclusions;
+        # this preliminary check only extracts the established lower bound.
         floor = (
-            re.search(r">=\s*(\d+(?:\.\d+)*)", requirement.group(1))
-            if requirement
-            else None
+            re.search(r">=\s*(\d+(?:\.\d+)*)", requirement)
+            if check_only
+            else re.fullmatch(r">=\s*(\d+(?:\.\d+)*)", requirement)
         )
         if floor is None:
-            raise ValueError(
-                "Cannot read project.requires-python lower bound for bootstrap"
-            )
-        if sys.version_info[:3] < tuple(int(n) for n in floor.group(1).split(".")):
-            raise ValueError(
-                "Bootstrap Python does not satisfy " + requirement.group(1)
-            )
+            raise ValueError("Bootstrap requires an explicit >= Python version floor")
+        numeric_floor = runpy.run_path(
+            str(Path(__file__).parents[1] / "runtime_floor.py")
+        )["numeric_python_floor"]
+        if not numeric_floor(
+            ".".join(str(n) for n in sys.version_info[:3]), ">=" + floor.group(1)
+        ):
+            raise ValueError("Bootstrap Python does not satisfy " + requirement)
         if check_only:
             return 0
         sys.path.insert(0, str(root))
@@ -45,7 +61,7 @@ def main(check_only=False):
                             "code": "ENVIRONMENT_MISMATCH",
                             "fact": "bootstrap.interpreter",
                             "owner": "environment",
-                            "sources": ["pyproject.toml"],
+                            "sources": sources,
                             "reason": str(exc),
                             "repair": "Select a supported interpreter using the launcher bootstrap override",
                         }

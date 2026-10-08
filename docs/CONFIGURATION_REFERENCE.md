@@ -217,8 +217,12 @@ Parameters:
 - `version`: `1` (`int`)
 
 ### `config/governance/project.json`
-Top-level keys: `authorities`, `canonical_owner_set`, `environment`, `execution`, `generated_surfaces`, `project`, `required_authorities`, `role_bootstrap`, `routes`, `sanitation`, `schema_version`, `verification`
+Top-level keys: `artifact_roles`, `authorities`, `canonical_owner_set`, `environment`, `execution`, `generated_surfaces`, `project`, `required_authorities`, `role_bootstrap`, `routes`, `sanitation`, `schema_version`, `skill_adapters`, `verification`
 Parameters:
+- `artifact_roles.docs/architecture/workspace_governance_distribution.md`: `"governance_treatment"` (`string`)
+- `artifact_roles.docs/architecture/workspace_governance_distribution_review.md`: `"bookkeeping"` (`string`)
+- `artifact_roles.docs/plans/all_repository_governance_ledger.json`: `"bookkeeping"` (`string`)
+- `artifact_roles.docs/plans/all_repository_governance_rollout.md`: `"governance_treatment"` (`string`)
 - `authorities[]`: array[`object`]
 - `authorities[].alias_of`: `"subsystem-ownership"` (`string`)
 - `authorities[].authority_id`: varies (`string`); examples: `"engineering"`, `"verification"`, `"change-governance"`
@@ -262,15 +266,17 @@ Parameters:
 - `execution.representative_scenarios[].priority`: varies (`int`); examples: `300`, `200`, `350`
 - `execution.representative_scenarios[].routes[]`: array[`string`]; examples: `"godot_product_shell"`, `"python_reference_engine"`, `"native_deterministic_core"`
 - `generated_surfaces[]`: array[`object`]
-- `generated_surfaces[].kind`: `"compatibility_facade"` (`string`)
-- `generated_surfaces[].source`: `"config/governance/project.json#/routes"` (`string`)
-- `generated_surfaces[].surface_id`: `"legacy-route-facade"` (`string`)
-- `generated_surfaces[].target`: `"config/project/policy_pack.json#/codex_routing/routes"` (`string`)
+- `generated_surfaces[].check_command[]`: array[`string`]; examples: `"{python}"`, `"tools/governance/generate_configuration_reference.py"`, `"--check"`
+- `generated_surfaces[].kind`: varies (`string`); examples: `"generated_output"`, `"compatibility_facade"`
+- `generated_surfaces[].source`: varies (`string`); examples: `"tools/governance/generate_configuration_reference.py"`, `"config/governance/project.json#/routes"`
+- `generated_surfaces[].surface_id`: varies (`string`); examples: `"configuration-reference"`, `"user-settings-reference"`, `"legacy-route-facade"`
+- `generated_surfaces[].target`: varies (`string`); examples: `"docs/CONFIGURATION_REFERENCE.md"`, `"docs/USER_SETTINGS_REFERENCE.md"`, `"config/project/policy_pack.json#/codex_routing/routes"`
+- `generated_surfaces[].timeout_seconds`: varies (`int`); examples: `120`
 - `generated_surfaces[].transform`: `"authority-legacy-key-route-v1"` (`string`)
 - `project.id`: `"tet4d"` (`string`)
 - `project.name`: `"Tet4D"` (`string`)
 - `required_authorities[]`: array[`string`]; examples: `"native-and-platform"`, `"authority-transfer"`
-- `role_bootstrap.bookkeeping[]`: array[`string`]; examples: `"docs/BACKLOG.md"`
+- `role_bootstrap.bookkeeping[]`: array[`string`]; examples: `"docs/BACKLOG.md"`, `"CURRENT_STATE.md"`
 - `role_bootstrap.instruction_roots[]`: array[`string`]; examples: `"AGENTS.md"`, `"CLAUDE.md"`, `"godot/AGENTS.md"`
 - `routes.godot_product_shell.authority_refs[]`: array[`string`]; examples: `"product-requirements"`, `"subsystem-ownership"`, `"native-and-platform"`
 - `routes.godot_product_shell.dispatch_paths[]`: array[`string`]; examples: `"godot/AGENTS.md"`
@@ -298,6 +304,12 @@ Parameters:
 - `sanitation.repository_check`: `"scripts/check_git_sanitation_repo.sh"` (`string`)
 - `sanitation.secret_scanner`: `"tools/governance/scan_secrets.py"` (`string`)
 - `schema_version`: `1` (`int`)
+- `skill_adapters[]`: array[`object`]
+- `skill_adapters[].name`: varies (`string`); examples: `"governance-context"`, `"governance-maintenance"`
+- `skill_adapters[].path`: varies (`string`); examples: `".agents/skills/governance-context/SKILL.md"`, `".claude/skills/governance-context/SKILL.md"`, `".agents/skills/governance-maintenance/SKILL.md"`
+- `skill_adapters[].release_manifest_sha256`: varies (`string`); examples: `"0dbb35dc8fcccc60f32de726eb0131a24759a6c683a8a5a6ea6b4a2d6d405856"`
+- `skill_adapters[].sha256`: varies (`string`); examples: `"013a4a955f5272545c9d000b0514fa10458dc1a31314ab4d3dfd1f6f2bfea9f9"`, `"fd416bb129ee2a2c758537a238adf09a0615694c951d4ced029fa5bab76af10b"`
+- `skill_adapters[].target`: varies (`string`); examples: `"tools/workspace_governance/skills/governance-context/SKILL.md"`, `"tools/workspace_governance/skills/governance-maintenance/SKILL.md"`
 - `verification.canonical.authority_ref`: `"legacy-policy-pack"` (`string`)
 - `verification.canonical.json_pointer`: `"/governance/verification_command"` (`string`)
 - `verification.full.authority_ref`: `"legacy-policy-pack"` (`string`)
@@ -308,14 +320,14 @@ Parameters:
 ### `config/governance/workspace.lock.json`
 Top-level keys: `content_sha256`, `files`, `lock_algorithm`, `pack_name`, `pack_path`, `revision`, `schema_version`, `version`
 Parameters:
-- `content_sha256`: `"c6470f9b5dd3922d844da8afe46f90d796f93f795dbba23512c6ae0778fef031"` (`string`)
-- `files[]`: array[`string`]; examples: `"MANIFEST.json"`, `"VERSION"`, `"__init__.py"`
+- `content_sha256`: `"1b2b597301731e20a4b9958483fe3fbb17c765cf6d266c24f412981b0a932c8e"` (`string`)
+- `files[]`: array[`string`]; examples: `".ruff.toml"`, `"MANIFEST.json"`, `"VERSION"`
 - `lock_algorithm`: `"sha256-path-and-content-v1"` (`string`)
 - `pack_name`: `"workspace-governance"` (`string`)
 - `pack_path`: `"tools/workspace_governance"` (`string`)
-- `revision`: `"v0.4-telemetry-core-4"` (`string`)
+- `revision`: `"v0.6.1-private-execution-metadata-1"` (`string`)
 - `schema_version`: `1` (`int`)
-- `version`: `"0.4.0"` (`string`)
+- `version`: `"0.6.1"` (`string`)
 
 ### `config/help/action_map.json`
 Top-level keys: `action_topics`, `default_topic`, `version`
@@ -2456,9 +2468,13 @@ Parameters:
 - `governance_surface.validator_provenance.contracts`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
 - `governance_surface.validator_provenance.dedup_dead_code_rules`: `"docs/governance/ENGINEERING.md"` (`string`)
 - `governance_surface.validator_provenance.drift_protection`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
+- `governance_surface.validator_provenance.environment_doctor`: `"docs/governance/VERIFICATION.md"` (`string`)
+- `governance_surface.validator_provenance.git_sanitation_baseline`: `"docs/governance/SECURITY_AND_SANITATION.md"` (`string`)
 - `governance_surface.validator_provenance.git_sanitation_repo`: `"docs/governance/SECURITY_AND_SANITATION.md"` (`string`)
 - `governance_surface.validator_provenance.godot_semantic_boundary`: `"docs/governance/NATIVE_AND_PLATFORM.md"` (`string`)
 - `governance_surface.validator_provenance.godot_settings_externalization`: `"docs/governance/CONFIG_AND_GENERATED_DATA.md"` (`string`)
+- `governance_surface.validator_provenance.governance`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
+- `governance_surface.validator_provenance.governance_inventory`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
 - `governance_surface.validator_provenance.governance_surface`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
 - `governance_surface.validator_provenance.handoff_lifecycle`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
 - `governance_surface.validator_provenance.live_board_visual_roles`: `"docs/governance/NATIVE_AND_PLATFORM.md"` (`string`)
@@ -2466,6 +2482,7 @@ Parameters:
 - `governance_surface.validator_provenance.maintenance_docs`: `"docs/governance/CONFIG_AND_GENERATED_DATA.md"` (`string`)
 - `governance_surface.validator_provenance.menu_graph`: `"docs/governance/CONFIG_AND_GENERATED_DATA.md"` (`string`)
 - `governance_surface.validator_provenance.native_cpp_tooling`: `"docs/governance/NATIVE_AND_PLATFORM.md"` (`string`)
+- `governance_surface.validator_provenance.pack_sanitation`: `"docs/governance/SECURITY_AND_SANITATION.md"` (`string`)
 - `governance_surface.validator_provenance.policy_compliance`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
 - `governance_surface.validator_provenance.policy_compliance_repo`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
 - `governance_surface.validator_provenance.policy_pack_canonical`: `"docs/governance/CONFIG_AND_GENERATED_DATA.md"` (`string`)
@@ -2477,6 +2494,7 @@ Parameters:
 - `governance_surface.validator_provenance.ruff_c901`: `"docs/governance/ENGINEERING.md"` (`string`)
 - `governance_surface.validator_provenance.ruff_format`: `"docs/governance/ENGINEERING.md"` (`string`)
 - `governance_surface.validator_provenance.secret_scan`: `"docs/governance/SECURITY_AND_SANITATION.md"` (`string`)
+- `governance_surface.validator_provenance.template_drift`: `"docs/governance/CHANGE_GOVERNANCE.md"` (`string`)
 - `governance_surface.validator_provenance.topology_contract_codegen`: `"docs/governance/CONFIG_AND_GENERATED_DATA.md"` (`string`)
 - `governance_surface.validator_provenance.utility_reuse`: `"docs/governance/ENGINEERING.md"` (`string`)
 - `governance_surface.validator_provenance.wheel_reuse_rules`: `"docs/governance/ENGINEERING.md"` (`string`)

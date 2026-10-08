@@ -48,7 +48,10 @@ source.
 `gov check` loads the versioned JSON schemas as structural authority, then
 extends them with stable-ID uniqueness, authority reachability, route
 reachability, route-facade parity, generated relationships, path sanitation,
-field-use classification, and pinned-pack checks.
+field-use classification, and pinned-pack checks. Generic generated-output
+declarations are checked without starting application renderers. Explicit
+`gov check --generated` executes those checks in the selected consumer
+environment; governed verification runners must require it.
 
 Reachability is enforced in both directions. An authority that no route
 references, and a route that no execution profile or representative scenario
@@ -270,13 +273,20 @@ and objects must be constrained empty. Tests execute the registry and the
 contradiction catalog, including actual emissions for every advertised code.
 The registry is a coverage index, not proof by declaration.
 
-Generic generated surfaces in v0.1 support compatibility facades only. Drift
-emits `CONFLICTING_VALUE`; `STALE_GENERATED_SURFACE` is not a public capability.
-CONFIGURATION_REFERENCE and USER_SETTINGS_REFERENCE remain solely checked by
-`generate_configuration_reference.py --check`. PROJECT_STRUCTURE and
-CURRENT_STATE generated blocks remain solely checked by
-`generate_maintenance_docs.py --check`. Broader generated-artifact migration is
-deferred. The configuration reference covers `config/**`; workspace membership
+Runtime 0.5 extends generated surfaces with checkout-local renderer checks.
+Default checks and context resolution remain dependency-light. The mandatory
+`gov check --generated` verification step runs renderers after environment
+certification; structural success alone does not establish generated parity.
+Drift emits `CONFLICTING_VALUE`; `STALE_GENERATED_SURFACE` is not a public capability.
+CONFIGURATION_REFERENCE and USER_SETTINGS_REFERENCE are both declared outputs
+checked through the original `generate_configuration_reference.py --check`
+renderer and its selected consumer environment. The original `config_reference`
+verification family remains required while the generic checker is independently
+reviewed. Mutation detection covers Git-visible files and declared authorities,
+renderer, outputs and pack; ignored caches and Git administrative metadata are
+outside that guard, and it is not an OS sandbox. PROJECT_STRUCTURE and
+CURRENT_STATE generated blocks retain `generate_maintenance_docs.py --check`.
+Broader generated-artifact migration remains deferred. The configuration reference covers `config/**`; workspace membership
 at `.governance/workspace.json` is explicitly outside its scope and checked by
 `gov check`.
 
@@ -291,6 +301,11 @@ extracted here. Pack hashing ignores platform `.DS_Store` files through the
 manifest exclusion mechanism, alongside bytecode caches.
 
 ## Canonical upstream boundary
+
+The local all-repository distribution contract is
+`docs/architecture/workspace_governance_distribution.md`; it retains the existing
+`workspace/policy-kit` logical authority. Immutable export identity, publisher
+responsibility and reconstruction remain acceptance requirements.
 
 The vendored pack lock proves the identity of bytes consumed inside Tet4D; it
 does not identify an external canonical source. No current workspace or project
@@ -460,3 +475,20 @@ invocation results. Calibration, treatment-versus-control comparison,
 governance-effectiveness metrics, the G1 compatibility outcome and postmortem
 aggregation stay outside the pack and consume its interface. They never decide
 what is logged.
+
+## Portable consumers and local fleet distribution
+
+Runtime 0.5 declares its own Python floor separately from an application. The
+`tools` environment profile certifies the declared governance interpreter and
+route tools without requiring a consumer pyproject or application imports. The
+existing/default Python profile retains application and source certification.
+Direct command and owner declarations are exclusive alternatives to complete
+legacy pointers; no generated outputs is valid.
+
+The distribution contract is `workspace_governance_distribution.md`. Fleet
+plan/apply/audit/undo uses immutable release bytes, private machine registries,
+exact replacement preimages and real verifier hooks. The bounded portable
+secret scanner checks Git-visible text patterns; ignored/history/binary/large
+inputs and semantic secret review remain outside its coverage. Existing stronger
+consumer scanners and checks remain required. Shared skills guide bounded
+context and migration; required runners enforce machinery.

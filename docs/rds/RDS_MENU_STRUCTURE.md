@@ -126,6 +126,11 @@ Main Menu
   parity inspection, and non-live topology/endgame demonstrations, but routes
   through a secondary `Advanced / Diagnostics` screen rather than competing
   with Play as a top-level action.
+- Godot Main Menu Play launches the current validated setup directly. Play
+  3D/4D and shortcuts `3`/`4` launch their mode-specific validated setups;
+  legacy `2` directly launches Play 2D. Change Setup (`C`) opens the current
+  mode's configuration without launching. Invalid drafts cannot launch by
+  button or shortcut. See `docs/architecture/editable_board_setup_and_persistence.md`.
 
 ### 4.2 In-game pause menu map
 
@@ -316,6 +321,25 @@ disabled control emits no activation.
 ### 5.3 Text/readability
 
 1. Default body text should target at least 18 px equivalent in current window scale.
+   Godot menu/help body text uses 24 logical pixels and supporting text uses 22;
+   display scaling and the persisted UI-scale preference apply on top.
+   Helper keycaps and action labels use at least 22 logical pixels in every
+   density. Compact density may reduce spacing, never text size; keycaps size
+   from their font metrics and operation labels wrap rather than truncate.
+   Main and Advanced menu panels grow with the available window width and
+   height, with bounded outer margins. Command rows share extra vertical space,
+   wrap descriptions, and remain reachable by scrolling in compact windows.
+   At maximum UI scale the scroll surface stays inside the physical window;
+   shell minimums must not enlarge the transformed layout beyond its viewport.
+   Guidance panels retain a 170 px minimum with compact padding so the larger
+   text preserves the primary board's required viewport share.
+   Live header chrome retains its compact 18/16 px scale; onboarding guidance
+   uses the larger help scale. PIECE and VIEW scroll internally when their
+   readable rows exceed the available height, keeping NEXT/HOLD alongside them
+   on standard/wide windows. Normal deck rows reserve 220 px. Preview status
+   text wraps, and live-mode/density rebuilds reapply keycap styling.
+   The live control deck caps its height at 28% of the shell (subject to its
+   row floor), scrolling extra rows to preserve space for the primary board in compact windows.
 2. Maintain text/background contrast aligned with WCAG minimum guidance.
 3. Avoid crowded line wrapping in options; keep one option per row.
 4. Titles should use capitalized display text rather than stacked
