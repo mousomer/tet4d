@@ -18,6 +18,8 @@ func run() -> Array:
 	var app = root.get_node("App")
 	var hud = root.get_node("ReplayHud")
 	app._enter_live_2d_mode()
+	# Compare board allocation with guidance hidden; guide layout has separate acceptance.
+	hud._set_onboarding_visible(false)
 	await tree.process_frame
 	await tree.process_frame
 	var hash_before := str(app._live_bridge.live_2d_state_hash())

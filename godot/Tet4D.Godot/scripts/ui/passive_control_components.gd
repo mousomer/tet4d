@@ -2,6 +2,7 @@ extends RefCounted
 
 class_name PassiveControlComponents
 
+const Tokens = preload("res://scripts/ui/style/shell_design_tokens.gd")
 
 static func section(title_text: String, role: String, density: String = "normal") -> VBoxContainer:
 	var box := VBoxContainer.new()
@@ -11,8 +12,9 @@ static func section(title_text: String, role: String, density: String = "normal"
 	var title := Label.new()
 	title.name = "ControlSectionTitle"
 	title.text = title_text
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title.theme_type_variation = "SecondaryLabel"
-	title.add_theme_font_size_override("font_size", 10 if density == "compact" else 11)
+	title.add_theme_font_size_override("font_size", Tokens.FONT_SECTION)
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(title)
 	return box
@@ -27,11 +29,10 @@ static func row(operation: String, binding: String, role: String, density: Strin
 	var operation_label := Label.new()
 	operation_label.name = "ControlRowOperation"
 	operation_label.text = operation
-	operation_label.theme_type_variation = "DimLabel" if density == "compact" else "SecondaryLabel"
-	operation_label.add_theme_font_size_override("font_size", 10 if density == "compact" else 11)
-	operation_label.custom_minimum_size.x = 50.0 if density == "compact" else 64.0
+	operation_label.add_theme_font_size_override("font_size", Tokens.FONT_CONTROL_HINT)
+	operation_label.custom_minimum_size.x = 50.0 if density == "compact" else 56.0
 	operation_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	operation_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	operation_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	operation_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	result.add_child(operation_label)
 	result.add_child(binding_pair(binding, density, pointer))
@@ -53,9 +54,10 @@ static func keycap(binding: String, density: String = "normal", pointer := false
 	result.name = "PointerGestureKeycap" if pointer else "Keycap"
 	result.text = binding
 	result.theme_type_variation = "KeycapLabel"
-	result.add_theme_font_size_override("font_size", 10 if density == "compact" else 11)
+	result.add_theme_font_size_override("font_size", Tokens.FONT_CONTROL_HINT)
 	result.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	result.custom_minimum_size = Vector2(maxf(24.0, 8.0 + binding.length() * (5.2 if density == "compact" else 5.8)), 18.0)
+	# Text metrics own the chip size. Density may reduce gaps, never glyph size.
+	result.custom_minimum_size = Vector2.ZERO
 	result.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	result.set_meta("semantic_role", "pointer_gesture" if pointer else "passive_keycap")
 	return result

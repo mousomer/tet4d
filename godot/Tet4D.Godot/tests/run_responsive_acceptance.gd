@@ -27,6 +27,7 @@ const CASES := [
 var _failures: Array = []
 # Optional evidence: pass `-- capture_dir=/abs/path` to save one PNG per assertion.
 var _capture_dir := ""
+var _ordinary_game := false
 
 
 func _initialize() -> void:
@@ -38,11 +39,13 @@ func _run() -> void:
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("capture_dir="):
 			_capture_dir = argument.trim_prefix("capture_dir=")
+		elif argument == "ordinary_game":
+			_ordinary_game = true
 	if DisplayServer.get_name() == "headless":
 		push_error("Stage 56G responsive acceptance requires a windowed DisplayServer, got headless")
 		quit(2)
 		return
-	var scene := load("res://scenes/trace_replay.tscn") as PackedScene
+	var scene := load("res://scenes/game_bootstrap.tscn" if _ordinary_game else "res://scenes/trace_replay.tscn") as PackedScene
 	var scene_root := scene.instantiate() as Control
 	root.add_child(scene_root)
 	var hud = scene_root.get_node("ReplayHud")
@@ -68,12 +71,18 @@ func _run() -> void:
 		if not active_mode.is_empty():
 			_assert_case(hud, case, "%s resize" % active_mode)
 		for mode in ["2D", "3D", "4D"]:
-			match mode:
-				"2D": app._enter_live_2d_mode()
-				"3D": app._enter_live_3d_mode()
-				"4D": app._enter_live_4d_mode()
+			if _ordinary_game:
+				app._start_configured_live_game(hud.configured_live_setup("live_%s" % mode.to_lower()))
+				hud._set_onboarding_visible(false)
+			else:
+				match mode:
+					"2D": app._enter_live_2d_mode()
+					"3D": app._enter_live_3d_mode()
+					"4D": app._enter_live_4d_mode()
 			for i in range(8):
 				await process_frame
+			if _ordinary_game and (str(app._current_snapshot).contains("TRACE_") or hud.design_affordances_enabled()):
+				_fail("%s ordinary game must exclude trace fixtures and Designer affordances" % mode)
 			_assert_case(hud, case, mode)
 			_capture(case, mode, "hold_empty")
 			# NEXT/HOLD must also fit with an occupied HOLD preview (R3.1).
@@ -88,7 +97,7 @@ func _run() -> void:
 				_capture(case, mode, "hold_occupied")
 			active_mode = mode
 	if _failures.is_empty():
-		print("STAGE_56G_RESPONSIVE_ACCEPTANCE PASS (%d mode entries + %d active resizes)" % [CASES.size() * 3, CASES.size() - 1])
+		print("STAGE_56G_RESPONSIVE_ACCEPTANCE PASS (%d mode entries + %d active resizes; ordinary_game=%s)" % [CASES.size() * 3, CASES.size() - 1, str(_ordinary_game)])
 		quit(0)
 		return
 	for failure in _failures:

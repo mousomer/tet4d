@@ -21,7 +21,7 @@ const MAX_DECK_ROWS := 3
 # have to be TALLER to stay contained. Capping the deck and scrolling the
 # overflow keeps every control reachable at any size; the cost is that not all
 # of them are visible at once, which is the accepted tradeoff for small shells.
-const MAX_DECK_HEIGHT_SHARE := 0.34
+const MAX_DECK_HEIGHT_SHARE := 0.28
 # Outer shell margin on each side of the cockpit.
 const DECK_HORIZONTAL_INSET := 24.0
 
@@ -42,6 +42,7 @@ var _row_assignment: Array = []
 var _packing_in_progress := false
 var _last_packing_width := -1.0
 var _last_module_minimums := Vector3.ZERO
+var _last_module_heights := Vector3.ZERO
 var _natural_deck_height := 0.0
 var _scroll_required := false
 
@@ -52,6 +53,7 @@ func _init() -> void:
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	header_slot = _slot("Header")
+	header_slot.set_meta("shell_chrome", true)
 	add_child(header_slot)
 	primary_board_surface = _slot("PrimaryBoardSurface")
 	primary_board_surface.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -163,7 +165,7 @@ func _on_deck_metrics_changed() -> void:
 		return
 	var width := _packing_width()
 	var minimums := _module_minimums()
-	if is_equal_approx(width, _last_packing_width) and minimums.is_equal_approx(_last_module_minimums):
+	if is_equal_approx(width, _last_packing_width) and minimums.is_equal_approx(_last_module_minimums) and _module_heights().is_equal_approx(_last_module_heights):
 		return
 	_apply_responsive_policy()
 
@@ -173,6 +175,14 @@ func _module_minimums() -> Vector3:
 		piece_controls.get_combined_minimum_size().x,
 		view_controls.get_combined_minimum_size().x,
 		piece_state.get_combined_minimum_size().x
+	)
+
+
+func _module_heights() -> Vector3:
+	return Vector3(
+		piece_controls.get_combined_minimum_size().y,
+		view_controls.get_combined_minimum_size().y,
+		piece_state.get_combined_minimum_size().y
 	)
 
 
@@ -199,6 +209,7 @@ func _apply_responsive_policy() -> void:
 	_scroll_required = natural_height > deck_height + 0.5
 	_last_packing_width = available
 	_last_module_minimums = _module_minimums()
+	_last_module_heights = _module_heights()
 	_packing_in_progress = false
 	# Both packing inputs are only final after a layout pass, and the first pass
 	# may see a transient width. Re-check once the pass settles; the width and
@@ -288,7 +299,7 @@ func _natural_height_for_rows(packed: Array, profile_floor: float, row_separatio
 
 
 func _row_height_for_profile() -> float:
-	var base := 150.0 if _density == "compact" else (220.0 if _density == "detailed" else 190.0)
+	var base := 150.0 if _density == "compact" else 220.0
 	match _responsive_profile:
 		PROFILE_NARROW:
 			return minf(base, 170.0)

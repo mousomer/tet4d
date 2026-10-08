@@ -738,6 +738,7 @@ func _configure_live_cockpit_mode(mode: String) -> void:
 			_hud_density,
 			mode
 		)
+		_style_applier.apply_to_tree(_live_view_control_strip, _style_manager)
 	_update_camera_guidance(mode)
 	if _inspector_hint_panel != null:
 		_inspector_hint_panel.set_meta("hint_cache_key", "")
@@ -1029,11 +1030,13 @@ func handle_main_menu_shortcut(event: InputEvent) -> bool:
 		return false
 	match key_event.keycode:
 		KEY_2:
-			open_game_setup(GameSetupSpecScript.MODE_2D)
+			start_current_validated_setup(GameSetupSpecScript.MODE_2D)
 		KEY_3:
-			open_game_setup(GameSetupSpecScript.MODE_3D)
+			start_current_validated_setup(GameSetupSpecScript.MODE_3D)
 		KEY_4:
-			open_game_setup(GameSetupSpecScript.MODE_4D)
+			start_current_validated_setup(GameSetupSpecScript.MODE_4D)
+		KEY_C:
+			open_game_setup(_game_setup_model.current_mode)
 		KEY_L:
 			if not _design_affordances_enabled:
 				return false
@@ -1885,6 +1888,7 @@ func _apply_hud_density(density: String) -> void:
 			_hud_density,
 			_active_live_mode
 		)
+		_style_applier.apply_to_tree(_live_view_control_strip, _style_manager)
 	_set_live_inspector_density(_bottom_panel != null and not _bottom_panel.visible)
 	_update_live_view_action_labels()
 	_apply_responsive_layout()
@@ -2676,24 +2680,38 @@ func _make_screen() -> Control:
 	return screen
 
 
-func _build_main_menu_screen(screen: Control) -> void:
-	_main_menu_scroll = ScrollContainer.new()
-	_main_menu_scroll.name = "MainMenuScroll"
-	_main_menu_scroll.focus_mode = Control.FOCUS_ALL
-	_main_menu_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_main_menu_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	_main_menu_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_main_menu_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_fill_parent(_main_menu_scroll)
-	screen.add_child(_main_menu_scroll)
-	var center := CenterContainer.new()
-	center.custom_minimum_size = Vector2(720, 0)
-	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	center.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	_main_menu_scroll.add_child(center)
+func _make_menu_surface(screen: Control, scroll_name: String) -> PanelContainer:
+	var scroll := ScrollContainer.new()
+	scroll.name = scroll_name
+	scroll.focus_mode = Control.FOCUS_ALL
+	scroll.follow_focus = true
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	_fill_parent(scroll)
+	screen.add_child(scroll)
+	var surround := MarginContainer.new()
+	surround.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	surround.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	surround.add_theme_constant_override("margin_top", ShellDesignTokensScript.SPACE_4)
+	surround.add_theme_constant_override("margin_bottom", ShellDesignTokensScript.SPACE_4)
+	scroll.add_child(surround)
+	scroll.resized.connect(func() -> void:
+		var side_margin := maxi(ShellDesignTokensScript.SPACE_4, int(minf(
+			scroll.size.x * ShellDesignTokensScript.MENU_SIDE_MARGIN_SHARE,
+			(scroll.size.x - ShellDesignTokensScript.MENU_MIN_WIDTH) * 0.5
+		)))
+		surround.add_theme_constant_override("margin_left", side_margin)
+		surround.add_theme_constant_override("margin_right", side_margin)
+	)
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(720, 0)
-	center.add_child(panel)
+	panel.name = "%sPanel" % scroll_name
+	surround.add_child(panel)
+	return panel
+
+
+func _build_main_menu_screen(screen: Control) -> void:
+	var panel := _make_menu_surface(screen, "MainMenuScroll")
+	_main_menu_scroll = panel.get_parent().get_parent() as ScrollContainer
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", ShellDesignTokensScript.SPACE_6)
 	margin.add_theme_constant_override("margin_top", ShellDesignTokensScript.SPACE_6)
@@ -2720,6 +2738,7 @@ func _build_main_menu_screen(screen: Control) -> void:
 	subtitle.text = "A geometry instrument across two, three, and four dimensions."
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	subtitle.theme_type_variation = "SecondaryLabel"
+	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	subtitle.add_theme_font_size_override("font_size", ShellDesignTokensScript.FONT_BODY)
 	layout.add_child(subtitle)
 	layout.add_child(_menu_group_header("PLAY"))
@@ -2782,12 +2801,7 @@ func _build_main_menu_screen(screen: Control) -> void:
 
 
 func _build_advanced_screen(screen: Control) -> void:
-	var center := CenterContainer.new()
-	_fill_parent(center)
-	screen.add_child(center)
-	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(720, 0)
-	center.add_child(panel)
+	var panel := _make_menu_surface(screen, "AdvancedMenuScroll")
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 48)
 	margin.add_theme_constant_override("margin_top", 44)
@@ -3022,7 +3036,9 @@ func _make_command_card(label_text: String, description: String, shortcut: Strin
 	var button := Button.new()
 	button.name = "CommandCard__%s" % label_text.replace(" ", "_").replace("/", "_")
 	button.text = "%s        %s\n%s" % [label_text, shortcut, description]
-	button.custom_minimum_size = Vector2(480, 52)
+	button.custom_minimum_size = Vector2(0, ShellDesignTokensScript.MENU_COMMAND_MIN_HEIGHT)
+	button.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.add_theme_font_size_override("font_size", ShellDesignTokensScript.FONT_BODY)
 	button.tooltip_text = "%s - %s" % [label_text, description]
@@ -3316,10 +3332,18 @@ func _apply_responsive_layout() -> void:
 func _apply_shell_extents() -> void:
 	var viewport_size := get_viewport_rect().size
 	var ui_scale := maxf(_ui_scale_factor, 0.01)
+	var available := viewport_size / ui_scale
+	# Window.min_size owns the physical window floor. Reapplying that floor to
+	# transformed Controls makes large text push the menu's scroll viewport
+	# outside the real window instead of letting the content scroll within it.
+	var minimum := ReplayVisuals.supported_live_shell_minimum_size() if not _active_live_mode.is_empty() else ReplayVisuals.supported_shell_minimum_size()
+	custom_minimum_size = minimum.min(available)
+	if _shell_root_margin != null:
+		_shell_root_margin.custom_minimum_size = custom_minimum_size
 	offset_left = 0.0
 	offset_top = 0.0
-	offset_right = viewport_size.x / ui_scale
-	offset_bottom = viewport_size.y / ui_scale
+	offset_right = available.x
+	offset_bottom = available.y
 
 
 func _sync_design_resolution() -> void:

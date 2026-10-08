@@ -7,6 +7,7 @@ const TRON_THEME_PATH := "res://themes/replay_tron_theme.tres"
 const PLAIN_THEME_PATH := "res://themes/replay_theme.tres"
 const ShellStyleManagerScript = preload("res://scripts/ui/style/shell_style_manager.gd")
 const ShellStyleRolesScript = preload("res://scripts/ui/style/shell_style_roles.gd")
+const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
 const PresentationProfileScript = preload("res://scripts/presentation/presentation_profile.gd")
 
 const DISPLAY_MODE_DIAGNOSTIC := "diagnostic"
@@ -218,7 +219,9 @@ static func build_theme(mode: String = DISPLAY_MODE_PLAIN) -> Theme:
 			theme_path = TRON_THEME_PATH
 		DISPLAY_MODE_PLAIN:
 			theme_path = PLAIN_THEME_PATH
-	return load(theme_path).duplicate() as Theme
+	var shell_theme := load(theme_path).duplicate() as Theme
+	shell_theme.default_font_size = ShellDesignTokensScript.FONT_BODY
+	return shell_theme
 
 
 static func active_cell_material(mode: String = DISPLAY_MODE_PLAIN, color_id: int = 1, opacity: float = -1.0) -> StandardMaterial3D:

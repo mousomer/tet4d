@@ -20,6 +20,7 @@ const TEST_SCRIPTS := [
 	"res://tests/test_shell_settings_persistence.gd",
 	"res://tests/test_shell_display_settings.gd",
 	"res://tests/test_display_presentation_runtime.gd",
+	"res://tests/test_menu_responsive_layout.gd",
 	"res://tests/test_accessibility_runtime.gd",
 	"res://tests/test_game_setup_model.gd",
 	"res://tests/test_board_extent_contract.gd",

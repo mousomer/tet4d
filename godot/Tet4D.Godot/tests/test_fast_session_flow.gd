@@ -21,6 +21,7 @@ func run() -> Array:
 		return ["game bootstrap must contain TraceReplayApp"]
 
 	await _assert_main_menu_play_and_setup(failures, app)
+	await _assert_menu_shortcuts(failures, app)
 	await _assert_restart_preserves_setup(failures, app, TraceReplayAppScript.MODE_LIVE_2D, [10, 20])
 	await _assert_restart_preserves_setup(failures, app, TraceReplayAppScript.MODE_LIVE_3D, [4, 8, 4])
 	await _assert_restart_preserves_setup(failures, app, TraceReplayAppScript.MODE_LIVE_4D, [4, 8, 3, 3])
@@ -64,6 +65,88 @@ func _assert_main_menu_play_and_setup(failures: Array, app) -> void:
 		failures.append("Change Setup must open configuration UI")
 	if starts[0] != starts_before_setup:
 		failures.append("Change Setup must not start a game")
+
+
+func _assert_menu_shortcuts(failures: Array, app) -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var model = app._hud._game_setup_model
+	var starts := [0]
+	app._hud.live_game_start_requested.connect(func(_setup: Dictionary) -> void: starts[0] += 1)
+	var cases := [
+		{"key": KEY_2, "mode": GameSetupSpecScript.MODE_2D, "shape": [10, 20]},
+		{"key": KEY_3, "mode": GameSetupSpecScript.MODE_3D, "shape": [4, 8, 4]},
+		{"key": KEY_4, "mode": GameSetupSpecScript.MODE_4D, "shape": [4, 8, 3, 3]},
+	]
+	for case in cases:
+		var mode: String = case["mode"]
+		model.set_mode(mode)
+		model.reset_to_standard(mode)
+		for axis in case["shape"].size():
+			model.set_axis_text(axis, str(case["shape"][axis]))
+		var expected: Dictionary = app._hud.configured_live_setup(mode)
+		if expected.is_empty():
+			failures.append("%s shortcut fixture must be a valid setup" % mode)
+			continue
+		# Start from another menu mode to prove the digit selects its target.
+		model.set_mode(GameSetupSpecScript.MODE_4D if mode == GameSetupSpecScript.MODE_2D else GameSetupSpecScript.MODE_2D)
+		app._return_to_main_menu()
+		await tree.process_frame
+		var before: int = starts[0]
+		app._input(_menu_key(case["key"]))
+		await tree.process_frame
+		if starts[0] != before + 1 or app._mode != mode or app._hud.current_screen() != ReplayHudScript.SCREEN_VIEWER:
+			failures.append("%s digit shortcut must launch exactly once directly into its live viewer" % mode)
+		_assert_frozen_setup(failures, app, expected, "%s digit shortcut" % mode)
+
+		app._return_to_main_menu()
+		await tree.process_frame
+		before = starts[0]
+		app._input(_menu_key(KEY_C))
+		await tree.process_frame
+		if starts[0] != before or app._hud.current_screen() != ReplayHudScript.SCREEN_GAME_SETUP or model.current_mode != mode:
+			failures.append("%s C shortcut must open current-mode Setup without a session launch" % mode)
+		var frozen: Dictionary = app._active_live_setup.duplicate(true)
+		model.set_axis_text(0, "invalid")
+		if model.is_valid(mode):
+			failures.append("%s malformed draft must be invalid" % mode)
+		app._return_to_main_menu()
+		await tree.process_frame
+		app._input(_menu_key(case["key"]))
+		await tree.process_frame
+		if starts[0] != before or app._hud.current_screen() != ReplayHudScript.SCREEN_MAIN_MENU:
+			failures.append("%s digit shortcut must reject an invalid draft" % mode)
+		if app._hud.start_current_validated_setup(mode):
+			failures.append("%s button launch boundary must reject an invalid draft" % mode)
+		_assert_frozen_setup(failures, app, frozen, "%s invalid draft" % mode)
+		model.reset_to_standard(mode)
+
+	app._return_to_main_menu()
+	await tree.process_frame
+	for key in [KEY_2, KEY_3, KEY_4, KEY_C]:
+		for filter in ["release", "echo", "alt", "ctrl", "meta"]:
+			var event := _menu_key(key)
+			event.pressed = filter != "release"
+			event.echo = filter == "echo"
+			event.alt_pressed = filter == "alt"
+			event.ctrl_pressed = filter == "ctrl"
+			event.meta_pressed = filter == "meta"
+			var before: int = starts[0]
+			app._input(event)
+			if starts[0] != before or app._hud.current_screen() != ReplayHudScript.SCREEN_MAIN_MENU:
+				failures.append("menu shortcut %s must ignore %s events" % [str(key), filter])
+	app._hud.open_game_setup(model.current_mode)
+	var before: int = starts[0]
+	app._input(_menu_key(KEY_3))
+	if starts[0] != before or app._hud.current_screen() != ReplayHudScript.SCREEN_GAME_SETUP:
+		failures.append("Main Menu digit shortcuts must not launch from Setup")
+
+
+func _menu_key(key: int) -> InputEventKey:
+	var event := InputEventKey.new()
+	event.keycode = key
+	event.physical_keycode = key
+	event.pressed = true
+	return event
 
 
 func _assert_restart_preserves_setup(failures: Array, app, mode: String, shape: Array) -> void:

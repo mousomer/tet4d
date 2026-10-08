@@ -4,6 +4,7 @@ class_name LiveViewControlStrip
 
 const LiveInputContractScript = preload("res://scripts/input/live_input_contract.gd")
 const PassiveControlComponentsScript = preload("res://scripts/ui/passive_control_components.gd")
+const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
 
 var _mode := "live_4d"
 var _density := "normal"
@@ -17,12 +18,20 @@ func _init() -> void:
 	name = "LiveViewControlStrip"
 	theme_type_variation = "ViewportFrame"
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	set_meta("semantic_role", "passive_view_guidance")
+	var scroll := ScrollContainer.new()
+	scroll.name = "ViewHelpScroll"
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	scroll.mouse_filter = Control.MOUSE_FILTER_PASS
+	add_child(scroll)
 	var margin := MarginContainer.new()
 	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_%s" % side, 6)
-	add_child(margin)
+		margin.add_theme_constant_override("margin_%s" % side, ShellDesignTokensScript.SPACE_1)
+	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(margin)
 	var content := VBoxContainer.new()
 	content.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	content.add_theme_constant_override("separation", 3)
@@ -31,14 +40,14 @@ func _init() -> void:
 	title.name = "ViewControlTitle"
 	title.text = "VIEW"
 	title.theme_type_variation = "AccentLabel"
-	title.add_theme_font_size_override("font_size", 13)
+	title.add_theme_font_size_override("font_size", ShellDesignTokensScript.FONT_SECTION)
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	content.add_child(title)
 	_groups_box = GridContainer.new()
 	_groups_box.name = "ViewControlGroups"
 	_groups_box.columns = 2
 	_groups_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_groups_box.add_theme_constant_override("h_separation", 10)
+	_groups_box.add_theme_constant_override("h_separation", ShellDesignTokensScript.SPACE_2)
 	_groups_box.add_theme_constant_override("v_separation", 3)
 	content.add_child(_groups_box)
 
@@ -86,9 +95,7 @@ func _rebuild() -> void:
 		var role := str(group.get("cockpit_role", ""))
 		var section := PassiveControlComponentsScript.section(_section_title(role), role, _density)
 		section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		# The widest VIEW row ("Translate" + "Right Drag") needs ~136px; 205px
-		# keeps two aligned columns while leaving room for PIECE STATE on the
-		# first deck row at the standard 1440x900 window (Stage 56H-R3.1).
+		# Two readable columns leave room for PIECE STATE at standard widths.
 		section.custom_minimum_size.x = 205.0
 		for item in group.get("items", []):
 			var semantic := _semantic_row(role, item)

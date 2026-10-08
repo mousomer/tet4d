@@ -4,6 +4,7 @@ class_name LivePieceControlStrip
 
 const LiveInputContractScript = preload("res://scripts/input/live_input_contract.gd")
 const PassiveControlComponentsScript = preload("res://scripts/ui/passive_control_components.gd")
+const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
 
 var _mode := ""
 var _density := "normal"
@@ -17,15 +18,23 @@ func _init() -> void:
 	name = "LivePieceControlStrip"
 	theme_type_variation = "ViewportFrame"
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	set_meta("semantic_role", "passive_primary_gameplay_guidance")
+	var scroll := ScrollContainer.new()
+	scroll.name = "PieceHelpScroll"
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	scroll.mouse_filter = Control.MOUSE_FILTER_PASS
+	add_child(scroll)
 	var margin := MarginContainer.new()
 	margin.name = "PieceControlMargin"
 	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	for side in ["left", "right"]:
-		margin.add_theme_constant_override("margin_%s" % side, 7)
+		margin.add_theme_constant_override("margin_%s" % side, ShellDesignTokensScript.SPACE_1)
 	for side in ["top", "bottom"]:
 		margin.add_theme_constant_override("margin_%s" % side, 6)
-	add_child(margin)
+	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(margin)
 	var content := VBoxContainer.new()
 	content.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	content.add_theme_constant_override("separation", 4)
@@ -34,13 +43,13 @@ func _init() -> void:
 	title.name = "PieceControlTitle"
 	title.text = "PIECE"
 	title.theme_type_variation = "AccentLabel"
-	title.add_theme_font_size_override("font_size", 13)
+	title.add_theme_font_size_override("font_size", ShellDesignTokensScript.FONT_SECTION)
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	content.add_child(title)
 	_groups_box = HBoxContainer.new()
 	_groups_box.name = "PieceControlGroups"
 	_groups_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_groups_box.add_theme_constant_override("separation", 10)
+	_groups_box.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_2)
 	content.add_child(_groups_box)
 
 
@@ -97,11 +106,9 @@ func _rebuild() -> void:
 		var role := str(group.get("cockpit_role", ""))
 		var section := PassiveControlComponentsScript.section(_section_title(role), role, _density)
 		section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		# Floors keep columns steady between modes; they are not content widths.
-		# MOVE rows need ~121px in 3D/4D (2D's four caps exceed any floor), so a
-		# 160px floor still leaves slack while letting PIECE STATE share the
-		# first deck row at the standard 1440x900 window (Stage 56H-R3.1).
-		section.custom_minimum_size.x = 115.0 if role == "drop" else (160.0 if role == "translate" else 285.0)
+		# Reserve enough width for the full-size keycaps; wrapped operation text
+		# and internal vertical scrolling keep the three deck modules together.
+		section.custom_minimum_size.x = 115.0 if role == "drop" else (160.0 if role == "translate" else 248.0)
 		var row_parent: Container = section
 		if role == "rotate":
 			var rotation_grid := GridContainer.new()

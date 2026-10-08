@@ -34,7 +34,8 @@ func apply_panel(panel: Control, style_manager, elevated: bool = false) -> void:
 		border_role = ShellStyleRolesScript.GRID_MINOR
 	elif _is_elevated_panel(panel):
 		border_role = ShellStyleRolesScript.GRID_MAJOR
-	var style := _panel_box(style_manager, background_role, border_role, ShellDesignTokensScript.COMPACT_PADDING)
+	var padding := ShellDesignTokensScript.CONTROL_PADDING if panel.name in ["LivePieceControlStrip", "LiveViewControlStrip"] else ShellDesignTokensScript.COMPACT_PADDING
+	var style := _panel_box(style_manager, background_role, border_role, padding)
 	panel.add_theme_stylebox_override("panel", style)
 	panel.set_meta("shell_style_theme_id", style_manager.get_theme_id())
 
@@ -110,13 +111,18 @@ func _apply_label(label: Label, style_manager) -> void:
 	elif label.name.find("GameOver") >= 0:
 		role = ShellStyleRolesScript.STATE_GAME_OVER
 	label.add_theme_color_override("font_color", style_manager.get_color(role))
-	if label.name.find("Title") >= 0 and label.name.find("Subtitle") < 0:
-		label.add_theme_font_size_override("font_size", ShellDesignTokensScript.FONT_SCREEN_TITLE)
+	if label.name in ["ControlSectionTitle", "PieceControlTitle", "ViewControlTitle", "NextPieceTitle", "HoldPieceTitle"]:
+		label.add_theme_font_size_override("font_size", _font_size(label, ShellDesignTokensScript.FONT_SECTION))
+	elif label.name.find("Title") >= 0 and label.name.find("Subtitle") < 0:
+		label.add_theme_font_size_override("font_size", _font_size(label, ShellDesignTokensScript.FONT_SCREEN_TITLE))
 	elif label.name.find("SectionHeader") >= 0:
-		label.add_theme_font_size_override("font_size", ShellDesignTokensScript.FONT_SECTION)
+		label.add_theme_font_size_override("font_size", _font_size(label, ShellDesignTokensScript.FONT_SECTION))
 	elif label.theme_type_variation in ["DimLabel", "SecondaryLabel"]:
-		label.add_theme_font_size_override("font_size", ShellDesignTokensScript.FONT_SUPPORTING)
+		label.add_theme_font_size_override("font_size", _font_size(label, ShellDesignTokensScript.FONT_SUPPORTING))
+	else:
+		label.add_theme_font_size_override("font_size", _font_size(label, maxi(label.get_theme_font_size("font_size"), ShellDesignTokensScript.FONT_SUPPORTING)))
 	if label.theme_type_variation == "KeycapLabel":
+		label.add_theme_font_size_override("font_size", _font_size(label, ShellDesignTokensScript.FONT_CONTROL_HINT))
 		label.add_theme_stylebox_override("normal", _keycap_box(style_manager))
 	elif label.name.find("StatusBadge") >= 0:
 		var badge_border := ShellStyleRolesScript.ACCENT_PRIMARY
@@ -131,6 +137,7 @@ func _apply_label(label: Label, style_manager) -> void:
 
 
 func _apply_button(button: Button, style_manager) -> void:
+	button.add_theme_font_size_override("font_size", _font_size(button, ShellDesignTokensScript.FONT_BODY))
 	button.add_theme_color_override("font_color", style_manager.get_color(ShellStyleRolesScript.TEXT_PRIMARY))
 	button.add_theme_color_override("font_hover_color", style_manager.get_color(ShellStyleRolesScript.TEXT_PRIMARY))
 	button.add_theme_color_override("font_pressed_color", style_manager.get_color(ShellStyleRolesScript.TEXT_INVERSE))
@@ -148,7 +155,7 @@ func _apply_action_button(button: Button, style_manager) -> void:
 	button.add_theme_color_override("font_hover_color", style_manager.get_color(ShellStyleRolesScript.TEXT_PRIMARY))
 	button.add_theme_color_override("font_pressed_color", style_manager.get_color(ShellStyleRolesScript.TEXT_INVERSE))
 	button.add_theme_color_override("font_disabled_color", style_manager.get_color(ShellStyleRolesScript.TEXT_MUTED))
-	button.add_theme_font_size_override("font_size", ShellDesignTokensScript.FONT_BODY)
+	button.add_theme_font_size_override("font_size", _font_size(button, ShellDesignTokensScript.FONT_BODY))
 	var margin := ShellDesignTokensScript.CONTROL_PADDING + ShellDesignTokensScript.SPACE_1
 	button.add_theme_stylebox_override("normal", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_ELEVATED, ShellStyleRolesScript.ACCENT_PRIMARY, margin, 2))
 	button.add_theme_stylebox_override("hover", _button_box(style_manager, ShellStyleRolesScript.ACCENT_SOFT, ShellStyleRolesScript.ACCENT_FOCUS, margin, 2))
@@ -173,6 +180,7 @@ func _apply_error_button(button: Button, style_manager) -> void:
 
 
 func _apply_checkbox(checkbox: CheckBox, style_manager) -> void:
+	checkbox.add_theme_font_size_override("font_size", _font_size(checkbox, ShellDesignTokensScript.FONT_BODY))
 	checkbox.add_theme_color_override("font_color", style_manager.get_color(ShellStyleRolesScript.TEXT_PRIMARY))
 	checkbox.add_theme_color_override("font_hover_color", style_manager.get_color(ShellStyleRolesScript.TEXT_PRIMARY))
 	checkbox.add_theme_color_override("font_pressed_color", style_manager.get_color(ShellStyleRolesScript.TEXT_PRIMARY))
@@ -211,11 +219,29 @@ func _apply_slider(slider: HSlider, style_manager) -> void:
 
 
 func _apply_line_edit(line_edit: LineEdit, style_manager) -> void:
+	line_edit.add_theme_font_size_override("font_size", _font_size(line_edit, ShellDesignTokensScript.FONT_BODY))
 	line_edit.add_theme_color_override("font_color", style_manager.get_color(ShellStyleRolesScript.TEXT_PRIMARY))
 	line_edit.add_theme_color_override("font_placeholder_color", style_manager.get_color(ShellStyleRolesScript.TEXT_MUTED))
 	line_edit.add_theme_color_override("caret_color", style_manager.get_color(ShellStyleRolesScript.ACCENT_FOCUS))
 	line_edit.add_theme_stylebox_override("normal", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_BOARD, ShellStyleRolesScript.GRID_MINOR))
 	line_edit.add_theme_stylebox_override("focus", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_BOARD, ShellStyleRolesScript.ACCENT_FOCUS, 8, _focus_border_width(style_manager)))
+
+
+func _font_size(control: Control, readable_size: int) -> int:
+	# The session header retains its existing compact chrome. Menus, help pages,
+	# and passive guidance use the larger readable type scale independently.
+	var ancestor: Node = control
+	while ancestor != null:
+		if bool(ancestor.get_meta("readable_guidance", false)):
+			return readable_size
+		if bool(ancestor.get_meta("shell_chrome", false)):
+			if readable_size >= ShellDesignTokensScript.FONT_SCREEN_TITLE:
+				return ShellDesignTokensScript.FONT_CHROME_TITLE
+			if readable_size == ShellDesignTokensScript.FONT_BODY:
+				return ShellDesignTokensScript.FONT_CHROME_BODY
+			return ShellDesignTokensScript.FONT_CHROME_SUPPORTING
+		ancestor = ancestor.get_parent()
+	return readable_size
 
 
 func _flat_box(style_manager, background_role: String, border_role: String, radius: int = ShellDesignTokensScript.RADIUS_PANEL, content_margin: int = ShellDesignTokensScript.CONTROL_PADDING, border_width: int = ShellDesignTokensScript.BORDER_STANDARD) -> StyleBoxFlat:

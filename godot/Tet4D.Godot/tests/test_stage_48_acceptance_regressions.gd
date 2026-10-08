@@ -54,8 +54,8 @@ func run() -> Array:
 	if not hud.handle_main_menu_shortcut(_key_event(KEY_D)) or hud.current_screen() != hud.SCREEN_ADVANCED:
 		failures.append("advertised D shortcut should activate Advanced / Diagnostics")
 	hud.show_screen("main_menu")
-	if not hud.handle_main_menu_shortcut(_key_event(KEY_2)) or hud.current_screen() != hud.SCREEN_GAME_SETUP:
-		failures.append("advertised 2 shortcut should open Play 2D setup")
+	if not hud.handle_main_menu_shortcut(_key_event(KEY_C)) or hud.current_screen() != hud.SCREEN_GAME_SETUP:
+		failures.append("advertised C shortcut should open Change Setup")
 	hud.show_screen("main_menu")
 	var app = root.get_node_or_null("App")
 	if app == null:

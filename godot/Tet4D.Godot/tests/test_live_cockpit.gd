@@ -85,6 +85,7 @@ func _check_production_extraction() -> Array:
 	# Other in-process tests exercise global accessibility and onboarding state.
 	# This geometry contract has a standard-density, no-overlay precondition.
 	hud._apply_ui_scale("standard")
+	hud._apply_hud_density("standard")
 	hud._set_onboarding_visible(false)
 	await tree.process_frame
 	await tree.process_frame
