@@ -14,6 +14,12 @@ const CockpitScript = preload("res://scripts/ui/live_cockpit.gd")
 
 const MIN_GAME_WIDTH_SHARE := 0.55
 const MIN_GAME_HEIGHT_SHARE := 0.30
+# Live 2D puts its controls in a rail beside the tall board, so width share is
+# the wrong measure there; what matters is how much height the board gets.
+# Python drew 79% at its 1200x760 default. The fixed live header costs a
+# larger share of a small window, so narrow/small shells get a lower floor.
+const MIN_2D_BOARD_HEIGHT_SHARE := 0.60
+const MIN_2D_BOARD_HEIGHT_SHARE_SMALL := 0.45
 
 const CASES := [
 	{"points": Vector2i(1728, 1080), "profile": CockpitScript.PROFILE_WIDE, "next_hold_without_scroll": true},
@@ -69,7 +75,7 @@ func _run() -> void:
 		# entry. Keep it in the matrix so deferred container sorting cannot leave
 		# controls clipped until the player changes mode.
 		if not active_mode.is_empty():
-			_assert_case(hud, case, "%s resize" % active_mode)
+			_assert_case(hud, app, case, "%s resize" % active_mode)
 		for mode in ["2D", "3D", "4D"]:
 			if _ordinary_game:
 				app._start_configured_live_game(hud.configured_live_setup("live_%s" % mode.to_lower()))
@@ -83,7 +89,7 @@ func _run() -> void:
 				await process_frame
 			if _ordinary_game and (str(app._current_snapshot).contains("TRACE_") or hud.design_affordances_enabled()):
 				_fail("%s ordinary game must exclude trace fixtures and Designer affordances" % mode)
-			_assert_case(hud, case, mode)
+			_assert_case(hud, app, case, mode)
 			_capture(case, mode, "hold_empty")
 			# NEXT/HOLD must also fit with an occupied HOLD preview (R3.1).
 			if bool(case.get("next_hold_without_scroll", false)):
@@ -93,7 +99,7 @@ func _run() -> void:
 					"4D": app._dispatch_live_4d_gameplay_command("hold")
 				for i in range(4):
 					await process_frame
-				_assert_case(hud, case, "%s hold occupied" % mode)
+				_assert_case(hud, app, case, "%s hold occupied" % mode)
 				_capture(case, mode, "hold_occupied")
 			active_mode = mode
 	if _failures.is_empty():
@@ -106,7 +112,7 @@ func _run() -> void:
 	quit(1)
 
 
-func _assert_case(hud, case: Dictionary, mode: String) -> void:
+func _assert_case(hud, app, case: Dictionary, mode: String) -> void:
 	var points: Vector2i = case["points"]
 	var label := "%dx%d Live %s" % [points.x, points.y, mode]
 	var snapshot: Dictionary = hud.layout_contract_snapshot()
@@ -136,19 +142,33 @@ func _assert_case(hud, case: Dictionary, mode: String) -> void:
 	if board.intersects(deck):
 		_fail("%s must keep the game surface and control deck separate" % label)
 
+	var side_rail := str(cockpit.get("deck_placement", "")) == CockpitScript.PLACEMENT_SIDE
+	if side_rail != mode.begins_with("2D"):
+		_fail("%s must use the side rail exactly in Live 2D, got placement %s" % [label, cockpit.get("deck_placement")])
 	var flattened: Array = []
 	for row in cockpit.get("deck_row_assignment", []):
 		for module_name in row:
 			flattened.append(str(module_name))
-	if flattened != ["PieceControls", "ViewControls", "PieceState"]:
-		_fail("%s must preserve PIECE / VIEW / PIECE STATE order across rows, got %s" % [label, str(flattened)])
+	var expected_order := ["PieceState", "PieceControls"] if side_rail else ["PieceControls", "ViewControls", "PieceState"]
+	if flattened != expected_order:
+		_fail("%s must preserve module order %s, got %s" % [label, str(expected_order), str(flattened)])
 	for index in range(modules.size()):
+		if side_rail and index == 1:
+			continue
 		if not _contains(rows_rect, modules[index]):
 			_fail("%s module %d must stay inside the deck row host: %s in %s" % [label, index, modules[index], rows_rect])
 
 	var width_share := game_viewport.size.x / maxf(usable.size.x, 1.0)
 	var height_share := game_viewport.size.y / maxf(usable.size.y, 1.0)
-	if width_share < MIN_GAME_WIDTH_SHARE:
+	if side_rail:
+		if deck.position.x < board.end.x:
+			_fail("%s rail must sit to the right of the board: board %s rail %s" % [label, board, deck])
+		var camera: Camera3D = app._camera_rig._camera
+		var board_height := game_viewport.size.y * 20.0 / maxf(camera.size, 0.001)
+		var floor_share := MIN_2D_BOARD_HEIGHT_SHARE if str(case["profile"]) in [CockpitScript.PROFILE_WIDE, CockpitScript.PROFILE_STANDARD] else MIN_2D_BOARD_HEIGHT_SHARE_SMALL
+		if board_height / maxf(usable.size.y, 1.0) < floor_share:
+			_fail("%s 10x20 board must fill >= %d%% of window height, got %.0fpx of %.0f" % [label, int(floor_share * 100.0), board_height, usable.size.y])
+	elif width_share < MIN_GAME_WIDTH_SHARE:
 		_fail("%s gameplay surface must keep >= %d%% of window width, got %d%%" % [label, int(MIN_GAME_WIDTH_SHARE * 100.0), int(width_share * 100.0)])
 	if height_share < MIN_GAME_HEIGHT_SHARE:
 		_fail("%s gameplay surface must keep >= %d%% of window height, got %d%%" % [label, int(MIN_GAME_HEIGHT_SHARE * 100.0), int(height_share * 100.0)])
@@ -174,7 +194,7 @@ func _assert_case(hud, case: Dictionary, mode: String) -> void:
 	# Stage 56H-R3.1 overrides the standard-band allowance above for NEXT/HOLD:
 	# at the standard window they must be on screen without scrolling.
 	if bool(case.get("next_hold_without_scroll", false)):
-		if scroll_required or int(cockpit.get("deck_row_count", 0)) != 1:
+		if scroll_required or (not side_rail and int(cockpit.get("deck_row_count", 0)) != 1):
 			_fail("%s must fit PIECE / VIEW / PIECE STATE on one unscrolled deck row, got rows %s" % [
 				label, str(cockpit.get("deck_row_assignment", [])),
 			])

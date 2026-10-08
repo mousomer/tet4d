@@ -406,7 +406,7 @@ func _check_live_mode_progression(hud: Node, viewport_size: Vector2i) -> Array:
 	if two_d.get("view_control_strip", {}).get("row_ids", []) != ["view_framing:Fit", "view_framing:Reset"]:
 		failures.append("live 2D viewport %s: shared View module must contain only Fit and Reset" % str(viewport_size))
 	var two_d_piece_rows: Array = two_d.get("piece_control_strip", {}).get("row_ids", [])
-	for required in ["translate:X", "drop:Soft", "drop:Hard", "rotate:clockwise", "rotate:counter-clockwise"]:
+	for required in ["translate:Move", "drop:Soft drop", "drop:Hard drop", "rotate:Right (CW)", "rotate:Left (CCW)", "session:Restart"]:
 		if required not in two_d_piece_rows:
 			failures.append("live 2D viewport %s: shared Piece module must include %s" % [str(viewport_size), required])
 

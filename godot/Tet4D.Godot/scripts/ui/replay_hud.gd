@@ -754,13 +754,15 @@ func _refresh_piece_control_strip() -> void:
 		_active_live_mode,
 		_live_4d_basis_snapshot if _active_live_mode == GameSetupSpecScript.MODE_4D else {},
 		_control_frame_snapshot,
-		_hud_density
+		_hud_density,
+		LiveInputContractScript,
+		LivePieceControlStripScript.LAYOUT_RAIL if _uses_side_rail() else LivePieceControlStripScript.LAYOUT_DECK
 	)
 	if is_inside_tree():
 		_style_applier.apply_to_tree(_piece_control_strip, _style_manager)
 
 
-func _apply_shell_minimums(live: bool) -> void:
+func _apply_shell_minimums(live: bool, side_rail := false) -> void:
 	var minimum := ReplayVisuals.supported_live_shell_minimum_size() if live else ReplayVisuals.supported_shell_minimum_size()
 	custom_minimum_size = minimum
 	if _viewer_screen != null:
@@ -770,16 +772,29 @@ func _apply_shell_minimums(live: bool) -> void:
 		if outer != null:
 			outer.custom_minimum_size = minimum
 	if _body_container != null:
+		# The 2D rail sits beside the body inside the same shell width, so the
+		# body gives up the rail's share or the rail is pushed off-screen.
+		var rail_share := (LiveCockpitScript.SIDE_RAIL_MIN_WIDTH + LiveCockpitScript.SIDE_RAIL_GAP) if side_rail else 0.0
 		_body_container.custom_minimum_size = Vector2(
-			minimum.x - (ReplayVisuals.OUTER_MARGIN * 2),
+			minimum.x - (ReplayVisuals.OUTER_MARGIN * 2) - rail_share,
 			ReplayVisuals.LIVE_BODY_MIN_HEIGHT if live else ReplayVisuals.BODY_MIN_HEIGHT
 		)
 
 
+# Live 2D's tall board takes the side rail; 3D/4D keep the deck below. The
+# rail drops VIEW: flat 2D framing almost never changes, and Fit View stays a
+# header button, so its rows would only push the key legend down.
+func _uses_side_rail() -> bool:
+	return _active_live_mode == GameSetupSpecScript.MODE_2D
+
+
 func _set_live_4d_deck_active(active: bool) -> void:
-	_apply_shell_minimums(active)
+	var side_rail := active and _uses_side_rail()
+	_apply_shell_minimums(active, side_rail)
 	if _live_4d_deck == null:
 		return
+	_live_4d_view_module.visible = not side_rail
+	_live_cockpit.set_deck_placement(LiveCockpitScript.PLACEMENT_SIDE if side_rail else LiveCockpitScript.PLACEMENT_BELOW)
 	if active:
 		_piece_control_strip.reparent(_live_4d_piece_module, false)
 		_live_view_control_strip.reparent(_live_4d_view_module, false)

@@ -240,10 +240,21 @@ func _check_primary_surfaces(hud, mode: String, label: String) -> Array:
 	# reachable by scrolling, which is the accepted constrained-size tradeoff;
 	# a module outside the row host would be genuinely lost.
 	var rows_rect: Rect2 = (layout.get("live_cockpit", {}) as Dictionary).get("deck_rows_rect", deck)
-	if not layout.get("live_4d_deck_visible", false) or (strict_containment and (not _contains_rect(rows_rect, piece_module) or not _contains_rect(rows_rect, view_module) or not _contains_rect(rows_rect, state_module))):
-		failures.append("%s %s shared deck must visibly contain all three semantic modules" % [label, mode])
 	if viewport.intersects(deck):
 		failures.append("%s %s board and shared deck must not overlap" % [label, mode])
+	# Live 2D stacks NEXT/HOLD above the key legend in a rail beside the board
+	# and omits VIEW; its legend adds the hold and session keys.
+	if mode == "live_2d":
+		if not layout.get("live_4d_deck_visible", false) or (strict_containment and (not _contains_rect(rows_rect, piece_module) or not _contains_rect(rows_rect, state_module))):
+			failures.append("%s %s rail must visibly contain NEXT/HOLD and the key legend" % [label, mode])
+		if not _precedes(state_module, piece_module):
+			failures.append("%s %s rail must stack NEXT/HOLD above the key legend" % [label, mode])
+		var rail_strip: Dictionary = hud._piece_control_strip.deterministic_snapshot()
+		if rail_strip.get("source") != "LiveInputContract" or rail_strip.get("roles", []) != ["translate", "drop", "rotate", "hold", "session"]:
+			failures.append("%s %s legend must report authoritative move/rotate/drop/hold/session consumption" % [label, mode])
+		return failures
+	if not layout.get("live_4d_deck_visible", false) or (strict_containment and (not _contains_rect(rows_rect, piece_module) or not _contains_rect(rows_rect, view_module) or not _contains_rect(rows_rect, state_module))):
+		failures.append("%s %s shared deck must visibly contain all three semantic modules" % [label, mode])
 	# Reading order, not a single line: the deck reflows into rows when the
 	# modules' measured minimum widths exceed the available width, so modules on
 	# different rows legitimately share an X range. Identity and order survive;
