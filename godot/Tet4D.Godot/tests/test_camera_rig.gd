@@ -19,8 +19,12 @@ const EXPECTED_SAFE_PITCH_MAX_DEG := 86.240113
 
 func run() -> Array:
 	var failures: Array = []
-	if CameraRigScript.LIVE_2D_FIT_MARGIN < 1.3 or CameraRigScript.LIVE_3D_FIT_MARGIN < 1.3:
-		failures.append("live entry fit margins should preserve visible breathing room around the board")
+	if CameraRigScript.LIVE_3D_FIT_MARGIN < 1.3:
+		failures.append("live 3D entry fit margin should preserve visible breathing room around the board")
+	# Live 2D fits board + spawn rows explicitly, so its margin is clearance only;
+	# the old 1.32 floor kept the 2D board a quarter smaller than it needs to be.
+	if CameraRigScript.LIVE_2D_FIT_MARGIN < 1.02 or CameraRigScript.LIVE_2D_FIT_MARGIN > 1.12 or CameraRigScript.LIVE_2D_SPAWN_HEADROOM_ROWS < 1.0:
+		failures.append("live 2D entry fit must cover the spawn rows with only modest clearance")
 	if CameraRigScript.LIVE_4D_FIT_MARGIN < 1.04 or CameraRigScript.LIVE_4D_FIT_MARGIN > 1.10:
 		failures.append("live 4D entry fit must add only modest clearance beyond required padded bounds")
 	var tree := Engine.get_main_loop() as SceneTree

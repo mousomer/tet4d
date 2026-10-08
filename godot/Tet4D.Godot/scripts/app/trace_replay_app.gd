@@ -1104,13 +1104,21 @@ func _fit_view() -> void:
 		_pending_fit_view = true
 		return
 	var margin := 1.14
+	var content_boxes := _renderer.current_content_boxes()
 	if _mode == MODE_LIVE_2D:
 		margin = CameraRigScript.LIVE_2D_FIT_MARGIN
+		# The spawning piece is drawn above the board (world +Y is board-up), so
+		# those rows are content too; fitting only the board would clip it.
+		var headroom := Vector3(0.0, CameraRigScript.LIVE_2D_SPAWN_HEADROOM_ROWS, 0.0)
+		bounds = {"ok": true, "min": bounds["min"], "max": (bounds["max"] as Vector3) + headroom}
+		content_boxes = [{"min": bounds["min"], "max": bounds["max"]}]
 	elif _mode == MODE_LIVE_3D:
 		margin = CameraRigScript.LIVE_3D_FIT_MARGIN
 	elif _mode == MODE_LIVE_4D:
 		margin = CameraRigScript.LIVE_4D_FIT_MARGIN
-	_camera_rig.fit_current_bounds(bounds, margin, _renderer.current_content_boxes())
+	# Live 2D always shows its key legend in a rail on the right.
+	_camera_rig.set_fit_horizontal_anchor(1.0 if _mode == MODE_LIVE_2D else 0.0)
+	_camera_rig.fit_current_bounds(bounds, margin, content_boxes)
 	_camera_rig.set_orientation_gizmo_visible(_mode in [MODE_LIVE_3D, MODE_LIVE_4D])
 	_pending_fit_view = false
 	_refresh_camera_status()
