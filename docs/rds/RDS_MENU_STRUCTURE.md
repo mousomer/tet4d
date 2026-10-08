@@ -340,6 +340,11 @@ disabled control emits no activation.
    text wraps, and live-mode/density rebuilds reapply keycap styling.
    The live control deck caps its height at 28% of the shell (subject to its
    row floor), scrolling extra rows to preserve space for the primary board in compact windows.
+   Live 2D instead places the deck in a side rail beside its tall board
+   (30% of the shell width, 280-400 px): NEXT/HOLD above a key-first legend
+   grouped MOVE / ROTATE / GAME that includes Hold, Pause and Restart keys, with
+   no VIEW module. The camera fits the board plus its two spawn rows with 1.06
+   clearance and anchors the board toward the rail when width is spare.
 2. Maintain text/background contrast aligned with WCAG minimum guidance.
 3. Avoid crowded line wrapping in options; keep one option per row.
 4. Titles should use capitalized display text rather than stacked

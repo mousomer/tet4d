@@ -206,6 +206,15 @@ now use validated direct launch and `C` opens Change Setup; regression coverage
 includes invalid drafts and modifier filtering. Replay and Designer flows
 remain out of scope. Human acceptance and the unresolved product decisions
 listed in the repair plan remain open.
+Stage 56H gameplay-ergonomics pass (2D): measured against the Python client
+(30 px cells, board 79% of a 1200×760 window), Live 2D drew 13.6 px cells
+(36%) because a 220 px deck sat under the tall board and the 1.32 fit margin
+discarded another quarter. Live 2D now uses a side rail with a key-first
+legend and a 1.06 fit including spawn rows: 25 px cells (66%) at 1200×760 and
+31 px (69%) at 1440×900. Open: the 100 px live header (its status block has no
+content-driven height, so shrinking it needs a header rework); applying a
+side or slimmer layout to 3D/4D; 3D/4D restart is Backspace because R rotates
+there; manual playtest acceptance.
 
 ### Three-product packaging gaps
 
