@@ -43,7 +43,7 @@ static func row(operation: String, binding: String, role: String, density: Strin
 # column so the eye can scan straight down them; the operation is secondary
 # text and never wraps, because a wrapped "clock / wise" cannot be read at a
 # glance.
-static func key_first_row(operation: String, binding: String, role: String, key_column_width: float) -> HBoxContainer:
+static func key_first_row(operation: String, binding: String, role: String, key_column_width: float, tag := "") -> HBoxContainer:
 	var result := HBoxContainer.new()
 	result.name = "LegendRow__%s" % role
 	result.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -78,12 +78,23 @@ static func key_first_row(operation: String, binding: String, role: String, key_
 	operation_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	operation_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	result.add_child(operation_label)
+	if not tag.is_empty():
+		# Reference name for players who think in planes; never the only cue.
+		var tag_label := Label.new()
+		tag_label.name = "LegendTag"
+		tag_label.text = tag
+		tag_label.theme_type_variation = "SecondaryLabel"
+		tag_label.add_theme_font_size_override("font_size", Tokens.FONT_CHROME_SUPPORTING)
+		tag_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		tag_label.modulate = Color(1.0, 1.0, 1.0, 0.6)
+		tag_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		result.add_child(tag_label)
 	return result
 
 
 # Arrow keys are recognised by shape faster than by name.
 static func key_glyph(label: String) -> String:
-	return str({"Left": "←", "Right": "→", "Up": "↑", "Down": "↓"}.get(label, label))
+	return str({"Left": "←", "Right": "→", "Up": "↑", "Down": "↓", "Backspace": "Bksp"}.get(label, label))
 
 
 static func binding_pair(binding: String, density: String = "normal", pointer := false) -> HBoxContainer:

@@ -19,8 +19,8 @@ const EXPECTED_SAFE_PITCH_MAX_DEG := 86.240113
 
 func run() -> Array:
 	var failures: Array = []
-	if CameraRigScript.LIVE_3D_FIT_MARGIN < 1.3:
-		failures.append("live 3D entry fit margin should preserve visible breathing room around the board")
+	if CameraRigScript.LIVE_3D_FIT_MARGIN < 1.04 or CameraRigScript.LIVE_3D_FIT_MARGIN > 1.2:
+		failures.append("live 3D entry fit must cover board + spawn rows with only modest clearance")
 	# Live 2D fits board + spawn rows explicitly, so its margin is clearance only;
 	# the old 1.32 floor kept the 2D board a quarter smaller than it needs to be.
 	if CameraRigScript.LIVE_2D_FIT_MARGIN < 1.02 or CameraRigScript.LIVE_2D_FIT_MARGIN > 1.12 or CameraRigScript.LIVE_2D_SPAWN_HEADROOM_ROWS < 1.0:

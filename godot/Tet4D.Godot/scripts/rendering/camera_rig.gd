@@ -19,7 +19,9 @@ const LIVE_4D_DISPLAY_PITCH_RAD := 0.3490658503988659  # +20 degrees above the b
 const LIVE_2D_FIT_MARGIN := 1.06
 # Rows above the board where a new piece appears before it enters.
 const LIVE_2D_SPAWN_HEADROOM_ROWS := 2.0
-const LIVE_3D_FIT_MARGIN := 1.38
+# Live 3D also fits board + spawn rows. 1.38 left a 6x10x6 well at 29 px cells
+# (Python drew 67 px); 1.10 keeps clearance for the tilted silhouette.
+const LIVE_3D_FIT_MARGIN := 1.10
 # The authoritative collection bounds already include W-label and spawn
 # clearance. Add one modest projected safety margin without conservatively
 # padding those required attachments a second time.

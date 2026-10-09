@@ -67,6 +67,7 @@ var _live_4d_basis = SliceBasis4DScript.identity()
 var _live_4d_local_orientation = SliceLocalOrientationScript.new()
 var _translation_frame := ControlFrameMappingScript.FRAME_RELATIVE
 var _rotation_frame := ControlFrameMappingScript.FRAME_RELATIVE
+var _published_legend_directions := {}
 var _control_frame_presentation_key := ""
 var _live_tick_accumulator := 0.0
 var _live_gravity_interval_seconds := DEFAULT_LIVE_GRAVITY_INTERVAL_SECONDS
@@ -169,6 +170,8 @@ func _is_designer_product() -> bool:
 func _process(delta: float) -> void:
 	if _pending_fit_view:
 		_fit_view()
+	if _mode in [MODE_LIVE_3D, MODE_LIVE_4D]:
+		_publish_legend_screen_directions()
 	if _is_live_mode():
 		if not _live_mode_paused() and not _live_snapshot_game_over():
 			if _hud != null and _hud.onboarding_suspends_live_gameplay():
@@ -728,6 +731,26 @@ func _open_design_laboratory() -> void:
 	_hud.open_design_laboratory()
 
 
+# Viewport-derived presentation (the fitted focus, Live 4D's adaptive slice
+# tiling) is only right once the shell layout for the current mode has settled,
+# which otherwise happens at the next deferred container sort. Sort the HUD
+# top-down now; the resulting resizes run the usual route/re-tile paths
+# synchronously.
+func _settle_shell_layout_now() -> void:
+	if _hud == null or not _hud.is_inside_tree():
+		return
+	# Minimum sizes propagate upward between passes; three converge in practice.
+	for pass_index in range(3):
+		_sort_containers_now(_hud)
+
+
+static func _sort_containers_now(node: Node) -> void:
+	if node is Container and (node as Container).is_visible_in_tree():
+		node.notification(Container.NOTIFICATION_SORT_CHILDREN)
+	for child in node.get_children():
+		_sort_containers_now(child)
+
+
 func _load_design_laboratory_scenario(scenario: Dictionary) -> Dictionary:
 	if str(scenario.get("scenario_kind", "replay_fixture")) == "live_session":
 		var setup = scenario.get("live_setup")
@@ -748,6 +771,7 @@ func _load_design_laboratory_scenario(scenario: Dictionary) -> Dictionary:
 		_live_3d_paused = true
 		_live_4d_paused = true
 		_refresh_hud()
+		_settle_shell_layout_now()
 		var live_fingerprint := _design_laboratory_fingerprint()
 		return {
 			"ok": true,
@@ -1105,19 +1129,17 @@ func _fit_view() -> void:
 		return
 	var margin := 1.14
 	var content_boxes := _renderer.current_content_boxes()
-	if _mode == MODE_LIVE_2D:
-		margin = CameraRigScript.LIVE_2D_FIT_MARGIN
+	if _mode in [MODE_LIVE_2D, MODE_LIVE_3D]:
+		margin = CameraRigScript.LIVE_2D_FIT_MARGIN if _mode == MODE_LIVE_2D else CameraRigScript.LIVE_3D_FIT_MARGIN
 		# The spawning piece is drawn above the board (world +Y is board-up), so
 		# those rows are content too; fitting only the board would clip it.
 		var headroom := Vector3(0.0, CameraRigScript.LIVE_2D_SPAWN_HEADROOM_ROWS, 0.0)
 		bounds = {"ok": true, "min": bounds["min"], "max": (bounds["max"] as Vector3) + headroom}
 		content_boxes = [{"min": bounds["min"], "max": bounds["max"]}]
-	elif _mode == MODE_LIVE_3D:
-		margin = CameraRigScript.LIVE_3D_FIT_MARGIN
 	elif _mode == MODE_LIVE_4D:
 		margin = CameraRigScript.LIVE_4D_FIT_MARGIN
-	# Live 2D always shows its key legend in a rail on the right.
-	_camera_rig.set_fit_horizontal_anchor(1.0 if _mode == MODE_LIVE_2D else 0.0)
+	# Live 2D and 3D show their key legend in a rail on the right.
+	_camera_rig.set_fit_horizontal_anchor(1.0 if _mode in [MODE_LIVE_2D, MODE_LIVE_3D] else 0.0)
 	_camera_rig.fit_current_bounds(bounds, margin, content_boxes)
 	_camera_rig.set_orientation_gizmo_visible(_mode in [MODE_LIVE_3D, MODE_LIVE_4D])
 	_pending_fit_view = false
@@ -1129,6 +1151,11 @@ func _establish_canonical_view_and_fit(mode_name: String) -> void:
 	if _camera_rig == null or _renderer == null:
 		_pending_fit_view = true
 		return
+	# Modes place the deck differently (2D/3D rail, 4D split), and the game
+	# viewport only takes the new mode's size at the next container sort. Fitting
+	# before that framed Live 4D, entered from the 3D rail, for the rail's aspect:
+	# its slices at half size. Settle the shell first.
+	_settle_shell_layout_now()
 	if mode_name == MODE_LIVE_4D:
 		_restore_live_4d_presentation_defaults()
 		_refresh_live_4d_presentation(true)
@@ -1752,11 +1779,85 @@ func _dispatch_live_2d_control_intent(intent: String) -> bool:
 	return _dispatch_live_gameplay_command(_control_frame_mapping(2).translation_command(intent, _translation_frame))
 
 
+# The 3D/4D legend draws where each movement key and rotation axis points on
+# screen. Axis names cannot carry that: under view-relative controls the same
+# key keeps its on-screen effect while its board axis changes with the view,
+# so the old labels changed (X -> Z) exactly when nothing changed for the hand.
+func _publish_legend_screen_directions() -> void:
+	if _hud == null or not _hud.has_method("set_legend_screen_directions"):
+		return
+	var directions := _legend_screen_directions(4 if _mode == MODE_LIVE_4D else 3)
+	if _legend_directions_close(directions, _published_legend_directions):
+		return
+	_published_legend_directions = directions
+	_hud.set_legend_screen_directions(directions)
+
+
+func _legend_screen_directions(dimension: int) -> Dictionary:
+	var result := {}
+	if _renderer == null or _camera_rig == null or not _renderer.has_method("cell_global_position"):
+		return result
+	var shape: Array = _renderer.presented_board_shape()
+	if shape.size() != dimension:
+		return result
+	var origin: Array = []
+	for extent in shape:
+		origin.append(floori(float(extent) * 0.5))
+	var mapping = _control_frame_mapping(dimension)
+	var intents := ["move_x_neg", "move_x_pos", "move_z_neg", "move_z_pos"]
+	if dimension >= 4:
+		intents.append_array(["move_w_neg", "move_w_pos"])
+	# Measure the command each key dispatches, exactly as input routing does.
+	for intent in intents:
+		var command := str(mapping.translation_command(intent, _translation_frame))
+		result[intent] = _board_axis_screen_direction(shape, origin, "xyzw".find(command.get_slice("_", 1)), 1 if command.ends_with("_pos") else -1)
+	var relative := ControlFrameMappingScript.normalize_frame(_rotation_frame) == ControlFrameMappingScript.FRAME_RELATIVE
+	for local_index in range(dimension):
+		var label := "xyzw"[local_index]
+		var axis := int(mapping.axis_for_local(label).get("axis", local_index)) if relative else local_index
+		# Up is against gravity (+Y runs down the board).
+		result[label] = _board_axis_screen_direction(shape, origin, axis, -1 if label == "y" else 1)
+	return result
+
+
+func _board_axis_screen_direction(shape: Array, origin: Array, axis: int, direction: int) -> Vector2:
+	if axis < 0 or axis >= origin.size():
+		return Vector2.ZERO
+	var neighbour := origin.duplicate()
+	neighbour[axis] = int(neighbour[axis]) + direction
+	if int(neighbour[axis]) < 0 or int(neighbour[axis]) >= int(shape[axis]):
+		return Vector2.ZERO
+	var from := _camera_rig.project_world_point(_renderer.cell_global_position(origin))
+	var to := _camera_rig.project_world_point(_renderer.cell_global_position(neighbour))
+	var delta := to - from
+	return delta.normalized() if delta.length() > 0.5 else Vector2.ZERO
+
+
+# Lights the legend row of the plane just used, so the key, its glyph and the
+# change on the board are seen together.
+func _flash_legend_plane(plane: String, view: bool) -> void:
+	if _hud == null or not _hud.has_method("flash_legend_plane"):
+		return
+	var letters := Array(plane.to_lower().split(""))
+	letters.sort_custom(func(a, b): return "xyzw".find(str(a)) < "xyzw".find(str(b)))
+	_hud.flash_legend_plane("".join(PackedStringArray(letters)).to_upper(), view)
+
+
+static func _legend_directions_close(a: Dictionary, b: Dictionary) -> bool:
+	if a.size() != b.size():
+		return false
+	for key in a:
+		if not b.has(key) or (a[key] as Vector2).distance_to(b[key] as Vector2) > 0.02:
+			return false
+	return true
+
+
 func _dispatch_live_3d_control_intent(intent: String) -> bool:
 	return _dispatch_live_3d_gameplay_command(_control_frame_mapping(3).translation_command(intent, _translation_frame))
 
 
 func _dispatch_live_3d_rotation_intent(intent: String) -> bool:
+	_flash_legend_plane(intent.get_slice("_", 1), false)
 	return _dispatch_live_3d_gameplay_command(_control_frame_mapping(3).rotation_command(intent, _rotation_frame))
 
 
@@ -1765,12 +1866,14 @@ func _dispatch_live_4d_control_intent(intent: String) -> bool:
 
 
 func _dispatch_live_4d_rotation_intent(intent: String) -> bool:
+	_flash_legend_plane(intent.get_slice("_", 1), false)
 	return _dispatch_live_4d_gameplay_command(_control_frame_mapping(4).rotation_command(intent, _rotation_frame))
 
 
 func _apply_live_4d_basis_turn(plane: String, direction: int) -> void:
 	if _mode != MODE_LIVE_4D or _renderer == null:
 		return
+	_flash_legend_plane(plane, true)
 	_live_4d_basis = _live_4d_basis.turned(plane, direction)
 	_renderer.set_live_4d_basis(_live_4d_basis, true)
 	_refresh_live_4d_presentation()

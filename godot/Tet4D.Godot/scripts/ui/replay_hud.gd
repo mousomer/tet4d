@@ -333,6 +333,21 @@ func set_control_frame_snapshot(snapshot: Dictionary) -> void:
 	_refresh_piece_control_strip()
 
 
+# Measured screen directions of each movement key and rotation axis; the 3D/4D
+# legend draws them so it shows where a key moves the piece, not an axis name.
+func set_legend_screen_directions(directions: Dictionary) -> void:
+	if _piece_control_strip != null:
+		_piece_control_strip.set_screen_directions(directions)
+	if _live_view_control_strip != null:
+		_live_view_control_strip.set_screen_directions(directions)
+
+
+func flash_legend_plane(plane: String, view: bool) -> void:
+	var strip = _live_view_control_strip if view else _piece_control_strip
+	if strip != null and strip.is_visible_in_tree():
+		strip.flash_plane(plane)
+
+
 static func quick_control_hint_groups(mode: String) -> Array:
 	match mode:
 		"live_2d", "live_3d", "live_4d":
@@ -736,7 +751,9 @@ func _configure_live_cockpit_mode(mode: String) -> void:
 			_live_4d_basis_snapshot if mode == GameSetupSpecScript.MODE_4D else {},
 			_control_frame_snapshot,
 			_hud_density,
-			mode
+			mode,
+			LiveInputContractScript,
+			LiveViewControlStripScript.LAYOUT_WIDE if mode == GameSetupSpecScript.MODE_4D else LiveViewControlStripScript.LAYOUT_GRID
 		)
 		_style_applier.apply_to_tree(_live_view_control_strip, _style_manager)
 	_update_camera_guidance(mode)
@@ -756,7 +773,7 @@ func _refresh_piece_control_strip() -> void:
 		_control_frame_snapshot,
 		_hud_density,
 		LiveInputContractScript,
-		LivePieceControlStripScript.LAYOUT_RAIL if _uses_side_rail() else LivePieceControlStripScript.LAYOUT_DECK
+		_piece_legend_layout()
 	)
 	if is_inside_tree():
 		_style_applier.apply_to_tree(_piece_control_strip, _style_manager)
@@ -781,20 +798,36 @@ func _apply_shell_minimums(live: bool, side_rail := false) -> void:
 		)
 
 
-# Live 2D's tall board takes the side rail; 3D/4D keep the deck below. The
-# rail drops VIEW: flat 2D framing almost never changes, and Fit View stays a
-# header button, so its rows would only push the key legend down.
+# Tall boards (2D, and 3D's upright well) take the side rail. Live 4D keeps the
+# deck below: its slice row is about 2.8:1, so a rail would shrink the boards,
+# while a full-width deck holds the legend sections side by side. The rail
+# drops VIEW: Fit View stays a header button, and mouse orbit is unlabelled
+# muscle memory, so its rows would only push the key legend down.
 func _uses_side_rail() -> bool:
-	return _active_live_mode == GameSetupSpecScript.MODE_2D
+	return _active_live_mode in [GameSetupSpecScript.MODE_2D, GameSetupSpecScript.MODE_3D]
+
+
+func _piece_legend_layout() -> String:
+	if _uses_side_rail():
+		return LivePieceControlStripScript.LAYOUT_RAIL
+	if _active_live_mode == GameSetupSpecScript.MODE_4D:
+		return LivePieceControlStripScript.LAYOUT_WIDE
+	return LivePieceControlStripScript.LAYOUT_DECK
 
 
 func _set_live_4d_deck_active(active: bool) -> void:
 	var side_rail := active and _uses_side_rail()
-	_apply_shell_minimums(active, side_rail)
+	var split := active and _active_live_mode == GameSetupSpecScript.MODE_4D
+	_apply_shell_minimums(active, side_rail or split)
 	if _live_4d_deck == null:
 		return
 	_live_4d_view_module.visible = not side_rail
-	_live_cockpit.set_deck_placement(LiveCockpitScript.PLACEMENT_SIDE if side_rail else LiveCockpitScript.PLACEMENT_BELOW)
+	var placement := LiveCockpitScript.PLACEMENT_BELOW
+	if side_rail:
+		placement = LiveCockpitScript.PLACEMENT_SIDE
+	elif split:
+		placement = LiveCockpitScript.PLACEMENT_SPLIT
+	_live_cockpit.set_deck_placement(placement)
 	if active:
 		_piece_control_strip.reparent(_live_4d_piece_module, false)
 		_live_view_control_strip.reparent(_live_4d_view_module, false)
@@ -1901,7 +1934,9 @@ func _apply_hud_density(density: String) -> void:
 			_live_4d_basis_snapshot if _active_live_mode == GameSetupSpecScript.MODE_4D else {},
 			_control_frame_snapshot,
 			_hud_density,
-			_active_live_mode
+			_active_live_mode,
+			LiveInputContractScript,
+			LiveViewControlStripScript.LAYOUT_WIDE if _active_live_mode == GameSetupSpecScript.MODE_4D else LiveViewControlStripScript.LAYOUT_GRID
 		)
 		_style_applier.apply_to_tree(_live_view_control_strip, _style_manager)
 	_set_live_inspector_density(_bottom_panel != null and not _bottom_panel.visible)

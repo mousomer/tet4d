@@ -242,15 +242,28 @@ func _check_primary_surfaces(hud, mode: String, label: String) -> Array:
 	var rows_rect: Rect2 = (layout.get("live_cockpit", {}) as Dictionary).get("deck_rows_rect", deck)
 	if viewport.intersects(deck):
 		failures.append("%s %s board and shared deck must not overlap" % [label, mode])
-	# Live 2D stacks NEXT/HOLD above the key legend in a rail beside the board
-	# and omits VIEW; its legend adds the hold and session keys.
-	if mode == "live_2d":
+	var legend_roles := ["translate", "drop", "rotate", "hold", "session"]
+	# Live 4D keeps its legend in the deck and moves NEXT/HOLD + VIEW into a
+	# side column beside the board.
+	if mode == "live_4d" and str((layout.get("live_cockpit", {}) as Dictionary).get("deck_placement", "")) == "split":
+		var side: Rect2 = (layout.get("live_cockpit", {}) as Dictionary).get("side_column_rect", Rect2())
+		if not layout.get("live_4d_deck_visible", false) or (strict_containment and (not _contains_rect(rows_rect, piece_module) or not _contains_rect(side, state_module))):
+			failures.append("%s %s must show the legend in the deck and NEXT/HOLD in the side column" % [label, mode])
+		if viewport.intersects(side) or not _precedes(state_module, view_module):
+			failures.append("%s %s side column must sit beside the board with NEXT/HOLD above VIEW" % [label, mode])
+		var split_strip: Dictionary = hud._piece_control_strip.deterministic_snapshot()
+		if split_strip.get("source") != "LiveInputContract" or split_strip.get("roles", []) != legend_roles:
+			failures.append("%s %s legend must report authoritative move/drop/rotate/hold/session consumption" % [label, mode])
+		return failures
+	# Live 2D and 3D stack NEXT/HOLD above the key legend in a rail beside the
+	# board and omit VIEW; the legend adds the hold and session keys.
+	if mode in ["live_2d", "live_3d"]:
 		if not layout.get("live_4d_deck_visible", false) or (strict_containment and (not _contains_rect(rows_rect, piece_module) or not _contains_rect(rows_rect, state_module))):
 			failures.append("%s %s rail must visibly contain NEXT/HOLD and the key legend" % [label, mode])
 		if not _precedes(state_module, piece_module):
 			failures.append("%s %s rail must stack NEXT/HOLD above the key legend" % [label, mode])
 		var rail_strip: Dictionary = hud._piece_control_strip.deterministic_snapshot()
-		if rail_strip.get("source") != "LiveInputContract" or rail_strip.get("roles", []) != ["translate", "drop", "rotate", "hold", "session"]:
+		if rail_strip.get("source") != "LiveInputContract" or rail_strip.get("roles", []) != legend_roles:
 			failures.append("%s %s legend must report authoritative move/rotate/drop/hold/session consumption" % [label, mode])
 		return failures
 	if not layout.get("live_4d_deck_visible", false) or (strict_containment and (not _contains_rect(rows_rect, piece_module) or not _contains_rect(rows_rect, view_module) or not _contains_rect(rows_rect, state_module))):
@@ -301,10 +314,15 @@ func _projected_bounds_height_share(app) -> float:
 			for y in [minimum.y, maximum.y]:
 				for z in [minimum.z, maximum.z]:
 					var point: Vector2 = app._camera_rig.project_world_point(Vector3(x, y, z))
-					screen_min.y = minf(screen_min.y, point.y)
-					screen_max.y = maxf(screen_max.y, point.y)
-	var viewport_height: float = app._camera_rig._camera.get_viewport().get_visible_rect().size.y
-	return (screen_max.y - screen_min.y) / viewport_height if viewport_height > 0.0 else 0.0
+					screen_min = screen_min.min(point)
+					screen_max = screen_max.max(point)
+	# The limiting dimension is whichever the fit filled: height when the slice
+	# row has width to spare, width once a side column narrows the viewport.
+	var viewport_size: Vector2 = app._camera_rig._camera.get_viewport().get_visible_rect().size
+	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
+		return 0.0
+	var span := screen_max - screen_min
+	return maxf(span.x / viewport_size.x, span.y / viewport_size.y)
 
 
 func _modules_in_reading_order(first: Rect2, second: Rect2, third: Rect2) -> bool:

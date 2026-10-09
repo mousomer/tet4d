@@ -46,6 +46,7 @@ const TEST_SCRIPTS := [
 	"res://tests/test_semantic_control_helpers.gd",
 	"res://tests/test_live_cockpit.gd",
 	"res://tests/test_live_3d_shared_cockpit.gd",
+	"res://tests/test_live_4d_spatial_legend.gd",
 	"res://tests/test_live_2d_shared_cockpit.gd",
 	"res://tests/test_stage_56g_responsive_cockpit.gd",
 	"res://tests/test_cockpit_density_control_hierarchy.gd",
