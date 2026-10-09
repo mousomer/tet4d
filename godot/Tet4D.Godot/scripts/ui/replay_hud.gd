@@ -231,6 +231,15 @@ var _live_view_control_strip: PanelContainer
 var _live_cockpit
 const DESIGN_RESOLUTION_MIN_WIDTH := 640.0
 const DESIGN_RESOLUTION_MIN_HEIGHT := 480.0
+# Above this window size the whole shell scales up with the window, so an
+# enlarged or maximised window shows the reference layout larger; below it the
+# shell keeps its point size and reflows (the game opens at 1280x720, at 1x).
+# Without the upper half, text stayed at its opening point size in any larger
+# window and the menus merely spread out. The height is 800, not the opening
+# 720, so a magnified layout never has less height than the live rails and
+# Designer chrome were laid out for, even in a short, wide window.
+const DESIGN_REFERENCE_SIZE := Vector2(1280.0, 800.0)
+const MAX_WINDOW_UI_SCALE := 2.0
 
 var _live_4d_deck: VBoxContainer
 var _live_4d_piece_module: VBoxContainer
@@ -3410,12 +3419,22 @@ func _sync_design_resolution() -> void:
 		return
 	var display_scale := maxf(DisplayServer.screen_get_scale(), 0.01)
 	var points := window_pixels / display_scale
+	var logical := points / window_ui_scale(points)
 	var target := Vector2i(
-		int(maxf(points.x, DESIGN_RESOLUTION_MIN_WIDTH)),
-		int(maxf(points.y, DESIGN_RESOLUTION_MIN_HEIGHT))
+		int(maxf(logical.x, DESIGN_RESOLUTION_MIN_WIDTH)),
+		int(maxf(logical.y, DESIGN_RESOLUTION_MIN_HEIGHT))
 	)
 	if window.content_scale_size != target:
 		window.content_scale_size = target
+
+
+# How much the shell is magnified for a window of this size in points: 1.0 up
+# to the reference window, then proportional to whichever axis is tighter.
+static func window_ui_scale(window_points: Vector2) -> float:
+	if window_points.x <= 0.0 or window_points.y <= 0.0:
+		return 1.0
+	var fit := minf(window_points.x / DESIGN_REFERENCE_SIZE.x, window_points.y / DESIGN_REFERENCE_SIZE.y)
+	return clampf(fit, 1.0, MAX_WINDOW_UI_SCALE)
 
 
 # The responsive breakpoint domain is what the player actually sees, not the
@@ -3433,7 +3452,10 @@ func apparent_layout_size() -> Vector2:
 		return size
 	var display_scale := maxf(DisplayServer.screen_get_scale(), 0.01)
 	var ui_scale := maxf(_ui_scale_factor, 0.01)
-	return (window_pixels / display_scale) / ui_scale
+	var points := window_pixels / display_scale
+	# Breakpoints follow the magnified layout, not the raw window: a maximised
+	# window shows the reference layout scaled up, so it uses that layout's profile.
+	return points / window_ui_scale(points) / ui_scale
 
 
 func _log_geometry_diagnostics(reason: String) -> void:

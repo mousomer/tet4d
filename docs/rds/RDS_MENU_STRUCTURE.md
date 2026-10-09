@@ -323,6 +323,11 @@ disabled control emits no activation.
 1. Default body text should target at least 18 px equivalent in current window scale.
    Godot menu/help body text uses 24 logical pixels and supporting text uses 22;
    display scaling and the persisted UI-scale preference apply on top.
+   Up to a 1280×800 pt window (the game opens at 1280×720), one logical pixel
+   is one point and smaller windows reflow. Larger windows magnify the whole
+   shell by min(width/1280, height/800), capped at 2×, so an enlarged or
+   maximised window shows the reference layout larger instead of the same
+   text in a wider layout, and never with less than 800 logical pixels of height.
    Helper keycaps and action labels use at least 22 logical pixels in every
    density. Compact density may reduce spacing, never text size; keycaps size
    from their font metrics and operation labels wrap rather than truncate.

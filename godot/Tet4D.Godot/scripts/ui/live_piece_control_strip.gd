@@ -33,6 +33,7 @@ var _signature := ""
 var _groups_box: Container
 var _title: Label
 var _scroll: ScrollContainer
+var _margin: MarginContainer
 var _layout := LAYOUT_DECK
 var _source := "LiveInputContract"
 var _screen_directions := {}
@@ -54,6 +55,7 @@ func _init() -> void:
 	scroll.mouse_filter = Control.MOUSE_FILTER_PASS
 	add_child(scroll)
 	var margin := MarginContainer.new()
+	_margin = margin
 	margin.name = "PieceControlMargin"
 	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	for side in ["left", "right"]:
@@ -199,6 +201,8 @@ func _set_layout(layout: String) -> void:
 	# nested auto-scroll reports none and would collapse to nothing. The 4D deck
 	# instead has a fixed height and lets the legend scroll inside it.
 	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED if _layout == LAYOUT_RAIL else ScrollContainer.SCROLL_MODE_AUTO
+	for side in ["top", "bottom"]:
+		_margin.add_theme_constant_override("margin_%s" % side, 2 if _layout == LAYOUT_RAIL else 6)
 	var parent := _groups_box.get_parent()
 	parent.remove_child(_groups_box)
 	_groups_box.queue_free()
@@ -219,7 +223,9 @@ func _new_groups_box(layout: String) -> Container:
 	var box: BoxContainer = VBoxContainer.new() if layout == LAYOUT_RAIL else HBoxContainer.new()
 	box.name = "PieceControlGroups"
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_2)
+	# Section titles already separate the rail's groups; a wide gap only costs
+	# the height a magnified window is short of.
+	box.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_1 if layout == LAYOUT_RAIL else ShellDesignTokensScript.SPACE_2)
 	return box
 
 
@@ -246,8 +252,11 @@ func _rebuild_rail() -> void:
 			continue
 		var section := PassiveControlComponentsScript.section(str(section_spec[0]), str(section_spec[0]).to_lower(), _density)
 		section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		for semantic in section_rows:
-			section.add_child(PassiveControlComponentsScript.key_first_row(str(semantic["operation"]), str(semantic["binding"]), str(semantic["role"]), key_column))
+		if str(section_spec[0]) == "GAME":
+			section.add_child(_compact_rows(section_rows))
+		else:
+			for semantic in section_rows:
+				section.add_child(PassiveControlComponentsScript.key_first_row(str(semantic["operation"]), str(semantic["binding"]), str(semantic["role"]), key_column))
 		_groups_box.add_child(section)
 
 
@@ -335,8 +344,11 @@ func _build_spatial_legend(rows_by_role: Dictionary) -> void:
 	var game_rows: Array = rows_by_role.get("hold", []) + rows_by_role.get("session", [])
 	if not game_rows.is_empty():
 		var game := PassiveControlComponentsScript.section("GAME", "game", _density)
-		for semantic in game_rows:
-			game.add_child(_legend_row(semantic, cap_width * 2.0))
+		if _layout == LAYOUT_RAIL:
+			game.add_child(_compact_rows(game_rows))
+		else:
+			for semantic in game_rows:
+				game.add_child(_legend_row(semantic, cap_width * 2.0))
 		_groups_box.add_child(game)
 	for glyph in _glyphs:
 		(glyph as ControlLegendGlyph).set_directions(_screen_directions)
@@ -362,6 +374,24 @@ func _slice_row(labels: Array) -> HBoxContainer:
 	row.add_child(hop)
 	row.add_child(PassiveControlComponentsScript.keycap(right_key))
 	return row
+
+
+# Hold, pause and restart are glanced at rarely, so in a rail they share one
+# flowing line of key + verb pairs: a magnified window gives the rail the
+# height of a ~1280x780 shell, where three full rows pushed the 3D legend
+# into scrolling. The line still wraps into rows when the rail is narrow.
+func _compact_rows(rows: Array) -> HFlowContainer:
+	var flow := HFlowContainer.new()
+	flow.name = "LegendCompactRows"
+	flow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	flow.add_theme_constant_override("h_separation", ShellDesignTokensScript.SPACE_4)
+	flow.add_theme_constant_override("v_separation", 2)
+	for semantic in rows:
+		var row := _legend_row(semantic, 0.0)
+		row.size_flags_horizontal = Control.SIZE_FILL
+		(row.get_node("LegendOperation") as Label).size_flags_horizontal = Control.SIZE_FILL
+		flow.add_child(row)
+	return flow
 
 
 # Spatial legends size to their words: a trimmed verb would leave only the key.

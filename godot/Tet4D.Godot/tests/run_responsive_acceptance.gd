@@ -25,8 +25,10 @@ const MIN_2D_BOARD_HEIGHT_SHARE_SMALL := 0.45
 const MIN_3D_BOARD_HEIGHT_SHARE := 0.55
 const MIN_3D_BOARD_HEIGHT_SHARE_SMALL := 0.40
 
+# Windows larger than the 1280x800 reference magnify the reference layout, so
+# a 1728x1080 window lays out as 1280x800 scaled 1.35x: the standard profile.
 const CASES := [
-	{"points": Vector2i(1728, 1080), "profile": CockpitScript.PROFILE_WIDE, "next_hold_without_scroll": true},
+	{"points": Vector2i(1728, 1080), "profile": CockpitScript.PROFILE_STANDARD, "next_hold_without_scroll": true},
 	{"points": Vector2i(1440, 900), "profile": CockpitScript.PROFILE_STANDARD, "next_hold_without_scroll": true},
 	{"points": Vector2i(1200, 800), "profile": CockpitScript.PROFILE_STANDARD},
 	{"points": Vector2i(1000, 720), "profile": CockpitScript.PROFILE_NARROW},

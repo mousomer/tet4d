@@ -2,6 +2,8 @@ extends VBoxContainer
 
 class_name LiveCockpit
 
+const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
+
 const PROFILE_WIDE := "wide"
 const PROFILE_STANDARD := "standard"
 const PROFILE_NARROW := "narrow"
@@ -35,7 +37,11 @@ const PLACEMENT_SIDE := "side"
 # at 1440 px. The column narrows the width-limited slice row (about 30 -> 26 px
 # cells at 1440x900); that is the price of every 4D control visible unscrolled.
 const PLACEMENT_SPLIT := "split"
-const SIDE_RAIL_WIDTH_SHARE := 0.32
+# Standard and wide shells need ~440 px at the 1280 px reference width for the
+# 3D compass and drops to share a row; narrow shells scroll the rail anyway and
+# give the width back to the board (and an open Designer panel).
+const SIDE_RAIL_WIDTH_SHARE := 0.35
+const SIDE_RAIL_NARROW_WIDTH_SHARE := 0.30
 const SIDE_RAIL_MIN_WIDTH := 280.0
 const SIDE_RAIL_MAX_WIDTH := 460.0
 const SIDE_RAIL_GAP := 10
@@ -332,7 +338,10 @@ func _apply_responsive_policy() -> void:
 
 
 func _rail_width() -> float:
-	return clampf(_layout_size.x * SIDE_RAIL_WIDTH_SHARE, SIDE_RAIL_MIN_WIDTH, SIDE_RAIL_MAX_WIDTH) if _layout_size.x > 1.0 else SIDE_RAIL_MIN_WIDTH
+	if _layout_size.x <= 1.0:
+		return SIDE_RAIL_MIN_WIDTH
+	var share := SIDE_RAIL_NARROW_WIDTH_SHARE if _responsive_profile in [PROFILE_NARROW, PROFILE_SMALL] else SIDE_RAIL_WIDTH_SHARE
+	return clampf(_layout_size.x * share, SIDE_RAIL_MIN_WIDTH, SIDE_RAIL_MAX_WIDTH)
 
 
 # The rail stacks visible modules top to bottom: what the player glances at
@@ -345,7 +354,9 @@ func _apply_side_policy() -> void:
 	for module in [piece_state, piece_controls, view_controls]:
 		if (module as Control).visible:
 			packed.append([str((module as Control).name)])
-	var row_separation := _row_separation_for_profile()
+	# Stacked panels need only a hairline between them; the deck's row gap is
+	# sized for modules side by side.
+	var row_separation := ShellDesignTokensScript.SPACE_1
 	_apply_row_assignment(packed, row_separation)
 	_row_assignment = packed
 	_natural_deck_height = _natural_height_for_rows(packed, 0.0, row_separation)
