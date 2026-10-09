@@ -340,11 +340,20 @@ disabled control emits no activation.
    text wraps, and live-mode/density rebuilds reapply keycap styling.
    The live control deck caps its height at 28% of the shell (subject to its
    row floor), scrolling extra rows to preserve space for the primary board in compact windows.
-   Live 2D instead places the deck in a side rail beside its tall board
-   (30% of the shell width, 280-400 px): NEXT/HOLD above a key-first legend
-   grouped MOVE / ROTATE / GAME that includes Hold, Pause and Restart keys, with
-   no VIEW module. The camera fits the board plus its two spawn rows with 1.06
-   clearance and anchors the board toward the rail when width is spare.
+   Live 2D and 3D instead place the deck in a side rail beside their tall
+   boards (32% of the shell width, 280-460 px): NEXT/HOLD above a key-first
+   legend grouped MOVE / ROTATE / GAME that includes Hold, Pause and Restart
+   keys, with no VIEW module. Live 4D keeps the legend in the deck and moves
+   NEXT/HOLD and a VIEW module of view turns and look into a scrolling side
+   column (22% of the width, 300-340 px); narrow and small shells fall back to
+   the reflowing deck. The camera fits 2D/3D boards plus their two spawn rows
+   (1.06 / 1.10 clearance) and anchors them toward the rail when width is spare.
+   The 3D/4D legend is spatial: movement is a compass whose arrows are measured
+   from the camera (each keycap sits where its key moves the piece on screen),
+   the 4D slice hop reads `Q ← slice → E`, and rotations and 4D view turns are
+   rows with a glyph lighting the two on-screen directions they mix (Spin,
+   Turn, Tip, Side↔W, Up↔W, Depth↔W; plane names remain as a rail tag). A row
+   flashes when its key is used. Wording never changes with the view.
 2. Maintain text/background contrast aligned with WCAG minimum guidance.
 3. Avoid crowded line wrapping in options; keep one option per row.
 4. Titles should use capitalized display text rather than stacked

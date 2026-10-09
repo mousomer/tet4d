@@ -215,6 +215,18 @@ legend and a 1.06 fit including spawn rows: 25 px cells (66%) at 1200×760 and
 content-driven height, so shrinking it needs a header rework); applying a
 side or slimmer layout to 3D/4D; 3D/4D restart is Backspace because R rotates
 there; manual playtest acceptance.
+Stage 56H 3D/4D ergonomics pass: a scripted diagnostic play (real key events,
+prediction before each frame) found the dominant added cost was vocabulary,
+not puzzle: the deck labelled moves with axis names that contradicted the
+orientation gizmo and changed after a view turn (A/D: X -> Z) while the keys'
+on-screen effect did not, and rotations were bare plane names. 3D cells were
+29 px against Python's 67. Now: 3D rail and spawn-aware fit (46 px, board 64%
+of a 1440x900 window), a camera-measured movement compass, plane-glyph rotation
+and view-turn rows, and a 4D split layout with no scrolling at 1440x900.
+Trade-off: 4D cells went from 30 to 26.5 px, because the side column
+narrows the width-limited slice row. Open: rotation direction (R vs T) is still
+not shown; the orientation gizmo is still ~40 px with tiny labels; manual
+human playtest acceptance of 3D/4D.
 
 ### Three-product packaging gaps
 
