@@ -103,8 +103,12 @@ explicit human A/B gate.
 Stage 56B is implemented and focused-green. During cockpit integration it
 exposed bounded repair `56B-R`: the stretched render SubViewport can report a
 transient `120×2` allocation before the real game area settles, so the HUD's
-stable game-area geometry now owns layout invalidation and supplies the board
-viewport to the renderer. The repair changes presentation geometry only and
+game-area geometry initially owned layout invalidation. The Stage 56H
+corrective pass supersedes that workaround: the visible inner render region's
+resolved size (SubViewport stretch matching its container) owns layout and fit
+invalidation through size/visibility signals. Hidden or invalid dimensions
+leave canonical-entry fitting pending; no forced container sorting establishes
+correctness. The repair changes presentation geometry only and
 does not alter slice identity, activity, gameplay, or deterministic state.
 The measured candidate table and required A/B captures are recorded in
 `docs/design/stage_56b_slice_tiling_evidence.md`. Stage 56C is now eligible;

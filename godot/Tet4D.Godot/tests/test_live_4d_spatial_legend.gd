@@ -28,6 +28,7 @@ func run() -> Array:
 	for i in range(4):
 		await tree.process_frame
 
+	var style_before := _legend_style(hud._piece_control_strip)
 	var layout: Dictionary = hud.layout_contract_snapshot()
 	var cockpit: Dictionary = layout.get("live_cockpit", {})
 	if cockpit.get("deck_placement") != LiveCockpitScript.PLACEMENT_SPLIT:
@@ -69,6 +70,35 @@ func run() -> Array:
 	if hud._piece_control_strip.deterministic_snapshot().get("row_ids", []) != row_ids_before:
 		failures.append("Live 4D legend wording must not change after a view turn, got %s" % str(hud._piece_control_strip.deterministic_snapshot().get("row_ids", [])))
 	failures.append_array(await LegendDirectionProbeScript.check_compass_matches_moves(app, hud, tree, 4, "Live-4D after view turn"))
+	# Direction publishing runs after contract refresh. Exercise that late rebuild
+	# with repeated real XW turns, rather than reconfiguring/styling it by hand.
+	app._live_4d_paused = true
+	var hash_before := str(app._live_bridge.live_4d_state_hash())
+	var reversed_before: bool = hud._piece_control_strip.deterministic_snapshot()["slice_keys_reversed"]
+	var reversals := 0
+	for turn in range(8):
+		app._apply_live_4d_basis_turn("xw", 1)
+		for frame in range(6):
+			await tree.process_frame
+		var legend: Dictionary = hud._piece_control_strip.deterministic_snapshot()
+		var reversed_now: bool = legend["slice_keys_reversed"]
+		if reversed_now != reversed_before:
+			reversals += 1
+		reversed_before = reversed_now
+		if _legend_style(hud._piece_control_strip) != style_before:
+			failures.append("Live-4D direction rebuild must preserve keycap style, typography, spacing and control count")
+		var row = hud._piece_control_strip.find_child("LegendSliceRow", true, false)
+		var left := LiveInputContractScript.display_key("live_4d_move_w_pos" if reversed_now else "live_4d_move_w_neg")
+		var right := LiveInputContractScript.display_key("live_4d_move_w_neg" if reversed_now else "live_4d_move_w_pos")
+		if row == null or row.get_child_count() != 3 or row.get_child(0).text != left or row.get_child(2).text != right:
+			failures.append("Live-4D rebuilt slice keys must follow the measured direction without duplicate controls")
+		var positive: Vector2 = legend.get("screen_directions", {}).get("move_w_pos", Vector2.ZERO)
+		if reversed_now != (positive.x < 0.0):
+			failures.append("Live-4D slice arrows must follow the published screen direction")
+	if reversals < 2:
+		failures.append("Live-4D rebuild regression must exercise repeated slice-direction reversals")
+	if str(app._live_bridge.live_4d_state_hash()) != hash_before:
+		failures.append("Live-4D view turns and legend reconstruction must not mutate gameplay")
 	# The row of the plane just used lights up.
 	if not hud._piece_control_strip.flash_plane("XW") or not hud._live_view_control_strip.flash_plane("ZW"):
 		failures.append("Live 4D must be able to flash the legend row of the plane just used")
@@ -76,3 +106,22 @@ func run() -> Array:
 	await tree.process_frame
 	tree.root.size = original_size
 	return failures
+
+
+func _legend_style(strip: Control) -> Array:
+	var result: Array = []
+	for control in strip.find_children("*", "Control", true, false):
+		var entry: Array = [control.get_class(), control.get_meta("shell_style_theme_id", "missing")]
+		# Anonymous container names change on reconstruction; class/order/count
+		# and metrics are the stable identity of this presentation subtree.
+		if control is Label:
+			entry.append_array([control.get_theme_font_size("font_size"), control.get_theme_color("font_color"), control.has_theme_stylebox_override("normal")])
+			if control.theme_type_variation == "KeycapLabel":
+				var box := control.get_theme_stylebox("normal") as StyleBoxFlat
+				entry.append([box.bg_color, box.border_color, box.get_content_margin(SIDE_LEFT)] if box != null else [])
+		if control is BoxContainer:
+			entry.append(control.get_theme_constant("separation"))
+		if control is FlowContainer:
+			entry.append_array([control.get_theme_constant("h_separation"), control.get_theme_constant("v_separation")])
+		result.append(entry)
+	return result

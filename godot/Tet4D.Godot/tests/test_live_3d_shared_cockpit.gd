@@ -25,8 +25,7 @@ func run() -> Array:
 	var app = root.get_node("App")
 	var hud = root.get_node("ReplayHud")
 	# Compare board allocation with guidance hidden; guide layout has separate
-	# acceptance. Hide it before entry: a resize inside the post-entry layout
-	# guard deliberately does not refit.
+	# acceptance. Live 3D has no presentation-profile layout guard.
 	hud._set_onboarding_visible(false)
 	await tree.process_frame
 	app._enter_live_3d_mode()
@@ -44,6 +43,16 @@ func run() -> Array:
 		failures.append("Live 3D must place the control rail to the right of the board: board %s rail %s placement %s" % [game_area, deck, cockpit.get("deck_placement")])
 	if hud._live_cockpit.view_controls.visible:
 		failures.append("Live-3D rail must omit the VIEW module; mouse orbit and the Fit View button cover it")
+	var reset_rows: Array = hud._piece_control_strip.find_children("*", "HBoxContainer", true, false).filter(func(row):
+		var operation = row.get_node_or_null("LegendOperation")
+		return operation != null and operation.text == "Reset View"
+	)
+	if reset_rows.size() != 1 or not reset_rows[0].is_visible_in_tree():
+		failures.append("Live-3D normal rail must visibly expose exactly one Reset View hint")
+	else:
+		var caps: Array = reset_rows[0].find_children("*", "Label", true, false).filter(func(label): return label.theme_type_variation == "KeycapLabel")
+		if caps.size() != 1 or caps[0].text != LiveInputContractScript.display_key("reset"):
+			failures.append("Live-3D Reset View keycap must consume the reset binding")
 	# Measure the board itself, not its container.
 	var board_height := LegendDirectionProbeScript.projected_content_height(app)
 	if board_height / float(tree.root.size.y) < MIN_BOARD_HEIGHT_SHARE:
@@ -81,11 +90,12 @@ func run() -> Array:
 	for action_id in ["live_3d_move_x_neg", "live_3d_move_x_pos", "live_3d_rotate_xy_neg", "live_3d_rotate_yz_pos", "live_3d_soft_drop", "live_3d_hard_drop"]:
 		if not LiveInputContractScript.action_specs().has(action_id):
 			failures.append("Live-3D migration must retain input authority action %s" % action_id)
+	app._live_3d_paused = true
+	hash_before = str(app._live_bridge.live_3d_state_hash())
 	hud._apply_hud_density("compact")
 	await tree.process_frame
-	app._reset_live_3d()
-	await tree.process_frame
-	hash_before = str(app._live_bridge.live_3d_state_hash())
+	if str(app._live_bridge.live_3d_state_hash()) != hash_before:
+		failures.append("Live-3D compact density must not mutate deterministic gameplay state")
 	hud._apply_hud_density("standard")
 	await tree.process_frame
 	if str(app._live_bridge.live_3d_state_hash()) != hash_before:

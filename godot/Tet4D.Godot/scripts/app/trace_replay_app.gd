@@ -731,26 +731,6 @@ func _open_design_laboratory() -> void:
 	_hud.open_design_laboratory()
 
 
-# Viewport-derived presentation (the fitted focus, Live 4D's adaptive slice
-# tiling) is only right once the shell layout for the current mode has settled,
-# which otherwise happens at the next deferred container sort. Sort the HUD
-# top-down now; the resulting resizes run the usual route/re-tile paths
-# synchronously.
-func _settle_shell_layout_now() -> void:
-	if _hud == null or not _hud.is_inside_tree():
-		return
-	# Minimum sizes propagate upward between passes; three converge in practice.
-	for pass_index in range(3):
-		_sort_containers_now(_hud)
-
-
-static func _sort_containers_now(node: Node) -> void:
-	if node is Container and (node as Container).is_visible_in_tree():
-		node.notification(Container.NOTIFICATION_SORT_CHILDREN)
-	for child in node.get_children():
-		_sort_containers_now(child)
-
-
 func _load_design_laboratory_scenario(scenario: Dictionary) -> Dictionary:
 	if str(scenario.get("scenario_kind", "replay_fixture")) == "live_session":
 		var setup = scenario.get("live_setup")
@@ -771,7 +751,6 @@ func _load_design_laboratory_scenario(scenario: Dictionary) -> Dictionary:
 		_live_3d_paused = true
 		_live_4d_paused = true
 		_refresh_hud()
-		_settle_shell_layout_now()
 		var live_fingerprint := _design_laboratory_fingerprint()
 		return {
 			"ok": true,
@@ -803,7 +782,7 @@ func _load_design_laboratory_scenario(scenario: Dictionary) -> Dictionary:
 
 func _design_laboratory_fingerprint() -> Dictionary:
 	var camera: Dictionary = _camera_rig.presentation_snapshot() if _camera_rig != null else {}
-	# Fit distance and orthographic size are derived from the current viewport.
+	# Fit focus, distance and orthographic size derive from the render region.
 	# Responsive layout may settle them a frame later without changing the
 	# user's pose or zoom; treating those scalars as authored comparison state
 	# makes a window resize look like a gameplay/style mutation.
@@ -823,8 +802,9 @@ func _design_laboratory_fingerprint() -> Dictionary:
 			"current_yaw": camera.get("current_yaw", 0.0),
 			"current_pitch": camera.get("current_pitch", 0.0),
 			"current_roll": camera.get("current_roll", 0.0),
-			"target_focus": str(camera.get("target_focus", Vector3.ZERO)),
-			"current_focus": str(camera.get("current_focus", Vector3.ZERO)),
+			# Preserve authored pan while excluding the layout-derived fit centre.
+			"target_focus": str((camera.get("target_focus", Vector3.ZERO) as Vector3) - (camera.get("fit_focus", Vector3.ZERO) as Vector3)),
+			"current_focus": str((camera.get("current_focus", Vector3.ZERO) as Vector3) - (camera.get("fit_focus", Vector3.ZERO) as Vector3)),
 			"zoom_multiplier": camera.get("zoom_multiplier", 1.0),
 			"projection": camera.get("projection", -1),
 			"view_context": camera.get("view_context", ""),
@@ -1036,14 +1016,15 @@ func _refresh_render() -> void:
 # a 2D/3D aspect change that makes width the limiting axis leaves the camera
 # solving for the previous aspect, which clips the board.
 func _on_game_viewport_geometry_changed(viewport_size: Vector2) -> void:
-	if not _route_layout_viewport_size(viewport_size):
+	if viewport_size.x < 240.0 or viewport_size.y < 120.0:
 		return
+	_route_layout_viewport_size(viewport_size)
 	if _mode not in [MODE_LIVE_2D, MODE_LIVE_3D, MODE_LIVE_4D] or _current_snapshot.is_empty():
 		return
 	var framing_status := str(_camera_rig.presentation_snapshot().get("framing_status", "")) if _camera_rig != null else ""
 	if _mode == MODE_LIVE_4D:
 		_refresh_live_4d_presentation(true)
-	if not _presentation_layout_guard_active and not framing_status.begins_with("manual"):
+	if _pending_fit_view or (not _presentation_layout_guard_active and not framing_status.begins_with("manual")):
 		_fit_view()
 
 
@@ -1123,6 +1104,12 @@ func _fit_view() -> void:
 	if _camera_rig == null or _renderer == null:
 		_pending_fit_view = true
 		return
+	var viewport_size := _hud.board_viewport_size() if _hud != null else Vector2.ZERO
+	if viewport_size.x < 240.0 or viewport_size.y < 120.0:
+		_pending_fit_view = true
+		return
+	if _route_layout_viewport_size(viewport_size) and _mode == MODE_LIVE_4D:
+		_refresh_live_4d_presentation(true)
 	var bounds := _renderer.current_bounds()
 	if not bounds.get("ok", false):
 		_pending_fit_view = true
@@ -1151,11 +1138,6 @@ func _establish_canonical_view_and_fit(mode_name: String) -> void:
 	if _camera_rig == null or _renderer == null:
 		_pending_fit_view = true
 		return
-	# Modes place the deck differently (2D/3D rail, 4D split), and the game
-	# viewport only takes the new mode's size at the next container sort. Fitting
-	# before that framed Live 4D, entered from the 3D rail, for the rail's aspect:
-	# its slices at half size. Settle the shell first.
-	_settle_shell_layout_now()
 	if mode_name == MODE_LIVE_4D:
 		_restore_live_4d_presentation_defaults()
 		_refresh_live_4d_presentation(true)
@@ -1184,6 +1166,8 @@ func _establish_canonical_view_and_fit(mode_name: String) -> void:
 				0.0,
 				false
 			)
+	# Fit now only when the render region is already visible and resolved.
+	# Hidden entry remains pending; size/visibility changes use the same path.
 	_fit_view()
 
 
@@ -1557,6 +1541,8 @@ func _enter_live_2d_mode(preserve_current_view: bool = false) -> void:
 	if not preserve_current_view:
 		_establish_canonical_view_and_fit(MODE_LIVE_2D)
 	_hud.show_replay_viewer()
+	if not preserve_current_view:
+		_fit_view()
 
 
 func _enter_live_3d_mode(preserve_current_view: bool = false) -> void:
@@ -1568,6 +1554,8 @@ func _enter_live_3d_mode(preserve_current_view: bool = false) -> void:
 	if not preserve_current_view:
 		_establish_canonical_view_and_fit(MODE_LIVE_3D)
 	_hud.show_replay_viewer()
+	if not preserve_current_view:
+		_fit_view()
 	_refresh_live_3d_snapshot()
 
 
@@ -1580,6 +1568,8 @@ func _enter_live_4d_mode(preserve_current_view: bool = false) -> void:
 	if not preserve_current_view:
 		_establish_canonical_view_and_fit(MODE_LIVE_4D)
 	_hud.show_replay_viewer()
+	if not preserve_current_view:
+		_fit_view()
 	_refresh_live_4d_snapshot()
 
 
@@ -1825,6 +1815,8 @@ func _board_axis_screen_direction(shape: Array, origin: Array, axis: int, direct
 		return Vector2.ZERO
 	var neighbour := origin.duplicate()
 	neighbour[axis] = int(neighbour[axis]) + direction
+	# Samples an in-board point for the legend arrow, never movement legality.
+	# tet4d-semantic-boundary: allow display-only
 	if int(neighbour[axis]) < 0 or int(neighbour[axis]) >= int(shape[axis]):
 		return Vector2.ZERO
 	var from := _camera_rig.project_world_point(_renderer.cell_global_position(origin))

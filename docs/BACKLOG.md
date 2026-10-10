@@ -226,7 +226,12 @@ and view-turn rows, and a 4D split layout with no scrolling at 1440x900.
 Trade-off: 4D cells went from 30 to 26.5 px, because the side column
 narrows the width-limited slice row. Open: rotation direction (R vs T) is still
 not shown; the orientation gizmo is still ~40 px with tiny labels; manual
-human playtest acceptance of 3D/4D.
+human playtest acceptance of 3D/4D. The bounded corrective pass replaces
+forced layout fitting with visible inner-render-region size/visibility-driven
+refitting, restores the 3D Reset View keycap, reapplies styling on direction
+rebuilds, and strengthens transition/hash regression coverage. Real-window
+framing acceptance for entry/restart/resize/guide changes remains required;
+automated geometry evidence alone does not close human acceptance.
 
 ### Three-product packaging gaps
 

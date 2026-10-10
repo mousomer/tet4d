@@ -79,6 +79,12 @@ and frozen-setup Restart/Play Again under
 Shell readability uses 24/22 px body/supporting/helper text and window-filling Main
 and Advanced menus with contained maximum-scale scrolling. Helper keycaps/actions
 retain 22 px in every density and scroll internally. Include typography/guide layout in the outstanding Stage 56H human acceptance.
+The bounded camera/legend correction requires visible inner-render-region
+fitting on menu entry, restart, resize, and guide/layout changes; visible 3D
+Reset View guidance; styled 4D direction rebuilds; and native hash isolation.
+Preserve synchronous fitting when valid visible geometry already exists,
+including Reset View and Designer comparison loading. Human playability remains
+separate from automated geometry and local Metal screenshot inspection.
 Durable open work and release-matrix deferrals remain in `docs/BACKLOG.md`.
 
 Sections with `BEGIN/END GENERATED:*` markers are maintained by

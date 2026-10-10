@@ -103,6 +103,10 @@ or write settings/profile storage. The application verifies the scenario's
 non-style fingerprint before and after a switch. Any mismatch aborts the
 comparison instead of silently continuing.
 
+The camera fingerprint records pan relative to the fitted focus. The fitted
+focus, distance, and orthographic size derive from resolved render-region
+geometry and are excluded; authored pan, orientation, and zoom remain checked.
+
 The observable style contract is the complete canonical profile snapshot, so
 `A -> B -> A` is exact by construction. Each arm is copied on assignment and
 on read; user edits and saves cannot leak across arms. Reassignment advances

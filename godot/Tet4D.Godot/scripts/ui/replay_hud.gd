@@ -1159,8 +1159,18 @@ func game_viewport() -> SubViewport:
 	return _game_viewport
 
 
+func _publish_game_viewport_geometry() -> void:
+	game_viewport_geometry_changed.emit(board_viewport_size())
+
+
 func board_viewport_size() -> Vector2:
-	return _game_area.size if _game_area != null else Vector2.ZERO
+	# SubViewport.size_changed fires after stretch has applied the inner region.
+	# Hidden or mismatched geometry is not a fit input, even if it has old sizes.
+	if _game_viewport_container == null or _game_viewport == null or not _game_viewport_container.is_visible_in_tree():
+		return Vector2.ZERO
+	if Vector2i(_game_viewport_container.size) != _game_viewport.size:
+		return Vector2.ZERO
+	return Vector2(_game_viewport.size)
 
 
 func layout_contract_snapshot() -> Dictionary:
@@ -2370,7 +2380,6 @@ func _build_layout() -> void:
 	_game_area.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_game_area.theme_type_variation = "ViewportFrame"
 	_game_area.resized.connect(func() -> void:
-		game_viewport_geometry_changed.emit(_game_area.size)
 		call_deferred("_layout_presentation_designer")
 	)
 	body.add_child(_game_area)
@@ -2411,6 +2420,8 @@ func _build_layout() -> void:
 	_game_viewport.size = Vector2i(ReplayVisuals.GAME_AREA_MIN_WIDTH, 240)
 	_game_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	_game_viewport_container.add_child(_game_viewport)
+	_game_viewport.size_changed.connect(_publish_game_viewport_geometry, CONNECT_DEFERRED)
+	_game_viewport_container.visibility_changed.connect(_publish_game_viewport_geometry, CONNECT_DEFERRED)
 
 	_right_scroll = ScrollContainer.new()
 	_right_scroll.name = "RightInspectorSlot"
@@ -2534,6 +2545,9 @@ func _build_layout() -> void:
 	_hold_piece_panel.set_style_manager(_style_manager)
 	_piece_preview_row.add_child(_hold_piece_panel)
 	_piece_control_strip = LivePieceControlStripScript.new()
+	_piece_control_strip.rebuilt.connect(func() -> void:
+		_style_applier.apply_to_tree(_piece_control_strip, _style_manager)
+	)
 	_piece_control_strip.visible = false
 	_right_column.add_child(_piece_control_strip)
 	_live_view_control_strip = LiveViewControlStripScript.new()

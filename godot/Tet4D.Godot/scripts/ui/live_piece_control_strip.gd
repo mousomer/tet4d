@@ -2,6 +2,8 @@ extends PanelContainer
 
 class_name LivePieceControlStrip
 
+signal rebuilt
+
 const LiveInputContractScript = preload("res://scripts/input/live_input_contract.gd")
 const PassiveControlComponentsScript = preload("res://scripts/ui/passive_control_components.gd")
 const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
@@ -144,6 +146,7 @@ func _rebuild() -> void:
 	_glyphs.clear()
 	if _layout in [LAYOUT_RAIL, LAYOUT_WIDE]:
 		_rebuild_rail()
+		rebuilt.emit()
 		return
 	for group in _groups:
 		var role := str(group.get("cockpit_role", ""))
@@ -166,6 +169,8 @@ func _rebuild() -> void:
 			var semantic := _semantic_row(role, item)
 			row_parent.add_child(PassiveControlComponentsScript.row(str(semantic["operation"]), str(semantic["binding"]), role, _density))
 		_groups_box.add_child(section)
+
+	rebuilt.emit()
 
 
 # Measured on-screen directions from the app: movement intents and local
@@ -342,6 +347,15 @@ func _build_spatial_legend(rows_by_role: Dictionary) -> void:
 	_groups_box.add_child(rotate)
 
 	var game_rows: Array = rows_by_role.get("hold", []) + rows_by_role.get("session", [])
+	if _mode == "live_3d":
+		# The full VIEW module is hidden in the rail. Consume its existing Reset
+		# descriptor here so the key remains discoverable without another panel.
+		for group in LiveInputContractScript.view_control_groups(_mode):
+			for item in group.get("items", []):
+				if str(_item_metadata(item).get("operation", "")) == "Reset":
+					var reset := _semantic_row("view_framing", item)
+					reset["operation"] = "Reset View"
+					game_rows.append(reset)
 	if not game_rows.is_empty():
 		var game := PassiveControlComponentsScript.section("GAME", "game", _density)
 		if _layout == LAYOUT_RAIL:
