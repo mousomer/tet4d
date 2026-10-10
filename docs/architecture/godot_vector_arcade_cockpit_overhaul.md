@@ -877,3 +877,29 @@ the primary piece strip remain judgeable. Compact mode leaves the ordinary
 cockpit allocation intact. This correction changes no gameplay, input,
 persistence, deterministic identity, canonical geometry, exact basis,
 Designer A/B semantics, or authority boundary.
+
+
+### Stage 56H render-region lifecycle repair
+
+Camera fitting and adaptive slice layout consume the visible inner render
+SubViewport's resolved size, after stretch agrees with its container. Hidden,
+invalid, or mismatched geometry cannot complete a fit request. Canonical view
+entry requests a fit before the cockpit is shown; the render region's deferred
+size/visibility notifications and the pending-fit retry complete that same path.
+Later inner-region size changes use it again, including changes inside an
+unchanged outer GameArea. Designer fingerprints retain authored pan relative
+to the fitted centre, excluding that layout-derived centre alongside fit size. No synchronous container-sort passes establish fit
+correctness. Explicit Fit/Reset still request framing; existing manual framing
+and Live-4D presentation-profile pose protection retain their contracts.
+
+The normal Live-3D rail includes a compact Reset View keycap sourced from
+LiveInputContract's existing framing descriptor. Direction-driven piece-legend
+reconstruction emits completion only after all controls and glyphs exist; the
+HUD reapplies the current shell style on every rebuild. These operations remain
+presentation-only and do not mutate native state/hash.
+
+Automated transition evidence covers Main Menu Play into 3D/4D, restart,
+window and inner-region resizing, guide visibility, density isolation, and
+repeated legend direction reversals. Headless projection and fit-idempotence
+checks do not replace real-window framing inspection or human playability
+acceptance.

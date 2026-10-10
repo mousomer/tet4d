@@ -90,8 +90,10 @@ func run() -> Array:
 	await _settle(tree)
 	if DisplayServer.get_name() != "headless":
 		var points := Vector2(DisplayServer.window_get_size()) / DisplayServer.screen_get_scale()
-		if not Vector2(tree.root.content_scale_size).is_equal_approx(points):
-			failures.append("returning to live/replay must restore the existing point-sized responsive canvas")
+		var logical := points / HudScript.window_ui_scale(points)
+		var expected := Vector2(ceil(logical.x), ceil(logical.y))
+		if not Vector2(tree.root.content_scale_size).is_equal_approx(expected):
+			failures.append("returning to live/replay must restore its taller responsive reference canvas")
 	for mode in ["plain", "tron", "diagnostic"]:
 		hud.set_display_mode(mode)
 		if hud.theme.default_font_size < 24:

@@ -323,12 +323,12 @@ disabled control emits no activation.
 1. Default body text should target at least 18 px equivalent in current window scale.
    Godot menu/help body text uses 24 logical pixels and supporting text uses 22;
    display scaling and the persisted UI-scale preference apply on top.
-   Above the 1280×720 point opening window, menu screens magnify text and
-   controls proportionally by the tighter window axis (up to 2×). Smaller
-   windows retain readable point sizes and reflow/scroll. The live/replay
-   viewport keeps its existing responsive sizing. Initial Main Menu layout
-   shows the title and focused Play action; layout changes keep the focused
-   action reachable without overriding manual wheel scrolling.
+   Menu screens magnify above the 1280×720 point opening window; live/replay
+   uses a 1280×800 point reference so magnified rails and Designer chrome retain
+   their required logical height. Each scales by the tighter window axis, capped
+   at 2×. Smaller windows keep readable point sizes and reflow/scroll. Initial
+   Main Menu layout shows the title and focused Play action; layout changes
+   keep the focused action reachable without overriding manual wheel scrolling.
    Helper keycaps and action labels use at least 22 logical pixels in every
    density. Compact density may reduce spacing, never text size; keycaps size
    from their font metrics and operation labels wrap rather than truncate.
@@ -346,6 +346,20 @@ disabled control emits no activation.
    text wraps, and live-mode/density rebuilds reapply keycap styling.
    The live control deck caps its height at 28% of the shell (subject to its
    row floor), scrolling extra rows to preserve space for the primary board in compact windows.
+   Live 2D and 3D instead place the deck in a side rail beside their tall
+   boards (32% of the shell width, 280-460 px): NEXT/HOLD above a key-first
+   legend grouped MOVE / ROTATE / GAME that includes Hold, Pause and Restart
+   keys, with no VIEW module. Live 4D keeps the legend in the deck and moves
+   NEXT/HOLD and a VIEW module of view turns and look into a scrolling side
+   column (22% of the width, 300-340 px); narrow and small shells fall back to
+   the reflowing deck. The camera fits 2D/3D boards plus their two spawn rows
+   (1.06 / 1.10 clearance) and anchors them toward the rail when width is spare.
+   The 3D/4D legend is spatial: movement is a compass whose arrows are measured
+   from the camera (each keycap sits where its key moves the piece on screen),
+   the 4D slice hop reads `Q ← slice → E`, and rotations and 4D view turns are
+   rows with a glyph lighting the two on-screen directions they mix (Spin,
+   Turn, Tip, Side↔W, Up↔W, Depth↔W; plane names remain as a rail tag). A row
+   flashes when its key is used. Wording never changes with the view.
 2. Maintain text/background contrast aligned with WCAG minimum guidance.
 3. Avoid crowded line wrapping in options; keep one option per row.
 4. Titles should use capitalized display text rather than stacked

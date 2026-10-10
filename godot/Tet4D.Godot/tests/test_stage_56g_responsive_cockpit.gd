@@ -13,6 +13,7 @@ extends RefCounted
 # resize requests.
 
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
+const LiveCockpitScript = preload("res://scripts/ui/live_cockpit.gd")
 
 # Absolute collapse guard only. This is not a legibility criterion: a 120x120
 # gameplay surface inside a desktop window is plainly unplayable, which is why
@@ -92,18 +93,49 @@ func _assert_live_geometry(hud: Node, viewport_case: Dictionary, mode: String, v
 		failures.append("%s must keep the whole control deck inside the usable viewport: deck %s in %s" % [label, deck, usable])
 	if not _contains_rect(usable, game_viewport):
 		failures.append("%s must keep the gameplay surface inside the usable viewport: %s in %s" % [label, game_viewport, usable])
-	for index in range(modules.size()):
-		if not _contains_rect(rows_rect, modules[index]):
-			failures.append("%s must keep semantic module %d inside the scroll-reachable row host: %s in %s" % [label, index, modules[index], rows_rect])
-
+	# Placement follows the board's shape: 2D and 3D wells take a side rail;
+	# Live 4D keeps its legend in the deck and moves NEXT/HOLD + VIEW to a side
+	# column, falling back to the reflowing deck in narrow and small shells.
+	var placement := str(cockpit.get("deck_placement", ""))
+	var profile := str(cockpit.get("responsive_profile", ""))
+	var expected_placement := LiveCockpitScript.PLACEMENT_SIDE
+	if mode == "4D":
+		expected_placement = LiveCockpitScript.PLACEMENT_SPLIT if profile in [LiveCockpitScript.PROFILE_WIDE, LiveCockpitScript.PROFILE_STANDARD] else LiveCockpitScript.PLACEMENT_BELOW
+	if placement != expected_placement:
+		failures.append("%s at profile %s must use placement %s, got %s" % [label, profile, expected_placement, placement])
+	var side_rail := placement == LiveCockpitScript.PLACEMENT_SIDE
+	var split := placement == LiveCockpitScript.PLACEMENT_SPLIT
+	var side_column: Rect2 = cockpit.get("side_column_rect", Rect2())
 	if cockpit.get("deck_modules") != ["PieceControls", "ViewControls", "PieceState"]:
 		failures.append("%s must retain the shared PIECE / VIEW / PIECE STATE identity" % label)
 	var flattened: Array = []
 	for row in cockpit.get("deck_row_assignment", []):
 		for module_name in row:
 			flattened.append(str(module_name))
-	if flattened != ["PieceControls", "ViewControls", "PieceState"]:
-		failures.append("%s must preserve semantic module order across reflow rows, got %s" % [label, str(flattened)])
+	var expected_order := ["PieceControls", "ViewControls", "PieceState"]
+	if side_rail:
+		expected_order = ["PieceState", "PieceControls"]
+	elif split:
+		expected_order = ["PieceControls"]
+	if flattened != expected_order:
+		failures.append("%s must preserve semantic module order %s, got %s" % [label, str(expected_order), str(flattened)])
+	# Rail modes omit VIEW (index 1). In the split, NEXT/HOLD and VIEW live in a
+	# scrolling side column: NEXT/HOLD must be fully visible at its top, VIEW
+	# reachable below it.
+	for index in range(modules.size()):
+		if side_rail and index == 1:
+			continue
+		if split and index > 0:
+			continue
+		if not _contains_rect(rows_rect, modules[index]):
+			failures.append("%s must keep semantic module %d inside the scroll-reachable row host: %s in %s" % [label, index, modules[index], rows_rect])
+	if split:
+		if not _contains_rect(usable, side_column) or side_column.position.x < board.end.x:
+			failures.append("%s must keep the side column inside the window, right of the board: %s board %s" % [label, side_column, board])
+		if not _contains_rect(side_column, modules[2]):
+			failures.append("%s must show PIECE STATE fully at the top of the side column: %s in %s" % [label, modules[2], side_column])
+		if modules[1].position.y < modules[2].end.y - 0.5 or modules[1].position.x < side_column.position.x - 0.5:
+			failures.append("%s must stack VIEW below PIECE STATE in the side column: %s" % [label, modules[1]])
 	if not bool(cockpit.get("deck_visible", false)):
 		failures.append("%s must keep the shared control deck reachable" % label)
 	if board.intersects(deck):
@@ -113,13 +145,21 @@ func _assert_live_geometry(hud: Node, viewport_case: Dictionary, mode: String, v
 		failures.append("%s collapsed the gameplay surface entirely, got %s" % [label, game_viewport])
 	var width_share := game_viewport.size.x / maxf(viewport_size.x, 1.0)
 	var height_share := game_viewport.size.y / maxf(viewport_size.y, 1.0)
-	if width_share < MIN_GAME_WIDTH_SHARE:
+	# A rail or side column spends width the board's fit does not use, so width
+	# share is not the measure there; it must simply sit right of the board.
+	if side_rail and deck.position.x < board.end.x:
+		failures.append("%s must place the rail to the right of the board: board %s rail %s" % [label, board, deck])
+	if not side_rail and not split and width_share < MIN_GAME_WIDTH_SHARE:
 		failures.append("%s must leave the gameplay surface at least %d%% of the viewport width, got %d%%" % [label, int(MIN_GAME_WIDTH_SHARE * 100.0), int(width_share * 100.0)])
 	if height_share < MIN_GAME_HEIGHT_SHARE:
 		failures.append("%s must leave the gameplay surface at least %d%% of the viewport height, got %d%%" % [label, int(MIN_GAME_HEIGHT_SHARE * 100.0), int(height_share * 100.0)])
 
 	for first in range(modules.size()):
 		for second in range(first + 1, modules.size()):
+			# Omitted VIEW, and side-column content clipped by its scroll, are not
+			# visible geometry that could overlap anything.
+			if (side_rail or split) and (first == 1 or second == 1):
+				continue
 			if modules[first].intersects(modules[second]):
 				failures.append("%s must not overlap semantic modules %d/%d" % [label, first, second])
 	var preview_row: Rect2 = snapshot.get("piece_preview_row_rect", Rect2())
@@ -128,10 +168,11 @@ func _assert_live_geometry(hud: Node, viewport_case: Dictionary, mode: String, v
 	# Stage 56H-R3.1: scrolling is the constrained-size escape hatch only. At the
 	# standard window NEXT and HOLD must be on screen without scrolling.
 	if bool(viewport_case.get("next_hold_without_scroll", false)):
-		if bool(cockpit.get("deck_scroll_required", false)) or int(cockpit.get("deck_row_count", 0)) != 1:
-			failures.append("%s must fit PIECE / VIEW / PIECE STATE on one unscrolled deck row, got rows %s" % [label, str(cockpit.get("deck_row_assignment", []))])
-		if not _contains_rect(deck, preview_row) or not _contains_rect(usable, preview_row):
-			failures.append("%s must show NEXT and HOLD inside the visible deck: %s in %s" % [label, preview_row, deck])
+		if bool(cockpit.get("deck_scroll_required", false)) or (not side_rail and int(cockpit.get("deck_row_count", 0)) != 1):
+			failures.append("%s must fit its deck on one unscrolled row, got rows %s" % [label, str(cockpit.get("deck_row_assignment", []))])
+		var visible_host := side_column if split else deck
+		if not _contains_rect(visible_host, preview_row) or not _contains_rect(usable, preview_row):
+			failures.append("%s must show NEXT and HOLD without scrolling: %s in %s" % [label, preview_row, visible_host])
 	return failures
 
 

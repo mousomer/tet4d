@@ -336,7 +336,7 @@ func _test_live_app_integration() -> Array:
 		failures.append("4D orientation indicator should preserve readable slice state while tuning presentation")
 	if not _rect_contains_rect(four_d_layout.get("piece_module_rect", Rect2()), hud._piece_control_strip.get_global_rect()):
 		failures.append("4D primary piece controls should remain visible in the shared Piece module while tuning presentation")
-	if "translate:W" not in four_d_layout.get("piece_control_strip", {}).get("row_ids", []):
+	if "translate:Slice" not in four_d_layout.get("piece_control_strip", {}).get("row_ids", []):
 		failures.append("4D slice guidance should remain present in the shared Piece module while tuning presentation")
 
 	designer.revert_and_hide()

@@ -189,6 +189,8 @@ window-filling Main/Advanced menus with wrapping, focus-following overflow.
 Menu acceptance also requires the launch title/Play action to be visible and
 proportional text/control growth above 1280×720 pt (capped at 2×), including
 same-aspect resizes, compact overflow, and transitions back to live play.
+The unified shell retains the gameplay branch's 1280×800 pt live/replay
+magnification reference alongside the menu's 1280×720 pt reference.
 Helper keycaps/actions remain at least 22 px in every density; internal help
 scrolling preserves NEXT/HOLD visibility. Check the larger typography during
 the outstanding manual acceptance.
@@ -209,6 +211,32 @@ now use validated direct launch and `C` opens Change Setup; regression coverage
 includes invalid drafts and modifier filtering. Replay and Designer flows
 remain out of scope. Human acceptance and the unresolved product decisions
 listed in the repair plan remain open.
+Stage 56H gameplay-ergonomics pass (2D): measured against the Python client
+(30 px cells, board 79% of a 1200×760 window), Live 2D drew 13.6 px cells
+(36%) because a 220 px deck sat under the tall board and the 1.32 fit margin
+discarded another quarter. Live 2D now uses a side rail with a key-first
+legend and a 1.06 fit including spawn rows: 25 px cells (66%) at 1200×760 and
+31 px (69%) at 1440×900. Open: the 100 px live header (its status block has no
+content-driven height, so shrinking it needs a header rework); applying a
+side or slimmer layout to 3D/4D; 3D/4D restart is Backspace because R rotates
+there; manual playtest acceptance.
+Stage 56H 3D/4D ergonomics pass: a scripted diagnostic play (real key events,
+prediction before each frame) found the dominant added cost was vocabulary,
+not puzzle: the deck labelled moves with axis names that contradicted the
+orientation gizmo and changed after a view turn (A/D: X -> Z) while the keys'
+on-screen effect did not, and rotations were bare plane names. 3D cells were
+29 px against Python's 67. Now: 3D rail and spawn-aware fit (46 px, board 64%
+of a 1440x900 window), a camera-measured movement compass, plane-glyph rotation
+and view-turn rows, and a 4D split layout with no scrolling at 1440x900.
+Trade-off: 4D cells went from 30 to 26.5 px, because the side column
+narrows the width-limited slice row. Open: rotation direction (R vs T) is still
+not shown; the orientation gizmo is still ~40 px with tiny labels; manual
+human playtest acceptance of 3D/4D. The bounded corrective pass replaces
+forced layout fitting with visible inner-render-region size/visibility-driven
+refitting, restores the 3D Reset View keycap, reapplies styling on direction
+rebuilds, and strengthens transition/hash regression coverage. Real-window
+framing acceptance for entry/restart/resize/guide changes remains required;
+automated geometry evidence alone does not close human acceptance.
 
 ### Three-product packaging gaps
 

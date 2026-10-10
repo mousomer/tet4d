@@ -21,12 +21,6 @@ This file contains only the compact state needed to resume staged or
 phase-dependent work. It is not workflow authority, a CI diary, a completed
 stage archive, a task-contract ledger, or a future programme.
 
-## Menu sizing acceptance
-
-The current checkout's menu fix keeps launch title/Play visible, magnifies menus
-above 1280×720 pt up to 2×, and retains compact scrolling and live canvas sizing.
-Stage 56H human acceptance should include launch, resize, and scrolled navigation.
-
 ## Active Focus
 
 Machine-readable handoff state. `status` is `active` only on a feature branch
@@ -82,9 +76,15 @@ RMBG product execution stay held at their owner boundaries.
 The human session includes direct Play and `2`/`3`/`4` entry, `C` Change Setup,
 and frozen-setup Restart/Play Again under
 `docs/architecture/editable_board_setup_and_persistence.md`.
-Shell readability uses 24/22 px body/supporting/helper text and window-filling Main
-and Advanced menus with contained maximum-scale scrolling. Helper keycaps/actions
-retain 22 px in every density and scroll internally. Include typography/guide layout in the outstanding Stage 56H human acceptance.
+Shell readability uses 24/22 px text, contained menu scrolling, and visible launch
+Play. Magnification uses 1280×720 pt for menus and 1280×800 pt for live/replay,
+up to 2×. Include resizing, navigation, and guide layout in human acceptance.
+The bounded camera/legend correction requires visible inner-render-region
+fitting on menu entry, restart, resize, and guide/layout changes; visible 3D
+Reset View guidance; styled 4D direction rebuilds; and native hash isolation.
+Preserve synchronous fitting when valid visible geometry already exists,
+including Reset View and Designer comparison loading. Human playability remains
+separate from automated geometry and local Metal screenshot inspection.
 Durable open work and release-matrix deferrals remain in `docs/BACKLOG.md`.
 
 Sections with `BEGIN/END GENERATED:*` markers are maintained by

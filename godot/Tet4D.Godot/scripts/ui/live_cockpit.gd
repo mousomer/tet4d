@@ -2,6 +2,8 @@ extends VBoxContainer
 
 class_name LiveCockpit
 
+const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
+
 const PROFILE_WIDE := "wide"
 const PROFILE_STANDARD := "standard"
 const PROFILE_NARROW := "narrow"
@@ -25,8 +27,35 @@ const MAX_DECK_HEIGHT_SHARE := 0.28
 # Outer shell margin on each side of the cockpit.
 const DECK_HORIZONTAL_INSET := 24.0
 
+# A tall board (Live 2D is 1:2) wastes most of a wide window, while a deck
+# under it takes the one dimension the board is short of. Beside the board the
+# deck spends width instead, the way the Python client's side panel did.
+const PLACEMENT_BELOW := "below"
+const PLACEMENT_SIDE := "side"
+# Live 4D: the piece legend is wide and short, so it stays in the deck; NEXT/
+# HOLD and VIEW move to a side column. Together they did not fit one deck row
+# at 1440 px. The column narrows the width-limited slice row (about 30 -> 26 px
+# cells at 1440x900); that is the price of every 4D control visible unscrolled.
+const PLACEMENT_SPLIT := "split"
+# Standard and wide shells need ~440 px at the 1280 px reference width for the
+# 3D compass and drops to share a row; narrow shells scroll the rail anyway and
+# give the width back to the board (and an open Designer panel).
+const SIDE_RAIL_WIDTH_SHARE := 0.35
+const SIDE_RAIL_NARROW_WIDTH_SHARE := 0.30
+const SIDE_RAIL_MIN_WIDTH := 280.0
+const SIDE_RAIL_MAX_WIDTH := 460.0
+const SIDE_RAIL_GAP := 10
+# The split column holds only NEXT/HOLD and stacked VIEW, so it stays narrower.
+const SPLIT_COLUMN_WIDTH_SHARE := 0.22
+# NEXT/HOLD side by side need about 290 px; below that they clip.
+const SPLIT_COLUMN_MIN_WIDTH := 300.0
+const SPLIT_COLUMN_MAX_WIDTH := 340.0
+
 var header_slot: VBoxContainer
+var board_stage: HBoxContainer
 var primary_board_surface: VBoxContainer
+var side_column: VBoxContainer
+var side_scroll: ScrollContainer
 var control_deck: VBoxContainer
 var deck_scroll: ScrollContainer
 var deck_row_host: VBoxContainer
@@ -45,6 +74,8 @@ var _last_module_minimums := Vector3.ZERO
 var _last_module_heights := Vector3.ZERO
 var _natural_deck_height := 0.0
 var _scroll_required := false
+var _placement := PLACEMENT_BELOW
+var _requested_placement := PLACEMENT_BELOW
 
 
 func _init() -> void:
@@ -55,9 +86,34 @@ func _init() -> void:
 	header_slot = _slot("Header")
 	header_slot.set_meta("shell_chrome", true)
 	add_child(header_slot)
+	board_stage = HBoxContainer.new()
+	board_stage.name = "BoardStage"
+	board_stage.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	board_stage.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	board_stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	board_stage.add_theme_constant_override("separation", SIDE_RAIL_GAP)
+	add_child(board_stage)
 	primary_board_surface = _slot("PrimaryBoardSurface")
 	primary_board_surface.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_child(primary_board_surface)
+	board_stage.add_child(primary_board_surface)
+	# Scrolls as a whole so a short window never pushes the deck off-screen;
+	# NEXT/HOLD sit at its top and stay visible.
+	side_scroll = ScrollContainer.new()
+	side_scroll.name = "SideColumnScroll"
+	side_scroll.visible = false
+	side_scroll.size_flags_horizontal = Control.SIZE_SHRINK_END
+	side_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	# Never disabled: a disabled axis adopts the content's minimum, which would
+	# let a style's fonts resize the 4D viewport and with it the slice tiling.
+	side_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	side_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	board_stage.add_child(side_scroll)
+	side_column = VBoxContainer.new()
+	side_column.name = "SideColumn"
+	side_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	side_column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	side_column.add_theme_constant_override("separation", 6)
+	side_scroll.add_child(side_column)
 	control_deck = VBoxContainer.new()
 	control_deck.name = "ControlDeck"
 	control_deck.visible = false
@@ -106,6 +162,50 @@ func _init() -> void:
 		module.minimum_size_changed.connect(_on_deck_metrics_changed)
 
 
+func set_deck_placement(placement: String) -> void:
+	_requested_placement = placement if placement in [PLACEMENT_SIDE, PLACEMENT_SPLIT] else PLACEMENT_BELOW
+	_apply_responsive_policy()
+
+
+# A split column costs width a narrow window cannot spare, so narrow and small
+# shells fall back to the reflowing deck below the board.
+func _effective_placement() -> String:
+	if _requested_placement == PLACEMENT_SPLIT and _responsive_profile in [PROFILE_NARROW, PROFILE_SMALL]:
+		return PLACEMENT_BELOW
+	return _requested_placement
+
+
+func _relocate(next_placement: String) -> void:
+	if next_placement == _placement:
+		return
+	var leaving_split := _placement == PLACEMENT_SPLIT
+	_placement = next_placement
+	var side := _placement == PLACEMENT_SIDE
+	side_scroll.visible = _placement == PLACEMENT_SPLIT
+	if _placement == PLACEMENT_SPLIT:
+		for module in [piece_state, view_controls]:
+			(module as Control).reparent(side_column, false)
+		side_column.move_child(piece_state, 0)
+	elif leaving_split:
+		# Row assignment reparents every module it packs; seed them back first.
+		for module in [view_controls, piece_state]:
+			(module as Control).reparent(deck_rows[0], false)
+	control_deck.reparent(board_stage if side else self, false)
+	if not side:
+		move_child(control_deck, get_child_count() - 1)
+	control_deck.size_flags_horizontal = Control.SIZE_SHRINK_END if side else Control.SIZE_EXPAND_FILL
+	control_deck.size_flags_vertical = Control.SIZE_EXPAND_FILL if side else Control.SIZE_FILL
+	for row in deck_rows:
+		# Rail rows hug their content so the legend stays put at the top of the
+		# rail instead of spreading out as the window grows.
+		row.size_flags_vertical = Control.SIZE_FILL if side else Control.SIZE_EXPAND_FILL
+	deck_row_host.size_flags_vertical = Control.SIZE_FILL if side else Control.SIZE_EXPAND_FILL
+
+
+func deck_placement() -> String:
+	return _placement
+
+
 func set_control_deck_visible(enabled: bool, density: String = "standard") -> void:
 	control_deck.visible = enabled
 	_density = density
@@ -137,10 +237,14 @@ func deterministic_snapshot() -> Dictionary:
 		"slots": [str(header_slot.name), str(primary_board_surface.name), str(control_deck.name)],
 		"deck_modules": [str(piece_controls.name), str(view_controls.name), str(piece_state.name)],
 		"deck_visible": control_deck.visible,
+		"deck_placement": _placement,
+		"side_column_rect": side_scroll.get_global_rect() if side_scroll.visible else Rect2(),
 		"responsive_profile": _responsive_profile,
 		"layout_size": _layout_size,
 		"apparent_size": _apparent_size,
-		"deck_minimum_height": control_deck.custom_minimum_size.y,
+		# Below the board the deck's height is the cap it imposes; beside it the
+		# rail is as tall as the stage, so its laid-out height is the constraint.
+		"deck_minimum_height": control_deck.size.y if _placement == PLACEMENT_SIDE else control_deck.custom_minimum_size.y,
 		"deck_separation": control_deck.get_theme_constant("separation"),
 		"deck_row_count": _row_assignment.size(),
 		"deck_natural_height": _natural_deck_height,
@@ -166,6 +270,8 @@ func _on_deck_metrics_changed() -> void:
 	var width := _packing_width()
 	var minimums := _module_minimums()
 	if is_equal_approx(width, _last_packing_width) and minimums.is_equal_approx(_last_module_minimums) and _module_heights().is_equal_approx(_last_module_heights):
+		if _placement == PLACEMENT_SIDE:
+			_update_side_scroll_state()
 		return
 	_apply_responsive_policy()
 
@@ -191,6 +297,15 @@ func _apply_responsive_policy() -> void:
 		return
 	_packing_in_progress = true
 	_responsive_profile = responsive_profile_for_size(_apparent_size) if _apparent_size.x > 0.0 else PROFILE_STANDARD
+	_relocate(_effective_placement())
+	if _placement == PLACEMENT_SIDE:
+		_apply_side_policy()
+		_packing_in_progress = false
+		if is_inside_tree():
+			call_deferred("_on_deck_metrics_changed")
+		return
+	control_deck.custom_minimum_size.x = 0.0
+	side_scroll.custom_minimum_size.x = clampf(_layout_size.x * SPLIT_COLUMN_WIDTH_SHARE, SPLIT_COLUMN_MIN_WIDTH, SPLIT_COLUMN_MAX_WIDTH) if _placement == PLACEMENT_SPLIT else 0.0
 	var row_height := _row_height_for_profile()
 	var row_separation := _row_separation_for_profile()
 	var deck_separation := 8 if _responsive_profile in [PROFILE_NARROW, PROFILE_SMALL] else 6
@@ -203,6 +318,10 @@ func _apply_responsive_policy() -> void:
 	var natural_height := _natural_height_for_rows(packed, row_height, deck_separation)
 	var height_cap := _layout_size.y * MAX_DECK_HEIGHT_SHARE if _layout_size.y > 1.0 else natural_height
 	var deck_height := minf(natural_height, maxf(height_cap, row_height))
+	if _placement == PLACEMENT_SPLIT:
+		# A fixed height keeps the 4D viewport, and so its slice tiling, independent
+		# of the active style's metrics; the legend scrolls if a style outgrows it.
+		deck_height = row_height
 	deck_row_host.custom_minimum_size.y = natural_height
 	control_deck.custom_minimum_size.y = deck_height
 	_natural_deck_height = natural_height
@@ -218,6 +337,41 @@ func _apply_responsive_policy() -> void:
 		call_deferred("_on_deck_metrics_changed")
 
 
+func _rail_width() -> float:
+	if _layout_size.x <= 1.0:
+		return SIDE_RAIL_MIN_WIDTH
+	var share := SIDE_RAIL_NARROW_WIDTH_SHARE if _responsive_profile in [PROFILE_NARROW, PROFILE_SMALL] else SIDE_RAIL_WIDTH_SHARE
+	return clampf(_layout_size.x * share, SIDE_RAIL_MIN_WIDTH, SIDE_RAIL_MAX_WIDTH)
+
+
+# The rail stacks visible modules top to bottom: what the player glances at
+# most (NEXT/HOLD, then the key legend) comes first. Its height is the stage's
+# height, so the only overflow is a genuinely short window, which scrolls.
+func _apply_side_policy() -> void:
+	control_deck.custom_minimum_size = Vector2(_rail_width(), 0.0)
+	control_deck.add_theme_constant_override("separation", 6)
+	var packed: Array = []
+	for module in [piece_state, piece_controls, view_controls]:
+		if (module as Control).visible:
+			packed.append([str((module as Control).name)])
+	# Stacked panels need only a hairline between them; the deck's row gap is
+	# sized for modules side by side.
+	var row_separation := ShellDesignTokensScript.SPACE_1
+	_apply_row_assignment(packed, row_separation)
+	_row_assignment = packed
+	_natural_deck_height = _natural_height_for_rows(packed, 0.0, row_separation)
+	deck_row_host.custom_minimum_size.y = _natural_deck_height
+	_last_packing_width = _packing_width()
+	_last_module_minimums = _module_minimums()
+	_last_module_heights = _module_heights()
+	_update_side_scroll_state()
+
+
+func _update_side_scroll_state() -> void:
+	var available := control_deck.size.y
+	_scroll_required = available > 1.0 and _natural_deck_height > available + 0.5
+
+
 # Packing must consume the CONSTRAINT, not the result. control_deck.size.x is
 # the deck's own laid-out width, which when the deck overflows is its minimum -
 # so reading it makes the deck conclude it has room for the very arrangement
@@ -230,9 +384,9 @@ func _packing_width() -> float:
 
 
 func _pack_rows(available: float, row_separation: int) -> Array:
-	var modules := [piece_controls, view_controls, piece_state]
+	var modules := [piece_controls] if _placement == PLACEMENT_SPLIT else [piece_controls, view_controls, piece_state]
 	if available <= 0.0:
-		return [[str(piece_controls.name), str(view_controls.name), str(piece_state.name)]]
+		return [modules.map(func(module): return str((module as Control).name))]
 	var rows: Array = []
 	var current: Array = []
 	var current_width := 0.0

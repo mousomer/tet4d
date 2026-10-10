@@ -231,10 +231,11 @@ var _live_view_control_strip: PanelContainer
 var _live_cockpit
 const DESIGN_RESOLUTION_MIN_WIDTH := 640.0
 const DESIGN_RESOLUTION_MIN_HEIGHT := 480.0
-# Menus magnify above the fresh-profile window; compact windows retain readable
-# point sizes and scroll. Gameplay keeps its existing responsive canvas.
+# Menus magnify above their opening size; live/replay preserves the taller
+# reference canvas required by the gameplay rails and Designer chrome.
 const MENU_REFERENCE_SIZE := Vector2(1280.0, 720.0)
-const MAX_MENU_WINDOW_SCALE := 2.0
+const DESIGN_REFERENCE_SIZE := Vector2(1280.0, 800.0)
+const MAX_WINDOW_UI_SCALE := 2.0
 
 var _live_4d_deck: VBoxContainer
 var _live_4d_piece_module: VBoxContainer
@@ -335,6 +336,21 @@ func start_current_validated_setup(mode: String = "") -> bool:
 func set_control_frame_snapshot(snapshot: Dictionary) -> void:
 	_control_frame_snapshot = snapshot.duplicate(true)
 	_refresh_piece_control_strip()
+
+
+# Measured screen directions of each movement key and rotation axis; the 3D/4D
+# legend draws them so it shows where a key moves the piece, not an axis name.
+func set_legend_screen_directions(directions: Dictionary) -> void:
+	if _piece_control_strip != null:
+		_piece_control_strip.set_screen_directions(directions)
+	if _live_view_control_strip != null:
+		_live_view_control_strip.set_screen_directions(directions)
+
+
+func flash_legend_plane(plane: String, view: bool) -> void:
+	var strip = _live_view_control_strip if view else _piece_control_strip
+	if strip != null and strip.is_visible_in_tree():
+		strip.flash_plane(plane)
 
 
 static func quick_control_hint_groups(mode: String) -> Array:
@@ -740,7 +756,9 @@ func _configure_live_cockpit_mode(mode: String) -> void:
 			_live_4d_basis_snapshot if mode == GameSetupSpecScript.MODE_4D else {},
 			_control_frame_snapshot,
 			_hud_density,
-			mode
+			mode,
+			LiveInputContractScript,
+			LiveViewControlStripScript.LAYOUT_WIDE if mode == GameSetupSpecScript.MODE_4D else LiveViewControlStripScript.LAYOUT_GRID
 		)
 		_style_applier.apply_to_tree(_live_view_control_strip, _style_manager)
 	_update_camera_guidance(mode)
@@ -758,13 +776,15 @@ func _refresh_piece_control_strip() -> void:
 		_active_live_mode,
 		_live_4d_basis_snapshot if _active_live_mode == GameSetupSpecScript.MODE_4D else {},
 		_control_frame_snapshot,
-		_hud_density
+		_hud_density,
+		LiveInputContractScript,
+		_piece_legend_layout()
 	)
 	if is_inside_tree():
 		_style_applier.apply_to_tree(_piece_control_strip, _style_manager)
 
 
-func _apply_shell_minimums(live: bool) -> void:
+func _apply_shell_minimums(live: bool, side_rail := false) -> void:
 	var minimum := ReplayVisuals.supported_live_shell_minimum_size() if live else ReplayVisuals.supported_shell_minimum_size()
 	custom_minimum_size = minimum
 	if _viewer_screen != null:
@@ -774,16 +794,45 @@ func _apply_shell_minimums(live: bool) -> void:
 		if outer != null:
 			outer.custom_minimum_size = minimum
 	if _body_container != null:
+		# The 2D rail sits beside the body inside the same shell width, so the
+		# body gives up the rail's share or the rail is pushed off-screen.
+		var rail_share := (LiveCockpitScript.SIDE_RAIL_MIN_WIDTH + LiveCockpitScript.SIDE_RAIL_GAP) if side_rail else 0.0
 		_body_container.custom_minimum_size = Vector2(
-			minimum.x - (ReplayVisuals.OUTER_MARGIN * 2),
+			minimum.x - (ReplayVisuals.OUTER_MARGIN * 2) - rail_share,
 			ReplayVisuals.LIVE_BODY_MIN_HEIGHT if live else ReplayVisuals.BODY_MIN_HEIGHT
 		)
 
 
+# Tall boards (2D, and 3D's upright well) take the side rail. Live 4D keeps the
+# deck below: its slice row is about 2.8:1, so a rail would shrink the boards,
+# while a full-width deck holds the legend sections side by side. The rail
+# drops VIEW: Fit View stays a header button, and mouse orbit is unlabelled
+# muscle memory, so its rows would only push the key legend down.
+func _uses_side_rail() -> bool:
+	return _active_live_mode in [GameSetupSpecScript.MODE_2D, GameSetupSpecScript.MODE_3D]
+
+
+func _piece_legend_layout() -> String:
+	if _uses_side_rail():
+		return LivePieceControlStripScript.LAYOUT_RAIL
+	if _active_live_mode == GameSetupSpecScript.MODE_4D:
+		return LivePieceControlStripScript.LAYOUT_WIDE
+	return LivePieceControlStripScript.LAYOUT_DECK
+
+
 func _set_live_4d_deck_active(active: bool) -> void:
-	_apply_shell_minimums(active)
+	var side_rail := active and _uses_side_rail()
+	var split := active and _active_live_mode == GameSetupSpecScript.MODE_4D
+	_apply_shell_minimums(active, side_rail or split)
 	if _live_4d_deck == null:
 		return
+	_live_4d_view_module.visible = not side_rail
+	var placement := LiveCockpitScript.PLACEMENT_BELOW
+	if side_rail:
+		placement = LiveCockpitScript.PLACEMENT_SIDE
+	elif split:
+		placement = LiveCockpitScript.PLACEMENT_SPLIT
+	_live_cockpit.set_deck_placement(placement)
 	if active:
 		_piece_control_strip.reparent(_live_4d_piece_module, false)
 		_live_view_control_strip.reparent(_live_4d_view_module, false)
@@ -1131,8 +1180,18 @@ func game_viewport() -> SubViewport:
 	return _game_viewport
 
 
+func _publish_game_viewport_geometry() -> void:
+	game_viewport_geometry_changed.emit(board_viewport_size())
+
+
 func board_viewport_size() -> Vector2:
-	return _game_area.size if _game_area != null else Vector2.ZERO
+	# SubViewport.size_changed fires after stretch has applied the inner region.
+	# Hidden or mismatched geometry is not a fit input, even if it has old sizes.
+	if _game_viewport_container == null or _game_viewport == null or not _game_viewport_container.is_visible_in_tree():
+		return Vector2.ZERO
+	if Vector2i(_game_viewport_container.size) != _game_viewport.size:
+		return Vector2.ZERO
+	return Vector2(_game_viewport.size)
 
 
 func layout_contract_snapshot() -> Dictionary:
@@ -1915,7 +1974,9 @@ func _apply_hud_density(density: String) -> void:
 			_live_4d_basis_snapshot if _active_live_mode == GameSetupSpecScript.MODE_4D else {},
 			_control_frame_snapshot,
 			_hud_density,
-			_active_live_mode
+			_active_live_mode,
+			LiveInputContractScript,
+			LiveViewControlStripScript.LAYOUT_WIDE if _active_live_mode == GameSetupSpecScript.MODE_4D else LiveViewControlStripScript.LAYOUT_GRID
 		)
 		_style_applier.apply_to_tree(_live_view_control_strip, _style_manager)
 	_set_live_inspector_density(_bottom_panel != null and not _bottom_panel.visible)
@@ -2340,7 +2401,6 @@ func _build_layout() -> void:
 	_game_area.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_game_area.theme_type_variation = "ViewportFrame"
 	_game_area.resized.connect(func() -> void:
-		game_viewport_geometry_changed.emit(_game_area.size)
 		call_deferred("_layout_presentation_designer")
 	)
 	body.add_child(_game_area)
@@ -2381,6 +2441,8 @@ func _build_layout() -> void:
 	_game_viewport.size = Vector2i(ReplayVisuals.GAME_AREA_MIN_WIDTH, 240)
 	_game_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	_game_viewport_container.add_child(_game_viewport)
+	_game_viewport.size_changed.connect(_publish_game_viewport_geometry, CONNECT_DEFERRED)
+	_game_viewport_container.visibility_changed.connect(_publish_game_viewport_geometry, CONNECT_DEFERRED)
 
 	_right_scroll = ScrollContainer.new()
 	_right_scroll.name = "RightInspectorSlot"
@@ -2504,6 +2566,9 @@ func _build_layout() -> void:
 	_hold_piece_panel.set_style_manager(_style_manager)
 	_piece_preview_row.add_child(_hold_piece_panel)
 	_piece_control_strip = LivePieceControlStripScript.new()
+	_piece_control_strip.rebuilt.connect(func() -> void:
+		_style_applier.apply_to_tree(_piece_control_strip, _style_manager)
+	)
 	_piece_control_strip.visible = false
 	_right_column.add_child(_piece_control_strip)
 	_live_view_control_strip = LiveViewControlStripScript.new()
@@ -3349,8 +3414,8 @@ func _apply_responsive_layout() -> void:
 	_log_geometry_diagnostics("responsive-compat")
 
 
-# The gameplay canvas tracks window points for responsive reflow. Menu screens
-# magnify above their reference size; both paths recompute explicit shell offsets
+# Menu and gameplay canvases magnify above their respective reference sizes.
+# Compact windows reflow; both paths recompute explicit shell offsets
 # because the persisted UI-scale transform changes the available logical extent.
 func _apply_shell_extents() -> void:
 	var viewport_size := get_viewport_rect().size
@@ -3394,11 +3459,20 @@ func _sync_design_resolution() -> void:
 
 static func menu_window_scale(window_points: Vector2) -> float:
 	var fit := minf(window_points.x / MENU_REFERENCE_SIZE.x, window_points.y / MENU_REFERENCE_SIZE.y)
-	return clampf(fit, 1.0, MAX_MENU_WINDOW_SCALE)
+	return clampf(fit, 1.0, MAX_WINDOW_UI_SCALE)
 
 
 func _window_ui_scale(points: Vector2) -> float:
-	return 1.0 if _current_screen == SCREEN_VIEWER else menu_window_scale(points)
+	return window_ui_scale(points) if _current_screen == SCREEN_VIEWER else menu_window_scale(points)
+
+
+# How much the shell is magnified for a window of this size in points: 1.0 up
+# to the reference window, then proportional to whichever axis is tighter.
+static func window_ui_scale(window_points: Vector2) -> float:
+	if window_points.x <= 0.0 or window_points.y <= 0.0:
+		return 1.0
+	var fit := minf(window_points.x / DESIGN_REFERENCE_SIZE.x, window_points.y / DESIGN_REFERENCE_SIZE.y)
+	return clampf(fit, 1.0, MAX_WINDOW_UI_SCALE)
 
 
 # The responsive breakpoint domain is what the player actually sees, not the

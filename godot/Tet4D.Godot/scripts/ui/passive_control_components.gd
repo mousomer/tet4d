@@ -39,6 +39,64 @@ static func row(operation: String, binding: String, role: String, density: Strin
 	return result
 
 
+# Key-first row for the active-play legend. The keys sit in a fixed-width
+# column so the eye can scan straight down them; the operation is secondary
+# text and never wraps, because a wrapped "clock / wise" cannot be read at a
+# glance.
+static func key_first_row(operation: String, binding: String, role: String, key_column_width: float, tag := "") -> HBoxContainer:
+	var result := HBoxContainer.new()
+	result.name = "LegendRow__%s" % role
+	result.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	result.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	result.add_theme_constant_override("separation", Tokens.SPACE_3)
+	var keys := HBoxContainer.new()
+	keys.name = "LegendKeys"
+	keys.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	keys.custom_minimum_size.x = key_column_width
+	keys.add_theme_constant_override("separation", 4)
+	var glyphs: Array[String] = []
+	var letters: Array[String] = []
+	for label in binding_labels(binding):
+		var glyph := key_glyph(label)
+		(letters if glyph == label else glyphs).append(glyph)
+	# Arrows lead: they are the primary scheme and are read by shape.
+	glyphs.append_array(letters)
+	for label in glyphs:
+		var cap := keycap(label)
+		# A uniform minimum keeps single letters square-ish, so a row of caps
+		# reads as keys rather than as a word.
+		cap.custom_minimum_size.x = float(Tokens.FONT_CONTROL_HINT) * 1.4
+		keys.add_child(cap)
+	result.add_child(keys)
+	var operation_label := Label.new()
+	operation_label.name = "LegendOperation"
+	operation_label.text = operation
+	operation_label.theme_type_variation = "SecondaryLabel"
+	operation_label.add_theme_font_size_override("font_size", Tokens.FONT_CONTROL_HINT)
+	operation_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	operation_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	operation_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	operation_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	result.add_child(operation_label)
+	if not tag.is_empty():
+		# Reference name for players who think in planes; never the only cue.
+		var tag_label := Label.new()
+		tag_label.name = "LegendTag"
+		tag_label.text = tag
+		tag_label.theme_type_variation = "SecondaryLabel"
+		tag_label.add_theme_font_size_override("font_size", Tokens.FONT_CHROME_SUPPORTING)
+		tag_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		tag_label.modulate = Color(1.0, 1.0, 1.0, 0.6)
+		tag_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		result.add_child(tag_label)
+	return result
+
+
+# Arrow keys are recognised by shape faster than by name.
+static func key_glyph(label: String) -> String:
+	return str({"Left": "←", "Right": "→", "Up": "↑", "Down": "↓", "Backspace": "Bksp"}.get(label, label))
+
+
 static func binding_pair(binding: String, density: String = "normal", pointer := false) -> HBoxContainer:
 	var pair := HBoxContainer.new()
 	pair.name = "PointerGesture" if pointer else "BindingPair"

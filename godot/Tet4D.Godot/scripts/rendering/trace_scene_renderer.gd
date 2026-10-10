@@ -380,6 +380,17 @@ func current_bounds() -> Dictionary:
 	return {"ok": true, "min": minimum, "max": maximum}
 
 
+# Global position of a board cell as currently presented (basis, slice row,
+# renderer transform and world reflection included), so callers can measure
+# which way a board axis actually runs on screen.
+func cell_global_position(coordinates: Array) -> Vector3:
+	return to_global(_presentation.render_cell_world_position(coordinates))
+
+
+func presented_board_shape() -> Array:
+	return _presentation.board_shape() if _presentation != null else []
+
+
 # Render-effective per-slice boxes, transformed exactly as current_bounds()
 # transforms the collection AABB so both describe the same rendered geometry.
 func current_content_boxes() -> Array:

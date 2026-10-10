@@ -179,6 +179,20 @@ static func piece_control_groups(mode: String, basis_snapshot: Dictionary = {}, 
 	return result
 
 
+# The active-play legend is the same role selection, widened to the hold and
+# session keys a player reaches for mid-game. The deck variant leaves those to
+# visible buttons, but a button does not teach its key, so a player who forgot
+# R for restart had nowhere to look.
+static func play_legend_groups(mode: String, basis_snapshot: Dictionary = {}, control_frame: Dictionary = {}) -> Array:
+	var result: Array = []
+	var groups := control_hint_groups(mode, basis_snapshot, control_frame)
+	for expected_role in ["translate", "drop", "rotate", "hold", "session"]:
+		for source_group in groups:
+			if str(source_group.get("cockpit_role", "")) == expected_role:
+				result.append(source_group.duplicate(true))
+	return result
+
+
 # Passive cockpit consumers select role metadata, never prose labels or a
 # second action/binding inventory. Only Live 4D currently exposes this deck.
 static func view_control_groups(mode: String, basis_snapshot: Dictionary = {}, control_frame: Dictionary = {}) -> Array:
@@ -227,9 +241,9 @@ static func _live_2d_groups(control_frame: Dictionary = {}) -> Array:
 		{"group": "Piece movement", "cockpit_role": "translate", "note": "Controls follow the current view." if relative else "Canonical X axis.", "items": [[_pair("live_move_left", "live_move_right"), movement_label, movement_meta], [_pair("live_2d_move_left", "live_2d_move_right"), movement_label, movement_meta]]},
 		{"group": "Piece rotation", "cockpit_role": "rotate", "items": [[_all_keys("live_rotate_cw"), "Rotate clockwise"], [_display_key("live_rotate_ccw"), "Rotate counter-clockwise"]]},
 		{"group": "Drop", "cockpit_role": "drop", "items": [[_all_keys("live_soft_drop"), "Soft Drop", {"operation": "Soft"}], [_display_key("live_hard_drop"), "Hard Drop", {"operation": "Hard"}]]},
-		{"group": "Piece management", "items": [[_display_key("live_hold"), "Hold"]]},
+		{"group": "Piece management", "cockpit_role": "hold", "items": [[_display_key("live_hold"), "Hold"]]},
 		{"group": "Framing", "cockpit_role": "view_framing", "items": [["F", "Fit View (framing only)", {"operation": "Fit"}], [_display_key("reset"), "Reset View (restore flat canonical view)", {"operation": "Reset"}]]},
-		{"group": "Session", "items": [[_display_key("live_pause"), "Pause"], [_display_key("live_reset"), "Restart Game"]]},
+		{"group": "Session", "cockpit_role": "session", "items": [[_display_key("live_pause"), "Pause"], [_display_key("live_reset"), "Restart Game"]]},
 		{"group": "Navigation", "items": [["Tab", "Play 3D"], ["Esc", "Main Menu"]]},
 	]
 
@@ -252,10 +266,10 @@ static func _live_3d_groups(control_frame: Dictionary = {}) -> Array:
 		{"group": "Piece movement", "cockpit_role": "translate", "note": "Controls follow the current view; Forward recedes and Back approaches." if relative else "Canonical X/Z axes.", "items": move_rows},
 		{"group": "Piece rotation", "cockpit_role": "rotate", "note": rotation_note, "items": [[_pair("live_3d_rotate_xy_neg", "live_3d_rotate_xy_pos"), "Rotate XY"], [_pair("live_3d_rotate_xz_neg", "live_3d_rotate_xz_pos"), "Rotate XZ"], [_pair("live_3d_rotate_yz_neg", "live_3d_rotate_yz_pos"), "Rotate YZ"]]},
 		{"group": "Drop", "cockpit_role": "drop", "items": [[_display_key("live_3d_soft_drop"), "Soft Drop", {"operation": "Soft"}], [_display_key("live_3d_hard_drop"), "Hard Drop", {"operation": "Hard"}]]},
-		{"group": "Piece management", "items": [[_display_key("live_hold"), "Hold"]]},
+		{"group": "Piece management", "cockpit_role": "hold", "items": [[_display_key("live_hold"), "Hold"]]},
 		{"group": "Framing", "cockpit_role": "view_framing", "items": [["Double-click", "Fit View (framing only)", {"operation": "Fit"}], [_display_key("reset"), "Reset View (restore canonical view)", {"operation": "Reset"}]]},
 		{"group": "Pointer", "cockpit_role": "view_pointer", "items": camera_helper_items()},
-		{"group": "Session", "items": [[_display_key("live_3d_pause"), "Pause"], [_display_key("live_3d_reset"), "Restart Game"]]},
+		{"group": "Session", "cockpit_role": "session", "items": [[_display_key("live_3d_pause"), "Pause"], [_display_key("live_3d_reset"), "Restart Game"]]},
 		{"group": "Navigation", "items": [["Tab", "Play 4D"], ["Esc", "Main Menu"]]},
 	]
 
@@ -289,8 +303,8 @@ static func _live_4d_groups(basis_snapshot: Dictionary = {}, control_frame: Dict
 		{"group": "Slice orientation", "cockpit_role": "view_orient", "items": [[_pair("live_4d_camera_pitch_up", "live_4d_camera_pitch_down", " / "), "Pitch up / down", {"operation": "Pitch"}], [_pair("live_4d_camera_yaw_left", "live_4d_camera_yaw_right", " / "), "Yaw left / right", {"operation": "Yaw"}]]},
 		{"group": "Framing", "cockpit_role": "view_framing", "items": [["%s / = / +" % _display_key("live_4d_camera_zoom_out"), "Zoom out / in", {"operation": "Zoom"}], ["Double-click", "Fit View (framing only)", {"operation": "Fit"}], [_display_key("reset"), "Reset View (basis, slice orientation, framing)", {"operation": "Reset"}]]},
 		{"group": "Pointer", "cockpit_role": "view_pointer", "items": live_4d_pointer_helper_items()},
-		{"group": "Piece management", "items": [[_display_key("live_hold"), "Hold"]]},
-		{"group": "Session", "items": [[_display_key("live_4d_pause"), "Pause"], [_display_key("live_4d_reset"), "Restart Game"]]},
+		{"group": "Piece management", "cockpit_role": "hold", "items": [[_display_key("live_hold"), "Hold"]]},
+		{"group": "Session", "cockpit_role": "session", "items": [[_display_key("live_4d_pause"), "Pause"], [_display_key("live_4d_reset"), "Restart Game"]]},
 		{"group": "Navigation", "items": [["Tab", "Replay Demos"], ["Esc", "Main Menu"]]},
 	]
 
