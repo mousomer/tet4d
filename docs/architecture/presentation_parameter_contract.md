@@ -305,3 +305,9 @@ restart. Agent-driven review is evidence, not independent human sign-off.
 
 Legacy schema-1 profile snapshots migrate boolean `display.grid_visible` to
 `full` for true and `border` for false; new snapshots use `display.grid_mode`.
+
+The registry's `legacy_setting_migrations` metadata declares each retired input
+key, its recognized replacement, and its single repository-relative migration
+consumer. The externalization checker validates that consumer stays inside the
+runtime script tree and still rejects the retired key in any other consumer.
+This does not add a runtime parameter or widen the set of current setting IDs.

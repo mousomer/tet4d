@@ -1,5 +1,11 @@
 {
   "schema_version": 3,
+  "legacy_setting_migrations": {
+    "display.grid_visible": {
+      "replacement": "display.grid_mode",
+      "consumer": "godot/Tet4D.Godot/scripts/presentation/presentation_profile.gd"
+    }
+  },
   "categories": [
     {"id": "replay", "label": "Replay"},
     {"id": "display", "label": "Display"},

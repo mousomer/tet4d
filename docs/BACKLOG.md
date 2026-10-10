@@ -395,4 +395,4 @@ Work is complete only when acceptance passes, authorities are current, required
 checks are green, publication state is reported, and the worktree is clean. A
 branch or draft PR alone is not completion.
 
-- [x] Stage 56H corrective implementation: orthogonal FULL/BORDER/NONE grid modes and full-Designer panel Move/Resize handles with panel recovery; geometry is session-only. Regression coverage exercises actual inner-region refits, style/grid/native-hash independence, and normal-mode input gating. Human playability remains separate acceptance.
+- [x] Stage 56H corrective implementation: orthogonal FULL/BORDER/NONE grid modes and full-Designer panel Move/Resize handles with panel recovery; geometry is session-only. Regression coverage exercises actual inner-region refits, style/grid/native-hash independence, and normal-mode input gating. Human playability remains separate acceptance. Legacy profile input keys are declared and checked only at their migration owner.

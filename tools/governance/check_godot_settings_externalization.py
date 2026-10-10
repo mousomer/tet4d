@@ -189,12 +189,55 @@ def _validate_paths_and_store(
             )
 
 
+def _validate_legacy_migrations(
+    root: Path,
+    registry: dict[str, Any],
+    settings_by_id: dict[str, Any],
+    contract: dict[str, Any],
+    issues: list[str],
+) -> dict[str, str]:
+    """Retired keys are input compatibility, confined to one migration owner."""
+    migrations = registry.get("legacy_setting_migrations", {})
+    if not isinstance(migrations, dict):
+        issues.append("legacy setting migrations must be an object")
+        return {}
+    allowed: dict[str, str] = {}
+    source_root = (root / str(contract.get("runtime_source_root", ""))).resolve()
+    for setting_id, declaration in migrations.items():
+        if (
+            not isinstance(setting_id, str)
+            or not SETTING_TOKEN_RE.fullmatch(f'"{setting_id}"')
+            or setting_id in settings_by_id
+            or not isinstance(declaration, dict)
+            or not isinstance(declaration.get("replacement"), str)
+            or declaration.get("replacement") not in settings_by_id
+        ):
+            issues.append(f"invalid legacy setting migration: {setting_id}")
+            continue
+        consumer = declaration.get("consumer")
+        if (
+            not isinstance(consumer, str)
+            or "\\" in consumer
+            or Path(consumer).is_absolute()
+            or ".." in Path(consumer).parts
+            or not consumer.endswith(".gd")
+            or not (root / consumer).resolve().is_relative_to(source_root)
+            or not (root / consumer).is_file()
+        ):
+            issues.append(f"legacy setting {setting_id} has invalid migration consumer")
+            continue
+        allowed[setting_id] = consumer
+    return allowed
+
+
 def _validate_runtime_sources(
     root: Path,
     settings_by_id: dict[str, Any],
     contract: dict[str, Any],
     issues: list[str],
+    legacy_migrations: dict[str, str] | None = None,
 ) -> None:
+    legacy_migrations = legacy_migrations or {}
     source_root = root / str(contract.get("runtime_source_root", ""))
     if not source_root.is_dir():
         issues.append(f"runtime settings source root is missing: {source_root}")
@@ -209,9 +252,13 @@ def _validate_runtime_sources(
         for match in SETTING_TOKEN_RE.finditer(source):
             setting_id = match.group(1)
             if (
-                setting_id.split(".", 1)[0] in category_ids
+                (
+                    setting_id.split(".", 1)[0] in category_ids
+                    or setting_id in legacy_migrations
+                )
                 and setting_id not in settings_by_id
                 and setting_id not in non_setting_tokens
+                and legacy_migrations.get(setting_id) != relative_path.as_posix()
             ):
                 issues.append(
                     f"{relative_path} references unknown setting id {setting_id}"
@@ -259,7 +306,10 @@ def validate_repository(root: Path) -> list[str]:
     registry = _load_json(registry_path, issues, "Godot settings registry")
     settings_by_id = _validate_registry(registry, contract, issues)
     _validate_paths_and_store(root, registry, contract, issues)
-    _validate_runtime_sources(root, settings_by_id, contract, issues)
+    legacy_migrations = _validate_legacy_migrations(
+        root, registry, settings_by_id, contract, issues
+    )
+    _validate_runtime_sources(root, settings_by_id, contract, issues, legacy_migrations)
     return issues
 
 
