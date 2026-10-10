@@ -402,6 +402,22 @@ func run() -> Array:
 	if renderer._presentation.projection.mapper.current_layer_count() != 4 or renderer._presentation.projection.mapper.visible_board_shape() != [3, 10, 5]:
 		failures.append("ZX+ should rotate visible X/Z dimensions while preserving the W slice count")
 
+	# All dimensional renderers must honor the same tri-state contract, including
+	# the floor lattice and active-slice frame (historically always drawn).
+	for source in [live_2d_snapshot, live_3d_snapshot, live_4d_snapshot]:
+		for mode in [0, 1, 2]:
+			renderer.set_grid_mode(mode)
+			renderer.render_snapshot(source)
+			await tree.process_frame
+			var grid = renderer.get_node("GridRoot").get_child(0)
+			var internals := _count_presentation_role(grid, "board.grid") + _count_presentation_role(grid, "board.grid.floor")
+			var boundary := _count_presentation_role(grid, "board.wireframe") + _count_presentation_role(grid, "board.frame_active")
+			if (mode == 0 and (internals == 0 or boundary == 0)) or (mode == 1 and (internals != 0 or boundary == 0)) or (mode == 2 and (internals != 0 or boundary != 0)):
+				failures.append("Grid mode %s must control lattice/boundaries in dimension %s" % [mode, source["dimension"]])
+			if renderer.get_node("CellRoot").get_child_count() == 0:
+				failures.append("Grid modes must never suppress gameplay pieces")
+	renderer.set_grid_mode(0)
+
 	renderer.clear_presentation()
 	for root_name in ["GridRoot", "CellRoot", "ParticleRoot", "MarkerRoot"]:
 		var presentation_root := renderer.get_node_or_null(root_name)

@@ -170,7 +170,7 @@ func _test_live_app_integration() -> Array:
 	if designer == null or designer.state() != DesignerScript.STATE_FULL or not hud.live_interaction_owns_input():
 		failures.append("opening the live Designer should show the full editor and transfer gameplay input ownership")
 	var layout: Dictionary = hud.layout_contract_snapshot()
-	var game_rect: Rect2 = layout.get("game_area", Rect2())
+	var game_rect: Rect2 = hud._live_cockpit._designer_host.get_global_rect()
 	var designer_rect: Rect2 = designer.get_global_rect()
 	if not _rect_contains_rect(game_rect, designer_rect) or designer_rect.size.x >= game_rect.size.x * 0.65:
 		failures.append("full Designer should remain bounded inside the board area without obscuring the whole board")
@@ -184,14 +184,13 @@ func _test_live_app_integration() -> Array:
 		not hud._next_piece_panel.is_visible_in_tree()
 		or not hud._hold_piece_panel.is_visible_in_tree()
 		or not hud._piece_control_strip.is_visible_in_tree()
-		or not _rect_contains_rect(rows_rect, state_module_rect)
 		or not _rect_contains_rect(state_module_rect, hud._next_piece_panel.get_global_rect())
 		or not _rect_contains_rect(state_module_rect, hud._hold_piece_panel.get_global_rect())
 		or not _rect_contains_rect(piece_module_rect, hud._piece_control_strip.get_global_rect())
 	):
 		failures.append("NEXT, HOLD, and primary piece controls must remain simultaneously present while the full Designer is open")
-	if not layout.get("live_4d_deck_visible", false) or hud._right_scroll.is_visible_in_tree():
-		failures.append("shared live guidance must remain reachable in the deck while the legacy inspector stays retired")
+	if hud._live_cockpit.designer_panels().size() != 4 or hud._right_scroll.is_visible_in_tree():
+		failures.append("shared live guidance must remain reachable in detached panels while the legacy inspector stays retired")
 
 	var full_owned_hash := str(app._live_bridge.live_2d_state_hash())
 	var blocked_drop := InputEventAction.new()
@@ -295,11 +294,13 @@ func _test_live_app_integration() -> Array:
 		await tree.process_frame
 		await tree.process_frame
 		await tree.process_frame
-		var responsive_game: Rect2 = hud.layout_contract_snapshot().get("game_area", Rect2())
+		var responsive_game: Rect2 = hud._live_cockpit._designer_host.get_global_rect() if not hud._live_cockpit.designer_panels().is_empty() else hud._game_area.get_global_rect()
 		if not _rect_contains_rect(responsive_game, designer.get_global_rect()):
 			failures.append("Designer should remain inside the game area after resize to %s: state=%s designer=%s game=%s" % [viewport_size, designer.state(), designer.get_global_rect(), responsive_game])
 		designer.collapse_to_compact()
-		await tree.process_frame
+		for frame in range(10):
+			await tree.process_frame
+		responsive_game = hud._game_area.get_global_rect()
 		if not _rect_contains_rect(responsive_game, designer.get_global_rect()):
 			failures.append("compact Designer should remain inside the game area after resize to %s" % str(viewport_size))
 		designer.expand_to_full()

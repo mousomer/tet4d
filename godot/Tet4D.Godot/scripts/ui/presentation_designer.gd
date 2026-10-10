@@ -6,6 +6,8 @@ const PresentationProfileScript = preload("res://scripts/presentation/presentati
 const PresentationProfileLibraryScript = preload("res://scripts/presentation/presentation_profile_library.gd")
 const BuiltInStyleCatalogScript = preload("res://scripts/presentation/built_in_style_catalog.gd")
 
+signal panel_focus_requested(panel_name: String)
+
 signal profile_preview_requested(profile)
 signal state_changed(state: String)
 
@@ -206,6 +208,17 @@ func set_parameter_value(setting_id: String, value) -> bool:
 	return true
 
 
+# Quick grid actions affect the displayed active profile separately. Synchronize
+# B without selecting it, recapturing immutable A, or replacing style values.
+func synchronize_runtime_parameter(setting_id: String, value) -> void:
+	if _working_profile == null:
+		return
+	var candidate = _working_profile.with_overrides({setting_id: value})
+	if _valid_profile(candidate):
+		_working_profile = candidate
+		_sync_controls_from_working()
+
+
 func reset_parameter(setting_id: String) -> bool:
 	if _opening_profile == null or not _applicable_ids.has(setting_id):
 		return false
@@ -374,7 +387,7 @@ func apply_built_in_style(style_id: String) -> Dictionary:
 	var style_profile = result.get("profile")
 	if not _valid_profile(style_profile):
 		return _library_failure("Built-in style did not produce a detached conforming B.")
-	_working_profile = style_profile.detached_copy()
+	_working_profile = style_profile.with_overrides({"display.grid_mode": _working_profile.value("display.grid_mode")})
 	_displayed_slot = SLOT_WORKING
 	_set_applied_style(result.get("record", {}), _working_profile)
 	_sync_controls_from_working()
@@ -538,6 +551,25 @@ func _build_surface() -> void:
 	hide_button.tooltip_text = "Hide without discarding A, B, or the current preview"
 	hide_button.pressed.connect(hide_preserving_preview)
 	header.add_child(hide_button)
+
+	var panel_row := HBoxContainer.new()
+	panel_row.name = "DesignerPanelSelection"
+	_full_root.add_child(panel_row)
+	var panel_choice := OptionButton.new()
+	panel_choice.name = "DesignerPanelChoice"
+	panel_choice.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for entry in [["Board", "GameArea"], ["Piece controls", "PieceControls"], ["View controls", "ViewControls"], ["NEXT / HOLD", "PieceState"]]:
+		panel_choice.add_item(str(entry[0]))
+		panel_choice.set_item_metadata(panel_choice.item_count - 1, str(entry[1]))
+	panel_row.add_child(panel_choice)
+	var raise_button := Button.new()
+	raise_button.name = "DesignerRaisePanel"
+	raise_button.text = "Bring Panel Forward"
+	raise_button.tooltip_text = "Expose the selected panel and its Move/Resize handles if panels overlap"
+	raise_button.pressed.connect(func() -> void:
+		panel_focus_requested.emit(str(panel_choice.get_item_metadata(panel_choice.selected)))
+	)
+	panel_row.add_child(raise_button)
 
 	var detached_note := Label.new()
 	detached_note.text = "DETACHED PREVIEW · Ordinary settings are never saved · Library writes require explicit Save"

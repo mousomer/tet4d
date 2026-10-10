@@ -31,8 +31,11 @@ registry metadata
     -> existing presentation consumers
 ```
 
-No control may bypass the bounded application seam to write a renderer,
-material, camera, HUD node, geometry object, native session, or settings store.
+Registered parameter controls must use the bounded application seam rather
+than writing renderers, materials, camera, HUD nodes, board geometry, native
+sessions, or settings stores directly. Session panel handles call only the
+existing cockpit layout owner; actual resolved render-region signals drive
+camera refitting through the app.
 
 ## Profile identities
 
@@ -143,15 +146,15 @@ palette architecture.
 
 ## Cockpit viewability
 
-The Designer is a bounded panel inside the existing game-area rect, never a
-fixed opaque centre overlay. Full mode uses an internal scroll container and
+The Designer is a bounded panel inside the existing game-area rect, or the
+cockpit surface while full Designer panel manipulation is active. Full mode uses an internal scroll container and
 occupies less than a majority of ordinary board width. Compact mode becomes a
 small A/B strip. Hidden mode removes the overlay while retaining the detached
 session.
 
 The board and active/Ghost pieces remain visible beside/behind the bounded
-panel. The existing right inspector is not displaced, so NEXT and HOLD remain
-simultaneously visible at supported layouts. The 4D basis/slice indicator
+panel. NEXT and HOLD remain together in their shared module; full Designer mode
+places cockpit modules in bounded scrollable frames. The 4D basis/slice indicator
 remains visible, and helper/status content remains visible or immediately
 reachable through the established inspector scroll container. Designer rows
 also scroll, so constrained windows and enlarged UI scale do not make bottom
@@ -167,7 +170,7 @@ Stage 54F-2R clarifies the priority within that coexistence contract. The full
 Designer must preserve the board, active/Ghost pieces, compact NEXT/HOLD row,
 and the permanent authority-derived piece-control strip. Camera guidance and
 detailed helper prose are secondary and may require inspector scrolling.
-Compact Designer mode does not reallocate the ordinary cockpit. These layout
+Compact Designer mode restores the ordinary responsive cockpit. These layout
 rules do not change detached A/B state, application, focus, persistence, or
 input-isolation semantics.
 
@@ -198,3 +201,31 @@ mechanism, or insecure gate is introduced.
 This contract formalizes orchestration within existing Godot presentation
 authority. It transfers or establishes no gameplay, native, replay, profile,
 registry, NEXT, HOLD, geometry, basis, camera, or persistence authority.
+
+## Stage 56H panel geometry and grid independence
+
+Full Designer mode enables labelled Move and Resize handles for the board,
+piece controls, view controls, and NEXT/HOLD panels. The cockpit owns detached
+panel rectangles; scroll containers preserve access to controls at their minimum
+sizes (300×160 logical pixels for control panels, 320×360 for the board,
+including handles and board chrome; constrained by the available surface). Rectangles are constrained to the available cockpit surface, including
+after window changes. The panel selector and Bring Panel Forward action recover
+any overlapping panel without changing its geometry, profile, or gameplay. Compact/hidden Designer and ordinary gameplay restore the
+responsive cockpit and disable all manipulation. Session rectangles survive
+reopening Designer, but are not saved: neither the registry nor the existing
+profile library has a panel-geometry persistence contract.
+
+The board panel contains the real SubViewportContainer. Moving/resizing panels
+never calls Fit directly: resolved inner visibility/size signals use the same
+app refit path as mode entry and window resizing. Layout geometry is independent
+of profiles, style, grid mode, exact basis, view orientation, density, and native
+gameplay state. Geometry edits never apply profiles or dispatch native commands.
+
+Grid is a session presentation enum (`full`, `border`, `none`), cycling in that
+order. FULL draws internal and floor lattice plus ordinary/active boundaries;
+BORDER draws boundaries only; NONE draws neither lattice nor boundaries. Pieces,
+Ghost, floor surface, and orientation labels retain their existing roles.
+Grid cycling changes only `display.grid_mode` on the active detached profile,
+never reconstructs saved settings, and synchronizes working B. Applying built-in
+styles preserves the current grid mode. Explicit A/B, profile load, and reset
+operations continue to select the explicitly captured profile values.

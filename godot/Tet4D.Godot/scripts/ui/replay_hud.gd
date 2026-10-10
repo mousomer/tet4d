@@ -29,6 +29,7 @@ const GameSetupPanelScript = preload("res://scripts/ui/game_setup/game_setup_pan
 const GameSetupSpecScript = preload("res://scripts/ui/game_setup/game_setup_spec.gd")
 const CameraPresetScript = preload("res://scripts/presentation/camera_preset.gd")
 const PresentationProfileScript = preload("res://scripts/presentation/presentation_profile.gd")
+const GridDisplayMode = preload("res://scripts/presentation/grid_display_mode.gd")
 const PresentationDesignerScript = preload("res://scripts/ui/presentation_designer.gd")
 const DesignLaboratoryPanelScript = preload("res://scripts/ui/design_laboratory_panel.gd")
 const SafeAreaInsetsScript = preload("res://scripts/ui/safe_area_insets.gd")
@@ -49,7 +50,7 @@ signal projection_strength_changed(value: float)
 signal board_detail_changed(detail: String)
 signal ghost_visibility_changed(visible: bool)
 signal locked_cell_opacity_changed(opacity: float)
-signal grid_visibility_changed(visible: bool)
+signal grid_mode_changed(mode: int)
 signal accessibility_policy_changed(policy: Dictionary)
 signal camera_preferences_changed(sensitivity_factor: float, invert_y: bool, interpolation_scale: float)
 signal camera_preset_requested(id: String)
@@ -198,7 +199,7 @@ var _geometry_diagnostics_enabled := false
 var _keyboard_hints_visible := true
 var _accessibility_policy = AccessibilityPolicyScript.new()
 var _hud_density := "standard"
-var _grid_visible := true
+var _grid_mode := GridDisplayMode.Mode.FULL
 var _ui_scale_factor := 1.0
 var _camera_sensitivity_factor := 1.0
 var _camera_invert_y := false
@@ -736,6 +737,8 @@ func set_replay_mode_labels(is_playing: bool, speed: float, diagnostics_visible:
 
 
 func _configure_live_cockpit_mode(mode: String) -> void:
+	if _active_live_mode != mode and _presentation_designer != null:
+		_presentation_designer.hide_preserving_preview()
 	_active_live_mode = mode
 	if _presentation_designer != null:
 		_presentation_designer.set_runtime_context(mode)
@@ -826,7 +829,7 @@ func _set_live_4d_deck_active(active: bool) -> void:
 	_apply_shell_minimums(active, side_rail or split)
 	if _live_4d_deck == null:
 		return
-	_live_4d_view_module.visible = not side_rail
+	_live_4d_view_module.visible = not side_rail or not _live_cockpit.designer_panels().is_empty()
 	var placement := LiveCockpitScript.PLACEMENT_BELOW
 	if side_rail:
 		placement = LiveCockpitScript.PLACEMENT_SIDE
@@ -992,10 +995,12 @@ func _build_presentation_designer() -> void:
 	add_child(_presentation_designer)
 	if not _presentation_designer.configure(_settings_registry):
 		push_error("Presentation Designer requires a valid presentation registry")
+	_presentation_designer.panel_focus_requested.connect(_live_cockpit.raise_designer_panel)
 	_presentation_designer.profile_preview_requested.connect(func(profile) -> void:
 		presentation_profile_changed.emit(profile)
 	)
 	_presentation_designer.state_changed.connect(func(_state: String) -> void:
+		_live_cockpit.set_designer_layout_enabled(_state == PresentationDesignerScript.STATE_FULL and _design_affordances_enabled, _game_area)
 		_update_live_view_action_labels()
 		call_deferred("_layout_presentation_designer")
 	)
@@ -1013,7 +1018,14 @@ func _layout_presentation_designer() -> void:
 	if _presentation_designer == null or _game_area == null or not _game_area.is_inside_tree():
 		return
 	var game_rect := _game_area.get_global_rect()
-	_presentation_designer_game_rect = game_rect
+	# Detached board panels may be smaller than the full editor. Keep the
+	# editor usable within the cockpit while its board is manipulated.
+	var frames: Dictionary = _live_cockpit.designer_panels()
+	if not frames.is_empty():
+		game_rect = _live_cockpit._designer_host.get_global_rect()
+		if game_rect.size.x <= 0.0 or game_rect.size.y <= 0.0:
+			return
+	_presentation_designer_game_rect = _game_area.get_global_rect()
 	var inverse := get_global_transform().affine_inverse()
 	var local_origin: Vector2 = inverse * game_rect.position
 	var local_far: Vector2 = inverse * (game_rect.position + game_rect.size)
@@ -1375,7 +1387,7 @@ func apply_presentation_profile(profile) -> bool:
 		str(profile.value("camera.sensitivity"))
 	)
 	_camera_invert_y = bool(profile.value("camera.invert_y"))
-	_grid_visible = bool(profile.value("display.grid_visible"))
+	_grid_mode = GridDisplayMode.from_value(profile.value("display.grid_mode"))
 	set_display_mode(str(profile.value("theme.name")))
 	_apply_ui_scale(str(profile.value("display.ui_scale")))
 	_apply_hud_density(str(profile.value("display.hud_density")))
@@ -1404,7 +1416,7 @@ func _wire_settings_panel(panel: SettingsPanel) -> void:
 	panel.setting_changed.connect(func(setting_id: String, value) -> void:
 		_sync_setting_controls(panel, setting_id)
 		if not _applying_initial_settings:
-			presentation_profile_changed.emit(_profile_from_store())
+			_emit_runtime_parameter_change(setting_id, value)
 	)
 	panel.playback_speed_changed.connect(func(value: float) -> void:
 		playback_speed_changed.emit(value)
@@ -1484,8 +1496,14 @@ func _set_persistent_setting(setting_id: String, value) -> void:
 		_sync_all_setting_controls()
 	if setting_id == "interface.show_onboarding":
 		_set_onboarding_visible(bool(_settings_store.value(setting_id)))
-	if changed:
-		presentation_profile_changed.emit(_profile_from_store())
+	if changed or presentation_profile().value(setting_id) != value:
+		_emit_runtime_parameter_change(setting_id, value)
+
+
+func _emit_runtime_parameter_change(setting_id: String, value) -> void:
+	if _presentation_designer != null:
+		_presentation_designer.synchronize_runtime_parameter(setting_id, value)
+	presentation_profile_changed.emit(presentation_profile().with_overrides({setting_id: value}))
 
 
 func _update_live_status_strip(mode_label: String, state_label: String, reason: String, mode: String) -> void:
@@ -1991,19 +2009,23 @@ func _toggle_quick_settings() -> void:
 
 
 func _toggle_grid_visibility() -> void:
-	_grid_visible = not _grid_visible
+	_grid_mode = GridDisplayMode.next(_grid_mode)
+	var value := GridDisplayMode.to_value(_grid_mode)
+	# Preserve detached runtime style instead of rebuilding persisted defaults.
 	if _settings_store != null:
-		_settings_store.set_value("display.grid_visible", _grid_visible)
+		_settings_store.set_value("display.grid_mode", value)
+	if _presentation_designer != null:
+		_presentation_designer.synchronize_runtime_parameter("display.grid_mode", value)
+	presentation_profile_changed.emit(presentation_profile().with_overrides({"display.grid_mode": value}))
 	_update_live_view_action_labels()
-	presentation_profile_changed.emit(_profile_from_store())
-	grid_visibility_changed.emit(_grid_visible)
+	grid_mode_changed.emit(_grid_mode)
 
 
 func _update_live_view_action_labels() -> void:
 	if _quick_settings_button != null:
 		_quick_settings_button.text = "Hide Quick Settings" if _hud_density == "detailed" else "Show Quick Settings"
 	if _grid_toggle_button != null:
-		_grid_toggle_button.text = "Grid: On" if _grid_visible else "Grid: Off"
+		_grid_toggle_button.text = "Grid: %s" % GridDisplayMode.to_value(_grid_mode).capitalize()
 	if _designer_button != null:
 		var designer_state := _presentation_designer.state() if _presentation_designer != null else "hidden"
 		_designer_button.text = "Designer: %s" % ("Open" if designer_state == "hidden" else designer_state.capitalize())
@@ -2252,7 +2274,7 @@ func _build_layout() -> void:
 	_grid_toggle_button = Button.new()
 	_grid_toggle_button.name = "GridVisibilityToggle"
 	_grid_toggle_button.custom_minimum_size = Vector2(84, 34)
-	_grid_toggle_button.tooltip_text = "Show or hide internal board grid detail"
+	_grid_toggle_button.tooltip_text = "Cycle Full grid → Border only → None"
 	_grid_toggle_button.set_meta("semantic_role", "action_button")
 	_grid_toggle_button.pressed.connect(_toggle_grid_visibility)
 	_live_display_action_row.add_child(_grid_toggle_button)

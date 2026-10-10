@@ -380,11 +380,11 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		if quick_settings.text != "Hide Quick Settings":
 			failures.append("%s: Quick Settings action should expose and report the detailed inspector" % label)
 		quick_settings.pressed.emit()
-	if grid_toggle == null or grid_toggle.text != "Grid: On":
+	if grid_toggle == null or grid_toggle.text != "Grid: Full":
 		failures.append("%s: action row should expose the current grid state" % label)
 	else:
 		grid_toggle.pressed.emit()
-		if grid_toggle.text != "Grid: Off":
+		if grid_toggle.text != "Grid: Border":
 			failures.append("%s: grid action should report the hidden-detail state" % label)
 		grid_toggle.pressed.emit()
 	if quick_settings != null and (quick_settings.get_parent() != live_view_row or quick_settings.get_meta("semantic_role", "") != "action_button" or quick_settings.get_theme_stylebox("normal") == null):

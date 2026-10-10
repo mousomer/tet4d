@@ -119,7 +119,7 @@ Allowed runtime applicability values are `shell`, `replay`, `live_2d`,
 | `display.board_detail` | `PIECE_PRESENTATION` | all live modes | accessibility_composable |
 | `ghost.enabled` | `GHOST_PRESENTATION` | all live modes | accessibility_composable |
 | `settled_cells.opacity` | `PIECE_PRESENTATION` | all live modes | accessibility_composable |
-| `display.grid_visible` | `BOARD_PRESENTATION` | all live modes | accessibility_composable |
+| `display.grid_mode` | `BOARD_PRESENTATION` | all live modes | accessibility_composable |
 | `replay.playback_speed` | `REPLAY_PRESENTATION` | replay | neutral |
 | `replay.loop_enabled` | `REPLAY_PRESENTATION` | replay | neutral |
 | `display.show_w_labels` | `SLICE_SET_PRESENTATION` | replay, live 4D | accessibility_composable |
@@ -155,7 +155,7 @@ The existing parameters retain their accepted values. The new values are:
 
 | ID | Type and bounds | Canonical default | Meaning |
 | --- | --- | --- | --- |
-| `display.grid_visible` | bool | `true` | Session-only quick-control state for internal grid detail; the boundary remains visible. |
+| `display.grid_mode` | enum `full`, `border`, `none` | `full` | Session-only lattice/boundary display, independent of style. |
 | `board.grid_opacity` | float, `0.05..0.90` | `0.31` | Normal internal/floor grid alpha before High Contrast minimum strengthening. |
 | `board.boundary_opacity` | float, `0.35..1.00` | `0.90` | Ordinary board/slice wireframe alpha. |
 | `active_cells.opacity` | float, `0.35..1.00` | `1.00` | Active-piece fill alpha; outlines remain independently legible. |
@@ -221,7 +221,7 @@ document contains no fixed key inventory and needs no schema bump for this
 additive envelope.
 
 Only `local_shell` plus `persist: true` entries reach the ordinary settings
-document. Diagnostics and `display.grid_visible` remain session-only there.
+document. Diagnostics and `display.grid_mode` remain session-only there.
 `PresentationProfile` itself does not write. Named profile artifacts are a
 separate explicit persistence boundary and may contain the complete validated
 profile value set, including session-only presentation values, because loading
@@ -302,3 +302,6 @@ Real-window review records the exact Godot/platform/path and demonstrates
 default coherence plus live active-piece, grid/boundary, Ghost, palette,
 slice-spacing, environment, UI-scale, and accessibility changes without a game
 restart. Agent-driven review is evidence, not independent human sign-off.
+
+Legacy schema-1 profile snapshots migrate boolean `display.grid_visible` to
+`full` for true and `border` for false; new snapshots use `display.grid_mode`.

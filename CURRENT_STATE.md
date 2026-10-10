@@ -12,8 +12,7 @@ Git-visible, and ordinary named gate failures retain checker diagnostics and
 exit status. Scanner redaction remains bounded. Focused integration checks,
 a Git-visible checkout export and the canonical full gate pass.
 Ambient evidence matching and Make ordering remain shared-kit follow-up.
-Native verifier edits need guarded re-review before fleet acceptance. Keep this
-repair uncommitted alongside the existing Stage 56H work.
+Native verifier edits need guarded re-review before fleet acceptance. The Stage 56H unified baseline is committed at `0cb30958`.
 
 ## Purpose
 
@@ -79,9 +78,10 @@ and frozen-setup Restart/Play Again under
 Shell readability uses 24/22 px text, contained menu scrolling, and visible launch
 Play. Magnification uses 1280×720 pt for menus and 1280×800 pt for live/replay,
 up to 2×. Include resizing, navigation, and guide layout in human acceptance.
-The bounded camera/legend correction requires visible inner-render-region
-fitting on menu entry, restart, resize, and guide/layout changes; visible 3D
-Reset View guidance; styled 4D direction rebuilds; and native hash isolation.
+The correction on `claude/stage-56h-gameplay-ergonomics` from `0cb30958`
+requires actual-region fitting, styled legends, orthogonal grid modes, and
+session-only Designer panel Move/Resize with native-hash isolation. Human
+playability remains the acceptance boundary after automated geometry gates.
 Preserve synchronous fitting when valid visible geometry already exists,
 including Reset View and Designer comparison loading. Human playability remains
 separate from automated geometry and local Metal screenshot inspection.

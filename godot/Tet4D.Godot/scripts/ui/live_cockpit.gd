@@ -2,6 +2,7 @@ extends VBoxContainer
 
 class_name LiveCockpit
 
+const DesignerPanelFrame = preload("res://scripts/ui/designer_panel_frame.gd")
 const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
 
 const PROFILE_WIDE := "wide"
@@ -76,6 +77,89 @@ var _natural_deck_height := 0.0
 var _scroll_required := false
 var _placement := PLACEMENT_BELOW
 var _requested_placement := PLACEMENT_BELOW
+
+var _designer_host: Control
+var _designer_frames: Dictionary = {}
+var _designer_origins: Dictionary = {}
+var _designer_rects: Dictionary = {}
+var _designer_enabled := false
+var _designer_deck_visible := false
+
+
+func set_designer_layout_enabled(enabled: bool, board: Control) -> void:
+	if enabled == _designer_enabled:
+		return
+	_designer_enabled = enabled
+	if enabled:
+		_designer_deck_visible = control_deck.visible
+		_designer_host = Control.new()
+		_designer_host.name = "DesignerCockpitSurface"
+		_designer_host.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		_designer_host.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(_designer_host)
+		_designer_host.resized.connect(_constrain_designer_panels)
+		for entry in [["Board", board], ["Piece controls", piece_controls], ["View controls", view_controls], ["NEXT / HOLD", piece_state]]:
+			var panel: Control = entry[1]
+			var key := str(panel.name)
+			_designer_origins[key] = {"parent": panel.get_parent(), "index": panel.get_index(), "visible": panel.visible}
+			var frame = DesignerPanelFrame.new()
+			_designer_host.add_child(frame)
+			frame.configure(str(entry[0]), panel, panel != board)
+			panel.show()
+			frame.geometry_edited.connect(func(rect: Rect2) -> void: _designer_rects[key] = rect)
+			_designer_frames[key] = frame
+		board_stage.hide()
+		control_deck.hide()
+		call_deferred("_constrain_designer_panels")
+	else:
+		for key in _designer_frames:
+			var frame = _designer_frames[key]
+			_designer_rects[key] = Rect2(frame.position, frame.size)
+			var origin: Dictionary = _designer_origins[key]
+			frame.content.reparent(origin["parent"], false)
+			frame.content.visible = origin["visible"]
+			origin["parent"].move_child(frame.content, mini(origin["index"], origin["parent"].get_child_count() - 1))
+		_designer_host.queue_free()
+		_designer_host = null
+		_designer_frames.clear()
+		_designer_origins.clear()
+		board_stage.show()
+		control_deck.visible = _designer_deck_visible
+		_apply_responsive_policy()
+
+
+func designer_panels() -> Dictionary:
+	return _designer_frames.duplicate()
+
+
+func raise_designer_panel(panel_name: String) -> void:
+	if _designer_enabled and _designer_frames.has(panel_name):
+		_designer_host.move_child(_designer_frames[panel_name], _designer_host.get_child_count() - 1)
+
+
+func _constrain_designer_panels() -> void:
+	if not _designer_enabled or _designer_host == null or _designer_host.size.x < 1:
+		return
+	var extent := _designer_host.size
+	var index := 0
+	for key in _designer_frames:
+		var frame = _designer_frames[key]
+		var gap := 8.0
+		var half_width := (extent.x - gap) * 0.65
+		var right_origin := half_width + gap
+		var column_width := extent.x - right_origin
+		var module_width := column_width
+		var row_height := (extent.y - gap * 2) / 3.0
+		var initial := Rect2(Vector2.ZERO, Vector2(half_width, extent.y))
+		if index == 1:
+			initial = Rect2(Vector2(right_origin, 0), Vector2(module_width, row_height))
+		elif index == 2:
+			initial = Rect2(Vector2(right_origin, row_height + gap), Vector2(module_width, row_height))
+		elif index == 3:
+			initial = Rect2(Vector2(right_origin, (row_height + gap) * 2), Vector2(module_width, row_height))
+		frame.constrain(_designer_rects.get(key, initial))
+		_designer_rects[key] = Rect2(frame.position, frame.size)
+		index += 1
 
 
 func _init() -> void:
@@ -207,7 +291,10 @@ func deck_placement() -> String:
 
 
 func set_control_deck_visible(enabled: bool, density: String = "standard") -> void:
-	control_deck.visible = enabled
+	if _designer_enabled:
+		_designer_deck_visible = enabled
+	else:
+		control_deck.visible = enabled
 	_density = density
 	_apply_responsive_policy()
 
@@ -293,6 +380,9 @@ func _module_heights() -> Vector3:
 
 
 func _apply_responsive_policy() -> void:
+	if _designer_enabled:
+		_constrain_designer_panels()
+		return
 	if _packing_in_progress:
 		return
 	_packing_in_progress = true

@@ -2,6 +2,7 @@ extends Node3D
 
 class_name GridRenderer
 
+const GridDisplayMode = preload("res://scripts/presentation/grid_display_mode.gd")
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 const PRESENTATION_ROLE_GRID := "board.grid"
 const PRESENTATION_ROLE_FLOOR_GRID := "board.grid.floor"
@@ -31,7 +32,7 @@ func rebuild(
 	active_layers: Array = [],
 	board_detail: String = "standard",
 	high_contrast: bool = false,
-	show_grid: bool = true,
+	grid_mode: int = GridDisplayMode.Mode.FULL,
 	grid_opacity: float = -1.0,
 	boundary_opacity: float = -1.0
 ) -> void:
@@ -59,9 +60,8 @@ func rebuild(
 		slice_root.set_meta("slice_anchor", slice_root.position)
 		slice_root.set_meta("presentation_role", "board.slice_geometry")
 		add_child(slice_root)
-		# The Grid: On control is authoritative: detail may tune the presentation,
-		# but it must never silently suppress the lattice.
-		if show_grid and live_2d and dimension >= 2:
+		# Mode, not detail/style, owns lattice and boundary visibility.
+		if grid_mode == GridDisplayMode.Mode.FULL and live_2d and dimension >= 2:
 			if dimension == 2:
 				_add_planar_grid(geometry, display_mode, high_contrast, grid_opacity, slice_root)
 			else:
@@ -76,30 +76,32 @@ func rebuild(
 				)
 		if live_2d and dimension >= 3:
 			_add_floor_face(geometry, display_mode, slice_root)
-			_add_floor_lattice(geometry, display_mode, high_contrast, grid_opacity, slice_root)
+			if grid_mode == GridDisplayMode.Mode.FULL:
+				_add_floor_lattice(geometry, display_mode, high_contrast, grid_opacity, slice_root)
 		if live_2d and dimension == 2:
 			_add_spawn_entry_cue(geometry, display_mode, high_contrast, slice_root)
-		_add_outline_box(
-			geometry,
-			display_mode,
-			null,
-			ReplayVisuals.slice_outline_thickness(display_mode) * (1.20 if high_contrast else 1.0),
-			PRESENTATION_ROLE_WIREFRAME,
-			high_contrast,
-			boundary_opacity,
-			slice_root
-		)
-		if active_layers.has(w_index):
+		if grid_mode != GridDisplayMode.Mode.NONE:
 			_add_outline_box(
 				geometry,
 				display_mode,
-				ReplayVisuals.board_active_frame_material(display_mode, high_contrast),
-				ReplayVisuals.slice_outline_thickness(display_mode) * (ReplayVisuals.ACTIVE_SLICE_FRAME_HIGH_CONTRAST_MULTIPLIER if high_contrast else ReplayVisuals.ACTIVE_SLICE_FRAME_MULTIPLIER),
-				PRESENTATION_ROLE_ACTIVE_FRAME,
+				null,
+				ReplayVisuals.slice_outline_thickness(display_mode) * (1.20 if high_contrast else 1.0),
+				PRESENTATION_ROLE_WIREFRAME,
 				high_contrast,
 				boundary_opacity,
 				slice_root
 			)
+			if active_layers.has(w_index):
+				_add_outline_box(
+					geometry,
+					display_mode,
+					ReplayVisuals.board_active_frame_material(display_mode, high_contrast),
+					ReplayVisuals.slice_outline_thickness(display_mode) * (ReplayVisuals.ACTIVE_SLICE_FRAME_HIGH_CONTRAST_MULTIPLIER if high_contrast else ReplayVisuals.ACTIVE_SLICE_FRAME_MULTIPLIER),
+					PRESENTATION_ROLE_ACTIVE_FRAME,
+					high_contrast,
+					boundary_opacity,
+					slice_root
+				)
 		if dimension >= 4 and show_w_labels:
 			_add_slice_label(
 				w_index,

@@ -2,6 +2,7 @@ extends Node3D
 
 class_name TraceSceneRenderer
 
+const GridDisplayMode = preload("res://scripts/presentation/grid_display_mode.gd")
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 const GridRendererScript = preload("res://scripts/rendering/grid_renderer.gd")
 const CellRendererScript = preload("res://scripts/rendering/cell_renderer.gd")
@@ -21,7 +22,7 @@ var _event_scale := ReplayVisuals.EVENT_SCALE * _projection_strength
 var _display_mode := str(_presentation_profile.value("theme.name"))
 var _show_w_labels = _presentation_profile.value("display.show_w_labels")
 var _board_detail := str(_presentation_profile.value("display.board_detail"))
-var _show_grid = _presentation_profile.value("display.grid_visible")
+var _grid_mode := GridDisplayMode.from_value(_presentation_profile.value("display.grid_mode"))
 var _locked_cell_opacity := float(_presentation_profile.value("settled_cells.opacity"))
 var _high_contrast = _presentation_profile.value("accessibility.high_contrast")
 var _reduced_motion = _presentation_profile.value("accessibility.reduced_motion")
@@ -84,7 +85,11 @@ func set_board_detail(detail: String) -> void:
 
 
 func set_grid_visible(visible: bool) -> void:
-	_apply_parameter_override("display.grid_visible", visible)
+	set_grid_mode(GridDisplayMode.Mode.FULL if visible else GridDisplayMode.Mode.BORDER)
+
+
+func set_grid_mode(mode: int) -> void:
+	_apply_parameter_override("display.grid_mode", GridDisplayMode.to_value(mode))
 
 
 func set_locked_cell_opacity(opacity: float) -> void:
@@ -119,7 +124,7 @@ func _apply_profile_values() -> void:
 	_particle_scale = ReplayVisuals.PARTICLE_SCALE * _projection_strength
 	_event_scale = ReplayVisuals.EVENT_SCALE * _projection_strength
 	_board_detail = str(_presentation_profile.value("display.board_detail"))
-	_show_grid = bool(_presentation_profile.value("display.grid_visible"))
+	_grid_mode = GridDisplayMode.from_value(_presentation_profile.value("display.grid_mode"))
 	_locked_cell_opacity = float(_presentation_profile.value("settled_cells.opacity"))
 	_high_contrast = bool(_presentation_profile.value("accessibility.high_contrast"))
 	_reduced_motion = bool(_presentation_profile.value("accessibility.reduced_motion"))
@@ -222,7 +227,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		_presentation.active_layer_indices(),
 		_board_detail,
 		_high_contrast,
-		_show_grid,
+		_grid_mode,
 		_grid_opacity,
 		_boundary_opacity
 	)

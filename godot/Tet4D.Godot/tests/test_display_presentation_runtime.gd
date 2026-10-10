@@ -119,7 +119,7 @@ func _test_shell_preferences() -> Array:
 			"display.ui_scale": "large",
 			"display.hud_density": "detailed",
 			"accessibility.high_contrast": true,
-			"display.grid_visible": false,
+			"display.grid_mode": "border",
 			"board.grid_opacity": 0.55,
 			"board.boundary_opacity": 0.65,
 			"active_cells.opacity": 0.65,
@@ -141,7 +141,7 @@ func _test_shell_preferences() -> Array:
 		var live_hud_preferences: Dictionary = hud.presentation_preferences_snapshot()
 		if absf(float(live_hud_preferences.get("ui_scale_factor")) - 1.15) > 0.001 or live_hud_preferences.get("hud_density") != "detailed":
 			failures.append("bounded profile application should reach shell-owned scale and density consumers")
-		if not bool(live_hud_preferences.get("accessibility", {}).get("high_contrast", false)) or hud._grid_visible:
+		if not bool(live_hud_preferences.get("accessibility", {}).get("high_contrast", false)) or hud._grid_mode != 1:
 			failures.append("bounded profile application should compose accessibility and quick grid presentation state")
 		if app._current_snapshot != deterministic_snapshot_before or app._active_live_setup != canonical_setup_before or app._current_document != document_before:
 			failures.append("profile switching must not reconstruct or mutate deterministic replay/session state")

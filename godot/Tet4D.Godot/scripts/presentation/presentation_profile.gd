@@ -41,6 +41,12 @@ static func from_snapshot(registry, snapshot: Dictionary):
 
 
 func configure(registry, source_values: Dictionary) -> Array:
+	# Compatibility for named profiles exported before tri-state grid display.
+	source_values = source_values.duplicate(true)
+	if source_values.has("display.grid_visible") and typeof(source_values["display.grid_visible"]) == TYPE_BOOL:
+		if not source_values.has("display.grid_mode"):
+			source_values["display.grid_mode"] = "full" if source_values["display.grid_visible"] == true else "border"
+		source_values.erase("display.grid_visible")
 	_registry = registry
 	_values.clear()
 	_failures.clear()

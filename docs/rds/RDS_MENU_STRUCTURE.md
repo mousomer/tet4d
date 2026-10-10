@@ -826,3 +826,14 @@ Execution artifact:
 6. The right helper in the modern playground is keys-first and minimal, not a
    second menu, and diagnostics stay on secondary surfaces rather than
    replacing the operational sidebar.
+
+### Stage 56H live presentation controls
+
+Live View Options cycles Grid: Full → Border → None. Full displays internal and
+floor lattice plus boundaries; Border retains boundaries only; None hides both.
+Grid selection and design style must not reset one another. In full Designer,
+labelled Move/Resize handles manipulate bounded board, piece-control,
+view-control, and NEXT/HOLD panels. Compact/hidden Designer restores the normal
+responsive cockpit with manipulation disabled. Geometry is session-only and
+never mutates style, grid, native gameplay, RNG, or view orientation. Resolved
+inner-render-region changes use the common visibility/size-driven camera refit.

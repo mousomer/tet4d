@@ -125,7 +125,7 @@ Apply semantics reuse the accepted A/B contract exactly:
 
 ```text
 apply built-in style
-    -> detached values replace working B
+    -> detached style values replace working B, retaining its selected grid mode
     -> B is displayed through profile_preview_requested
     -> captured A is neither recaptured nor mutated
     -> the shipped catalog entry is unchanged

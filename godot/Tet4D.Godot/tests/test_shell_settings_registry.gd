@@ -50,7 +50,7 @@ func run() -> Array:
 	_assert_has_setting(failures, registry, "interface.show_onboarding")
 	_assert_has_setting(failures, registry, "ghost.enabled")
 	_assert_has_setting(failures, registry, "settled_cells.opacity")
-	for setting_id in ["display.grid_visible", "board.grid_opacity", "board.boundary_opacity", "active_cells.opacity", "ghost.opacity", "slice_set.spacing", "environment.background_intensity"]:
+	for setting_id in ["display.grid_mode", "board.grid_opacity", "board.boundary_opacity", "active_cells.opacity", "ghost.opacity", "slice_set.spacing", "environment.background_intensity"]:
 		_assert_has_setting(failures, registry, setting_id)
 	for setting_id in [
 		"display.window_mode",

@@ -126,9 +126,10 @@ acquire artificial gaps. The default 4D
 fit keeps the complete current-slice matrix visible without making it feel remote.
 Active cell wireframes remain crisp but subordinate to piece fill rather than
 forming a bright cage. Live boards keep persistent View Options above the board
-for restoring Quick Settings and toggling grid visibility. A selected Grid: On
-state always renders the lattice; board-detail preferences may not silently
-remove it. The outer orientation cage remains visible when Grid: Off.
+for restoring Quick Settings and cycling Grid: Full → Border → None. Full
+renders the internal/floor lattice and boundaries; Border retains only the
+ordinary and active-slice boundaries; None hides both lattice and boundaries.
+Grid selection is independent of design style and board-detail preferences.
 On volumetric boards, grid rectangles belong to the three camera-relative rear
 faces of each box: one face per axis. As the camera orbits, rear-face selection
 updates so the three front faces remain free of grid detail. Grids must never
