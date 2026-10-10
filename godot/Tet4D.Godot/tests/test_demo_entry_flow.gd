@@ -107,6 +107,11 @@ func _find_visible_command_card(root: Node, label_text: String) -> Button:
 
 
 func _click(tree: SceneTree, control: Control) -> void:
+	# Navigate into view before pointer input; menus start at Play and overflow
+	# rows are reached through the focus-following scroll surface.
+	control.grab_focus()
+	await tree.process_frame
+	await tree.process_frame
 	var point := control.get_global_rect().get_center()
 	var motion := InputEventMouseMotion.new()
 	motion.position = point

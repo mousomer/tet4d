@@ -21,6 +21,12 @@ This file contains only the compact state needed to resume staged or
 phase-dependent work. It is not workflow authority, a CI diary, a completed
 stage archive, a task-contract ledger, or a future programme.
 
+## Menu sizing acceptance
+
+The current checkout's menu fix keeps launch title/Play visible, magnifies menus
+above 1280×720 pt up to 2×, and retains compact scrolling and live canvas sizing.
+Stage 56H human acceptance should include launch, resize, and scrolled navigation.
+
 ## Active Focus
 
 Machine-readable handoff state. `status` is `active` only on a feature branch

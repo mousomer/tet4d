@@ -186,6 +186,9 @@ window-size persistence on applied shell settings; the real 2× fresh launch now
 opens at 1280×720 pt. Manual Stage 56H acceptance remains deferred.
 Shell readability acceptance now uses 24 px body / 22 px supporting/helper text and
 window-filling Main/Advanced menus with wrapping, focus-following overflow.
+Menu acceptance also requires the launch title/Play action to be visible and
+proportional text/control growth above 1280×720 pt (capped at 2×), including
+same-aspect resizes, compact overflow, and transitions back to live play.
 Helper keycaps/actions remain at least 22 px in every density; internal help
 scrolling preserves NEXT/HOLD visibility. Check the larger typography during
 the outstanding manual acceptance.

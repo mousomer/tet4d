@@ -35,9 +35,9 @@ func run() -> Array:
 	if quit_button == null:
 		failures.append("main menu should expose Quit for pointer activation")
 	else:
-		if quit_button.get_global_rect().end.y > float(tree.root.size.y):
-			failures.append("Quit card should fit fully inside the supported viewport")
 		await _click(tree, quit_button)
+		if not hud.get_viewport_rect().encloses(quit_button.get_global_rect()):
+			failures.append("focused Quit card should fit fully inside the supported viewport")
 		await tree.process_frame
 		if quit_count[0] != 1:
 			failures.append("mouse click should emit Quit exactly once; hovered %s; rect %s" % [_hovered_name(tree), quit_button.get_global_rect()])
@@ -75,6 +75,11 @@ func run() -> Array:
 
 
 func _click(tree: SceneTree, control: Control) -> void:
+	# Navigate into view before pointer input; menus start at Play and overflow
+	# rows are reached through the focus-following scroll surface.
+	control.grab_focus()
+	await tree.process_frame
+	await tree.process_frame
 	var point := control.get_global_rect().get_center()
 	var motion := InputEventMouseMotion.new()
 	motion.position = point

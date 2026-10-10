@@ -231,6 +231,10 @@ var _live_view_control_strip: PanelContainer
 var _live_cockpit
 const DESIGN_RESOLUTION_MIN_WIDTH := 640.0
 const DESIGN_RESOLUTION_MIN_HEIGHT := 480.0
+# Menus magnify above the fresh-profile window; compact windows retain readable
+# point sizes and scroll. Gameplay keeps its existing responsive canvas.
+const MENU_REFERENCE_SIZE := Vector2(1280.0, 720.0)
+const MAX_MENU_WINDOW_SCALE := 2.0
 
 var _live_4d_deck: VBoxContainer
 var _live_4d_piece_module: VBoxContainer
@@ -1018,6 +1022,7 @@ func show_screen(screen_name: String) -> void:
 		_presentation_designer.hide_preserving_preview()
 	if _current_screen != SCREEN_VIEWER and _design_laboratory != null:
 		_design_laboratory.close()
+	_apply_responsive_layout()
 	call_deferred("_log_geometry_diagnostics", "screen:%s" % _current_screen)
 	call_deferred("_focus_current_screen")
 
@@ -1076,6 +1081,30 @@ func _focus_current_screen() -> void:
 		target = buttons[0] if not buttons.is_empty() else null
 	if _valid_focus_target(target):
 		(target as Control).grab_focus()
+		var scroll := _menu_scroll_for_current_screen()
+		if scroll != null:
+			call_deferred("_ensure_menu_focus_visible", scroll)
+
+
+func _menu_scroll_for_current_screen() -> ScrollContainer:
+	if _current_screen == SCREEN_MAIN_MENU:
+		return _main_menu_scroll
+	if _current_screen == SCREEN_ADVANCED:
+		return find_child("AdvancedMenuScroll", true, false) as ScrollContainer
+	return null
+
+
+func _ensure_menu_focus_visible(scroll: ScrollContainer) -> void:
+	# follow_focus runs when focus changes, which can precede container sorting
+	# at startup. Reconcile only on layout/focus changes, so wheel scrolling stays
+	# under the player's control. The first action also keeps the title in view.
+	var owner := get_viewport().gui_get_focus_owner()
+	if owner == null or not scroll.is_visible_in_tree() or not scroll.is_ancestor_of(owner):
+		return
+	if owner == _screen_focus_targets.get(_current_screen):
+		scroll.scroll_vertical = 0
+	else:
+		scroll.ensure_control_visible(owner)
 
 
 func _valid_focus_target(target) -> bool:
@@ -2695,6 +2724,8 @@ func _make_menu_surface(screen: Control, scroll_name: String) -> PanelContainer:
 	surround.add_theme_constant_override("margin_top", ShellDesignTokensScript.SPACE_4)
 	surround.add_theme_constant_override("margin_bottom", ShellDesignTokensScript.SPACE_4)
 	scroll.add_child(surround)
+	surround.resized.connect(func() -> void: call_deferred("_ensure_menu_focus_visible", scroll))
+	scroll.resized.connect(func() -> void: call_deferred("_ensure_menu_focus_visible", scroll))
 	scroll.resized.connect(func() -> void:
 		var side_margin := maxi(ShellDesignTokensScript.SPACE_4, int(minf(
 			scroll.size.x * ShellDesignTokensScript.MENU_SIDE_MARGIN_SHARE,
@@ -3318,17 +3349,9 @@ func _apply_responsive_layout() -> void:
 	_log_geometry_diagnostics("responsive-compat")
 
 
-# The design resolution tracks the window so layout coordinates and responsive
-# breakpoints share one domain. With a base pinned to a fixed resolution the
-# logical extent never shrinks - canvas_items stretch downscales instead - so a
-# small window could never reach a constrained layout however the breakpoints
-# were computed. Tracking the window also renders text at its intended size
-# rather than squeezing a fixed canvas into fewer pixels.
-# The shell is sized by explicit offsets rather than full-rect anchors because
-# it carries a UI-scale transform. Those offsets are therefore only correct for
-# the viewport they were computed against, and must be recomputed whenever the
-# viewport changes - which it now does, because the design resolution tracks
-# the window.
+# The gameplay canvas tracks window points for responsive reflow. Menu screens
+# magnify above their reference size; both paths recompute explicit shell offsets
+# because the persisted UI-scale transform changes the available logical extent.
 func _apply_shell_extents() -> void:
 	var viewport_size := get_viewport_rect().size
 	var ui_scale := maxf(_ui_scale_factor, 0.01)
@@ -3360,12 +3383,22 @@ func _sync_design_resolution() -> void:
 		return
 	var display_scale := maxf(DisplayServer.screen_get_scale(), 0.01)
 	var points := window_pixels / display_scale
+	var logical := points / _window_ui_scale(points)
 	var target := Vector2i(
-		int(maxf(points.x, DESIGN_RESOLUTION_MIN_WIDTH)),
-		int(maxf(points.y, DESIGN_RESOLUTION_MIN_HEIGHT))
+		int(ceil(maxf(logical.x, DESIGN_RESOLUTION_MIN_WIDTH))),
+		int(ceil(maxf(logical.y, DESIGN_RESOLUTION_MIN_HEIGHT)))
 	)
 	if window.content_scale_size != target:
 		window.content_scale_size = target
+
+
+static func menu_window_scale(window_points: Vector2) -> float:
+	var fit := minf(window_points.x / MENU_REFERENCE_SIZE.x, window_points.y / MENU_REFERENCE_SIZE.y)
+	return clampf(fit, 1.0, MAX_MENU_WINDOW_SCALE)
+
+
+func _window_ui_scale(points: Vector2) -> float:
+	return 1.0 if _current_screen == SCREEN_VIEWER else menu_window_scale(points)
 
 
 # The responsive breakpoint domain is what the player actually sees, not the
@@ -3383,7 +3416,8 @@ func apparent_layout_size() -> Vector2:
 		return size
 	var display_scale := maxf(DisplayServer.screen_get_scale(), 0.01)
 	var ui_scale := maxf(_ui_scale_factor, 0.01)
-	return (window_pixels / display_scale) / ui_scale
+	var points := window_pixels / display_scale
+	return points / _window_ui_scale(points) / ui_scale
 
 
 func _log_geometry_diagnostics(reason: String) -> void:
