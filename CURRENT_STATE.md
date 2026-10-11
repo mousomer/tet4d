@@ -13,13 +13,11 @@ exit status. Scanner redaction remains bounded. Focused integration checks,
 a Git-visible checkout export and the canonical full gate pass.
 Ambient evidence matching and Make ordering remain shared-kit follow-up.
 Native verifier edits need guarded re-review before fleet acceptance. The Stage 56H unified baseline is committed at `0cb30958`.
-
 ## Purpose
 
 This file contains only the compact state needed to resume staged or
 phase-dependent work. It is not workflow authority, a CI diary, a completed
 stage archive, a task-contract ledger, or a future programme.
-
 ## Active Focus
 
 Machine-readable handoff state. `status` is `active` only on a feature branch
@@ -31,15 +29,17 @@ enforces this.
 ```json
 {
   "schema_version": 1,
-  "status": "none",
-  "branch": null,
+  "status": "active",
+  "branch": "codex/stage-56h-r4a-fast-session-flow",
   "pull_request": null
 }
 ```
 <!-- END HANDOFF:state -->
 
 <!-- BEGIN HANDOFF:notes -->
-No active handoff.
+Designer and spatial-scaffold migrations remain uncommitted; see their architecture contracts.
+Safety copy: `/private/tmp/tet4d-stage56h-safety-20261011-132107`; scaffold matrices are in `/private/tmp/tet4d-scaffold-evidence`.
+Edge-scaffold correction: Border defaults; Designer Advanced Settings owns compatible opacity keys. Focused regressions, regenerated 54-case matrix, pinned Godot and repository gates pass. Evidence: `/private/tmp/tet4d-scaffold-evidence/CORRECTION.md`. No commit is authorized.
 <!-- END HANDOFF:notes -->
 
 ## Current Authority
@@ -101,7 +101,7 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 28` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 5.99` (`low`)
+- `tech_debt.score = 6.00` (`low`)
 
 Dominant remaining pressure:
 

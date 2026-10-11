@@ -68,6 +68,7 @@ signal change_setup_requested(mode: String)
 signal new_random_game_requested()
 signal main_menu_requested()
 signal basis_turn_requested(plane: String, direction: int)
+signal design_restoration_requested(profile)
 signal presentation_profile_changed(profile)
 signal design_laboratory_requested()
 
@@ -134,6 +135,7 @@ var _live_fit_view_button: Button
 var _live_reset_view_button: Button
 var _quick_settings_button: Button
 var _grid_toggle_button: Button
+var _comparison_toggle_button: Button
 var _designer_button: Button
 var _design_menu_header: Control
 var _design_lab_button: Button
@@ -199,7 +201,7 @@ var _geometry_diagnostics_enabled := false
 var _keyboard_hints_visible := true
 var _accessibility_policy = AccessibilityPolicyScript.new()
 var _hud_density := "standard"
-var _grid_mode := GridDisplayMode.Mode.FULL
+var _grid_mode := GridDisplayMode.Mode.BORDER
 var _ui_scale_factor := 1.0
 var _camera_sensitivity_factor := 1.0
 var _camera_invert_y := false
@@ -912,6 +914,10 @@ func configure_design_laboratory(callbacks: Dictionary) -> bool:
 		main_menu_requested.emit()
 	)
 	callbacks["edit_candidate"] = Callable(self, "_open_design_candidate")
+	callbacks["comparison"] = _presentation_designer.comparison
+	callbacks["ensure_current"] = Callable(self, "_ensure_current_design")
+	callbacks["apply_selection"] = Callable(self, "_apply_lab_selection")
+	callbacks["apply_style"] = callbacks.get("apply_style", callbacks.get("apply_profile"))
 	var configured: bool = _design_laboratory.configure(_settings_registry, callbacks)
 	if configured:
 		_apply_shell_style()
@@ -945,6 +951,19 @@ func open_design_laboratory() -> void:
 		return
 	show_screen(SCREEN_VIEWER)
 	_design_laboratory.open()
+
+
+func _ensure_current_design() -> void:
+	var context := _active_live_mode if not _active_live_mode.is_empty() else "live_2d"
+	_presentation_designer.initialize_current_design(presentation_profile(), context)
+
+
+func _apply_lab_selection(resolved: Dictionary) -> bool:
+	_ensure_current_design()
+	var descriptor: Dictionary = resolved.get("descriptor", {})
+	if descriptor.get("source_kind") == "built_in":
+		return bool(_presentation_designer.apply_built_in_style(str(descriptor.get("preset_id", ""))).get("ok", false))
+	return bool(_presentation_designer.load_saved_profile(str(descriptor.get("preset_id", ""))).get("ok", false))
 
 
 func _open_design_candidate(profile_id: String) -> void:
@@ -995,16 +1014,40 @@ func _build_presentation_designer() -> void:
 	add_child(_presentation_designer)
 	if not _presentation_designer.configure(_settings_registry):
 		push_error("Presentation Designer requires a valid presentation registry")
+	_live_cockpit.designer_geometry_changed.connect(_presentation_designer.synchronize_panel_geometry)
+	_presentation_designer.comparison.changed.connect(_update_live_view_action_labels)
+	_presentation_designer.comparison_activate = func(side: String) -> bool:
+		if _design_laboratory != null and _design_laboratory._comparison.active():
+			return _design_laboratory._activate_arm(side)
+		return _presentation_designer.preview_comparison_snapshot(side)
+	_presentation_designer.comparison_edit_requested = func() -> void:
+		if _design_laboratory != null:
+			_design_laboratory._comparison.end()
 	_presentation_designer.panel_focus_requested.connect(_live_cockpit.raise_designer_panel)
-	_presentation_designer.profile_preview_requested.connect(func(profile) -> void:
-		presentation_profile_changed.emit(profile)
+	_presentation_designer.profile_preview_requested.connect(func(profile, restore_geometry: bool) -> void:
+		if restore_geometry:
+			design_restoration_requested.emit(profile)
+		else:
+			presentation_profile_changed.emit(profile)
 	)
 	_presentation_designer.state_changed.connect(func(_state: String) -> void:
 		_live_cockpit.set_designer_layout_enabled(_state == PresentationDesignerScript.STATE_FULL and _design_affordances_enabled, _game_area)
+		if _state == PresentationDesignerScript.STATE_FULL:
+			var current_preview: bool = _presentation_designer.comparison.shown() == PresentationDesignerScript.CURRENT
+			var source = _presentation_designer.working_profile() if current_preview else presentation_profile()
+			var metadata: Dictionary = source.design_state()
+			_live_cockpit.restore_designer_geometry(metadata.get("panel_rects", {}))
+			if current_preview and not metadata.has("panel_rects"):
+				call_deferred("_capture_opening_designer_geometry")
 		_update_live_view_action_labels()
 		call_deferred("_layout_presentation_designer")
 	)
 
+
+func _capture_opening_designer_geometry() -> void:
+	_live_cockpit._constrain_designer_panels()
+	var rects: Dictionary = _live_cockpit.designer_geometry_snapshot()
+	_presentation_designer.initialize_panel_geometry(rects)
 
 func _open_presentation_designer() -> void:
 	if _presentation_designer == null or _active_live_mode.is_empty() or not _design_affordances_enabled:
@@ -1373,10 +1416,19 @@ func _profile_from_store():
 	return PresentationProfileScript.from_store(_settings_registry, _settings_store)
 
 
-func apply_presentation_profile(profile) -> bool:
+func design_geometry_will_change(profile) -> bool:
+	return (
+		not _live_cockpit.designer_panels().is_empty()
+		and _live_cockpit.designer_geometry_snapshot() != profile.design_state().get("panel_rects", {})
+	)
+
+
+func apply_presentation_profile(profile, restore_geometry: bool = false) -> bool:
 	if profile == null or not profile.has_method("contract_conforms") or not profile.contract_conforms():
 		return false
 	_active_presentation_profile = profile.detached_copy()
+	if restore_geometry:
+		_live_cockpit.restore_designer_geometry(profile.design_state().get("panel_rects", {}))
 	_accessibility_policy.configure(
 		bool(profile.value("accessibility.high_contrast")),
 		bool(profile.value("accessibility.reduced_motion")),
@@ -1501,9 +1553,10 @@ func _set_persistent_setting(setting_id: String, value) -> void:
 
 
 func _emit_runtime_parameter_change(setting_id: String, value) -> void:
-	if _presentation_designer != null:
+	if _presentation_designer != null and _presentation_designer.working_profile() != null:
 		_presentation_designer.synchronize_runtime_parameter(setting_id, value)
-	presentation_profile_changed.emit(presentation_profile().with_overrides({setting_id: value}))
+	else:
+		presentation_profile_changed.emit(presentation_profile().with_overrides({setting_id: value}))
 
 
 func _update_live_status_strip(mode_label: String, state_label: String, reason: String, mode: String) -> void:
@@ -2014,14 +2067,19 @@ func _toggle_grid_visibility() -> void:
 	# Preserve detached runtime style instead of rebuilding persisted defaults.
 	if _settings_store != null:
 		_settings_store.set_value("display.grid_mode", value)
-	if _presentation_designer != null:
+	if _presentation_designer != null and _presentation_designer.working_profile() != null:
 		_presentation_designer.synchronize_runtime_parameter("display.grid_mode", value)
-	presentation_profile_changed.emit(presentation_profile().with_overrides({"display.grid_mode": value}))
+	else:
+		presentation_profile_changed.emit(presentation_profile().with_overrides({"display.grid_mode": value}))
 	_update_live_view_action_labels()
 	grid_mode_changed.emit(_grid_mode)
 
 
 func _update_live_view_action_labels() -> void:
+	if _comparison_toggle_button != null and _presentation_designer != null:
+		_comparison_toggle_button.visible = _design_affordances_enabled and _presentation_designer.comparison.ready()
+		_comparison_toggle_button.disabled = not _presentation_designer.comparison.ready()
+		_comparison_toggle_button.text = "A | B · %s" % _presentation_designer.comparison.shown()
 	if _quick_settings_button != null:
 		_quick_settings_button.text = "Hide Quick Settings" if _hud_density == "detailed" else "Show Quick Settings"
 	if _grid_toggle_button != null:
@@ -2286,6 +2344,12 @@ func _build_layout() -> void:
 	_designer_button.set_meta("semantic_role", "action_button")
 	_designer_button.pressed.connect(_open_presentation_designer)
 	_live_display_action_row.add_child(_designer_button)
+	_comparison_toggle_button = Button.new()
+	_comparison_toggle_button.name = "ComparisonToggleAB"
+	_comparison_toggle_button.text = "A | B · CURRENT"
+	_comparison_toggle_button.tooltip_text = "Switch frozen A/B preview; CURRENT DESIGN stays unchanged"
+	_comparison_toggle_button.pressed.connect(func() -> void: _presentation_designer.toggle_slots())
+	_live_display_action_row.add_child(_comparison_toggle_button)
 	_update_live_view_action_labels()
 
 	_top_status_panel = PanelContainer.new()

@@ -397,8 +397,11 @@ func _test_designer_integration(registry) -> Array:
 		designer.queue_free()
 		return failures + ["applying a built-in style should succeed: %s" % applied.get("error", "")]
 	var style_values: Dictionary = catalog.style_profile("tron_grid_flow").get("profile").values()
-	if designer.working_profile().values() != style_values:
-		failures.append("applying a built-in style must replace detached working B with its values")
+	var expected_current: Dictionary = style_values.duplicate(true)
+	for setting_id in ProfileScript.STYLE_INDEPENDENT_IDS:
+		expected_current[setting_id] = opening.value(setting_id)
+	if designer.working_profile().values() != expected_current:
+		failures.append("applying a built-in style must apply appearance while retaining current grid")
 	if designer.reference_profile().values() != reference_values:
 		failures.append("applying a built-in style must leave captured A unchanged")
 	var applied_snapshot: Dictionary = designer.deterministic_snapshot()
@@ -430,8 +433,8 @@ func _test_designer_integration(registry) -> Array:
 		var stored = library.load_profile(saved_id).get("profile")
 		if stored == null or stored.values() != designer.working_profile().values():
 			failures.append("the saved user profile must contain the edited built-in-derived values")
-		if str(designer.deterministic_snapshot().get("applied_style_id", "")) != "":
-			failures.append("saving as a user profile should hand identity to the mutable library")
+		if str(designer.deterministic_snapshot().get("applied_style_id", "")) != "tron_grid_flow":
+			failures.append("Save As must preserve base-style provenance alongside saved-design identity")
 
 	var copied: Dictionary = designer.copy_built_in_style_to_library("blueprint_technical", "Blueprint Copy")
 	if not bool(copied.get("ok", false)):
@@ -495,14 +498,19 @@ func _test_live_integration(registry) -> Array:
 		var designer = hud._presentation_designer
 		for record in catalog.list_styles():
 			var style_id := str(record.get("style_id", ""))
+			var independent_before: Dictionary = {}
+			for setting_id in ProfileScript.STYLE_INDEPENDENT_IDS:
+				independent_before[setting_id] = designer.working_profile().value(setting_id)
 			if not bool(designer.apply_built_in_style(style_id).get("ok", false)):
 				failures.append("%s must apply in %s" % [style_id, mode])
 				continue
 			await tree.process_frame
 			var applied_values: Dictionary = designer.working_profile().values()
 			var expected: Dictionary = catalog.style_profile(style_id).get("profile").values()
+			for setting_id in independent_before:
+				expected[setting_id] = independent_before[setting_id]
 			if applied_values != expected:
-				failures.append("%s in %s must apply exactly its declared values" % [style_id, mode])
+				failures.append("%s in %s must apply declared appearance while preserving current grid" % [style_id, mode])
 			var editable: Array = designer.deterministic_snapshot().get("applicable_ids", [])
 			for setting_id in editable:
 				if not registry.get_spec(str(setting_id)).applies_at_runtime(mode):

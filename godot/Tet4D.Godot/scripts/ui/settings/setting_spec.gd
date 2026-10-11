@@ -57,7 +57,7 @@ const ALLOWED_SPEC_FIELDS := [
 	"persistence", "persist", "action_id", "ui_visible", "ui_contexts",
 	"semantic_owner", "accessibility_classification", "runtime_applicability",
 ]
-const ALLOWED_UI_CONTEXTS := ["global_settings", "replay", "live_2d", "live_3d", "live_4d"]
+const ALLOWED_UI_CONTEXTS := ["designer_advanced", "global_settings", "replay", "live_2d", "live_3d", "live_4d"]
 const CONTROL_TYPE_BY_VALUE_TYPE := {
 	"bool": "checkbox",
 	"int": "slider",

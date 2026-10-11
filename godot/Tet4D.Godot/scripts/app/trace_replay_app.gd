@@ -148,7 +148,8 @@ func _deferred_ready() -> void:
 	_build_world_in_game_viewport()
 	if _is_designer_product() and not _hud.configure_design_laboratory({
 		"load_scenario": Callable(self, "_load_design_laboratory_scenario"),
-		"apply_profile": Callable(self, "apply_presentation_profile"),
+		"apply_profile": Callable(self, "restore_presentation_design"),
+		"apply_style": Callable(self, "apply_presentation_style"),
 		"current_fingerprint": Callable(self, "_design_laboratory_fingerprint"),
 		"capture_image": Callable(self, "_capture_design_laboratory_image"),
 		"build_identity": Callable(self, "_design_laboratory_build_identity"),
@@ -691,6 +692,7 @@ func _wire_hud() -> void:
 		_state.loop_enabled = enabled
 	)
 	_hud.presentation_profile_changed.connect(apply_presentation_profile)
+	_hud.design_restoration_requested.connect(restore_presentation_design)
 	_hud.camera_preset_requested.connect(func(id: String) -> void:
 		var applied := _apply_live_4d_view_action(id) if _mode == MODE_LIVE_4D else (_camera_rig != null and _camera_rig.apply_outer_view_action(id))
 		if applied and _camera_rig != null:
@@ -1266,10 +1268,26 @@ func _scaled_background_color(color: Color, intensity: float) -> Color:
 	return color.lerp(Color(1.0, 1.0, 1.0, color.a), minf((intensity - 1.0) * 0.35, 0.35))
 
 
-func apply_presentation_profile(profile) -> bool:
+# Built-in Apply Live composes appearance; full design and comparison
+# restoration use apply_presentation_profile instead.
+func apply_presentation_style(profile) -> bool:
+	if profile == null or not profile.has_method("contract_conforms") or not profile.contract_conforms():
+		return false
+	return apply_presentation_profile(_presentation_profile.with_style_of(profile))
+
+
+func restore_presentation_design(profile) -> bool:
+	return apply_presentation_profile(profile, true)
+
+
+func apply_presentation_profile(profile, restore_geometry: bool = false) -> bool:
 	if profile == null or not profile.has_method("contract_conforms") or not profile.contract_conforms():
 		return false
 	var previous_ghost_enabled := _ghost_enabled
+	# A complete design can restore real panel geometry. Let the existing
+	# resolved-region lifecycle fit that change, as it does for handle edits.
+	if restore_geometry and _hud != null and _hud.design_geometry_will_change(profile):
+		_pending_fit_view = true
 	if _mode == MODE_LIVE_4D and not _current_snapshot.is_empty():
 		_begin_presentation_layout_guard()
 	_presentation_profile = profile.detached_copy()
@@ -1278,7 +1296,7 @@ func apply_presentation_profile(profile) -> bool:
 	_state.loop_enabled = bool(_presentation_profile.value("replay.loop_enabled"))
 	_ghost_enabled = bool(_presentation_profile.value("ghost.enabled"))
 	if _hud != null:
-		_hud.apply_presentation_profile(_presentation_profile)
+		_hud.apply_presentation_profile(_presentation_profile, restore_geometry)
 	if _renderer != null:
 		_renderer.apply_presentation_profile(_presentation_profile)
 	if _animated_background != null:

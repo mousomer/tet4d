@@ -34,7 +34,7 @@ func run() -> Array:
 
 	for legacy in [true, false]:
 		var migrated = PresentationProfileScript.from_snapshot(registry, {"schema_version": 1, "values": {"display.grid_visible": legacy}})
-		if not migrated.contract_conforms() or migrated.value("display.grid_mode") != ("full" if legacy else "border") or migrated.values().has("display.grid_visible"):
+		if not migrated.contract_conforms() or migrated.value("display.grid_mode") != ("full" if legacy else "none") or migrated.values().has("display.grid_visible"):
 			failures.append("Legacy profile grid booleans must migrate to canonical enum values")
 	if defaults.with_overrides({"display.grid_mode": "unknown"}).contract_conforms():
 		failures.append("Grid modes must reject unsupported states")

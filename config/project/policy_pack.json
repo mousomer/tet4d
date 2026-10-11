@@ -179,7 +179,7 @@
       "required_setting_fields": ["id", "label", "description", "category", "value_type", "control_type", "default", "semantic_owner", "accessibility_classification", "runtime_applicability", "authority", "persistence", "persist"],
       "persistent_policy": "local_shell",
       "non_persistent_policies": ["none", "session"],
-      "runtime_non_setting_dotted_tokens": ["board.frame_active", "board.grid", "board.slice_geometry", "board.spawn_entry_cue", "board.wireframe"],
+      "runtime_non_setting_dotted_tokens": ["board.enclosure", "board.floor", "board.grid_edge", "board.grid_face", "board.grid_interior", "board.frame_active", "board.slice_geometry", "board.spawn_entry_cue"],
       "forbid_runtime_default_duplicates": true,
       "statement": "Every Godot presentation parameter, its default, exactly-one semantic owner, accessibility classification, and runtime applicability must be declared in the checked-in shell settings registry; runtime code may map validated preset values but must not introduce a second setting default. Persistent user choices must be written only to the separate user-data JSON store."
     },

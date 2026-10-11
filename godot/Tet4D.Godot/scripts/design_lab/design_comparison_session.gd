@@ -9,6 +9,8 @@ const ARM_A := "A"
 const ARM_B := "B"
 const ARMS := [ARM_A, ARM_B]
 
+var preview = preload("res://scripts/design_lab/design_comparison_preview.gd").new()
+
 var _active := false
 var _session: Dictionary = {}
 
@@ -45,7 +47,15 @@ func start(scenario: Dictionary, resolved_a: Dictionary, resolved_b: Dictionary,
 		"toggle_count": 0,
 	}
 	_active = true
+	preview.set_snapshot("A", _session["arms"]["A"]["presentation_profile"])
+	preview.set_snapshot("B", _session["arms"]["B"]["presentation_profile"])
+	preview.show_side(str(_session["shown_arm"]))
 	return _success({"session": snapshot(), "profile": arm_profile_snapshot(ARM_A)})
+
+
+func end() -> void:
+	_active = false
+	_session = {}
 
 
 func active() -> bool:
@@ -101,6 +111,7 @@ func assign(arm: String, resolved: Dictionary, current_non_style_fingerprint: Di
 			"session": snapshot(),
 		})
 	_session["arms"][arm] = assigned
+	preview.set_snapshot(arm, assigned["presentation_profile"])
 	_session["assignment_revision"] = int(_session.get("assignment_revision", 0)) + 1
 	_session["session_id"] = _assignment_session_id(arm)
 	_session["blind_labels"] = _blind_labels(str(_session.get("session_id", "")))
@@ -123,6 +134,7 @@ func activate(arm: String, current_non_style_fingerprint: Dictionary) -> Diction
 	if arm != shown_arm():
 		_session["toggle_count"] = int(_session.get("toggle_count", 0)) + 1
 	_session["shown_arm"] = arm
+	preview.show_side(arm)
 	return _success({"arm": arm, "profile": arm_profile_snapshot(arm), "session": snapshot()})
 
 
@@ -135,6 +147,7 @@ func reset_request(current_non_style_fingerprint: Dictionary) -> Dictionary:
 	if not bool(invariant.get("ok", false)):
 		return invariant
 	_session["shown_arm"] = ARM_A
+	preview.show_side(ARM_A)
 	return _success({
 		"scenario": _session.get("scenario", {}).duplicate(true),
 		"arm": ARM_A,
@@ -158,7 +171,7 @@ func verify_non_style_fingerprint(current: Dictionary) -> Dictionary:
 func arm_profile_snapshot(arm: String) -> Dictionary:
 	if not _active or not ARMS.has(arm):
 		return {}
-	return _session.get("arms", {}).get(arm, {}).get("presentation_profile", {}).duplicate(true)
+	return preview.snapshot_for(arm)
 
 
 func frozen_arm(arm: String) -> Dictionary:
@@ -189,6 +202,9 @@ func restore(saved: Dictionary) -> Dictionary:
 	_session = saved.duplicate(true)
 	_session["blind_labels"] = _blind_labels(str(_session.get("session_id", "")))
 	_active = true
+	preview.set_snapshot("A", _session["arms"]["A"]["presentation_profile"])
+	preview.set_snapshot("B", _session["arms"]["B"]["presentation_profile"])
+	preview.show_side(str(_session["shown_arm"]))
 	return _success({
 		"session": snapshot(),
 		"profile": arm_profile_snapshot(shown_arm()),

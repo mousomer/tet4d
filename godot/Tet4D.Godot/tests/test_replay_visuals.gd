@@ -76,31 +76,19 @@ func run() -> Array:
 	var high_contrast_ghost := ReplayVisuals.ghost_cell_material(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC, 2, true)
 	if high_contrast_grid.albedo_color.a <= live_board_grid.albedo_color.a or high_contrast_ghost.albedo_color.a <= ghost.albedo_color.a:
 		failures.append("High Contrast must strengthen grid and ghost roles")
-	var normal_grid := ReplayVisuals.live_board_grid_material(ReplayVisuals.DISPLAY_MODE_PLAIN)
-	var normal_wireframe := ReplayVisuals.board_outline_material(ReplayVisuals.DISPLAY_MODE_PLAIN)
+	var normal_grid := ReplayVisuals.board_scaffold_material(ReplayVisuals.DISPLAY_MODE_PLAIN)
 	var normal_active_frame := ReplayVisuals.board_active_frame_material(ReplayVisuals.DISPLAY_MODE_PLAIN)
-	var high_contrast_grid_plain := ReplayVisuals.live_board_grid_material(ReplayVisuals.DISPLAY_MODE_PLAIN, true)
-	var high_contrast_wireframe := ReplayVisuals.board_outline_material(ReplayVisuals.DISPLAY_MODE_PLAIN, true)
-	var high_contrast_active_frame := ReplayVisuals.board_active_frame_material(ReplayVisuals.DISPLAY_MODE_PLAIN, true)
 	var floor_fill := ReplayVisuals.live_board_floor_material(ReplayVisuals.DISPLAY_MODE_PLAIN)
-	var floor_lattice := ReplayVisuals.live_board_floor_grid_material(ReplayVisuals.DISPLAY_MODE_PLAIN)
-	if ReplayVisuals.ROLE_BOARD_GRID == ReplayVisuals.ROLE_BOARD_WIREFRAME or ReplayVisuals.ROLE_BOARD_GRID == ReplayVisuals.ROLE_BOARD_FRAME_ACTIVE or ReplayVisuals.ROLE_BOARD_WIREFRAME == ReplayVisuals.ROLE_BOARD_FRAME_ACTIVE:
-		failures.append("grid, ordinary wireframe, and active frame must remain distinct semantic roles")
-	if normal_grid.albedo_color.r >= 0.72 or normal_grid.albedo_color.g >= 0.72 or normal_grid.albedo_color.b >= 0.86:
-		failures.append("normal live grid must remain a dark desaturated blue, not near-white")
-	if normal_wireframe.albedo_color == normal_grid.albedo_color or normal_wireframe.emission_energy_multiplier <= normal_grid.emission_energy_multiplier:
-		failures.append("wireframe must remain a distinct, stronger role than the internal grid")
-	if normal_active_frame.emission_energy_multiplier <= normal_wireframe.emission_energy_multiplier:
-		failures.append("active frame must remain stronger than the ordinary wireframe")
-	if high_contrast_wireframe.albedo_color.a <= high_contrast_grid_plain.albedo_color.a or high_contrast_wireframe.emission_energy_multiplier <= high_contrast_grid_plain.emission_energy_multiplier:
-		failures.append("High Contrast wireframe must remain stronger than its grid")
-	if high_contrast_active_frame.emission_energy_multiplier <= high_contrast_wireframe.emission_energy_multiplier:
-		failures.append("High Contrast active frame must remain stronger than its ordinary wireframe")
-	if floor_fill.albedo_color.a >= normal_grid.albedo_color.a or floor_fill.albedo_color.a >= normal_wireframe.albedo_color.a or floor_lattice.albedo_color.a <= floor_fill.albedo_color.a:
-		failures.append("floor plane must remain weaker than wireframe, grid, and the separate useful floor lattice")
-	var grid_default := ReplayVisuals.presentation_parameter_default("board.grid_opacity")
-	if grid_default > 0.33 or grid_default < 0.29:
-		failures.append("ordinary internal grid strength should be approximately 60–65 percent of the rejected calibration")
+	var enclosure := ReplayVisuals.board_enclosure_material(ReplayVisuals.DISPLAY_MODE_PLAIN)
+	var cells := ReplayVisuals.board_internal_scaffold_material(ReplayVisuals.DISPLAY_MODE_PLAIN)
+	if normal_grid.albedo_color.a >= 0.6 or normal_grid.albedo_color.a <= floor_fill.albedo_color.a:
+		failures.append("rear scaffold must be weak but perceptible above the floor")
+	if normal_active_frame.albedo_color.a <= normal_grid.albedo_color.a:
+		failures.append("navigation frame must remain stronger than rear scaffold")
+	if enclosure.cull_mode != BaseMaterial3D.CULL_FRONT or enclosure.depth_draw_mode != BaseMaterial3D.DEPTH_DRAW_DISABLED:
+		failures.append("enclosure must show shaded interior faces without writing depth")
+	if cells.get_meta("scaffold_setting") != "board.cell_volume_opacity" or cells.render_priority <= enclosure.render_priority or cells.render_priority >= 0:
+		failures.append("cell shells need their own material role before transparent pieces")
 	if ReplayVisuals.axis_color("+W") != ReplayVisuals.axis_color("-W"):
 		failures.append("axis sign must not change W's semantic colour")
 	var live_3d_active_top := live_3d_active_faces.get("top") as StandardMaterial3D

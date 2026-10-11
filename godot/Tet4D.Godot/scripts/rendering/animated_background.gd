@@ -47,6 +47,8 @@ func _ready() -> void:
 	mesh = quad
 	_material = ShaderMaterial.new()
 	_material.shader = BackgroundShader
+	# Background precedes low-priority translucent scaffold and pieces.
+	_material.render_priority = -100
 	material_override = _material
 	position = Vector3(0.0, 0.0, -BACKDROP_DISTANCE)
 	_refresh_viewport_aspect()

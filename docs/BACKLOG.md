@@ -23,6 +23,18 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ## Active Work
 
+### Stage 56H spatial scaffold acceptance
+
+Cumulative NONE/BORDER/FULL roles now require cached edge geometry rather than
+filled cell shells. Border is the fresh-session default; Designer Advanced
+Settings owns the three compatible persisted opacity parameters. Corrective
+regressions and the regenerated AFTER 54-case matrix verify rear-only
+subdivisions, unique internal lattice lines, material isolation, save/load,
+piece/ghost hierarchy and movement cache retention. Pinned Godot and repository
+gates pass; evidence is in the external scaffold correction report. The broader
+human playability review remains open; no commit is authorized.
+
+
 ### Godot editor diagnostic follow-up
 
 Recheck the isolated macOS ObjectDB profiler snapshot-storage advisory when the
@@ -395,4 +407,8 @@ Work is complete only when acceptance passes, authorities are current, required
 checks are green, publication state is reported, and the worktree is clean. A
 branch or draft PR alone is not completion.
 
-- [x] Stage 56H corrective implementation: orthogonal FULL/BORDER/NONE grid modes and full-Designer panel Move/Resize handles with panel recovery; geometry is session-only. Regression coverage exercises actual inner-region refits, style/grid/native-hash independence, and normal-mode input gating. Human playability remains separate acceptance. Legacy profile input keys are declared and checked only at their migration owner.
+- [x] Stage 56H corrective implementation: orthogonal FULL/BORDER/NONE grid modes and full-Designer panel Move/Resize handles with panel recovery; geometry is owned by current design and included in saved designs. Regression coverage exercises actual inner-region refits, style/grid/native-hash independence, and normal-mode input gating. Human playability remains separate acceptance. Legacy profile input keys are declared and checked only at their migration owner.
+- [x] Stage 56H grid-mode × style composition: Actual built-in style selection composes through `PresentationProfile.with_style_of` and preserves grid. Complete saved-design load, Revert and A/B preview restore each snapshot's saved grid and geometry. `test_style_grid_mode_composition.gd` derives every catalog style and asserts rendered lattice/boundary topology and style materials for style × FULL/BORDER/NONE in Live 2D/3D/4D, transition orders, library round-trip, and A/B slots.
+
+- [x] Designer current-design migration: one editable current design, complete Save/Save As/Load/Revert, base-style provenance, shared frozen A/B preview, external toggle and explicit adoption; existing panel handlers and grid renderer coverage retained.
+- [ ] Human interaction acceptance of CURRENT DESIGN, saved geometry restoration and immediate A/B comparison.

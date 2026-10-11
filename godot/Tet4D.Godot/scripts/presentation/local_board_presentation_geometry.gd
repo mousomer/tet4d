@@ -97,86 +97,61 @@ func local_bounds() -> Dictionary:
 	return {"ok": true, "min": center - half_extent, "max": center + half_extent}
 
 
-func boundary_geometry() -> Array:
+# The board is one rectangular lattice. For each lattice coordinate pair on two
+# axes, emit one maximal line spanning the whole remaining axis; never per-cell
+# edges. A line's class is the number of boundary planes it lies on: 2 marks the
+# 12 outer edges, 1 a boundary-face line (tagged with its face), 0 a
+# volume-interior line. Total count
+# is (Ny+1)(Nz+1) + (Nx+1)(Nz+1) + (Nx+1)(Ny+1), independent of cell count.
+func lattice_geometry() -> Array:
+	var result: Array = []
 	if not is_configured():
-		return []
-	var bounds := local_bounds()
-	var min_pos: Vector3 = bounds.get("min", Vector3.ZERO)
-	var max_pos: Vector3 = bounds.get("max", Vector3.ZERO)
-	var result := []
+		return result
 	for line_axis in range(3):
-		var fixed_axes := []
-		for axis in range(3):
-			if axis != line_axis:
-				fixed_axes.append(axis)
-		for first_sign in [-1.0, 1.0]:
-			for second_sign in [-1.0, 1.0]:
-				var start := center
-				var finish := center
-				start[line_axis] = min_pos[line_axis]
-				finish[line_axis] = max_pos[line_axis]
-				start[int(fixed_axes[0])] = min_pos[int(fixed_axes[0])] if first_sign < 0.0 else max_pos[int(fixed_axes[0])]
-				finish[int(fixed_axes[0])] = start[int(fixed_axes[0])]
-				start[int(fixed_axes[1])] = min_pos[int(fixed_axes[1])] if second_sign < 0.0 else max_pos[int(fixed_axes[1])]
-				finish[int(fixed_axes[1])] = start[int(fixed_axes[1])]
-				result.append({"start": start, "end": finish, "line_axis": line_axis})
+		var a := (line_axis + 1) % 3
+		var b := (line_axis + 2) % 3
+		for i in range(int(local_dimensions[a]) + 1):
+			for j in range(int(local_dimensions[b]) + 1):
+				var lattice_start := Vector3i.ZERO
+				lattice_start[a] = i
+				lattice_start[b] = j
+				var lattice_end := lattice_start
+				lattice_end[line_axis] = int(local_dimensions[line_axis])
+				var line := {
+					"start": _lattice_point_position(lattice_start),
+					"end": _lattice_point_position(lattice_end),
+					"line_axis": line_axis,
+					"lattice_start": lattice_start,
+					"lattice_end": lattice_end,
+					"boundary_planes": int(i == 0 or i == int(local_dimensions[a])) + int(j == 0 or j == int(local_dimensions[b])),
+				}
+				if int(line.boundary_planes) == 1:
+					# A face line lies on exactly one boundary plane: that face owns it.
+					var face_axis := a if i == 0 or i == int(local_dimensions[a]) else b
+					line["face_axis"] = face_axis
+					line["face_sign"] = signf(line.start[face_axis] - center[face_axis])
+				result.append(line)
 	return result
 
 
-func grid_geometry() -> Array:
-	var result := []
-	for face_axis in range(3):
-		for face_sign in [-1.0, 1.0]:
-			result.append({
-				"face_axis": face_axis,
-				"face_sign": face_sign,
-				"normal": _axis_vector(face_axis) * face_sign,
-				"segments": face_grid_geometry(face_axis, face_sign),
-			})
-	return result
+func boundary_geometry() -> Array:
+	return lattice_geometry().filter(func(line: Dictionary) -> bool: return int(line.boundary_planes) == 2)
 
 
-func face_grid_geometry(face_axis: int, face_sign: float) -> Array:
-	if not is_configured() or face_axis < 0 or face_axis > 2 or face_sign == 0.0:
-		return []
-	var bounds := local_bounds()
-	var min_pos: Vector3 = bounds.get("min", Vector3.ZERO)
-	var max_pos: Vector3 = bounds.get("max", Vector3.ZERO)
-	var face_coordinate := min_pos[face_axis] if face_sign < 0.0 else max_pos[face_axis]
-	var result := []
-	for division_axis in range(3):
-		if division_axis == face_axis:
-			continue
-		var line_axis := 3 - face_axis - division_axis
-		for division_index in range(1, int(local_dimensions[division_axis])):
-			var start := center
-			var finish := center
-			start[face_axis] = face_coordinate
-			finish[face_axis] = face_coordinate
-			var division_coordinate := min_pos[division_axis] + float(division_index) * cell_size
-			start[division_axis] = division_coordinate
-			finish[division_axis] = division_coordinate
-			start[line_axis] = min_pos[line_axis]
-			finish[line_axis] = max_pos[line_axis]
-			result.append({
-				"start": start,
-				"end": finish,
-				"face_axis": face_axis,
-				"face_sign": -1.0 if face_sign < 0.0 else 1.0,
-				"division_axis": division_axis,
-				"line_axis": line_axis,
-			})
-	return result
+# Lattice points sit on cell corners: board point p maps like cell center p - 0.5.
+func _lattice_point_position(lattice_point: Vector3i) -> Vector3:
+	return _affine_position([lattice_point.x - 0.5, lattice_point.y - 0.5, lattice_point.z - 0.5])
 
 
+# Dimensions and cell size determine every generated line, so the cache key
+# never regenerates geometry.
 func structural_snapshot() -> Dictionary:
 	return {
 		"local_dimensions": local_dimensions.duplicate(),
 		"cell_size": cell_size,
+		"scaffold_cell_count": cell_count(),
 		"local_extent": local_extent,
 		"center": center,
-		"grid_geometry": grid_geometry(),
-		"boundary_geometry": boundary_geometry(),
 	}
 
 
@@ -199,14 +174,6 @@ func _valid_local_coordinate(local_coordinate: Array, allow_above_board_y: bool)
 		if coordinate < 0 and not (allow_above_board_y and axis == Vector3.AXIS_Y):
 			return false
 	return true
-
-
-func _axis_vector(axis: int) -> Vector3:
-	if axis == Vector3.AXIS_X:
-		return Vector3.RIGHT
-	if axis == Vector3.AXIS_Y:
-		return Vector3.UP
-	return Vector3.BACK
 
 
 func _is_integral_number(value) -> bool:

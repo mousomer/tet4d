@@ -20,49 +20,40 @@ live `Designer` entry. The game product (`scenes/game_bootstrap.tscn`) hides it
 and refuses to open the Designer, along with the Design Laboratory menu card and
 `L` shortcut.
 
-The production flow is:
+## State and interaction map
 
-```text
-registry metadata
-    -> generated Designer control
-    -> detached working PresentationProfile B
-    -> ReplayHud presentation_profile_changed
-    -> TraceReplayApp.apply_presentation_profile
-    -> existing presentation consumers
-```
+| Object / action | State and interaction |
+| --- | --- |
+| BUILT-IN STYLE | Read-only appearance preset; never a save target. |
+| CURRENT DESIGN | Exactly one editable detached profile: registry values, base-style provenance and cockpit panel rectangles. |
+| SAVED DESIGN | Complete persisted current design, owned by PresentationProfileLibrary. |
+| A/B COMPARISON | Two frozen snapshots and a shown side, separate from current design. Designer and Design Lab share the comparison-preview abstraction. |
+| Save | Updates the associated saved design and complete working baseline. |
+| Save As | Creates a fresh named design and association without changing the source artifact. |
+| Load | `restore_design`: replaces current with the complete saved snapshot and establishes the baseline. |
+| Revert | Restores the complete saved/opening working baseline. |
+| Apply Style | Named appearance composition; preserves grid, geometry and independent parameters, records base style; preserves saved-design association. |
+| Set A / Set B | Copies current (or a selected saved design) into the indicated comparison snapshot. |
+| Toggle A/B | One HUD activation outside Designer switches frozen preview only; visible text names the side. |
+| Adopt A/B as Current | Explicitly copies the candidate into current; baseline and save association remain. |
 
-Registered parameter controls must use the bounded application seam rather
-than writing renderers, materials, camera, HUD nodes, board geometry, native
-sessions, or settings stores directly. Session panel handles call only the
-existing cockpit layout owner; actual resolved render-region signals drive
-camera refitting through the app.
+Implementation migration: `_working_profile` is current design (the internal
+name remains for API compatibility), never comparison B. `show_slot` restores
+the frozen candidate exactly instead of composing its style onto current.
+`load_saved_profile` restores the saved snapshot instead of `with_style_of`.
+`_set_applied_style` records provenance without clearing saved association or
+replacing the design baseline. `capture_reference` delegates to Set A; B needs
+explicit capture too. “Apply to B”, “Show A/B” as primary editing actions and
+“Keep B” wording are retired. Design Lab's evidence session retains its frozen
+scenario/fingerprint guard and uses the same comparison-preview owner.
 
-## Profile identities
-
-The following objects are distinct:
-
-- **factory defaults** are declared by the checked-in registry;
-- **persisted player preferences** are owned and written only by
-  `SettingsStore`;
-- **active runtime profile** is the detached profile currently applied by
-  `TraceReplayApp` and retained by `ReplayHud`;
-- **opening baseline** is an immutable detached copy of that active profile at
-  the start of a Designer session;
-- **working B** begins as a detached copy of the opening baseline and is
-  replaced by validated `PresentationProfile.with_overrides()` results;
-- **reference A** is created only by explicit `Capture B as A` and remains
-  detached from later B edits.
-- **named library profile** is an independently stored artifact owned by
-  `PresentationProfileLibrary`; load copies it into B and explicit Save copies B
-  back across the persistence boundary.
-- **built-in style** is a read-only shipped artifact owned by
-  `BuiltInStyleCatalog`; applying one copies detached values into B and can
-  never be a save target.
-
-Object aliasing between A, B, the opening baseline, active runtime state, and
-the settings store is forbidden. The Designer is intentionally not given a
-store or persistence callback. Applying A or B changes the current runtime
-presentation only.
+Registered parameter controls use the bounded app application seam. Existing
+cockpit handles remain the only panel movement/resizing implementation; profile
+metadata captures/restores their rectangles through that owner. Complete design
+restoration and comparison preview explicitly request geometry restoration;
+ordinary value/style previews preserve it at the app boundary. Geometry changes
+use the existing resolved-region fit lifecycle.
+No operation writes ordinary settings or changes deterministic gameplay truth.
 
 ## Registry generation and applicability
 
@@ -93,40 +84,22 @@ diagnostics do not appear in the live Designer. Stage 54F-4's three
 `ENVIRONMENT_PRESENTATION` background-animation parameters are ordinary
 registry-generated rows; they required no new control type.
 
-## A/B and reset semantics
+## Baselines and comparison
 
-The displayed profile is always announced textually as `A` or `B`; colour is
-not the only indication. Full and compact surfaces both select A and B, and the
-compact strip provides an explicit `A ↔ B` action. Switching slots applies a
-detached copy through the same app boundary and does not rebuild the game.
+Parameter/group Reset uses the complete saved/opening working baseline.
+Revert restores that baseline including grid, appearance, density, base-style
+provenance and panel geometry. Save, Save As and Load establish a new baseline;
+style application and comparison adoption do not. Internally `revert_style`
+reapplies the recorded base-style appearance while preserving independent state;
+the UI exposes one Revert command to avoid duplicate reset concepts.
 
-Reset wording and behavior are normative:
-
-- parameter `Reset` restores that parameter's opening-baseline value;
-- `Reset group` restores every currently applicable parameter owned by that
-  semantic owner to its opening-baseline value;
-- `Reset B to Opened` restores the complete opening baseline;
-- `Factory Defaults` replaces B with a detached registry-default profile;
-- `Revert & Hide` restores the opening profile, makes it B, and hides;
-- `Keep B & Hide` explicitly reapplies B and hides;
-- ordinary Hide or Compact preserves A, B, and the currently displayed slot.
-
-Named profile storage/versioning/import/export remain outside this Designer
-contract and are owned by `presentation_profile_library.md`. Read-only shipped
-styles are owned by `built_in_style_catalog.md`. The integrated UI may invoke
-either owner, but ordinary edits, reset actions, A/B switching,
-`Keep B & Hide`, collapse, and hide retain the runtime-only behavior above.
-
-Applying a built-in style behaves exactly like any other detached B replacement:
-it displays B, leaves captured A untouched, and performs no write. It also
-clears the loaded user-profile identity, so explicit `Save Profile` is disabled
-and the shipped style cannot be overwritten. The Designer hosts two collapsed-by-
-default disclosure sections, `BUILT-IN STYLES` and `PROFILE LIBRARY`, which are
-mutually exclusive so their combined minimum content cannot exceed the allocated
-overlay. Expanding either consumes internal Designer space only.
-
-Undo history, randomized assignment, telemetry, and statistical experimentation
-remain outside all three contracts.
+Edits always update CURRENT DESIGN and return preview to current. Previewing A
+or B never changes current or the save association. Set A/B copies complete
+snapshots; later edits cannot mutate them. Adoption is explicit. Hide, Compact
+and reopen preserve current and comparison state. The external HUD A/B control
+is available once both snapshots exist, even with Designer hidden. Lab comparison
+switching retains the deterministic fingerprint guard. Laboratory Apply Live
+composes built-in appearance but fully restores a user design.
 
 ## Presentation and deterministic isolation
 
@@ -171,7 +144,7 @@ Designer must preserve the board, active/Ghost pieces, compact NEXT/HOLD row,
 and the permanent authority-derived piece-control strip. Camera guidance and
 detailed helper prose are secondary and may require inspector scrolling.
 Compact Designer mode restores the ordinary responsive cockpit. These layout
-rules do not change detached A/B state, application, focus, persistence, or
+rules do not change detached current/comparison state, application, focus, persistence, or
 input-isolation semantics.
 
 ## Input and focus isolation
@@ -211,9 +184,9 @@ sizes (300×160 logical pixels for control panels, 320×360 for the board,
 including handles and board chrome; constrained by the available surface). Rectangles are constrained to the available cockpit surface, including
 after window changes. The panel selector and Bring Panel Forward action recover
 any overlapping panel without changing its geometry, profile, or gameplay. Compact/hidden Designer and ordinary gameplay restore the
-responsive cockpit and disable all manipulation. Session rectangles survive
-reopening Designer, but are not saved: neither the registry nor the existing
-profile library has a panel-geometry persistence contract.
+responsive cockpit and disable all manipulation. Session rectangles survive reopening Designer and are persisted in the optional
+design-state extension of the profile snapshot. Older profiles without the
+extension restore default cockpit geometry.
 
 The board panel contains the real SubViewportContainer. Moving/resizing panels
 never calls Fit directly: resolved inner visibility/size signals use the same
@@ -225,7 +198,17 @@ Grid is a session presentation enum (`full`, `border`, `none`), cycling in that
 order. FULL draws internal and floor lattice plus ordinary/active boundaries;
 BORDER draws boundaries only; NONE draws neither lattice nor boundaries. Pieces,
 Ghost, floor surface, and orientation labels retain their existing roles.
-Grid cycling changes only `display.grid_mode` on the active detached profile,
-never reconstructs saved settings, and synchronizes working B. Applying built-in
-styles preserves the current grid mode. Explicit A/B, profile load, and reset
-operations continue to select the explicitly captured profile values.
+Grid cycling changes only `display.grid_mode` on CURRENT DESIGN and returns
+preview to current. Style composition preserves grid; loading, reverting and
+previewing complete designs restores their saved grid. FULL/BORDER/NONE renderer
+semantics and all-style × all-grid × dimensional renderer coverage are retained.
+
+
+The three scaffold opacity controls appear only under Designer → Advanced
+Settings, collapsed on opening. Registry UI context `designer_advanced` routes
+Enclosure opacity, Border/surface grid opacity, and Full/internal scaffold
+opacity while their semantic owner remains BOARD_PRESENTATION. Stored IDs and
+values remain compatible; `board.cell_volume_opacity` is the legacy internal
+edge opacity key. Named Save/Load includes all three. Each slider edits its
+role material only, preserving grid, style, gameplay and panel geometry.
+Border is the fresh-session grid default; complete saved designs retain grid.

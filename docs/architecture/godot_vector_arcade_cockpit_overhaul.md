@@ -740,7 +740,7 @@ The normative live-board hierarchy is:
 Grid opacity and thickness must be operational material properties rather than
 inactive alpha constants. High Contrast strengthens the same semantic order;
 it does not flatten every role to equal intensity. Cell faces, floor cues,
-rear-face lattice selection, and occlusion preserve 3D depth. Live 4D reuses
+Border rear-face lattice selection, and occlusion preserve 3D depth. Live 4D reuses
 those cues inside every W slice so the collection reads as related 3D volumes,
 not as flat cards or one fused wireframe.
 

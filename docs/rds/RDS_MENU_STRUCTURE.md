@@ -829,11 +829,22 @@ Execution artifact:
 
 ### Stage 56H live presentation controls
 
-Live View Options cycles Grid: Full → Border → None. Full displays internal and
-floor lattice plus boundaries; Border retains boundaries only; None hides both.
+Live View Options and normal Settings expose Grid: Full / Border / None, with
+Border as the fresh-session default. None retains enclosure and floor; Border
+adds rear subdivision edges; Full adds internal cell-boundary edges. The three
+scaffold opacity sliders appear only in Designer → Advanced Settings.
 Grid selection and design style must not reset one another. In full Designer,
 labelled Move/Resize handles manipulate bounded board, piece-control,
 view-control, and NEXT/HOLD panels. Compact/hidden Designer restores the normal
-responsive cockpit with manipulation disabled. Geometry is session-only and
-never mutates style, grid, native gameplay, RNG, or view orientation. Resolved
+responsive cockpit with manipulation disabled. Geometry belongs to CURRENT
+DESIGN and is included in complete saved designs; it never mutates style, grid, native gameplay, RNG, or view orientation. Resolved
 inner-render-region changes use the common visibility/size-driven camera refit.
+
+Normal Designer work edits one CURRENT DESIGN. Apply Style changes appearance
+while preserving grid and panel geometry. Save updates its associated saved
+design; Save As creates a new named complete design without changing the source;
+Load and Revert restore complete saved/opening state, including grid and geometry.
+A/B is optional frozen comparison preview with explicit Set A/Set B and adoption
+actions. A single HUD toggle outside Designer switches preview and clearly names
+the shown side; it never changes CURRENT DESIGN. The detailed state and interaction
+map is owned by `docs/architecture/live_presentation_designer.md`.

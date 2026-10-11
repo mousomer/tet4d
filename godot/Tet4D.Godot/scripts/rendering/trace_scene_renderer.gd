@@ -46,6 +46,7 @@ var _live_4d_fit_reference_layer_count := 1
 var _basis_fit_scale := 1.0
 var _basis_fit_position := Vector3.ZERO
 
+var _grid: GridRenderer
 var _grid_root: Node3D
 var _cell_root: Node3D
 var _particle_root: Node3D
@@ -64,8 +65,7 @@ func _process(delta: float) -> void:
 	if _basis_transition_progress >= 1.0:
 		return
 	_basis_transition_progress = minf(1.0, _basis_transition_progress + delta / maxf(_basis_transition_duration, 0.001))
-	var eased := 1.0 - pow(1.0 - _basis_transition_progress, 3.0)
-	_apply_basis_presentation_transform(lerpf(0.965, 1.0, eased))
+	_apply_basis_presentation_transform(_basis_settle_scale())
 
 
 func set_display_mode(display_mode: String) -> void:
@@ -85,7 +85,7 @@ func set_board_detail(detail: String) -> void:
 
 
 func set_grid_visible(visible: bool) -> void:
-	set_grid_mode(GridDisplayMode.Mode.FULL if visible else GridDisplayMode.Mode.BORDER)
+	set_grid_mode(GridDisplayMode.Mode.FULL if visible else GridDisplayMode.Mode.NONE)
 
 
 func set_grid_mode(mode: int) -> void:
@@ -138,7 +138,7 @@ func _apply_profile_values() -> void:
 func set_live_4d_basis(basis, animate: bool = true) -> void:
 	_live_4d_basis = basis
 	_basis_transition_progress = 1.0 if _reduced_motion or not animate else 0.0
-	_apply_basis_presentation_transform(1.0 if _basis_transition_progress >= 1.0 else 0.965)
+	_apply_basis_presentation_transform(_basis_settle_scale())
 
 
 func set_live_4d_local_orientation(orientation) -> void:
@@ -168,6 +168,7 @@ func reset_live_4d_fit_envelope() -> void:
 # lifecycle seam immediately after this teardown.
 func clear_presentation() -> void:
 	_clear_root(_grid_root)
+	_grid = null
 	_clear_root(_cell_root)
 	_clear_root(_particle_root)
 	_clear_root(_marker_root)
@@ -211,14 +212,14 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 	current_slice_stride = _presentation.projection.mapper.slice_stride
 	_last_bounds = _presentation.current_bounds()
 	_update_live_4d_fit_envelope(str(snapshot.get("trace_type", "")))
-	_clear_root(_grid_root)
 	_clear_root(_cell_root)
 	_clear_root(_particle_root)
 	_clear_root(_marker_root)
 
-	var grid := GridRendererScript.new()
-	_grid_root.add_child(grid)
-	grid.rebuild(
+	if not is_instance_valid(_grid):
+		_grid = GridRendererScript.new()
+		_grid_root.add_child(_grid)
+	_grid.rebuild(
 		_presentation.dimension,
 		_presentation.projection,
 		_display_mode,
@@ -229,7 +230,10 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		_high_contrast,
 		_grid_mode,
 		_grid_opacity,
-		_boundary_opacity
+		_boundary_opacity,
+		float(_presentation_profile.value("board.enclosure_opacity")),
+		float(_presentation_profile.value("board.back_scaffold_opacity")),
+		float(_presentation_profile.value("board.cell_volume_opacity"))
 	)
 
 	var locked_material := ReplayVisuals.locked_cell_material(_display_mode, _locked_cell_opacity)
@@ -434,7 +438,12 @@ func _update_live_4d_fit_envelope(trace_type: String) -> void:
 	var reference_center := (reference_min + reference_max) * 0.5
 	var current_center := (current_min + current_max) * 0.5
 	_basis_fit_position = reference_center - current_center * _basis_fit_scale
-	_apply_basis_presentation_transform(1.0 if _basis_transition_progress >= 1.0 else 0.965)
+	_apply_basis_presentation_transform(_basis_settle_scale())
+
+
+# Snapshot refreshes retain the same in-progress pose as animation frames.
+func _basis_settle_scale() -> float:
+	return lerpf(0.965, 1.0, 1.0 - pow(1.0 - _basis_transition_progress, 3.0))
 
 
 func _apply_basis_presentation_transform(settle_scale: float) -> void:

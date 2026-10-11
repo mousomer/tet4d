@@ -29,6 +29,9 @@ var _exporter
 var _transport = DesignExportTransportScript.new()
 var _last_export: Dictionary = {}
 var _load_scenario: Callable
+var _ensure_current: Callable
+var _apply_selection: Callable
+var _apply_style: Callable
 var _apply_profile: Callable
 var _current_fingerprint: Callable
 var _capture_image: Callable
@@ -64,6 +67,11 @@ func configure(registry, callbacks: Dictionary) -> bool:
 	_exporter = DesignExportBundleScript.new(_registry)
 	_load_scenario = callbacks.get("load_scenario", Callable())
 	_apply_profile = callbacks.get("apply_profile", Callable())
+	_apply_style = callbacks.get("apply_style", _apply_profile)
+	_ensure_current = callbacks.get("ensure_current", Callable())
+	_apply_selection = callbacks.get("apply_selection", Callable())
+	if callbacks.has("comparison"):
+		_comparison.preview = callbacks["comparison"]
 	_current_fingerprint = callbacks.get("current_fingerprint", Callable())
 	_capture_image = callbacks.get("capture_image", Callable())
 	_build_identity = callbacks.get("build_identity", Callable())
@@ -318,6 +326,8 @@ func _resolve_selected(select: OptionButton) -> Dictionary:
 
 
 func _start_comparison() -> void:
+	if _ensure_current.is_valid():
+		_ensure_current.call()
 	var scenario := _selected_scenario()
 	var loaded: Dictionary = _load_scenario.call(scenario)
 	if not bool(loaded.get("ok", false)):
@@ -369,7 +379,14 @@ func _reset_scenario() -> void:
 
 func _apply_selected() -> void:
 	var resolved := _resolve_selected(_catalog_select)
-	if not bool(resolved.get("ok", false)) or not _apply_snapshot(resolved.get("snapshot", {})):
+	var applied := false
+	if bool(resolved.get("ok", false)):
+		var profile = PresentationProfileScript.from_snapshot(_registry, resolved.get("snapshot", {}))
+		if _apply_selection.is_valid():
+			applied = bool(_apply_selection.call(resolved))
+		else:
+			applied = bool(_apply_style.call(profile)) if resolved.get("descriptor", {}).get("source_kind") == "built_in" else _apply_snapshot(resolved.get("snapshot", {}))
+	if not applied:
 		_set_status(str(resolved.get("error", "Preset could not be applied.")), true)
 		return
 	_set_status("Applied %s without changing gameplay state." % resolved.get("descriptor", {}).get("display_name", "preset"))

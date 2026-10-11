@@ -34,8 +34,8 @@ func _test_registry_driven_component() -> Array:
 		return failures
 	var snapshot: Dictionary = designer.deterministic_snapshot()
 	failures.append_array(_check_generated_controls(designer, registry, "live_2d"))
-	if snapshot.get("applicable_ids", []).size() != 19:
-		failures.append("live 2D Designer should generate exactly the registry's 19 applicable parameters")
+	if snapshot.get("applicable_ids", []).size() != 22:
+		failures.append("live 2D Designer should generate exactly the registry's 22 applicable parameters")
 	for hidden_id in [
 		"display.window_mode",
 		"display.windowed_size",
@@ -67,7 +67,7 @@ func _test_registry_driven_component() -> Array:
 		failures.append("Designer groups should follow registry order and semantic_owner metadata")
 
 	var previews: Array = []
-	designer.profile_preview_requested.connect(func(profile) -> void: previews.append(profile.snapshot()))
+	designer.profile_preview_requested.connect(func(profile, _restore_geometry: bool) -> void: previews.append(profile.snapshot()))
 	if not designer.capture_reference():
 		failures.append("Designer should capture working B as immutable reference A")
 	var reference_before: Dictionary = designer.reference_profile().snapshot()
@@ -77,6 +77,7 @@ func _test_registry_driven_component() -> Array:
 		failures.append("editing B must never mutate captured reference A")
 	if designer.working_profile().value("ghost.opacity") != 1.25:
 		failures.append("numeric edits should update detached working B exactly")
+	designer.set_comparison_snapshot("B")
 	if not designer.show_slot(DesignerScript.SLOT_REFERENCE) or previews[-1].get("values", {}).get("ghost.opacity") != 0.75:
 		failures.append("Show A should preview the exact captured reference profile")
 	if not designer.show_slot(DesignerScript.SLOT_WORKING) or previews[-1].get("values", {}).get("ghost.opacity") != 1.25:
@@ -96,13 +97,13 @@ func _test_registry_driven_component() -> Array:
 
 	designer.set_runtime_context("live_3d")
 	failures.append_array(_check_generated_controls(designer, registry, "live_3d"))
-	if designer.deterministic_snapshot().get("applicable_ids", []).size() != 21:
-		failures.append("live 3D Designer should generate exactly 21 registry-applicable controls")
+	if designer.deterministic_snapshot().get("applicable_ids", []).size() != 24:
+		failures.append("live 3D Designer should generate exactly 24 registry-applicable controls")
 	designer.set_runtime_context("live_4d")
 	failures.append_array(_check_generated_controls(designer, registry, "live_4d"))
 	var four_d_ids: Array = designer.deterministic_snapshot().get("applicable_ids", [])
-	if four_d_ids.size() != 23 or not four_d_ids.has("slice_set.spacing") or not four_d_ids.has("display.show_w_labels"):
-		failures.append("live 4D Designer should generate all 23 applicable controls including slice settings")
+	if four_d_ids.size() != 26 or not four_d_ids.has("slice_set.spacing") or not four_d_ids.has("display.show_w_labels"):
+		failures.append("live 4D Designer should generate all 26 applicable controls including slice settings")
 
 	var registry_data := {"schema_version": registry.schema_version, "categories": registry.categories.duplicate(true), "settings": []}
 	for spec in registry.settings:
@@ -234,11 +235,13 @@ func _test_live_app_integration() -> Array:
 		failures.append("Designer live apply should reach the HUD presentation owner")
 	if app._world_environment.environment.background_color == background_before:
 		failures.append("Designer live apply should reach the environment presentation owner")
+	designer.set_comparison_snapshot("B")
 	if not designer.show_slot(DesignerScript.SLOT_REFERENCE):
 		failures.append("integrated A/B selection should expose the reference slot")
 	await tree.process_frame
 	if absf(float(app._presentation_profile.value("ghost.opacity")) - original_opacity) > 0.001:
 		failures.append("integrated Show A should apply the exact captured profile")
+	designer.set_comparison_snapshot("B")
 	designer.show_slot(DesignerScript.SLOT_WORKING)
 	await tree.process_frame
 	if absf(float(app._presentation_profile.value("ghost.opacity")) - edited_opacity) > 0.001:
@@ -306,10 +309,14 @@ func _test_live_app_integration() -> Array:
 		designer.expand_to_full()
 		await tree.process_frame
 
+	# B is a frozen comparison now. Return explicitly to CURRENT DESIGN before
+	# checking that ordinary appearance edits preserve the settled camera pose.
+	designer.keep_working_and_hide()
 	app._enter_live_4d_mode()
 	await tree.process_frame
 	hud._open_presentation_designer()
-	await tree.process_frame
+	for _frame in range(6):
+		await tree.process_frame
 	var four_d_designer: Dictionary = designer.deterministic_snapshot()
 	if not four_d_designer.get("applicable_ids", []).has("slice_set.spacing") or not four_d_designer.get("applicable_ids", []).has("display.show_w_labels"):
 		failures.append("integrated live 4D Designer should expose registry-authorized slice controls")

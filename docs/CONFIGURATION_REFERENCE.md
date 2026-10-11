@@ -2292,7 +2292,7 @@ Parameters:
 - `governance.godot_settings_externalization_contract.registry_loader_path`: `"godot/Tet4D.Godot/scripts/ui/settings/settings_registry.gd"` (`string`)
 - `governance.godot_settings_externalization_contract.registry_path`: `"godot/Tet4D.Godot/config/shell_settings_registry.json"` (`string`)
 - `governance.godot_settings_externalization_contract.required_setting_fields[]`: array[`string`]; examples: `"id"`, `"label"`, `"description"`
-- `governance.godot_settings_externalization_contract.runtime_non_setting_dotted_tokens[]`: array[`string`]; examples: `"board.frame_active"`, `"board.grid"`, `"board.slice_geometry"`
+- `governance.godot_settings_externalization_contract.runtime_non_setting_dotted_tokens[]`: array[`string`]; examples: `"board.enclosure"`, `"board.floor"`, `"board.grid_edge"`
 - `governance.godot_settings_externalization_contract.runtime_source_root`: `"godot/Tet4D.Godot/scripts"` (`string`)
 - `governance.godot_settings_externalization_contract.statement`: `"Every Godot presentation parameter, its default, exactly-one semanti...` (`string`)
 - `governance.godot_settings_externalization_contract.store_path`: `"godot/Tet4D.Godot/scripts/ui/settings/settings_store.gd"` (`string`)

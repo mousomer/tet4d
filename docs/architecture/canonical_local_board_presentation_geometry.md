@@ -92,18 +92,22 @@ treatment and planar camera while occupying the same full local cell envelope.
 
 ## 4. Grid and boundary contract
 
-All grid lines originate as canonical face-grid segments. For a face, the
-geometry emits one segment for every interior cell edge on its two in-plane
-axes. `GridRenderer` alone chooses which canonical faces are displayed:
+The board is one rectangular lattice; grid lines are never built from cell
+edges. `lattice_geometry()` emits, for every lattice coordinate pair on two
+axes, one maximal line spanning the entire remaining axis, tagged with its
+`line_axis`, integral `lattice_start`/`lattice_end`, and `boundary_planes`
+(2 = outer edge, 1 = boundary face, 0 = interior); face lines also carry the
+`face_axis`/`face_sign` of the one face they lie on. An `Nx × Ny × Nz` board has
+`(Ny+1)(Nz+1) + (Nx+1)(Nz+1) + (Nx+1)(Ny+1)` lines, never scaling with cell
+count. `boundary_geometry()` is the 12 two-plane lines.
 
-- 2D displays the negative-Z face as a planar grid;
-- 3D and 4D cache all six faces and show camera-relative rear faces;
-- the gravity floor reuses the negative-Y face segments; and
-- style-only offsets prevent z-fighting without changing the underlying grid
-  coordinate system.
+- 2D uses the one-cell-deep slab and the same lattice generator as 3D;
+- every 4D slice receives the identical lattice for its 3D dimensions;
+- camera, projection, slice state and style never change which lines are
+  built; in Border the camera only selects which rear faces are visible.
 
-Ordinary wireframes and 4D active-slice frames both consume the same twelve
-canonical boundary segments. Their role, material, opacity, and thickness are
+The enclosure uses canonical bounds; independent 4D active-slice frames consume
+the twelve canonical boundary segments. Their material, opacity, and thickness are
 presentation-profile/accessibility concerns, not alternate geometry.
 
 ## 5. Composition and ownership
@@ -172,3 +176,15 @@ Stage 54F-1 established the correct canonical local-board architecture. The
 54F-1R review correction repaired a domain regression in which continuous
 endgame presentation points had been routed through the new strict cell API;
 it did not redesign the architecture or change exact 4D basis authority.
+
+
+Stage 56H scaffold consumption retains canonical geometry: enclosure and floor
+in every mode; the lattice adds nothing in NONE, the 12 outer edges plus
+rear-face lines in BORDER, and the complete lattice in FULL, so BORDER's built
+lines (`4(Dx+Dy+Dz)`) are a strict subset of FULL's.
+Interior lines number `(Dy-1)(Dz-1) + (Dx-1)(Dz-1) + (Dx-1)(Dy-1)`, with no
+cell faces. Structural snapshots carry dimensions only, so cache comparison
+never regenerates lines.
+Shallow `[X,Y]`, `[X,Y,1]`, `[X,Y,1,1]` remain structurally identical. The shared
+renderer caches geometry independently of gameplay; opacity edits update only
+role materials. Navigation frames are independent.

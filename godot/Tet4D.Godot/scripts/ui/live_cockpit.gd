@@ -78,6 +78,8 @@ var _scroll_required := false
 var _placement := PLACEMENT_BELOW
 var _requested_placement := PLACEMENT_BELOW
 
+signal designer_geometry_changed(rects: Dictionary)
+
 var _designer_host: Control
 var _designer_frames: Dictionary = {}
 var _designer_origins: Dictionary = {}
@@ -106,7 +108,10 @@ func set_designer_layout_enabled(enabled: bool, board: Control) -> void:
 			_designer_host.add_child(frame)
 			frame.configure(str(entry[0]), panel, panel != board)
 			panel.show()
-			frame.geometry_edited.connect(func(rect: Rect2) -> void: _designer_rects[key] = rect)
+			frame.geometry_edited.connect(func(rect: Rect2) -> void:
+				_designer_rects[key] = rect
+				designer_geometry_changed.emit(designer_geometry_snapshot())
+			)
 			_designer_frames[key] = frame
 		board_stage.hide()
 		control_deck.hide()
@@ -130,6 +135,22 @@ func set_designer_layout_enabled(enabled: bool, board: Control) -> void:
 
 func designer_panels() -> Dictionary:
 	return _designer_frames.duplicate()
+
+
+func designer_geometry_snapshot() -> Dictionary:
+	var result: Dictionary = {}
+	for key in _designer_rects:
+		var rect: Rect2 = _designer_rects[key]
+		result[key] = [rect.position.x, rect.position.y, rect.size.x, rect.size.y]
+	return result
+
+
+func restore_designer_geometry(rects: Dictionary) -> void:
+	_designer_rects.clear()
+	for key in rects:
+		var data: Array = rects[key]
+		_designer_rects[key] = Rect2(float(data[0]), float(data[1]), float(data[2]), float(data[3]))
+	_constrain_designer_panels()
 
 
 func raise_designer_panel(panel_name: String) -> void:

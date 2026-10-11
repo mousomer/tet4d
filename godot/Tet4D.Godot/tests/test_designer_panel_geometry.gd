@@ -55,18 +55,14 @@ func run() -> Array:
 		density_after.erase("display.hud_density")
 		if density_before != density_after or probe._state_hash(app, mode) != hash_before:
 			failures.append("Density changes must preserve style/grid and native state")
-		# Grid cycling over reference A must not silently select B's style.
+		# Editing while A is shown edits CURRENT DESIGN, then previews current.
 		designer.capture_reference()
 		designer.set_parameter_value("theme.name", "diagnostic")
+		designer.set_comparison_snapshot("B")
 		designer.show_slot("A")
-		var a_values: Dictionary = hud.presentation_profile().values()
 		hud._toggle_grid_visibility()
-		var a_after: Dictionary = hud.presentation_profile().values()
-		a_values.erase("display.grid_mode")
-		a_after.erase("display.grid_mode")
-		if a_values != a_after or designer.deterministic_snapshot()["displayed_slot"] != "A":
-			failures.append("Grid cycling must preserve displayed reference A and its style")
-		designer.show_slot("B")
+		if hud.presentation_profile().value("theme.name") != "diagnostic" or designer.deterministic_snapshot()["displayed_slot"] != "CURRENT":
+			failures.append("Grid edit must preserve current style and return preview to current")
 		designer.set_parameter_value("display.grid_mode", "none")
 		designer.apply_built_in_style(str(records[0]["style_id"]))
 		if hud.presentation_profile().value("display.grid_mode") != "none":
@@ -121,6 +117,31 @@ func run() -> Array:
 				failures.append("Panel geometry must preserve view orientation")
 		if app._live_4d_basis.indicator_snapshot() != basis_before or app._live_4d_local_orientation.snapshot() != local_before:
 			failures.append("Panel geometry must preserve exact basis and local orientation")
+		# Existing handle edits must become complete saved-design geometry.
+		var saved_geometry: Dictionary = hud._live_cockpit.designer_geometry_snapshot()
+		var current_before: Dictionary = designer.working_profile().snapshot()
+		var saved: Dictionary = designer.save_working_as("Geometry %s %s" % [mode, OS.get_process_id()])
+		var saved_id := str(saved.get("record", {}).get("profile_id", ""))
+		panels["GameArea"].set_geometry(Rect2(Vector2.ZERO, Vector2(500, 400)))
+		designer.load_saved_profile(saved_id)
+		await probe._layout_frames(tree)
+		if hud._live_cockpit.designer_geometry_snapshot() != saved_geometry or designer.working_profile().snapshot() != current_before:
+			failures.append("Loading a design must restore saved handle geometry and unrelated presentation state")
+		designer.set_comparison_snapshot("A")
+		designer.set_parameter_value("display.grid_mode", "border")
+		designer.set_comparison_snapshot("B")
+		await probe._layout_frames(tree)
+		var current_at_comparison: Dictionary = designer.working_profile().snapshot()
+		designer.hide_preserving_preview()
+		await probe._layout_frames(tree)
+		for index in range(4):
+			hud._comparison_toggle_button.pressed.emit()
+			await probe._layout_frames(tree)
+			if designer.working_profile().snapshot() != current_at_comparison or designer.state() != "hidden":
+				failures.append("External one-action A/B toggle must preserve current while Designer remains hidden")
+			if hud._comparison_toggle_button.text.find(designer.comparison.shown()) < 0 or hud.presentation_profile().snapshot() != designer.comparison.snapshot_for(designer.comparison.shown()):
+				failures.append("External toggle must clearly label and apply the exact previewed side")
+		designer._profile_library.delete_profile(saved_id)
 		designer.hide_preserving_preview()
 		await probe._layout_frames(tree)
 		if not hud._live_cockpit.designer_panels().is_empty():

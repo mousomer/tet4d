@@ -116,10 +116,10 @@ func run() -> Array:
 		failures.append("live renderer should keep one shared grid renderer")
 	else:
 		var live_grid := grid_root.get_child(0)
-		if _count_presentation_role(live_grid, "board.wireframe") != 12:
-			failures.append("live 2D renderer should build an explicit 12-edge ordinary wireframe")
-		if _count_presentation_role(live_grid, "board.grid") != 6:
-			failures.append("live 2D internal grid should exclude its six coincident outer-boundary lines")
+		if _count_presentation_role(live_grid, "board.enclosure") != 1:
+			failures.append("live 2D must retain a shaded slab enclosure")
+		if _count_presentation_role(live_grid, "board.cell_volumes") != 0:
+			failures.append("live 2D must never contain filled cell volumes")
 		var spawn_cue := live_grid.find_child("SpawnEntryLabel", true, false) as Label3D
 		if spawn_cue == null or spawn_cue.text.find("SPAWN ENTRY") == -1:
 			failures.append("live 2D should identify intended above-board spawn entry without adding cells")
@@ -129,8 +129,8 @@ func run() -> Array:
 		renderer.render_snapshot(renderer._presentation.snapshot)
 		await tree.process_frame
 		var hidden_grid := (renderer.get_node_or_null("GridRoot") as Node).get_child(0)
-		if _count_presentation_role(hidden_grid, "board.wireframe") != 12 or _count_presentation_role(hidden_grid, "board.grid") != 0:
-			failures.append("grid toggle should hide internal detail while retaining the 12-edge orientation cage")
+		if _count_presentation_role(hidden_grid, "board.enclosure") != 1 or _count_presentation_role(hidden_grid, "board.grid_edge") != 0:
+			failures.append("legacy grid false must retain enclosure but remove explicit scaffold")
 		renderer.set_grid_visible(true)
 
 	var live_3d_snapshot := {
@@ -184,9 +184,10 @@ func run() -> Array:
 		failures.append("live 3D renderer should keep one shared grid renderer")
 	else:
 		var live_3d_grid := grid_root.get_child(0)
-		if _count_presentation_role(live_3d_grid, "board.wireframe") != 12:
-			failures.append("live 3D renderer should retain an explicit ordinary wireframe")
-		_assert_internal_face_grid_counts(failures, live_3d_grid, [4, 5, 4])
+		if _count_presentation_role(live_3d_grid, "board.enclosure") != 1:
+			failures.append("live 3D renderer must retain its enclosure")
+		# FULL [4,5,4]: (5+1)(4+1) + (4+1)(4+1) + (4+1)(5+1) maximal lines.
+		_assert_lattice_per_slice(failures, live_3d_grid, 1, 85, "live 3D")
 
 	var live_4d_snapshot := {
 		"case_id": "live_plain_4d",
@@ -239,9 +240,9 @@ func run() -> Array:
 		failures.append("live 4D renderer should keep one shared grid renderer")
 	else:
 		var live_4d_grid := grid_root.get_child(0)
-		if _count_presentation_role(live_4d_grid, "board.wireframe") != 48:
-			failures.append("live 4D renderer should build one explicit ordinary wireframe per board")
-		if _count_presentation_role(live_4d_grid, "board.frame_active") != 12:
+		if _count_presentation_role(live_4d_grid, "board.enclosure") != 4:
+			failures.append("live 4D renderer must build one enclosure per slice")
+		if _nodes_with_meta(live_4d_grid, "presentation_role").filter(func(n): return n is MultiMeshInstance3D and n.get_meta("presentation_role") == "board.frame_active" and n.is_visible_in_tree()).size() != 1:
 			failures.append("live 4D renderer should keep one separately governed active frame")
 		var stable_structural_count := _count_presentation_role(live_4d_grid, "board.wireframe") + _count_presentation_role(live_4d_grid, "board.grid") + _count_presentation_role(live_4d_grid, "board.grid.floor") + _count_presentation_role(live_4d_grid, "board.frame_active")
 		live_4d_grid._process(0.016)
@@ -251,11 +252,9 @@ func run() -> Array:
 		var floor_count := _count_meta_value(live_4d_grid, "boundary_role", "gravity_floor")
 		if floor_count != 4:
 			failures.append("live 4D should distinguish the bottom boundary on every W section")
-		live_4d_grid._update_rear_grid_faces(Vector3(100.0, 100.0, 100.0))
-		_assert_three_rear_grid_faces_per_slice(failures, live_4d_grid, 4, -1.0, "positive camera octant")
-		live_4d_grid._update_rear_grid_faces(Vector3(-100.0, -100.0, -100.0))
+		# FULL [5,10,3] per slice: (10+1)(3+1) + (5+1)(3+1) + (5+1)(10+1).
+		_assert_lattice_per_slice(failures, live_4d_grid, 4, 134, "live 4D")
 		live_4d_grid._update_slice_labels(Vector3(-100.0, -100.0, -100.0))
-		_assert_three_rear_grid_faces_per_slice(failures, live_4d_grid, 4, 1.0, "negative camera octant")
 		var slice_label_count := 0
 		for child in live_4d_grid.get_children():
 			if child is Label3D and child.has_meta("slice_axis"):
@@ -410,10 +409,10 @@ func run() -> Array:
 			renderer.render_snapshot(source)
 			await tree.process_frame
 			var grid = renderer.get_node("GridRoot").get_child(0)
-			var internals := _count_presentation_role(grid, "board.grid") + _count_presentation_role(grid, "board.grid.floor")
-			var boundary := _count_presentation_role(grid, "board.wireframe") + _count_presentation_role(grid, "board.frame_active")
-			if (mode == 0 and (internals == 0 or boundary == 0)) or (mode == 1 and (internals != 0 or boundary == 0)) or (mode == 2 and (internals != 0 or boundary != 0)):
-				failures.append("Grid mode %s must control lattice/boundaries in dimension %s" % [mode, source["dimension"]])
+			var expected := preload("res://scripts/presentation/grid_display_mode.gd").roles(mode)
+			for role in preload("res://scripts/presentation/grid_display_mode.gd").roles(0):
+				if (_count_presentation_role(grid, role) > 0) != expected.has(role):
+					failures.append("Grid mode %s must compose semantic role %s in dimension %s" % [mode, role, source["dimension"]])
 			if renderer.get_node("CellRoot").get_child_count() == 0:
 				failures.append("Grid modes must never suppress gameplay pieces")
 	renderer.set_grid_mode(0)
@@ -654,41 +653,20 @@ func _count_presentation_role(node: Node, role: String) -> int:
 	return count
 
 
-func _assert_internal_face_grid_counts(failures: Array, grid: Node3D, board_shape: Array) -> void:
-	var face_count := 0
-	for child in _nodes_with_meta(grid, "grid_axis"):
-		face_count += 1
-		var axis := int(child.get_meta("grid_axis", -1))
-		var expected := 0
-		for dimension_index in range(3):
-			if dimension_index != axis:
-				expected += maxi(0, int(board_shape[dimension_index]) - 1)
-		if child.get_child_count() != expected:
-			failures.append("rear grid faces must contain interior subdivisions only; axis %d expected %d, got %d" % [axis, expected, child.get_child_count()])
-		if str(child.get_meta("presentation_role", "")) != "board.grid":
-			failures.append("rear grid faces must consume the board.grid presentation role")
-	if face_count != 6:
-		failures.append("live 3D renderer should retain six cached rear-grid face candidates")
-
-
-func _assert_three_rear_grid_faces_per_slice(
-	failures: Array,
-	grid: Node3D,
-	slice_count: int,
-	expected_sign: float,
-	label: String
-) -> void:
-	var visible_faces := 0
-	for child in _nodes_with_meta(grid, "grid_axis"):
-		if not (child as Node3D).visible:
-			continue
-		visible_faces += 1
-		if float(child.get_meta("grid_sign", 0.0)) != expected_sign:
-			failures.append("%s should show only camera-relative rear grid faces" % label)
-		if child.get_child_count() == 0:
-			failures.append("%s rear grid face should contain boundary rectangles" % label)
-	if visible_faces != slice_count * 3:
-		failures.append("%s should show exactly three rear grid faces per section, got %d" % [label, visible_faces])
+# One identical maximal-line lattice per slice, never camera-dependent.
+func _assert_lattice_per_slice(failures: Array, grid: Node3D, slice_count: int, expected_lines: int, label: String) -> void:
+	var topology: Array = grid.grid_topology()
+	if topology.size() != slice_count:
+		failures.append("%s should build one lattice per slice, got %d" % [label, topology.size()])
+		return
+	for slice_lines in topology:
+		if slice_lines.size() != expected_lines:
+			failures.append("%s should render %d maximal lattice lines, got %d" % [label, expected_lines, slice_lines.size()])
+		if slice_lines != topology[0]:
+			failures.append("%s slices must share one grid topology" % label)
+	grid._process(0.016)
+	if grid.grid_topology() != topology:
+		failures.append("%s camera processing must not change grid topology" % label)
 
 
 func _nodes_with_meta(root: Node, meta_name: String) -> Array:

@@ -8,7 +8,7 @@ const BuiltInStyleCatalogScript = preload("res://scripts/presentation/built_in_s
 
 signal panel_focus_requested(panel_name: String)
 
-signal profile_preview_requested(profile)
+signal profile_preview_requested(profile, restore_geometry: bool)
 signal state_changed(state: String)
 
 const STATE_HIDDEN := "hidden"
@@ -16,15 +16,17 @@ const STATE_COMPACT := "compact"
 const STATE_FULL := "full"
 const SLOT_REFERENCE := "A"
 const SLOT_WORKING := "B"
+const CURRENT := "CURRENT"
 
 var _registry
 var _profile_library
 var _style_catalog
 var _runtime_context := "live_2d"
 var _opening_profile
-var _reference_profile
+var comparison = preload("res://scripts/design_lab/design_comparison_preview.gd").new()
+var comparison_activate: Callable
+var comparison_edit_requested: Callable
 var _working_profile
-var _displayed_slot := SLOT_WORKING
 var _state := STATE_HIDDEN
 var _syncing_controls := false
 var _library_expanded := false
@@ -59,10 +61,6 @@ var _import_dialog: FileDialog
 var _export_dialog: FileDialog
 var _delete_confirmation: ConfirmationDialog
 var _overwrite_confirmation: ConfirmationDialog
-var _reference_button: Button
-var _compact_reference_button: Button
-var _working_button: Button
-var _compact_working_button: Button
 var _first_full_focus: Control
 var _controls_by_id: Dictionary = {}
 var _owner_order: Array = []
@@ -73,6 +71,7 @@ func _ready() -> void:
 	name = "PresentationDesigner"
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	set_meta("semantic_role", "interactive_button_panel")
+	comparison.changed.connect(func() -> void: _refresh_all_text("Comparison preview: %s" % comparison.shown()))
 	_build_surface()
 	_refresh_state_visibility()
 
@@ -89,18 +88,25 @@ func configure(registry, profile_library = null, style_catalog = null) -> bool:
 	return true
 
 
-func open_with_profile(active_profile, runtime_context: String) -> bool:
+func initialize_current_design(active_profile, runtime_context: String) -> bool:
 	if _registry == null or not _valid_profile(active_profile) or not _valid_runtime_context(runtime_context):
 		return false
 	_runtime_context = runtime_context
 	if _opening_profile == null:
 		_opening_profile = active_profile.detached_copy()
 		_working_profile = active_profile.detached_copy()
-		_displayed_slot = SLOT_WORKING
 		_clear_loaded_profile()
+		_saved_profile_baseline = active_profile.detached_copy()
+		_sync_style_identity()
+	return true
+
+
+func open_with_profile(active_profile, runtime_context: String) -> bool:
+	if not initialize_current_design(active_profile, runtime_context):
+		return false
 	_rebuild_registry_controls()
 	_set_state(STATE_FULL)
-	_refresh_all_text("Live edits preview B only; nothing is saved.")
+	_refresh_all_text("Edit CURRENT DESIGN; Save persists only on request.")
 	_sync_controls_from_working()
 	return true
 
@@ -130,35 +136,31 @@ func expand_to_full() -> void:
 
 
 func revert_and_hide() -> void:
-	if _opening_profile == null:
-		return
-	_working_profile = _opening_profile.detached_copy()
-	_displayed_slot = SLOT_WORKING
-	_emit_preview(_working_profile, "Reverted B to the opening baseline.")
+	revert_design()
 	_set_state(STATE_HIDDEN)
 
 
 func keep_working_and_hide() -> void:
 	if _working_profile == null:
 		return
-	_displayed_slot = SLOT_WORKING
-	_emit_preview(_working_profile, "Keeping detached B for this run; nothing was saved.")
+	_emit_preview(_working_profile, "Keeping current design for this run; nothing was saved.", true, true)
 	_set_state(STATE_HIDDEN)
 
 
 func end_session() -> void:
+	if comparison_edit_requested.is_valid():
+		comparison_edit_requested.call()
 	_set_state(STATE_HIDDEN)
 	_opening_profile = null
-	_reference_profile = null
+	comparison.clear()
 	_working_profile = null
-	_displayed_slot = SLOT_WORKING
 	_clear_loaded_profile()
 	_library_expanded = false
 	_built_in_expanded = false
 	if _library_root != null:
 		_library_root.visible = false
 	if _library_toggle_button != null:
-		_library_toggle_button.text = "PROFILE LIBRARY ▸"
+		_library_toggle_button.text = "SAVED DESIGNS ▸"
 	if _built_in_root != null:
 		_built_in_root.visible = false
 	if _built_in_toggle_button != null:
@@ -168,25 +170,106 @@ func end_session() -> void:
 
 
 func capture_reference() -> bool:
-	if _working_profile == null:
+	return set_comparison_snapshot("A")
+
+
+func set_comparison_snapshot(side: String, profile = null) -> bool:
+	var source = profile if profile != null else _working_profile
+	if not _valid_profile(source):
 		return false
-	_reference_profile = _working_profile.detached_copy()
-	_refresh_all_text("Captured immutable reference A from working B.")
-	return true
+	if comparison_edit_requested.is_valid():
+		comparison_edit_requested.call()
+	var result: bool = comparison.set_snapshot(side, source.snapshot())
+	_refresh_all_text("Set %s from current design; current is unchanged." % side)
+	return result
+
+
+func set_comparison_from_saved(side: String, profile_id: String) -> bool:
+	var result: Dictionary = _profile_library.load_profile(profile_id)
+	return bool(result.get("ok", false)) and set_comparison_snapshot(side, result.get("profile"))
 
 
 func show_slot(slot: String) -> bool:
+	if comparison_activate.is_valid():
+		return bool(comparison_activate.call(slot))
+	return preview_comparison_snapshot(slot)
+
+
+func preview_comparison_snapshot(slot: String) -> bool:
 	var profile = _profile_for_slot(slot)
-	if profile == null:
-		_refresh_all_text("Capture A before selecting the reference slot.")
+	if profile == null or not comparison.show_side(slot):
 		return false
-	_displayed_slot = slot
-	_emit_preview(profile, "Showing %s · detached preview · not saved." % slot)
+	_emit_preview(profile, "Preview %s · CURRENT DESIGN is unchanged." % slot, false, true)
 	return true
 
 
 func toggle_slots() -> bool:
-	return show_slot(SLOT_REFERENCE if _displayed_slot == SLOT_WORKING else SLOT_WORKING)
+	if not comparison.ready():
+		return false
+	return show_slot("B" if comparison.shown() == "A" else "A")
+
+
+func adopt_comparison(side: String) -> bool:
+	var candidate = _profile_for_slot(side)
+	if candidate == null:
+		return false
+	return restore_design(candidate)
+
+
+func restore_design(profile) -> bool:
+	if not _valid_profile(profile):
+		return false
+	_working_profile = profile.detached_copy()
+	_sync_style_identity()
+	_sync_controls_from_working()
+	_emit_preview(_working_profile, "CURRENT DESIGN restored.", true, true)
+	return true
+
+
+func revert_design() -> bool:
+	return restore_design(_saved_profile_baseline if _saved_profile_baseline != null else _opening_profile)
+
+
+func revert_style() -> bool:
+	if _working_profile == null:
+		return false
+	var base: Dictionary = _working_profile.design_state().get("base_style_values", {})
+	if base.is_empty():
+		return false
+	var style = PresentationProfileScript.from_snapshot(_registry, {"schema_version": 1, "values": base})
+	_working_profile = _working_profile.with_style_of(style)
+	_sync_controls_from_working()
+	_emit_preview(_working_profile, "Restored base-style appearance.")
+	return true
+
+
+func initialize_panel_geometry(rects: Dictionary) -> void:
+	if _working_profile == null or _working_profile.design_state().has("panel_rects"):
+		return
+	synchronize_panel_geometry(rects)
+	# Resolve initial rectangles without changing either baseline's appearance.
+	for baseline in [_opening_profile, _saved_profile_baseline]:
+		if baseline != null and not baseline.design_state().has("panel_rects"):
+			var metadata: Dictionary = baseline.design_state()
+			metadata["panel_rects"] = rects.duplicate(true)
+			if baseline == _opening_profile:
+				_opening_profile = baseline.with_design_state(metadata)
+			else:
+				_saved_profile_baseline = baseline.with_design_state(metadata)
+
+
+func synchronize_panel_geometry(rects: Dictionary) -> void:
+	if _working_profile == null:
+		return
+	var metadata: Dictionary = _working_profile.design_state()
+	metadata["panel_rects"] = rects.duplicate(true)
+	_working_profile = _working_profile.with_design_state(metadata)
+	var was_preview := comparison.shown() != CURRENT
+	comparison.show_current()
+	if was_preview:
+		_emit_preview(_working_profile, "Updated CURRENT DESIGN panel geometry.")
+	else:
+		_refresh_all_text("Updated CURRENT DESIGN panel geometry.")
 
 
 func set_parameter_value(setting_id: String, value) -> bool:
@@ -202,14 +285,12 @@ func set_parameter_value(setting_id: String, value) -> bool:
 	if not _valid_profile(next_profile):
 		return false
 	_working_profile = next_profile.detached_copy()
-	_displayed_slot = SLOT_WORKING
 	_sync_controls_from_working()
-	_emit_preview(_working_profile, "Updated B · %s · not saved." % spec.label())
+	_emit_preview(_working_profile, "Updated CURRENT DESIGN · %s · not saved." % spec.label())
 	return true
 
 
-# Quick grid actions affect the displayed active profile separately. Synchronize
-# B without selecting it, recapturing immutable A, or replacing style values.
+# Quick actions edit current design and leave frozen comparison snapshots intact.
 func synchronize_runtime_parameter(setting_id: String, value) -> void:
 	if _working_profile == null:
 		return
@@ -217,12 +298,13 @@ func synchronize_runtime_parameter(setting_id: String, value) -> void:
 	if _valid_profile(candidate):
 		_working_profile = candidate
 		_sync_controls_from_working()
+		_emit_preview(_working_profile, "Updated CURRENT DESIGN.")
 
 
 func reset_parameter(setting_id: String) -> bool:
 	if _opening_profile == null or not _applicable_ids.has(setting_id):
 		return false
-	return set_parameter_value(setting_id, _opening_profile.value(setting_id))
+	return set_parameter_value(setting_id, _saved_profile_baseline.value(setting_id))
 
 
 func reset_owner(owner: String) -> bool:
@@ -236,13 +318,7 @@ func reset_owner(owner: String) -> bool:
 
 
 func reset_working_to_opening() -> bool:
-	if _opening_profile == null:
-		return false
-	_working_profile = _opening_profile.detached_copy()
-	_displayed_slot = SLOT_WORKING
-	_sync_controls_from_working()
-	_emit_preview(_working_profile, "Reset B to the opening baseline.")
-	return true
+	return revert_design()
 
 
 func reset_working_to_factory_defaults() -> bool:
@@ -255,21 +331,20 @@ func reset_working_to_factory_defaults() -> bool:
 	if not _valid_profile(profile):
 		return false
 	_working_profile = profile.detached_copy()
-	_displayed_slot = SLOT_WORKING
 	_sync_controls_from_working()
-	_emit_preview(_working_profile, "Reset B to registry factory defaults; nothing was saved.")
+	_emit_preview(_working_profile, "Reset CURRENT DESIGN to registry factory defaults; nothing was saved.", true, true)
 	return true
 
 
 func save_working_as(display_name: String) -> Dictionary:
 	if _profile_library == null or _working_profile == null:
-		return _library_failure("Open the Designer before saving working B.")
+		return _library_failure("Open the Designer before saving current design.")
 	var result: Dictionary = _profile_library.save_new(display_name, _working_profile)
 	if bool(result.get("ok", false)):
 		var record: Dictionary = result.get("record", {})
 		_set_loaded_profile(record, _working_profile)
 		_refresh_library_list(_loaded_profile_id)
-		_refresh_all_text(_library_success_message("Saved working B as '%s'." % _loaded_profile_name, result))
+		_refresh_all_text(_library_success_message("Saved current design as '%s'." % _loaded_profile_name, result))
 	else:
 		_refresh_all_text(str(result.get("error", "Profile could not be saved.")))
 	return result
@@ -277,12 +352,12 @@ func save_working_as(display_name: String) -> Dictionary:
 
 func save_working() -> Dictionary:
 	if _profile_library == null or _working_profile == null or _loaded_profile_id.is_empty():
-		return _library_failure("Use Save As before saving this working B.")
+		return _library_failure("Use Save As before saving this current design.")
 	var result: Dictionary = _profile_library.save_existing(_loaded_profile_id, _working_profile)
 	if bool(result.get("ok", false)):
 		_set_loaded_profile(result.get("record", {}), _working_profile)
 		_refresh_library_list(_loaded_profile_id)
-		_refresh_all_text(_library_success_message("Saved working B to '%s'." % _loaded_profile_name, result))
+		_refresh_all_text(_library_success_message("Saved current design to '%s'." % _loaded_profile_name, result))
 	else:
 		_refresh_all_text(str(result.get("error", "Profile could not be saved.")))
 	return result
@@ -299,10 +374,9 @@ func load_saved_profile(profile_id: String) -> Dictionary:
 	if not _valid_profile(loaded_profile):
 		return _library_failure("Stored profile did not produce a detached conforming B.")
 	_working_profile = loaded_profile.detached_copy()
-	_displayed_slot = SLOT_WORKING
 	_set_loaded_profile(result.get("record", {}), _working_profile)
 	_sync_controls_from_working()
-	_emit_preview(_working_profile, "Loaded '%s' into detached working B; A is unchanged." % _loaded_profile_name)
+	_emit_preview(_working_profile, "Loaded '%s' into CURRENT DESIGN." % _loaded_profile_name, true, true)
 	return result
 
 
@@ -340,9 +414,10 @@ func delete_saved_profile(profile_id: String) -> Dictionary:
 	var result: Dictionary = _profile_library.delete_profile(profile_id)
 	if bool(result.get("ok", false)):
 		if profile_id == _loaded_profile_id:
-			_clear_loaded_profile()
+			_loaded_profile_id = ""
+			_loaded_profile_name = ""
 		_refresh_library_list()
-		_refresh_all_text("Deleted the stored profile; detached working B remains active.")
+		_refresh_all_text("Deleted the stored profile; detached current design remains active.")
 	else:
 		_refresh_all_text(str(result.get("error", "Profile could not be deleted.")))
 	return result
@@ -355,7 +430,7 @@ func import_saved_profile(source_path: String, display_name: String = "") -> Dic
 	if bool(result.get("ok", false)):
 		var record: Dictionary = result.get("record", {})
 		_refresh_library_list(str(record.get("profile_id", "")))
-		_refresh_all_text(_library_success_message("Imported '%s'; working B was not changed." % record.get("display_name", ""), result))
+		_refresh_all_text(_library_success_message("Imported '%s'; current design was not changed." % record.get("display_name", ""), result))
 	else:
 		_refresh_all_text(str(result.get("error", "Profile could not be imported.")))
 	return result
@@ -387,13 +462,12 @@ func apply_built_in_style(style_id: String) -> Dictionary:
 	var style_profile = result.get("profile")
 	if not _valid_profile(style_profile):
 		return _library_failure("Built-in style did not produce a detached conforming B.")
-	_working_profile = style_profile.with_overrides({"display.grid_mode": _working_profile.value("display.grid_mode")})
-	_displayed_slot = SLOT_WORKING
-	_set_applied_style(result.get("record", {}), _working_profile)
+	_working_profile = _working_profile.with_style_of(style_profile)
+	_set_applied_style(result.get("record", {}), style_profile)
 	_sync_controls_from_working()
 	_emit_preview(
 		_working_profile,
-		"Applied built-in style '%s' to detached B; A and the built-in source are unchanged." % _applied_style_name
+		"Applied built-in style '%s' to current design; A and the built-in source are unchanged." % _applied_style_name
 	)
 	return result
 
@@ -447,7 +521,7 @@ func working_profile_dirty() -> bool:
 	return (
 		_working_profile != null
 		and _saved_profile_baseline != null
-		and _working_profile.values() != _saved_profile_baseline.values()
+		and _working_profile.snapshot() != _saved_profile_baseline.snapshot()
 	)
 
 
@@ -468,7 +542,7 @@ func working_profile():
 
 
 func reference_profile():
-	return _reference_profile.detached_copy() if _reference_profile != null else null
+	return _profile_for_slot("A")
 
 
 func opening_profile():
@@ -487,14 +561,14 @@ func deterministic_snapshot() -> Dictionary:
 	return {
 		"state": _state,
 		"runtime_context": _runtime_context,
-		"displayed_slot": _displayed_slot,
+		"displayed_slot": comparison.shown(),
 		"has_opening": _opening_profile != null,
-		"has_reference": _reference_profile != null,
+		"has_reference": not comparison.snapshot_for("A").is_empty(),
 		"applicable_ids": _applicable_ids.duplicate(),
 		"owner_order": _owner_order.duplicate(),
 		"control_types": control_types,
 		"opening": _opening_profile.snapshot() if _opening_profile != null else {},
-		"reference": _reference_profile.snapshot() if _reference_profile != null else {},
+		"reference": comparison.snapshot_for("A"),
 		"working": _working_profile.snapshot() if _working_profile != null else {},
 		"profile_library": _profile_library.deterministic_snapshot() if _profile_library != null else {},
 		"built_in_catalog": _style_catalog.deterministic_snapshot() if _style_catalog != null else {},
@@ -535,7 +609,7 @@ func _build_surface() -> void:
 	header.add_theme_constant_override("separation", 6)
 	_full_root.add_child(header)
 	var title := Label.new()
-	title.text = "LIVE PRESENTATION DESIGNER"
+	title.text = "CURRENT DESIGN"
 	title.theme_type_variation = "AccentLabel"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
@@ -577,30 +651,27 @@ func _build_surface() -> void:
 	detached_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_full_root.add_child(detached_note)
 
-	var slot_row := HBoxContainer.new()
-	slot_row.add_theme_constant_override("separation", 5)
+	var comparison_toggle := Button.new()
+	comparison_toggle.text = "Comparison…"
+	_full_root.add_child(comparison_toggle)
+	var slot_row := GridContainer.new()
+	slot_row.columns = 1
+	slot_row.visible = false
 	_full_root.add_child(slot_row)
-	var capture_button := Button.new()
-	capture_button.name = "DesignerCaptureAButton"
-	capture_button.text = "Capture B as A"
-	capture_button.tooltip_text = "Replace reference A with an immutable snapshot of working B"
-	capture_button.pressed.connect(capture_reference)
-	slot_row.add_child(capture_button)
-	_reference_button = Button.new()
-	_reference_button.name = "DesignerReferenceAButton"
-	_reference_button.text = "Show A"
-	_reference_button.pressed.connect(show_slot.bind(SLOT_REFERENCE))
-	slot_row.add_child(_reference_button)
-	_working_button = Button.new()
-	_working_button.name = "DesignerWorkingBButton"
-	_working_button.text = "Show B"
-	_working_button.pressed.connect(show_slot.bind(SLOT_WORKING))
-	slot_row.add_child(_working_button)
-	var toggle_button := Button.new()
-	toggle_button.name = "DesignerToggleABButton"
-	toggle_button.text = "Toggle A/B"
-	toggle_button.pressed.connect(toggle_slots)
-	slot_row.add_child(toggle_button)
+	comparison_toggle.pressed.connect(func() -> void: slot_row.visible = not slot_row.visible)
+	for side in ["A", "B"]:
+		var capture_button := Button.new()
+		capture_button.text = "Set %s from Current" % side
+		capture_button.pressed.connect(set_comparison_snapshot.bind(side))
+		slot_row.add_child(capture_button)
+		var saved_button := Button.new()
+		saved_button.text = "Set %s from Saved" % side
+		saved_button.pressed.connect(func() -> void: set_comparison_from_saved(side, _selected_library_profile_id()))
+		slot_row.add_child(saved_button)
+		var adopt_button := Button.new()
+		adopt_button.text = "Use %s as Current" % side
+		adopt_button.pressed.connect(adopt_comparison.bind(side))
+		slot_row.add_child(adopt_button)
 
 	_slot_state_label = Label.new()
 	_slot_state_label.name = "DesignerSlotState"
@@ -648,7 +719,7 @@ func _build_surface() -> void:
 	built_in_actions.add_theme_constant_override("separation", 5)
 	_built_in_root.add_child(built_in_actions)
 	for built_in_action in [
-		["Apply to B", "Load the selected read-only style into detached working B without changing A", _apply_built_in_from_ui],
+		["Apply Style…", "Load the selected read-only style into detached current design without changing A", _apply_built_in_from_ui],
 		["Copy to User Library", "Save the selected read-only style as a new editable user profile", _copy_built_in_from_ui],
 	]:
 		var built_in_button := Button.new()
@@ -664,7 +735,7 @@ func _build_surface() -> void:
 	_full_root.add_child(library_header)
 	_library_toggle_button = Button.new()
 	_library_toggle_button.name = "DesignerProfileLibraryToggle"
-	_library_toggle_button.text = "PROFILE LIBRARY ▸"
+	_library_toggle_button.text = "SAVED DESIGNS ▸"
 	_library_toggle_button.tooltip_text = "Manage explicitly saved presentation profiles"
 	_library_toggle_button.pressed.connect(func() -> void: set_library_expanded(not _library_expanded))
 	library_header.add_child(_library_toggle_button)
@@ -691,14 +762,14 @@ func _build_surface() -> void:
 	name_row.add_child(_profile_name_input)
 	var save_as_button := Button.new()
 	save_as_button.name = "DesignerProfileSaveAs"
-	save_as_button.text = "Save As"
-	save_as_button.tooltip_text = "Explicitly persist detached working B as a new named profile"
+	save_as_button.text = "Save As…"
+	save_as_button.tooltip_text = "Explicitly persist detached current design as a new named profile"
 	save_as_button.pressed.connect(_save_as_from_ui)
 	name_row.add_child(save_as_button)
 	_save_profile_button = Button.new()
 	_save_profile_button.name = "DesignerProfileSave"
-	_save_profile_button.text = "Save Profile"
-	_save_profile_button.tooltip_text = "Explicitly overwrite the loaded/saved profile with working B"
+	_save_profile_button.text = "Save"
+	_save_profile_button.tooltip_text = "Explicitly overwrite the loaded/saved profile with current design"
 	_save_profile_button.pressed.connect(_request_save_from_ui)
 	name_row.add_child(_save_profile_button)
 
@@ -716,7 +787,7 @@ func _build_surface() -> void:
 	lifecycle_grid.columns = 4
 	_library_root.add_child(lifecycle_grid)
 	for action in [
-		["Load", "Load selected profile into detached B without changing A", _load_selected_from_ui],
+		["Load", "Load selected profile into current design without changing A", _load_selected_from_ui],
 		["Duplicate", "Create an independent copy of the selected profile", _duplicate_selected_from_ui],
 		["Rename", "Rename the selected profile without applying it", _rename_selected_from_ui],
 		["Delete", "Delete the selected stored profile after confirmation", _request_delete_from_ui],
@@ -751,13 +822,13 @@ func _build_surface() -> void:
 	reset_row.add_theme_constant_override("separation", 5)
 	_full_root.add_child(reset_row)
 	var reset_b := Button.new()
-	reset_b.text = "Reset B to Opened"
-	reset_b.tooltip_text = "Restore every B value to the profile captured when this Designer session opened"
+	reset_b.text = "Revert"
+	reset_b.tooltip_text = "Restore the complete saved/opening design baseline"
 	reset_b.pressed.connect(reset_working_to_opening)
 	reset_row.add_child(reset_b)
 	var factory_button := Button.new()
 	factory_button.text = "Factory Defaults"
-	factory_button.tooltip_text = "Replace B with registry defaults without saving them"
+	factory_button.tooltip_text = "Replace current design with registry defaults without saving them"
 	factory_button.pressed.connect(reset_working_to_factory_defaults)
 	reset_row.add_child(factory_button)
 
@@ -765,14 +836,9 @@ func _build_surface() -> void:
 	finish_row.add_theme_constant_override("separation", 5)
 	_full_root.add_child(finish_row)
 	var keep_button := Button.new()
-	keep_button.text = "Keep B & Hide"
+	keep_button.text = "Keep & Hide"
 	keep_button.pressed.connect(keep_working_and_hide)
 	finish_row.add_child(keep_button)
-	var revert_button := Button.new()
-	revert_button.text = "Revert & Hide"
-	revert_button.tooltip_text = "Restore the opening profile, discard B edits, and hide"
-	revert_button.pressed.connect(revert_and_hide)
-	finish_row.add_child(revert_button)
 
 	_compact_root = HBoxContainer.new()
 	_compact_root.name = "DesignerCompact"
@@ -783,19 +849,9 @@ func _build_surface() -> void:
 	_compact_state_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_compact_state_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_compact_root.add_child(_compact_state_label)
-	_compact_reference_button = Button.new()
-	_compact_reference_button.text = "A"
-	_compact_reference_button.tooltip_text = "Show immutable reference A"
-	_compact_reference_button.pressed.connect(show_slot.bind(SLOT_REFERENCE))
-	_compact_root.add_child(_compact_reference_button)
-	_compact_working_button = Button.new()
-	_compact_working_button.text = "B"
-	_compact_working_button.tooltip_text = "Show detached working B"
-	_compact_working_button.pressed.connect(show_slot.bind(SLOT_WORKING))
-	_compact_root.add_child(_compact_working_button)
 	var compact_toggle := Button.new()
 	compact_toggle.text = "A ↔ B"
-	compact_toggle.tooltip_text = "Toggle between reference A and working B"
+	compact_toggle.tooltip_text = "Toggle frozen comparison snapshots"
 	compact_toggle.pressed.connect(toggle_slots)
 	_compact_root.add_child(compact_toggle)
 	var expand_button := Button.new()
@@ -809,12 +865,12 @@ func _build_surface() -> void:
 
 	_overwrite_confirmation = ConfirmationDialog.new()
 	_overwrite_confirmation.title = "Save Presentation Profile"
-	_overwrite_confirmation.dialog_text = "Replace the saved profile with detached working B?"
+	_overwrite_confirmation.dialog_text = "Replace the saved profile with detached current design?"
 	_overwrite_confirmation.confirmed.connect(save_working)
 	add_child(_overwrite_confirmation)
 	_delete_confirmation = ConfirmationDialog.new()
 	_delete_confirmation.title = "Delete Presentation Profile"
-	_delete_confirmation.dialog_text = "Delete the selected saved profile? Detached working B will remain active."
+	_delete_confirmation.dialog_text = "Delete the selected saved profile? Detached current design will remain active."
 	_delete_confirmation.confirmed.connect(_delete_selected_after_confirmation)
 	add_child(_delete_confirmation)
 	_import_dialog = FileDialog.new()
@@ -841,9 +897,9 @@ func _save_as_from_ui() -> void:
 
 func _request_save_from_ui() -> void:
 	if _loaded_profile_id.is_empty():
-		_refresh_all_text("Use Save As before saving this working B.")
+		_refresh_all_text("Use Save As before saving this current design.")
 		return
-	_overwrite_confirmation.dialog_text = "Replace '%s' with detached working B?" % _loaded_profile_name
+	_overwrite_confirmation.dialog_text = "Replace '%s' with detached current design?" % _loaded_profile_name
 	_overwrite_confirmation.popup_centered()
 
 
@@ -947,7 +1003,7 @@ func _refresh_built_in_description() -> void:
 		return
 	var record := _selected_built_in_record()
 	if record.is_empty():
-		_built_in_description_label.text = "Select a built-in style. Built-in styles are read-only: apply one to B, then use Save As to keep an editable copy."
+		_built_in_description_label.text = "Select a built-in style. Built-in styles are read-only: apply one to current design, then use Save As to keep an editable copy."
 		return
 	_built_in_description_label.text = "%s %s Read-only built-in; Save As keeps an editable copy." % [
 		str(record.get("short_description", "")),
@@ -1000,7 +1056,7 @@ func _set_library_disclosure(expanded: bool) -> void:
 	if _library_root != null:
 		_library_root.visible = expanded
 	if _library_toggle_button != null:
-		_library_toggle_button.text = "PROFILE LIBRARY %s" % ("▾" if expanded else "▸")
+		_library_toggle_button.text = "SAVED DESIGNS %s" % ("▾" if expanded else "▸")
 
 
 func _refresh_library_list(preferred_profile_id: String = "") -> void:
@@ -1035,19 +1091,24 @@ func _selected_library_profile_id() -> String:
 func _set_loaded_profile(record: Dictionary, profile) -> void:
 	_loaded_profile_id = str(record.get("profile_id", ""))
 	_loaded_profile_name = str(record.get("display_name", ""))
-	_applied_style_id = ""
-	_applied_style_name = ""
+	_sync_style_identity()
 	_saved_profile_baseline = profile.detached_copy() if _valid_profile(profile) else null
 
 
 func _set_applied_style(record: Dictionary, profile) -> void:
-	# A built-in style is never a save target, so the loaded user-profile
-	# identity is cleared and explicit Save stays disabled.
-	_loaded_profile_id = ""
-	_loaded_profile_name = ""
 	_applied_style_id = str(record.get("style_id", ""))
 	_applied_style_name = str(record.get("display_name", ""))
-	_saved_profile_baseline = profile.detached_copy() if _valid_profile(profile) else null
+	var metadata: Dictionary = _working_profile.design_state()
+	metadata["base_style_id"] = _applied_style_id
+	metadata["base_style_name"] = _applied_style_name
+	metadata["base_style_values"] = profile.values()
+	_working_profile = _working_profile.with_design_state(metadata)
+
+
+func _sync_style_identity() -> void:
+	var metadata: Dictionary = _working_profile.design_state()
+	_applied_style_id = str(metadata.get("base_style_id", ""))
+	_applied_style_name = str(metadata.get("base_style_name", ""))
 
 
 func _clear_loaded_profile() -> void:
@@ -1072,6 +1133,7 @@ func _rebuild_registry_controls() -> void:
 	if _groups_box == null:
 		return
 	for child in _groups_box.get_children():
+		_groups_box.remove_child(child)
 		child.queue_free()
 	_controls_by_id.clear()
 	_owner_order.clear()
@@ -1088,8 +1150,31 @@ func _rebuild_registry_controls() -> void:
 			_owner_order.append(owner)
 		specs_by_owner[owner].append(spec)
 		_applicable_ids.append(spec.id())
+	var advanced_specs: Array = []
 	for owner in _owner_order:
-		_build_owner_group(str(owner), specs_by_owner.get(owner, []))
+		var ordinary_specs: Array = []
+		for spec in specs_by_owner.get(owner, []):
+			if spec.data.get("ui_contexts", []).has("designer_advanced"):
+				advanced_specs.append(spec)
+			else:
+				ordinary_specs.append(spec)
+		_build_owner_group(str(owner), ordinary_specs)
+	var advanced := VBoxContainer.new()
+	advanced.name = "DesignerAdvancedSettings"
+	_groups_box.add_child(advanced)
+	var toggle := Button.new()
+	toggle.text = "Advanced Settings ▸"
+	toggle.toggle_mode = true
+	advanced.add_child(toggle)
+	var advanced_rows := VBoxContainer.new()
+	advanced_rows.name = "AdvancedParameters"
+	advanced_rows.visible = false
+	advanced.add_child(advanced_rows)
+	toggle.toggled.connect(func(expanded: bool) -> void:
+		advanced_rows.visible = expanded
+		toggle.text = "Advanced Settings ▾" if expanded else "Advanced Settings ▸")
+	for spec in advanced_specs:
+		_build_parameter_row(advanced_rows, spec)
 	_sync_controls_from_working()
 	_refresh_all_text("Editing %d live-applicable parameters for %s." % [_applicable_ids.size(), _runtime_context.replace("_", " ").to_upper()])
 
@@ -1223,7 +1308,6 @@ func _replace_working_values(overrides: Dictionary, message: String) -> bool:
 	if not _valid_profile(next_profile):
 		return false
 	_working_profile = next_profile.detached_copy()
-	_displayed_slot = SLOT_WORKING
 	_sync_controls_from_working()
 	_emit_preview(_working_profile, message)
 	return true
@@ -1256,17 +1340,20 @@ func _sync_controls_from_working() -> void:
 	_syncing_controls = false
 
 
-func _emit_preview(profile, message: String) -> void:
+func _emit_preview(profile, message: String, current: bool = true, restore_geometry: bool = false) -> void:
+	if current:
+		restore_geometry = restore_geometry or comparison.shown() != CURRENT
+		if comparison_edit_requested.is_valid():
+			comparison_edit_requested.call()
+		_sync_style_identity()
+		comparison.show_current()
 	_refresh_all_text(message)
-	profile_preview_requested.emit(profile.detached_copy())
+	profile_preview_requested.emit(profile.detached_copy(), restore_geometry)
 
 
 func _profile_for_slot(slot: String):
-	if slot == SLOT_REFERENCE:
-		return _reference_profile
-	if slot == SLOT_WORKING:
-		return _working_profile
-	return null
+	var snapshot: Dictionary = comparison.snapshot_for(slot)
+	return PresentationProfileScript.from_snapshot(_registry, snapshot) if not snapshot.is_empty() else null
 
 
 func _set_state(next_state: String) -> void:
@@ -1304,7 +1391,6 @@ func _release_designer_focus() -> void:
 
 
 func _refresh_all_text(message: String) -> void:
-	var has_a := _reference_profile != null
 	var dirty_marker := " *" if working_profile_dirty() else ""
 	var saved_state := "Not saved"
 	# The compact strip has room for roughly one short phrase, so it keeps the
@@ -1316,27 +1402,17 @@ func _refresh_all_text(message: String) -> void:
 	elif not _applied_style_id.is_empty():
 		saved_state = "Built-in: \"%s\" (read-only)%s" % [_applied_style_name, dirty_marker]
 		compact_saved_state = "%s%s" % [_applied_style_name, dirty_marker]
-	var slot_description := "Showing %s · %s · %s" % [
-		_displayed_slot,
-		"immutable reference" if _displayed_slot == SLOT_REFERENCE else "detached working profile",
-		saved_state,
-	]
+	var slot_description := "CURRENT DESIGN · %s · Preview: %s" % [saved_state, comparison.shown()]
 	if _slot_state_label != null:
 		_slot_state_label.text = slot_description
 	if _compact_state_label != null:
-		_compact_state_label.text = "%s shown · %s" % [_displayed_slot, compact_saved_state]
+		_compact_state_label.text = "%s shown · %s" % [comparison.shown(), compact_saved_state]
 	if _library_state_label != null:
 		_library_state_label.text = saved_state
 	if _status_label != null:
 		_status_label.text = message
 	if _save_profile_button != null:
 		_save_profile_button.disabled = _loaded_profile_id.is_empty() or _working_profile == null
-	for button in [_reference_button, _compact_reference_button]:
-		if button != null:
-			button.disabled = not has_a
-	for button in [_working_button, _compact_working_button]:
-		if button != null:
-			button.disabled = _working_profile == null
 
 
 func _valid_profile(profile) -> bool:

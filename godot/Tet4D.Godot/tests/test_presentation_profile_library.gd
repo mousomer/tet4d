@@ -455,6 +455,7 @@ func _test_designer_boundary(registry) -> Array:
 	var write_before := int(library.deterministic_snapshot().get("write_count", -1))
 	designer.set_parameter_value("ghost.opacity", 1.25)
 	designer.show_slot(DesignerScript.SLOT_REFERENCE)
+	designer.set_comparison_snapshot("B")
 	designer.show_slot(DesignerScript.SLOT_WORKING)
 	designer.collapse_to_compact()
 	designer.expand_to_full()
@@ -471,6 +472,7 @@ func _test_designer_boundary(registry) -> Array:
 	var saved_id := str(saved.get("record", {}).get("profile_id", ""))
 	if library.load_profile(saved_id).get("profile").values() != working_at_save:
 		failures.append("Save As must persist working B even while immutable A is displayed")
+	designer.set_comparison_snapshot("B")
 	designer.show_slot(DesignerScript.SLOT_WORKING)
 	var stored_before_edit: Dictionary = library.load_profile(saved_id).get("profile").values()
 	designer.set_parameter_value("ghost.opacity", 0.5)
@@ -478,6 +480,7 @@ func _test_designer_boundary(registry) -> Array:
 		failures.append("editing loaded B should mark dirty without mutating its stored artifact")
 	var writes_after_edit := int(library.deterministic_snapshot().get("write_count", -1))
 	designer.show_slot(DesignerScript.SLOT_REFERENCE)
+	designer.set_comparison_snapshot("B")
 	designer.show_slot(DesignerScript.SLOT_WORKING)
 	if int(library.deterministic_snapshot().get("write_count", -1)) != writes_after_edit or not designer.working_profile_dirty():
 		failures.append("A/B display switching should neither save nor affect semantic dirty state")
@@ -488,11 +491,11 @@ func _test_designer_boundary(registry) -> Array:
 	var comparison_saved: Dictionary = library.save_new("Comparison Profile", comparison)
 	var comparison_id := str(comparison_saved.get("record", {}).get("profile_id", ""))
 	var previews: Array = []
-	designer.profile_preview_requested.connect(func(profile) -> void: previews.append(profile.snapshot()))
+	designer.profile_preview_requested.connect(func(profile, _restore_geometry: bool) -> void: previews.append(profile.snapshot()))
 	var reference_on_load: Dictionary = designer.reference_profile().snapshot()
 	if not bool(designer.load_saved_profile(comparison_id).get("ok", false)):
 		failures.append("Designer Load should replace working B from a valid artifact")
-	elif designer.working_profile().values() != comparison.values() or designer.deterministic_snapshot().get("displayed_slot") != DesignerScript.SLOT_WORKING:
+	elif designer.working_profile().values() != comparison.values() or designer.deterministic_snapshot().get("displayed_slot") != DesignerScript.CURRENT:
 		failures.append("Load should create/display an exact detached working B")
 	if designer.reference_profile().snapshot() != reference_on_load or designer.reference_profile().snapshot() != reference_before:
 		failures.append("loading B must not recapture or mutate immutable A")
@@ -515,7 +518,7 @@ func _test_designer_boundary(registry) -> Array:
 		designer.set_runtime_context(mode)
 		designer.load_saved_profile(saved_id)
 		var snapshot: Dictionary = designer.deterministic_snapshot()
-		var expected_count := 19 if mode == "live_2d" else 21 if mode == "live_3d" else 23
+		var expected_count := 22 if mode == "live_2d" else 24 if mode == "live_3d" else 26
 		if snapshot.get("applicable_ids", []).size() != expected_count or designer.working_profile().values() != library.load_profile(saved_id).get("profile").values():
 			failures.append("%s load should preserve the full payload while exposure remains registry-applicable" % mode)
 	designer.set_library_expanded(true)
@@ -551,7 +554,7 @@ func _test_designer_failed_save(registry) -> Array:
 	var snapshot: Dictionary = designer.deterministic_snapshot()
 	if bool(result.get("ok", false)) or not str(snapshot.get("loaded_profile_id", "")).is_empty():
 		failures.append("failed Designer Save As must not establish loaded/saved profile state")
-	if designer.working_profile().snapshot() != working_before or snapshot.get("displayed_slot") != DesignerScript.SLOT_WORKING:
+	if designer.working_profile().snapshot() != working_before or snapshot.get("displayed_slot") != DesignerScript.CURRENT:
 		failures.append("failed Designer Save As must preserve detached working B and its displayed state")
 	var library_snapshot: Dictionary = snapshot.get("profile_library", {})
 	if not library_snapshot.get("profiles", []).is_empty() or int(library_snapshot.get("write_count", -1)) != 0:

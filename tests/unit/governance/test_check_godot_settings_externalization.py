@@ -110,7 +110,7 @@ def test_gate_allows_declared_non_setting_role_token(tmp_path: Path) -> None:
     root = _contract_root(tmp_path)
     consumer = root / "godot/Tet4D.Godot/scripts/ui/settings/contract_test_consumer.gd"
     consumer.write_text(
-        'const PRESENTATION_ROLE := "board.grid"\n',
+        'const PRESENTATION_ROLE := "board.enclosure"\n',
         encoding="utf-8",
     )
 

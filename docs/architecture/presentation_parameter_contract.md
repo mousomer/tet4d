@@ -132,6 +132,9 @@ Allowed runtime applicability values are `shell`, `replay`, `live_2d`,
 | `camera.invert_y` | `CAMERA_PRESENTATION` | replay, live 3D, live 4D | neutral |
 | `diagnostics.show_layout_bounds` | `DIAGNOSTICS_PRESENTATION` | shell, replay | neutral |
 | `interface.show_onboarding` | `GUIDANCE_PRESENTATION` | all live modes | accessibility_composable |
+| `board.enclosure_opacity` | `BOARD_PRESENTATION` | all live modes / replay / preview | accessibility_composable |
+| `board.back_scaffold_opacity` | `BOARD_PRESENTATION` | all live modes / replay / preview | accessibility_composable |
+| `board.cell_volume_opacity` | `BOARD_PRESENTATION` | all live modes / replay / preview | accessibility_composable |
 | `board.grid_opacity` | `BOARD_PRESENTATION` | all live modes | accessibility_composable |
 | `board.boundary_opacity` | `BOARD_PRESENTATION` | replay, all live modes | accessibility_composable |
 | `active_cells.opacity` | `PIECE_PRESENTATION` | all live modes | accessibility_composable |
@@ -155,9 +158,12 @@ The existing parameters retain their accepted values. The new values are:
 
 | ID | Type and bounds | Canonical default | Meaning |
 | --- | --- | --- | --- |
-| `display.grid_mode` | enum `full`, `border`, `none` | `full` | Session-only lattice/boundary display, independent of style. |
-| `board.grid_opacity` | float, `0.05..0.90` | `0.31` | Normal internal/floor grid alpha before High Contrast minimum strengthening. |
-| `board.boundary_opacity` | float, `0.35..1.00` | `0.90` | Ordinary board/slice wireframe alpha. |
+| `display.grid_mode` | enum `full`, `border`, `none` | `border` | Session-only cumulative spatial scaffold, independent of style. |
+| `board.enclosure_opacity` | float, `0.005..0.40` | `0.16` | Shaded enclosure alpha before boundary multiplier. |
+| `board.back_scaffold_opacity` | float, `0.005..0.60` | `0.40` | Weak Border edge and Full boundary-face line alpha before bounded grid strength. |
+| `board.cell_volume_opacity` | float, `0.005..0.08` | `0.025` | Internal edge scaffold alpha (legacy persistence key retained). |
+| `board.grid_opacity` | float, `0.05..0.90` | `0.31` | Rear scaffold strength relative to its role opacity; ratio to the canonical default is bounded to `0.65..1.15`. |
+| `board.boundary_opacity` | float, `0.35..1.00` | `0.90` | Enclosure alpha multiplier; navigation frame stays independently styled. |
 | `active_cells.opacity` | float, `0.35..1.00` | `1.00` | Active-piece fill alpha; outlines remain independently legible. |
 | `ghost.opacity` | float multiplier, `0.25..1.50` | `1.00` | Multiplies the selected palette/theme's accepted Ghost fill baseline. |
 | `slice_set.spacing` | float multiplier, `0.60..1.60` | `1.00` | Multiplies the responsive 4D horizontal/vertical gutter only. It never changes slice-local geometry. |
@@ -304,10 +310,68 @@ slice-spacing, environment, UI-scale, and accessibility changes without a game
 restart. Agent-driven review is evidence, not independent human sign-off.
 
 Legacy schema-1 profile snapshots migrate boolean `display.grid_visible` to
-`full` for true and `border` for false; new snapshots use `display.grid_mode`.
+`full` for true and `none` for false; new snapshots use `display.grid_mode`.
 
 The registry's `legacy_setting_migrations` metadata declares each retired input
 key, its recognized replacement, and its single repository-relative migration
 consumer. The externalization checker validates that consumer stays inside the
 runtime script tree and still rejects the retired key in any other consumer.
 This does not add a runtime parameter or widen the set of current setting IDs.
+
+## Complete Designer state
+
+The optional `PresentationProfile.design_state` extension is owned by Godot
+presentation orchestration: validated cockpit panel rectangles and base-style
+provenance/values. It adds no registry parameter or gameplay meaning. Snapshot,
+detached copy and value overrides retain it; full restoration replaces it.
+`with_style_of` preserves this metadata and independent grid, window, UI scale,
+replay, guidance, diagnostics and camera preferences. Built-in appearance owns
+the remaining catalog appearance values, including HUD density. Designer records
+base-style identity after composition. The profile library persists complete
+snapshots without a parallel geometry store.
+
+
+## Spatial scaffold semantics (Stage 56H)
+
+`GridDisplayMode.roles()` centrally defines cumulative inclusion:
+NONE includes `board.enclosure` and `board.floor`; BORDER adds
+`board.grid_edge` and `board.grid_face`; FULL adds `board.grid_interior`.
+`GridDisplayMode.select_lines()` filters the one canonical lattice by those
+roles: None = no lattice (enclosure shading and floor only), Border = the 12
+outer box edges plus boundary-face lines, Full = the complete board lattice.
+Border shows face lines only on camera-relative rear faces; Full shows all.
+Border is the fresh-session default. Explicit saved grid symbols and legacy
+boolean migrations retain their values without a schema change.
+
+Godot presentation owns geometry and materials. Live, replay and Designer use
+one `GridRenderer`. Every rendered grid line is a maximal lattice line spanning
+a whole board axis; no line is a cell edge. Each slice batches edges,
+interior lines and each boundary face separately, so node count scales with
+slices and faces, never cells. In Border, the camera toggles whole face
+batches (front and edge-on faces hide; edges always show); it never changes
+the built lines. `GridRenderer.grid_topology()` reports built board-coordinate
+lines per slice (`visible_only` reports what the camera shows); style may
+change only colour, alpha, width and depth behaviour, never that topology. Edge and face lines use the
+`board.back_scaffold_opacity` material; interior lines use
+`board.cell_volume_opacity`. The 2D slab uses the same generator.
+
+Scaffold tests depth, never writes depth, and draws before pieces/Ghost.
+Environment priority -100 precedes enclosure -30, surface lattice -20 and
+interior -10.
+Pieces and navigation cues remain stronger than enclosure and weak scaffold.
+High Contrast composes after role opacity with bounded role-specific minimums
+(enclosure 0.18, surface lattice 0.42, interior 0.04), preserving that
+hierarchy.
+
+The three role opacity sliders belong to Designer → Advanced Settings only.
+Their stored IDs, ranges, values and persistence remain compatible, including
+`board.cell_volume_opacity` as the legacy key for internal scaffold opacity.
+Styles supply defaults; named Designer save/load round-trips all values.
+Editing one changes only its corresponding role material, never grid, style,
+gameplay, panel geometry, or canonical segment geometry.
+
+The renderer persists across gameplay snapshots. Its key includes dimensions,
+anchors/basis, labels, mode and material inputs. Camera and active-slice changes
+toggle cached faces/navigation without rebuilding geometry. Piece state,
+score, topology and RNG never enter the key. Refreshes preserve interpolated
+view-settle pose. Tron animation remains independent of GridMode.
