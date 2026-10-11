@@ -51,10 +51,11 @@ opacity, colour, scale, camera and depth tuning belong to later stages.
   and `/private/tmp/tet4d-stage57-secret-scan.log`.
 - Deferred from repository review: replacing the currently shown Designer A/B
   snapshot updates its stored value without refreshing the displayed preview.
-  Keep this outside Stage 57 and add a shown-slot replacement regression when fixed.
-- Documentation follow-up: `live_presentation_designer.md` still describes the
-  older BORDER/NONE topology; align that paragraph with the accepted cumulative
-  scaffold contract without changing renderer behavior.
+  Keep this in backlog unless Stage 58 touches that code path; add a shown-slot
+  replacement regression when fixed.
+- [x] P3 documentation mismatch: `live_presentation_designer.md` now follows the
+  accepted cumulative scaffold contract and shared maximal-line generator.
+  Renderer behavior is unchanged.
 
 
 ### Godot editor diagnostic follow-up

@@ -195,9 +195,15 @@ of profiles, style, grid mode, exact basis, view orientation, density, and nativ
 gameplay state. Geometry edits never apply profiles or dispatch native commands.
 
 Grid is a session presentation enum (`full`, `border`, `none`), cycling in that
-order. FULL draws internal and floor lattice plus ordinary/active boundaries;
-BORDER draws boundaries only; NONE draws neither lattice nor boundaries. Pieces,
-Ghost, floor surface, and orientation labels retain their existing roles.
+order. Its cumulative roles follow the
+[spatial scaffold contract](presentation_parameter_contract.md#spatial-scaffold-semantics-stage-56h):
+NONE retains enclosure shading and the floor, with no lattice lines; BORDER
+adds the outer box edges and boundary-face lines on camera-relative rear faces;
+FULL adds the interior lines and shows all boundary faces, yielding the complete
+board lattice. Lines span whole board axes rather than individual cell edges.
+The 2D slab and each 3D/4D slice share this generator and topology rule. Styles
+affect appearance, not topology. Pieces, Ghost and orientation labels retain
+their existing roles.
 Grid cycling changes only `display.grid_mode` on CURRENT DESIGN and returns
 preview to current. Style composition preserves grid; loading, reverting and
 previewing complete designs restores their saved grid. FULL/BORDER/NONE renderer
