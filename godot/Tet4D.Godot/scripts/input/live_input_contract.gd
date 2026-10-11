@@ -165,25 +165,11 @@ static func control_hint_groups(mode: String, basis_snapshot: Dictionary = {}, c
 			return []
 
 
-# The permanent cockpit strip selects the movement and rotation groups through
+# The permanent cockpit strip selects gameplay and session groups through
 # metadata on the existing authoritative help groups. It therefore consumes
 # the same action identities, applicability, plane labels, and display bindings
 # rather than maintaining a second inventory.
 static func piece_control_groups(mode: String, basis_snapshot: Dictionary = {}, control_frame: Dictionary = {}) -> Array:
-	var result: Array = []
-	var groups := control_hint_groups(mode, basis_snapshot, control_frame)
-	for expected_role in ["translate", "drop", "rotate"]:
-		for source_group in groups:
-			if str(source_group.get("cockpit_role", "")) == expected_role:
-				result.append(source_group.duplicate(true))
-	return result
-
-
-# The active-play legend is the same role selection, widened to the hold and
-# session keys a player reaches for mid-game. The deck variant leaves those to
-# visible buttons, but a button does not teach its key, so a player who forgot
-# R for restart had nowhere to look.
-static func play_legend_groups(mode: String, basis_snapshot: Dictionary = {}, control_frame: Dictionary = {}) -> Array:
 	var result: Array = []
 	var groups := control_hint_groups(mode, basis_snapshot, control_frame)
 	for expected_role in ["translate", "drop", "rotate", "hold", "session"]:
@@ -191,6 +177,11 @@ static func play_legend_groups(mode: String, basis_snapshot: Dictionary = {}, co
 			if str(source_group.get("cockpit_role", "")) == expected_role:
 				result.append(source_group.duplicate(true))
 	return result
+
+
+# Rail, wide and compact deck layouts share one semantic inventory.
+static func play_legend_groups(mode: String, basis_snapshot: Dictionary = {}, control_frame: Dictionary = {}) -> Array:
+	return piece_control_groups(mode, basis_snapshot, control_frame)
 
 
 # Passive cockpit consumers select role metadata, never prose labels or a
@@ -301,7 +292,7 @@ static func _live_4d_groups(basis_snapshot: Dictionary = {}, control_frame: Dict
 		{"group": "Piece rotation", "cockpit_role": "rotate", "note": "Left: CCW · Right: CW" if legacy else ("Left: CCW · Right: CW · Planes follow the current view." if rotation_relative else "Left: CCW · Right: CW · Canonical XY/XZ/YZ/XW/YW/ZW planes."), "items": _rotation_hint_items("piece")},
 		{"group": "Exact camera rotation", "cockpit_role": "view_exact", "note": "Exact presentation basis; Y stays down", "items": _exact_camera_rotation_hint_items()},
 		{"group": "Slice orientation", "cockpit_role": "view_orient", "items": [[_pair("live_4d_camera_pitch_up", "live_4d_camera_pitch_down", " / "), "Pitch up / down", {"operation": "Pitch"}], [_pair("live_4d_camera_yaw_left", "live_4d_camera_yaw_right", " / "), "Yaw left / right", {"operation": "Yaw"}]]},
-		{"group": "Framing", "cockpit_role": "view_framing", "items": [["%s / = / +" % _display_key("live_4d_camera_zoom_out"), "Zoom out / in", {"operation": "Zoom"}], ["Double-click", "Fit View (framing only)", {"operation": "Fit"}], [_display_key("reset"), "Reset View (basis, slice orientation, framing)", {"operation": "Reset"}]]},
+		{"group": "Framing", "cockpit_role": "view_framing", "items": [["%s / %s" % [_all_keys("live_4d_camera_zoom_out", " / "), _all_keys("live_4d_camera_zoom_in", " / ")], "Zoom out / in", {"operation": "Zoom"}], ["Double-click", "Fit View (framing only)", {"operation": "Fit"}], [_display_key("reset"), "Reset View (basis, slice orientation, framing)", {"operation": "Reset"}]]},
 		{"group": "Pointer", "cockpit_role": "view_pointer", "items": live_4d_pointer_helper_items()},
 		{"group": "Piece management", "cockpit_role": "hold", "items": [[_display_key("live_hold"), "Hold"]]},
 		{"group": "Session", "cockpit_role": "session", "items": [[_display_key("live_4d_pause"), "Pause"], [_display_key("live_4d_reset"), "Restart Game"]]},
@@ -340,15 +331,54 @@ static func _pair(first_action: String, second_action: String, separator: String
 
 static func _display_key(action_name: String) -> String:
 	var spec: Dictionary = ACTION_SPECS.get(action_name, {})
-	return _key_label(int(spec.get("display_key", KEY_NONE)))
+	var events := binding_events(action_name)
+	for event in events:
+		if event is InputEventKey and event.keycode == int(spec.get("display_key", KEY_NONE)) and not event.get_modifiers_mask():
+			return _binding_label(event)
+	return _binding_label(events[0]) if not events.is_empty() else "Unbound"
 
 
-static func _all_keys(action_name: String) -> String:
-	var spec: Dictionary = ACTION_SPECS.get(action_name, {})
+static func _all_keys(action_name: String, separator: String = "/") -> String:
 	var labels: Array[String] = []
-	for keycode in spec.get("keys", []):
-		labels.append(_key_label(int(keycode)))
-	return "/".join(labels)
+	for event in binding_events(action_name):
+		var label := _binding_label(event)
+		if not labels.has(label):
+			labels.append(label)
+	return separator.join(labels) if not labels.is_empty() else "Unbound"
+
+
+# Defaults seed absent actions. Once registered, even an empty event list is
+# authoritative: clearing/rebinding must never resurrect a printed default.
+static func binding_events(action_name: String) -> Array:
+	if InputMap.has_action(action_name):
+		return InputMap.action_get_events(action_name)
+	var events: Array = []
+	for keycode in ACTION_SPECS.get(action_name, {}).get("keys", []):
+		var event := InputEventKey.new()
+		event.keycode = int(keycode)
+		events.append(event)
+	return events
+
+
+static func binding_signature() -> String:
+	var bindings: Array = []
+	for action_name in ACTION_SPECS:
+		bindings.append([action_name, binding_events(action_name).map(func(event): return event.as_text())])
+	return JSON.stringify(bindings)
+
+
+static func _binding_label(event: InputEvent) -> String:
+	if not event is InputEventKey:
+		return event.as_text()
+	var key := event as InputEventKey
+	var label := _key_label(key.keycode if key.keycode != KEY_NONE else key.physical_keycode)
+	var modifiers: Array[String] = []
+	if key.ctrl_pressed: modifiers.append("Ctrl")
+	if key.alt_pressed: modifiers.append("Alt")
+	if key.shift_pressed: modifiers.append("Shift")
+	if key.meta_pressed: modifiers.append("Meta")
+	modifiers.append(label)
+	return "+".join(modifiers)
 
 
 static func _key_label(keycode: int) -> String:
@@ -375,7 +405,9 @@ static func _key_label(keycode: int) -> String:
 			return "."
 		KEY_EQUAL:
 			return "="
-		KEY_MINUS:
+		KEY_PLUS, KEY_KP_ADD:
+			return "+"
+		KEY_MINUS, KEY_KP_SUBTRACT:
 			return "-"
 		KEY_SEMICOLON:
 			return ";"

@@ -71,6 +71,7 @@ const TEST_SCRIPTS := [
 	"res://tests/test_live_soft_drop_binding.gd",
 	"res://tests/test_ordinary_live_entry.gd",
 	"res://tests/test_fast_session_flow.gd",
+	"res://tests/test_gameplay_ergonomics.gd",
 	"res://tests/test_render_region_fit_lifecycle.gd",
 	"res://tests/test_designer_panel_geometry.gd",
 	"res://tests/test_style_grid_mode_composition.gd",

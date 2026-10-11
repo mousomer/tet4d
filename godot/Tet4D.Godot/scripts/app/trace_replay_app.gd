@@ -364,7 +364,7 @@ func _handle_live_2d_input(event: InputEvent) -> bool:
 	if _event_action_pressed(event, ["live_pause", "live_2d_pause"]):
 		_toggle_live_2d_pause()
 		return true
-	if _event_action_pressed(event, ["live_reset", "replay_reset"]):
+	if _event_action_pressed_once(event, ["live_reset"]):
 		_reset_live_2d()
 		return true
 	if event.is_action_pressed("replay_fit_view"):
@@ -412,7 +412,7 @@ func _handle_live_3d_input(event: InputEvent) -> bool:
 	if _event_action_pressed(event, ["live_pause", "live_3d_pause"]):
 		_toggle_live_3d_pause()
 		return true
-	if _event_action_pressed(event, ["live_3d_reset"]):
+	if _event_action_pressed_once(event, ["live_3d_reset"]):
 		_reset_live_3d()
 		return true
 	if _event_action_pressed_once(event, ["reset"]):
@@ -479,7 +479,7 @@ func _handle_live_4d_input(event: InputEvent) -> bool:
 	if _event_action_pressed(event, ["live_pause", "live_4d_pause"]):
 		_toggle_live_4d_pause()
 		return true
-	if _event_action_pressed(event, ["live_4d_reset"]):
+	if _event_action_pressed_once(event, ["live_4d_reset"]):
 		_reset_live_4d()
 		return true
 	if _event_is_escape(event):
@@ -1529,7 +1529,9 @@ func _start_ordinary_live_mode(mode_name: String, preserve_current_view: bool = 
 
 
 func _start_new_random_game() -> void:
-	if _active_live_setup.is_empty() or str(_active_live_setup.get("random_mode", "")) != "true_random":
+	# Legacy internal name; the action now starts another game for either seed
+	# policy. Checked native configuration owns seed selection from frozen setup.
+	if _active_live_setup.is_empty():
 		return
 	_start_configured_live_game(_active_live_setup.duplicate(true), true)
 
@@ -2634,6 +2636,8 @@ func _ensure_input_map() -> void:
 	var live_action_specs := LiveInputContractScript.action_specs()
 	_physical_fallback_bound = PhysicalKeyFallbackScript.bound_keycodes(live_action_specs)
 	for action_name in live_action_specs:
+		if InputMap.has_action(action_name):
+			continue
 		var spec: Dictionary = live_action_specs.get(action_name, {})
 		for forbidden_key in spec.get("forbidden_keys", []):
 			_remove_key_action(str(action_name), int(forbidden_key) as Key)

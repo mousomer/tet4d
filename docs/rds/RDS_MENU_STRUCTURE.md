@@ -360,6 +360,17 @@ disabled control emits no activation.
    rows with a glyph lighting the two on-screen directions they mix (Spin,
    Turn, Tip, Side↔W, Up↔W, Depth↔W; plane names remain as a rail tag). A row
    flashes when its key is used. Wording never changes with the view.
+   Stage 57: the active-play reference resolves each semantic action through
+   the current runtime InputMap. Contract keys seed missing actions only;
+   rebinding or clearing an action must update the visible reference without
+   reopening Settings or restarting gameplay. Compact mode retains movement,
+   rotation, drop, Hold, Pause and Restart; 4D-only actions stay out of 2D.
+   Restart remains directly available by its configured action and gameplay
+   button from playing, paused and game-over states, returning directly to play
+   with the same native session setup and effective seed. New Game is also
+   directly available for every mode: fixed-seed setup reproduces its seed;
+   true-random setup obtains a fresh native effective seed. Both preserve the
+   detached presentation design and bypass menus. Change Setup remains explicit.
 2. Maintain text/background contrast aligned with WCAG minimum guidance.
 3. Avoid crowded line wrapping in options; keep one option per row.
 4. Titles should use capitalized display text rather than stacked

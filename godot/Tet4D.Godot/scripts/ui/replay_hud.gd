@@ -201,6 +201,7 @@ var _geometry_diagnostics_enabled := false
 var _keyboard_hints_visible := true
 var _accessibility_policy = AccessibilityPolicyScript.new()
 var _hud_density := "standard"
+var _live_binding_signature := ""
 var _grid_mode := GridDisplayMode.Mode.BORDER
 var _ui_scale_factor := 1.0
 var _camera_sensitivity_factor := 1.0
@@ -418,6 +419,17 @@ func _process(delta: float) -> void:
 		return
 	_window_mode_poll_accumulator = 0.0
 	_sync_observed_window_mode()
+	_refresh_configured_control_reference()
+
+
+func _refresh_configured_control_reference() -> void:
+	if _active_live_mode.is_empty():
+		return
+	var signature := LiveInputContractScript.binding_signature()
+	if signature == _live_binding_signature:
+		return
+	_live_binding_signature = signature
+	_configure_live_cockpit_mode(_active_live_mode)
 
 
 func _notification(what: int) -> void:
@@ -516,7 +528,8 @@ func set_snapshot(snapshot: Dictionary, diagnostics_visible: bool) -> void:
 			_update_live_status_strip(mode_label, state_label, reason, trace_type)
 			_update_live_gameplay_summary(snapshot, mode_label, paused)
 			if _new_random_game_button != null:
-				_new_random_game_button.visible = str(snapshot.get("random_mode", "")) == GameSetupSpecScript.RANDOM_MODE_TRUE_RANDOM
+				_new_random_game_button.visible = true
+				_new_random_game_button.text = "New Random Game" if str(snapshot.get("random_mode", "")) == GameSetupSpecScript.RANDOM_MODE_TRUE_RANDOM else "New Game"
 			_trace_integrity_label.text = _format_live_inspector_text(
 				mode_label,
 				state_label,
@@ -576,7 +589,7 @@ func set_live_2d_mode(
 	if _mode_hint_strip != null:
 		_mode_hint_strip.visible = false
 	if _replay_note != null:
-		_replay_note.text = "GAME OVER · %s. R restarts Live 2D." % _game_over_reason_label(game_over_reason) if game_over else "Play 2D. Camera controls change the view; movement controls move the piece. P pauses; Esc opens the Main Menu."
+		_replay_note.text = "GAME OVER · %s. %s restarts Live 2D." % [_game_over_reason_label(game_over_reason), LiveInputContractScript.display_key("live_reset")] if game_over else "Play 2D. Camera controls change the view; movement controls move the piece. %s pauses; Esc opens the Main Menu." % LiveInputContractScript.display_key("live_pause")
 	if _hint_label != null:
 		_hint_label.visible = false
 	if _inspector_hint_panel != null:
@@ -625,7 +638,7 @@ func set_live_3d_mode(
 	if _mode_hint_strip != null:
 		_mode_hint_strip.visible = false
 	if _replay_note != null:
-		_replay_note.text = "GAME OVER · %s. Backspace restarts Live 3D." % _game_over_reason_label(game_over_reason) if game_over else "Play 3D. Movement uses X/Z while falling remains separate. Camera controls change only the view."
+		_replay_note.text = "GAME OVER · %s. %s restarts Live 3D." % [_game_over_reason_label(game_over_reason), LiveInputContractScript.display_key("live_3d_reset")] if game_over else "Play 3D. Movement uses X/Z while falling remains separate. Camera controls change only the view."
 	if _hint_label != null:
 		_hint_label.visible = false
 	if _inspector_hint_panel != null:
@@ -674,7 +687,7 @@ func set_live_4d_mode(
 	if _mode_hint_strip != null:
 		_mode_hint_strip.visible = false
 	if _replay_note != null:
-		_replay_note.text = "GAME OVER · %s. Backspace restarts Live 4D." % _game_over_reason_label(game_over_reason) if game_over else "Use exact 90° XW, ZW, or ZX view rotations. Y remains down; camera and piece rotations stay independent."
+		_replay_note.text = "GAME OVER · %s. %s restarts Live 4D." % [_game_over_reason_label(game_over_reason), LiveInputContractScript.display_key("live_4d_reset")] if game_over else "Use exact 90° XW, ZW, or ZX view rotations. Y remains down; camera and piece rotations stay independent."
 	if _hint_label != null:
 		_hint_label.visible = false
 	if _inspector_hint_panel != null:

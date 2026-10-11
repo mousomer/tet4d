@@ -31,8 +31,30 @@ Settings owns the three compatible persisted opacity parameters. Corrective
 regressions and the regenerated AFTER 54-case matrix verify rear-only
 subdivisions, unique internal lattice lines, material isolation, save/load,
 piece/ghost hierarchy and movement cache retention. Pinned Godot and repository
-gates pass; evidence is in the external scaffold correction report. The broader
-human playability review remains open; no commit is authorized.
+gates pass; evidence is in the external scaffold correction report. User manual
+review accepts the board-lattice renderer correction. Renderer work is closed;
+opacity, colour, scale, camera and depth tuning belong to later stages.
+
+### Stage 57 gameplay ergonomics
+
+- [x] 57A: retain compact mode-specific gameplay guidance, resolve effective
+  configured bindings and update it after rebinding without opening Settings.
+- [x] 57B: direct restart and another-game actions across playing, paused and
+  game-over in 2D/3D/4D; preserve canonical setup, seed policy and presentation.
+- [x] Automated state/routing coverage and manual control-discovery/replay review.
+- Manual macOS review: mode-specific references remain visible during 2D/3D/4D
+  play without Settings; configured restart and direct New Game return to play
+  without setup navigation. Final pinned Godot gate passes 83 scripts and 59
+  topology cases. Repository gate passed before the final zoom-label correction;
+  its rerun timed out only in secret scanning, which passed separately with a
+  600-second bound. External logs: `/private/tmp/tet4d-stage57-godot-final.log`
+  and `/private/tmp/tet4d-stage57-secret-scan.log`.
+- Deferred from repository review: replacing the currently shown Designer A/B
+  snapshot updates its stored value without refreshing the displayed preview.
+  Keep this outside Stage 57 and add a shown-slot replacement regression when fixed.
+- Documentation follow-up: `live_presentation_designer.md` still describes the
+  older BORDER/NONE topology; align that paragraph with the accepted cumulative
+  scaffold contract without changing renderer behavior.
 
 
 ### Godot editor diagnostic follow-up

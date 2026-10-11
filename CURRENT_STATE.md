@@ -37,9 +37,9 @@ enforces this.
 <!-- END HANDOFF:state -->
 
 <!-- BEGIN HANDOFF:notes -->
-Designer and spatial-scaffold migrations remain uncommitted; see their architecture contracts.
-Safety copy: `/private/tmp/tet4d-stage56h-safety-20261011-132107`; scaffold matrices are in `/private/tmp/tet4d-scaffold-evidence`.
-Edge-scaffold correction: Border defaults; Designer Advanced Settings owns compatible opacity keys. Focused regressions, regenerated 54-case matrix, pinned Godot and repository gates pass. Evidence: `/private/tmp/tet4d-scaffold-evidence/CORRECTION.md`. No commit is authorized.
+Accepted grid/Designer baseline is committed at `b5d004b7`.
+Stage 57 control legibility and direct restart/new-game flow pass manual review and
+the pinned Godot gate; see `docs/BACKLOG.md` for evidence and the secret-scan rerun.
 <!-- END HANDOFF:notes -->
 
 ## Current Authority

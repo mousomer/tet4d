@@ -665,13 +665,27 @@ The top live cockpit exposes two visually distinct families:
 
 - **View:** stateless View Actions in 3D/4D, mode-truthful Fit View, composite
   Reset View, grid detail, and secondary Quick Settings disclosure.
-- **Session:** Restart Game, conditional New Random Game, Change Setup, and
+- **Session:** Restart Game, New Game (New Random Game for true-random setup), Change Setup, and
   Main Menu.
 
 Restart Game is always reachable and remains a gameplay lifecycle operation
 that preserves the current view. Reset View remains presentation-only and
 restores the complete current-mode canonical view. Fit View remains
 framing-only. Their shared placement does not merge their semantics.
+
+Stage 57 keeps the existing control legend and native reset/configure owners.
+`LiveInputContract` owns semantic groups and default bindings; runtime InputMap
+events own the effective displayed keys after registration. Missing actions use
+contract defaults, while explicitly unbound actions display Unbound. The HUD
+refreshes cached guidance when runtime bindings change, including while paused.
+Restart calls the existing mode-specific native reset and retains effective
+seed, dimensions and presentation. New Game passes the frozen canonical setup
+to checked native configuration; native random-mode policy chooses its seed.
+Neither action routes through setup/menu or reconstructs setup fields in UI.
+Coverage must exercise both UI and configured-key restart in 2D/3D/4D from
+playing, paused and game-over, plus rebinding propagation into visible guidance.
+Manual acceptance checks control discovery during play and immediate replay.
+Renderer, camera, scale, projection and Designer reorganisation are excluded.
 
 The named-view control is a `MenuButton` labelled as an action launcher. It
 never reports a selected view, never displays `Custom`, and manual orientation

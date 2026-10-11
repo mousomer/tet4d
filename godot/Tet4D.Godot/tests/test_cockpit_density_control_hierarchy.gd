@@ -34,8 +34,8 @@ func _check_authoritative_piece_sets() -> Array:
 	}
 	for mode in cases:
 		var groups := LiveInputContractScript.piece_control_groups(mode)
-		if groups.size() != 3 or groups.map(func(group): return str(group.get("cockpit_role", ""))) != ["translate", "drop", "rotate"]:
-			failures.append("%s piece strip must select exactly authoritative translate, rotate, and drop groups" % mode)
+		if groups.size() != 5 or groups.map(func(group): return str(group.get("cockpit_role", ""))) != ["translate", "drop", "rotate", "hold", "session"]:
+			failures.append("%s piece strip must select authoritative movement, rotation, drop, hold and session groups" % mode)
 			continue
 		var text := str(groups)
 		for rotation_label in cases[mode]["rotation"]:
@@ -288,7 +288,7 @@ func _check_primary_surfaces(hud, mode: String, label: String) -> Array:
 	if next_rect.intersects(hold_rect) or next_rect.end.x > hold_rect.position.x + 0.5:
 		failures.append("%s %s NEXT and HOLD must be compact side-by-side non-overlapping surfaces" % [label, mode])
 	var strip: Dictionary = hud._piece_control_strip.deterministic_snapshot()
-	if strip.get("source") != "LiveInputContract" or strip.get("roles", []) != (["translate", "drop", "rotate", "hold", "session"] if floating or split or rail else ["translate", "drop", "rotate"]):
+	if strip.get("source") != "LiveInputContract" or strip.get("roles", []) != ["translate", "drop", "rotate", "hold", "session"]:
 		failures.append("%s %s piece surface must report authoritative translate/rotate/drop consumption" % [label, mode])
 	var view_strip: Dictionary = hud._live_view_control_strip.deterministic_snapshot()
 	if view_strip.get("source") != "LiveInputContract" or view_strip.get("roles", []).is_empty():

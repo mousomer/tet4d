@@ -315,15 +315,6 @@ func _build_spatial_legend(rows_by_role: Dictionary) -> void:
 		move_column.add_child(_slice_row(slice_labels))
 	for semantic in rows_by_role.get("drop", []):
 		move_column.add_child(_legend_row(semantic, cap_width * 2.0))
-	var arrows_note := Label.new()
-	arrows_note.name = "LegendArrowKeysNote"
-	arrows_note.text = "Arrow keys move too"
-	arrows_note.theme_type_variation = "SecondaryLabel"
-	arrows_note.add_theme_font_size_override("font_size", ShellDesignTokensScript.FONT_CHROME_SUPPORTING)
-	arrows_note.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	# Under the drops, never under the compass: the compass is the taller
-	# column in both layouts, so the note adds no height there.
-	move_column.add_child(arrows_note)
 	_groups_box.add_child(move)
 
 	var rotate := PassiveControlComponentsScript.section("ROTATE", "rotate", _density)
