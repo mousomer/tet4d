@@ -57,6 +57,42 @@ opacity, colour, scale, camera and depth tuning belong to later stages.
   accepted cumulative scaffold contract and shared maximal-line generator.
   Renderer behavior is unchanged.
 
+### Stage 58 3D/4D board readability
+
+- [x] 58A audit (2026-10-12): production shell renders of canonical 3D
+  `[6,10,6]` and 4D `[5,10,4,4]`/`[5,10,4,7]` boards across fresh defaults and
+  all six built-in styles, Border/Full, default/oblique/near-axis/front-back/
+  zoomed-out views and 4D active-slice end/middle, at the fresh 1280x720 pt and a
+  near-fullscreen window. Measured in canvas points; Python reference geometry
+  computed with its own fit code. Interactive manual play still owed.
+- P1 (58B): cells are about half the Python reference size: 3D about 27 pt
+  (Python 55.7), 4D about 15 pt (Python 27.7); the 3D board covers about 11% of
+  the window (Python 35%). Camera fit is already height-limited at 80-85%; the
+  cause is the game viewport share (3D 750x490, 4D 898x266 of 1280x720) left by
+  header, 3D rail and 4D deck. Closing it needs cockpit allocation, outside the
+  stated 58B change list; owner scope decision pending.
+- P1 (58B): 4D boards with five or more slices keep two rows; at 7 slices cells
+  are 7.5 pt (Python 17.4) while one row would be 1.5x larger in the real
+  viewport. `AdaptiveLayerLayout` row preference was tuned on 1600x960.
+- P2 (58B, scope pending): the game SubViewport renders at canvas resolution
+  without MSAA and is upscaled 2-2.5x on Retina; thin outlines alias.
+- P2 (58B, style invariant): `slice_set.spacing` is style-owned, so styles move
+  4D slice anchors, gaps (29-43 pt), occupancy and camera size. P3: diagnostic and
+  tron themes shrink the 3D viewport 490 to 472 pt through header height.
+- P2 (58C): no depth cue beyond occlusion and face shading (orthographic,
+  depth-uniform materials); near-axis views read z-separated cells as coplanar.
+- P2 (58C): inactive 4D slices match active-slice cell and grid prominence; only
+  the navigation frame marks active slices.
+- P2 (58C): the active piece differs from same-colour settled cells mainly by
+  luminance and the origin marker; weakest with settled opacity 1.0.
+- P2 (58C, Full only): front lattice lines cross active-piece faces.
+- P3: rotated 4D views detach and clip W labels up to 20 pt (Stage 59 slice
+  identity); Tron Grid Flow background shows through the board (58C); catalog
+  `display.grid_mode` values are inert because grid mode is style-independent.
+- Acceptable: no board-geometry clipping in any case; deterministic 4D slice
+  placement independent of the active piece; Border lattice subordinate to cells;
+  style does not change grid mode; orbit/zoom recover through Fit View.
+
 
 ### Godot editor diagnostic follow-up
 
