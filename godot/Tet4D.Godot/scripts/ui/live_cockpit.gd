@@ -3,6 +3,7 @@ extends VBoxContainer
 class_name LiveCockpit
 
 const DesignerPanelFrame = preload("res://scripts/ui/designer_panel_frame.gd")
+const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
 
 const PROFILE_WIDE := "wide"
@@ -25,6 +26,13 @@ const MAX_DECK_ROWS := 3
 # overflow keeps every control reachable at any size; the cost is that not all
 # of them are visible at once, which is the accepted tradeoff for small shells.
 const MAX_DECK_HEIGHT_SHARE := 0.28
+# Product contract for the Live 4D legend deck: at the supported 1280x720
+# opening window (720 logical px tall) and above, it shows the whole measured
+# legend. Below it the deck gives up exactly the missing height, so the board
+# keeps its reference-window allocation, until it reaches the standard compact
+# share; from there both shrink together and the legend scrolls. Header height
+# beyond the plain live top bar (an open guide) counts as missing height too.
+const LEGEND_FULL_FIT_HEIGHT := 720.0
 # Outer shell margin on each side of the cockpit.
 const DECK_HORIZONTAL_INSET := 24.0
 
@@ -73,6 +81,7 @@ var _packing_in_progress := false
 var _last_packing_width := -1.0
 var _last_module_minimums := Vector3.ZERO
 var _last_module_heights := Vector3.ZERO
+var _last_header_height := -1.0
 var _natural_deck_height := 0.0
 var _scroll_required := false
 var _placement := PLACEMENT_BELOW
@@ -265,6 +274,7 @@ func _init() -> void:
 	control_deck.resized.connect(_on_deck_metrics_changed)
 	for module in [piece_controls, view_controls, piece_state]:
 		module.minimum_size_changed.connect(_on_deck_metrics_changed)
+	header_slot.minimum_size_changed.connect(_on_deck_metrics_changed)
 
 
 func set_deck_placement(placement: String) -> void:
@@ -377,11 +387,15 @@ func _on_deck_metrics_changed() -> void:
 		return
 	var width := _packing_width()
 	var minimums := _module_minimums()
-	if is_equal_approx(width, _last_packing_width) and minimums.is_equal_approx(_last_module_minimums) and _module_heights().is_equal_approx(_last_module_heights):
+	if is_equal_approx(width, _last_packing_width) and minimums.is_equal_approx(_last_module_minimums) and _module_heights().is_equal_approx(_last_module_heights) and is_equal_approx(_header_height(), _last_header_height):
 		if _placement == PLACEMENT_SIDE:
 			_update_side_scroll_state()
 		return
 	_apply_responsive_policy()
+
+
+func _header_height() -> float:
+	return header_slot.get_combined_minimum_size().y
 
 
 func _module_minimums() -> Vector3:
@@ -430,9 +444,17 @@ func _apply_responsive_policy() -> void:
 	var height_cap := _layout_size.y * MAX_DECK_HEIGHT_SHARE if _layout_size.y > 1.0 else natural_height
 	var deck_height := minf(natural_height, maxf(height_cap, row_height))
 	if _placement == PLACEMENT_SPLIT:
-		# A fixed height keeps the 4D viewport, and so its slice tiling, independent
-		# of the active style's metrics; the legend scrolls if a style outgrows it.
-		deck_height = row_height
+		# The legend's own measured height, not the profile row floor, bounded by
+		# the current cockpit height. Both inputs are re-read on every pass, so
+		# the deck never keeps a height a smaller window imposed.
+		natural_height = _natural_height_for_rows(packed, 0.0, deck_separation)
+		if _layout_size.y > 1.0:
+			var header_growth := maxf(_header_height() - float(ReplayVisuals.TOP_BAR_HEIGHT), 0.0)
+			var shortfall := maxf(LEGEND_FULL_FIT_HEIGHT + header_growth - _layout_size.y, 0.0)
+			var compact := minf(natural_height, _layout_size.y * MAX_DECK_HEIGHT_SHARE)
+			deck_height = maxf(natural_height - shortfall, compact)
+		else:
+			deck_height = natural_height
 	deck_row_host.custom_minimum_size.y = natural_height
 	control_deck.custom_minimum_size.y = deck_height
 	_natural_deck_height = natural_height
@@ -440,6 +462,7 @@ func _apply_responsive_policy() -> void:
 	_last_packing_width = available
 	_last_module_minimums = _module_minimums()
 	_last_module_heights = _module_heights()
+	_last_header_height = _header_height()
 	_packing_in_progress = false
 	# Both packing inputs are only final after a layout pass, and the first pass
 	# may see a transient width. Re-check once the pass settles; the width and
@@ -475,6 +498,7 @@ func _apply_side_policy() -> void:
 	_last_packing_width = _packing_width()
 	_last_module_minimums = _module_minimums()
 	_last_module_heights = _module_heights()
+	_last_header_height = _header_height()
 	_update_side_scroll_state()
 
 

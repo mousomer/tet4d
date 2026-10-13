@@ -59,6 +59,9 @@ opacity, colour, scale, camera and depth tuning belong to later stages.
 
 ### Stage 58 3D/4D board readability
 
+- [x] Live 4D legend deck: the whole measured legend shows unscrolled at 1280×720 and
+  above; shorter windows or an open guide compact the deck, which then scrolls.
+
 - [x] 58A audit (2026-10-12): production shell renders of canonical 3D
   `[6,10,6]` and 4D `[5,10,4,4]`/`[5,10,4,7]` boards across fresh defaults and
   all six built-in styles, Border/Full, default/oblique/near-axis/front-back/

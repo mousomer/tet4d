@@ -202,10 +202,10 @@ func _set_layout(layout: String) -> void:
 	if next_layout == _layout:
 		return
 	_layout = next_layout
-	# The rail scrolls as a whole, so the legend must report its true height: a
-	# nested auto-scroll reports none and would collapse to nothing. The 4D deck
-	# instead has a fixed height and lets the legend scroll inside it.
-	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED if _layout == LAYOUT_RAIL else ScrollContainer.SCROLL_MODE_AUTO
+	# The rail and the 4D deck both scroll as a whole, so the legend must report
+	# its true height: a nested auto-scroll reports none, which left the deck
+	# sizing to a guess and the legend scrolling even when it had room.
+	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED if _layout in [LAYOUT_RAIL, LAYOUT_WIDE] else ScrollContainer.SCROLL_MODE_AUTO
 	for side in ["top", "bottom"]:
 		_margin.add_theme_constant_override("margin_%s" % side, 2 if _layout == LAYOUT_RAIL else 6)
 	var parent := _groups_box.get_parent()
