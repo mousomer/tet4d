@@ -125,6 +125,8 @@ var _hint_label: VBoxContainer
 var _mode_hint_strip: VBoxContainer
 var _viewport_title: Label
 var _viewport_hint: Label
+var _top_bar: HBoxContainer
+var _viewport_inner: MarginContainer
 var _viewer_nav: VBoxContainer
 var _viewer_nav_label: Label
 var _replay_navigation_controls: Array[Control] = []
@@ -156,7 +158,7 @@ var _body_container: HBoxContainer
 var _left_panel: PanelContainer
 var _viewer_case_browser: CaseBrowser
 var _game_area: PanelContainer
-var _game_viewport_container: SubViewportContainer
+var _game_viewport_container: TextureRect
 var _game_viewport: SubViewport
 var _right_scroll: ScrollContainer
 var _right_column: VBoxContainer
@@ -229,7 +231,7 @@ var _onboarding_model = LiveOnboardingModelScript.new()
 var _onboarding_panel: PanelContainer
 var _next_piece_panel: PanelContainer
 var _hold_piece_panel: PanelContainer
-var _piece_preview_row: HBoxContainer
+var _piece_preview_row: GridContainer
 var _piece_control_strip: PanelContainer
 var _live_view_control_strip: PanelContainer
 var _live_cockpit
@@ -845,6 +847,8 @@ func _piece_legend_layout() -> String:
 func _set_live_4d_deck_active(active: bool) -> void:
 	var side_rail := active and _uses_side_rail()
 	var split := active and _active_live_mode == GameSetupSpecScript.MODE_4D
+	if _piece_preview_row != null:
+		_piece_preview_row.columns = 1 if split else 2
 	_apply_shell_minimums(active, side_rail or split)
 	if _live_4d_deck == null:
 		return
@@ -1257,13 +1261,10 @@ func _publish_game_viewport_geometry() -> void:
 
 
 func board_viewport_size() -> Vector2:
-	# SubViewport.size_changed fires after stretch has applied the inner region.
-	# Hidden or mismatched geometry is not a fit input, even if it has old sizes.
+	# Logical allocation remains independent of render pixel density.
 	if _game_viewport_container == null or _game_viewport == null or not _game_viewport_container.is_visible_in_tree():
 		return Vector2.ZERO
-	if Vector2i(_game_viewport_container.size) != _game_viewport.size:
-		return Vector2.ZERO
-	return Vector2(_game_viewport.size)
+	return _game_viewport_container.size
 
 
 func layout_contract_snapshot() -> Dictionary:
@@ -1754,13 +1755,20 @@ static func _live_feedback_short(snapshot: Dictionary, paused: bool, guide_open:
 
 
 func _set_live_declutter_mode(live_mode: bool) -> void:
+	if _top_bar != null:
+		_top_bar.custom_minimum_size.y = ReplayVisuals.LIVE_TOP_BAR_HEIGHT if live_mode else ReplayVisuals.TOP_BAR_HEIGHT
+	if _viewport_inner != null:
+		for edge in ["left", "top", "right", "bottom"]:
+			_viewport_inner.add_theme_constant_override("margin_" + edge, ReplayVisuals.LIVE_VIEWPORT_FRAME_PADDING if live_mode else ReplayVisuals.VIEWPORT_FRAME_PADDING)
 	if _viewer_nav != null:
-		_viewer_nav.custom_minimum_size = Vector2(430 if live_mode else 270, ReplayVisuals.TOP_BAR_HEIGHT)
+		_viewer_nav.custom_minimum_size = Vector2(430 if live_mode else 270, ReplayVisuals.LIVE_TOP_BAR_HEIGHT if live_mode else ReplayVisuals.TOP_BAR_HEIGHT)
 	if _viewer_nav_label != null:
 		_viewer_nav_label.text = "SESSION" if live_mode else "NAVIGATION"
 	for control in _replay_navigation_controls:
 		if control != null:
 			control.visible = not live_mode
+	if _summary_title != null:
+		_summary_title.visible = not live_mode
 	if _top_status_panel != null:
 		_top_status_panel.visible = not live_mode
 	if _authority_panel != null:
@@ -1778,6 +1786,9 @@ func _set_live_declutter_mode(live_mode: bool) -> void:
 		_change_setup_button.visible = live_mode
 	if _live_view_actions != null:
 		_live_view_actions.visible = live_mode
+		for caption in _live_view_action_row.get_children():
+			if caption.get_meta("allocation_caption", false):
+				caption.visible = not live_mode
 	# Reset View is reparented into a camera container shared with replay
 	# diagnostics, so its mode scope must never depend on parent visibility.
 	if _live_reset_view_button != null:
@@ -2238,6 +2249,7 @@ func _build_layout() -> void:
 	outer.add_child(_live_cockpit)
 
 	var top_bar := HBoxContainer.new()
+	_top_bar = top_bar
 	top_bar.custom_minimum_size = Vector2(0, ReplayVisuals.TOP_BAR_HEIGHT)
 	top_bar.add_theme_constant_override("separation", ReplayVisuals.PANEL_GAP)
 	_live_cockpit.header_slot.add_child(top_bar)
@@ -2246,6 +2258,7 @@ func _build_layout() -> void:
 	_viewer_nav = viewer_nav
 	viewer_nav.custom_minimum_size = Vector2(270, ReplayVisuals.TOP_BAR_HEIGHT)
 	viewer_nav.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	viewer_nav.add_theme_constant_override("separation", 4)
 	top_bar.add_child(viewer_nav)
 	var nav_row_a := HBoxContainer.new()
 	nav_row_a.add_theme_constant_override("separation", 6)
@@ -2314,6 +2327,7 @@ func _build_layout() -> void:
 	_live_view_actions.add_child(_live_view_action_row)
 	var view_label := Label.new()
 	view_label.text = "RECOVER"
+	view_label.set_meta("allocation_caption", true)
 	view_label.theme_type_variation = "SecondaryLabel"
 	_live_view_action_row.add_child(view_label)
 	_live_fit_view_button = Button.new()
@@ -2337,6 +2351,7 @@ func _build_layout() -> void:
 	_live_display_action_row = _live_view_action_row
 	var display_label := Label.new()
 	display_label.text = "DISPLAY"
+	display_label.set_meta("allocation_caption", true)
 	display_label.theme_type_variation = "SecondaryLabel"
 	_live_display_action_row.add_child(display_label)
 	_quick_settings_button = Button.new()
@@ -2394,12 +2409,9 @@ func _build_layout() -> void:
 	top_summary_panel.name = "TopReplaySummaryPanel"
 	top_summary_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top_bar.add_child(top_summary_panel)
-	var top_summary_root := Control.new()
-	_fill_parent(top_summary_root)
-	top_summary_panel.add_child(top_summary_root)
 	var top_summary_box := VBoxContainer.new()
-	_fill_parent(top_summary_box)
-	top_summary_root.add_child(top_summary_box)
+	top_summary_box.add_theme_constant_override("separation", 4)
+	top_summary_panel.add_child(top_summary_box)
 	var summary_title := Label.new()
 	summary_title.text = "Replay"
 	_summary_title = summary_title
@@ -2509,6 +2521,7 @@ func _build_layout() -> void:
 	body.add_child(_game_area)
 	_viewport_frame = _game_area
 	var viewport_inner := MarginContainer.new()
+	_viewport_inner = viewport_inner
 	viewport_inner.add_theme_constant_override("margin_left", ReplayVisuals.VIEWPORT_FRAME_PADDING)
 	viewport_inner.add_theme_constant_override("margin_top", ReplayVisuals.VIEWPORT_FRAME_PADDING)
 	viewport_inner.add_theme_constant_override("margin_right", ReplayVisuals.VIEWPORT_FRAME_PADDING)
@@ -2531,19 +2544,18 @@ func _build_layout() -> void:
 	_mode_hint_strip.name = "ViewportControlHints"
 	_mode_hint_strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	viewport_box.add_child(_mode_hint_strip)
-	_game_viewport_container = SubViewportContainer.new()
+	_game_viewport_container = preload("res://scripts/ui/gameplay_viewport_surface.gd").new()
 	_game_viewport_container.name = "GameViewportContainer"
 	_game_viewport_container.custom_minimum_size = Vector2(ReplayVisuals.GAME_AREA_MIN_WIDTH, 0)
 	_game_viewport_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_game_viewport_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_game_viewport_container.stretch = true
 	_game_viewport_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	viewport_box.add_child(_game_viewport_container)
 	_game_viewport = SubViewport.new()
 	_game_viewport.name = "GameViewport"
 	_game_viewport.size = Vector2i(ReplayVisuals.GAME_AREA_MIN_WIDTH, 240)
 	_game_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	_game_viewport_container.add_child(_game_viewport)
+	_game_viewport_container.attach(_game_viewport)
 	_game_viewport.size_changed.connect(_publish_game_viewport_geometry, CONNECT_DEFERRED)
 	_game_viewport_container.visibility_changed.connect(_publish_game_viewport_geometry, CONNECT_DEFERRED)
 
@@ -2654,10 +2666,12 @@ func _build_layout() -> void:
 		_set_persistent_setting("interface.show_onboarding", false)
 	)
 	_right_column.add_child(_onboarding_panel)
-	_piece_preview_row = HBoxContainer.new()
+	_piece_preview_row = GridContainer.new()
+	_piece_preview_row.columns = 2
 	_piece_preview_row.name = "PiecePreviewRow"
 	_piece_preview_row.visible = false
-	_piece_preview_row.add_theme_constant_override("separation", 8)
+	_piece_preview_row.add_theme_constant_override("h_separation", 8)
+	_piece_preview_row.add_theme_constant_override("v_separation", 8)
 	_piece_preview_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_right_column.add_child(_piece_preview_row)
 	_next_piece_panel = NextPiecePanelScript.new()

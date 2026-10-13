@@ -29,6 +29,7 @@ const TEST_SCRIPTS := [
 	"res://tests/test_setup_field_taxonomy.gd",
 	"res://tests/test_setup_progressive_disclosure.gd",
 	"res://tests/test_adaptive_4d_layer_layout.gd",
+	"res://tests/test_stage_58b_readability.gd",
 	"res://tests/test_live_presentation_regressions.gd",
 	"res://tests/test_slice_basis_4d.gd",
 	"res://tests/test_slice_local_orientation.gd",

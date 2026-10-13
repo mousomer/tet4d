@@ -164,10 +164,11 @@ func _rebuild_wide() -> void:
 	for group in _groups:
 		var role := str(group.get("cockpit_role", ""))
 		var section := PassiveControlComponentsScript.section({"view_exact": "TURN VIEW", "view_orient": "LOOK"}.get(role, role.to_upper()), role, _density)
-		# Look's two pairs share one line; the side column is short of height.
+		# Look pairs stack inside the bounded side column; labels wrap at
+		# its width while the module remains vertically scrollable.
 		var row_parent: Container = section
 		if role == "view_orient":
-			row_parent = HBoxContainer.new()
+			row_parent = VBoxContainer.new()
 			row_parent.name = "LookRow"
 			row_parent.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			row_parent.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_3)
@@ -179,6 +180,7 @@ func _rebuild_wide() -> void:
 			var operation := str(LivePieceControlStripScript.ROTATION_WORDS.get(plane, plane)) if exact else plane
 			var row := PassiveControlComponentsScript.key_first_row(operation, str(semantic["binding"]), role, key_column if exact else 0.0)
 			(row.get_node("LegendOperation") as Label).text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+			(row.get_node("LegendOperation") as Label).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			if exact:
 				var glyph := ControlLegendGlyphScript.plane(Array(plane.to_lower().split("")), row.get_node("LegendKeys").get_child(0) as Label)
 				glyph.name = "LegendPlaneGlyph__%s" % plane

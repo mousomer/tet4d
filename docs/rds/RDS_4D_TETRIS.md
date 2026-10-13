@@ -364,10 +364,12 @@ Relevant tests:
     normal Live-4D camera binding.
 15. Live-4D slice tiling is a deterministic function of visible slice count,
     board viewport geometry, and the stable local-board envelope. It maximizes
-    projected per-slice scale, strongly prefers at most two rows in the
-    expected range, avoids severely unbalanced final rows, and preserves
-    left-aligned row-major identity. Axis name, active slice, occupancy, and
-    per-slice content cannot affect geometry.
+    projected per-slice scale using the actual allocated gameplay viewport and
+    canonical fitted camera, including label/spawn clearance. Balance and
+    unused area break scale ties; no row count is preferred. Slice gaps are
+    canonical and style-invariant. Left-aligned row-major identity remains
+    stable. Axis name, active slice, occupancy, style and per-slice content
+    cannot affect geometry.
 16. Live-4D PIECE and VIEW guidance is a passive semantic projection of
     `LiveInputContract`. Operations and bindings remain separately scannable,
     all supported density modes preserve the same row identities, and no

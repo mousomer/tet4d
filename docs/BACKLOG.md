@@ -59,29 +59,28 @@ opacity, colour, scale, camera and depth tuning belong to later stages.
 
 ### Stage 58 3D/4D board readability
 
+- [x] 58B widened scope (implemented and verified 2026-10-12): increase gameplay allocation;
+  measure before/after; select slice layouts by usable scale in the real viewport;
+  canonicalize spacing; render at displayed resolution; verify style invariance,
+  unclipped geometry, Stage 57 and manual 3D/4D play. Agent acceptance passed;
+  scale/framing is frozen and depth/contrast moves to 58C. The 4D board-area
+  floor is 35% so the whole gameplay legend fits at 1280×720.
 - [x] Live 4D legend deck: the whole measured legend shows unscrolled at 1280×720 and
   above; shorter windows or an open guide compact the deck, which then scrolls.
+- [ ] 58B follow-up: the narrowed Live 3D side rail scrolls at 1440×900.
 
 - [x] 58A audit (2026-10-12): production shell renders of canonical 3D
   `[6,10,6]` and 4D `[5,10,4,4]`/`[5,10,4,7]` boards across fresh defaults and
   all six built-in styles, Border/Full, default/oblique/near-axis/front-back/
   zoomed-out views and 4D active-slice end/middle, at the fresh 1280x720 pt and a
   near-fullscreen window. Measured in canvas points; Python reference geometry
-  computed with its own fit code. Interactive manual play still owed.
-- P1 (58B): cells are about half the Python reference size: 3D about 27 pt
-  (Python 55.7), 4D about 15 pt (Python 27.7); the 3D board covers about 11% of
-  the window (Python 35%). Camera fit is already height-limited at 80-85%; the
-  cause is the game viewport share (3D 750x490, 4D 898x266 of 1280x720) left by
-  header, 3D rail and 4D deck. Closing it needs cockpit allocation, outside the
-  stated 58B change list; owner scope decision pending.
-- P1 (58B): 4D boards with five or more slices keep two rows; at 7 slices cells
-  are 7.5 pt (Python 17.4) while one row would be 1.5x larger in the real
-  viewport. `AdaptiveLayerLayout` row preference was tuned on 1600x960.
-- P2 (58B, scope pending): the game SubViewport renders at canvas resolution
-  without MSAA and is upscaled 2-2.5x on Retina; thin outlines alias.
-- P2 (58B, style invariant): `slice_set.spacing` is style-owned, so styles move
-  4D slice anchors, gaps (29-43 pt), occupancy and camera size. P3: diagnostic and
-  tron themes shrink the 3D viewport 490 to 472 pt through header height.
+  computed with its own fit code. Interactive 3D/4D review is recorded in 58B.
+- 58A P1/P2/P3 findings addressed by 58B: reclaimed gameplay allocation,
+  viewport-driven scale scoring, native display pixel rendering with 4× MSAA,
+  canonical slice spacing and theme-independent header metrics. Controlled pitch
+  changes: 3D 27.785 → 34.785 pt; default 4D 15.017 → 23.230 pt; seven-slice
+  4D 7.672 → 13.793 pt. Full evidence and incremental attribution:
+  `docs/design/stage_58b_readability_evidence.md`.
 - P2 (58C): no depth cue beyond occlusion and face shading (orthographic,
   depth-uniform materials); near-axis views read z-separated cells as coplanar.
 - P2 (58C): inactive 4D slices match active-slice cell and grid prominence; only

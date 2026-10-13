@@ -30,7 +30,6 @@ var _grid_opacity := float(_presentation_profile.value("board.grid_opacity"))
 var _boundary_opacity := float(_presentation_profile.value("board.boundary_opacity"))
 var _active_cell_opacity := float(_presentation_profile.value("active_cells.opacity"))
 var _ghost_opacity_multiplier := float(_presentation_profile.value("ghost.opacity"))
-var _slice_spacing_scale := float(_presentation_profile.value("slice_set.spacing"))
 var _last_case_id := ""
 var _last_frame_index := -1
 var _particle_trails: Dictionary = {}
@@ -132,7 +131,6 @@ func _apply_profile_values() -> void:
 	_boundary_opacity = float(_presentation_profile.value("board.boundary_opacity"))
 	_active_cell_opacity = float(_presentation_profile.value("active_cells.opacity"))
 	_ghost_opacity_multiplier = float(_presentation_profile.value("ghost.opacity"))
-	_slice_spacing_scale = float(_presentation_profile.value("slice_set.spacing"))
 
 
 func set_live_4d_basis(basis, animate: bool = true) -> void:
@@ -206,7 +204,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		snapshot,
 		presentation_basis,
 		_live_4d_local_orientation if str(snapshot.get("trace_type", "")) == "live_4d" else null,
-		_slice_spacing_scale,
+		1.0,
 		_layout_viewport_size
 	)
 	current_slice_stride = _presentation.projection.mapper.slice_stride

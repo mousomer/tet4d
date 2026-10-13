@@ -128,7 +128,7 @@ func _check_production_deck() -> Array:
 		if str(cockpit.get("deck_placement", "")) == "split":
 			# Legend in the deck; PIECE STATE above VIEW in the side column.
 			var side: Rect2 = cockpit.get("side_column_rect", Rect2())
-			if not snapshot.get("live_4d_deck_visible", false) or not _contains(deck, piece) or not _contains(side, state) or view.position.y < state.end.y - 0.5:
+			if not snapshot.get("live_4d_deck_visible", false) or not _contains(cockpit.get("deck_rows_rect", deck), piece) or not _contains(side, state) or view.position.y < state.end.y - 0.5:
 				failures.append("%s density must show PIECE in the Live-4D deck and PIECE STATE above VIEW in the side column" % density)
 			if board.intersects(deck) or board.intersects(side) or piece.intersects(state):
 				failures.append("%s density semantic modules must not overlap the board or each other" % density)

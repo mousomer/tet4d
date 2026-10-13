@@ -145,16 +145,19 @@ frames, camera bounds, and active-layer emphasis:
    identity view);
 2. evaluate count-derived column candidates against the available board
    viewport and the stable local-board orientation envelope, maximizing
-   projected per-slice scale before preferring at most two rows and a balanced
-   final row;
+   projected per-slice scale with the canonical fitted projection and required
+   label/spawn clearance; balance and unused area break equal-scale ties;
 3. set rows to `ceil(layer_count / columns)`;
 4. assign every layer exactly once in stable row-major order;
 5. derive mapper offsets and camera bounds from the same assignment;
 6. highlight every layer occupied by active-piece cells.
 
-Counts up to four retain the best-fitting one-row or compact matrix. At the
-1600×960 reference viewport, five/six use `3x2` and seven/eight use `4x2`;
-the policy is an optimization, not a count table. Partial final rows remain
+Every count selects the grid that yields the largest usable cell scale in its
+actual allocated gameplay viewport. No reference-window assumption or preferred
+row count overrides scale. At the measured 970×444-point cockpit viewport,
+seven canonical `[5,10,4]` slices select one row; tall viewports may choose
+multiple rows. Gaps derive from the supported envelope and fixed gutter bounds;
+legacy `slice_set.spacing` values cannot change positions. Partial final rows remain
 left aligned so a layer keeps its predictable row-major column. Centering has
 identical scale and unused area and remains a human A/B option rather than an
 activity-dependent runtime choice. All Stage 49 presets remain fully

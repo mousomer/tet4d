@@ -213,11 +213,15 @@ func _test_invalidation(failures: Array, renderer) -> void:
 	renderer.render_snapshot(snapshot)
 	if grid.scaffold_generation != generation or not grid._active_frames[2].visible or grid._active_frames[1].visible:
 		failures.append("active slice changes only independent navigation")
-	for change in [{"display.grid_mode":"border"}, {"board.grid_opacity":0.4}, {"slice_set.spacing":1.2}]:
+	for change in [{"display.grid_mode":"border"}, {"board.grid_opacity":0.4}]:
 		renderer.apply_presentation_profile(renderer._presentation_profile.with_overrides(change))
 		renderer.render_snapshot(snapshot)
 		if grid.scaffold_generation <= generation: failures.append("structural/material input must invalidate cache")
 		generation = grid.scaffold_generation
+	renderer.apply_presentation_profile(renderer._presentation_profile.with_overrides({"slice_set.spacing":1.2}))
+	renderer.render_snapshot(snapshot)
+	if grid.scaffold_generation != generation:
+		failures.append("inert legacy spacing must not rebuild canonical geometry")
 	snapshot.board_shape = [4,5,3,3]
 	renderer.render_snapshot(snapshot)
 	if grid.scaffold_generation <= generation: failures.append("dimensions must invalidate cache")

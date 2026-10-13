@@ -112,9 +112,13 @@ func _check_fit(failures: Array, app, hud, label: String) -> void:
 	if not hud._game_viewport_container.is_visible_in_tree() or region.x < 240.0 or region.y < 120.0:
 		failures.append("%s requires visible resolved inner geometry" % label)
 		return
-	if region != hud.board_viewport_size():
-		failures.append("%s layout must consume actual inner render geometry" % label)
-	if not app._last_layout_viewport_size.is_equal_approx(region) or app._pending_fit_view:
+	var logical_region: Vector2 = hud.board_viewport_size()
+	var surface = hud._game_viewport_container
+	var transform: Transform2D = surface.get_viewport().get_stretch_transform() * surface.get_global_transform_with_canvas()
+	var expected_pixels: Vector2i = surface.render_size(logical_region, Vector2(transform.x.length(), transform.y.length()))
+	if Vector2i(region) != expected_pixels:
+		failures.append("%s rendering must cover actual displayed pixels" % label)
+	if not app._last_layout_viewport_size.is_equal_approx(logical_region) or app._pending_fit_view:
 		failures.append("%s must complete fitting/layout from the current inner render region" % label)
 	var camera: Camera3D = app._camera_rig._camera
 	var size_before := camera.size

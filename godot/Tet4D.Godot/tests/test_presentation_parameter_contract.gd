@@ -29,8 +29,8 @@ func run() -> Array:
 	_assert_equal(failures, defaults.semantic_owner("active_cells.opacity"), "PIECE_PRESENTATION", "active-cell semantic owner")
 	_assert_equal(failures, defaults.semantic_owner("ghost.opacity"), "GHOST_PRESENTATION", "Ghost semantic owner")
 	_assert_equal(failures, defaults.semantic_owner("slice_set.spacing"), "SLICE_SET_PRESENTATION", "slice semantic owner")
-	if not defaults.applies_at_runtime("slice_set.spacing", "live_4d") or defaults.applies_at_runtime("slice_set.spacing", "live_3d"):
-		failures.append("slice-set spacing should apply only to the declared 4D runtime among live 3D/4D contexts")
+	if defaults.applies_at_runtime("slice_set.spacing", "live_4d") or defaults.applies_at_runtime("slice_set.spacing", "live_3d"):
+		failures.append("legacy slice spacing must be absent from live runtime controls")
 
 	for legacy in [true, false]:
 		var migrated = PresentationProfileScript.from_snapshot(registry, {"schema_version": 1, "values": {"display.grid_visible": legacy}})
@@ -89,8 +89,8 @@ func _test_spacing_and_mode_coverage(failures: Array) -> void:
 	standard_layout.configure(4, 5.0, 10.0, 1.7777778, 1.0)
 	var expanded_layout = AdaptiveLayerLayoutScript.new()
 	expanded_layout.configure(4, 5.0, 10.0, 1.7777778, 1.4)
-	if expanded_layout.horizontal_gap <= standard_layout.horizontal_gap or expanded_layout.vertical_gap <= standard_layout.vertical_gap:
-		failures.append("slice spacing profile should scale both adaptive 4D gutters")
+	if expanded_layout.snapshot() != standard_layout.snapshot():
+		failures.append("legacy spacing profiles must retain identical slice geometry")
 	for fixture in [
 		{"trace_type": "live_2d", "dimension": 2, "board_shape": [10, 20]},
 		{"trace_type": "live_3d", "dimension": 3, "board_shape": [6, 10, 6]},

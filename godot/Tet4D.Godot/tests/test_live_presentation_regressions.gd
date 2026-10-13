@@ -73,8 +73,8 @@ func _assert_orientation_envelope_layout(failures: Array) -> void:
 		for scale_case in [0.8, 1.0, 1.2]:
 			var layout := AdaptiveLayerLayoutScript.new()
 			layout.configure(shape_case["layers"], local_extent.x, local_extent.y, shape_case["aspect"], scale_case, local_extent.z)
-			if absf(layout.horizontal_gap - standard.horizontal_gap * scale_case) > 0.001 or absf(layout.vertical_gap - standard.vertical_gap * scale_case) > 0.001:
-				failures.append("slice_set.spacing %.1f must predictably multiply the governed gutter for %s" % [scale_case, local_extent])
+			if absf(layout.horizontal_gap - standard.horizontal_gap) > 0.001 or absf(layout.vertical_gap - standard.vertical_gap) > 0.001:
+				failures.append("slice_set.spacing %.1f must leave canonical geometry unchanged for %s" % [scale_case, local_extent])
 
 
 func _assert_product_pitch_contract(failures: Array) -> void:

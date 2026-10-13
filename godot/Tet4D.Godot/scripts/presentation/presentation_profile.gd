@@ -12,7 +12,8 @@ const STYLE_INDEPENDENT_IDS := [
 	"display.ui_scale", "replay.playback_speed", "replay.loop_enabled",
 	"display.projection_strength", "accessibility.show_help_hints",
 	"camera.sensitivity", "camera.invert_y", "diagnostics.show_layout_bounds",
-	"interface.show_onboarding",
+	"interface.show_onboarding", "slice_set.spacing",
+	"display.hud_density",
 ]
 
 var _registry

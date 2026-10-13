@@ -38,9 +38,10 @@ The following refinements make its visible consequences explicit:
    mouse angle and not from an axis-aligned unrotated slice. Anchors therefore
    do not breathe during manipulation, while representative extreme
    orientations retain a readable deterministic gutter.
-5. `slice_set.spacing` multiplies the governed envelope stride. It never shrinks
-   cells, changes 2D/3D geometry, or reinterprets the slice sequence as a local
-   axis.
+5. Slice gaps are canonical, derived from the supported envelope and fixed
+   gutter bounds. Legacy `slice_set.spacing` values remain loadable but are inert.
+   Styles cannot move slices. Grid selection maximizes usable cell scale from
+   the actual logical gameplay viewport; balance only breaks scale ties.
 6. Renderer bounds consumed by Fit include renderer-root stabilization scale
    and translation. Fit then adds one modest framing margin to already complete
    required bounds; it does not compound an unscaled collection envelope with

@@ -139,7 +139,7 @@ Allowed runtime applicability values are `shell`, `replay`, `live_2d`,
 | `board.boundary_opacity` | `BOARD_PRESENTATION` | replay, all live modes | accessibility_composable |
 | `active_cells.opacity` | `PIECE_PRESENTATION` | all live modes | accessibility_composable |
 | `ghost.opacity` | `GHOST_PRESENTATION` | all live modes | accessibility_composable |
-| `slice_set.spacing` | `SLICE_SET_PRESENTATION` | live 4D | aesthetic |
+| `slice_set.spacing` | `SLICE_SET_PRESENTATION` | shell compatibility storage only | inert |
 | `environment.background_intensity` | `ENVIRONMENT_PRESENTATION` | replay, all live modes | accessibility_composable |
 | `environment.background_animation_mode` | `ENVIRONMENT_PRESENTATION` | replay, all live modes | accessibility_composable |
 | `environment.background_animation_intensity` | `ENVIRONMENT_PRESENTATION` | replay, all live modes | accessibility_composable |
@@ -166,7 +166,7 @@ The existing parameters retain their accepted values. The new values are:
 | `board.boundary_opacity` | float, `0.35..1.00` | `0.90` | Enclosure alpha multiplier; navigation frame stays independently styled. |
 | `active_cells.opacity` | float, `0.35..1.00` | `1.00` | Active-piece fill alpha; outlines remain independently legible. |
 | `ghost.opacity` | float multiplier, `0.25..1.50` | `1.00` | Multiplies the selected palette/theme's accepted Ghost fill baseline. |
-| `slice_set.spacing` | float multiplier, `0.60..1.60` | `1.00` | Multiplies the responsive 4D horizontal/vertical gutter only. It never changes slice-local geometry. |
+| `slice_set.spacing` | float multiplier, `0.60..1.60` | `1.00` | Legacy compatibility value; hidden from editing and ignored for geometry. Horizontal/vertical gaps follow one canonical envelope rule. |
 | `environment.background_intensity` | float, `0.25..1.50` | `1.00` | Scales the selected semantic world-background role without changing the shell palette. |
 | `environment.background_animation_mode` | enum `none`, `tron_grid_flow` | `none` | Selects the bounded animated world-background treatment. `none` is the static themed background. |
 | `environment.background_animation_intensity` | float, `0.00..1.00` | `0.55` | Scales how strongly the animated treatment reads. `0` falls back to the static background. |
@@ -241,7 +241,7 @@ replay/trace files, or deterministic identity.
 Live application may:
 
 - rebuild materials and presentation nodes from the current exported snapshot;
-- recompute responsive slice anchors and renderer bounds after spacing changes;
+- retain identical responsive slice anchors and renderer bounds when legacy spacing values change;
 - refit only when accepted presentation layout bounds changed;
 - switch the semantic palette/theme;
 - update environment colour/intensity; and
@@ -306,7 +306,7 @@ native snapshot/hash assertions are preferred over brittle screenshot pixels.
 
 Real-window review records the exact Godot/platform/path and demonstrates
 default coherence plus live active-piece, grid/boundary, Ghost, palette,
-slice-spacing, environment, UI-scale, and accessibility changes without a game
+environment, UI-scale, and accessibility changes without a game
 restart. Agent-driven review is evidence, not independent human sign-off.
 
 Legacy schema-1 profile snapshots migrate boolean `display.grid_visible` to

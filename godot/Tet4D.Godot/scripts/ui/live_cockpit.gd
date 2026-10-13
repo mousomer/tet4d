@@ -20,12 +20,12 @@ const STANDARD_MIN_WIDTH := 1180.0
 const NARROW_MIN_WIDTH := 800.0
 
 const MAX_DECK_ROWS := 3
-# Reflow buys width at a height cost: every extra row is another ~190px while
+# Reflow buys width at a height cost: every extra control row adds height while
 # the board already holds a large minimum, so a narrow window would otherwise
 # have to be TALLER to stay contained. Capping the deck and scrolling the
 # overflow keeps every control reachable at any size; the cost is that not all
 # of them are visible at once, which is the accepted tradeoff for small shells.
-const MAX_DECK_HEIGHT_SHARE := 0.28
+const MAX_DECK_HEIGHT_SHARE := 0.20
 # Product contract for the Live 4D legend deck: at the supported 1280x720
 # opening window (720 logical px tall) and above, it shows the whole measured
 # legend. Below it the deck gives up exactly the missing height, so the board
@@ -43,22 +43,21 @@ const PLACEMENT_BELOW := "below"
 const PLACEMENT_SIDE := "side"
 # Live 4D: the piece legend is wide and short, so it stays in the deck; NEXT/
 # HOLD and VIEW move to a side column. Together they did not fit one deck row
-# at 1440 px. The column narrows the width-limited slice row (about 30 -> 26 px
-# cells at 1440x900); that is the price of every 4D control visible unscrolled.
+# at 1440 px. A bounded side column and scrollable bottom deck preserve
+# access to every control while prioritizing the gameplay viewport.
 const PLACEMENT_SPLIT := "split"
-# Standard and wide shells need ~440 px at the 1280 px reference width for the
-# 3D compass and drops to share a row; narrow shells scroll the rail anyway and
-# give the width back to the board (and an open Designer panel).
-const SIDE_RAIL_WIDTH_SHARE := 0.35
-const SIDE_RAIL_NARROW_WIDTH_SHARE := 0.30
-const SIDE_RAIL_MIN_WIDTH := 280.0
-const SIDE_RAIL_MAX_WIDTH := 460.0
+# Stage 58B bounds cockpit chrome independently of the board. The existing
+# rail reflows/scrolls its controls instead of consuming a third of gameplay.
+const SIDE_RAIL_WIDTH_SHARE := 0.24
+const SIDE_RAIL_NARROW_WIDTH_SHARE := 0.24
+const SIDE_RAIL_MIN_WIDTH := 260.0
+const SIDE_RAIL_MAX_WIDTH := 320.0
 const SIDE_RAIL_GAP := 10
 # The split column holds only NEXT/HOLD and stacked VIEW, so it stays narrower.
-const SPLIT_COLUMN_WIDTH_SHARE := 0.22
-# NEXT/HOLD side by side need about 290 px; below that they clip.
-const SPLIT_COLUMN_MIN_WIDTH := 300.0
-const SPLIT_COLUMN_MAX_WIDTH := 340.0
+const SPLIT_COLUMN_WIDTH_SHARE := 0.19
+# NEXT/HOLD reflow inside the column; their minimum must not resize gameplay.
+const SPLIT_COLUMN_MIN_WIDTH := 240.0
+const SPLIT_COLUMN_MAX_WIDTH := 280.0
 
 var header_slot: VBoxContainer
 var board_stage: HBoxContainer
@@ -194,6 +193,7 @@ func _constrain_designer_panels() -> void:
 
 func _init() -> void:
 	name = "LiveCockpit"
+	add_theme_constant_override("separation", 4)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -219,7 +219,7 @@ func _init() -> void:
 	side_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	# Never disabled: a disabled axis adopts the content's minimum, which would
 	# let a style's fonts resize the 4D viewport and with it the slice tiling.
-	side_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	side_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	side_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	board_stage.add_child(side_scroll)
 	side_column = VBoxContainer.new()
@@ -449,7 +449,7 @@ func _apply_responsive_policy() -> void:
 		# the deck never keeps a height a smaller window imposed.
 		natural_height = _natural_height_for_rows(packed, 0.0, deck_separation)
 		if _layout_size.y > 1.0:
-			var header_growth := maxf(_header_height() - float(ReplayVisuals.TOP_BAR_HEIGHT), 0.0)
+			var header_growth := maxf(_header_height() - float(ReplayVisuals.LIVE_TOP_BAR_HEIGHT), 0.0)
 			var shortfall := maxf(LEGEND_FULL_FIT_HEIGHT + header_growth - _layout_size.y, 0.0)
 			var compact := minf(natural_height, _layout_size.y * MAX_DECK_HEIGHT_SHARE)
 			deck_height = maxf(natural_height - shortfall, compact)

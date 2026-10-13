@@ -855,11 +855,12 @@ DESIGN and is included in complete saved designs; it never mutates style, grid, 
 inner-render-region changes use the common visibility/size-driven camera refit.
 
 Normal Designer work edits one CURRENT DESIGN. Apply Style changes appearance
-while preserving grid and panel geometry. At the 1280×720 opening window and
-above the Live 4D legend deck shows its whole measured legend unscrolled.
-Shorter windows, or an open guide, take the missing height from the deck first,
-down to its compact share, then scroll it; sizing is recomputed from the
-current size. Save updates its associated saved
+while preserving grid, panel geometry, HUD allocation, camera target and canonical
+slice spacing. Live cockpit rails and the 4D legend deck give gameplay the
+primary display area; at the 1280×720 opening window and above the 4D deck
+shows its whole measured legend unscrolled. Shorter windows, or an open guide,
+take the missing height from the deck first, down to a fifth of the cockpit, then scroll it;
+sizing is recomputed from the current size. Every existing session action remains reachable. Save updates its associated saved
 design; Save As creates a new named complete design without changing the source;
 Load and Revert restore complete saved/opening state, including grid and geometry.
 A/B is optional frozen comparison preview with explicit Set A/Set B and adoption

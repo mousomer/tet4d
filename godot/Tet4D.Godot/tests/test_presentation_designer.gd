@@ -102,8 +102,8 @@ func _test_registry_driven_component() -> Array:
 	designer.set_runtime_context("live_4d")
 	failures.append_array(_check_generated_controls(designer, registry, "live_4d"))
 	var four_d_ids: Array = designer.deterministic_snapshot().get("applicable_ids", [])
-	if four_d_ids.size() != 26 or not four_d_ids.has("slice_set.spacing") or not four_d_ids.has("display.show_w_labels"):
-		failures.append("live 4D Designer should generate all 26 applicable controls including slice settings")
+	if four_d_ids.size() != 25 or four_d_ids.has("slice_set.spacing") or not four_d_ids.has("display.show_w_labels"):
+		failures.append("live 4D Designer should generate 25 applicable controls, excluding inert legacy spacing")
 
 	var registry_data := {"schema_version": registry.schema_version, "categories": registry.categories.duplicate(true), "settings": []}
 	for spec in registry.settings:
@@ -318,20 +318,19 @@ func _test_live_app_integration() -> Array:
 	for _frame in range(6):
 		await tree.process_frame
 	var four_d_designer: Dictionary = designer.deterministic_snapshot()
-	if not four_d_designer.get("applicable_ids", []).has("slice_set.spacing") or not four_d_designer.get("applicable_ids", []).has("display.show_w_labels"):
+	if four_d_designer.get("applicable_ids", []).has("slice_set.spacing") or not four_d_designer.get("applicable_ids", []).has("display.show_w_labels"):
 		failures.append("integrated live 4D Designer should expose registry-authorized slice controls")
 	var four_d_state_before: Dictionary = app._current_snapshot.duplicate(true)
 	var four_d_basis_before: Array = app._live_4d_basis.slots()
 	var four_d_orientation_before: Dictionary = app._live_4d_local_orientation.snapshot()
 	var four_d_camera_before: Dictionary = app._camera_rig.presentation_snapshot()
-	var original_spacing := float(designer.working_profile().value("slice_set.spacing"))
-	var edited_spacing := 1.4 if absf(original_spacing - 1.4) > 0.001 else 0.8
-	if not designer.set_parameter_value("slice_set.spacing", edited_spacing):
-		failures.append("integrated 4D Designer should apply slice-set presentation values")
+	var show_labels := not bool(designer.working_profile().value("display.show_w_labels"))
+	if not designer.set_parameter_value("display.show_w_labels", show_labels):
+		failures.append("integrated 4D Designer should apply slice appearance values")
 	await tree.process_frame
 	var four_d_renderer_values: Dictionary = app._renderer.presentation_preferences_snapshot().get("profile", {}).get("values", {})
-	if absf(float(four_d_renderer_values.get("slice_set.spacing", -99.0)) - edited_spacing) > 0.001:
-		failures.append("Designer live apply should reach the slice-set presentation owner")
+	if bool(four_d_renderer_values.get("display.show_w_labels")) != show_labels:
+		failures.append("Designer live apply should reach the slice appearance owner")
 	if app._current_snapshot != four_d_state_before or app._live_4d_basis.slots() != four_d_basis_before or app._live_4d_local_orientation.snapshot() != four_d_orientation_before:
 		failures.append("4D slice presentation editing must preserve game state, active slice, basis, and local orientation")
 	var four_d_camera_after: Dictionary = app._camera_rig.presentation_snapshot()

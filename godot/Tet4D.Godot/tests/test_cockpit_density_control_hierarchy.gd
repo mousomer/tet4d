@@ -285,8 +285,9 @@ func _check_primary_surfaces(hud, mode: String, label: String) -> Array:
 			continue
 		if surface[0].size.x <= 0.0 or surface[0].size.y <= 0.0 or (strict_containment and not _contains_rect(surface[1], surface[0])):
 			failures.append("%s %s %s must be contained by its semantic deck module" % [label, mode, surface[2]])
-	if next_rect.intersects(hold_rect) or next_rect.end.x > hold_rect.position.x + 0.5:
-		failures.append("%s %s NEXT and HOLD must be compact side-by-side non-overlapping surfaces" % [label, mode])
+	var stacked_previews: bool = hud._piece_preview_row.columns == 1
+	if next_rect.intersects(hold_rect) or (next_rect.end.y > hold_rect.position.y + 0.5 if stacked_previews else next_rect.end.x > hold_rect.position.x + 0.5):
+		failures.append("%s %s NEXT and HOLD must follow the preview grid without overlap" % [label, mode])
 	var strip: Dictionary = hud._piece_control_strip.deterministic_snapshot()
 	if strip.get("source") != "LiveInputContract" or strip.get("roles", []) != ["translate", "drop", "rotate", "hold", "session"]:
 		failures.append("%s %s piece surface must report authoritative translate/rotate/drop consumption" % [label, mode])

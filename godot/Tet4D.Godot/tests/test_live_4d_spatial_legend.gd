@@ -71,13 +71,16 @@ func run() -> Array:
 		failures.append("Live 4D legend wording must not change after a view turn, got %s" % str(hud._piece_control_strip.deterministic_snapshot().get("row_ids", [])))
 	failures.append_array(await LegendDirectionProbeScript.check_compass_matches_moves(app, hud, tree, 4, "Live-4D after view turn"))
 	# Direction publishing runs after contract refresh. Exercise that late rebuild
-	# with repeated real XW turns, rather than reconfiguring/styling it by hand.
+	# with real XW turns and alternating inspection yaw. Scale-first layouts
+	# can retain one row through every basis turn, so basis turns alone no
+	# longer guarantee a left/right reversal. Never inject legend directions.
 	app._live_4d_paused = true
 	var hash_before := str(app._live_bridge.live_4d_state_hash())
 	var reversed_before: bool = hud._piece_control_strip.deterministic_snapshot()["slice_keys_reversed"]
 	var reversals := 0
 	for turn in range(8):
 		app._apply_live_4d_basis_turn("xw", 1)
+		app._camera_rig.nudge_yaw(PI)
 		for frame in range(6):
 			await tree.process_frame
 		var legend: Dictionary = hud._piece_control_strip.deterministic_snapshot()

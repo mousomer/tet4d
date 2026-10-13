@@ -35,6 +35,8 @@ func apply_panel(panel: Control, style_manager, elevated: bool = false) -> void:
 	elif _is_elevated_panel(panel):
 		border_role = ShellStyleRolesScript.GRID_MAJOR
 	var padding := ShellDesignTokensScript.CONTROL_PADDING if panel.name in ["LivePieceControlStrip", "LiveViewControlStrip"] else ShellDesignTokensScript.COMPACT_PADDING
+	if _is_shell_chrome(panel):
+		padding = ShellDesignTokensScript.CHROME_CONTROL_PADDING
 	var style := _panel_box(style_manager, background_role, border_role, padding)
 	panel.add_theme_stylebox_override("panel", style)
 	panel.set_meta("shell_style_theme_id", style_manager.get_theme_id())
@@ -42,6 +44,8 @@ func apply_panel(panel: Control, style_manager, elevated: bool = false) -> void:
 
 func _apply_control(control: Control, style_manager) -> void:
 	control.set_meta("shell_style_theme_id", style_manager.get_theme_id())
+	if _is_shell_chrome(control):
+		control.add_theme_font_override("font", ThemeDB.fallback_font)
 	if control is PanelContainer:
 		var elevated := _is_elevated_panel(control)
 		apply_panel(control, style_manager, elevated)
@@ -142,7 +146,7 @@ func _apply_button(button: Button, style_manager) -> void:
 	button.add_theme_color_override("font_hover_color", style_manager.get_color(ShellStyleRolesScript.TEXT_PRIMARY))
 	button.add_theme_color_override("font_pressed_color", style_manager.get_color(ShellStyleRolesScript.TEXT_INVERSE))
 	button.add_theme_color_override("font_disabled_color", style_manager.get_color(ShellStyleRolesScript.TEXT_MUTED))
-	var margin := ShellDesignTokensScript.CONTROL_PADDING
+	var margin := ShellDesignTokensScript.CHROME_CONTROL_PADDING if _is_shell_chrome(button) else ShellDesignTokensScript.CONTROL_PADDING
 	button.add_theme_stylebox_override("normal", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_ELEVATED, ShellStyleRolesScript.GRID_MINOR, margin))
 	button.add_theme_stylebox_override("hover", _button_box(style_manager, ShellStyleRolesScript.ACCENT_SOFT, ShellStyleRolesScript.ACCENT_FOCUS, margin))
 	button.add_theme_stylebox_override("focus", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_ELEVATED, ShellStyleRolesScript.ACCENT_FOCUS, margin, _focus_border_width(style_manager)))
@@ -156,7 +160,7 @@ func _apply_action_button(button: Button, style_manager) -> void:
 	button.add_theme_color_override("font_pressed_color", style_manager.get_color(ShellStyleRolesScript.TEXT_INVERSE))
 	button.add_theme_color_override("font_disabled_color", style_manager.get_color(ShellStyleRolesScript.TEXT_MUTED))
 	button.add_theme_font_size_override("font_size", _font_size(button, ShellDesignTokensScript.FONT_BODY))
-	var margin := ShellDesignTokensScript.CONTROL_PADDING + ShellDesignTokensScript.SPACE_1
+	var margin := ShellDesignTokensScript.CHROME_ACTION_PADDING if _is_shell_chrome(button) else ShellDesignTokensScript.CONTROL_PADDING + ShellDesignTokensScript.SPACE_1
 	button.add_theme_stylebox_override("normal", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_ELEVATED, ShellStyleRolesScript.ACCENT_PRIMARY, margin, 2))
 	button.add_theme_stylebox_override("hover", _button_box(style_manager, ShellStyleRolesScript.ACCENT_SOFT, ShellStyleRolesScript.ACCENT_FOCUS, margin, 2))
 	button.add_theme_stylebox_override("focus", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_ELEVATED, ShellStyleRolesScript.ACCENT_FOCUS, margin, _focus_border_width(style_manager)))
@@ -235,8 +239,8 @@ func _font_size(control: Control, readable_size: int) -> int:
 		if bool(ancestor.get_meta("readable_guidance", false)):
 			return readable_size
 		if bool(ancestor.get_meta("shell_chrome", false)):
-			if readable_size >= ShellDesignTokensScript.FONT_SCREEN_TITLE:
-				return ShellDesignTokensScript.FONT_CHROME_TITLE
+			if control is Label:
+				return ShellDesignTokensScript.FONT_CHROME_TITLE if control.name.ends_with("Title") else ShellDesignTokensScript.FONT_CHROME_SUPPORTING
 			if readable_size == ShellDesignTokensScript.FONT_BODY:
 				return ShellDesignTokensScript.FONT_CHROME_BODY
 			return ShellDesignTokensScript.FONT_CHROME_SUPPORTING
@@ -289,3 +293,12 @@ func _is_elevated_panel(panel: Control) -> bool:
 
 func _focus_border_width(style_manager) -> int:
 	return ShellDesignTokensScript.BORDER_FOCUS_HIGH_CONTRAST if style_manager.is_high_contrast_enabled() else ShellDesignTokensScript.BORDER_FOCUS
+
+
+func _is_shell_chrome(control: Control) -> bool:
+	var ancestor: Node = control
+	while ancestor != null:
+		if bool(ancestor.get_meta("shell_chrome", false)):
+			return true
+		ancestor = ancestor.get_parent()
+	return false

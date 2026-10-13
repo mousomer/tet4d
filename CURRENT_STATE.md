@@ -37,9 +37,9 @@ enforces this.
 <!-- END HANDOFF:state -->
 
 <!-- BEGIN HANDOFF:notes -->
-Accepted grid/Designer baseline is committed at `b5d004b7`.
-Stage 57 control legibility and direct restart/new-game flow pass manual review and
-the pinned Godot gate; see `docs/BACKLOG.md` for evidence and the secret-scan rerun.
+Stage 57 is committed; current master `5b0e30db` is an ancestor of this branch.
+Stage 58B is implemented: larger allocation, scale-based tiling, canonical gaps
+and native resolution. Gates/manual review passed; scale is frozen. See `docs/BACKLOG.md`.
 <!-- END HANDOFF:notes -->
 
 ## Current Authority

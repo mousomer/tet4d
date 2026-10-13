@@ -188,7 +188,7 @@ responsive cockpit and disable all manipulation. Session rectangles survive reop
 design-state extension of the profile snapshot. Older profiles without the
 extension restore default cockpit geometry.
 
-The board panel contains the real SubViewportContainer. Moving/resizing panels
+The board panel contains the real gameplay viewport surface. Moving/resizing panels
 never calls Fit directly: resolved inner visibility/size signals use the same
 app refit path as mode entry and window resizing. Layout geometry is independent
 of profiles, style, grid mode, exact basis, view orientation, density, and native

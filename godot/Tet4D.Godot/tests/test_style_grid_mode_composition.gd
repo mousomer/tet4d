@@ -61,7 +61,8 @@ func _test_composition_rule(failures: Array, catalog, style_ids: Array) -> void:
 			var current = ProfileScript.canonical_defaults().with_overrides({"display.grid_mode": grid_mode})
 			var composed = current.with_style_of(style)
 			var expected: Dictionary = style.values()
-			expected["display.grid_mode"] = grid_mode
+			for setting_id in ProfileScript.STYLE_INDEPENDENT_IDS:
+				expected[setting_id] = current.value(setting_id)
 			if not composed.contract_conforms() or composed.values() != expected:
 				failures.append("%s over %s must keep the grid selection and every style value" % [style_id, grid_mode])
 

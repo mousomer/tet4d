@@ -113,9 +113,11 @@ func _check_resize_history(tree: SceneTree, scene: PackedScene) -> Array:
 		if look == looks[0]:
 			# Opened alone: two live shells in one real window would fight over
 			# its content scale, a state production never has.
-			# An open guide takes header height the deck yields; closing it must
-			# restore the clean 1280x720 legend exactly.
+			# An open guide takes header height; the deck must yield it, not
+			# push past the window or squeeze the board below its guard.
 			var guided := await _open_live_4d(tree, scene, catalog, {"style": look["style"], "theme": look["theme"], "guide": true}, HISTORY_REFERENCE)
+			var guided_geometry := _deck_geometry(guided["hud"])
+			_assert_deck_safe(failures, guided_geometry, HISTORY_REFERENCE, "%s 1280x720 with guide open" % label)
 			guided["hud"]._set_onboarding_visible(false)
 			await _settle(tree)
 			_compare_geometry(failures, opening, _deck_geometry(guided["hud"]), "%s 1280x720 after closing the guide" % label)
@@ -387,7 +389,8 @@ func _assert_live_geometry(hud: Node, viewport_case: Dictionary, mode: String, v
 	# Stage 56H-R3.1: scrolling is the constrained-size escape hatch only. At the
 	# standard window NEXT and HOLD must be on screen without scrolling.
 	if bool(viewport_case.get("next_hold_without_scroll", false)):
-		if bool(cockpit.get("deck_scroll_required", false)) or (not side_rail and int(cockpit.get("deck_row_count", 0)) != 1):
+		# The 4D split legend must fit too; only the side rail may scroll here.
+		if not side_rail and (bool(cockpit.get("deck_scroll_required", false)) or int(cockpit.get("deck_row_count", 0)) != 1):
 			failures.append("%s must fit its deck on one unscrolled row, got rows %s" % [label, str(cockpit.get("deck_row_assignment", []))])
 		var visible_host := side_column if split else deck
 		if not _contains_rect(visible_host, preview_row) or not _contains_rect(usable, preview_row):

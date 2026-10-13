@@ -687,6 +687,30 @@ playing, paused and game-over, plus rebinding propagation into visible guidance.
 Manual acceptance checks control discovery during play and immediate replay.
 Renderer, camera, scale, projection and Designer reorganisation are excluded.
 
+### Stage 58B gameplay allocation and resolution
+
+The accepted 58A audit establishes viewport allocation, rather than camera fit,
+as the main scale constraint. Stage 58B gives live boards a larger share of the
+existing cockpit: bounded side rails, a measured 4D legend deck and
+compact, style-independent header metrics. Every existing action and semantic
+control group stays reachable. Allocation follows the actual available shell;
+theme appearance cannot change those region constraints or the camera target.
+
+Adaptive slice layout maximizes usable cell scale in the actual gameplay region
+over all column counts, using the canonical fitted camera projection and the
+same per-slice label/spawn clearance as Fit. Row balance and unused area break equal-scale ties;
+there is no preferred row count. Slice gaps derive only from the canonical
+supported local-board envelope, independent of style and active-piece position.
+The legacy `slice_set.spacing` value remains readable in saved designs but has
+no geometric effect and is no longer offered as a design control.
+
+The gameplay SubViewport renders at the displayed pixel extent, including
+canvas/UI scaling and HiDPI backing scale. Fit and layout consume the logical
+display region separately from render-target resolution. Four-sample MSAA smooths edges;
+line width and grid topology are not resolution controls. Geometry invariance,
+unclipped bounds, Stage 57, style matrices and manual 3D/4D play are acceptance
+evidence. Depth, contrast, slice attenuation and W-label tracking remain deferred.
+
 The named-view control is a `MenuButton` labelled as an action launcher. It
 never reports a selected view, never displays `Custom`, and manual orientation
 after an action does not update any identity. While its popup is open, the HUD

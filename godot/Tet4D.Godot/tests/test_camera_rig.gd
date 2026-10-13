@@ -199,8 +199,8 @@ func _assert_live_4d_screen_level_slice_rows(failures: Array, rig, presentation_
 		1.0,
 		CameraRigScript.live_4d_screen_row_y_per_world_x()
 	)
-	if mapper.layer_layout.columns != 3 or mapper.layer_layout.rows != 2:
-		failures.append("six Live-4D slices must exercise the three-column row-alignment fixture, got %dx%d" % [mapper.layer_layout.columns, mapper.layer_layout.rows])
+	if mapper.layer_layout.columns < 2:
+		failures.append("six Live-4D slices must exercise adjacent same-row anchors, got %dx%d" % [mapper.layer_layout.columns, mapper.layer_layout.rows])
 		return
 	var left_anchor := mapper.slice_anchor(0)
 	var right_anchor := mapper.slice_anchor(1)

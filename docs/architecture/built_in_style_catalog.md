@@ -117,7 +117,7 @@ The catalog is a collapsed-by-default disclosure section inside the existing
 full Designer, above the Profile Library section. The two sections are mutually
 exclusive so their combined minimum content can never exceed the already
 allocated Designer overlay; expanding either one consumes internal Designer
-space and leaves the production cockpit rect and gameplay `SubViewportContainer`
+space and leaves the production cockpit rect and gameplay `gameplay viewport surface`
 rect unchanged.
 
 Apply uses `PresentationProfile.with_style_of` and records base-style provenance.
@@ -218,7 +218,7 @@ enter a deterministic comparison.
 | Python Reference | heritage | Flat homage to the Python build | Diagnostic palette, fine grid `0.22`, hard boundary `1.00`, subdued Ghost `0.75`, background `0.55` |
 | Arcade Neon | vivid | Bright cabinet look | Grid `0.55`, full board detail, Ghost `1.30`, background `1.25` |
 | Tron Grid Flow | animated | The one animated style | Vector Arcade palette, `tron_grid_flow` at strength `0.55` / speed `0.85`, dark background `0.45` |
-| Blueprint Technical | technical | Schematic reading | Grid `0.72`, translucent fills `0.88`/`0.78`, slice spacing `1.25`, detailed HUD |
+| Blueprint Technical | technical | Schematic reading | Grid `0.72`, translucent fills `0.88`/`0.78`, canonical slice spacing, detailed HUD preference |
 | High Contrast | accessibility | Maximum separation, no motion | High Contrast invariant, Ghost `1.35`, background `0.30`, reduced motion |
 
 ## 10. Future relationship to comparative evaluation
