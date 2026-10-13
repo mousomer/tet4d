@@ -76,8 +76,8 @@ The human session includes direct Play and `2`/`3`/`4` entry, `C` Change Setup,
 and frozen-setup Restart/Play Again under
 `docs/architecture/editable_board_setup_and_persistence.md`.
 Shell readability uses 24/22 px text, contained menu scrolling, and visible launch
-Play. Magnification uses 1280×720 pt for menus and 1280×800 pt for live/replay,
-up to 2×. Include resizing, navigation, and guide layout in human acceptance.
+Play. Scale: menus 1280×720 pt, tighter axis, 0.75–2×; live/replay 1280×800 pt, 1–2×.
+Include resizing, navigation, and guide layout in human acceptance.
 The correction on `claude/stage-56h-gameplay-ergonomics` from `0cb30958`
 requires actual-region fitting, styled legends, orthogonal grid modes, and
 session-only Designer panel Move/Resize with native-hash isolation. Human

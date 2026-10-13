@@ -323,10 +323,13 @@ disabled control emits no activation.
 1. Default body text should target at least 18 px equivalent in current window scale.
    Godot menu/help body text uses 24 logical pixels and supporting text uses 22;
    display scaling and the persisted UI-scale preference apply on top.
-   Menu screens magnify above the 1280×720 point opening window; live/replay
-   uses a 1280×800 point reference so magnified rails and Designer chrome retain
-   their required logical height. Each scales by the tighter window axis, capped
-   at 2×. Smaller windows keep readable point sizes and reflow/scroll. Initial
+   Menu screens scale from the 1280×720 point opening window by the tighter
+   window axis in both directions: a narrower or a shorter window shrinks menu
+   text, and extra width never enlarges it while height is the limit. Menu
+   scaling floors at 0.75× (24 px body renders at the 18 px target) and caps at
+   2×; smaller windows then keep that size and reflow/scroll. Live/replay uses
+   a 1280×800 point reference, scaled by the tighter axis between 1× and 2×, so
+   magnified rails and Designer chrome retain their required logical height. Initial
    Main Menu layout shows the title and focused Play action; layout changes
    keep the focused action reachable without overriding manual wheel scrolling.
    Helper keycaps and action labels use at least 22 logical pixels in every

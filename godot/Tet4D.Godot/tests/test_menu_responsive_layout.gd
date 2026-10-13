@@ -5,16 +5,36 @@ const HudScript = preload("res://scripts/ui/replay_hud.gd")
 
 func run() -> Array:
 	var failures: Array = []
+	# Expected factors are the contract written out by hand: the tighter of
+	# width/1280 and height/720, floored at the 18/24 readable-body ratio.
 	for sample in [
-		[Vector2(720, 600), 1.0],
 		[Vector2(1280, 720), 1.0],
 		[Vector2(1600, 900), 1.25],
 		[Vector2(1920, 1080), 1.5],
 		[Vector2(1920, 720), 1.0],
 		[Vector2(3840, 2160), 2.0],
+		# Width-only and height-only reductions from the reference.
+		[Vector2(1120, 720), 0.875],
+		[Vector2(1280, 600), 600.0 / 720.0],
+		# Wide but short is held by height; narrow but tall by width.
+		[Vector2(1920, 600), 600.0 / 720.0],
+		[Vector2(1700, 560), 560.0 / 720.0],
+		[Vector2(1120, 1000), 0.875],
+		# Compact windows stop at the 18 px readable-body floor and reflow.
+		[Vector2(720, 600), 0.75],
+		[Vector2(600, 400), 0.75],
 	]:
 		if not is_equal_approx(HudScript.menu_window_scale(sample[0]), sample[1]):
-			failures.append("menu scale must follow the tighter axis, preserve compact text, and cap at 2x: %s" % sample[0])
+			failures.append("menu scale must follow the tighter axis in both directions, floor at 18 px body text, and cap at 2x: %s gave %s, want %s" % [sample[0], HudScript.menu_window_scale(sample[0]), sample[1]])
+	var reference_scale := HudScript.menu_window_scale(Vector2(1280, 720))
+	if HudScript.menu_window_scale(Vector2(1280, 560)) >= reference_scale:
+		failures.append("reducing only the window height must shrink menu text")
+	if HudScript.menu_window_scale(Vector2(1000, 720)) >= reference_scale:
+		failures.append("reducing only the window width must shrink menu text")
+	if HudScript.menu_window_scale(Vector2(2400, 560)) > HudScript.menu_window_scale(Vector2(1280, 560)):
+		failures.append("extra width must not enlarge menu text in a height-limited window")
+	if HudScript.menu_window_scale(Vector2(1000, 1400)) > HudScript.menu_window_scale(Vector2(1000, 720)):
+		failures.append("extra height must not enlarge menu text in a width-limited window")
 	var tree := Engine.get_main_loop() as SceneTree
 	var original_size := tree.root.size
 	var original_content_scale_size := tree.root.content_scale_size
@@ -39,16 +59,43 @@ func run() -> Array:
 		var button_name := "CommandCard__Play" if screen == HudScript.SCREEN_MAIN_MENU else "CommandCard__Replay_Demos"
 		var command := hud.find_child(button_name, true, false) as Button
 		await _resize(tree, Vector2i(1280, 720))
-		var opening_text_scale := (tree.root.get_final_transform() * command.get_global_transform_with_canvas()).get_scale().x
+		var opening_text_scale := _rendered_scale(tree, command)
 		await _resize(tree, Vector2i(1600, 900))
 		if DisplayServer.get_name() != "headless":
-			var growth := (tree.root.get_final_transform() * command.get_global_transform_with_canvas()).get_scale().x / opening_text_scale
+			var growth := _rendered_scale(tree, command) / opening_text_scale
 			if absf(growth - 1.25) > 0.02:
 				failures.append("%s rendered text must grow 25%% on a same-aspect 1280x720 to 1600x900 resize, got %s" % [screen, growth])
+			# Headless pins the canvas to the window, so rendered typography is
+			# only observable with a real window. Each step compares the on-screen
+			# command font against the reference measurement, not against the
+			# policy function, so an inert resize path cannot satisfy it.
+			for step in [
+				[Vector2i(1280, 560), 560.0 / 720.0, "height-only reduction"],
+				[Vector2i(1040, 720), 1040.0 / 1280.0, "width-only reduction"],
+				[Vector2i(1700, 560), 560.0 / 720.0, "wide but short window"],
+				[Vector2i(1040, 960), 1040.0 / 1280.0, "narrow but tall window"],
+				[Vector2i(720, 600), 0.75, "compact window at the readable floor"],
+				[Vector2i(1280, 720), 1.0, "restored reference window"],
+			]:
+				await _resize(tree, step[0])
+				var ratio := _rendered_scale(tree, command) / opening_text_scale
+				if absf(ratio - float(step[1])) > 0.02:
+					failures.append("%s %s must render menu text at %.3fx the reference, got %.3fx" % [screen, step[2], step[1], ratio])
+			var restored_scale := _rendered_scale(tree, command)
+			hud._apply_responsive_layout()
+			await _settle(tree)
+			if not is_equal_approx(_rendered_scale(tree, command), restored_scale) or not is_equal_approx(restored_scale, opening_text_scale):
+				failures.append("%s repeated layout at the reference size must reproduce the opening typography" % screen)
+			await _resize(tree, Vector2i(720, 600))
+			var body_points := command.get_theme_font_size("font_size") * _rendered_scale(tree, command) / DisplayServer.screen_get_scale()
+			if body_points < 18.0 - 0.01:
+				failures.append("%s compact menu body text must stay at or above 18 points, got %s" % [screen, body_points])
 		await _resize(tree, Vector2i(960, 720))
-		var compact_width := panel.size.x
+		# Same-aspect windows share one logical canvas, so growth is measured in
+		# rendered pixels: what the player sees, not the logical layout extent.
+		var compact_width := panel.size.x * _rendered_scale(tree, panel)
 		await _resize(tree, Vector2i(1600, 1200))
-		if panel.size.x <= compact_width:
+		if panel.size.x * _rendered_scale(tree, panel) <= compact_width:
 			failures.append("%s menu panel must grow with the window width" % screen)
 		# Stay inside a laptop display's usable height; the OS clamps oversized
 		# real windows, so 1200-to-1600 heights would test the same window twice.
@@ -104,6 +151,10 @@ func run() -> Array:
 	tree.root.content_scale_size = original_content_scale_size
 	ThemeDB.fallback_base_scale = 1.0
 	return failures
+
+
+func _rendered_scale(tree: SceneTree, control: Control) -> float:
+	return (tree.root.get_final_transform() * control.get_global_transform_with_canvas()).get_scale().x
 
 
 func _settle(tree: SceneTree) -> void:

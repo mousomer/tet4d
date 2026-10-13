@@ -235,11 +235,15 @@ var _live_view_control_strip: PanelContainer
 var _live_cockpit
 const DESIGN_RESOLUTION_MIN_WIDTH := 640.0
 const DESIGN_RESOLUTION_MIN_HEIGHT := 480.0
-# Menus magnify above their opening size; live/replay preserves the taller
-# reference canvas required by the gameplay rails and Designer chrome.
+# Menus scale with their opening size on both axes; live/replay preserves the
+# taller reference canvas required by the gameplay rails and Designer chrome.
 const MENU_REFERENCE_SIZE := Vector2(1280.0, 720.0)
 const DESIGN_REFERENCE_SIZE := Vector2(1280.0, 800.0)
 const MAX_WINDOW_UI_SCALE := 2.0
+# Menu text may shrink with a smaller window only down to the RDS 18 px
+# readable-body target; below it the logical canvas grows and menus reflow.
+const MENU_READABLE_BODY_POINTS := 18.0
+const MIN_MENU_WINDOW_SCALE := MENU_READABLE_BODY_POINTS / ShellDesignTokensScript.FONT_BODY
 
 var _live_4d_deck: VBoxContainer
 var _live_4d_piece_module: VBoxContainer
@@ -3556,9 +3560,15 @@ func _sync_design_resolution() -> void:
 		window.content_scale_size = target
 
 
+# The single menu typography policy: logical font tokens are fixed, and this
+# window-to-canvas factor follows whichever axis is tighter in both directions,
+# so a shorter window shrinks menu text as surely as a narrower one. It is
+# recomputed from the reference on every resize, never from the prior scale.
 static func menu_window_scale(window_points: Vector2) -> float:
+	if window_points.x <= 0.0 or window_points.y <= 0.0:
+		return 1.0
 	var fit := minf(window_points.x / MENU_REFERENCE_SIZE.x, window_points.y / MENU_REFERENCE_SIZE.y)
-	return clampf(fit, 1.0, MAX_WINDOW_UI_SCALE)
+	return clampf(fit, MIN_MENU_WINDOW_SCALE, MAX_WINDOW_UI_SCALE)
 
 
 func _window_ui_scale(points: Vector2) -> float:
