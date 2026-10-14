@@ -164,3 +164,10 @@ Each shared leaf executes once within that invocation. The standalone
 then executes both shared leaves, preserving its complete always-on CI contract.
 This factoring uses explicit call ownership, without skip flags or cached proof.
 Separate CI jobs retain their own required evidence and checkout scope.
+
+The pinned Godot wrapper keeps a 900-second default per-step watchdog. Its
+aggregate replay/style suite has a separate 1800-second bounded budget, selected
+by `GODOT_REPLAY_TEST_TIMEOUT_SECONDS`; all assertions and all test scripts still
+run. Hosted Linux evidence on 2026-10-14 reached script 78 of 84 before the old
+900-second aggregate limit, without assertion failures. This budget change does
+not remove the watchdog or certify a timed-out run as passing.

@@ -118,3 +118,10 @@ remote results are linked from [PR #153](https://github.com/mousomer/tet4d/pull/
 
 This publication step does not change scale, geometry, styling or gameplay.
 Owner visual acceptance remains distinct from the recorded agent inspection.
+
+The first publication rerun passed every other selected product lane but the
+Godot replay suite exceeded its 900-second aggregate budget after reaching
+script 78/84, with no reported assertion failure. Publication gives this suite
+a separate bounded 1800-second budget, retaining all tests and the 900-second
+watchdog for other Godot steps. A fresh complete run is required; the timed-out
+run is not acceptance evidence.

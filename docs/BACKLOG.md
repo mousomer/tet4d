@@ -59,6 +59,11 @@ opacity, colour, scale, camera and depth tuning belong to later stages.
 
 ### Stage 58 3D/4D board readability
 
+- [x] Publication CI correction (2026-10-14): clear ready-PR handoff state and
+  give the complete Godot replay/style suite a separate bounded 30-minute
+  watchdog after hosted Linux reached test 78/84 at the old 15-minute limit.
+  Retain all test assertions and shorter watchdogs for other steps.
+
 - [x] 58B widened scope (implemented and verified 2026-10-12): increase gameplay allocation;
   measure before/after; select slice layouts by usable scale in the real viewport;
   canonicalize spacing; render at displayed resolution; verify style invariance,
