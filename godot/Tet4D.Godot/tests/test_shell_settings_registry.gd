@@ -11,7 +11,7 @@ func run() -> Array:
 	failures.append_array(registry.validate())
 	_assert_equal(failures, registry.schema_version, 3, "Stage 52 registry schema version")
 	_assert_equal(failures, registry.categories.size(), 8, "Stage 52 category count")
-	_assert_equal(failures, registry.settings.size(), 29, "presentation parameter contract setting count")
+	_assert_equal(failures, registry.settings.size(), 32, "presentation parameter contract setting count")
 	var setting_ids: Array = []
 	for spec in registry.settings:
 		var setting_id: String = spec.id()
@@ -50,7 +50,7 @@ func run() -> Array:
 	_assert_has_setting(failures, registry, "interface.show_onboarding")
 	_assert_has_setting(failures, registry, "ghost.enabled")
 	_assert_has_setting(failures, registry, "settled_cells.opacity")
-	for setting_id in ["display.grid_visible", "board.grid_opacity", "board.boundary_opacity", "active_cells.opacity", "ghost.opacity", "slice_set.spacing", "environment.background_intensity"]:
+	for setting_id in ["display.grid_mode", "board.grid_opacity", "board.boundary_opacity", "active_cells.opacity", "ghost.opacity", "slice_set.spacing", "environment.background_intensity"]:
 		_assert_has_setting(failures, registry, setting_id)
 	for setting_id in [
 		"display.window_mode",
@@ -62,8 +62,8 @@ func run() -> Array:
 		"camera.invert_y",
 	]:
 		_assert_has_setting(failures, registry, setting_id)
-	if registry.persistent_specs().size() != 27:
-		failures.append("shell should persist exactly twenty-seven whitelisted presentation preferences")
+	if registry.persistent_specs().size() != 30:
+		failures.append("shell should persist exactly thirty whitelisted presentation preferences")
 	if registry.get_spec("display.windowed_size").is_ui_visible():
 		failures.append("remembered window size should remain automatic and hidden")
 	if registry.get_spec("diagnostics.show_layout_bounds").is_persistent():

@@ -10,6 +10,7 @@ const SliceLocalOrientationScript = preload("res://scripts/presentation/slice_lo
 func run() -> Array:
 	var failures := []
 	_test_reference_viewport_policy(failures)
+	_test_fitted_live_matrix(failures)
 	_test_responsive_viewport_matrix(failures)
 	for count in [3, 4, 8, 12]:
 		var layout = AdaptiveLayerLayoutScript.new()
@@ -84,46 +85,41 @@ func _test_responsive_viewport_matrix(failures: Array) -> void:
 
 
 func _test_reference_viewport_policy(failures: Array) -> void:
-	var expected_columns := {5: 3, 6: 3, 7: 4, 8: 4}
-	for count in expected_columns:
-		var layout = AdaptiveLayerLayoutScript.new()
-		layout.configure(count, 8.0, 16.0, 1600.0 / 960.0, 1.0, 5.0, 0.0, Vector2(1600.0, 960.0))
-		var snapshot: Dictionary = layout.snapshot()
-		if int(snapshot.get("columns", 0)) != int(expected_columns[count]) or int(snapshot.get("rows", 0)) != 2:
-			failures.append("%d slices at 1600x960 must select %dx2, got %sx%s" % [count, expected_columns[count], snapshot.get("columns"), snapshot.get("rows")])
-		if snapshot.get("viewport_size", Vector2.ZERO) != Vector2(1600.0, 960.0):
-			failures.append("%d-slice evidence must retain the measured viewport" % count)
-		if float(snapshot.get("projected_board_scale", 0.0)) <= 0.0 or float(snapshot.get("unused_viewport_area", -1.0)) < 0.0:
-			failures.append("%d-slice evidence must report scale and unused area" % count)
-		var content_rect: Rect2 = snapshot.get("content_rect", Rect2())
-		var tile_rects: Array = snapshot.get("tile_rects", [])
-		if tile_rects.size() != count:
-			failures.append("%d-slice evidence must report every tile rectangle" % count)
-		for index in range(tile_rects.size()):
-			var tile_rect: Rect2 = tile_rects[index]
-			if not _rect_contains(content_rect, tile_rect):
-				failures.append("%d-slice tile %d must remain inside collection bounds" % [count, index])
-			var assignment: Dictionary = snapshot.get("assignments", [])[index]
-			if int(assignment.get("layer", -1)) != index or int(assignment.get("row", -1)) != index / int(expected_columns[count]) or int(assignment.get("column", -1)) != index % int(expected_columns[count]):
-				failures.append("%d-slice assignment %d must remain monotonic row-major" % [count, index])
-		if str(snapshot.get("partial_row_alignment", "")) != "left":
-			failures.append("partial rows must retain the stable left-aligned column origin")
-		var final_row_first := int(expected_columns[count])
-		if count % int(expected_columns[count]) != 0 and int((snapshot.get("assignments", []) as Array)[final_row_first].get("column", -1)) != 0:
-			failures.append("%d-slice partial final row must begin in column zero" % count)
-		var fixed_four: Dictionary = layout.candidate_snapshot(4)
-		var chosen_scale := float(snapshot.get("projected_board_scale", 0.0))
-		if chosen_scale + AdaptiveLayerLayoutScript.SCALE_TIE_EPSILON < float(fixed_four.get("projected_board_scale", 0.0)):
-			failures.append("%d-slice chosen grid must not reduce scale versus fixed four columns" % count)
-		if count in [5, 6] and float(fixed_four.get("last_row_imbalance", 0.0)) <= float(layout.candidate_snapshot(int(expected_columns[count])).get("last_row_imbalance", 1.0)):
-			failures.append("%d-slice 3-column choice must improve final-row balance versus fixed four" % count)
+	# Evaluate every valid candidate, across actual cockpit allocations and
+	# contrasting aspects. No row-count preference may sacrifice cell scale.
+	for viewport in [Vector2(970, 444), Vector2(970, 260), Vector2(600, 700), Vector2(1600, 960)]:
+		for count in [1, 4, 5, 6, 7, 8, 12]:
+			var layout = AdaptiveLayerLayoutScript.new()
+			layout.configure(count, 5.0, 10.0, viewport.x / viewport.y, 1.0, 4.0, 0.0, viewport)
+			for columns in range(1, count + 1):
+				var candidate: Dictionary = layout.candidate_snapshot(columns)
+				if layout.projected_board_scale + 0.0001 < float(candidate["projected_board_scale"]):
+					failures.append("%d slices at %s sacrificed usable cell scale" % [count, viewport])
+			var repeated = AdaptiveLayerLayoutScript.new()
+			repeated.configure(count, 5.0, 10.0, viewport.x / viewport.y, 1.4, 4.0, 0.0, viewport)
+			if layout.snapshot() != repeated.snapshot():
+				failures.append("legacy spacing must not alter anchors or layout selection")
+	var wide = AdaptiveLayerLayoutScript.new()
+	var tall = AdaptiveLayerLayoutScript.new()
+	wide.configure(7, 5.0, 10.0, 4.0, 1.0, 4.0, 0.0, Vector2(1200, 300))
+	tall.configure(7, 5.0, 10.0, 0.75, 1.0, 4.0, 0.0, Vector2(600, 800))
+	if wide.rows != 1 or tall.rows <= 1:
+		failures.append("the same seven slices must respond to actual wide/tall viewport dimensions")
 
-	var eight = AdaptiveLayerLayoutScript.new()
-	eight.configure(8, 8.0, 16.0, 1600.0 / 960.0, 1.0, 5.0, 0.0, Vector2(1600.0, 960.0))
-	var old_five_plus_three: Dictionary = eight.candidate_snapshot(5)
-	var new_four_plus_four: Dictionary = eight.candidate_snapshot(4)
-	if float(new_four_plus_four.get("last_row_imbalance", 1.0)) >= float(old_five_plus_three.get("last_row_imbalance", 0.0)):
-		failures.append("8-slice 4+4 must improve balance over the old 5+3 grid")
+
+func _test_fitted_live_matrix(failures: Array) -> void:
+	for viewport in [Vector2(970, 444), Vector2(970, 260), Vector2(600, 800), Vector2(1400, 700)]:
+		for count in [4, 5, 6, 7, 8, 12]:
+			var presentation = BoardPresentationModelScript.new()
+			presentation.configure({"trace_type": "live_4d", "dimension": 4, "board_shape": [5, 10, 4, count]}, null, SliceLocalOrientationScript.new(), 1.0, viewport)
+			var layout = presentation.projection.mapper.layer_layout
+			for columns in range(1, count + 1):
+				if layout.projected_board_scale + 0.0001 < float(layout.candidate_snapshot(columns)["projected_board_scale"]):
+					failures.append("live fitted %d-slice layout must maximize scale at %s" % [count, viewport])
+			if count == 7 and viewport == Vector2(970, 444) and layout.rows != 1:
+				failures.append("seven slices in the reproduced cockpit must avoid the unnecessary second row")
+			if count == 7 and viewport == Vector2(600, 800) and layout.rows <= 1:
+				failures.append("seven slices must use multiple rows when the actual viewport is tall")
 
 
 func _rect_contains(outer: Rect2, inner: Rect2) -> bool:

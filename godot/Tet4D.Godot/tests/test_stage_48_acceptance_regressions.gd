@@ -35,9 +35,9 @@ func run() -> Array:
 	if quit_button == null:
 		failures.append("main menu should expose Quit for pointer activation")
 	else:
-		if quit_button.get_global_rect().end.y > float(tree.root.size.y):
-			failures.append("Quit card should fit fully inside the supported viewport")
 		await _click(tree, quit_button)
+		if not hud.get_viewport_rect().encloses(quit_button.get_global_rect()):
+			failures.append("focused Quit card should fit fully inside the supported viewport")
 		await tree.process_frame
 		if quit_count[0] != 1:
 			failures.append("mouse click should emit Quit exactly once; hovered %s; rect %s" % [_hovered_name(tree), quit_button.get_global_rect()])
@@ -54,8 +54,8 @@ func run() -> Array:
 	if not hud.handle_main_menu_shortcut(_key_event(KEY_D)) or hud.current_screen() != hud.SCREEN_ADVANCED:
 		failures.append("advertised D shortcut should activate Advanced / Diagnostics")
 	hud.show_screen("main_menu")
-	if not hud.handle_main_menu_shortcut(_key_event(KEY_2)) or hud.current_screen() != hud.SCREEN_GAME_SETUP:
-		failures.append("advertised 2 shortcut should open Play 2D setup")
+	if not hud.handle_main_menu_shortcut(_key_event(KEY_C)) or hud.current_screen() != hud.SCREEN_GAME_SETUP:
+		failures.append("advertised C shortcut should open Change Setup")
 	hud.show_screen("main_menu")
 	var app = root.get_node_or_null("App")
 	if app == null:
@@ -75,6 +75,11 @@ func run() -> Array:
 
 
 func _click(tree: SceneTree, control: Control) -> void:
+	# Navigate into view before pointer input; menus start at Play and overflow
+	# rows are reached through the focus-following scroll surface.
+	control.grab_focus()
+	await tree.process_frame
+	await tree.process_frame
 	var point := control.get_global_rect().get_center()
 	var motion := InputEventMouseMotion.new()
 	motion.position = point

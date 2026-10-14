@@ -65,6 +65,13 @@ mode-specific `Play 3D` and `Play 4D` actions use the same direct seam after
 selecting their respective validated entries. None of these paths synthesize
 pieces, seeds, topology, speed, or board shape.
 
+Main Menu shortcuts `2`, `3`, and `4` launch the corresponding validated
+2D/3D/4D setup directly; `2` remains a compatibility shortcut for Play 2D.
+`C` performs Change Setup for the current mode without launching a session.
+These shortcuts apply only on Main Menu, ignore key releases and repeats,
+and do not intercept Alt/Ctrl/Meta combinations. An invalid draft cannot
+launch through either a button or a shortcut.
+
 `Change Setup` remains the explicit configuration-only path: it opens Setup
 and creates no session. Live `Restart Game` and terminal `Play Again` both use
 the existing native reset boundary over the frozen active setup, never a menu

@@ -21,6 +21,13 @@ def _contract_root(tmp_path: Path) -> Path:
         Path(contract["registry_loader_path"]),
         Path(contract["store_path"]),
     )
+    registry = json.loads(
+        (REPO_ROOT / contract["registry_path"]).read_text(encoding="utf-8")
+    )
+    copied_paths += tuple(
+        Path(declaration["consumer"])
+        for declaration in registry.get("legacy_setting_migrations", {}).values()
+    )
     for relative_path in copied_paths:
         destination = tmp_path / relative_path
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -103,7 +110,7 @@ def test_gate_allows_declared_non_setting_role_token(tmp_path: Path) -> None:
     root = _contract_root(tmp_path)
     consumer = root / "godot/Tet4D.Godot/scripts/ui/settings/contract_test_consumer.gd"
     consumer.write_text(
-        'const PRESENTATION_ROLE := "board.grid"\n',
+        'const PRESENTATION_ROLE := "board.enclosure"\n',
         encoding="utf-8",
     )
 
@@ -122,3 +129,62 @@ def test_gate_rejects_duplicate_runtime_default(tmp_path: Path) -> None:
         "duplicates the registry default for display.window_mode" in issue
         for issue in validate_repository(root)
     )
+
+
+def test_gate_confines_legacy_key_to_declared_migration_owner(tmp_path: Path) -> None:
+    root = _contract_root(tmp_path)
+    assert validate_repository(root) == []
+    consumer = root / "godot/Tet4D.Godot/scripts/ui/settings/wrong_consumer.gd"
+    consumer.write_text('const KEY := "display.grid_visible"\n', encoding="utf-8")
+    assert any(
+        "unknown setting id display.grid_visible" in issue
+        for issue in validate_repository(root)
+    )
+
+
+def test_gate_rejects_legacy_migration_without_known_replacement(
+    tmp_path: Path,
+) -> None:
+    root = _contract_root(tmp_path)
+    path, registry = _registry(root)
+    for replacement in ("display.missing", None, [], {}):
+        registry["legacy_setting_migrations"]["display.grid_visible"]["replacement"] = (
+            replacement
+        )
+        _write_registry(path, registry)
+        assert any(
+            "invalid legacy setting migration" in issue
+            for issue in validate_repository(root)
+        )
+
+
+def test_gate_rejects_escaping_legacy_migration_consumer(tmp_path: Path) -> None:
+    root = _contract_root(tmp_path)
+    path, registry = _registry(root)
+    registry["legacy_setting_migrations"]["display.grid_visible"]["consumer"] = (
+        "../outside.gd"
+    )
+    _write_registry(path, registry)
+    assert any(
+        "invalid migration consumer" in issue for issue in validate_repository(root)
+    )
+
+
+def test_gate_rejects_missing_legacy_migration_consumer(tmp_path: Path) -> None:
+    root = _contract_root(tmp_path)
+    path, registry = _registry(root)
+    registry["legacy_setting_migrations"]["display.grid_visible"]["consumer"] = (
+        "godot/Tet4D.Godot/scripts/missing.gd"
+    )
+    _write_registry(path, registry)
+    assert any(
+        "invalid migration consumer" in issue for issue in validate_repository(root)
+    )
+
+
+def test_gate_rejects_malformed_legacy_migrations(tmp_path: Path) -> None:
+    root = _contract_root(tmp_path)
+    path, registry = _registry(root)
+    registry["legacy_setting_migrations"] = []
+    _write_registry(path, registry)
+    assert "legacy setting migrations must be an object" in validate_repository(root)

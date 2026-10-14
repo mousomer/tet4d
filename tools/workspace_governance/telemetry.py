@@ -15,11 +15,14 @@ failure here degrades to a single warning on stderr.
 from __future__ import annotations
 
 import contextlib
+import fcntl
 import hashlib
 import hmac
 import json
 import os
+import re
 import secrets
+import stat
 import subprocess
 import sys
 import tempfile
@@ -153,7 +156,11 @@ def telemetry_key(directory: Path) -> TelemetryKey:
     records made under a new key as comparable.
     """
     directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+    if directory.is_symlink() or directory.stat().st_mode & 0o077:
+        raise TelemetryError("telemetry key directory must be owner-only and regular")
     key_path = directory / KEY_FILENAME
+    if key_path.is_symlink():
+        raise TelemetryError("telemetry key must not be a symlink")
     if not key_path.exists():
         _publish_key(key_path)
     # Ensure an old key cannot become group- or world-readable.
@@ -466,7 +473,15 @@ def event_issues(event: dict[str, Any]) -> list[str]:
         f"{issue.fact}: {issue.reason}"
         for issue in _schema_issues(event, _schema(), path="", source=SCHEMA_FILE.name)
     ]
-    return schema_issues + _argument_issues(event)
+    time_issues = []
+    for name in ("observed_at", "recorded_at"):
+        try:
+            parsed = datetime.fromisoformat(event[name])
+            if parsed.tzinfo is None:
+                raise ValueError("timestamp has no timezone")
+        except (ValueError, TypeError, KeyError):
+            time_issues.append(name + ": expected a timezone-aware ISO-8601 timestamp")
+    return schema_issues + time_issues + _argument_issues(event)
 
 
 def append_event(directory: Path, event: dict[str, Any]) -> Path:
@@ -475,12 +490,32 @@ def append_event(directory: Path, event: dict[str, Any]) -> Path:
     if problems:
         raise TelemetryError("; ".join(problems))
     directory.mkdir(parents=True, exist_ok=True, mode=0o700)
-    day = str(event["recorded_at"])[:10]
+    if directory.is_symlink() or directory.stat().st_mode & 0o077:
+        raise TelemetryError("telemetry store must be an owner-only regular directory")
+    day = (
+        datetime.fromisoformat(event["recorded_at"]).astimezone(UTC).date().isoformat()
+    )
     path = directory / f"events-{day}.jsonl"
     line = (json.dumps(event, sort_keys=True, separators=(",", ":")) + "\n").encode()
-    descriptor = os.open(path, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o600)
+    descriptor = os.open(
+        path, os.O_WRONLY | os.O_APPEND | os.O_CREAT | os.O_NOFOLLOW, 0o600
+    )
     try:
-        os.write(descriptor, line)
+        info = os.fstat(descriptor)
+        if (
+            info.st_mode & 0o077
+            or not stat.S_ISREG(info.st_mode)
+            or info.st_uid != os.getuid()
+        ):
+            raise TelemetryError("telemetry event file must be owner-only and regular")
+        fcntl.flock(descriptor, fcntl.LOCK_EX)
+        pending = memoryview(line)
+        while pending:
+            written = os.write(descriptor, pending)
+            if written <= 0:
+                raise TelemetryError("telemetry append did not complete")
+            pending = pending[written:]
+        os.fsync(descriptor)
     finally:
         os.close(descriptor)
     return path
@@ -517,10 +552,237 @@ def record(settings: TelemetrySettings, event_factory) -> Path | None:
     if not settings.enabled or settings.directory is None:
         return None
     try:
-        return append_event(settings.directory, event_factory())
-    except (OSError, ValueError, TypeError, KeyError) as exc:
-        print(f"gov: telemetry not recorded: {exc}", file=sys.stderr)
+        event = event_factory()
+        path = append_event(settings.directory, event)
+        _save_success(settings, event, path)
+        return path
+    except Exception as exc:  # noqa: BLE001 - recording cannot alter the observed command
+        _save_failure(settings)
+        print(f"gov: telemetry not recorded ({type(exc).__name__})", file=sys.stderr)
         return None
+
+
+READINESS_FILENAME = "telemetry-readiness-v1.json"
+FAILURE_FILENAME = "telemetry-failure-v1.json"
+
+
+def _private_file(path: Path) -> None:
+    if path.is_symlink() or not path.is_file():
+        raise TelemetryError("private recording state is not a regular file")
+    info = path.stat()
+    if info.st_mode & 0o077 or info.st_uid != os.getuid():
+        raise TelemetryError("private recording state is not owner-only")
+
+
+def _existing_key(directory: Path) -> TelemetryKey:
+    path = directory / KEY_FILENAME
+    _private_file(path)
+    secret = path.read_bytes()
+    if len(secret) != KEY_BYTES:
+        raise TelemetryError("telemetry key has an invalid length")
+    key_id = hmac.new(
+        secret, b"workspace-governance telemetry key identifier v1", hashlib.sha256
+    ).hexdigest()
+    return TelemetryKey(secret, key_id)
+
+
+def _store_identity(settings: TelemetrySettings, key: TelemetryKey) -> str:
+    return private_identity(
+        str(settings.directory.resolve()), key, normalization="telemetry-store-v1"
+    )["hmac_sha256"]
+
+
+def _read_signed(path: Path, key: TelemetryKey) -> dict[str, Any]:
+    _private_file(path)
+    if path.stat().st_size > 8192:
+        raise TelemetryError("recording status exceeds its bounded envelope")
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if (
+        not isinstance(value, dict)
+        or value.get("kind") != "telemetry-recording-observation"
+        or value.get("schema_version") != 1
+    ):
+        raise TelemetryError("recording status envelope is invalid")
+    signature = value.pop("hmac_sha256", None)
+    signed = json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+    expected = hmac.new(key.secret, signed, hashlib.sha256).hexdigest()
+    if not isinstance(signature, str) or not hmac.compare_digest(signature, expected):
+        raise TelemetryError("recording status identity is invalid")
+    observed = datetime.fromisoformat(value["observed_at"])
+    if observed.tzinfo is None or observed > datetime.now(UTC):
+        raise TelemetryError("recording observation time is invalid")
+    return value
+
+
+def _write_signed(
+    settings: TelemetrySettings, key: TelemetryKey, name: str, value: dict[str, Any]
+) -> None:
+    directory = settings.key_directory
+    if directory is None or directory.is_symlink():
+        raise TelemetryError("recording state directory is unavailable")
+    value = {
+        "kind": "telemetry-recording-observation",
+        "schema_version": 1,
+        "store_identity": _store_identity(settings, key),
+        **value,
+    }
+    data = json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+    value["hmac_sha256"] = hmac.new(key.secret, data, hashlib.sha256).hexdigest()
+    target = directory / name
+    if target.is_symlink():
+        raise TelemetryError("recording status is a symlink")
+    descriptor, staging = tempfile.mkstemp(prefix=".telemetry-status-", dir=directory)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+            json.dump(value, stream, sort_keys=True)
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(staging, target)
+    finally:
+        with contextlib.suppress(FileNotFoundError):
+            os.unlink(staging)
+
+
+def _verified_observation(settings: TelemetrySettings, value: dict[str, Any]) -> bool:
+    name = value.get("event_file")
+    if not isinstance(name, str) or not re.fullmatch(
+        r"events-\d{4}-\d{2}-\d{2}\.jsonl", name
+    ):
+        return False
+    path = settings.directory / name
+    _private_file(path)
+    if path.stat().st_size > 32 * 1024 * 1024:
+        return False
+    with path.open("rb") as stream:
+        for line in stream:
+            if hashlib.sha256(line).hexdigest() == value.get("event_sha256"):
+                event = json.loads(line)
+                return (
+                    isinstance(event, dict)
+                    and event.get("observation_id") == value.get("observation_id")
+                    and not event_issues(event)
+                )
+    return False
+
+
+def status(settings: TelemetrySettings) -> dict[str, Any]:
+    """Read configuration and the last verified append; never infer present writability."""
+    result = {
+        "kind": "telemetry-status",
+        "enabled": settings.enabled,
+        "state": "unknown"
+        if settings.enabled
+        or settings.workspace_id is None
+        or settings.directory is None
+        else "disabled",
+        "product_evidence": False,
+    }
+    if (
+        not settings.enabled
+        or settings.directory is None
+        or settings.key_directory is None
+    ):
+        return result
+    try:
+        key = _existing_key(settings.key_directory)
+        result["store_identity"] = _store_identity(settings, key)
+        success = _read_signed(settings.key_directory / READINESS_FILENAME, key)
+        if success.get("store_identity") == result[
+            "store_identity"
+        ] and _verified_observation(settings, success):
+            result.update(
+                state="recording_observed",
+                observed_at=success["observed_at"],
+                observation_id=success["observation_id"],
+                synthetic_probe=success.get("synthetic_probe", False),
+                current_writability="unknown",
+            )
+    except (OSError, ValueError, TypeError, KeyError):
+        pass
+    try:
+        failure = _read_signed(settings.key_directory / FAILURE_FILENAME, key)
+        if failure.get("store_identity") == result.get("store_identity") and failure[
+            "observed_at"
+        ] > result.get("observed_at", ""):
+            result.update(
+                state="unwritable_observed",
+                observed_at=failure["observed_at"],
+                current_writability="unknown",
+            )
+    except (OSError, ValueError, TypeError, KeyError, UnboundLocalError):
+        pass
+    return result
+
+
+def _save_success(
+    settings: TelemetrySettings, event: dict[str, Any], path: Path
+) -> None:
+    key = _existing_key(settings.key_directory)
+    line = (json.dumps(event, sort_keys=True, separators=(",", ":")) + "\n").encode()
+    value = {
+        "observed_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+        "event_file": path.name,
+        "event_sha256": hashlib.sha256(line).hexdigest(),
+        "observation_id": event["observation_id"],
+        "synthetic_probe": event["payload"].get("synthetic_probe", False),
+    }
+    if not _verified_observation(settings, value):
+        raise TelemetryError("recorded observation readback failed")
+    _write_signed(settings, key, READINESS_FILENAME, value)
+
+
+def _save_failure(settings: TelemetrySettings) -> str:
+    observed = datetime.now(UTC).isoformat().replace("+00:00", "Z")
+    with contextlib.suppress(Exception):
+        key = _existing_key(settings.key_directory)
+        _write_signed(
+            settings,
+            key,
+            FAILURE_FILENAME,
+            {"observed_at": observed, "state": "unwritable_observed"},
+        )
+    return observed
+
+
+def selftest(settings: TelemetrySettings, root: Path) -> tuple[dict[str, Any], int]:
+    """Explicit private write/readback probe; never ordinary command/product evidence."""
+    if (
+        not settings.enabled
+        or settings.directory is None
+        or settings.key_directory is None
+    ):
+        result = {**status(settings), "probe": "not_run"}
+        return result, 1 if result["state"] == "unknown" else 0
+    try:
+        key = telemetry_key(settings.key_directory)
+        event = build_command_execution(
+            root=root,
+            workspace_id=settings.workspace_id,
+            project_id=None,
+            producer_version=producer_version(),
+            program="gov-telemetry-selftest",
+            arguments=[],
+            key=key,
+            exit_status=0,
+            environ={},
+        )
+        event["payload"]["synthetic_probe"] = True
+        path = append_event(settings.directory, event)
+        _save_success(settings, event, path)
+        return {**status(settings), "probe": "passed", "product_evidence": False}, 0
+    except Exception as exc:  # noqa: BLE001 - explicit probe reports a bounded failure
+        observed = _save_failure(settings)
+        return {
+            **status(settings),
+            "kind": "telemetry-status",
+            "enabled": True,
+            "state": "unwritable_observed",
+            "observed_at": observed,
+            "probe": "failed",
+            "failure_type": type(exc).__name__,
+            "product_evidence": False,
+        }, 1
 
 
 __all__ = [
@@ -543,6 +805,8 @@ __all__ = [
     "resolution_summary",
     "resolve_settings",
     "run_context",
+    "selftest",
+    "status",
     "store_directory",
     "telemetry_key",
 ]

@@ -182,7 +182,7 @@ class GovernanceResolver:
         except ValueError:
             return str(path)
 
-    def check(self) -> list[Diagnostic]:
+    def check(self, *, generated: bool = False) -> list[Diagnostic]:
         try:
             documents = self.local_documents()
         except (OSError, ValueError, TypeError, KeyError) as exc:
@@ -227,7 +227,45 @@ class GovernanceResolver:
             local,
             pack_root=pack_root,
             local_documents=[(payload, source) for payload, _, source in documents],
+            local_tiers={
+                key: tier for payload, tier, _ in documents for key in payload
+            },
+            generated=generated,
         ) + validate_pack(self.root, workspace)
+
+    def _verification_fact(
+        self, spec: dict[str, Any], authority_map: dict[str, Any], fact: str
+    ) -> dict[str, Any]:
+        if "command" in spec:
+            return {
+                "value": spec["command"],
+                "owner": "project",
+                "source": f"{self.project_source()}#/verification/{fact}/command",
+            }
+        authority_id, pointer = spec["authority_ref"], spec["json_pointer"]
+        authority = authority_map[authority_id]
+        value: Any = load_manifest_json(self.root / authority["source"])
+        try:
+            for token in pointer.removeprefix("/").split("/"):
+                value = value[token.replace("~1", "/").replace("~0", "~")]
+        except (KeyError, TypeError) as exc:
+            raise GovernanceError(
+                [
+                    Diagnostic(
+                        "BROKEN_REFERENCE",
+                        pointer,
+                        authority_id,
+                        (authority["source"],),
+                        f"authority JSON pointer does not resolve: {exc}",
+                        "repair the reference or restore the authority field",
+                    )
+                ]
+            ) from exc
+        return {
+            "value": value,
+            "owner": authority_id,
+            "source": f"{authority['source']}#{pointer}",
+        }
 
     def resolve(
         self, *, task: str | None = None, mode: str | None = None
@@ -311,28 +349,6 @@ class GovernanceResolver:
         def entry(value: Any, owner: str, source: str) -> dict[str, Any]:
             return {"value": value, "owner": owner, "source": source}
 
-        def referenced_fact(spec: dict[str, Any]) -> dict[str, Any]:
-            authority_id, pointer = spec["authority_ref"], spec["json_pointer"]
-            authority = authority_map[authority_id]
-            value: Any = load_manifest_json(self.root / authority["source"])
-            try:
-                for token in pointer.removeprefix("/").split("/"):
-                    value = value[token.replace("~1", "/").replace("~0", "~")]
-            except (KeyError, TypeError) as exc:
-                raise GovernanceError(
-                    [
-                        Diagnostic(
-                            "BROKEN_REFERENCE",
-                            pointer,
-                            authority_id,
-                            (authority["source"],),
-                            f"authority JSON pointer does not resolve: {exc}",
-                            "repair the reference or restore the authority field",
-                        )
-                    ]
-                ) from exc
-            return entry(value, authority_id, f"{authority['source']}#{pointer}")
-
         entries = {
             "workspace.id": entry(
                 workspace["workspace_id"], "workspace", workspace_source
@@ -354,10 +370,12 @@ class GovernanceResolver:
                 "project",
                 f"{project_source}#/execution/profiles/{selected}",
             ),
-            "verification.canonical": referenced_fact(
-                project["verification"]["canonical"]
+            "verification.canonical": self._verification_fact(
+                project["verification"]["canonical"], authority_map, "canonical"
             ),
-            "verification.full": referenced_fact(project["verification"]["full"]),
+            "verification.full": self._verification_fact(
+                project["verification"]["full"], authority_map, "full"
+            ),
             "verification.targeted": entry(
                 project["verification"]["targeted"],
                 "project",

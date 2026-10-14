@@ -73,7 +73,7 @@ def _bundle(tmp_path: Path) -> Path:
 def test_valid_bundle_resolves_every_property_and_owner(tmp_path: Path) -> None:
     validator = _module()
     result = validator.validate_bundle(_bundle(tmp_path), REGISTRY_PATH)
-    assert result["property_count"] == 29
+    assert result["property_count"] == 32
     assert result["evaluation_count"] == 1
 
 

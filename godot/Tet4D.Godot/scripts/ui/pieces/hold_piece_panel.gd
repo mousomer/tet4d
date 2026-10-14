@@ -55,6 +55,7 @@ func _init() -> void:
 	_status_label.theme_type_variation = "DimLabel"
 	_status_label.add_theme_font_size_override("font_size", 11)
 	_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_content.add_child(_status_label)
 	PiecePreviewLayoutScript.apply_compact(self, _margin, _content, _thumbnail, 0)
 	_render_state()

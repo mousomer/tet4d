@@ -34,7 +34,9 @@ def _visual_role_issues(visuals: str) -> list[str]:
 def _grid_issues(grid: str) -> list[str]:
     issues: list[str] = []
     for token in (
-        "ReplayVisuals.live_board_grid_material",
+        "ReplayVisuals.board_scaffold_material",
+        "ReplayVisuals.board_enclosure_material",
+        "ReplayVisuals.board_internal_scaffold_material",
         "ReplayVisuals.board_outline_material",
         "ReplayVisuals.board_active_frame_material",
     ):

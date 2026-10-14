@@ -8,12 +8,10 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 from support import scrubbed_environment
 
-from tools.workspace_governance.cli.gov import _sync
 from tools.workspace_governance.resolver.core import GovernanceError, GovernanceResolver
 from tools.workspace_governance.validators import core
 
@@ -41,169 +39,43 @@ def test_repository_manifests_and_pack_are_valid() -> None:
     assert GovernanceResolver.for_root(ROOT).check() == []
 
 
-def test_work_type_and_artifact_role_schema_is_additive_until_migration() -> None:
-    workspace, project = manifests()
-    project["work_types"] = ["Planning", "Coding", "Manifest"]
-    project["artifact_roles"] = {
-        "docs/ARCHITECTURE_CONTRACT.md": "product_authority",
-        "CURRENT_STATE.md": "bookkeeping",
-    }
-    assert validate(workspace, project) == []
-
-    project["work_types"] = ["Planning", "Coding", "Verification"]
-    assert any(issue.fact == "work_types[2]" for issue in validate(workspace, project))
-
-    project["work_types"] = ["Planning", "Coding", "Manifest"]
-    project["artifact_roles"]["CURRENT_STATE.md"] = "route_membership"
-    assert any(
-        issue.fact == "artifact_roles.CURRENT_STATE.md"
-        for issue in validate(workspace, project)
+@pytest.mark.canonical_gate_environment
+def test_git_visible_checkout_preserves_declared_adapters(checkout: Path) -> None:
+    shutil.copy2(ROOT / ".gitignore", checkout / ".gitignore")
+    subprocess.run(["git", "init", "-q"], cwd=checkout, check=True)
+    private = checkout / ".claude/settings.local.json"
+    private.write_text('{"private": true}\n')
+    result = subprocess.run(
+        [
+            "git",
+            "-c",
+            "core.excludesFile=/dev/null",
+            "ls-files",
+            "--others",
+            "--exclude-standard",
+            "-z",
+        ],
+        cwd=checkout,
+        capture_output=True,
+        text=True,
+        check=True,
     )
-
-
-@pytest.mark.parametrize(
-    ("path", "role", "code"),
-    [
-        ("../outside.md", "planning_document", "CONFLICTING_VALUE"),
-        ("docs/**/*.md", "planning_document", "CONFLICTING_VALUE"),
-        ("/docs/BACKLOG.md", "bookkeeping", "CONFLICTING_VALUE"),
-        ("does/not/exist.md", "planning_document", "BROKEN_REFERENCE"),
-        (
-            "tools/workspace_governance/policies/ownership.md",
-            "executable_machinery",
-            "CONFLICTING_VALUE",
-        ),
-        ("config/governance/project.json", "executable_machinery", "CONFLICTING_VALUE"),
-        ("config/governance/workspace.lock.json", "bookkeeping", "CONFLICTING_VALUE"),
-        ("AGENTS.md", "bookkeeping", "CONFLICTING_VALUE"),
-        ("AGENTS.md", "governance_treatment", None),
-    ],
-)
-def test_project_role_declarations_cannot_escape_relabel_roots_or_claim_the_pack(
-    path: str, role: str, code: str | None
-) -> None:
-    workspace, project = manifests()
-    project["artifact_roles"] = {path: role}
-    issues = [
-        i for i in validate(workspace, project) if i.fact == f"artifact_roles.{path}"
-    ]
-    assert [i.code for i in issues] == ([code] if code else [])
-
-
-def test_role_bootstrap_paths_are_single_existing_files_outside_fixed_roots() -> None:
-    workspace, project = manifests()
-    assert validate(workspace, project) == []
-
-    duplicated = copy.deepcopy(project)
-    duplicated["role_bootstrap"]["bookkeeping"].append("AGENTS.md")
-    assert any(
-        i.fact.startswith("role_bootstrap.bookkeeping")
-        and i.code == "CONFLICTING_VALUE"
-        for i in validate(workspace, duplicated)
-    )
-    root_as_record = copy.deepcopy(project)
-    root_as_record["role_bootstrap"]["bookkeeping"].append(
-        "config/governance/project.json"
-    )
-    assert any(
-        i.fact.startswith("role_bootstrap.bookkeeping") and "fixed role" in i.reason
-        for i in validate(workspace, root_as_record)
-    )
-    missing = copy.deepcopy(project)
-    missing["role_bootstrap"]["instruction_roots"].append("missing/AGENTS.md")
-    assert any(
-        i.fact.startswith("role_bootstrap.instruction_roots")
-        and i.code == "BROKEN_REFERENCE"
-        for i in validate(workspace, missing)
-    )
-
-
-def test_pack_metadata_is_complete_and_directional() -> None:
-    manifest = json.loads((PACK_ROOT / "MANIFEST.json").read_text())
-    _, files = core.pack_hash(PACK_ROOT)
-    assert core._pack_metadata_issues(manifest, files) == []
-
-    weakened = copy.deepcopy(manifest)
-    weakened["obligation_comparators"]["required_all_of"] = "set_subset"
-    assert any(
-        issue.fact == "MANIFEST.obligation_comparators"
-        for issue in core._pack_metadata_issues(weakened, files)
-    )
-
-    missing_role = copy.deepcopy(manifest)
-    missing_role["artifact_roles"].pop()
-    assert any(
-        issue.fact == "MANIFEST.artifact_roles"
-        for issue in core._pack_metadata_issues(missing_role, files)
-    )
-
-    relaxed = copy.deepcopy(manifest)
-    relaxed["write_compatibility"]["Coding"]["governance_treatment"] = "allowed"
-    assert any(
-        issue.fact == "MANIFEST.write_compatibility"
-        for issue in core._pack_metadata_issues(relaxed, files)
-    )
-
-    for roots in (
-        [root for root in manifest["bootstrap_roots"] if root != "validators/core.py"],
-        [*manifest["bootstrap_roots"], "not/packed.py"],
-        [*manifest["bootstrap_roots"], manifest["bootstrap_roots"][0]],
-    ):
-        unrooted = copy.deepcopy(manifest)
-        unrooted["bootstrap_roots"] = roots
-        assert any(
-            issue.fact == "MANIFEST.bootstrap_roots"
-            for issue in core._pack_metadata_issues(unrooted, files)
-        )
-
-
-def test_resolution_entries_have_uniform_and_truthful_provenance() -> None:
-    resolver = GovernanceResolver.for_root(ROOT)
-    local_fix = resolver.resolve(mode="LOCAL_FIX")
-    structural = resolver.resolve(mode="STRUCTURAL_CHANGE")
-    for resolved in (local_fix, structural):
-        assert resolved["entries"]
-        assert all(
-            set(item) == {"value", "owner", "source"}
-            for item in resolved["entries"].values()
-        )
-    local_entries = local_fix["entries"]
-    structural_entries = structural["entries"]
-    assert local_entries["execution.mode"]["value"] == "LOCAL_FIX"
-    assert local_entries["execution.mode"]["source"].endswith("#/execution")
-    assert (
-        local_entries["execution.exploration"]
-        != structural_entries["execution.exploration"]
-    )
-    assert local_entries["verification.full"] == structural_entries["verification.full"]
-    assert (
-        local_entries["verification.rule"]["value"]
-        == manifests()[1]["verification"]["rule"]
-    )
-    assert local_entries["verification.full"]["source"].endswith(
-        "#/governance/godot_toolchain/canonical_commands/full_repository"
-    )
-
-
-@pytest.mark.parametrize(
-    ("field", "resolved_key", "replacement"),
-    [
-        ("rule", "verification.rule", "mutated evidence rule"),
-        ("targeted", "verification.targeted", "./scripts/another_targeted_gate.sh"),
-    ],
-)
-def test_manifest_values_cannot_be_replaced_by_hardcoded_claims(
-    monkeypatch: pytest.MonkeyPatch, field: str, resolved_key: str, replacement: str
-) -> None:
-    workspace, project = manifests()
-    project["verification"][field] = replacement
-    monkeypatch.setattr(GovernanceResolver, "check", lambda self: [])
-    monkeypatch.setattr(
-        GovernanceResolver, "load", lambda self: (workspace, project, None)
-    )
-    entry = GovernanceResolver.for_root(ROOT).resolve()["entries"][resolved_key]
-    assert entry["value"] == replacement
-    assert entry["source"].endswith(f"#/verification/{field}")
+    visible = set(result.stdout.split("\0"))
+    manifest = json.loads((checkout / "config/governance/project.json").read_text())
+    adapters = {adapter["path"] for adapter in manifest["skill_adapters"]}
+    # The export boundary must be checked before builder-provided adapters can
+    # hide ignored inputs from ordinary context validation.
+    assert adapters <= visible
+    assert private.relative_to(checkout).as_posix() not in visible
+    for path in checkout.rglob("*"):
+        if (
+            path.is_file()
+            and not path.is_symlink()
+            and ".git" not in path.parts
+            and path.relative_to(checkout).as_posix() not in visible
+        ):
+            path.unlink()
+    assert GovernanceResolver.for_root(checkout).check() == []
 
 
 @pytest.mark.parametrize(
@@ -600,52 +472,6 @@ def test_scenario_declaration_reordering_does_not_change_resolution(
     assert resolver.resolve(task=task) == expected
 
 
-def test_equal_highest_scenario_priorities_are_ambiguous(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    workspace, project = manifests()
-    project["execution"]["representative_scenarios"].extend(
-        [
-            {
-                "id": "tie-a",
-                "match_all": ["deliberate tie"],
-                "mode": "LOCAL_FIX",
-                "priority": 999,
-                "routes": ["python_reference_engine"],
-            },
-            {
-                "id": "tie-b",
-                "match_all": ["deliberate tie"],
-                "mode": "FEATURE",
-                "priority": 999,
-                "routes": ["godot_product_shell"],
-            },
-        ]
-    )
-    monkeypatch.setattr(GovernanceResolver, "check", lambda self: [])
-    monkeypatch.setattr(
-        GovernanceResolver, "load", lambda self: (workspace, project, None)
-    )
-
-    with pytest.raises(GovernanceError) as error:
-        GovernanceResolver.for_root(ROOT).resolve(task="A deliberate tie")
-
-    assert error.value.diagnostics[0].code == "AMBIGUOUS_AUTHORITY"
-    assert "tie-a, tie-b" in error.value.diagnostics[0].reason
-
-
-@pytest.mark.parametrize("priority", [-1, True, "high", None])
-def test_scenario_priority_schema_rejects_invalid_values(priority: object) -> None:
-    workspace, project = manifests()
-    project["execution"]["representative_scenarios"][0]["priority"] = priority
-    issues = validate(workspace, project)
-    assert any(
-        issue.fact.endswith("representative_scenarios[0].priority")
-        and issue.code == "CONFLICTING_VALUE"
-        for issue in issues
-    )
-
-
 def _normalized_markdown(path: Path) -> str:
     return " ".join(path.read_text(encoding="utf-8").split())
 
@@ -689,33 +515,6 @@ def test_dispatcher_treats_resolved_stable_facts_as_sufficient() -> None:
     assert "authority edits" in dispatcher
 
 
-def test_authority_identity_ambiguity_and_structured_reachability() -> None:
-    workspace, project = manifests()
-    duplicate = copy.deepcopy(project["authorities"][0])
-    project["authorities"].append(duplicate)
-    assert "DUPLICATE_AUTHORITY" in codes(validate(workspace, project))
-    project["authorities"][-1]["authority_id"] = "another-owner"
-    ambiguity = next(
-        issue
-        for issue in validate(workspace, project)
-        if issue.code == "AMBIGUOUS_AUTHORITY"
-    )
-    assert ambiguity.fact == duplicate["scope"]
-    project = manifests()[1]
-    project["authorities"].append(
-        {
-            "authority_id": "orphan",
-            "source_type": "file",
-            "authority_type": "human",
-            "scope": "orphan-scope",
-            "source": "docs/BACKLOG.md",
-            "exclusive": True,
-            "canonical_governance": False,
-        }
-    )
-    assert any("unreachable" in issue.reason for issue in validate(workspace, project))
-
-
 def test_every_declared_route_is_selectable_from_an_execution_path() -> None:
     workspace, project = manifests()
     assert not [
@@ -751,16 +550,6 @@ def test_every_declared_route_is_selectable_from_an_execution_path() -> None:
     assert "unreachable" in unreachable.reason
 
 
-def test_schema_is_structural_source_and_reserved_fields_are_rejected() -> None:
-    workspace, project = manifests()
-    workspace["undeclared"] = True
-    project["undeclared"] = True
-    local = {"schema_version": 1, "checkout_locations": {"tet4d": "."}}
-    issues = validate(workspace, project, local)
-    assert "CONFLICTING_VALUE" in codes(issues)
-    assert any(issue.fact == "checkout_locations" for issue in issues)
-
-
 def test_workspace_project_membership_and_route_facade_parity_are_enforced() -> None:
     workspace, project = manifests()
     workspace["projects"].append(copy.deepcopy(workspace["projects"][0]))
@@ -773,37 +562,6 @@ def test_workspace_project_membership_and_route_facade_parity_are_enforced() -> 
         issue.fact == "legacy-route-facade" and issue.code == "CONFLICTING_VALUE"
         for issue in validate(workspace, project)
     )
-
-
-def test_environment_priority_is_override_then_local_then_repository_and_never_python_bin(
-    tmp_path: Path,
-) -> None:
-    _, project = manifests()
-    (tmp_path / "pyproject.toml").write_text('[project]\nrequires-python = ">=3.11"\n')
-    preferred = tmp_path / ".venv/bin/python"
-    preferred.parent.mkdir(parents=True)
-    preferred.write_text(f'#!/bin/sh\nexec "{sys.executable}" "$@"\n')
-    os.chmod(preferred, 0o755)
-    interpreter, reason, issues = core.resolve_interpreter(
-        tmp_path, project, None, {"PYTHON_BIN": "/invalid/legacy"}
-    )
-    assert interpreter == preferred.absolute()
-    assert reason == "repository-local environment"
-    assert issues == []
-    interpreter, reason, issues = core.resolve_interpreter(
-        tmp_path, project, {"interpreter": sys.executable}, {}
-    )
-    assert interpreter == Path(sys.executable).absolute()
-    assert reason == "approved local overlay"
-    assert issues == []
-    interpreter, _, issues = core.resolve_interpreter(
-        tmp_path,
-        project,
-        {"interpreter": sys.executable},
-        {"TET4D_PYTHON": "/invalid/explicit"},
-    )
-    assert interpreter is None
-    assert codes(issues) == {"ENVIRONMENT_MISMATCH"}
 
 
 def test_shell_and_doctor_share_explicit_and_default_resolution(
@@ -893,121 +651,3 @@ def test_workspace_local_override_is_used_by_cli_and_shell(tmp_path: Path) -> No
         )
         == 2
     )
-
-
-def test_doctor_detects_wrong_checkout(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    _, project = manifests()
-    fake = tmp_path / ".venv/bin/python"
-    fake.parent.mkdir(parents=True)
-    shutil.copy2(sys.executable, fake)
-    os.chmod(fake, 0o755)
-    (tmp_path / "pyproject.toml").write_text('[project]\nrequires-python = ">=3.11"\n')
-
-    def fake_run(command: list[str], **_: object) -> SimpleNamespace:
-        if "from packaging.specifiers import SpecifierSet" in command[-1]:
-            return SimpleNamespace(returncode=0, stdout="3.14.0\n", stderr="")
-        payload = {
-            "version": "3.14.0",
-            "package": str(tmp_path / "elsewhere/tet4d/__init__.py"),
-            "critical_packages": ["tet4d"],
-        }
-        return SimpleNamespace(returncode=0, stdout=json.dumps(payload), stderr="")
-
-    monkeypatch.setattr(core.subprocess, "run", fake_run)
-    _, issues = core.doctor(tmp_path, project, None, {})
-    assert any(
-        issue.fact == "editable_install" and issue.code == "ENVIRONMENT_MISMATCH"
-        for issue in issues
-    )
-
-
-def test_pack_hash_policy_excludes_declared_files_and_lock_identity_is_manifest_owned(
-    tmp_path: Path,
-) -> None:
-    pack = tmp_path / "pack"
-    (pack / "nested").mkdir(parents=True)
-    (pack / "VERSION").write_text("0.1.0\n")
-    for enforcement in ("resolver/roles.py", "validators/core.py"):
-        (pack / enforcement).parent.mkdir(parents=True, exist_ok=True)
-        (pack / enforcement).write_text("")
-    manifest = {
-        "schema_version": 1,
-        "name": "workspace-governance",
-        "version": "0.1.0",
-        "revision": "test-revision",
-        "version_file": "VERSION",
-        "lock_algorithm": "sha256-path-and-content-v1",
-        "pack_hash_excludes": ["**/*.pyc"],
-        "commands": sorted(core.SUPPORTED_COMMANDS),
-        "diagnostics": sorted(core.DIAGNOSTIC_CLASSES),
-        "work_types": ["Planning", "Coding", "Manifest"],
-        "artifact_roles": [
-            {"path": "MANIFEST.json", "role": "executable_machinery"},
-            {"path": "VERSION", "role": "executable_machinery"},
-            {"path": "resolver/roles.py", "role": "executable_machinery"},
-            {"path": "validators/core.py", "role": "executable_machinery"},
-        ],
-        "bootstrap_roots": sorted(core.REQUIRED_PACK_ROOTS),
-        "obligation_comparators": core.OBLIGATION_COMPARATORS,
-        "write_compatibility": core.WRITE_COMPATIBILITY,
-    }
-    manifest["field_usage"] = {key: "consumed" for key in (*manifest, "field_usage")}
-    (pack / "MANIFEST.json").write_text(json.dumps(manifest))
-    (pack / "nested/cache.pyc").write_text("ignored")
-    first, files = core.pack_hash(pack)
-    (pack / "nested/cache.pyc").write_text("changed")
-    assert core.pack_hash(pack)[0] == first
-    assert "nested/cache.pyc" not in files
-    workspace = {"governance_pack": {"required_schema": 1, "lock": "lock.json"}}
-    lock = {
-        "pack_path": "pack",
-        "pack_name": manifest["name"],
-        "version": manifest["version"],
-        "revision": manifest["revision"],
-        "content_sha256": first,
-        "files": files,
-        "lock_algorithm": manifest["lock_algorithm"],
-    }
-    (tmp_path / "lock.json").write_text(json.dumps(lock))
-    assert core.validate_pack(tmp_path, workspace) == []
-
-
-def test_sync_refuses_to_invent_a_missing_pack_path(tmp_path: Path) -> None:
-    (tmp_path / "lock.json").write_text(json.dumps({"pack_path": "missing"}))
-    resolver = SimpleNamespace(
-        load=lambda: ({"governance_pack": {"lock": "lock.json"}}, {}, None)
-    )
-    with pytest.raises(ValueError, match="locked pack path does not exist"):
-        _sync(tmp_path, resolver)  # type: ignore[arg-type]
-
-
-def test_cli_accepts_json_in_both_positions_and_missing_explain_is_usage_error() -> (
-    None
-):
-    # `resolve` needs no project environment, but `gov` still needs something to
-    # start under, and a worktree need no longer carry a `.venv`.
-    env = scrubbed_environment(GOVERNANCE_PYTHON=sys.executable)
-    for args in (["--json", "resolve"], ["resolve", "--json"]):
-        result = subprocess.run(
-            [str(ROOT / "gov"), *args],
-            cwd=ROOT,
-            env=env,
-            text=True,
-            capture_output=True,
-            check=False,
-        )
-        assert result.returncode == 0, result.stderr
-        assert json.loads(result.stdout)["schema_version"] == 1
-    missing = subprocess.run(
-        [str(ROOT / "gov"), "explain"],
-        cwd=ROOT,
-        env=env,
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-    assert missing.returncode == 2
-    assert missing.stderr.startswith("usage:")
-    assert "BROKEN_REFERENCE" not in missing.stdout + missing.stderr

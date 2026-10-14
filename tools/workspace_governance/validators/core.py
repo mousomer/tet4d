@@ -6,6 +6,7 @@ import json
 import os
 import re
 import shutil
+import stat
 import subprocess
 import tomllib
 from dataclasses import asdict, dataclass
@@ -59,7 +60,23 @@ OVERLAY_REASONS = {
     "local": "approved local overlay",
     "workspace": "inherited workspace overlay",
 }
-SUPPORTED_COMMANDS = {"check", "resolve", "explain", "doctor", "sync", "env"}
+SUPPORTED_COMMANDS = {
+    "check",
+    "resolve",
+    "explain",
+    "doctor",
+    "sync",
+    "env",
+    "telemetry",
+}
+PYTHON_APPLICATION_FIELDS = {
+    "python_requires",
+    "dependency_authority",
+    "execution_mode",
+    "package_import",
+    "editable_source",
+    "critical_packages",
+}
 # Diagnostics name the manifest the workspace declares; this label stands in
 # only when the workspace names no default project at all.
 UNRESOLVED_PROJECT_SOURCE = "project manifest"
@@ -398,10 +415,13 @@ def _canonical_owner_issues(
     authorities = project["authorities"]
     try:
         ref = project["canonical_owner_set"]
-        owner_source = by_id[ref["authority_ref"]]["source"]
-        owner_set = _json_pointer(
-            load_manifest_json(root / owner_source), ref["json_pointer"]
-        )
+        if "owners" in ref:
+            owner_set = ref["owners"]
+        else:
+            owner_source = by_id[ref["authority_ref"]]["source"]
+            owner_set = _json_pointer(
+                load_manifest_json(root / owner_source), ref["json_pointer"]
+            )
         if (
             not isinstance(owner_set, dict)
             or not owner_set
@@ -450,8 +470,10 @@ def _canonical_owner_issues(
 def _semantic_manifest_issues(  # noqa: C901 - cross-field integrity transaction
     root: Path, workspace: dict[str, Any], project: dict[str, Any]
 ) -> list[Diagnostic]:
-    issues: list[Diagnostic] = []
     source = _project_source(workspace)
+    issues = _binding_contract_issues(project, source)
+    if issues:
+        return issues
     authorities = project["authorities"]
     by_id: dict[str, list[dict[str, Any]]] = {}
     for entry in authorities:
@@ -520,6 +542,10 @@ def _semantic_manifest_issues(  # noqa: C901 - cross-field integrity transaction
                 )
             )
     reached: set[str] = set()
+    requires_facade = any(
+        surface["kind"] == "compatibility_facade"
+        for surface in project["generated_surfaces"]
+    )
     for route_id, route in project["routes"].items():
         for authority_id in route["authority_refs"]:
             if authority_id not in by_id:
@@ -534,7 +560,11 @@ def _semantic_manifest_issues(  # noqa: C901 - cross-field integrity transaction
                     )
                 )
             reached.add(authority_id)
-            if authority_id in by_id and "legacy_key" not in by_id[authority_id][0]:
+            if (
+                requires_facade
+                and authority_id in by_id
+                and "legacy_key" not in by_id[authority_id][0]
+            ):
                 issues.append(
                     _diag(
                         "BROKEN_REFERENCE",
@@ -648,6 +678,8 @@ def _semantic_manifest_issues(  # noqa: C901 - cross-field integrity transaction
             )
         )
     for fact in ("canonical", "full"):
+        if "command" in project["verification"][fact]:
+            continue
         authority_id = project["verification"][fact]["authority_ref"]
         if authority_id not in by_id:
             issues.append(
@@ -661,6 +693,8 @@ def _semantic_manifest_issues(  # noqa: C901 - cross-field integrity transaction
                 )
             )
     for fact in ("python_requires", "dependency_authority"):
+        if project["environment"].get("profile", "python") != "python":
+            continue
         authority_id = project["environment"][fact]["authority_ref"]
         if authority_id not in by_id:
             issues.append(
@@ -673,9 +707,9 @@ def _semantic_manifest_issues(  # noqa: C901 - cross-field integrity transaction
                     "correct the authority reference",
                 )
             )
-    dependency = project["environment"]["dependency_authority"]
-    target = by_id.get(dependency["authority_ref"], [])
-    if target and dependency["source"] != target[0]["source"]:
+    dependency = project["environment"].get("dependency_authority")
+    target = by_id.get(dependency["authority_ref"], []) if dependency else []
+    if dependency and target and dependency["source"] != target[0]["source"]:
         issues.append(
             _diag(
                 "CONFLICTING_VALUE",
@@ -839,9 +873,398 @@ def _normalized_facade(value: object) -> dict[str, Any] | None:
     return result
 
 
-def _generated_surface_issues(root: Path, project: dict[str, Any]) -> list[Diagnostic]:
-    issues: list[Diagnostic] = []
+def _binding_contract_issues(project: dict[str, Any], source: str) -> list[Diagnostic]:
+    """Keep optional representations exclusive without weakening old profiles."""
+    defects: list[tuple[str, str]] = []
+    for fact in ("canonical", "full"):
+        spec = project["verification"][fact]
+        if set(spec) not in ({"command"}, {"authority_ref", "json_pointer"}):
+            defects.append(
+                (
+                    f"verification.{fact}",
+                    "declare either a direct command or one authority/json-pointer reference",
+                )
+            )
+    if set(project["canonical_owner_set"]) not in (
+        {"owners"},
+        {"authority_ref", "json_pointer"},
+    ):
+        defects.append(
+            (
+                "canonical_owner_set",
+                "declare either direct owners or one authority/json-pointer reference",
+            )
+        )
+    environment = project["environment"]
+    present = PYTHON_APPLICATION_FIELDS & environment.keys()
+    if environment.get("profile", "python") == "python":
+        if present != PYTHON_APPLICATION_FIELDS:
+            defects.append(
+                (
+                    "environment",
+                    "Python application profile requires all application certification fields",
+                )
+            )
+    elif present:
+        defects.append(
+            (
+                "environment",
+                "tools profile cannot declare Python application certification fields",
+            )
+        )
+    defects.extend(_surface_contract_defects(project))
+    return [
+        _diag(
+            "CONFLICTING_VALUE",
+            fact,
+            "project",
+            [source],
+            reason,
+            "declare one complete supported binding",
+        )
+        for fact, reason in defects
+    ]
+
+
+def _surface_contract_defects(project: dict[str, Any]) -> list[tuple[str, str]]:
+    defects: list[tuple[str, str]] = []
     for surface in project["generated_surfaces"]:
+        if surface["kind"] == "compatibility_facade":
+            if (
+                "transform" not in surface
+                or "check_command" in surface
+                or "timeout_seconds" in surface
+            ):
+                defects.append(
+                    (
+                        surface["surface_id"],
+                        "compatibility facade requires its transform only",
+                    )
+                )
+        elif "check_command" not in surface or "transform" in surface:
+            defects.append(
+                (
+                    surface["surface_id"],
+                    "generated output requires a check command instead of a transform",
+                )
+            )
+    return defects
+
+
+def _protected_check_paths(root: Path, project: dict[str, Any]) -> set[str]:
+    """Snapshot versioned/nonignored files and explicit governance inputs.
+
+    This detects mutation of protected files; it is not an OS sandbox and does
+    not certify ignored runtime/cache files or Git administrative metadata.
+    """
+    try:
+        tracked = subprocess.run(
+            ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
+            cwd=root,
+            capture_output=True,
+            check=False,
+        )
+    except OSError:
+        tracked = None
+    if tracked is not None and tracked.returncode == 0:
+        paths = {os.fsdecode(path) for path in tracked.stdout.split(b"\0") if path}
+    else:
+        paths = set()
+        excluded = {
+            ".git",
+            "__pycache__",
+            ".pytest_cache",
+            ".ruff_cache",
+            ".venv",
+            "venv",
+            "env",
+        }
+        for directory, directories, files in os.walk(root, followlinks=False):
+            paths.update(
+                (Path(directory) / name).relative_to(root).as_posix()
+                for name in directories
+                if (Path(directory) / name).is_symlink()
+            )
+            directories[:] = [name for name in directories if name not in excluded]
+            paths.update(
+                (Path(directory) / name).relative_to(root).as_posix() for name in files
+            )
+    paths = {
+        path
+        for path in paths
+        if "__pycache__" not in Path(path).parts and not path.endswith(".pyc")
+    }
+    for authority in project["authorities"]:
+        relative = authority["source"].partition("#")[0]
+        path = root / relative
+        paths.add(relative)
+        if path.is_dir():
+            paths.update(
+                item.relative_to(root).as_posix()
+                for item in path.rglob("*")
+                if item.is_file() or item.is_symlink()
+            )
+    for surface in project["generated_surfaces"]:
+        paths.update(surface[key].partition("#")[0] for key in ("source", "target"))
+    workspace = load_manifest_json(root / ".governance/workspace.json")
+    lock = load_manifest_json(root / workspace["governance_pack"]["lock"])
+    paths.update(
+        {
+            ".governance/workspace.json",
+            workspace["governance_pack"]["lock"],
+            _project_source(workspace),
+        }
+    )
+    paths.update(lock["pack_path"] + "/" + relative for relative in lock["files"])
+    return paths
+
+
+def _protected_check_snapshot(
+    root: Path, project: dict[str, Any]
+) -> dict[str, tuple[Any, ...]]:
+    snapshot: dict[str, tuple[Any, ...]] = {}
+    for relative in _protected_check_paths(root, project):
+        path = root / relative
+        try:
+            info = path.lstat()
+        except FileNotFoundError:
+            snapshot[relative] = ("missing",)
+            continue
+        metadata = (
+            info.st_mode,
+            info.st_size,
+            info.st_mtime_ns,
+            info.st_ctime_ns,
+            info.st_ino,
+        )
+        if stat.S_ISLNK(info.st_mode):
+            if path.is_file():
+                target_info = path.stat()
+                with path.open("rb") as stream:
+                    target_digest = hashlib.file_digest(stream, "sha256").hexdigest()
+                snapshot[relative] = (
+                    *metadata,
+                    os.readlink(path),
+                    target_info.st_mtime_ns,
+                    target_info.st_ctime_ns,
+                    target_info.st_ino,
+                    target_digest,
+                )
+            else:
+                snapshot[relative] = (*metadata, os.readlink(path))
+        elif stat.S_ISREG(info.st_mode):
+            with path.open("rb") as stream:
+                snapshot[relative] = (
+                    *metadata,
+                    hashlib.file_digest(stream, "sha256").hexdigest(),
+                )
+        else:
+            snapshot[relative] = metadata
+    return snapshot
+
+
+def _regular_generated_paths(root: Path, paths: tuple[str, ...]) -> bool:
+    return all(
+        (root / relative).is_file()
+        and not any(
+            (root / part).is_symlink()
+            for part in (Path(relative), *Path(relative).parents)
+        )
+        for relative in paths
+    )
+
+
+def _generated_output_defect(root: Path, surface: dict[str, Any]) -> str | None:
+    source, target = surface["source"], surface["target"]
+    command = surface["check_command"]
+    if any(declaration_path_defect(path) for path in (source, target)):
+        return (
+            "generated output source and target must be repository-relative file paths"
+        )
+    elif not all((root / path).is_file() for path in (source, target)):
+        return "generated output references a missing renderer or target"
+    elif not _regular_generated_paths(root, (source, target)):
+        return "generated output renderer and target must be regular files without symlink path components"
+    elif not all(
+        (root / path).resolve().is_relative_to(root.resolve())
+        for path in (source, target)
+    ):
+        return "generated output paths must remain inside the checkout"
+    elif not (
+        command[0] == source
+        or len(command) > 1
+        and command[0] == "{python}"
+        and command[1] == source
+    ):
+        return (
+            "check command must invoke its declared renderer directly or with {python}"
+        )
+    return None
+
+
+def _generated_mutation_reason(
+    root: Path,
+    project: dict[str, Any],
+    target: str,
+    before: dict[str, tuple[Any, ...]],
+) -> str | None:
+    try:
+        after = _protected_check_snapshot(root, project)
+        changed = sorted(
+            path
+            for path in before.keys() | after.keys()
+            if before.get(path) != after.get(path)
+        )
+        confined = _regular_generated_paths(root, (target,)) and (
+            root / target
+        ).resolve().is_relative_to(root.resolve())
+        if changed or not confined:
+            digest = hashlib.sha256(
+                b"\0".join(os.fsencode(path) for path in changed)
+            ).hexdigest()
+            return f"generated-output check modified protected inputs or outputs (changed_paths={len(changed)}; paths_sha256={digest}); target remains confined={confined}"
+    except (OSError, ValueError, KeyError, TypeError):
+        return "generated-output check invalidated protected input or output metadata"
+    return None
+
+
+def _generated_contract(root, project, surface, local, local_tiers):
+    command = surface["check_command"]
+    if command[0] == "{python}":
+        interpreter, _, issues = resolve_interpreter(
+            root, project, local, local_tiers=local_tiers
+        )
+        if issues or interpreter is None:
+            return None, issues
+        argv = [str(interpreter), *command[1:]]
+    else:
+        argv = [str(root / command[0]), *command[1:]]
+    _, _, issues = resolve_execution_mode(project, local=local)
+    if issues:
+        return None, issues
+    environment = {
+        **os.environ,
+        **binding_environment(root, project, local=local),
+        "PYTHONDONTWRITEBYTECODE": "1",
+    }
+    contract = (
+        tuple(argv),
+        str(root.resolve()),
+        tuple(sorted(environment.items())),
+        surface.get("timeout_seconds", 120),
+    )
+    return contract, []
+
+
+def _generated_output_group(root, project, surfaces, contract):
+    """Run one exact contract, preserving protection and attribution for all outputs."""
+    argv, cwd, environment, timeout = contract
+    before = _protected_check_snapshot(root, project)
+    reason = None
+    try:
+        result = subprocess.run(
+            list(argv),
+            cwd=Path(cwd),
+            capture_output=True,
+            timeout=timeout,
+            check=False,
+            env=dict(environment),
+        )
+        if result.returncode:
+            outputs = "; ".join(
+                f"{name}_bytes={len(data)}; {name}_sha256={hashlib.sha256(data).hexdigest()}"
+                for name, data in (("stdout", result.stdout), ("stderr", result.stderr))
+            )
+            reason = f"generated output check failed with exit {result.returncode}; {outputs}"
+    except subprocess.TimeoutExpired:
+        reason = "generated output check exceeded its declared timeout"
+    except OSError as exc:
+        reason = f"generated output check could not execute (errno={exc.errno})"
+    mutation = next(
+        (
+            issue
+            for surface in surfaces
+            if (
+                issue := _generated_mutation_reason(
+                    root, project, surface["target"], before
+                )
+            )
+        ),
+        None,
+    )
+    reason = mutation or reason
+    if reason is None:
+        return []
+    return [
+        _diag(
+            "CONFLICTING_VALUE",
+            surface["surface_id"],
+            "project",
+            [surface["source"], surface["target"]],
+            reason,
+            "regenerate through the declared renderer and rerun its read-only check",
+        )
+        for surface in surfaces
+    ]
+
+
+def _generated_output_issue(
+    root, project, surface, local=None, *, local_tiers=None, generated=True
+):
+    reason = _generated_output_defect(root, surface)
+    if reason:
+        return [
+            _diag(
+                "BROKEN_REFERENCE",
+                surface["surface_id"],
+                "project",
+                [surface["source"], surface["target"]],
+                reason,
+                "declare existing checkout-local renderer and output paths",
+            )
+        ]
+    if not generated:
+        return []
+    contract, issues = _generated_contract(root, project, surface, local, local_tiers)
+    return issues or _generated_output_group(root, project, [surface], contract)
+
+
+def _generated_surface_issues(  # noqa: C901 - declaration preflight, exact grouping and facade transaction
+    root: Path,
+    project: dict[str, Any],
+    local: dict[str, Any] | None = None,
+    *,
+    local_tiers: dict[str, str] | None = None,
+    generated: bool = False,
+) -> list[Diagnostic]:
+    issues: list[Diagnostic] = []
+    outputs = [
+        surface
+        for surface in project["generated_surfaces"]
+        if surface["kind"] == "generated_output"
+    ]
+    # Validate every declaration before any renderer can run.
+    for surface in outputs:
+        issues.extend(
+            _generated_output_issue(root, project, surface, local, generated=False)
+        )
+    if generated and not issues:
+        groups = {}
+        for surface in outputs:
+            contract, defects = _generated_contract(
+                root, project, surface, local, local_tiers
+            )
+            issues.extend(defects)
+            if contract is not None:
+                groups.setdefault(contract, []).append(surface)
+        if not issues:
+            for contract, surfaces in groups.items():
+                issues.extend(
+                    _generated_output_group(root, project, surfaces, contract)
+                )
+    for surface in project["generated_surfaces"]:
+        if surface["kind"] == "generated_output":
+            continue
         source_path, source_pointer = _split_reference(root, surface["source"])
         target_path, target_pointer = _split_reference(root, surface["target"])
         if not source_path.is_file() or not target_path.is_file():
@@ -892,6 +1315,103 @@ def _generated_surface_issues(root: Path, project: dict[str, Any]) -> list[Diagn
     return issues
 
 
+def _skill_adapter_issues(root: Path, project: dict[str, Any]) -> list[Diagnostic]:  # noqa: C901 - bounded adapter identity transaction
+    """Tie discoverable adapters to canonical bytes and the adopted release."""
+    issues = []
+    seen = set()
+    for entry in project.get("skill_adapters", []):
+        path, target = entry["path"], entry["target"]
+        reason = None
+        if path in seen:
+            reason = "duplicate skill adapter path"
+        seen.add(path)
+        if any(declaration_path_defect(item) for item in (path, target)):
+            reason = "skill adapter paths must be confined repository-relative files"
+        elif not _regular_generated_paths(root, (path, target)) or not all(
+            (root / item).resolve().is_relative_to(root.resolve())
+            for item in (path, target)
+        ):
+            reason = "skill adapter and canonical target must be confined regular files"
+        else:
+            expected_target = (
+                "tools/workspace_governance/skills/" + entry["name"] + "/SKILL.md"
+            )
+            text = (root / path).read_text(encoding="utf-8")
+            canonical = (root / target).read_text(encoding="utf-8")
+            canonical_names = re.findall(r"^name: ([^\n]+)$", canonical, re.MULTILINE)
+            descriptions = re.findall(
+                r"^description: ([^\n]+)$", canonical, re.MULTILINE
+            )
+            names = re.findall(r"^name: ([^\n]+)$", text, re.MULTILINE)
+            links = re.findall(r"\[canonical shared skill\]\(([^)]+)\)", text)
+            pins = re.findall(r"Canonical source SHA-256: `([0-9a-f]{64})`", text)
+            binding = root / ".governance/fleet.json"
+            if not re.fullmatch(r"[0-9a-f]{64}", entry["sha256"]) or not re.fullmatch(
+                r"[0-9a-f]{64}", entry["release_manifest_sha256"]
+            ):
+                reason = (
+                    "skill adapter digests must be full lowercase SHA-256 identities"
+                )
+            elif (
+                target != expected_target
+                or names != [entry["name"]]
+                or len(links) != 1
+                or canonical_names != [entry["name"]]
+                or len(descriptions) != 1
+            ):
+                reason = (
+                    "skill adapter name or canonical target disagrees with declaration"
+                )
+            elif (
+                Path(links[0]).is_absolute()
+                or (root / path).parent.joinpath(links[0]).resolve()
+                != (root / target).resolve()
+            ):
+                reason = "skill adapter discovery link disagrees with canonical target"
+            elif text != (
+                "---\nname: "
+                + entry["name"]
+                + "\ndescription: "
+                + descriptions[0]
+                + "\n---\n\nRead and apply the [canonical shared skill]("
+                + links[0]
+                + ") before performing this workflow.\n\n"
+                + "Canonical source SHA-256: `"
+                + entry["sha256"]
+                + "`. This discovery adapter does not own policy.\n"
+            ):
+                reason = (
+                    "skill adapter body diverges from its bounded discovery contract"
+                )
+            elif (
+                pins != [entry["sha256"]]
+                or hashlib.sha256((root / target).read_bytes()).hexdigest()
+                != entry["sha256"]
+            ):
+                reason = "skill adapter canonical source hash is stale"
+            elif (
+                binding.is_symlink()
+                or not _regular_generated_paths(root, (".governance/fleet.json",))
+                or load_manifest_json(binding).get("release_manifest_sha256")
+                != entry["release_manifest_sha256"]
+            ):
+                reason = (
+                    "skill adapter release differs from the adopted release binding"
+                )
+        if reason:
+            issues.append(
+                _diag(
+                    "BROKEN_REFERENCE",
+                    "skill_adapter:" + path,
+                    "project",
+                    [path, target],
+                    reason,
+                    "regenerate the adapter contract from the reviewed adopted release",
+                )
+            )
+    return issues
+
+
 def validate_manifests(
     root: Path,
     workspace: dict[str, Any],
@@ -900,6 +1420,8 @@ def validate_manifests(
     *,
     pack_root: Path,
     local_documents: list[tuple[dict[str, Any], str]] | None = None,
+    local_tiers: dict[str, str] | None = None,
+    generated: bool = False,
 ) -> list[Diagnostic]:
     schemas, issues = _load_schemas(pack_root)
     source = _project_source(workspace)
@@ -918,10 +1440,15 @@ def validate_manifests(
     if issues:
         return issues
     issues.extend(_semantic_manifest_issues(root, workspace, project))
+    issues.extend(_skill_adapter_issues(root, project))
     issues.extend(_artifact_role_issues(root, workspace, project, pack_root))
     issues.extend(_authority_graph_issues(root, project, source))
     if not issues:
-        issues.extend(_generated_surface_issues(root, project))
+        issues.extend(
+            _generated_surface_issues(
+                root, project, local, local_tiers=local_tiers, generated=generated
+            )
+        )
     for rel in (
         project["sanitation"]["secret_scanner"],
         project["sanitation"]["repository_check"],
@@ -1000,6 +1527,7 @@ def _pack_metadata_issues(
     project artifacts; that is `resolver.roles` over project declarations.
     """
     issues: list[Diagnostic] = []
+    issues.extend(_runtime_metadata_issues(manifest))
     work_types = manifest.get("work_types")
     if not isinstance(work_types, list) or sorted(work_types) != sorted(WORK_TYPES):
         issues.append(
@@ -1084,6 +1612,33 @@ def _pack_metadata_issues(
             )
         )
     return issues
+
+
+def _runtime_metadata_issues(manifest: dict[str, Any]) -> list[Diagnostic]:
+    runtime = manifest.get("runtime")
+    requirement = runtime.get("python_requires") if isinstance(runtime, dict) else None
+    floor = (
+        re.fullmatch(r">=\s*(\d+(?:\.\d+)*)", requirement)
+        if isinstance(requirement, str)
+        else None
+    )
+    if (
+        not isinstance(runtime, dict)
+        or set(runtime) != {"python_requires"}
+        or floor is None
+        or tuple(map(int, floor[1].split("."))) < (3, 11)
+    ):
+        return [
+            _diag(
+                "PACK_DRIFT",
+                "MANIFEST.runtime",
+                "shared_pack",
+                ["MANIFEST.json"],
+                "pack runtime must declare a Python >= version floor of at least 3.11",
+                "restore the supported pack runtime contract",
+            )
+        ]
+    return []
 
 
 def validate_pack(root: Path, workspace: dict[str, Any]) -> list[Diagnostic]:
@@ -1183,6 +1738,12 @@ def validate_pack(root: Path, workspace: dict[str, Any]) -> list[Diagnostic]:
 
 def _python_specifier(root: Path, project: dict[str, Any]) -> tuple[str, str]:
     environment = project["environment"]
+    if environment.get("profile", "python") == "tools":
+        workspace = load_manifest_json(root / ".governance/workspace.json")
+        lock = load_manifest_json(root / workspace["governance_pack"]["lock"])
+        source = lock["pack_path"] + "/MANIFEST.json"
+        manifest = load_manifest_json(root / source)
+        return manifest.get("runtime", {}).get("python_requires", ">=3.11"), source
     authority_id = environment["python_requires"]["authority_ref"]
     authority = next(
         item for item in project["authorities"] if item["authority_id"] == authority_id
@@ -1252,16 +1813,29 @@ def resolve_interpreter(
         )
     try:
         specifier_text, source = _python_specifier(root, project)
-        probe = subprocess.run(
-            [
-                str(path),
-                "-c",
+        if project["environment"].get("profile", "python") == "tools":
+            floor = re.fullmatch(r">=\s*(\d+(?:\.\d+)*)", specifier_text)
+            if floor is None:
+                raise ValueError(
+                    "pack runtime requires an explicit >= Python version floor"
+                )
+            probe_code = (
+                "import platform,runpy; v=platform.python_version(); print(v); "
+                "floor=runpy.run_path("
+                + repr(str(Path(__file__).resolve().parents[1] / "runtime_floor.py"))
+                + ")['numeric_python_floor']; "
+                "raise SystemExit(0 if floor(v," + repr(specifier_text) + ") else 1)"
+            )
+        else:
+            probe_code = (
                 "import platform; from packaging.specifiers import SpecifierSet; "
                 "from packaging.version import Version; v=platform.python_version(); "
                 "print(v); raise SystemExit(0 if Version(v) in SpecifierSet("
                 + repr(specifier_text)
-                + ") else 1)",
-            ],
+                + ") else 1)"
+            )
+        probe = subprocess.run(
+            [str(path), "-c", probe_code],
             cwd=root,
             text=True,
             capture_output=True,
@@ -1334,6 +1908,8 @@ def binding_environment(
     a path would make `editable_install` unable to observe a wrong one.
     """
     env = os.environ if environ is None else environ
+    if project["environment"].get("profile", "python") == "tools":
+        return {}
     mode, _, issues = resolve_execution_mode(project, env, local)
     if issues or mode != "source":
         return {}
@@ -1358,6 +1934,8 @@ def resolve_execution_mode(
     including one holding another worktree's stale build artifacts.
     """
     env = os.environ if environ is None else environ
+    if project["environment"].get("profile", "python") == "tools":
+        return "tools", "declared tools profile", []
     spec = project["environment"]["execution_mode"]
     override = spec["override"]
     if env.get(override):
@@ -1387,6 +1965,85 @@ def resolve_execution_mode(
     return mode, reason, []
 
 
+def _route_environment(
+    root: Path,
+    project: dict[str, Any],
+    local: dict[str, Any] | None,
+    env: dict[str, str],
+    route: str | None,
+    project_source: str,
+) -> tuple[dict[str, str], list[Diagnostic]]:
+    observed: dict[str, str] = {}
+    issues: list[Diagnostic] = []
+    if route is None:
+        return observed, issues
+    route_spec = project["routes"].get(route)
+    if route_spec is None:
+        return observed, [
+            _diag(
+                "BROKEN_REFERENCE",
+                f"route:{route}",
+                "project",
+                [project_source],
+                "requested route is unknown",
+                "select a declared route",
+            )
+        ]
+    local_tools = local.get("tool_paths", {}) if local else {}
+    for tool_id in route_spec.get("environment_tools", []):
+        spec = project["environment"]["route_tools"][tool_id]
+        executable = (
+            local_tools.get(tool_id)
+            or env.get(spec["override"])
+            or next(
+                (
+                    shutil.which(item, path=env.get("PATH"))
+                    for item in spec["candidates"]
+                    if shutil.which(item, path=env.get("PATH"))
+                ),
+                None,
+            )
+        )
+        if not executable:
+            issues.append(
+                _diag(
+                    "ENVIRONMENT_MISMATCH",
+                    f"tool:{tool_id}",
+                    "environment",
+                    [spec["override"]],
+                    "route-required tool is unavailable",
+                    "configure local tool_paths, the approved override, or install it",
+                )
+            )
+            continue
+        try:
+            version = subprocess.run(
+                [executable, *spec["version_args"]],
+                cwd=root,
+                text=True,
+                capture_output=True,
+                timeout=20,
+                check=False,
+                env=env,
+            )
+            lines = (version.stdout or version.stderr).strip().splitlines()
+            if version.returncode or not lines:
+                raise ValueError("route tool version probe failed")
+            observed[tool_id] = lines[0]
+        except (OSError, ValueError, subprocess.TimeoutExpired) as exc:
+            issues.append(
+                _diag(
+                    "ENVIRONMENT_MISMATCH",
+                    f"tool:{tool_id}",
+                    "environment",
+                    [executable],
+                    str(exc),
+                    "repair the tool",
+                )
+            )
+    return observed, issues
+
+
 def doctor(  # noqa: C901 - environment probes remain one deterministic transaction
     root: Path,
     project: dict[str, Any],
@@ -1401,6 +2058,21 @@ def doctor(  # noqa: C901 - environment probes remain one deterministic transact
     interpreter, reason, issues = resolve_interpreter(
         root, project, local, env, local_tiers=local_tiers
     )
+    if project["environment"].get("profile", "python") == "tools":
+        requirement, requirement_source = _python_specifier(root, project)
+        observed, tool_issues = _route_environment(
+            root, project, local, env, route, project_source
+        )
+        issues.extend(tool_issues)
+        return {
+            "status": "ENVIRONMENT_INVALID" if issues else "ok",
+            "interpreter": str(interpreter) if interpreter else None,
+            "selection_reason": reason,
+            "profile": "tools",
+            "python_requires": requirement,
+            "python_requires_source": requirement_source,
+            "route_tools": observed,
+        }, issues
     execution_mode, execution_mode_reason, mode_issues = resolve_execution_mode(
         project, env, local
     )
@@ -1566,72 +2238,11 @@ def doctor(  # noqa: C901 - environment probes remain one deterministic transact
                     "declare execution_mode source only with a resolvable binding",
                 )
             )
-    if route is not None:
-        route_spec = project["routes"].get(route)
-        if route_spec is None:
-            issues.append(
-                _diag(
-                    "BROKEN_REFERENCE",
-                    f"route:{route}",
-                    "project",
-                    [project_source],
-                    "requested route is unknown",
-                    "select a declared route",
-                )
-            )
-        else:
-            observed: dict[str, str] = {}
-            local_tools = local.get("tool_paths", {}) if local else {}
-            for tool_id in route_spec.get("environment_tools", []):
-                spec = project["environment"]["route_tools"][tool_id]
-                executable = (
-                    local_tools.get(tool_id)
-                    or env.get(spec["override"])
-                    or next(
-                        (
-                            shutil.which(item)
-                            for item in spec["candidates"]
-                            if shutil.which(item)
-                        ),
-                        None,
-                    )
-                )
-                if not executable:
-                    issues.append(
-                        _diag(
-                            "ENVIRONMENT_MISMATCH",
-                            f"tool:{tool_id}",
-                            "environment",
-                            [spec["override"]],
-                            "route-required tool is unavailable",
-                            "configure local tool_paths, the approved override, or install it",
-                        )
-                    )
-                    continue
-                version = subprocess.run(
-                    [executable, *spec["version_args"]],
-                    cwd=root,
-                    text=True,
-                    capture_output=True,
-                    timeout=20,
-                    check=False,
-                )
-                if version.returncode:
-                    issues.append(
-                        _diag(
-                            "ENVIRONMENT_MISMATCH",
-                            f"tool:{tool_id}",
-                            "environment",
-                            [executable],
-                            "route tool version probe failed",
-                            "repair the tool",
-                        )
-                    )
-                else:
-                    observed[tool_id] = (
-                        (version.stdout or version.stderr).strip().splitlines()[0]
-                    )
-            if observed:
-                result["route_tools"] = observed
+    observed, tool_issues = _route_environment(
+        root, project, local, env, route, project_source
+    )
+    issues.extend(tool_issues)
+    if observed:
+        result["route_tools"] = observed
     result["status"] = "ENVIRONMENT_INVALID" if issues else "ok"
     return result, issues

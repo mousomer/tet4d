@@ -13,8 +13,15 @@ const LIVE_3D_DISPLAY_PITCH_RAD := 0.4537856055185257  # +26 degrees above the b
 # while board-frame +Z recedes into the scene.
 const LIVE_4D_DISPLAY_YAW_RAD := 3.5779249665883754  # 205 degrees.
 const LIVE_4D_DISPLAY_PITCH_RAD := 0.3490658503988659  # +20 degrees above the board.
-const LIVE_2D_FIT_MARGIN := 1.32
-const LIVE_3D_FIT_MARGIN := 1.38
+# Live 2D fits the board plus its spawn rows (see LIVE_2D_SPAWN_HEADROOM_ROWS),
+# so the margin is clearance only. At 1.32 a quarter of the board's height went
+# to empty space, on top of the shell already squeezing it.
+const LIVE_2D_FIT_MARGIN := 1.06
+# Rows above the board where a new piece appears before it enters.
+const LIVE_2D_SPAWN_HEADROOM_ROWS := 2.0
+# Live 3D fits board plus spawn rows; retain 4% clearance around that
+# complete silhouette after reclaiming cockpit space in Stage 58B.
+const LIVE_3D_FIT_MARGIN := 1.04
 # The authoritative collection bounds already include W-label and spawn
 # clearance. Add one modest projected safety margin without conservatively
 # padding those required attachments a second time.
@@ -52,6 +59,17 @@ var _current_roll := 0.0
 var _base_distance := 22.0
 var _base_orthographic_size := DEFAULT_ORTHOGRAPHIC_SIZE
 var _zoom_multiplier := 1.0
+# 0 centres fitted content; 1 slides it toward the viewport's right edge when
+# the viewport is wider than the content needs. A side control rail sits
+# there, and the Python client kept its panel beside the board, not across
+# the screen from it.
+var _fit_horizontal_anchor := 0.0
+# Fitted content width in world units. The offset itself is derived every
+# frame: the viewport often settles a frame after the fit (a mode switch
+# resizes it), and an offset baked from the previous mode's aspect pushed the
+# whole 2D board off-screen.
+var _fit_content_width := 0.0
+const FIT_ANCHOR_CLEARANCE := 1.0
 var _view_context := "replay view"
 var _framing_status := "initial"
 var _sensitivity_factor := 1.0
@@ -132,7 +150,28 @@ func fit_current_bounds(bounds: Dictionary, margin: float = 1.14, content_boxes:
 	)
 	if _camera != null and _camera.projection == Camera3D.PROJECTION_ORTHOGONAL:
 		_camera.size = _base_orthographic_size
+	_apply_fit_horizontal_anchor(min_pos, max_pos, content_boxes)
 	_snap_framing_to_targets()
+
+
+func set_fit_horizontal_anchor(anchor: float) -> void:
+	_fit_horizontal_anchor = clampf(anchor, 0.0, 1.0)
+
+
+func _apply_fit_horizontal_anchor(min_pos: Vector3, max_pos: Vector3, content_boxes: Array) -> void:
+	_fit_content_width = _projected_span(min_pos, max_pos, _target_yaw, _target_pitch, content_boxes).x if _fit_horizontal_anchor > 0.0 else 0.0
+	_update_fit_horizontal_offset()
+
+
+func _update_fit_horizontal_offset() -> void:
+	if _camera == null:
+		return
+	if _fit_horizontal_anchor <= 0.0 or _fit_content_width <= 0.0 or _camera.projection != Camera3D.PROJECTION_ORTHOGONAL:
+		_camera.h_offset = 0.0
+		return
+	var surplus := _camera.size * _viewport_aspect() - _fit_content_width - 2.0 * FIT_ANCHOR_CLEARANCE
+	# A negative offset moves the camera left, so the content moves right.
+	_camera.h_offset = -maxf(surplus * 0.5, 0.0) * _fit_horizontal_anchor
 
 
 func restore_fitted_framing() -> void:
@@ -174,6 +213,7 @@ func clear_presentation_state() -> void:
 	if _camera != null:
 		_camera.projection = Camera3D.PROJECTION_ORTHOGONAL
 		_camera.size = DEFAULT_ORTHOGRAPHIC_SIZE
+		_fit_content_width = 0.0
 		_update_camera()
 
 
@@ -541,6 +581,7 @@ func _update_camera() -> void:
 	var forward := (_current_focus - _camera.global_position).normalized()
 	var rolled_up := Basis(forward, _current_roll) * Vector3.UP
 	_camera.look_at(_current_focus, rolled_up)
+	_update_fit_horizontal_offset()
 	_apply_world_presentation_transform()
 	_update_orientation_gizmo()
 
@@ -796,6 +837,12 @@ func _projected_orthographic_size(
 	margin: float,
 	content_boxes: Array = []
 ) -> float:
+	var span := _projected_span(min_pos, max_pos, yaw, pitch, content_boxes)
+	var aspect := _viewport_aspect()
+	return maxf(span.y, span.x / maxf(aspect, 0.001)) * margin
+
+
+func _projected_span(min_pos: Vector3, max_pos: Vector3, yaw: float, pitch: float, content_boxes: Array = []) -> Vector2:
 	var projected_min := Vector2(INF, INF)
 	var projected_max := Vector2(-INF, -INF)
 	var boxes: Array = []
@@ -813,9 +860,7 @@ func _projected_orthographic_size(
 			projected_min.y = minf(projected_min.y, projected.y)
 			projected_max.x = maxf(projected_max.x, projected.x)
 			projected_max.y = maxf(projected_max.y, projected.y)
-	var span := projected_max - projected_min
-	var aspect := _viewport_aspect()
-	return maxf(span.y, span.x / maxf(aspect, 0.001)) * margin
+	return projected_max - projected_min
 
 
 func _box_corners(min_pos: Vector3, max_pos: Vector3) -> Array:
@@ -840,7 +885,7 @@ func _project_for_fit(point: Vector3, yaw: float, pitch: float, roll: float = 0.
 	return Vector2(point.dot(basis.x), point.dot(basis.y))
 
 
-func _fit_camera_basis(yaw: float, pitch: float, roll: float) -> Basis:
+static func _fit_camera_basis(yaw: float, pitch: float, roll: float) -> Basis:
 	var horizontal_radius := cos(pitch)
 	var offset := Vector3(sin(yaw) * horizontal_radius, sin(pitch), cos(yaw) * horizontal_radius)
 	if offset.length_squared() < 0.000001:

@@ -327,21 +327,30 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 	# deck's row host, not the deck's visible rect. A module below the fold is
 	# reachable by scrolling, which is the accepted constrained-size tradeoff;
 	# a module outside the row host would be genuinely lost.
-	var rows_rect: Rect2 = (snapshot.get("live_cockpit", {}) as Dictionary).get("deck_rows_rect", deck_rect)
-	if not bool(snapshot.get("live_4d_deck_visible", false)) or not _contains_rect(rows_rect, piece_module_rect) or not _contains_rect(rows_rect, view_module_rect) or not _contains_rect(rows_rect, state_module_rect):
-		failures.append("%s: shared cockpit deck must contain Piece, View, and Piece State modules" % label)
+	var cockpit_snapshot: Dictionary = snapshot.get("live_cockpit", {})
+	var rows_rect: Rect2 = cockpit_snapshot.get("deck_rows_rect", deck_rect)
+	# In standard and wide shells Live 4D keeps the legend in the deck and moves
+	# Piece State and View to a side column; narrow shells reflow all three below.
+	var side_host: Rect2 = cockpit_snapshot.get("side_column_rect", Rect2())
+	var state_host: Rect2 = side_host if str(cockpit_snapshot.get("deck_placement", "")) == "split" else rows_rect
+	if not bool(snapshot.get("live_4d_deck_visible", false)) or not _contains_rect(rows_rect, piece_module_rect) or not _contains_rect(state_host, state_module_rect) or view_module_rect.size.y <= 0.0:
+		failures.append("%s: shared cockpit must show Piece, View, and Piece State modules, state %s in %s" % [label, state_module_rect, state_host])
 	if game_rect.intersects(deck_rect):
 		failures.append("%s: primary board and shared cockpit deck must not overlap" % label)
 	if replay_game_width > 0.0 and game_rect.size.x <= replay_game_width + 0.5:
 		failures.append("%s: live game area should gain width after hiding the left replay panel, live=%s replay=%s" % [label, game_rect.size.x, replay_game_width])
 	var piece_rows: Array = snapshot.get("piece_control_strip", {}).get("row_ids", [])
-	for required in ["translate:X", "translate:Z", "translate:W", "drop:Soft", "drop:Hard", "rotate:XY", "rotate:XZ", "rotate:YZ", "rotate:XW", "rotate:YW", "rotate:ZW"]:
+	# The legend names moves by on-screen direction and rotations by what they
+	# mix; plane names remain on the glyph rows' semantics and in full help.
+	for required in ["translate:Sideways", "translate:Near/far", "translate:Slice", "drop:Soft drop", "drop:Hard drop", "rotate:Spin", "rotate:Turn", "rotate:Tip", "rotate:Side↔W", "rotate:Up↔W", "rotate:Depth↔W", "session:Restart"]:
 		if required not in piece_rows:
-			failures.append("%s: authoritative Piece module must include %s" % [label, required])
+			failures.append("%s: authoritative Piece legend must include %s" % [label, required])
+	# The 4D View module keeps what play needs: view turns and look. Fit stays
+	# a header button and pointer gestures stay in the full help.
 	var view_rows: Array = snapshot.get("view_control_strip", {}).get("row_ids", [])
-	for required in ["view_framing:Fit", "view_framing:Reset", "view_pointer:Orient", "view_pointer:Translate", "view_pointer:Zoom"]:
+	for required in ["view_exact:XZ", "view_exact:XW", "view_exact:ZW", "view_orient:Pitch", "view_orient:Yaw"]:
 		if required not in view_rows:
-			failures.append("%s: authoritative View module must include %s" % [label, required])
+			failures.append("%s: authoritative View module must include %s, got %s" % [label, required, view_rows])
 	var next_piece_panel: Dictionary = snapshot.get("next_piece_panel", {})
 	if not bool(next_piece_panel.get("visible", false)) or next_piece_panel.get("piece_name_text") != "CROSS4":
 		failures.append("%s: Piece State module should expose the authoritative NEXT piece" % label)
@@ -371,12 +380,12 @@ func _check_live_4d_cockpit_contract(hud: Node, viewport_size: Vector2i, replay_
 		if quick_settings.text != "Hide Quick Settings":
 			failures.append("%s: Quick Settings action should expose and report the detailed inspector" % label)
 		quick_settings.pressed.emit()
-	if grid_toggle == null or grid_toggle.text != "Grid: On":
+	if grid_toggle == null or grid_toggle.text != "Grid: Border":
 		failures.append("%s: action row should expose the current grid state" % label)
 	else:
 		grid_toggle.pressed.emit()
-		if grid_toggle.text != "Grid: Off":
-			failures.append("%s: grid action should report the hidden-detail state" % label)
+		if grid_toggle.text != "Grid: None":
+			failures.append("%s: grid action should cycle from default Border to None" % label)
 		grid_toggle.pressed.emit()
 	if quick_settings != null and (quick_settings.get_parent() != live_view_row or quick_settings.get_meta("semantic_role", "") != "action_button" or quick_settings.get_theme_stylebox("normal") == null):
 		failures.append("%s: Quick Settings should be an unmistakable styled action button" % label)
@@ -406,7 +415,7 @@ func _check_live_mode_progression(hud: Node, viewport_size: Vector2i) -> Array:
 	if two_d.get("view_control_strip", {}).get("row_ids", []) != ["view_framing:Fit", "view_framing:Reset"]:
 		failures.append("live 2D viewport %s: shared View module must contain only Fit and Reset" % str(viewport_size))
 	var two_d_piece_rows: Array = two_d.get("piece_control_strip", {}).get("row_ids", [])
-	for required in ["translate:X", "drop:Soft", "drop:Hard", "rotate:clockwise", "rotate:counter-clockwise"]:
+	for required in ["translate:Move", "drop:Soft drop", "drop:Hard drop", "rotate:Right (CW)", "rotate:Left (CCW)", "session:Restart"]:
 		if required not in two_d_piece_rows:
 			failures.append("live 2D viewport %s: shared Piece module must include %s" % [str(viewport_size), required])
 

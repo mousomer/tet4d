@@ -275,6 +275,11 @@ func _click_text_prefix(tree: SceneTree, root: Node, text: String, failures: Arr
 
 
 func _click(tree: SceneTree, control: Control) -> void:
+	# Navigate into view before pointer input; menus start at Play and overflow
+	# rows are reached through the focus-following scroll surface.
+	control.grab_focus()
+	await tree.process_frame
+	await tree.process_frame
 	var point := control.get_global_rect().get_center()
 	for pressed in [true, false]:
 		var event := InputEventMouseButton.new()

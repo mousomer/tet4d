@@ -34,8 +34,8 @@ func _test_registry_driven_component() -> Array:
 		return failures
 	var snapshot: Dictionary = designer.deterministic_snapshot()
 	failures.append_array(_check_generated_controls(designer, registry, "live_2d"))
-	if snapshot.get("applicable_ids", []).size() != 19:
-		failures.append("live 2D Designer should generate exactly the registry's 19 applicable parameters")
+	if snapshot.get("applicable_ids", []).size() != 22:
+		failures.append("live 2D Designer should generate exactly the registry's 22 applicable parameters")
 	for hidden_id in [
 		"display.window_mode",
 		"display.windowed_size",
@@ -67,7 +67,7 @@ func _test_registry_driven_component() -> Array:
 		failures.append("Designer groups should follow registry order and semantic_owner metadata")
 
 	var previews: Array = []
-	designer.profile_preview_requested.connect(func(profile) -> void: previews.append(profile.snapshot()))
+	designer.profile_preview_requested.connect(func(profile, _restore_geometry: bool) -> void: previews.append(profile.snapshot()))
 	if not designer.capture_reference():
 		failures.append("Designer should capture working B as immutable reference A")
 	var reference_before: Dictionary = designer.reference_profile().snapshot()
@@ -77,6 +77,7 @@ func _test_registry_driven_component() -> Array:
 		failures.append("editing B must never mutate captured reference A")
 	if designer.working_profile().value("ghost.opacity") != 1.25:
 		failures.append("numeric edits should update detached working B exactly")
+	designer.set_comparison_snapshot("B")
 	if not designer.show_slot(DesignerScript.SLOT_REFERENCE) or previews[-1].get("values", {}).get("ghost.opacity") != 0.75:
 		failures.append("Show A should preview the exact captured reference profile")
 	if not designer.show_slot(DesignerScript.SLOT_WORKING) or previews[-1].get("values", {}).get("ghost.opacity") != 1.25:
@@ -96,13 +97,13 @@ func _test_registry_driven_component() -> Array:
 
 	designer.set_runtime_context("live_3d")
 	failures.append_array(_check_generated_controls(designer, registry, "live_3d"))
-	if designer.deterministic_snapshot().get("applicable_ids", []).size() != 21:
-		failures.append("live 3D Designer should generate exactly 21 registry-applicable controls")
+	if designer.deterministic_snapshot().get("applicable_ids", []).size() != 24:
+		failures.append("live 3D Designer should generate exactly 24 registry-applicable controls")
 	designer.set_runtime_context("live_4d")
 	failures.append_array(_check_generated_controls(designer, registry, "live_4d"))
 	var four_d_ids: Array = designer.deterministic_snapshot().get("applicable_ids", [])
-	if four_d_ids.size() != 23 or not four_d_ids.has("slice_set.spacing") or not four_d_ids.has("display.show_w_labels"):
-		failures.append("live 4D Designer should generate all 23 applicable controls including slice settings")
+	if four_d_ids.size() != 25 or four_d_ids.has("slice_set.spacing") or not four_d_ids.has("display.show_w_labels"):
+		failures.append("live 4D Designer should generate 25 applicable controls, excluding inert legacy spacing")
 
 	var registry_data := {"schema_version": registry.schema_version, "categories": registry.categories.duplicate(true), "settings": []}
 	for spec in registry.settings:
@@ -170,7 +171,7 @@ func _test_live_app_integration() -> Array:
 	if designer == null or designer.state() != DesignerScript.STATE_FULL or not hud.live_interaction_owns_input():
 		failures.append("opening the live Designer should show the full editor and transfer gameplay input ownership")
 	var layout: Dictionary = hud.layout_contract_snapshot()
-	var game_rect: Rect2 = layout.get("game_area", Rect2())
+	var game_rect: Rect2 = hud._live_cockpit._designer_host.get_global_rect()
 	var designer_rect: Rect2 = designer.get_global_rect()
 	if not _rect_contains_rect(game_rect, designer_rect) or designer_rect.size.x >= game_rect.size.x * 0.65:
 		failures.append("full Designer should remain bounded inside the board area without obscuring the whole board")
@@ -184,14 +185,13 @@ func _test_live_app_integration() -> Array:
 		not hud._next_piece_panel.is_visible_in_tree()
 		or not hud._hold_piece_panel.is_visible_in_tree()
 		or not hud._piece_control_strip.is_visible_in_tree()
-		or not _rect_contains_rect(rows_rect, state_module_rect)
 		or not _rect_contains_rect(state_module_rect, hud._next_piece_panel.get_global_rect())
 		or not _rect_contains_rect(state_module_rect, hud._hold_piece_panel.get_global_rect())
 		or not _rect_contains_rect(piece_module_rect, hud._piece_control_strip.get_global_rect())
 	):
 		failures.append("NEXT, HOLD, and primary piece controls must remain simultaneously present while the full Designer is open")
-	if not layout.get("live_4d_deck_visible", false) or hud._right_scroll.is_visible_in_tree():
-		failures.append("shared live guidance must remain reachable in the deck while the legacy inspector stays retired")
+	if hud._live_cockpit.designer_panels().size() != 4 or hud._right_scroll.is_visible_in_tree():
+		failures.append("shared live guidance must remain reachable in detached panels while the legacy inspector stays retired")
 
 	var full_owned_hash := str(app._live_bridge.live_2d_state_hash())
 	var blocked_drop := InputEventAction.new()
@@ -235,11 +235,13 @@ func _test_live_app_integration() -> Array:
 		failures.append("Designer live apply should reach the HUD presentation owner")
 	if app._world_environment.environment.background_color == background_before:
 		failures.append("Designer live apply should reach the environment presentation owner")
+	designer.set_comparison_snapshot("B")
 	if not designer.show_slot(DesignerScript.SLOT_REFERENCE):
 		failures.append("integrated A/B selection should expose the reference slot")
 	await tree.process_frame
 	if absf(float(app._presentation_profile.value("ghost.opacity")) - original_opacity) > 0.001:
 		failures.append("integrated Show A should apply the exact captured profile")
+	designer.set_comparison_snapshot("B")
 	designer.show_slot(DesignerScript.SLOT_WORKING)
 	await tree.process_frame
 	if absf(float(app._presentation_profile.value("ghost.opacity")) - edited_opacity) > 0.001:
@@ -295,35 +297,40 @@ func _test_live_app_integration() -> Array:
 		await tree.process_frame
 		await tree.process_frame
 		await tree.process_frame
-		var responsive_game: Rect2 = hud.layout_contract_snapshot().get("game_area", Rect2())
+		var responsive_game: Rect2 = hud._live_cockpit._designer_host.get_global_rect() if not hud._live_cockpit.designer_panels().is_empty() else hud._game_area.get_global_rect()
 		if not _rect_contains_rect(responsive_game, designer.get_global_rect()):
 			failures.append("Designer should remain inside the game area after resize to %s: state=%s designer=%s game=%s" % [viewport_size, designer.state(), designer.get_global_rect(), responsive_game])
 		designer.collapse_to_compact()
-		await tree.process_frame
+		for frame in range(10):
+			await tree.process_frame
+		responsive_game = hud._game_area.get_global_rect()
 		if not _rect_contains_rect(responsive_game, designer.get_global_rect()):
 			failures.append("compact Designer should remain inside the game area after resize to %s" % str(viewport_size))
 		designer.expand_to_full()
 		await tree.process_frame
 
+	# B is a frozen comparison now. Return explicitly to CURRENT DESIGN before
+	# checking that ordinary appearance edits preserve the settled camera pose.
+	designer.keep_working_and_hide()
 	app._enter_live_4d_mode()
 	await tree.process_frame
 	hud._open_presentation_designer()
-	await tree.process_frame
+	for _frame in range(6):
+		await tree.process_frame
 	var four_d_designer: Dictionary = designer.deterministic_snapshot()
-	if not four_d_designer.get("applicable_ids", []).has("slice_set.spacing") or not four_d_designer.get("applicable_ids", []).has("display.show_w_labels"):
+	if four_d_designer.get("applicable_ids", []).has("slice_set.spacing") or not four_d_designer.get("applicable_ids", []).has("display.show_w_labels"):
 		failures.append("integrated live 4D Designer should expose registry-authorized slice controls")
 	var four_d_state_before: Dictionary = app._current_snapshot.duplicate(true)
 	var four_d_basis_before: Array = app._live_4d_basis.slots()
 	var four_d_orientation_before: Dictionary = app._live_4d_local_orientation.snapshot()
 	var four_d_camera_before: Dictionary = app._camera_rig.presentation_snapshot()
-	var original_spacing := float(designer.working_profile().value("slice_set.spacing"))
-	var edited_spacing := 1.4 if absf(original_spacing - 1.4) > 0.001 else 0.8
-	if not designer.set_parameter_value("slice_set.spacing", edited_spacing):
-		failures.append("integrated 4D Designer should apply slice-set presentation values")
+	var show_labels := not bool(designer.working_profile().value("display.show_w_labels"))
+	if not designer.set_parameter_value("display.show_w_labels", show_labels):
+		failures.append("integrated 4D Designer should apply slice appearance values")
 	await tree.process_frame
 	var four_d_renderer_values: Dictionary = app._renderer.presentation_preferences_snapshot().get("profile", {}).get("values", {})
-	if absf(float(four_d_renderer_values.get("slice_set.spacing", -99.0)) - edited_spacing) > 0.001:
-		failures.append("Designer live apply should reach the slice-set presentation owner")
+	if bool(four_d_renderer_values.get("display.show_w_labels")) != show_labels:
+		failures.append("Designer live apply should reach the slice appearance owner")
 	if app._current_snapshot != four_d_state_before or app._live_4d_basis.slots() != four_d_basis_before or app._live_4d_local_orientation.snapshot() != four_d_orientation_before:
 		failures.append("4D slice presentation editing must preserve game state, active slice, basis, and local orientation")
 	var four_d_camera_after: Dictionary = app._camera_rig.presentation_snapshot()
@@ -336,7 +343,7 @@ func _test_live_app_integration() -> Array:
 		failures.append("4D orientation indicator should preserve readable slice state while tuning presentation")
 	if not _rect_contains_rect(four_d_layout.get("piece_module_rect", Rect2()), hud._piece_control_strip.get_global_rect()):
 		failures.append("4D primary piece controls should remain visible in the shared Piece module while tuning presentation")
-	if "translate:W" not in four_d_layout.get("piece_control_strip", {}).get("row_ids", []):
+	if "translate:Slice" not in four_d_layout.get("piece_control_strip", {}).get("row_ids", []):
 		failures.append("4D slice guidance should remain present in the shared Piece module while tuning presentation")
 
 	designer.revert_and_hide()

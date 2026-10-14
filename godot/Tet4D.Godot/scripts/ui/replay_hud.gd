@@ -29,6 +29,7 @@ const GameSetupPanelScript = preload("res://scripts/ui/game_setup/game_setup_pan
 const GameSetupSpecScript = preload("res://scripts/ui/game_setup/game_setup_spec.gd")
 const CameraPresetScript = preload("res://scripts/presentation/camera_preset.gd")
 const PresentationProfileScript = preload("res://scripts/presentation/presentation_profile.gd")
+const GridDisplayMode = preload("res://scripts/presentation/grid_display_mode.gd")
 const PresentationDesignerScript = preload("res://scripts/ui/presentation_designer.gd")
 const DesignLaboratoryPanelScript = preload("res://scripts/ui/design_laboratory_panel.gd")
 const SafeAreaInsetsScript = preload("res://scripts/ui/safe_area_insets.gd")
@@ -49,7 +50,7 @@ signal projection_strength_changed(value: float)
 signal board_detail_changed(detail: String)
 signal ghost_visibility_changed(visible: bool)
 signal locked_cell_opacity_changed(opacity: float)
-signal grid_visibility_changed(visible: bool)
+signal grid_mode_changed(mode: int)
 signal accessibility_policy_changed(policy: Dictionary)
 signal camera_preferences_changed(sensitivity_factor: float, invert_y: bool, interpolation_scale: float)
 signal camera_preset_requested(id: String)
@@ -67,6 +68,7 @@ signal change_setup_requested(mode: String)
 signal new_random_game_requested()
 signal main_menu_requested()
 signal basis_turn_requested(plane: String, direction: int)
+signal design_restoration_requested(profile)
 signal presentation_profile_changed(profile)
 signal design_laboratory_requested()
 
@@ -123,6 +125,8 @@ var _hint_label: VBoxContainer
 var _mode_hint_strip: VBoxContainer
 var _viewport_title: Label
 var _viewport_hint: Label
+var _top_bar: HBoxContainer
+var _viewport_inner: MarginContainer
 var _viewer_nav: VBoxContainer
 var _viewer_nav_label: Label
 var _replay_navigation_controls: Array[Control] = []
@@ -133,6 +137,7 @@ var _live_fit_view_button: Button
 var _live_reset_view_button: Button
 var _quick_settings_button: Button
 var _grid_toggle_button: Button
+var _comparison_toggle_button: Button
 var _designer_button: Button
 var _design_menu_header: Control
 var _design_lab_button: Button
@@ -153,7 +158,7 @@ var _body_container: HBoxContainer
 var _left_panel: PanelContainer
 var _viewer_case_browser: CaseBrowser
 var _game_area: PanelContainer
-var _game_viewport_container: SubViewportContainer
+var _game_viewport_container: TextureRect
 var _game_viewport: SubViewport
 var _right_scroll: ScrollContainer
 var _right_column: VBoxContainer
@@ -198,7 +203,8 @@ var _geometry_diagnostics_enabled := false
 var _keyboard_hints_visible := true
 var _accessibility_policy = AccessibilityPolicyScript.new()
 var _hud_density := "standard"
-var _grid_visible := true
+var _live_binding_signature := ""
+var _grid_mode := GridDisplayMode.Mode.BORDER
 var _ui_scale_factor := 1.0
 var _camera_sensitivity_factor := 1.0
 var _camera_invert_y := false
@@ -225,12 +231,21 @@ var _onboarding_model = LiveOnboardingModelScript.new()
 var _onboarding_panel: PanelContainer
 var _next_piece_panel: PanelContainer
 var _hold_piece_panel: PanelContainer
-var _piece_preview_row: HBoxContainer
+var _piece_preview_row: GridContainer
 var _piece_control_strip: PanelContainer
 var _live_view_control_strip: PanelContainer
 var _live_cockpit
 const DESIGN_RESOLUTION_MIN_WIDTH := 640.0
 const DESIGN_RESOLUTION_MIN_HEIGHT := 480.0
+# Menus scale with their opening size on both axes; live/replay preserves the
+# taller reference canvas required by the gameplay rails and Designer chrome.
+const MENU_REFERENCE_SIZE := Vector2(1280.0, 720.0)
+const DESIGN_REFERENCE_SIZE := Vector2(1280.0, 800.0)
+const MAX_WINDOW_UI_SCALE := 2.0
+# Menu text may shrink with a smaller window only down to the RDS 18 px
+# readable-body target; below it the logical canvas grows and menus reflow.
+const MENU_READABLE_BODY_POINTS := 18.0
+const MIN_MENU_WINDOW_SCALE := MENU_READABLE_BODY_POINTS / ShellDesignTokensScript.FONT_BODY
 
 var _live_4d_deck: VBoxContainer
 var _live_4d_piece_module: VBoxContainer
@@ -333,6 +348,21 @@ func set_control_frame_snapshot(snapshot: Dictionary) -> void:
 	_refresh_piece_control_strip()
 
 
+# Measured screen directions of each movement key and rotation axis; the 3D/4D
+# legend draws them so it shows where a key moves the piece, not an axis name.
+func set_legend_screen_directions(directions: Dictionary) -> void:
+	if _piece_control_strip != null:
+		_piece_control_strip.set_screen_directions(directions)
+	if _live_view_control_strip != null:
+		_live_view_control_strip.set_screen_directions(directions)
+
+
+func flash_legend_plane(plane: String, view: bool) -> void:
+	var strip = _live_view_control_strip if view else _piece_control_strip
+	if strip != null and strip.is_visible_in_tree():
+		strip.flash_plane(plane)
+
+
 static func quick_control_hint_groups(mode: String) -> Array:
 	match mode:
 		"live_2d", "live_3d", "live_4d":
@@ -395,6 +425,17 @@ func _process(delta: float) -> void:
 		return
 	_window_mode_poll_accumulator = 0.0
 	_sync_observed_window_mode()
+	_refresh_configured_control_reference()
+
+
+func _refresh_configured_control_reference() -> void:
+	if _active_live_mode.is_empty():
+		return
+	var signature := LiveInputContractScript.binding_signature()
+	if signature == _live_binding_signature:
+		return
+	_live_binding_signature = signature
+	_configure_live_cockpit_mode(_active_live_mode)
 
 
 func _notification(what: int) -> void:
@@ -493,7 +534,8 @@ func set_snapshot(snapshot: Dictionary, diagnostics_visible: bool) -> void:
 			_update_live_status_strip(mode_label, state_label, reason, trace_type)
 			_update_live_gameplay_summary(snapshot, mode_label, paused)
 			if _new_random_game_button != null:
-				_new_random_game_button.visible = str(snapshot.get("random_mode", "")) == GameSetupSpecScript.RANDOM_MODE_TRUE_RANDOM
+				_new_random_game_button.visible = true
+				_new_random_game_button.text = "New Random Game" if str(snapshot.get("random_mode", "")) == GameSetupSpecScript.RANDOM_MODE_TRUE_RANDOM else "New Game"
 			_trace_integrity_label.text = _format_live_inspector_text(
 				mode_label,
 				state_label,
@@ -553,7 +595,7 @@ func set_live_2d_mode(
 	if _mode_hint_strip != null:
 		_mode_hint_strip.visible = false
 	if _replay_note != null:
-		_replay_note.text = "GAME OVER · %s. R restarts Live 2D." % _game_over_reason_label(game_over_reason) if game_over else "Play 2D. Camera controls change the view; movement controls move the piece. P pauses; Esc opens the Main Menu."
+		_replay_note.text = "GAME OVER · %s. %s restarts Live 2D." % [_game_over_reason_label(game_over_reason), LiveInputContractScript.display_key("live_reset")] if game_over else "Play 2D. Camera controls change the view; movement controls move the piece. %s pauses; Esc opens the Main Menu." % LiveInputContractScript.display_key("live_pause")
 	if _hint_label != null:
 		_hint_label.visible = false
 	if _inspector_hint_panel != null:
@@ -602,7 +644,7 @@ func set_live_3d_mode(
 	if _mode_hint_strip != null:
 		_mode_hint_strip.visible = false
 	if _replay_note != null:
-		_replay_note.text = "GAME OVER · %s. Backspace restarts Live 3D." % _game_over_reason_label(game_over_reason) if game_over else "Play 3D. Movement uses X/Z while falling remains separate. Camera controls change only the view."
+		_replay_note.text = "GAME OVER · %s. %s restarts Live 3D." % [_game_over_reason_label(game_over_reason), LiveInputContractScript.display_key("live_3d_reset")] if game_over else "Play 3D. Movement uses X/Z while falling remains separate. Camera controls change only the view."
 	if _hint_label != null:
 		_hint_label.visible = false
 	if _inspector_hint_panel != null:
@@ -651,7 +693,7 @@ func set_live_4d_mode(
 	if _mode_hint_strip != null:
 		_mode_hint_strip.visible = false
 	if _replay_note != null:
-		_replay_note.text = "GAME OVER · %s. Backspace restarts Live 4D." % _game_over_reason_label(game_over_reason) if game_over else "Use exact 90° XW, ZW, or ZX view rotations. Y remains down; camera and piece rotations stay independent."
+		_replay_note.text = "GAME OVER · %s. %s restarts Live 4D." % [_game_over_reason_label(game_over_reason), LiveInputContractScript.display_key("live_4d_reset")] if game_over else "Use exact 90° XW, ZW, or ZX view rotations. Y remains down; camera and piece rotations stay independent."
 	if _hint_label != null:
 		_hint_label.visible = false
 	if _inspector_hint_panel != null:
@@ -716,6 +758,8 @@ func set_replay_mode_labels(is_playing: bool, speed: float, diagnostics_visible:
 
 
 func _configure_live_cockpit_mode(mode: String) -> void:
+	if _active_live_mode != mode and _presentation_designer != null:
+		_presentation_designer.hide_preserving_preview()
 	_active_live_mode = mode
 	if _presentation_designer != null:
 		_presentation_designer.set_runtime_context(mode)
@@ -736,8 +780,11 @@ func _configure_live_cockpit_mode(mode: String) -> void:
 			_live_4d_basis_snapshot if mode == GameSetupSpecScript.MODE_4D else {},
 			_control_frame_snapshot,
 			_hud_density,
-			mode
+			mode,
+			LiveInputContractScript,
+			LiveViewControlStripScript.LAYOUT_WIDE if mode == GameSetupSpecScript.MODE_4D else LiveViewControlStripScript.LAYOUT_GRID
 		)
+		_style_applier.apply_to_tree(_live_view_control_strip, _style_manager)
 	_update_camera_guidance(mode)
 	if _inspector_hint_panel != null:
 		_inspector_hint_panel.set_meta("hint_cache_key", "")
@@ -753,13 +800,15 @@ func _refresh_piece_control_strip() -> void:
 		_active_live_mode,
 		_live_4d_basis_snapshot if _active_live_mode == GameSetupSpecScript.MODE_4D else {},
 		_control_frame_snapshot,
-		_hud_density
+		_hud_density,
+		LiveInputContractScript,
+		_piece_legend_layout()
 	)
 	if is_inside_tree():
 		_style_applier.apply_to_tree(_piece_control_strip, _style_manager)
 
 
-func _apply_shell_minimums(live: bool) -> void:
+func _apply_shell_minimums(live: bool, side_rail := false) -> void:
 	var minimum := ReplayVisuals.supported_live_shell_minimum_size() if live else ReplayVisuals.supported_shell_minimum_size()
 	custom_minimum_size = minimum
 	if _viewer_screen != null:
@@ -769,16 +818,47 @@ func _apply_shell_minimums(live: bool) -> void:
 		if outer != null:
 			outer.custom_minimum_size = minimum
 	if _body_container != null:
+		# The 2D rail sits beside the body inside the same shell width, so the
+		# body gives up the rail's share or the rail is pushed off-screen.
+		var rail_share := (LiveCockpitScript.SIDE_RAIL_MIN_WIDTH + LiveCockpitScript.SIDE_RAIL_GAP) if side_rail else 0.0
 		_body_container.custom_minimum_size = Vector2(
-			minimum.x - (ReplayVisuals.OUTER_MARGIN * 2),
+			minimum.x - (ReplayVisuals.OUTER_MARGIN * 2) - rail_share,
 			ReplayVisuals.LIVE_BODY_MIN_HEIGHT if live else ReplayVisuals.BODY_MIN_HEIGHT
 		)
 
 
+# Tall boards (2D, and 3D's upright well) take the side rail. Live 4D keeps the
+# deck below: its slice row is about 2.8:1, so a rail would shrink the boards,
+# while a full-width deck holds the legend sections side by side. The rail
+# drops VIEW: Fit View stays a header button, and mouse orbit is unlabelled
+# muscle memory, so its rows would only push the key legend down.
+func _uses_side_rail() -> bool:
+	return _active_live_mode in [GameSetupSpecScript.MODE_2D, GameSetupSpecScript.MODE_3D]
+
+
+func _piece_legend_layout() -> String:
+	if _uses_side_rail():
+		return LivePieceControlStripScript.LAYOUT_RAIL
+	if _active_live_mode == GameSetupSpecScript.MODE_4D:
+		return LivePieceControlStripScript.LAYOUT_WIDE
+	return LivePieceControlStripScript.LAYOUT_DECK
+
+
 func _set_live_4d_deck_active(active: bool) -> void:
-	_apply_shell_minimums(active)
+	var side_rail := active and _uses_side_rail()
+	var split := active and _active_live_mode == GameSetupSpecScript.MODE_4D
+	if _piece_preview_row != null:
+		_piece_preview_row.columns = 1 if split else 2
+	_apply_shell_minimums(active, side_rail or split)
 	if _live_4d_deck == null:
 		return
+	_live_4d_view_module.visible = not side_rail or not _live_cockpit.designer_panels().is_empty()
+	var placement := LiveCockpitScript.PLACEMENT_BELOW
+	if side_rail:
+		placement = LiveCockpitScript.PLACEMENT_SIDE
+	elif split:
+		placement = LiveCockpitScript.PLACEMENT_SPLIT
+	_live_cockpit.set_deck_placement(placement)
 	if active:
 		_piece_control_strip.reparent(_live_4d_piece_module, false)
 		_live_view_control_strip.reparent(_live_4d_view_module, false)
@@ -855,6 +935,10 @@ func configure_design_laboratory(callbacks: Dictionary) -> bool:
 		main_menu_requested.emit()
 	)
 	callbacks["edit_candidate"] = Callable(self, "_open_design_candidate")
+	callbacks["comparison"] = _presentation_designer.comparison
+	callbacks["ensure_current"] = Callable(self, "_ensure_current_design")
+	callbacks["apply_selection"] = Callable(self, "_apply_lab_selection")
+	callbacks["apply_style"] = callbacks.get("apply_style", callbacks.get("apply_profile"))
 	var configured: bool = _design_laboratory.configure(_settings_registry, callbacks)
 	if configured:
 		_apply_shell_style()
@@ -888,6 +972,19 @@ func open_design_laboratory() -> void:
 		return
 	show_screen(SCREEN_VIEWER)
 	_design_laboratory.open()
+
+
+func _ensure_current_design() -> void:
+	var context := _active_live_mode if not _active_live_mode.is_empty() else "live_2d"
+	_presentation_designer.initialize_current_design(presentation_profile(), context)
+
+
+func _apply_lab_selection(resolved: Dictionary) -> bool:
+	_ensure_current_design()
+	var descriptor: Dictionary = resolved.get("descriptor", {})
+	if descriptor.get("source_kind") == "built_in":
+		return bool(_presentation_designer.apply_built_in_style(str(descriptor.get("preset_id", ""))).get("ok", false))
+	return bool(_presentation_designer.load_saved_profile(str(descriptor.get("preset_id", ""))).get("ok", false))
 
 
 func _open_design_candidate(profile_id: String) -> void:
@@ -938,14 +1035,40 @@ func _build_presentation_designer() -> void:
 	add_child(_presentation_designer)
 	if not _presentation_designer.configure(_settings_registry):
 		push_error("Presentation Designer requires a valid presentation registry")
-	_presentation_designer.profile_preview_requested.connect(func(profile) -> void:
-		presentation_profile_changed.emit(profile)
+	_live_cockpit.designer_geometry_changed.connect(_presentation_designer.synchronize_panel_geometry)
+	_presentation_designer.comparison.changed.connect(_update_live_view_action_labels)
+	_presentation_designer.comparison_activate = func(side: String) -> bool:
+		if _design_laboratory != null and _design_laboratory._comparison.active():
+			return _design_laboratory._activate_arm(side)
+		return _presentation_designer.preview_comparison_snapshot(side)
+	_presentation_designer.comparison_edit_requested = func() -> void:
+		if _design_laboratory != null:
+			_design_laboratory._comparison.end()
+	_presentation_designer.panel_focus_requested.connect(_live_cockpit.raise_designer_panel)
+	_presentation_designer.profile_preview_requested.connect(func(profile, restore_geometry: bool) -> void:
+		if restore_geometry:
+			design_restoration_requested.emit(profile)
+		else:
+			presentation_profile_changed.emit(profile)
 	)
 	_presentation_designer.state_changed.connect(func(_state: String) -> void:
+		_live_cockpit.set_designer_layout_enabled(_state == PresentationDesignerScript.STATE_FULL and _design_affordances_enabled, _game_area)
+		if _state == PresentationDesignerScript.STATE_FULL:
+			var current_preview: bool = _presentation_designer.comparison.shown() == PresentationDesignerScript.CURRENT
+			var source = _presentation_designer.working_profile() if current_preview else presentation_profile()
+			var metadata: Dictionary = source.design_state()
+			_live_cockpit.restore_designer_geometry(metadata.get("panel_rects", {}))
+			if current_preview and not metadata.has("panel_rects"):
+				call_deferred("_capture_opening_designer_geometry")
 		_update_live_view_action_labels()
 		call_deferred("_layout_presentation_designer")
 	)
 
+
+func _capture_opening_designer_geometry() -> void:
+	_live_cockpit._constrain_designer_panels()
+	var rects: Dictionary = _live_cockpit.designer_geometry_snapshot()
+	_presentation_designer.initialize_panel_geometry(rects)
 
 func _open_presentation_designer() -> void:
 	if _presentation_designer == null or _active_live_mode.is_empty() or not _design_affordances_enabled:
@@ -959,7 +1082,14 @@ func _layout_presentation_designer() -> void:
 	if _presentation_designer == null or _game_area == null or not _game_area.is_inside_tree():
 		return
 	var game_rect := _game_area.get_global_rect()
-	_presentation_designer_game_rect = game_rect
+	# Detached board panels may be smaller than the full editor. Keep the
+	# editor usable within the cockpit while its board is manipulated.
+	var frames: Dictionary = _live_cockpit.designer_panels()
+	if not frames.is_empty():
+		game_rect = _live_cockpit._designer_host.get_global_rect()
+		if game_rect.size.x <= 0.0 or game_rect.size.y <= 0.0:
+			return
+	_presentation_designer_game_rect = _game_area.get_global_rect()
 	var inverse := get_global_transform().affine_inverse()
 	var local_origin: Vector2 = inverse * game_rect.position
 	var local_far: Vector2 = inverse * (game_rect.position + game_rect.size)
@@ -1017,6 +1147,7 @@ func show_screen(screen_name: String) -> void:
 		_presentation_designer.hide_preserving_preview()
 	if _current_screen != SCREEN_VIEWER and _design_laboratory != null:
 		_design_laboratory.close()
+	_apply_responsive_layout()
 	call_deferred("_log_geometry_diagnostics", "screen:%s" % _current_screen)
 	call_deferred("_focus_current_screen")
 
@@ -1029,11 +1160,13 @@ func handle_main_menu_shortcut(event: InputEvent) -> bool:
 		return false
 	match key_event.keycode:
 		KEY_2:
-			open_game_setup(GameSetupSpecScript.MODE_2D)
+			start_current_validated_setup(GameSetupSpecScript.MODE_2D)
 		KEY_3:
-			open_game_setup(GameSetupSpecScript.MODE_3D)
+			start_current_validated_setup(GameSetupSpecScript.MODE_3D)
 		KEY_4:
-			open_game_setup(GameSetupSpecScript.MODE_4D)
+			start_current_validated_setup(GameSetupSpecScript.MODE_4D)
+		KEY_C:
+			open_game_setup(_game_setup_model.current_mode)
 		KEY_L:
 			if not _design_affordances_enabled:
 				return false
@@ -1073,6 +1206,30 @@ func _focus_current_screen() -> void:
 		target = buttons[0] if not buttons.is_empty() else null
 	if _valid_focus_target(target):
 		(target as Control).grab_focus()
+		var scroll := _menu_scroll_for_current_screen()
+		if scroll != null:
+			call_deferred("_ensure_menu_focus_visible", scroll)
+
+
+func _menu_scroll_for_current_screen() -> ScrollContainer:
+	if _current_screen == SCREEN_MAIN_MENU:
+		return _main_menu_scroll
+	if _current_screen == SCREEN_ADVANCED:
+		return find_child("AdvancedMenuScroll", true, false) as ScrollContainer
+	return null
+
+
+func _ensure_menu_focus_visible(scroll: ScrollContainer) -> void:
+	# follow_focus runs when focus changes, which can precede container sorting
+	# at startup. Reconcile only on layout/focus changes, so wheel scrolling stays
+	# under the player's control. The first action also keeps the title in view.
+	var owner := get_viewport().gui_get_focus_owner()
+	if owner == null or not scroll.is_visible_in_tree() or not scroll.is_ancestor_of(owner):
+		return
+	if owner == _screen_focus_targets.get(_current_screen):
+		scroll.scroll_vertical = 0
+	else:
+		scroll.ensure_control_visible(owner)
 
 
 func _valid_focus_target(target) -> bool:
@@ -1099,8 +1256,15 @@ func game_viewport() -> SubViewport:
 	return _game_viewport
 
 
+func _publish_game_viewport_geometry() -> void:
+	game_viewport_geometry_changed.emit(board_viewport_size())
+
+
 func board_viewport_size() -> Vector2:
-	return _game_area.size if _game_area != null else Vector2.ZERO
+	# Logical allocation remains independent of render pixel density.
+	if _game_viewport_container == null or _game_viewport == null or not _game_viewport_container.is_visible_in_tree():
+		return Vector2.ZERO
+	return _game_viewport_container.size
 
 
 func layout_contract_snapshot() -> Dictionary:
@@ -1270,10 +1434,19 @@ func _profile_from_store():
 	return PresentationProfileScript.from_store(_settings_registry, _settings_store)
 
 
-func apply_presentation_profile(profile) -> bool:
+func design_geometry_will_change(profile) -> bool:
+	return (
+		not _live_cockpit.designer_panels().is_empty()
+		and _live_cockpit.designer_geometry_snapshot() != profile.design_state().get("panel_rects", {})
+	)
+
+
+func apply_presentation_profile(profile, restore_geometry: bool = false) -> bool:
 	if profile == null or not profile.has_method("contract_conforms") or not profile.contract_conforms():
 		return false
 	_active_presentation_profile = profile.detached_copy()
+	if restore_geometry:
+		_live_cockpit.restore_designer_geometry(profile.design_state().get("panel_rects", {}))
 	_accessibility_policy.configure(
 		bool(profile.value("accessibility.high_contrast")),
 		bool(profile.value("accessibility.reduced_motion")),
@@ -1284,7 +1457,7 @@ func apply_presentation_profile(profile) -> bool:
 		str(profile.value("camera.sensitivity"))
 	)
 	_camera_invert_y = bool(profile.value("camera.invert_y"))
-	_grid_visible = bool(profile.value("display.grid_visible"))
+	_grid_mode = GridDisplayMode.from_value(profile.value("display.grid_mode"))
 	set_display_mode(str(profile.value("theme.name")))
 	_apply_ui_scale(str(profile.value("display.ui_scale")))
 	_apply_hud_density(str(profile.value("display.hud_density")))
@@ -1313,7 +1486,7 @@ func _wire_settings_panel(panel: SettingsPanel) -> void:
 	panel.setting_changed.connect(func(setting_id: String, value) -> void:
 		_sync_setting_controls(panel, setting_id)
 		if not _applying_initial_settings:
-			presentation_profile_changed.emit(_profile_from_store())
+			_emit_runtime_parameter_change(setting_id, value)
 	)
 	panel.playback_speed_changed.connect(func(value: float) -> void:
 		playback_speed_changed.emit(value)
@@ -1393,8 +1566,15 @@ func _set_persistent_setting(setting_id: String, value) -> void:
 		_sync_all_setting_controls()
 	if setting_id == "interface.show_onboarding":
 		_set_onboarding_visible(bool(_settings_store.value(setting_id)))
-	if changed:
-		presentation_profile_changed.emit(_profile_from_store())
+	if changed or presentation_profile().value(setting_id) != value:
+		_emit_runtime_parameter_change(setting_id, value)
+
+
+func _emit_runtime_parameter_change(setting_id: String, value) -> void:
+	if _presentation_designer != null and _presentation_designer.working_profile() != null:
+		_presentation_designer.synchronize_runtime_parameter(setting_id, value)
+	else:
+		presentation_profile_changed.emit(presentation_profile().with_overrides({setting_id: value}))
 
 
 func _update_live_status_strip(mode_label: String, state_label: String, reason: String, mode: String) -> void:
@@ -1575,13 +1755,20 @@ static func _live_feedback_short(snapshot: Dictionary, paused: bool, guide_open:
 
 
 func _set_live_declutter_mode(live_mode: bool) -> void:
+	if _top_bar != null:
+		_top_bar.custom_minimum_size.y = ReplayVisuals.LIVE_TOP_BAR_HEIGHT if live_mode else ReplayVisuals.TOP_BAR_HEIGHT
+	if _viewport_inner != null:
+		for edge in ["left", "top", "right", "bottom"]:
+			_viewport_inner.add_theme_constant_override("margin_" + edge, ReplayVisuals.LIVE_VIEWPORT_FRAME_PADDING if live_mode else ReplayVisuals.VIEWPORT_FRAME_PADDING)
 	if _viewer_nav != null:
-		_viewer_nav.custom_minimum_size = Vector2(430 if live_mode else 270, ReplayVisuals.TOP_BAR_HEIGHT)
+		_viewer_nav.custom_minimum_size = Vector2(430 if live_mode else 270, ReplayVisuals.LIVE_TOP_BAR_HEIGHT if live_mode else ReplayVisuals.TOP_BAR_HEIGHT)
 	if _viewer_nav_label != null:
 		_viewer_nav_label.text = "SESSION" if live_mode else "NAVIGATION"
 	for control in _replay_navigation_controls:
 		if control != null:
 			control.visible = not live_mode
+	if _summary_title != null:
+		_summary_title.visible = not live_mode
 	if _top_status_panel != null:
 		_top_status_panel.visible = not live_mode
 	if _authority_panel != null:
@@ -1599,6 +1786,9 @@ func _set_live_declutter_mode(live_mode: bool) -> void:
 		_change_setup_button.visible = live_mode
 	if _live_view_actions != null:
 		_live_view_actions.visible = live_mode
+		for caption in _live_view_action_row.get_children():
+			if caption.get_meta("allocation_caption", false):
+				caption.visible = not live_mode
 	# Reset View is reparented into a camera container shared with replay
 	# diagnostics, so its mode scope must never depend on parent visibility.
 	if _live_reset_view_button != null:
@@ -1883,8 +2073,11 @@ func _apply_hud_density(density: String) -> void:
 			_live_4d_basis_snapshot if _active_live_mode == GameSetupSpecScript.MODE_4D else {},
 			_control_frame_snapshot,
 			_hud_density,
-			_active_live_mode
+			_active_live_mode,
+			LiveInputContractScript,
+			LiveViewControlStripScript.LAYOUT_WIDE if _active_live_mode == GameSetupSpecScript.MODE_4D else LiveViewControlStripScript.LAYOUT_GRID
 		)
+		_style_applier.apply_to_tree(_live_view_control_strip, _style_manager)
 	_set_live_inspector_density(_bottom_panel != null and not _bottom_panel.visible)
 	_update_live_view_action_labels()
 	_apply_responsive_layout()
@@ -1897,19 +2090,28 @@ func _toggle_quick_settings() -> void:
 
 
 func _toggle_grid_visibility() -> void:
-	_grid_visible = not _grid_visible
+	_grid_mode = GridDisplayMode.next(_grid_mode)
+	var value := GridDisplayMode.to_value(_grid_mode)
+	# Preserve detached runtime style instead of rebuilding persisted defaults.
 	if _settings_store != null:
-		_settings_store.set_value("display.grid_visible", _grid_visible)
+		_settings_store.set_value("display.grid_mode", value)
+	if _presentation_designer != null and _presentation_designer.working_profile() != null:
+		_presentation_designer.synchronize_runtime_parameter("display.grid_mode", value)
+	else:
+		presentation_profile_changed.emit(presentation_profile().with_overrides({"display.grid_mode": value}))
 	_update_live_view_action_labels()
-	presentation_profile_changed.emit(_profile_from_store())
-	grid_visibility_changed.emit(_grid_visible)
+	grid_mode_changed.emit(_grid_mode)
 
 
 func _update_live_view_action_labels() -> void:
+	if _comparison_toggle_button != null and _presentation_designer != null:
+		_comparison_toggle_button.visible = _design_affordances_enabled and _presentation_designer.comparison.ready()
+		_comparison_toggle_button.disabled = not _presentation_designer.comparison.ready()
+		_comparison_toggle_button.text = "A | B · %s" % _presentation_designer.comparison.shown()
 	if _quick_settings_button != null:
 		_quick_settings_button.text = "Hide Quick Settings" if _hud_density == "detailed" else "Show Quick Settings"
 	if _grid_toggle_button != null:
-		_grid_toggle_button.text = "Grid: On" if _grid_visible else "Grid: Off"
+		_grid_toggle_button.text = "Grid: %s" % GridDisplayMode.to_value(_grid_mode).capitalize()
 	if _designer_button != null:
 		var designer_state := _presentation_designer.state() if _presentation_designer != null else "hidden"
 		_designer_button.text = "Designer: %s" % ("Open" if designer_state == "hidden" else designer_state.capitalize())
@@ -2047,6 +2249,7 @@ func _build_layout() -> void:
 	outer.add_child(_live_cockpit)
 
 	var top_bar := HBoxContainer.new()
+	_top_bar = top_bar
 	top_bar.custom_minimum_size = Vector2(0, ReplayVisuals.TOP_BAR_HEIGHT)
 	top_bar.add_theme_constant_override("separation", ReplayVisuals.PANEL_GAP)
 	_live_cockpit.header_slot.add_child(top_bar)
@@ -2055,6 +2258,7 @@ func _build_layout() -> void:
 	_viewer_nav = viewer_nav
 	viewer_nav.custom_minimum_size = Vector2(270, ReplayVisuals.TOP_BAR_HEIGHT)
 	viewer_nav.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	viewer_nav.add_theme_constant_override("separation", 4)
 	top_bar.add_child(viewer_nav)
 	var nav_row_a := HBoxContainer.new()
 	nav_row_a.add_theme_constant_override("separation", 6)
@@ -2123,6 +2327,7 @@ func _build_layout() -> void:
 	_live_view_actions.add_child(_live_view_action_row)
 	var view_label := Label.new()
 	view_label.text = "RECOVER"
+	view_label.set_meta("allocation_caption", true)
 	view_label.theme_type_variation = "SecondaryLabel"
 	_live_view_action_row.add_child(view_label)
 	_live_fit_view_button = Button.new()
@@ -2146,6 +2351,7 @@ func _build_layout() -> void:
 	_live_display_action_row = _live_view_action_row
 	var display_label := Label.new()
 	display_label.text = "DISPLAY"
+	display_label.set_meta("allocation_caption", true)
 	display_label.theme_type_variation = "SecondaryLabel"
 	_live_display_action_row.add_child(display_label)
 	_quick_settings_button = Button.new()
@@ -2158,7 +2364,7 @@ func _build_layout() -> void:
 	_grid_toggle_button = Button.new()
 	_grid_toggle_button.name = "GridVisibilityToggle"
 	_grid_toggle_button.custom_minimum_size = Vector2(84, 34)
-	_grid_toggle_button.tooltip_text = "Show or hide internal board grid detail"
+	_grid_toggle_button.tooltip_text = "Cycle Full grid → Border only → None"
 	_grid_toggle_button.set_meta("semantic_role", "action_button")
 	_grid_toggle_button.pressed.connect(_toggle_grid_visibility)
 	_live_display_action_row.add_child(_grid_toggle_button)
@@ -2170,6 +2376,12 @@ func _build_layout() -> void:
 	_designer_button.set_meta("semantic_role", "action_button")
 	_designer_button.pressed.connect(_open_presentation_designer)
 	_live_display_action_row.add_child(_designer_button)
+	_comparison_toggle_button = Button.new()
+	_comparison_toggle_button.name = "ComparisonToggleAB"
+	_comparison_toggle_button.text = "A | B · CURRENT"
+	_comparison_toggle_button.tooltip_text = "Switch frozen A/B preview; CURRENT DESIGN stays unchanged"
+	_comparison_toggle_button.pressed.connect(func() -> void: _presentation_designer.toggle_slots())
+	_live_display_action_row.add_child(_comparison_toggle_button)
 	_update_live_view_action_labels()
 
 	_top_status_panel = PanelContainer.new()
@@ -2197,12 +2409,9 @@ func _build_layout() -> void:
 	top_summary_panel.name = "TopReplaySummaryPanel"
 	top_summary_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top_bar.add_child(top_summary_panel)
-	var top_summary_root := Control.new()
-	_fill_parent(top_summary_root)
-	top_summary_panel.add_child(top_summary_root)
 	var top_summary_box := VBoxContainer.new()
-	_fill_parent(top_summary_box)
-	top_summary_root.add_child(top_summary_box)
+	top_summary_box.add_theme_constant_override("separation", 4)
+	top_summary_panel.add_child(top_summary_box)
 	var summary_title := Label.new()
 	summary_title.text = "Replay"
 	_summary_title = summary_title
@@ -2307,12 +2516,12 @@ func _build_layout() -> void:
 	_game_area.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_game_area.theme_type_variation = "ViewportFrame"
 	_game_area.resized.connect(func() -> void:
-		game_viewport_geometry_changed.emit(_game_area.size)
 		call_deferred("_layout_presentation_designer")
 	)
 	body.add_child(_game_area)
 	_viewport_frame = _game_area
 	var viewport_inner := MarginContainer.new()
+	_viewport_inner = viewport_inner
 	viewport_inner.add_theme_constant_override("margin_left", ReplayVisuals.VIEWPORT_FRAME_PADDING)
 	viewport_inner.add_theme_constant_override("margin_top", ReplayVisuals.VIEWPORT_FRAME_PADDING)
 	viewport_inner.add_theme_constant_override("margin_right", ReplayVisuals.VIEWPORT_FRAME_PADDING)
@@ -2335,19 +2544,20 @@ func _build_layout() -> void:
 	_mode_hint_strip.name = "ViewportControlHints"
 	_mode_hint_strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	viewport_box.add_child(_mode_hint_strip)
-	_game_viewport_container = SubViewportContainer.new()
+	_game_viewport_container = preload("res://scripts/ui/gameplay_viewport_surface.gd").new()
 	_game_viewport_container.name = "GameViewportContainer"
 	_game_viewport_container.custom_minimum_size = Vector2(ReplayVisuals.GAME_AREA_MIN_WIDTH, 0)
 	_game_viewport_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_game_viewport_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_game_viewport_container.stretch = true
 	_game_viewport_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	viewport_box.add_child(_game_viewport_container)
 	_game_viewport = SubViewport.new()
 	_game_viewport.name = "GameViewport"
 	_game_viewport.size = Vector2i(ReplayVisuals.GAME_AREA_MIN_WIDTH, 240)
 	_game_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	_game_viewport_container.add_child(_game_viewport)
+	_game_viewport_container.attach(_game_viewport)
+	_game_viewport.size_changed.connect(_publish_game_viewport_geometry, CONNECT_DEFERRED)
+	_game_viewport_container.visibility_changed.connect(_publish_game_viewport_geometry, CONNECT_DEFERRED)
 
 	_right_scroll = ScrollContainer.new()
 	_right_scroll.name = "RightInspectorSlot"
@@ -2456,10 +2666,12 @@ func _build_layout() -> void:
 		_set_persistent_setting("interface.show_onboarding", false)
 	)
 	_right_column.add_child(_onboarding_panel)
-	_piece_preview_row = HBoxContainer.new()
+	_piece_preview_row = GridContainer.new()
+	_piece_preview_row.columns = 2
 	_piece_preview_row.name = "PiecePreviewRow"
 	_piece_preview_row.visible = false
-	_piece_preview_row.add_theme_constant_override("separation", 8)
+	_piece_preview_row.add_theme_constant_override("h_separation", 8)
+	_piece_preview_row.add_theme_constant_override("v_separation", 8)
 	_piece_preview_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_right_column.add_child(_piece_preview_row)
 	_next_piece_panel = NextPiecePanelScript.new()
@@ -2471,6 +2683,9 @@ func _build_layout() -> void:
 	_hold_piece_panel.set_style_manager(_style_manager)
 	_piece_preview_row.add_child(_hold_piece_panel)
 	_piece_control_strip = LivePieceControlStripScript.new()
+	_piece_control_strip.rebuilt.connect(func() -> void:
+		_style_applier.apply_to_tree(_piece_control_strip, _style_manager)
+	)
 	_piece_control_strip.visible = false
 	_right_column.add_child(_piece_control_strip)
 	_live_view_control_strip = LiveViewControlStripScript.new()
@@ -2676,24 +2891,40 @@ func _make_screen() -> Control:
 	return screen
 
 
-func _build_main_menu_screen(screen: Control) -> void:
-	_main_menu_scroll = ScrollContainer.new()
-	_main_menu_scroll.name = "MainMenuScroll"
-	_main_menu_scroll.focus_mode = Control.FOCUS_ALL
-	_main_menu_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_main_menu_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	_main_menu_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_main_menu_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_fill_parent(_main_menu_scroll)
-	screen.add_child(_main_menu_scroll)
-	var center := CenterContainer.new()
-	center.custom_minimum_size = Vector2(720, 0)
-	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	center.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	_main_menu_scroll.add_child(center)
+func _make_menu_surface(screen: Control, scroll_name: String) -> PanelContainer:
+	var scroll := ScrollContainer.new()
+	scroll.name = scroll_name
+	scroll.focus_mode = Control.FOCUS_ALL
+	scroll.follow_focus = true
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	_fill_parent(scroll)
+	screen.add_child(scroll)
+	var surround := MarginContainer.new()
+	surround.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	surround.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	surround.add_theme_constant_override("margin_top", ShellDesignTokensScript.SPACE_4)
+	surround.add_theme_constant_override("margin_bottom", ShellDesignTokensScript.SPACE_4)
+	scroll.add_child(surround)
+	surround.resized.connect(func() -> void: call_deferred("_ensure_menu_focus_visible", scroll))
+	scroll.resized.connect(func() -> void: call_deferred("_ensure_menu_focus_visible", scroll))
+	scroll.resized.connect(func() -> void:
+		var side_margin := maxi(ShellDesignTokensScript.SPACE_4, int(minf(
+			scroll.size.x * ShellDesignTokensScript.MENU_SIDE_MARGIN_SHARE,
+			(scroll.size.x - ShellDesignTokensScript.MENU_MIN_WIDTH) * 0.5
+		)))
+		surround.add_theme_constant_override("margin_left", side_margin)
+		surround.add_theme_constant_override("margin_right", side_margin)
+	)
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(720, 0)
-	center.add_child(panel)
+	panel.name = "%sPanel" % scroll_name
+	surround.add_child(panel)
+	return panel
+
+
+func _build_main_menu_screen(screen: Control) -> void:
+	var panel := _make_menu_surface(screen, "MainMenuScroll")
+	_main_menu_scroll = panel.get_parent().get_parent() as ScrollContainer
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", ShellDesignTokensScript.SPACE_6)
 	margin.add_theme_constant_override("margin_top", ShellDesignTokensScript.SPACE_6)
@@ -2720,6 +2951,7 @@ func _build_main_menu_screen(screen: Control) -> void:
 	subtitle.text = "A geometry instrument across two, three, and four dimensions."
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	subtitle.theme_type_variation = "SecondaryLabel"
+	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	subtitle.add_theme_font_size_override("font_size", ShellDesignTokensScript.FONT_BODY)
 	layout.add_child(subtitle)
 	layout.add_child(_menu_group_header("PLAY"))
@@ -2782,12 +3014,7 @@ func _build_main_menu_screen(screen: Control) -> void:
 
 
 func _build_advanced_screen(screen: Control) -> void:
-	var center := CenterContainer.new()
-	_fill_parent(center)
-	screen.add_child(center)
-	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(720, 0)
-	center.add_child(panel)
+	var panel := _make_menu_surface(screen, "AdvancedMenuScroll")
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 48)
 	margin.add_theme_constant_override("margin_top", 44)
@@ -3022,7 +3249,9 @@ func _make_command_card(label_text: String, description: String, shortcut: Strin
 	var button := Button.new()
 	button.name = "CommandCard__%s" % label_text.replace(" ", "_").replace("/", "_")
 	button.text = "%s        %s\n%s" % [label_text, shortcut, description]
-	button.custom_minimum_size = Vector2(480, 52)
+	button.custom_minimum_size = Vector2(0, ShellDesignTokensScript.MENU_COMMAND_MIN_HEIGHT)
+	button.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.add_theme_font_size_override("font_size", ShellDesignTokensScript.FONT_BODY)
 	button.tooltip_text = "%s - %s" % [label_text, description]
@@ -3302,24 +3531,24 @@ func _apply_responsive_layout() -> void:
 	_log_geometry_diagnostics("responsive-compat")
 
 
-# The design resolution tracks the window so layout coordinates and responsive
-# breakpoints share one domain. With a base pinned to a fixed resolution the
-# logical extent never shrinks - canvas_items stretch downscales instead - so a
-# small window could never reach a constrained layout however the breakpoints
-# were computed. Tracking the window also renders text at its intended size
-# rather than squeezing a fixed canvas into fewer pixels.
-# The shell is sized by explicit offsets rather than full-rect anchors because
-# it carries a UI-scale transform. Those offsets are therefore only correct for
-# the viewport they were computed against, and must be recomputed whenever the
-# viewport changes - which it now does, because the design resolution tracks
-# the window.
+# Menu and gameplay canvases magnify above their respective reference sizes.
+# Compact windows reflow; both paths recompute explicit shell offsets
+# because the persisted UI-scale transform changes the available logical extent.
 func _apply_shell_extents() -> void:
 	var viewport_size := get_viewport_rect().size
 	var ui_scale := maxf(_ui_scale_factor, 0.01)
+	var available := viewport_size / ui_scale
+	# Window.min_size owns the physical window floor. Reapplying that floor to
+	# transformed Controls makes large text push the menu's scroll viewport
+	# outside the real window instead of letting the content scroll within it.
+	var minimum := ReplayVisuals.supported_live_shell_minimum_size() if not _active_live_mode.is_empty() else ReplayVisuals.supported_shell_minimum_size()
+	custom_minimum_size = minimum.min(available)
+	if _shell_root_margin != null:
+		_shell_root_margin.custom_minimum_size = custom_minimum_size
 	offset_left = 0.0
 	offset_top = 0.0
-	offset_right = viewport_size.x / ui_scale
-	offset_bottom = viewport_size.y / ui_scale
+	offset_right = available.x
+	offset_bottom = available.y
 
 
 func _sync_design_resolution() -> void:
@@ -3336,12 +3565,37 @@ func _sync_design_resolution() -> void:
 		return
 	var display_scale := maxf(DisplayServer.screen_get_scale(), 0.01)
 	var points := window_pixels / display_scale
+	var logical := points / _window_ui_scale(points)
 	var target := Vector2i(
-		int(maxf(points.x, DESIGN_RESOLUTION_MIN_WIDTH)),
-		int(maxf(points.y, DESIGN_RESOLUTION_MIN_HEIGHT))
+		int(ceil(maxf(logical.x, DESIGN_RESOLUTION_MIN_WIDTH))),
+		int(ceil(maxf(logical.y, DESIGN_RESOLUTION_MIN_HEIGHT)))
 	)
 	if window.content_scale_size != target:
 		window.content_scale_size = target
+
+
+# The single menu typography policy: logical font tokens are fixed, and this
+# window-to-canvas factor follows whichever axis is tighter in both directions,
+# so a shorter window shrinks menu text as surely as a narrower one. It is
+# recomputed from the reference on every resize, never from the prior scale.
+static func menu_window_scale(window_points: Vector2) -> float:
+	if window_points.x <= 0.0 or window_points.y <= 0.0:
+		return 1.0
+	var fit := minf(window_points.x / MENU_REFERENCE_SIZE.x, window_points.y / MENU_REFERENCE_SIZE.y)
+	return clampf(fit, MIN_MENU_WINDOW_SCALE, MAX_WINDOW_UI_SCALE)
+
+
+func _window_ui_scale(points: Vector2) -> float:
+	return window_ui_scale(points) if _current_screen == SCREEN_VIEWER else menu_window_scale(points)
+
+
+# How much the shell is magnified for a window of this size in points: 1.0 up
+# to the reference window, then proportional to whichever axis is tighter.
+static func window_ui_scale(window_points: Vector2) -> float:
+	if window_points.x <= 0.0 or window_points.y <= 0.0:
+		return 1.0
+	var fit := minf(window_points.x / DESIGN_REFERENCE_SIZE.x, window_points.y / DESIGN_REFERENCE_SIZE.y)
+	return clampf(fit, 1.0, MAX_WINDOW_UI_SCALE)
 
 
 # The responsive breakpoint domain is what the player actually sees, not the
@@ -3359,7 +3613,8 @@ func apparent_layout_size() -> Vector2:
 		return size
 	var display_scale := maxf(DisplayServer.screen_get_scale(), 0.01)
 	var ui_scale := maxf(_ui_scale_factor, 0.01)
-	return (window_pixels / display_scale) / ui_scale
+	var points := window_pixels / display_scale
+	return points / _window_ui_scale(points) / ui_scale
 
 
 func _log_geometry_diagnostics(reason: String) -> void:

@@ -4,23 +4,26 @@ class_name LiveOnboardingPanel
 
 signal dismiss_requested()
 
+const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
+
 var _title: Label
 var _body: Label
 var _progress: Label
 
 func _init() -> void:
 	name = "LiveOnboardingPanel"
+	set_meta("readable_guidance", true)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	custom_minimum_size = Vector2(0, 176)
+	custom_minimum_size = Vector2(0, ShellDesignTokensScript.GUIDANCE_MIN_HEIGHT)
 	theme_type_variation = "ViewportFrame"
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 16)
-	margin.add_theme_constant_override("margin_top", 14)
+	margin.add_theme_constant_override("margin_top", ShellDesignTokensScript.SPACE_2)
 	margin.add_theme_constant_override("margin_right", 16)
-	margin.add_theme_constant_override("margin_bottom", 14)
+	margin.add_theme_constant_override("margin_bottom", ShellDesignTokensScript.SPACE_2)
 	add_child(margin)
 	var content := VBoxContainer.new()
-	content.add_theme_constant_override("separation", 10)
+	content.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_2)
 	margin.add_child(content)
 	var header := HBoxContainer.new()
 	content.add_child(header)

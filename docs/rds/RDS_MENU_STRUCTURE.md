@@ -126,6 +126,11 @@ Main Menu
   parity inspection, and non-live topology/endgame demonstrations, but routes
   through a secondary `Advanced / Diagnostics` screen rather than competing
   with Play as a top-level action.
+- Godot Main Menu Play launches the current validated setup directly. Play
+  3D/4D and shortcuts `3`/`4` launch their mode-specific validated setups;
+  legacy `2` directly launches Play 2D. Change Setup (`C`) opens the current
+  mode's configuration without launching. Invalid drafts cannot launch by
+  button or shortcut. See `docs/architecture/editable_board_setup_and_persistence.md`.
 
 ### 4.2 In-game pause menu map
 
@@ -316,6 +321,59 @@ disabled control emits no activation.
 ### 5.3 Text/readability
 
 1. Default body text should target at least 18 px equivalent in current window scale.
+   Godot menu/help body text uses 24 logical pixels and supporting text uses 22;
+   display scaling and the persisted UI-scale preference apply on top.
+   Menu screens scale from the 1280×720 point opening window by the tighter
+   window axis in both directions: a narrower or a shorter window shrinks menu
+   text, and extra width never enlarges it while height is the limit. Menu
+   scaling floors at 0.75× (24 px body renders at the 18 px target) and caps at
+   2×; smaller windows then keep that size and reflow/scroll. Live/replay uses
+   a 1280×800 point reference, scaled by the tighter axis between 1× and 2×, so
+   magnified rails and Designer chrome retain their required logical height. Initial
+   Main Menu layout shows the title and focused Play action; layout changes
+   keep the focused action reachable without overriding manual wheel scrolling.
+   Helper keycaps and action labels use at least 22 logical pixels in every
+   density. Compact density may reduce spacing, never text size; keycaps size
+   from their font metrics and operation labels wrap rather than truncate.
+   Main and Advanced menu panels grow with the available window width and
+   height, with bounded outer margins. Command rows share extra vertical space,
+   wrap descriptions, and remain reachable by scrolling in compact windows.
+   At maximum UI scale the scroll surface stays inside the physical window;
+   shell minimums must not enlarge the transformed layout beyond its viewport.
+   Guidance panels retain a 170 px minimum with compact padding so the larger
+   text preserves the primary board's required viewport share.
+   Live header chrome retains its compact 18/16 px scale; onboarding guidance
+   uses the larger help scale. PIECE and VIEW scroll internally when their
+   readable rows exceed the available height, keeping NEXT/HOLD alongside them
+   on standard/wide windows. Normal deck rows reserve 220 px. Preview status
+   text wraps, and live-mode/density rebuilds reapply keycap styling.
+   The live control deck caps its height at 28% of the shell (subject to its
+   row floor), scrolling extra rows to preserve space for the primary board in compact windows.
+   Live 2D and 3D instead place the deck in a side rail beside their tall
+   boards (32% of the shell width, 280-460 px): NEXT/HOLD above a key-first
+   legend grouped MOVE / ROTATE / GAME that includes Hold, Pause and Restart
+   keys, with no VIEW module. Live 4D keeps the legend in the deck and moves
+   NEXT/HOLD and a VIEW module of view turns and look into a scrolling side
+   column (22% of the width, 300-340 px); narrow and small shells fall back to
+   the reflowing deck. The camera fits 2D/3D boards plus their two spawn rows
+   (1.06 / 1.10 clearance) and anchors them toward the rail when width is spare.
+   The 3D/4D legend is spatial: movement is a compass whose arrows are measured
+   from the camera (each keycap sits where its key moves the piece on screen),
+   the 4D slice hop reads `Q ← slice → E`, and rotations and 4D view turns are
+   rows with a glyph lighting the two on-screen directions they mix (Spin,
+   Turn, Tip, Side↔W, Up↔W, Depth↔W; plane names remain as a rail tag). A row
+   flashes when its key is used. Wording never changes with the view.
+   Stage 57: the active-play reference resolves each semantic action through
+   the current runtime InputMap. Contract keys seed missing actions only;
+   rebinding or clearing an action must update the visible reference without
+   reopening Settings or restarting gameplay. Compact mode retains movement,
+   rotation, drop, Hold, Pause and Restart; 4D-only actions stay out of 2D.
+   Restart remains directly available by its configured action and gameplay
+   button from playing, paused and game-over states, returning directly to play
+   with the same native session setup and effective seed. New Game is also
+   directly available for every mode: fixed-seed setup reproduces its seed;
+   true-random setup obtains a fresh native effective seed. Both preserve the
+   detached presentation design and bypass menus. Change Setup remains explicit.
 2. Maintain text/background contrast aligned with WCAG minimum guidance.
 3. Avoid crowded line wrapping in options; keep one option per row.
 4. Titles should use capitalized display text rather than stacked
@@ -782,3 +840,30 @@ Execution artifact:
 6. The right helper in the modern playground is keys-first and minimal, not a
    second menu, and diagnostics stay on secondary surfaces rather than
    replacing the operational sidebar.
+
+### Stage 56H live presentation controls
+
+Live View Options and normal Settings expose Grid: Full / Border / None, with
+Border as the fresh-session default. None retains enclosure and floor; Border
+adds rear subdivision edges; Full adds internal cell-boundary edges. The three
+scaffold opacity sliders appear only in Designer → Advanced Settings.
+Grid selection and design style must not reset one another. In full Designer,
+labelled Move/Resize handles manipulate bounded board, piece-control,
+view-control, and NEXT/HOLD panels. Compact/hidden Designer restores the normal
+responsive cockpit with manipulation disabled. Geometry belongs to CURRENT
+DESIGN and is included in complete saved designs; it never mutates style, grid, native gameplay, RNG, or view orientation. Resolved
+inner-render-region changes use the common visibility/size-driven camera refit.
+
+Normal Designer work edits one CURRENT DESIGN. Apply Style changes appearance
+while preserving grid, panel geometry, HUD allocation, camera target and canonical
+slice spacing. Live cockpit rails and the 4D legend deck give gameplay the
+primary display area; at the 1280×720 opening window and above the 4D deck
+shows its whole measured legend unscrolled. Shorter windows, or an open guide,
+take the missing height from the deck first, down to a fifth of the cockpit, then scroll it;
+sizing is recomputed from the current size. Every existing session action remains reachable. Save updates its associated saved
+design; Save As creates a new named complete design without changing the source;
+Load and Revert restore complete saved/opening state, including grid and geometry.
+A/B is optional frozen comparison preview with explicit Set A/Set B and adoption
+actions. A single HUD toggle outside Designer switches preview and clearly names
+the shown side; it never changes CURRENT DESIGN. The detailed state and interaction
+map is owned by `docs/architecture/live_presentation_designer.md`.

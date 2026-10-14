@@ -56,6 +56,10 @@ func _check_semantic_rows_and_density() -> Array:
 				failures.append("VIEW must include semantic row %s at %s density" % [required, density])
 		if not view.find_children("*", "BaseButton", true, false).is_empty():
 			failures.append("VIEW keycaps must remain passive labels at %s density" % density)
+		for strip in [piece, view]:
+			for label in strip.find_children("*", "Label", true, false):
+				if label.get_theme_font_size("font_size") < 22:
+					failures.append("%s helper %s must retain readable 22px text at %s density" % [strip.name, label.name, density])
 		piece.free()
 		view.free()
 	return failures
@@ -112,16 +116,38 @@ func _check_production_deck() -> Array:
 		hud._apply_hud_density(density)
 		await tree.process_frame
 		await tree.process_frame
+		for frame in range(10):
+			await tree.process_frame
 		var snapshot: Dictionary = hud.layout_contract_snapshot()
 		var deck: Rect2 = snapshot.get("live_4d_deck", Rect2())
 		var board: Rect2 = snapshot.get("game_area", Rect2())
 		var piece: Rect2 = snapshot.get("piece_module_rect", Rect2())
 		var view: Rect2 = snapshot.get("view_module_rect", Rect2())
 		var state: Rect2 = snapshot.get("piece_state_module_rect", Rect2())
-		if not snapshot.get("live_4d_deck_visible", false) or not _contains(deck, piece) or not _contains(deck, view) or not _contains(deck, state):
-			failures.append("%s density must contain PIECE, VIEW, and PIECE STATE in the Live-4D deck" % density)
-		if board.intersects(deck) or piece.intersects(view) or view.intersects(state):
-			failures.append("%s density semantic modules must not overlap board or neighbouring deck modules" % density)
+		var cockpit: Dictionary = snapshot.get("live_cockpit", {})
+		if str(cockpit.get("deck_placement", "")) == "split":
+			# Legend in the deck; PIECE STATE above VIEW in the side column.
+			var side: Rect2 = cockpit.get("side_column_rect", Rect2())
+			if not snapshot.get("live_4d_deck_visible", false) or not _contains(cockpit.get("deck_rows_rect", deck), piece) or not _contains(side, state) or view.position.y < state.end.y - 0.5:
+				failures.append("%s density must show PIECE in the Live-4D deck and PIECE STATE above VIEW in the side column" % density)
+			if board.intersects(deck) or board.intersects(side) or piece.intersects(state):
+				failures.append("%s density semantic modules must not overlap the board or each other" % density)
+		else:
+			if not snapshot.get("live_4d_deck_visible", false) or not _contains(deck, piece) or not _contains(deck, view) or not _contains(deck, state):
+				failures.append("%s density must contain PIECE, VIEW, and PIECE STATE in the Live-4D deck" % density)
+			if board.intersects(deck) or piece.intersects(view) or view.intersects(state):
+				failures.append("%s density semantic modules must not overlap board or neighbouring deck modules" % density)
+		for strip in [hud._piece_control_strip, hud._live_view_control_strip]:
+			for label in strip.find_children("*", "Label", true, false):
+				if label.get_theme_font_size("font_size") < 22:
+					failures.append("production %s helper text must stay at least 22px at %s density" % [strip.name, density])
+			var scroll := strip.get_child(0) as ScrollContainer
+			if scroll.size.y <= 0.0 or scroll.get_child(0).size.x > scroll.size.x + 1.0:
+				failures.append("%s must give readable help a visible scroll area without horizontal clipping" % strip.name)
+			scroll.scroll_vertical = int(scroll.get_v_scroll_bar().max_value)
+			await tree.process_frame
+			if scroll.get_child(0).get_global_rect().end.y > scroll.get_global_rect().end.y + 1.0:
+				failures.append("%s must allow scrolling to the final help row" % strip.name)
 		var next_piece_ids: Array = snapshot.get("piece_control_strip", {}).get("row_ids", [])
 		var next_view_ids: Array = snapshot.get("view_control_strip", {}).get("row_ids", [])
 		if piece_row_ids.is_empty():

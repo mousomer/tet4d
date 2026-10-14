@@ -2,6 +2,10 @@ extends VBoxContainer
 
 class_name LiveCockpit
 
+const DesignerPanelFrame = preload("res://scripts/ui/designer_panel_frame.gd")
+const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
+const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
+
 const PROFILE_WIDE := "wide"
 const PROFILE_STANDARD := "standard"
 const PROFILE_NARROW := "narrow"
@@ -16,17 +20,50 @@ const STANDARD_MIN_WIDTH := 1180.0
 const NARROW_MIN_WIDTH := 800.0
 
 const MAX_DECK_ROWS := 3
-# Reflow buys width at a height cost: every extra row is another ~190px while
+# Reflow buys width at a height cost: every extra control row adds height while
 # the board already holds a large minimum, so a narrow window would otherwise
 # have to be TALLER to stay contained. Capping the deck and scrolling the
 # overflow keeps every control reachable at any size; the cost is that not all
 # of them are visible at once, which is the accepted tradeoff for small shells.
-const MAX_DECK_HEIGHT_SHARE := 0.34
+const MAX_DECK_HEIGHT_SHARE := 0.20
+# Product contract for the Live 4D legend deck: at the supported 1280x720
+# opening window (720 logical px tall) and above, it shows the whole measured
+# legend. Below it the deck gives up exactly the missing height, so the board
+# keeps its reference-window allocation, until it reaches the standard compact
+# share; from there both shrink together and the legend scrolls. Header height
+# beyond the plain live top bar (an open guide) counts as missing height too.
+const LEGEND_FULL_FIT_HEIGHT := 720.0
 # Outer shell margin on each side of the cockpit.
 const DECK_HORIZONTAL_INSET := 24.0
 
+# A tall board (Live 2D is 1:2) wastes most of a wide window, while a deck
+# under it takes the one dimension the board is short of. Beside the board the
+# deck spends width instead, the way the Python client's side panel did.
+const PLACEMENT_BELOW := "below"
+const PLACEMENT_SIDE := "side"
+# Live 4D: the piece legend is wide and short, so it stays in the deck; NEXT/
+# HOLD and VIEW move to a side column. Together they did not fit one deck row
+# at 1440 px. A bounded side column and scrollable bottom deck preserve
+# access to every control while prioritizing the gameplay viewport.
+const PLACEMENT_SPLIT := "split"
+# Stage 58B bounds cockpit chrome independently of the board. The existing
+# rail reflows/scrolls its controls instead of consuming a third of gameplay.
+const SIDE_RAIL_WIDTH_SHARE := 0.24
+const SIDE_RAIL_NARROW_WIDTH_SHARE := 0.24
+const SIDE_RAIL_MIN_WIDTH := 260.0
+const SIDE_RAIL_MAX_WIDTH := 320.0
+const SIDE_RAIL_GAP := 10
+# The split column holds only NEXT/HOLD and stacked VIEW, so it stays narrower.
+const SPLIT_COLUMN_WIDTH_SHARE := 0.19
+# NEXT/HOLD reflow inside the column; their minimum must not resize gameplay.
+const SPLIT_COLUMN_MIN_WIDTH := 240.0
+const SPLIT_COLUMN_MAX_WIDTH := 280.0
+
 var header_slot: VBoxContainer
+var board_stage: HBoxContainer
 var primary_board_surface: VBoxContainer
+var side_column: VBoxContainer
+var side_scroll: ScrollContainer
 var control_deck: VBoxContainer
 var deck_scroll: ScrollContainer
 var deck_row_host: VBoxContainer
@@ -42,20 +79,155 @@ var _row_assignment: Array = []
 var _packing_in_progress := false
 var _last_packing_width := -1.0
 var _last_module_minimums := Vector3.ZERO
+var _last_module_heights := Vector3.ZERO
+var _last_header_height := -1.0
 var _natural_deck_height := 0.0
 var _scroll_required := false
+var _placement := PLACEMENT_BELOW
+var _requested_placement := PLACEMENT_BELOW
+
+signal designer_geometry_changed(rects: Dictionary)
+
+var _designer_host: Control
+var _designer_frames: Dictionary = {}
+var _designer_origins: Dictionary = {}
+var _designer_rects: Dictionary = {}
+var _designer_enabled := false
+var _designer_deck_visible := false
+
+
+func set_designer_layout_enabled(enabled: bool, board: Control) -> void:
+	if enabled == _designer_enabled:
+		return
+	_designer_enabled = enabled
+	if enabled:
+		_designer_deck_visible = control_deck.visible
+		_designer_host = Control.new()
+		_designer_host.name = "DesignerCockpitSurface"
+		_designer_host.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		_designer_host.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(_designer_host)
+		_designer_host.resized.connect(_constrain_designer_panels)
+		for entry in [["Board", board], ["Piece controls", piece_controls], ["View controls", view_controls], ["NEXT / HOLD", piece_state]]:
+			var panel: Control = entry[1]
+			var key := str(panel.name)
+			_designer_origins[key] = {"parent": panel.get_parent(), "index": panel.get_index(), "visible": panel.visible}
+			var frame = DesignerPanelFrame.new()
+			_designer_host.add_child(frame)
+			frame.configure(str(entry[0]), panel, panel != board)
+			panel.show()
+			frame.geometry_edited.connect(func(rect: Rect2) -> void:
+				_designer_rects[key] = rect
+				designer_geometry_changed.emit(designer_geometry_snapshot())
+			)
+			_designer_frames[key] = frame
+		board_stage.hide()
+		control_deck.hide()
+		call_deferred("_constrain_designer_panels")
+	else:
+		for key in _designer_frames:
+			var frame = _designer_frames[key]
+			_designer_rects[key] = Rect2(frame.position, frame.size)
+			var origin: Dictionary = _designer_origins[key]
+			frame.content.reparent(origin["parent"], false)
+			frame.content.visible = origin["visible"]
+			origin["parent"].move_child(frame.content, mini(origin["index"], origin["parent"].get_child_count() - 1))
+		_designer_host.queue_free()
+		_designer_host = null
+		_designer_frames.clear()
+		_designer_origins.clear()
+		board_stage.show()
+		control_deck.visible = _designer_deck_visible
+		_apply_responsive_policy()
+
+
+func designer_panels() -> Dictionary:
+	return _designer_frames.duplicate()
+
+
+func designer_geometry_snapshot() -> Dictionary:
+	var result: Dictionary = {}
+	for key in _designer_rects:
+		var rect: Rect2 = _designer_rects[key]
+		result[key] = [rect.position.x, rect.position.y, rect.size.x, rect.size.y]
+	return result
+
+
+func restore_designer_geometry(rects: Dictionary) -> void:
+	_designer_rects.clear()
+	for key in rects:
+		var data: Array = rects[key]
+		_designer_rects[key] = Rect2(float(data[0]), float(data[1]), float(data[2]), float(data[3]))
+	_constrain_designer_panels()
+
+
+func raise_designer_panel(panel_name: String) -> void:
+	if _designer_enabled and _designer_frames.has(panel_name):
+		_designer_host.move_child(_designer_frames[panel_name], _designer_host.get_child_count() - 1)
+
+
+func _constrain_designer_panels() -> void:
+	if not _designer_enabled or _designer_host == null or _designer_host.size.x < 1:
+		return
+	var extent := _designer_host.size
+	var index := 0
+	for key in _designer_frames:
+		var frame = _designer_frames[key]
+		var gap := 8.0
+		var half_width := (extent.x - gap) * 0.65
+		var right_origin := half_width + gap
+		var column_width := extent.x - right_origin
+		var module_width := column_width
+		var row_height := (extent.y - gap * 2) / 3.0
+		var initial := Rect2(Vector2.ZERO, Vector2(half_width, extent.y))
+		if index == 1:
+			initial = Rect2(Vector2(right_origin, 0), Vector2(module_width, row_height))
+		elif index == 2:
+			initial = Rect2(Vector2(right_origin, row_height + gap), Vector2(module_width, row_height))
+		elif index == 3:
+			initial = Rect2(Vector2(right_origin, (row_height + gap) * 2), Vector2(module_width, row_height))
+		frame.constrain(_designer_rects.get(key, initial))
+		_designer_rects[key] = Rect2(frame.position, frame.size)
+		index += 1
 
 
 func _init() -> void:
 	name = "LiveCockpit"
+	add_theme_constant_override("separation", 4)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	header_slot = _slot("Header")
+	header_slot.set_meta("shell_chrome", true)
 	add_child(header_slot)
+	board_stage = HBoxContainer.new()
+	board_stage.name = "BoardStage"
+	board_stage.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	board_stage.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	board_stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	board_stage.add_theme_constant_override("separation", SIDE_RAIL_GAP)
+	add_child(board_stage)
 	primary_board_surface = _slot("PrimaryBoardSurface")
 	primary_board_surface.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_child(primary_board_surface)
+	board_stage.add_child(primary_board_surface)
+	# Scrolls as a whole so a short window never pushes the deck off-screen;
+	# NEXT/HOLD sit at its top and stay visible.
+	side_scroll = ScrollContainer.new()
+	side_scroll.name = "SideColumnScroll"
+	side_scroll.visible = false
+	side_scroll.size_flags_horizontal = Control.SIZE_SHRINK_END
+	side_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	# Never disabled: a disabled axis adopts the content's minimum, which would
+	# let a style's fonts resize the 4D viewport and with it the slice tiling.
+	side_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	side_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	board_stage.add_child(side_scroll)
+	side_column = VBoxContainer.new()
+	side_column.name = "SideColumn"
+	side_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	side_column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	side_column.add_theme_constant_override("separation", 6)
+	side_scroll.add_child(side_column)
 	control_deck = VBoxContainer.new()
 	control_deck.name = "ControlDeck"
 	control_deck.visible = false
@@ -102,10 +274,58 @@ func _init() -> void:
 	control_deck.resized.connect(_on_deck_metrics_changed)
 	for module in [piece_controls, view_controls, piece_state]:
 		module.minimum_size_changed.connect(_on_deck_metrics_changed)
+	header_slot.minimum_size_changed.connect(_on_deck_metrics_changed)
+
+
+func set_deck_placement(placement: String) -> void:
+	_requested_placement = placement if placement in [PLACEMENT_SIDE, PLACEMENT_SPLIT] else PLACEMENT_BELOW
+	_apply_responsive_policy()
+
+
+# A split column costs width a narrow window cannot spare, so narrow and small
+# shells fall back to the reflowing deck below the board.
+func _effective_placement() -> String:
+	if _requested_placement == PLACEMENT_SPLIT and _responsive_profile in [PROFILE_NARROW, PROFILE_SMALL]:
+		return PLACEMENT_BELOW
+	return _requested_placement
+
+
+func _relocate(next_placement: String) -> void:
+	if next_placement == _placement:
+		return
+	var leaving_split := _placement == PLACEMENT_SPLIT
+	_placement = next_placement
+	var side := _placement == PLACEMENT_SIDE
+	side_scroll.visible = _placement == PLACEMENT_SPLIT
+	if _placement == PLACEMENT_SPLIT:
+		for module in [piece_state, view_controls]:
+			(module as Control).reparent(side_column, false)
+		side_column.move_child(piece_state, 0)
+	elif leaving_split:
+		# Row assignment reparents every module it packs; seed them back first.
+		for module in [view_controls, piece_state]:
+			(module as Control).reparent(deck_rows[0], false)
+	control_deck.reparent(board_stage if side else self, false)
+	if not side:
+		move_child(control_deck, get_child_count() - 1)
+	control_deck.size_flags_horizontal = Control.SIZE_SHRINK_END if side else Control.SIZE_EXPAND_FILL
+	control_deck.size_flags_vertical = Control.SIZE_EXPAND_FILL if side else Control.SIZE_FILL
+	for row in deck_rows:
+		# Rail rows hug their content so the legend stays put at the top of the
+		# rail instead of spreading out as the window grows.
+		row.size_flags_vertical = Control.SIZE_FILL if side else Control.SIZE_EXPAND_FILL
+	deck_row_host.size_flags_vertical = Control.SIZE_FILL if side else Control.SIZE_EXPAND_FILL
+
+
+func deck_placement() -> String:
+	return _placement
 
 
 func set_control_deck_visible(enabled: bool, density: String = "standard") -> void:
-	control_deck.visible = enabled
+	if _designer_enabled:
+		_designer_deck_visible = enabled
+	else:
+		control_deck.visible = enabled
 	_density = density
 	_apply_responsive_policy()
 
@@ -135,10 +355,14 @@ func deterministic_snapshot() -> Dictionary:
 		"slots": [str(header_slot.name), str(primary_board_surface.name), str(control_deck.name)],
 		"deck_modules": [str(piece_controls.name), str(view_controls.name), str(piece_state.name)],
 		"deck_visible": control_deck.visible,
+		"deck_placement": _placement,
+		"side_column_rect": side_scroll.get_global_rect() if side_scroll.visible else Rect2(),
 		"responsive_profile": _responsive_profile,
 		"layout_size": _layout_size,
 		"apparent_size": _apparent_size,
-		"deck_minimum_height": control_deck.custom_minimum_size.y,
+		# Below the board the deck's height is the cap it imposes; beside it the
+		# rail is as tall as the stage, so its laid-out height is the constraint.
+		"deck_minimum_height": control_deck.size.y if _placement == PLACEMENT_SIDE else control_deck.custom_minimum_size.y,
 		"deck_separation": control_deck.get_theme_constant("separation"),
 		"deck_row_count": _row_assignment.size(),
 		"deck_natural_height": _natural_deck_height,
@@ -163,9 +387,15 @@ func _on_deck_metrics_changed() -> void:
 		return
 	var width := _packing_width()
 	var minimums := _module_minimums()
-	if is_equal_approx(width, _last_packing_width) and minimums.is_equal_approx(_last_module_minimums):
+	if is_equal_approx(width, _last_packing_width) and minimums.is_equal_approx(_last_module_minimums) and _module_heights().is_equal_approx(_last_module_heights) and is_equal_approx(_header_height(), _last_header_height):
+		if _placement == PLACEMENT_SIDE:
+			_update_side_scroll_state()
 		return
 	_apply_responsive_policy()
+
+
+func _header_height() -> float:
+	return header_slot.get_combined_minimum_size().y
 
 
 func _module_minimums() -> Vector3:
@@ -176,11 +406,31 @@ func _module_minimums() -> Vector3:
 	)
 
 
+func _module_heights() -> Vector3:
+	return Vector3(
+		piece_controls.get_combined_minimum_size().y,
+		view_controls.get_combined_minimum_size().y,
+		piece_state.get_combined_minimum_size().y
+	)
+
+
 func _apply_responsive_policy() -> void:
+	if _designer_enabled:
+		_constrain_designer_panels()
+		return
 	if _packing_in_progress:
 		return
 	_packing_in_progress = true
 	_responsive_profile = responsive_profile_for_size(_apparent_size) if _apparent_size.x > 0.0 else PROFILE_STANDARD
+	_relocate(_effective_placement())
+	if _placement == PLACEMENT_SIDE:
+		_apply_side_policy()
+		_packing_in_progress = false
+		if is_inside_tree():
+			call_deferred("_on_deck_metrics_changed")
+		return
+	control_deck.custom_minimum_size.x = 0.0
+	side_scroll.custom_minimum_size.x = clampf(_layout_size.x * SPLIT_COLUMN_WIDTH_SHARE, SPLIT_COLUMN_MIN_WIDTH, SPLIT_COLUMN_MAX_WIDTH) if _placement == PLACEMENT_SPLIT else 0.0
 	var row_height := _row_height_for_profile()
 	var row_separation := _row_separation_for_profile()
 	var deck_separation := 8 if _responsive_profile in [PROFILE_NARROW, PROFILE_SMALL] else 6
@@ -193,18 +443,68 @@ func _apply_responsive_policy() -> void:
 	var natural_height := _natural_height_for_rows(packed, row_height, deck_separation)
 	var height_cap := _layout_size.y * MAX_DECK_HEIGHT_SHARE if _layout_size.y > 1.0 else natural_height
 	var deck_height := minf(natural_height, maxf(height_cap, row_height))
+	if _placement == PLACEMENT_SPLIT:
+		# The legend's own measured height, not the profile row floor, bounded by
+		# the current cockpit height. Both inputs are re-read on every pass, so
+		# the deck never keeps a height a smaller window imposed.
+		natural_height = _natural_height_for_rows(packed, 0.0, deck_separation)
+		if _layout_size.y > 1.0:
+			var header_growth := maxf(_header_height() - float(ReplayVisuals.LIVE_TOP_BAR_HEIGHT), 0.0)
+			var shortfall := maxf(LEGEND_FULL_FIT_HEIGHT + header_growth - _layout_size.y, 0.0)
+			var compact := minf(natural_height, _layout_size.y * MAX_DECK_HEIGHT_SHARE)
+			deck_height = maxf(natural_height - shortfall, compact)
+		else:
+			deck_height = natural_height
 	deck_row_host.custom_minimum_size.y = natural_height
 	control_deck.custom_minimum_size.y = deck_height
 	_natural_deck_height = natural_height
 	_scroll_required = natural_height > deck_height + 0.5
 	_last_packing_width = available
 	_last_module_minimums = _module_minimums()
+	_last_module_heights = _module_heights()
+	_last_header_height = _header_height()
 	_packing_in_progress = false
 	# Both packing inputs are only final after a layout pass, and the first pass
 	# may see a transient width. Re-check once the pass settles; the width and
 	# minimum guards make this converge rather than loop.
 	if is_inside_tree():
 		call_deferred("_on_deck_metrics_changed")
+
+
+func _rail_width() -> float:
+	if _layout_size.x <= 1.0:
+		return SIDE_RAIL_MIN_WIDTH
+	var share := SIDE_RAIL_NARROW_WIDTH_SHARE if _responsive_profile in [PROFILE_NARROW, PROFILE_SMALL] else SIDE_RAIL_WIDTH_SHARE
+	return clampf(_layout_size.x * share, SIDE_RAIL_MIN_WIDTH, SIDE_RAIL_MAX_WIDTH)
+
+
+# The rail stacks visible modules top to bottom: what the player glances at
+# most (NEXT/HOLD, then the key legend) comes first. Its height is the stage's
+# height, so the only overflow is a genuinely short window, which scrolls.
+func _apply_side_policy() -> void:
+	control_deck.custom_minimum_size = Vector2(_rail_width(), 0.0)
+	control_deck.add_theme_constant_override("separation", 6)
+	var packed: Array = []
+	for module in [piece_state, piece_controls, view_controls]:
+		if (module as Control).visible:
+			packed.append([str((module as Control).name)])
+	# Stacked panels need only a hairline between them; the deck's row gap is
+	# sized for modules side by side.
+	var row_separation := ShellDesignTokensScript.SPACE_1
+	_apply_row_assignment(packed, row_separation)
+	_row_assignment = packed
+	_natural_deck_height = _natural_height_for_rows(packed, 0.0, row_separation)
+	deck_row_host.custom_minimum_size.y = _natural_deck_height
+	_last_packing_width = _packing_width()
+	_last_module_minimums = _module_minimums()
+	_last_module_heights = _module_heights()
+	_last_header_height = _header_height()
+	_update_side_scroll_state()
+
+
+func _update_side_scroll_state() -> void:
+	var available := control_deck.size.y
+	_scroll_required = available > 1.0 and _natural_deck_height > available + 0.5
 
 
 # Packing must consume the CONSTRAINT, not the result. control_deck.size.x is
@@ -219,9 +519,9 @@ func _packing_width() -> float:
 
 
 func _pack_rows(available: float, row_separation: int) -> Array:
-	var modules := [piece_controls, view_controls, piece_state]
+	var modules := [piece_controls] if _placement == PLACEMENT_SPLIT else [piece_controls, view_controls, piece_state]
 	if available <= 0.0:
-		return [[str(piece_controls.name), str(view_controls.name), str(piece_state.name)]]
+		return [modules.map(func(module): return str((module as Control).name))]
 	var rows: Array = []
 	var current: Array = []
 	var current_width := 0.0
@@ -288,7 +588,7 @@ func _natural_height_for_rows(packed: Array, profile_floor: float, row_separatio
 
 
 func _row_height_for_profile() -> float:
-	var base := 150.0 if _density == "compact" else (220.0 if _density == "detailed" else 190.0)
+	var base := 150.0 if _density == "compact" else 220.0
 	match _responsive_profile:
 		PROFILE_NARROW:
 			return minf(base, 170.0)

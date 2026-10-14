@@ -2,6 +2,7 @@ extends RefCounted
 
 class_name ProjectionLayout
 
+const CameraRigScript = preload("res://scripts/rendering/camera_rig.gd")
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 const TraceCoordinateMapperScript = preload("res://scripts/rendering/trace_coordinate_mapper.gd")
 const SliceLocalOrientationScript = preload("res://scripts/presentation/slice_local_orientation.gd")
@@ -28,7 +29,25 @@ func configure(
 		local_orientation = orientation
 	applies_local_orientation = dimension == 4 and orientation != null
 	mapper.configure(board_shape, basis, spacing_scale, screen_row_slope, viewport_size)
+	if str(snapshot.get("trace_type", "")) == "live_4d":
+		_configure_canonical_fit_scoring()
 	bounds = _collection_bounds()
+
+
+func _configure_canonical_fit_scoring() -> void:
+	var local: Dictionary = mapper.local_slice_bounds()
+	if not bool(local.get("ok", false)):
+		return
+	# Canonical L=identity keeps allocation stable during rotation. Use the same
+	# fitted camera and required attachments as content_slice_boxes()/Fit.
+	var extent: Vector3 = local["max"] - local["min"]
+	extent += Vector3(2.0 * ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD, ReplayVisuals.W_SLICE_LABEL_VERTICAL_BOUNDS_PAD + ReplayVisuals.ABOVE_BOARD_ACTIVE_BOUNDS_PAD, 2.0 * ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD)
+	var camera_basis := CameraRigScript._fit_camera_basis(CameraRigScript.LIVE_4D_DISPLAY_YAW_RAD, CameraRigScript.LIVE_4D_DISPLAY_PITCH_RAD, 0.0)
+	var projected_extent := Vector2(camera_basis.x.abs().dot(extent), camera_basis.y.abs().dot(extent))
+	var layout = mapper.layer_layout
+	var column := Vector3(layout.tile_width + layout.horizontal_gap, (layout.tile_width + layout.horizontal_gap) * layout.screen_row_y_per_world_x, 0.0)
+	var row := Vector3(0.0, -(layout.tile_height + layout.vertical_gap), 0.0)
+	layout.configure_fit_projection(projected_extent, Vector2(column.dot(camera_basis.x), column.dot(camera_basis.y)), Vector2(row.dot(camera_basis.x), row.dot(camera_basis.y)))
 
 
 func oriented_world_position(coordinates: Array) -> Vector3:

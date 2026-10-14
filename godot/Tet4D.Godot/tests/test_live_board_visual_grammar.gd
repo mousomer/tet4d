@@ -25,12 +25,12 @@ func run() -> Array:
 		failures.append("absolute translation must remain canonical under Back yaw")
 	if ReplayVisuals.presentation_parameter_default("settled_cells.opacity") != 0.75 or ReplayVisuals.presentation_parameter_minimum("settled_cells.opacity") != 0.35 or ReplayVisuals.presentation_parameter_maximum("settled_cells.opacity") != 1.0:
 		failures.append("locked-cell opacity authority must retain its documented default and range")
-	var normal_grid := ReplayVisuals.live_board_grid_material(ReplayVisuals.DISPLAY_MODE_PLAIN, false)
-	var contrast_grid := ReplayVisuals.live_board_grid_material(ReplayVisuals.DISPLAY_MODE_PLAIN, true)
+	var normal_grid := ReplayVisuals.board_scaffold_material(ReplayVisuals.DISPLAY_MODE_PLAIN)
+	var contrast_grid := ReplayVisuals.board_scaffold_material(ReplayVisuals.DISPLAY_MODE_PLAIN)
 	if normal_grid.transparency != BaseMaterial3D.TRANSPARENCY_ALPHA:
-		failures.append("normal internal-grid alpha must be an operational material property")
-	if normal_grid.albedo_color.a >= 0.5 or contrast_grid.albedo_color.a <= normal_grid.albedo_color.a:
-		failures.append("internal grid should remain weak normally and strengthen in High Contrast")
+		failures.append("rear scaffold alpha must be operational")
+	if normal_grid.albedo_color.a > 0.6 or contrast_grid.albedo_color.a > 0.6:
+		failures.append("rear scaffold must stay subordinate without the old High Contrast alpha floor")
 	var outline_thickness := ReplayVisuals.slice_outline_thickness()
 	if ReplayVisuals.grid_internal_thickness() >= outline_thickness:
 		failures.append("internal grid must remain thinner than the inactive outer wireframe")

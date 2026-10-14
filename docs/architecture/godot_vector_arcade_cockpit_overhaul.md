@@ -665,13 +665,51 @@ The top live cockpit exposes two visually distinct families:
 
 - **View:** stateless View Actions in 3D/4D, mode-truthful Fit View, composite
   Reset View, grid detail, and secondary Quick Settings disclosure.
-- **Session:** Restart Game, conditional New Random Game, Change Setup, and
+- **Session:** Restart Game, New Game (New Random Game for true-random setup), Change Setup, and
   Main Menu.
 
 Restart Game is always reachable and remains a gameplay lifecycle operation
 that preserves the current view. Reset View remains presentation-only and
 restores the complete current-mode canonical view. Fit View remains
 framing-only. Their shared placement does not merge their semantics.
+
+Stage 57 keeps the existing control legend and native reset/configure owners.
+`LiveInputContract` owns semantic groups and default bindings; runtime InputMap
+events own the effective displayed keys after registration. Missing actions use
+contract defaults, while explicitly unbound actions display Unbound. The HUD
+refreshes cached guidance when runtime bindings change, including while paused.
+Restart calls the existing mode-specific native reset and retains effective
+seed, dimensions and presentation. New Game passes the frozen canonical setup
+to checked native configuration; native random-mode policy chooses its seed.
+Neither action routes through setup/menu or reconstructs setup fields in UI.
+Coverage must exercise both UI and configured-key restart in 2D/3D/4D from
+playing, paused and game-over, plus rebinding propagation into visible guidance.
+Manual acceptance checks control discovery during play and immediate replay.
+Renderer, camera, scale, projection and Designer reorganisation are excluded.
+
+### Stage 58B gameplay allocation and resolution
+
+The accepted 58A audit establishes viewport allocation, rather than camera fit,
+as the main scale constraint. Stage 58B gives live boards a larger share of the
+existing cockpit: bounded side rails, a measured 4D legend deck and
+compact, style-independent header metrics. Every existing action and semantic
+control group stays reachable. Allocation follows the actual available shell;
+theme appearance cannot change those region constraints or the camera target.
+
+Adaptive slice layout maximizes usable cell scale in the actual gameplay region
+over all column counts, using the canonical fitted camera projection and the
+same per-slice label/spawn clearance as Fit. Row balance and unused area break equal-scale ties;
+there is no preferred row count. Slice gaps derive only from the canonical
+supported local-board envelope, independent of style and active-piece position.
+The legacy `slice_set.spacing` value remains readable in saved designs but has
+no geometric effect and is no longer offered as a design control.
+
+The gameplay SubViewport renders at the displayed pixel extent, including
+canvas/UI scaling and HiDPI backing scale. Fit and layout consume the logical
+display region separately from render-target resolution. Four-sample MSAA smooths edges;
+line width and grid topology are not resolution controls. Geometry invariance,
+unclipped bounds, Stage 57, style matrices and manual 3D/4D play are acceptance
+evidence. Depth, contrast, slice attenuation and W-label tracking remain deferred.
 
 The named-view control is a `MenuButton` labelled as an action launcher. It
 never reports a selected view, never displays `Custom`, and manual orientation
@@ -740,7 +778,7 @@ The normative live-board hierarchy is:
 Grid opacity and thickness must be operational material properties rather than
 inactive alpha constants. High Contrast strengthens the same semantic order;
 it does not flatten every role to equal intensity. Cell faces, floor cues,
-rear-face lattice selection, and occlusion preserve 3D depth. Live 4D reuses
+Border rear-face lattice selection, and occlusion preserve 3D depth. Live 4D reuses
 those cues inside every W slice so the collection reads as related 3D volumes,
 not as flat cards or one fused wireframe.
 
@@ -877,3 +915,29 @@ the primary piece strip remain judgeable. Compact mode leaves the ordinary
 cockpit allocation intact. This correction changes no gameplay, input,
 persistence, deterministic identity, canonical geometry, exact basis,
 Designer A/B semantics, or authority boundary.
+
+
+### Stage 56H render-region lifecycle repair
+
+Camera fitting and adaptive slice layout consume the visible inner render
+SubViewport's resolved size, after stretch agrees with its container. Hidden,
+invalid, or mismatched geometry cannot complete a fit request. Canonical view
+entry requests a fit before the cockpit is shown; the render region's deferred
+size/visibility notifications and the pending-fit retry complete that same path.
+Later inner-region size changes use it again, including changes inside an
+unchanged outer GameArea. Designer fingerprints retain authored pan relative
+to the fitted centre, excluding that layout-derived centre alongside fit size. No synchronous container-sort passes establish fit
+correctness. Explicit Fit/Reset still request framing; existing manual framing
+and Live-4D presentation-profile pose protection retain their contracts.
+
+The normal Live-3D rail includes a compact Reset View keycap sourced from
+LiveInputContract's existing framing descriptor. Direction-driven piece-legend
+reconstruction emits completion only after all controls and glyphs exist; the
+HUD reapplies the current shell style on every rebuild. These operations remain
+presentation-only and do not mutate native state/hash.
+
+Automated transition evidence covers Main Menu Play into 3D/4D, restart,
+window and inner-region resizing, guide visibility, density isolation, and
+repeated legend direction reversals. Headless projection and fit-idempotence
+checks do not replace real-window framing inspection or human playability
+acceptance.

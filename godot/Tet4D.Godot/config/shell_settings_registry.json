@@ -1,5 +1,11 @@
 {
   "schema_version": 3,
+  "legacy_setting_migrations": {
+    "display.grid_visible": {
+      "replacement": "display.grid_mode",
+      "consumer": "godot/Tet4D.Godot/scripts/presentation/presentation_profile.gd"
+    }
+  },
   "categories": [
     {"id": "replay", "label": "Replay"},
     {"id": "display", "label": "Display"},
@@ -143,14 +149,15 @@
       "persist": true
     },
     {
-      "id": "display.grid_visible",
-      "label": "Grid Visibility",
-      "description": "Shows or hides internal board grid detail while retaining the orientation boundary.",
+      "id": "display.grid_mode",
+      "label": "Grid",
+      "description": "Spatial scaffold: enclosure and floor; rear subdivisions; internal lattice edges. Independent of style.",
       "category": "display",
-      "value_type": "bool",
-      "control_type": "checkbox",
-      "default": true,
-      "ui_visible": false,
+      "value_type": "enum",
+      "control_type": "dropdown",
+      "default": "border",
+      "options": [{"value": "full", "label": "Full"}, {"value": "border", "label": "Border"}, {"value": "none", "label": "None"}],
+      "ui_visible": true,
       "semantic_owner": "BOARD_PRESENTATION",
       "accessibility_classification": "accessibility_composable",
       "runtime_applicability": ["live_2d", "live_3d", "live_4d"],
@@ -159,9 +166,87 @@
       "persist": false
     },
     {
+      "id": "board.enclosure_opacity",
+      "label": "Enclosure opacity",
+      "description": "Enclosure opacity for Designer style authoring.",
+      "category": "display",
+      "value_type": "float",
+      "control_type": "slider",
+      "default": 0.16,
+      "min": 0.005,
+      "max": 0.4,
+      "step": 0.005,
+      "ui_visible": false,
+      "ui_contexts": [
+        "designer_advanced"
+      ],
+      "semantic_owner": "BOARD_PRESENTATION",
+      "accessibility_classification": "accessibility_composable",
+      "runtime_applicability": [
+        "live_2d",
+        "live_3d",
+        "live_4d"
+      ],
+      "authority": "godot_shell",
+      "persistence": "local_shell",
+      "persist": true
+    },
+    {
+      "id": "board.back_scaffold_opacity",
+      "label": "Border/surface grid opacity",
+      "description": "Opacity of Border edges and Full boundary-face grid lines for Designer style authoring.",
+      "category": "display",
+      "value_type": "float",
+      "control_type": "slider",
+      "default": 0.4,
+      "min": 0.005,
+      "max": 0.6,
+      "step": 0.005,
+      "ui_visible": false,
+      "ui_contexts": [
+        "designer_advanced"
+      ],
+      "semantic_owner": "BOARD_PRESENTATION",
+      "accessibility_classification": "accessibility_composable",
+      "runtime_applicability": [
+        "live_2d",
+        "live_3d",
+        "live_4d"
+      ],
+      "authority": "godot_shell",
+      "persistence": "local_shell",
+      "persist": true
+    },
+    {
+      "id": "board.cell_volume_opacity",
+      "label": "Full/internal scaffold opacity",
+      "description": "Full/internal scaffold opacity for Designer style authoring.",
+      "category": "display",
+      "value_type": "float",
+      "control_type": "slider",
+      "default": 0.025,
+      "min": 0.005,
+      "max": 0.08,
+      "step": 0.005,
+      "ui_visible": false,
+      "ui_contexts": [
+        "designer_advanced"
+      ],
+      "semantic_owner": "BOARD_PRESENTATION",
+      "accessibility_classification": "accessibility_composable",
+      "runtime_applicability": [
+        "live_2d",
+        "live_3d",
+        "live_4d"
+      ],
+      "authority": "godot_shell",
+      "persistence": "local_shell",
+      "persist": true
+    },
+    {
       "id": "board.grid_opacity",
       "label": "Grid Opacity",
-      "description": "Adjusts internal board-grid visibility without changing board geometry.",
+      "description": "Adjusts surface grid line strength within its subordinate opacity range.",
       "category": "display",
       "value_type": "float",
       "control_type": "slider",
@@ -236,8 +321,8 @@
     },
     {
       "id": "slice_set.spacing",
-      "label": "4D Slice Spacing",
-      "description": "Scales responsive gaps between 4D slices without changing slice-local geometry.",
+      "label": "Legacy 4D Slice Spacing",
+      "description": "Compatibility value retained when loading older profiles; canonical slice geometry ignores this value.",
       "category": "display",
       "value_type": "float",
       "control_type": "slider",
@@ -245,10 +330,11 @@
       "min": 0.6,
       "max": 1.6,
       "step": 0.05,
-      "ui_contexts": ["global_settings", "live_4d"],
+      "ui_visible": false,
+      "ui_contexts": [],
       "semantic_owner": "SLICE_SET_PRESENTATION",
       "accessibility_classification": "aesthetic",
-      "runtime_applicability": ["live_4d"],
+      "runtime_applicability": ["shell"],
       "authority": "godot_shell",
       "persistence": "local_shell",
       "persist": true

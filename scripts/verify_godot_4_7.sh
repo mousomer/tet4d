@@ -117,6 +117,9 @@ GODOT_ENV=(
 # A stalled Godot step must fail the gate rather than block it until a CI
 # timeout: a test that loops forever is a defect, not an absence of evidence.
 GODOT_STEP_TIMEOUT_SECONDS="${GODOT_STEP_TIMEOUT_SECONDS:-900}"
+# The complete replay/style matrix exceeds 15 minutes on hosted Linux runners.
+# Give only this aggregate suite a larger bounded budget; keep other steps short.
+GODOT_REPLAY_TEST_TIMEOUT_SECONDS="${GODOT_REPLAY_TEST_TIMEOUT_SECONDS:-1800}"
 
 # The step's output is both shown and kept: an operator watching the terminal
 # needs progress as it happens, and the checks below need the whole log.
@@ -200,7 +203,8 @@ run_godot_step "editor import" "$EDITOR_IMPORT_LOG" stream env "${GODOT_ENV[@]}"
   --headless --editor --path "$PROJECT_COPY" --quit
 assert_no_teardown_leak "editor import" "$EDITOR_IMPORT_LOG"
 REPLAY_TEST_LOG="$VERIFY_ROOT/run_tests.log"
-run_godot_step "replay tests" "$REPLAY_TEST_LOG" stream env "${GODOT_ENV[@]}" "$GODOT_BIN" \
+GODOT_STEP_TIMEOUT_SECONDS="$GODOT_REPLAY_TEST_TIMEOUT_SECONDS" \
+  run_godot_step "replay tests" "$REPLAY_TEST_LOG" stream env "${GODOT_ENV[@]}" "$GODOT_BIN" \
   --headless --path "$PROJECT_COPY" --script tests/run_tests.gd
 assert_no_script_error "replay tests" "$REPLAY_TEST_LOG"
 assert_no_teardown_leak "replay tests" "$REPLAY_TEST_LOG"

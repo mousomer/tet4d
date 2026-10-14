@@ -1,9 +1,9 @@
 # Stage 56H-R — bounded playability repair plan
 
-Status: approved planning input for Stage 56H. R1 and R2 are complete (see
-each slice's record below); R3 and the R1.3 guide-state follow-up are
-implemented on `claude/stage-56h-r3-legibility`. The human Stage 56H session
-remains deferred. The Stage 56
+Status: approved planning input for Stage 56H. R1–R3 are implemented and
+merged, including the R1.3 guide-state follow-up in PR #149. R4A fast session
+flow is merged in PR #152; its menu shortcut reconciliation is part of the
+approved closure scope. Human Stage 56H acceptance remains deferred. The Stage 56
 task contract (`docs/tasks/live_4d_cockpit_convergence.md`, Stage 56H-R)
 authorizes this tranche as its only bounded cross-layer exception.
 
@@ -510,9 +510,10 @@ and clamp path without rescaling.
 
 `test_shell_display_settings.gd` covers fresh 2× Retina sizing, a constrained
 2× usable rectangle that still meets the live floor, scale-one behavior, and
-the transition from an unstored default to a persisted size. The real
-fresh-profile Retina capture and final human Stage 56H session remain deferred
-for manual approval; they are not represented as automated evidence.
+the transition from an unstored default to a persisted size. Real fresh-profile
+Retina evidence was subsequently captured in the startup-order follow-up below.
+It is separate from automated evidence; final human Stage 56H acceptance
+remains deferred.
 
 Startup-order follow-up: the first real fresh-profile capture on a 2× built-in
 display (3456×2234) still opened at 800×480 pt. The shell's initial
@@ -764,6 +765,9 @@ Before declaring 56H-R complete:
    `CODEX_MODE=1 ./scripts/verify.sh`. CI workflows may run additional checks,
    but they do not substitute for this gate;
 3. run the Stage 56G real-window responsive acceptance matrix;
+   also pass `-- ordinary_game` to `tests/run_responsive_acceptance.gd` to
+   exercise the game bootstrap and validated ordinary sessions, with Designer
+   affordances and trace-fixture leakage checked separately from layout;
 4. capture fresh 1440×900 2D/3D/4D play images with NEXT/HOLD visible;
 5. capture fresh first-launch Retina evidence;
 6. preserve raw agent transcripts and P1a telemetry for the subsequent

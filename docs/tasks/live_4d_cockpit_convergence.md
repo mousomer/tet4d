@@ -103,8 +103,12 @@ explicit human A/B gate.
 Stage 56B is implemented and focused-green. During cockpit integration it
 exposed bounded repair `56B-R`: the stretched render SubViewport can report a
 transient `120×2` allocation before the real game area settles, so the HUD's
-stable game-area geometry now owns layout invalidation and supplies the board
-viewport to the renderer. The repair changes presentation geometry only and
+game-area geometry initially owned layout invalidation. The Stage 56H
+corrective pass supersedes that workaround: the visible inner render region's
+resolved size (SubViewport stretch matching its container) owns layout and fit
+invalidation through size/visibility signals. Hidden or invalid dimensions
+leave canonical-entry fitting pending; no forced container sorting establishes
+correctness. The repair changes presentation geometry only and
 does not alter slice identity, activity, gameplay, or deterministic state.
 The measured candidate table and required A/B captures are recorded in
 `docs/design/stage_56b_slice_tiling_evidence.md`. Stage 56C is now eligible;
@@ -219,7 +223,14 @@ final human A/B decision.
 2D, Live 3D, and Live 4D. Wide, standard, narrow, and small profiles preserve
 the single `PIECE | VIEW | PIECE STATE` hierarchy. Measured module minimums
 flow that order into bounded rows, with vertical scrolling as the constrained
-height escape hatch; cockpit ownership never forks by dimension.
+height escape hatch; cockpit ownership never forks by dimension. The current
+readability contract keeps keycaps, operation labels, and helper headings at
+22 logical pixels in every density. PIECE/VIEW use internal vertical scrolling
+for longer content; standard/wide deck rows reserve 220 px and keep NEXT/HOLD
+alongside them. Packing observes both module width and height changes, including
+wrapped preview status text. Mode/density rebuilds reapply keycap styles.
+Menu/help typography and its compact-window behavior are owned by
+`docs/rds/RDS_MENU_STRUCTURE.md` section 5.3.
 
 The original Stage 56G acceptance used child `SubViewport`s and therefore did
 not exercise the shipped `canvas_items` window-stretch path. Bounded repair
@@ -261,10 +272,18 @@ decision.
 | R2.3 OS-safe soft drop | `LiveInputContract` and the RDS | Input configuration owner only | Changes input mapping, not gameplay semantics |
 | R2.4 Retina launch sizing | Godot display/window owner | None | No deterministic gameplay effect |
 | R3 cockpit/player legibility | Presentation and cockpit | No gameplay authority transfer | Presentation-only |
+| R4A fast session flow and menu shortcut consistency | Godot app/menu routing | None | Reuses validated launch and frozen-setup native reset; no gameplay rule changes |
 
 The matrix names expected owners; it does not force a repair into a listed
 file. If investigation shows that a different existing owner is authoritative,
 the repair follows that owner and records the evidence.
+
+R4A makes Main Menu Play immediate, with `2`/`3`/`4` launching validated
+mode-specific setups and `C` opening Change Setup for the current mode.
+Restart and terminal Play Again reuse the frozen active setup. Its owning
+contract is `docs/architecture/editable_board_setup_and_persistence.md`.
+Invalid drafts remain non-launchable; replay/Designer flows, restart
+confirmation policy, and deterministic gameplay rules are outside this repair.
 
 Deterministic and replay constraints for 56H-R:
 

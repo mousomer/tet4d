@@ -7,6 +7,7 @@ const TRON_THEME_PATH := "res://themes/replay_tron_theme.tres"
 const PLAIN_THEME_PATH := "res://themes/replay_theme.tres"
 const ShellStyleManagerScript = preload("res://scripts/ui/style/shell_style_manager.gd")
 const ShellStyleRolesScript = preload("res://scripts/ui/style/shell_style_roles.gd")
+const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
 const PresentationProfileScript = preload("res://scripts/presentation/presentation_profile.gd")
 
 const DISPLAY_MODE_DIAGNOSTIC := "diagnostic"
@@ -22,6 +23,8 @@ const OUTER_MARGIN := 12
 const BODY_GAP := 10
 const PANEL_GAP := 12
 const TOP_BAR_HEIGHT := 96
+const LIVE_TOP_BAR_HEIGHT := 80
+const LIVE_VIEWPORT_FRAME_PADDING := 4
 const TIMELINE_HEIGHT := 104
 const LEFT_PANEL_WIDTH := 210
 const RIGHT_INSPECTOR_WIDTH := 260
@@ -218,7 +221,9 @@ static func build_theme(mode: String = DISPLAY_MODE_PLAIN) -> Theme:
 			theme_path = TRON_THEME_PATH
 		DISPLAY_MODE_PLAIN:
 			theme_path = PLAIN_THEME_PATH
-	return load(theme_path).duplicate() as Theme
+	var shell_theme := load(theme_path).duplicate() as Theme
+	shell_theme.default_font_size = ShellDesignTokensScript.FONT_BODY
+	return shell_theme
 
 
 static func active_cell_material(mode: String = DISPLAY_MODE_PLAIN, color_id: int = 1, opacity: float = -1.0) -> StandardMaterial3D:
@@ -672,3 +677,40 @@ static func _with_alpha(color: Color, alpha: float) -> Color:
 
 static func _html(value: String) -> Color:
 	return Color.html(value)
+
+
+# Accessibility composes after stored/style opacity with subordinate role floors.
+static func _scaffold_surface(mode: String, role: String, opacity: float, setting: String, priority: int) -> StandardMaterial3D:
+	var material := _role_material(role, mode, _role_emission(role, mode))
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.albedo_color.a = _parameter_value_or_default(setting, opacity)
+	material.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+	material.render_priority = priority
+	material.set_meta("scaffold_setting", setting)
+	return material
+
+static func board_enclosure_material(mode: String, opacity: float = -1.0, boundary_opacity: float = -1.0, high_contrast: bool = false) -> StandardMaterial3D:
+	var material := _scaffold_surface(mode, ROLE_LIVE_BOARD_FILL, opacity, "board.enclosure_opacity", -30)
+	material.albedo_color = material.albedo_color.lightened(0.12)
+	material.albedo_color.a *= _parameter_value_or_default("board.boundary_opacity", boundary_opacity)
+	if high_contrast: material.albedo_color.a = maxf(material.albedo_color.a, 0.18)
+	material.cull_mode = BaseMaterial3D.CULL_FRONT
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+	return material
+
+static func board_scaffold_material(mode: String, opacity: float = -1.0, high_contrast: bool = false) -> StandardMaterial3D:
+	var material := _scaffold_surface(mode, ROLE_LIVE_BOARD_GRID, opacity, "board.back_scaffold_opacity", -20)
+	if high_contrast: material.albedo_color.a = maxf(material.albedo_color.a, 0.42)
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	return material
+
+static func board_internal_scaffold_material(mode: String, opacity: float = -1.0, high_contrast: bool = false) -> StandardMaterial3D:
+	var material := _scaffold_surface(mode, ROLE_LIVE_BOARD_GRID, opacity, "board.cell_volume_opacity", -10)
+	if high_contrast: material.albedo_color.a = maxf(material.albedo_color.a, 0.04)
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	return material
+
+
+static func scaffold_alpha(opacity: float, grid_opacity: float) -> float:
+	return _parameter_value_or_default("board.back_scaffold_opacity", opacity) * clampf(
+		_parameter_value_or_default("board.grid_opacity", grid_opacity) / presentation_parameter_default("board.grid_opacity"), 0.65, 1.15)

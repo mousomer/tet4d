@@ -20,8 +20,8 @@ func run() -> Array:
 		tree.root.size = original_size
 		return ["Stage 56B runtime tiling test requires app and HUD"]
 
-	var expected_columns := {5: 3, 6: 3, 7: 4, 8: 4}
-	for count in expected_columns:
+	var counts := [5, 6, 7, 8]
+	for count in counts:
 		app._start_configured_live_game(_setup(count))
 		await tree.process_frame
 		await tree.process_frame
@@ -29,8 +29,9 @@ func run() -> Array:
 		var viewport_size: Vector2 = hud.board_viewport_size()
 		if layout.viewport_size.distance_to(viewport_size) > 0.1:
 			failures.append("%d-slice runtime layout must consume the displayed board viewport" % count)
-		if layout.columns != int(expected_columns[count]) or layout.rows != 2:
-			failures.append("%d-slice runtime cockpit must select %dx2, got %dx%d" % [count, expected_columns[count], layout.columns, layout.rows])
+		for columns in range(1, count + 1):
+			if layout.projected_board_scale + 0.0001 < float(layout.candidate_snapshot(columns).get("projected_board_scale", 0.0)):
+				failures.append("%d-slice runtime must maximize cell scale at %s" % [count, viewport_size])
 		var before: Dictionary = layout.snapshot()
 		app._refresh_live_4d_snapshot()
 		await tree.process_frame

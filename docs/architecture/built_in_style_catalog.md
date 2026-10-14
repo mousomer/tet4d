@@ -18,8 +18,8 @@ The product flow is one-directional:
 
 ```text
 built-in style
-    -> apply -> detached working B
-    -> edit  -> ordinary Designer B
+    -> apply -> detached CURRENT DESIGN
+    -> edit  -> ordinary Designer current design
     -> Save As / Copy to User Library -> ordinary mutable user profile
 ```
 
@@ -106,11 +106,10 @@ map on every call, so a caller can never reach the shipped source object. Every
 listed record carries `read_only: true`.
 
 In the Designer, built-in entries are prefixed `BUILT-IN ·`, live in their own
-section, and are described as read-only in the selection description. Applying a
-built-in style clears the loaded user-profile identity, which structurally
-disables explicit `Save Profile`. The only ways to keep a modified built-in
-style are `Save As` and `Copy to User Library`, both of which create an ordinary
-mutable user profile with a fresh generated user identity.
+section, and are described as read-only in the selection description. Applying a built-in style composes only its appearance-owned values into current
+design, preserving grid, geometry, independent parameters and saved association.
+Save updates an associated user design; Save As creates a new user design.
+The built-in catalog remains immutable.
 
 ## 5. Designer integration and A/B interaction
 
@@ -118,22 +117,12 @@ The catalog is a collapsed-by-default disclosure section inside the existing
 full Designer, above the Profile Library section. The two sections are mutually
 exclusive so their combined minimum content can never exceed the already
 allocated Designer overlay; expanding either one consumes internal Designer
-space and leaves the production cockpit rect and gameplay `SubViewportContainer`
+space and leaves the production cockpit rect and gameplay `gameplay viewport surface`
 rect unchanged.
 
-Apply semantics reuse the accepted A/B contract exactly:
-
-```text
-apply built-in style
-    -> detached values replace working B
-    -> B is displayed through profile_preview_requested
-    -> captured A is neither recaptured nor mutated
-    -> the shipped catalog entry is unchanged
-```
-
-Dirty state continues to compare complete `PresentationProfile.values()` against
-the applied baseline, so editing after applying a built-in style reads as
-modified without implying a stored artifact exists.
+Apply uses `PresentationProfile.with_style_of` and records base-style provenance.
+It returns preview to current without changing either comparison snapshot. Dirty
+state compares complete snapshots to the saved/opening design baseline.
 
 ### Runtime startup integration
 
@@ -229,7 +218,7 @@ enter a deterministic comparison.
 | Python Reference | heritage | Flat homage to the Python build | Diagnostic palette, fine grid `0.22`, hard boundary `1.00`, subdued Ghost `0.75`, background `0.55` |
 | Arcade Neon | vivid | Bright cabinet look | Grid `0.55`, full board detail, Ghost `1.30`, background `1.25` |
 | Tron Grid Flow | animated | The one animated style | Vector Arcade palette, `tron_grid_flow` at strength `0.55` / speed `0.85`, dark background `0.45` |
-| Blueprint Technical | technical | Schematic reading | Grid `0.72`, translucent fills `0.88`/`0.78`, slice spacing `1.25`, detailed HUD |
+| Blueprint Technical | technical | Schematic reading | Grid `0.72`, translucent fills `0.88`/`0.78`, canonical slice spacing, detailed HUD preference |
 | High Contrast | accessibility | Maximum separation, no motion | High Contrast invariant, Ghost `1.35`, background `0.30`, reduced motion |
 
 ## 10. Future relationship to comparative evaluation
@@ -264,3 +253,11 @@ and 4D plus full and compact Designer, and records two Tron frames at different
 animation phases to prove real motion with intact board readability. The
 canonical, pinned, governance, settings-externalization, semantic-boundary,
 sanitation, and full repository gates remain required.
+
+
+All six built-in styles explicitly specify enclosure, rear-scaffold and internal-scaffold
+opacity in the settings registry vocabulary. Structural roles are invariant:
+NONE = enclosure + floor; BORDER adds rear subdivisions; FULL adds batched
+internal cell-boundary edges. Python/Arcade rear opacity remains perceptible; Blueprint
+uses weaker internal edges to separate translucent pieces; High Contrast composes bounded role-specific minimums after style opacity.
+Tron background lattice animation is environmental and independent of GridMode.

@@ -85,6 +85,7 @@ func _check_production_extraction() -> Array:
 	# Other in-process tests exercise global accessibility and onboarding state.
 	# This geometry contract has a standard-density, no-overlay precondition.
 	hud._apply_ui_scale("standard")
+	hud._apply_hud_density("standard")
 	hud._set_onboarding_visible(false)
 	await tree.process_frame
 	await tree.process_frame
@@ -103,8 +104,13 @@ func _check_production_extraction() -> Array:
 	# Shared font resources can retain an accessibility scale across the complete
 	# in-process suite. Preserve the accepted horizontal allocation and require
 	# the board/deck split to stay within the supported scaled range.
-	if not is_equal_approx(game.size.x, 1576.0) or game.size.y < 550.0 or deck.size.y < 210.0 or deck.size.y > 230.0:
-		failures.append("LiveCockpit extraction must preserve the accepted 1600x960 allocation envelope, got game=%s deck=%s" % [game, deck])
+	# The 4D split puts NEXT/HOLD + VIEW in a side column; board and column
+	# still account for the whole accepted width.
+	var side: Rect2 = cockpit.get("side_column_rect", Rect2())
+	var stage_width := game.size.x + (side.size.x + float(LiveCockpitScript.SIDE_RAIL_GAP) if side.size.x > 0.0 else 0.0)
+	# The legend deck takes its measured height unscrolled; the board keeps the rest.
+	if not is_equal_approx(stage_width, 1576.0) or game.size.y < 550.0 or absf(deck.size.y - float(cockpit.get("deck_natural_height", 0.0))) > 0.5 or bool(cockpit.get("deck_scroll_required", true)):
+		failures.append("LiveCockpit extraction must show the whole 4D legend and keep the 1600x960 board allocation, got game=%s deck=%s natural=%s" % [game, deck, cockpit.get("deck_natural_height")])
 	if game.intersects(deck):
 		failures.append("LiveCockpit extraction must keep primary board and control deck non-overlapping")
 	if str(app._live_bridge.live_4d_state_hash()) != hash_before:

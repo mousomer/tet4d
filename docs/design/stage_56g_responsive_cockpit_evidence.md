@@ -32,9 +32,13 @@ The gate explicitly rejects headless execution. It drives the real root
 window through six point sizes in every live dimension, then checks five
 additional transitions while a live session is already active.
 
+Windows above 1280×800 pt magnify the reference layout rather than widening
+it, so 1728×1080 lays out as 1280×800 at 1.35× and selects `standard`; `wide`
+remains reachable through wide aspect ratios.
+
 | Client size | Expected profile |
 | ---: | --- |
-| 1728×1080 | `wide` |
+| 1728×1080 | `standard` (magnified) |
 | 1440×900 | `standard` |
 | 1200×800 | `standard` |
 | 1000×720 | `narrow` |

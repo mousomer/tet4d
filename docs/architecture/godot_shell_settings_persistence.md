@@ -5,7 +5,7 @@
 The guarded writer remains at schema 3. The registry currently declares 26
 presentation parameters: 24 `local_shell` values are serialized, while
 `diagnostics.show_layout_bounds` and the quick-control
-`display.grid_visible` are session-only. Additive registry keys do not require
+`display.grid_mode` are session-only. Additive registry keys do not require
 a settings-envelope bump: supported schema-1/2/3 documents retain valid known
 values and receive current defaults for absent keys.
 

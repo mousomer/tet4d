@@ -40,17 +40,9 @@ func _test_canonical_contract(failures: Array) -> void:
 	_assert_vector(failures, local_bounds.get("max", Vector3.ZERO), Vector3(2.0, 3.5, 5.5), "asymmetric board maximum")
 	if geometry.boundary_geometry().size() != 12:
 		failures.append("canonical boundary must contain exactly twelve outer segments")
-	var face_sets := geometry.grid_geometry()
-	if face_sets.size() != 6:
-		failures.append("canonical grid must expose all six local boundary faces")
-	for face in face_sets:
-		var face_axis := int(face.get("face_axis", -1))
-		var expected := 0
-		for division_axis in range(3):
-			if division_axis != face_axis:
-				expected += int(geometry.local_dimensions[division_axis]) - 1
-		if face.get("segments", []).size() != expected:
-			failures.append("face %d should contain %d canonical interior grid segments" % [face_axis, expected])
+	# 4x7x11: (7+1)(11+1) + (4+1)(11+1) + (4+1)(7+1) maximal lattice lines.
+	if geometry.lattice_geometry().size() != 196:
+		failures.append("canonical lattice must contain one maximal line per lattice coordinate pair")
 	var invalid := LocalBoardPresentationGeometryScript.new()
 	if invalid.configure([4, 0, 7], [1, 2, 3]) or invalid.is_configured():
 		failures.append("presentation geometry must not invent validity for zero semantic extents")

@@ -365,6 +365,9 @@ These Godot-owned presentation preferences are declared in `godot/Tet4D.Godot/co
 - `display.board_detail`: default `"standard"`; enum; options: minimal, standard, full
 - `ghost.enabled`: default `true`; bool
 - `settled_cells.opacity`: default `0.75`; float
+- `board.enclosure_opacity`: default `0.16`; float
+- `board.back_scaffold_opacity`: default `0.4`; float
+- `board.cell_volume_opacity`: default `0.025`; float
 - `board.grid_opacity`: default `0.31`; float
 - `board.boundary_opacity`: default `0.9`; float
 - `active_cells.opacity`: default `1.0`; float

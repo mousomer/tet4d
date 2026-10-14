@@ -73,8 +73,8 @@ func _assert_orientation_envelope_layout(failures: Array) -> void:
 		for scale_case in [0.8, 1.0, 1.2]:
 			var layout := AdaptiveLayerLayoutScript.new()
 			layout.configure(shape_case["layers"], local_extent.x, local_extent.y, shape_case["aspect"], scale_case, local_extent.z)
-			if absf(layout.horizontal_gap - standard.horizontal_gap * scale_case) > 0.001 or absf(layout.vertical_gap - standard.vertical_gap * scale_case) > 0.001:
-				failures.append("slice_set.spacing %.1f must predictably multiply the governed gutter for %s" % [scale_case, local_extent])
+			if absf(layout.horizontal_gap - standard.horizontal_gap) > 0.001 or absf(layout.vertical_gap - standard.vertical_gap) > 0.001:
+				failures.append("slice_set.spacing %.1f must leave canonical geometry unchanged for %s" % [scale_case, local_extent])
 
 
 func _assert_product_pitch_contract(failures: Array) -> void:
@@ -154,18 +154,21 @@ func _drag_probe_delta(app, delta: Vector2) -> Vector2:
 
 
 func _assert_required_bounds_fit(failures: Array, app) -> void:
-	var bounds: Dictionary = app._renderer.current_bounds()
+	# The required geometry is the per-slice boxes padded for W labels and the
+	# spawn rows, which is what Fit solves for. The collection AABB carries
+	# phantom corners from the counter-rotated slice row; it only stayed inside
+	# while Live 4D was height-limited, and the 4D side column made it width-
+	# limited at standard sizes.
 	var viewport_size: Vector2 = app._camera_rig._camera.get_viewport().get_visible_rect().size
 	var screen_min := Vector2(INF, INF)
 	var screen_max := Vector2(-INF, -INF)
-	for x in [bounds["min"].x, bounds["max"].x]:
-		for y in [bounds["min"].y, bounds["max"].y]:
-			for z in [bounds["min"].z, bounds["max"].z]:
-				var point: Vector2 = app._camera_rig.project_world_point(app._renderer.get_parent().to_global(Vector3(x, y, z)))
-				screen_min.x = minf(screen_min.x, point.x)
-				screen_min.y = minf(screen_min.y, point.y)
-				screen_max.x = maxf(screen_max.x, point.x)
-				screen_max.y = maxf(screen_max.y, point.y)
+	for box in app._renderer.current_content_boxes():
+		for x in [box["min"].x, box["max"].x]:
+			for y in [box["min"].y, box["max"].y]:
+				for z in [box["min"].z, box["max"].z]:
+					var point: Vector2 = app._camera_rig.project_world_point(app._renderer.get_parent().to_global(Vector3(x, y, z)))
+					screen_min = screen_min.min(point)
+					screen_max = screen_max.max(point)
 	if screen_min.x < -0.5 or screen_min.y < -0.5 or screen_max.x > viewport_size.x + 0.5 or screen_max.y > viewport_size.y + 0.5:
 		failures.append("Live-4D Fit must contain every required projected bounds corner")
 	var limiting_share := maxf((screen_max.x - screen_min.x) / viewport_size.x, (screen_max.y - screen_min.y) / viewport_size.y)

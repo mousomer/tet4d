@@ -19,8 +19,12 @@ const EXPECTED_SAFE_PITCH_MAX_DEG := 86.240113
 
 func run() -> Array:
 	var failures: Array = []
-	if CameraRigScript.LIVE_2D_FIT_MARGIN < 1.3 or CameraRigScript.LIVE_3D_FIT_MARGIN < 1.3:
-		failures.append("live entry fit margins should preserve visible breathing room around the board")
+	if CameraRigScript.LIVE_3D_FIT_MARGIN < 1.04 or CameraRigScript.LIVE_3D_FIT_MARGIN > 1.2:
+		failures.append("live 3D entry fit must cover board + spawn rows with only modest clearance")
+	# Live 2D fits board + spawn rows explicitly, so its margin is clearance only;
+	# the old 1.32 floor kept the 2D board a quarter smaller than it needs to be.
+	if CameraRigScript.LIVE_2D_FIT_MARGIN < 1.02 or CameraRigScript.LIVE_2D_FIT_MARGIN > 1.12 or CameraRigScript.LIVE_2D_SPAWN_HEADROOM_ROWS < 1.0:
+		failures.append("live 2D entry fit must cover the spawn rows with only modest clearance")
 	if CameraRigScript.LIVE_4D_FIT_MARGIN < 1.04 or CameraRigScript.LIVE_4D_FIT_MARGIN > 1.10:
 		failures.append("live 4D entry fit must add only modest clearance beyond required padded bounds")
 	var tree := Engine.get_main_loop() as SceneTree
@@ -195,8 +199,8 @@ func _assert_live_4d_screen_level_slice_rows(failures: Array, rig, presentation_
 		1.0,
 		CameraRigScript.live_4d_screen_row_y_per_world_x()
 	)
-	if mapper.layer_layout.columns != 3 or mapper.layer_layout.rows != 2:
-		failures.append("six Live-4D slices must exercise the three-column row-alignment fixture, got %dx%d" % [mapper.layer_layout.columns, mapper.layer_layout.rows])
+	if mapper.layer_layout.columns < 2:
+		failures.append("six Live-4D slices must exercise adjacent same-row anchors, got %dx%d" % [mapper.layer_layout.columns, mapper.layer_layout.rows])
 		return
 	var left_anchor := mapper.slice_anchor(0)
 	var right_anchor := mapper.slice_anchor(1)

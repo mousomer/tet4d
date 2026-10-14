@@ -23,6 +23,84 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ## Active Work
 
+### Stage 56H spatial scaffold acceptance
+
+Cumulative NONE/BORDER/FULL roles now require cached edge geometry rather than
+filled cell shells. Border is the fresh-session default; Designer Advanced
+Settings owns the three compatible persisted opacity parameters. Corrective
+regressions and the regenerated AFTER 54-case matrix verify rear-only
+subdivisions, unique internal lattice lines, material isolation, save/load,
+piece/ghost hierarchy and movement cache retention. Pinned Godot and repository
+gates pass; evidence is in the external scaffold correction report. User manual
+review accepts the board-lattice renderer correction. Renderer work is closed;
+opacity, colour, scale, camera and depth tuning belong to later stages.
+
+### Stage 57 gameplay ergonomics
+
+- [x] 57A: retain compact mode-specific gameplay guidance, resolve effective
+  configured bindings and update it after rebinding without opening Settings.
+- [x] 57B: direct restart and another-game actions across playing, paused and
+  game-over in 2D/3D/4D; preserve canonical setup, seed policy and presentation.
+- [x] Automated state/routing coverage and manual control-discovery/replay review.
+- Manual macOS review: mode-specific references remain visible during 2D/3D/4D
+  play without Settings; configured restart and direct New Game return to play
+  without setup navigation. Final pinned Godot gate passes 83 scripts and 59
+  topology cases. Repository gate passed before the final zoom-label correction;
+  its rerun timed out only in secret scanning, which passed separately with a
+  600-second bound. External logs: `/private/tmp/tet4d-stage57-godot-final.log`
+  and `/private/tmp/tet4d-stage57-secret-scan.log`.
+- Deferred from repository review: replacing the currently shown Designer A/B
+  snapshot updates its stored value without refreshing the displayed preview.
+  Keep this in backlog unless Stage 58 touches that code path; add a shown-slot
+  replacement regression when fixed.
+- [x] P3 documentation mismatch: `live_presentation_designer.md` now follows the
+  accepted cumulative scaffold contract and shared maximal-line generator.
+  Renderer behavior is unchanged.
+
+### Stage 58 3D/4D board readability
+
+- [x] Publication CI correction (2026-10-14): clear ready-PR handoff state and
+  give the complete Godot replay/style suite a separate bounded 30-minute
+  watchdog after hosted Linux reached test 78/84 at the old 15-minute limit.
+  Retain all test assertions and shorter watchdogs for other steps.
+
+- [x] 58B widened scope (implemented and verified 2026-10-12): increase gameplay allocation;
+  measure before/after; select slice layouts by usable scale in the real viewport;
+  canonicalize spacing; render at displayed resolution; verify style invariance,
+  unclipped geometry, Stage 57 and manual 3D/4D play. Agent acceptance passed;
+  scale/framing is frozen and depth/contrast moves to 58C. The 4D board-area
+  floor is 35% so the whole gameplay legend fits at 1280×720.
+- [x] Live 4D legend deck: the whole measured legend shows unscrolled at 1280×720 and
+  above; shorter windows or an open guide compact the deck, which then scrolls.
+- [ ] 58B follow-up: the narrowed Live 3D side rail scrolls at 1440×900.
+
+- [x] 58A audit (2026-10-12): production shell renders of canonical 3D
+  `[6,10,6]` and 4D `[5,10,4,4]`/`[5,10,4,7]` boards across fresh defaults and
+  all six built-in styles, Border/Full, default/oblique/near-axis/front-back/
+  zoomed-out views and 4D active-slice end/middle, at the fresh 1280x720 pt and a
+  near-fullscreen window. Measured in canvas points; Python reference geometry
+  computed with its own fit code. Interactive 3D/4D review is recorded in 58B.
+- 58A P1/P2/P3 findings addressed by 58B: reclaimed gameplay allocation,
+  viewport-driven scale scoring, native display pixel rendering with 4× MSAA,
+  canonical slice spacing and theme-independent header metrics. Controlled pitch
+  changes: 3D 27.785 → 34.785 pt; default 4D 15.017 → 23.230 pt; seven-slice
+  4D 7.672 → 13.793 pt. Full evidence and incremental attribution:
+  `docs/design/stage_58b_readability_evidence.md`.
+- P2 (58C): no depth cue beyond occlusion and face shading (orthographic,
+  depth-uniform materials); near-axis views read z-separated cells as coplanar.
+- P2 (58C): inactive 4D slices match active-slice cell and grid prominence; only
+  the navigation frame marks active slices.
+- P2 (58C): the active piece differs from same-colour settled cells mainly by
+  luminance and the origin marker; weakest with settled opacity 1.0.
+- P2 (58C, Full only): front lattice lines cross active-piece faces.
+- P3: rotated 4D views detach and clip W labels up to 20 pt (Stage 59 slice
+  identity); Tron Grid Flow background shows through the board (58C); catalog
+  `display.grid_mode` values are inert because grid mode is style-independent.
+- Acceptable: no board-geometry clipping in any case; deterministic 4D slice
+  placement independent of the active piece; Border lattice subordinate to cells;
+  style does not change grid mode; orbit/zoom recover through Fit View.
+
+
 ### Godot editor diagnostic follow-up
 
 Recheck the isolated macOS ObjectDB profiler snapshot-storage advisory when the
@@ -65,19 +143,57 @@ digest is likewise stale since iPadOS left hosted CI; that repair refreshes both
 
 ### Governance pack, telemetry and work-type rollout
 
-**Status (2026-09-25): paused for product work.** The approved work is the
+The owner authorized implementation of
+`docs/plans/policy_kit_logging_and_meta_testing_repairs.md`. Permanent private
+state, source history and backup restoration are complete. Distribution 1.3.1 /
+runtime 0.6.1 is published with execution/evidence hardening, release-pinned
+adapter validation, explicit P1a readiness and a separately packaged portable
+meta-test component. The frozen gate passed 552 cases; the 1.3.0 integration
+worktree passed its full source verifier before the bounded patch upgrade.
+Actual rollout, successor gates and current fleet results belong to the repair
+checkpoint and durable private audit. Failed products, unavailable evidence,
+IQA's model-download hold and RMBG's temporary-fixture boundary remain open.
+
+**Status (2026-10-04): all-repository implementation reactivated by the owner.**
+The rollout is `docs/plans/all_repository_governance_rollout.md`; distribution
+is `docs/architecture/workspace_governance_distribution.md`. The 56H evidence
+and independent family review gates below remain required. Earlier approval
+covered the
 bounded pre-56H repair (routing default, handoff and authority text), then
 Stage 56H as the first instrumented coding task, with P1a telemetry enabled on
 the working machine and the raw agent transcripts retained. A task-scoped
 post-mortem of 56H informs the owner's decision on whether P1b, P1c and P6
-continue. P2–P5 are dormant until the owner explicitly reactivates them. The
-items below are not executable backlog work: listing them here grants no agent
-permission to start them.
+continue. The owner has reactivated P2–P5 through the all-repository implementation request.
+Each family retains its explicit scope and independent-review requirements.
+P1b/P1c/P6 still require the 56H post-mortem continuation decision.
 
 Authorities: `docs/architecture/work_type_classification.md` (work-type ontology, G1) and `docs/architecture/workspace_governance_v0_1.md` (pack ownership; its "Planned: portable agent telemetry" section, accepted 2026-09-25, owns P1). Done: pack `0.2.0` work-type schema; pack `0.3.0` / `v0.3-role-resolution-1` role resolution, project role-declaration checks, pack bootstrap roots and write-compatibility table, and the project `role_bootstrap` declaration; the G1 log-only observer (record schema 2) judging writes by the treatment captured at segment start.
 **P0** (planning, recorded in those authorities): the pack records generic agent activity and experiments interpret it; capture is passive; per-run labels never live in `project.json`; snapshots are evidence, not attribution; raw-transcript retention is separable from telemetry retention. **P1a** (done in pack `0.4.0` / `v0.4-telemetry-core-4`): the pack's Tet4D literals are gone and guarded against, and the frozen project-independent observation envelope has immutable observation identities, source and persistence times, command phases, and opt-in first-hand `gov` observations with workspace-keyed private identities. **P1b**: capture sources that all emit the one observation model and differ only in source and provenance: first a Codex transcript importer moved out of the C1 experiment without its policy lookups, then a Claude transcript/session importer and a filesystem-snapshot source. Claude hooks are not assumed; add them only if a real consumer needs evidence unavailable in transcripts. Snapshots establish observed state changes, not reads or attributed writes. **P1c**: generic reconstruction of segments, read/write timelines and invocation results, correlating observations only on explicit evidence with a recorded confidence and never merging them by resemblance.
 **P2**: consolidate `scripts/resolve_bootstrap_python.sh` into the pack. **P3**: move project values into `project.json` (canonical owner set, the toolchain commands behind `verification.full`, routing requirements and workflow modifiers) and register the work-type decision as a routed authority. **P4**: unify `governance_surface.document_roles`, `governance_surface.file_classifications` and artifact roles within the human-reviewed Tet4D role migration, which must also classify `CURRENT_STATE.md`, `docs/CONFIGURATION_REFERENCE.md` and the work-type decision. **P5**: move the governance-surface mechanism into the pack and its limits into `project.json`. **P6**: move C1 calibration, the G1 outcome and postmortem analysis onto the telemetry interface as outside consumers. P3 and P5 extract policy families, so each waits on the independent review required under Explicit Deferrals.
 Still deferred behind an evidence checkpoint and explicit approval: the non-self-relaxation comparison, stratified validation, and any separate Manifest change enabling blocking. `dispatch_paths` remains context metadata and never implies Manifest membership.
+
+### Policy kit logging and manifest meta testing repairs
+
+Implementation authorized on 2026-10-04:
+`docs/plans/policy_kit_logging_and_meta_testing_repairs.md`.
+Durable state and verified 440-file backup restoration are complete. The
+published 1.3.1 / 0.6.1 successor includes execution/evidence contracts, safe
+gate diagnostics, logging readiness, immutable skills and portable meta-tests;
+1.2.0 and its historical evidence remain unchanged. The final private audit
+retains fresh acceptance and all unresolved product, sanitation and coverage
+results. One nested direct checkout, nine orphaned markers and 155 scan errors
+remain open. Mutable human documents and project tests receive owner migrations
+instead of frozen installer postimages. P1b/P1c/P6 and scientific/product fixes
+retain their separate gates.
+
+The 2026-10-05 integration review confirmed ignored Claude adapters and suppressed
+ordinary failure diagnostics. Their bounded Tet4D repair passes Git-visible
+checkout and quiet/verbose failure regressions plus the canonical full gate.
+Shared-kit follow-up remains open: ambient `TERM` changes evidence matching,
+Make prerequisites can execute before governance, and whole-verifier pinning
+requires guarded re-review after native integration edits. System-Python
+bootstrap policy and portable default tool paths need a separate kit decision;
+no successor release or fleet adoption is claimed by this integration repair.
 
 ### Camera and relative-control contract
 
@@ -145,9 +261,17 @@ fresh-profile launch showed that fix was bypassed: the shell's first deferred
 resize persisted the raw 1600×960 viewport before startup applied settings, so a
 2× display still opened at 800×480 pt. The R2.4 startup-order follow-up gates
 window-size persistence on applied shell settings; the real 2× fresh launch now
-opens at 1280×720 pt. Manual Stage 56H acceptance remains deferred. Open
-observation for R1.3/R3: during onboarding suspension the Live Session header
-still reads `[ RUNNING ]`.
+opens at 1280×720 pt. Manual Stage 56H acceptance remains deferred.
+Shell readability acceptance now uses 24 px body / 22 px supporting/helper text and
+window-filling Main/Advanced menus with wrapping, focus-following overflow.
+Menu acceptance also requires the launch title/Play action to be visible and
+proportional text/control growth above 1280×720 pt (capped at 2×), including
+same-aspect resizes, compact overflow, and transitions back to live play.
+The unified shell retains the gameplay branch's 1280×800 pt live/replay
+magnification reference alongside the menu's 1280×720 pt reference.
+Helper keycaps/actions remain at least 22 px in every density; internal help
+scrolling preserves NEXT/HOLD visibility. Check the larger typography during
+the outstanding manual acceptance.
 Stage 56H is a gameplay/product acceptance checkpoint,
 not a release gate; Stage 56I polish, the 190/200 A/B choice, and cockpit
 refinement continue after it.
@@ -160,8 +284,37 @@ Designer/Design Laboratory affordances and the READMEs launch the game scene
 Stage 56H-R4A is the bounded fast-session-flow follow-up: Main Menu Play starts
 the current valid/default setup directly, Restart and terminal Play Again reuse
 the frozen active setup through the existing native reset boundary, and Change
-Setup remains the sole explicit configuration route. Replay and Designer flows
-remain out of scope.
+Setup remains the sole explicit configuration route. Main Menu `2`/`3`/`4`
+now use validated direct launch and `C` opens Change Setup; regression coverage
+includes invalid drafts and modifier filtering. Replay and Designer flows
+remain out of scope. Human acceptance and the unresolved product decisions
+listed in the repair plan remain open.
+Stage 56H gameplay-ergonomics pass (2D): measured against the Python client
+(30 px cells, board 79% of a 1200×760 window), Live 2D drew 13.6 px cells
+(36%) because a 220 px deck sat under the tall board and the 1.32 fit margin
+discarded another quarter. Live 2D now uses a side rail with a key-first
+legend and a 1.06 fit including spawn rows: 25 px cells (66%) at 1200×760 and
+31 px (69%) at 1440×900. Open: the 100 px live header (its status block has no
+content-driven height, so shrinking it needs a header rework); applying a
+side or slimmer layout to 3D/4D; 3D/4D restart is Backspace because R rotates
+there; manual playtest acceptance.
+Stage 56H 3D/4D ergonomics pass: a scripted diagnostic play (real key events,
+prediction before each frame) found the dominant added cost was vocabulary,
+not puzzle: the deck labelled moves with axis names that contradicted the
+orientation gizmo and changed after a view turn (A/D: X -> Z) while the keys'
+on-screen effect did not, and rotations were bare plane names. 3D cells were
+29 px against Python's 67. Now: 3D rail and spawn-aware fit (46 px, board 64%
+of a 1440x900 window), a camera-measured movement compass, plane-glyph rotation
+and view-turn rows, and a 4D split layout with no scrolling at 1440x900.
+Trade-off: 4D cells went from 30 to 26.5 px, because the side column
+narrows the width-limited slice row. Open: rotation direction (R vs T) is still
+not shown; the orientation gizmo is still ~40 px with tiny labels; manual
+human playtest acceptance of 3D/4D. The bounded corrective pass replaces
+forced layout fitting with visible inner-render-region size/visibility-driven
+refitting, restores the 3D Reset View keycap, reapplies styling on direction
+rebuilds, and strengthens transition/hash regression coverage. Real-window
+framing acceptance for entry/restart/resize/guide changes remains required;
+automated geometry evidence alone does not close human acceptance.
 
 ### Three-product packaging gaps
 
@@ -231,16 +384,21 @@ identifiers; they do not become supported Designer platforms or game packages.
 - v0.1 retains `config/project/policy_pack.json` as authority for unmigrated
   Tet4D-specific facts. Future extraction should migrate one bounded fact family
   at a time with generated/validated compatibility output.
-- General prompt classification, runtime execution graphs, cross-repository
+- General prompt classification, runtime execution graphs and general execution
   orchestration, migration engines, and planner/runner redesign remain deferred.
+  The authorized local governance distribution
+  implements bounded plan/apply/audit/undo/verify without activating those programmes.
 - Round 2 hardens bootstrap diagnostics, canonical-owner coverage, field-use
-  mutation evidence, and executable contradiction fixtures. Generic generated
-  documents and the Godot-namespaced full-gate pointer remain deferred.
+  mutation evidence, and executable contradiction fixtures. The reviewed additive
+  renderer pilot covers the two declared configuration references; broader
+  generated-artifact migration and the Godot-namespaced gate pointer remain deferred.
 - The v0.1 integrity repair makes project routes canonical and retains legacy
-  routes only as a parity-validated facade. Do not extract another policy family
-  until the repaired contract receives independent review.
-- The vendored v0.1 pack is internally checked here. Canonical extraction is
-  blocked until authority names the external package/repository and release identity; Tet4D manifests cannot derive either from mutable Git remotes.
+  routes only as a parity-validated facade. The repaired portable contract received
+  independent review recorded in `docs/architecture/workspace_governance_distribution_review.md`;
+  each later policy-family handoff still requires its own review and parity evidence.
+- The canonical local package is `workspace/policy-kit`, distribution 1.2.0,
+  with immutable retained release bytes and consumer locks. External Git publication
+  is not established; package identity is never inferred from mutable Git remotes.
 
 ### Release and platform
 
@@ -314,3 +472,9 @@ identifiers; they do not become supported Designer platforms or game packages.
 Work is complete only when acceptance passes, authorities are current, required
 checks are green, publication state is reported, and the worktree is clean. A
 branch or draft PR alone is not completion.
+
+- [x] Stage 56H corrective implementation: orthogonal FULL/BORDER/NONE grid modes and full-Designer panel Move/Resize handles with panel recovery; geometry is owned by current design and included in saved designs. Regression coverage exercises actual inner-region refits, style/grid/native-hash independence, and normal-mode input gating. Human playability remains separate acceptance. Legacy profile input keys are declared and checked only at their migration owner.
+- [x] Stage 56H grid-mode × style composition: Actual built-in style selection composes through `PresentationProfile.with_style_of` and preserves grid. Complete saved-design load, Revert and A/B preview restore each snapshot's saved grid and geometry. `test_style_grid_mode_composition.gd` derives every catalog style and asserts rendered lattice/boundary topology and style materials for style × FULL/BORDER/NONE in Live 2D/3D/4D, transition orders, library round-trip, and A/B slots.
+
+- [x] Designer current-design migration: one editable current design, complete Save/Save As/Load/Revert, base-style provenance, shared frozen A/B preview, external toggle and explicit adoption; existing panel handlers and grid renderer coverage retained.
+- [ ] Human interaction acceptance of CURRENT DESIGN, saved geometry restoration and immediate A/B comparison.

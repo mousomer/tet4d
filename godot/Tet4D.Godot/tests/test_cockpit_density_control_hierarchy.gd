@@ -34,8 +34,8 @@ func _check_authoritative_piece_sets() -> Array:
 	}
 	for mode in cases:
 		var groups := LiveInputContractScript.piece_control_groups(mode)
-		if groups.size() != 3 or groups.map(func(group): return str(group.get("cockpit_role", ""))) != ["translate", "drop", "rotate"]:
-			failures.append("%s piece strip must select exactly authoritative translate, rotate, and drop groups" % mode)
+		if groups.size() != 5 or groups.map(func(group): return str(group.get("cockpit_role", ""))) != ["translate", "drop", "rotate", "hold", "session"]:
+			failures.append("%s piece strip must select authoritative movement, rotation, drop, hold and session groups" % mode)
 			continue
 		var text := str(groups)
 		for rotation_label in cases[mode]["rotation"]:
@@ -240,23 +240,56 @@ func _check_primary_surfaces(hud, mode: String, label: String) -> Array:
 	# reachable by scrolling, which is the accepted constrained-size tradeoff;
 	# a module outside the row host would be genuinely lost.
 	var rows_rect: Rect2 = (layout.get("live_cockpit", {}) as Dictionary).get("deck_rows_rect", deck)
-	if not layout.get("live_4d_deck_visible", false) or (strict_containment and (not _contains_rect(rows_rect, piece_module) or not _contains_rect(rows_rect, view_module) or not _contains_rect(rows_rect, state_module))):
-		failures.append("%s %s shared deck must visibly contain all three semantic modules" % [label, mode])
-	if viewport.intersects(deck):
-		failures.append("%s %s board and shared deck must not overlap" % [label, mode])
-	# Reading order, not a single line: the deck reflows into rows when the
-	# modules' measured minimum widths exceed the available width, so modules on
-	# different rows legitimately share an X range. Identity and order survive;
-	# "one HBox at every width" is deliberately not an invariant.
-	if not _modules_in_reading_order(piece_module, view_module, state_module):
-		failures.append("%s %s deck modules must follow Piece, View, Piece State order without overlap" % [label, mode])
+	var frames: Dictionary = hud._live_cockpit.designer_panels()
+	var floating := not frames.is_empty()
+	var split := mode == "live_4d" and str((layout.get("live_cockpit", {}) as Dictionary).get("deck_placement", "")) == "split"
+	var rail := mode in ["live_2d", "live_3d"]
+	if floating:
+		# The requested full Designer mode has free rectangles, not dock slots.
+		# Verify its geometry and scrolling, then retain shared content checks.
+		var host: Rect2 = hud._live_cockpit._designer_host.get_global_rect()
+		if frames.size() != 4:
+			failures.append("Full Designer must expose all four cockpit panels")
+		for key in frames:
+			var frame = frames[key]
+			if not _contains_rect(host, frame.get_global_rect()) or not frame.move_handle.is_visible_in_tree() or not frame.resize_handle.is_visible_in_tree():
+				failures.append("Designer %s must retain bounded geometry and visible handles" % key)
+		for module in [hud._live_cockpit.piece_controls, hud._live_cockpit.view_controls, hud._live_cockpit.piece_state]:
+			if not module.is_visible_in_tree() or not (module.get_parent() is ScrollContainer):
+				failures.append("Designer modules must remain visible and scrollable")
+	else:
+		if viewport.intersects(deck):
+			failures.append("%s %s board and shared deck must not overlap" % [label, mode])
+		if split:
+			var side: Rect2 = (layout.get("live_cockpit", {}) as Dictionary).get("side_column_rect", Rect2())
+			if not layout.get("live_4d_deck_visible", false) or (strict_containment and (not _contains_rect(rows_rect, piece_module) or not _contains_rect(side, state_module))):
+				failures.append("%s %s must show the legend in the deck and NEXT/HOLD in the side column" % [label, mode])
+			if viewport.intersects(side) or not _precedes(state_module, view_module):
+				failures.append("%s %s side column must sit beside the board with NEXT/HOLD above VIEW" % [label, mode])
+		elif rail:
+			if not layout.get("live_4d_deck_visible", false) or (strict_containment and (not _contains_rect(rows_rect, piece_module) or not _contains_rect(rows_rect, state_module))):
+				failures.append("%s %s rail must visibly contain NEXT/HOLD and the key legend" % [label, mode])
+			if not _precedes(state_module, piece_module):
+				failures.append("%s %s rail must stack NEXT/HOLD above the key legend" % [label, mode])
+		else:
+			if not layout.get("live_4d_deck_visible", false) or (strict_containment and (not _contains_rect(rows_rect, piece_module) or not _contains_rect(rows_rect, view_module) or not _contains_rect(rows_rect, state_module))):
+				failures.append("%s %s shared deck must visibly contain all three semantic modules" % [label, mode])
+			# Reading order, not a single line: the deck reflows into rows when the
+			# modules' measured minimum widths exceed the available width, so modules on
+			# different rows legitimately share an X range. Identity and order survive;
+			# "one HBox at every width" is deliberately not an invariant.
+			if not _modules_in_reading_order(piece_module, view_module, state_module):
+				failures.append("%s %s deck modules must follow Piece, View, Piece State order without overlap" % [label, mode])
 	for surface in [[piece_rect, piece_module, "piece controls"], [view_rect, view_module, "view controls"], [preview, state_module, "preview row"], [next_rect, state_module, "NEXT"], [hold_rect, state_module, "HOLD"]]:
+		if surface[2] == "view controls" and not hud._live_view_control_strip.is_visible_in_tree():
+			continue
 		if surface[0].size.x <= 0.0 or surface[0].size.y <= 0.0 or (strict_containment and not _contains_rect(surface[1], surface[0])):
 			failures.append("%s %s %s must be contained by its semantic deck module" % [label, mode, surface[2]])
-	if next_rect.intersects(hold_rect) or next_rect.end.x > hold_rect.position.x + 0.5:
-		failures.append("%s %s NEXT and HOLD must be compact side-by-side non-overlapping surfaces" % [label, mode])
+	var stacked_previews: bool = hud._piece_preview_row.columns == 1
+	if next_rect.intersects(hold_rect) or (next_rect.end.y > hold_rect.position.y + 0.5 if stacked_previews else next_rect.end.x > hold_rect.position.x + 0.5):
+		failures.append("%s %s NEXT and HOLD must follow the preview grid without overlap" % [label, mode])
 	var strip: Dictionary = hud._piece_control_strip.deterministic_snapshot()
-	if strip.get("source") != "LiveInputContract" or strip.get("roles", []) != ["translate", "drop", "rotate"]:
+	if strip.get("source") != "LiveInputContract" or strip.get("roles", []) != ["translate", "drop", "rotate", "hold", "session"]:
 		failures.append("%s %s piece surface must report authoritative translate/rotate/drop consumption" % [label, mode])
 	var view_strip: Dictionary = hud._live_view_control_strip.deterministic_snapshot()
 	if view_strip.get("source") != "LiveInputContract" or view_strip.get("roles", []).is_empty():
@@ -290,10 +323,15 @@ func _projected_bounds_height_share(app) -> float:
 			for y in [minimum.y, maximum.y]:
 				for z in [minimum.z, maximum.z]:
 					var point: Vector2 = app._camera_rig.project_world_point(Vector3(x, y, z))
-					screen_min.y = minf(screen_min.y, point.y)
-					screen_max.y = maxf(screen_max.y, point.y)
-	var viewport_height: float = app._camera_rig._camera.get_viewport().get_visible_rect().size.y
-	return (screen_max.y - screen_min.y) / viewport_height if viewport_height > 0.0 else 0.0
+					screen_min = screen_min.min(point)
+					screen_max = screen_max.max(point)
+	# The limiting dimension is whichever the fit filled: height when the slice
+	# row has width to spare, width once a side column narrows the viewport.
+	var viewport_size: Vector2 = app._camera_rig._camera.get_viewport().get_visible_rect().size
+	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
+		return 0.0
+	var span := screen_max - screen_min
+	return maxf(span.x / viewport_size.x, span.y / viewport_size.y)
 
 
 func _modules_in_reading_order(first: Rect2, second: Rect2, third: Rect2) -> bool:

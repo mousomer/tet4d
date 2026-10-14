@@ -10,7 +10,7 @@ portable `PresentationProfile` artifacts. It extends the accepted parameter
 and Live Designer architecture without making ordinary editing persistent:
 
 ```text
-Designer edit -> detached working B -> runtime preview only
+Designer edit -> detached CURRENT DESIGN -> runtime preview only
 explicit library Save -> persistent named artifact
 ```
 
@@ -124,10 +124,10 @@ growth; it is not permission to discard unknown newer semantics.
 
 ### Save As and Save
 
-`Save As` creates a new stable identity from detached working B after name and
+`Save As` creates a new stable identity from detached CURRENT DESIGN after name and
 profile validation. Duplicate names fail; no existing artifact is overwritten.
 
-`Save Profile` is available only for a profile loaded or saved in the current
+`Save` is available only for a profile loaded or saved in the current
 Designer session and is a deliberate overwrite of that stable identity. Every
 ordinary parameter edit remains runtime-only until that action. Successful
 save replaces the semantic dirty baseline.
@@ -135,7 +135,7 @@ save replaces the semantic dirty baseline.
 ### Load and A/B
 
 Load validates and deserializes the stored artifact, creates a detached
-profile, replaces working B, selects/displays B, and applies it through the
+profile, replaces CURRENT DESIGN, previews current, and applies it through the
 existing `profile_preview_requested` boundary. Captured A is neither recaptured
 nor mutated. The stored object is never exposed for mutation.
 
@@ -144,7 +144,7 @@ nor mutated. The stored object is never exposed for mutation.
 Duplicate copies semantic values into a new ID and distinct derived or
 user-chosen name. Rename preserves ID and values and does not apply the profile.
 Delete is confirmation-backed in the UI. Deleting a loaded source removes the
-artifact but leaves the currently active detached B unchanged.
+artifact but leaves the CURRENT DESIGN unchanged.
 
 ### Import and export
 
@@ -152,10 +152,11 @@ Import parses and validates the complete portable artifact before writing a
 fresh local identity. It does not auto-apply. Export writes the validated named
 artifact to an explicit selected destination and excludes absolute paths,
 settings documents, screenshots, runtime hashes, gameplay/session state,
-Designer state, and camera pose.
+ephemeral comparison/UI state, and camera pose. Complete design metadata
+(panel rectangles and base-style provenance) is included.
 
 Failed import/export/save/rename/delete operations do not partially mutate the
-library. Import failure also leaves working B, captured A, runtime presentation,
+library. Import failure also leaves CURRENT DESIGN, captured A, runtime presentation,
 ordinary settings, and gameplay unchanged because validation/persistence
 complete before the Designer receives a selectable result.
 
@@ -164,21 +165,22 @@ complete before the Designer receives a selectable result.
 The library is a collapsible section inside the full Designer and is collapsed
 by default. Compact and hidden modes retain their accepted dimensions and
 input behavior. The Designer displays the loaded/saved source and a `*` when
-working B differs semantically from its stored/saved baseline.
+CURRENT DESIGN differs semantically from its stored/saved baseline.
 
 Expanding the library consumes space inside the already allocated full Designer
 overlay. It cannot change the Designer's production cockpit rect or the
 gameplay `SubViewportContainer` rect. Live-4D NEXT, HOLD, piece controls, and
 basis/slice state remain visible under both disclosure states.
 
-Dirty state compares complete `PresentationProfile.values()` only. It is not
+Dirty state compares complete `PresentationProfile.snapshot()` values and
+Designer metadata. It is not
 affected by selecting A/B, current camera manipulation, gameplay advancement,
 Designer collapse/hide/scroll, or the library section's disclosure state. No
 save prompt is introduced on hide.
 
 ## 7. Isolation and applicability
 
-Named artifacts contain only registry-authorized profile values. They exclude
+Named artifacts contain registry-authorized profile values and validated Designer metadata. They exclude
 canonical setup, board/piece/queue/Hold/NEXT/Ghost semantic state, score/RNG,
 topology, basis, active slice, collision, replay/trace/hash identity, current
 camera yaw/pitch/pan/zoom/focus, Designer state, and shell-settings documents.
@@ -202,9 +204,9 @@ Ownership stays distinct:
 - the catalog owns shipped read-only styles and exposes no write API.
 
 Applying a built-in style performs no library write. The user crosses into this
-library only through the ordinary explicit `Save As` action or the equivalent
-`Copy to User Library` action, both of which allocate a normal generated user
-identity and produce an ordinary mutable profile. No theme pack, palette editor,
+library through explicit Save on an associated user design, or `Save As` /
+`Copy to User Library`, which allocate a new user identity. Built-in identity
+never becomes a mutable save target. No theme pack, palette editor,
 marketplace, or sharing service exists in either owner.
 
 ## 9. Verification contract
@@ -223,3 +225,12 @@ Godot 4.7.1 review covers Save As, load restoration, A/B comparison, detached
 delete, one actual export/import path, and the unchanged collapsed/expanded
 cockpit footprint. The canonical, pinned, persistence/governance,
 semantic-boundary, sanitation, and full repository gates remain required.
+
+## Complete design snapshot extension
+
+Schema-1 profile snapshots optionally carry `design_state`: panel rectangles
+(JSON arrays of x, y, width, height), base-style identity/name and a validated
+base-style values map. Absent metadata means default geometry and no known base
+style. Invalid metadata fails profile validation. The library round-trips the
+complete snapshot through all lifecycle operations; Load restores saved grid and
+geometry. Save As leaves the source identity and artifact intact.

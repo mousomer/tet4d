@@ -67,6 +67,7 @@ var _live_4d_basis = SliceBasis4DScript.identity()
 var _live_4d_local_orientation = SliceLocalOrientationScript.new()
 var _translation_frame := ControlFrameMappingScript.FRAME_RELATIVE
 var _rotation_frame := ControlFrameMappingScript.FRAME_RELATIVE
+var _published_legend_directions := {}
 var _control_frame_presentation_key := ""
 var _live_tick_accumulator := 0.0
 var _live_gravity_interval_seconds := DEFAULT_LIVE_GRAVITY_INTERVAL_SECONDS
@@ -147,7 +148,8 @@ func _deferred_ready() -> void:
 	_build_world_in_game_viewport()
 	if _is_designer_product() and not _hud.configure_design_laboratory({
 		"load_scenario": Callable(self, "_load_design_laboratory_scenario"),
-		"apply_profile": Callable(self, "apply_presentation_profile"),
+		"apply_profile": Callable(self, "restore_presentation_design"),
+		"apply_style": Callable(self, "apply_presentation_style"),
 		"current_fingerprint": Callable(self, "_design_laboratory_fingerprint"),
 		"capture_image": Callable(self, "_capture_design_laboratory_image"),
 		"build_identity": Callable(self, "_design_laboratory_build_identity"),
@@ -169,6 +171,8 @@ func _is_designer_product() -> bool:
 func _process(delta: float) -> void:
 	if _pending_fit_view:
 		_fit_view()
+	if _mode in [MODE_LIVE_3D, MODE_LIVE_4D]:
+		_publish_legend_screen_directions()
 	if _is_live_mode():
 		if not _live_mode_paused() and not _live_snapshot_game_over():
 			if _hud != null and _hud.onboarding_suspends_live_gameplay():
@@ -360,7 +364,7 @@ func _handle_live_2d_input(event: InputEvent) -> bool:
 	if _event_action_pressed(event, ["live_pause", "live_2d_pause"]):
 		_toggle_live_2d_pause()
 		return true
-	if _event_action_pressed(event, ["live_reset", "replay_reset"]):
+	if _event_action_pressed_once(event, ["live_reset"]):
 		_reset_live_2d()
 		return true
 	if event.is_action_pressed("replay_fit_view"):
@@ -408,7 +412,7 @@ func _handle_live_3d_input(event: InputEvent) -> bool:
 	if _event_action_pressed(event, ["live_pause", "live_3d_pause"]):
 		_toggle_live_3d_pause()
 		return true
-	if _event_action_pressed(event, ["live_3d_reset"]):
+	if _event_action_pressed_once(event, ["live_3d_reset"]):
 		_reset_live_3d()
 		return true
 	if _event_action_pressed_once(event, ["reset"]):
@@ -475,7 +479,7 @@ func _handle_live_4d_input(event: InputEvent) -> bool:
 	if _event_action_pressed(event, ["live_pause", "live_4d_pause"]):
 		_toggle_live_4d_pause()
 		return true
-	if _event_action_pressed(event, ["live_4d_reset"]):
+	if _event_action_pressed_once(event, ["live_4d_reset"]):
 		_reset_live_4d()
 		return true
 	if _event_is_escape(event):
@@ -688,6 +692,7 @@ func _wire_hud() -> void:
 		_state.loop_enabled = enabled
 	)
 	_hud.presentation_profile_changed.connect(apply_presentation_profile)
+	_hud.design_restoration_requested.connect(restore_presentation_design)
 	_hud.camera_preset_requested.connect(func(id: String) -> void:
 		var applied := _apply_live_4d_view_action(id) if _mode == MODE_LIVE_4D else (_camera_rig != null and _camera_rig.apply_outer_view_action(id))
 		if applied and _camera_rig != null:
@@ -779,7 +784,7 @@ func _load_design_laboratory_scenario(scenario: Dictionary) -> Dictionary:
 
 func _design_laboratory_fingerprint() -> Dictionary:
 	var camera: Dictionary = _camera_rig.presentation_snapshot() if _camera_rig != null else {}
-	# Fit distance and orthographic size are derived from the current viewport.
+	# Fit focus, distance and orthographic size derive from the render region.
 	# Responsive layout may settle them a frame later without changing the
 	# user's pose or zoom; treating those scalars as authored comparison state
 	# makes a window resize look like a gameplay/style mutation.
@@ -799,8 +804,9 @@ func _design_laboratory_fingerprint() -> Dictionary:
 			"current_yaw": camera.get("current_yaw", 0.0),
 			"current_pitch": camera.get("current_pitch", 0.0),
 			"current_roll": camera.get("current_roll", 0.0),
-			"target_focus": str(camera.get("target_focus", Vector3.ZERO)),
-			"current_focus": str(camera.get("current_focus", Vector3.ZERO)),
+			# Preserve authored pan while excluding the layout-derived fit centre.
+			"target_focus": str((camera.get("target_focus", Vector3.ZERO) as Vector3) - (camera.get("fit_focus", Vector3.ZERO) as Vector3)),
+			"current_focus": str((camera.get("current_focus", Vector3.ZERO) as Vector3) - (camera.get("fit_focus", Vector3.ZERO) as Vector3)),
 			"zoom_multiplier": camera.get("zoom_multiplier", 1.0),
 			"projection": camera.get("projection", -1),
 			"view_context": camera.get("view_context", ""),
@@ -1012,14 +1018,15 @@ func _refresh_render() -> void:
 # a 2D/3D aspect change that makes width the limiting axis leaves the camera
 # solving for the previous aspect, which clips the board.
 func _on_game_viewport_geometry_changed(viewport_size: Vector2) -> void:
-	if not _route_layout_viewport_size(viewport_size):
+	if viewport_size.x < 240.0 or viewport_size.y < 120.0:
 		return
+	_route_layout_viewport_size(viewport_size)
 	if _mode not in [MODE_LIVE_2D, MODE_LIVE_3D, MODE_LIVE_4D] or _current_snapshot.is_empty():
 		return
 	var framing_status := str(_camera_rig.presentation_snapshot().get("framing_status", "")) if _camera_rig != null else ""
 	if _mode == MODE_LIVE_4D:
 		_refresh_live_4d_presentation(true)
-	if not _presentation_layout_guard_active and not framing_status.begins_with("manual"):
+	if _pending_fit_view or (not _presentation_layout_guard_active and not framing_status.begins_with("manual")):
 		_fit_view()
 
 
@@ -1099,18 +1106,30 @@ func _fit_view() -> void:
 	if _camera_rig == null or _renderer == null:
 		_pending_fit_view = true
 		return
+	var viewport_size := _hud.board_viewport_size() if _hud != null else Vector2.ZERO
+	if viewport_size.x < 240.0 or viewport_size.y < 120.0:
+		_pending_fit_view = true
+		return
+	if _route_layout_viewport_size(viewport_size) and _mode == MODE_LIVE_4D:
+		_refresh_live_4d_presentation(true)
 	var bounds := _renderer.current_bounds()
 	if not bounds.get("ok", false):
 		_pending_fit_view = true
 		return
 	var margin := 1.14
-	if _mode == MODE_LIVE_2D:
-		margin = CameraRigScript.LIVE_2D_FIT_MARGIN
-	elif _mode == MODE_LIVE_3D:
-		margin = CameraRigScript.LIVE_3D_FIT_MARGIN
+	var content_boxes := _renderer.current_content_boxes()
+	if _mode in [MODE_LIVE_2D, MODE_LIVE_3D]:
+		margin = CameraRigScript.LIVE_2D_FIT_MARGIN if _mode == MODE_LIVE_2D else CameraRigScript.LIVE_3D_FIT_MARGIN
+		# The spawning piece is drawn above the board (world +Y is board-up), so
+		# those rows are content too; fitting only the board would clip it.
+		var headroom := Vector3(0.0, CameraRigScript.LIVE_2D_SPAWN_HEADROOM_ROWS, 0.0)
+		bounds = {"ok": true, "min": bounds["min"], "max": (bounds["max"] as Vector3) + headroom}
+		content_boxes = [{"min": bounds["min"], "max": bounds["max"]}]
 	elif _mode == MODE_LIVE_4D:
 		margin = CameraRigScript.LIVE_4D_FIT_MARGIN
-	_camera_rig.fit_current_bounds(bounds, margin, _renderer.current_content_boxes())
+	# Live 2D and 3D show their key legend in a rail on the right.
+	_camera_rig.set_fit_horizontal_anchor(1.0 if _mode in [MODE_LIVE_2D, MODE_LIVE_3D] else 0.0)
+	_camera_rig.fit_current_bounds(bounds, margin, content_boxes)
 	_camera_rig.set_orientation_gizmo_visible(_mode in [MODE_LIVE_3D, MODE_LIVE_4D])
 	_pending_fit_view = false
 	_refresh_camera_status()
@@ -1149,6 +1168,8 @@ func _establish_canonical_view_and_fit(mode_name: String) -> void:
 				0.0,
 				false
 			)
+	# Fit now only when the render region is already visible and resolved.
+	# Hidden entry remains pending; size/visibility changes use the same path.
 	_fit_view()
 
 
@@ -1247,10 +1268,26 @@ func _scaled_background_color(color: Color, intensity: float) -> Color:
 	return color.lerp(Color(1.0, 1.0, 1.0, color.a), minf((intensity - 1.0) * 0.35, 0.35))
 
 
-func apply_presentation_profile(profile) -> bool:
+# Built-in Apply Live composes appearance; full design and comparison
+# restoration use apply_presentation_profile instead.
+func apply_presentation_style(profile) -> bool:
+	if profile == null or not profile.has_method("contract_conforms") or not profile.contract_conforms():
+		return false
+	return apply_presentation_profile(_presentation_profile.with_style_of(profile))
+
+
+func restore_presentation_design(profile) -> bool:
+	return apply_presentation_profile(profile, true)
+
+
+func apply_presentation_profile(profile, restore_geometry: bool = false) -> bool:
 	if profile == null or not profile.has_method("contract_conforms") or not profile.contract_conforms():
 		return false
 	var previous_ghost_enabled := _ghost_enabled
+	# A complete design can restore real panel geometry. Let the existing
+	# resolved-region lifecycle fit that change, as it does for handle edits.
+	if restore_geometry and _hud != null and _hud.design_geometry_will_change(profile):
+		_pending_fit_view = true
 	if _mode == MODE_LIVE_4D and not _current_snapshot.is_empty():
 		_begin_presentation_layout_guard()
 	_presentation_profile = profile.detached_copy()
@@ -1259,7 +1296,7 @@ func apply_presentation_profile(profile) -> bool:
 	_state.loop_enabled = bool(_presentation_profile.value("replay.loop_enabled"))
 	_ghost_enabled = bool(_presentation_profile.value("ghost.enabled"))
 	if _hud != null:
-		_hud.apply_presentation_profile(_presentation_profile)
+		_hud.apply_presentation_profile(_presentation_profile, restore_geometry)
 	if _renderer != null:
 		_renderer.apply_presentation_profile(_presentation_profile)
 	if _animated_background != null:
@@ -1492,7 +1529,9 @@ func _start_ordinary_live_mode(mode_name: String, preserve_current_view: bool = 
 
 
 func _start_new_random_game() -> void:
-	if _active_live_setup.is_empty() or str(_active_live_setup.get("random_mode", "")) != "true_random":
+	# Legacy internal name; the action now starts another game for either seed
+	# policy. Checked native configuration owns seed selection from frozen setup.
+	if _active_live_setup.is_empty():
 		return
 	_start_configured_live_game(_active_live_setup.duplicate(true), true)
 
@@ -1522,6 +1561,8 @@ func _enter_live_2d_mode(preserve_current_view: bool = false) -> void:
 	if not preserve_current_view:
 		_establish_canonical_view_and_fit(MODE_LIVE_2D)
 	_hud.show_replay_viewer()
+	if not preserve_current_view:
+		_fit_view()
 
 
 func _enter_live_3d_mode(preserve_current_view: bool = false) -> void:
@@ -1533,6 +1574,8 @@ func _enter_live_3d_mode(preserve_current_view: bool = false) -> void:
 	if not preserve_current_view:
 		_establish_canonical_view_and_fit(MODE_LIVE_3D)
 	_hud.show_replay_viewer()
+	if not preserve_current_view:
+		_fit_view()
 	_refresh_live_3d_snapshot()
 
 
@@ -1545,6 +1588,8 @@ func _enter_live_4d_mode(preserve_current_view: bool = false) -> void:
 	if not preserve_current_view:
 		_establish_canonical_view_and_fit(MODE_LIVE_4D)
 	_hud.show_replay_viewer()
+	if not preserve_current_view:
+		_fit_view()
 	_refresh_live_4d_snapshot()
 
 
@@ -1744,11 +1789,87 @@ func _dispatch_live_2d_control_intent(intent: String) -> bool:
 	return _dispatch_live_gameplay_command(_control_frame_mapping(2).translation_command(intent, _translation_frame))
 
 
+# The 3D/4D legend draws where each movement key and rotation axis points on
+# screen. Axis names cannot carry that: under view-relative controls the same
+# key keeps its on-screen effect while its board axis changes with the view,
+# so the old labels changed (X -> Z) exactly when nothing changed for the hand.
+func _publish_legend_screen_directions() -> void:
+	if _hud == null or not _hud.has_method("set_legend_screen_directions"):
+		return
+	var directions := _legend_screen_directions(4 if _mode == MODE_LIVE_4D else 3)
+	if _legend_directions_close(directions, _published_legend_directions):
+		return
+	_published_legend_directions = directions
+	_hud.set_legend_screen_directions(directions)
+
+
+func _legend_screen_directions(dimension: int) -> Dictionary:
+	var result := {}
+	if _renderer == null or _camera_rig == null or not _renderer.has_method("cell_global_position"):
+		return result
+	var shape: Array = _renderer.presented_board_shape()
+	if shape.size() != dimension:
+		return result
+	var origin: Array = []
+	for extent in shape:
+		origin.append(floori(float(extent) * 0.5))
+	var mapping = _control_frame_mapping(dimension)
+	var intents := ["move_x_neg", "move_x_pos", "move_z_neg", "move_z_pos"]
+	if dimension >= 4:
+		intents.append_array(["move_w_neg", "move_w_pos"])
+	# Measure the command each key dispatches, exactly as input routing does.
+	for intent in intents:
+		var command := str(mapping.translation_command(intent, _translation_frame))
+		result[intent] = _board_axis_screen_direction(shape, origin, "xyzw".find(command.get_slice("_", 1)), 1 if command.ends_with("_pos") else -1)
+	var relative := ControlFrameMappingScript.normalize_frame(_rotation_frame) == ControlFrameMappingScript.FRAME_RELATIVE
+	for local_index in range(dimension):
+		var label := "xyzw"[local_index]
+		var axis := int(mapping.axis_for_local(label).get("axis", local_index)) if relative else local_index
+		# Up is against gravity (+Y runs down the board).
+		result[label] = _board_axis_screen_direction(shape, origin, axis, -1 if label == "y" else 1)
+	return result
+
+
+func _board_axis_screen_direction(shape: Array, origin: Array, axis: int, direction: int) -> Vector2:
+	if axis < 0 or axis >= origin.size():
+		return Vector2.ZERO
+	var neighbour := origin.duplicate()
+	neighbour[axis] = int(neighbour[axis]) + direction
+	# Samples an in-board point for the legend arrow, never movement legality.
+	# tet4d-semantic-boundary: allow display-only
+	if int(neighbour[axis]) < 0 or int(neighbour[axis]) >= int(shape[axis]):
+		return Vector2.ZERO
+	var from := _camera_rig.project_world_point(_renderer.cell_global_position(origin))
+	var to := _camera_rig.project_world_point(_renderer.cell_global_position(neighbour))
+	var delta := to - from
+	return delta.normalized() if delta.length() > 0.5 else Vector2.ZERO
+
+
+# Lights the legend row of the plane just used, so the key, its glyph and the
+# change on the board are seen together.
+func _flash_legend_plane(plane: String, view: bool) -> void:
+	if _hud == null or not _hud.has_method("flash_legend_plane"):
+		return
+	var letters := Array(plane.to_lower().split(""))
+	letters.sort_custom(func(a, b): return "xyzw".find(str(a)) < "xyzw".find(str(b)))
+	_hud.flash_legend_plane("".join(PackedStringArray(letters)).to_upper(), view)
+
+
+static func _legend_directions_close(a: Dictionary, b: Dictionary) -> bool:
+	if a.size() != b.size():
+		return false
+	for key in a:
+		if not b.has(key) or (a[key] as Vector2).distance_to(b[key] as Vector2) > 0.02:
+			return false
+	return true
+
+
 func _dispatch_live_3d_control_intent(intent: String) -> bool:
 	return _dispatch_live_3d_gameplay_command(_control_frame_mapping(3).translation_command(intent, _translation_frame))
 
 
 func _dispatch_live_3d_rotation_intent(intent: String) -> bool:
+	_flash_legend_plane(intent.get_slice("_", 1), false)
 	return _dispatch_live_3d_gameplay_command(_control_frame_mapping(3).rotation_command(intent, _rotation_frame))
 
 
@@ -1757,12 +1878,14 @@ func _dispatch_live_4d_control_intent(intent: String) -> bool:
 
 
 func _dispatch_live_4d_rotation_intent(intent: String) -> bool:
+	_flash_legend_plane(intent.get_slice("_", 1), false)
 	return _dispatch_live_4d_gameplay_command(_control_frame_mapping(4).rotation_command(intent, _rotation_frame))
 
 
 func _apply_live_4d_basis_turn(plane: String, direction: int) -> void:
 	if _mode != MODE_LIVE_4D or _renderer == null:
 		return
+	_flash_legend_plane(plane, true)
 	_live_4d_basis = _live_4d_basis.turned(plane, direction)
 	_renderer.set_live_4d_basis(_live_4d_basis, true)
 	_refresh_live_4d_presentation()
@@ -2513,6 +2636,8 @@ func _ensure_input_map() -> void:
 	var live_action_specs := LiveInputContractScript.action_specs()
 	_physical_fallback_bound = PhysicalKeyFallbackScript.bound_keycodes(live_action_specs)
 	for action_name in live_action_specs:
+		if InputMap.has_action(action_name):
+			continue
 		var spec: Dictionary = live_action_specs.get(action_name, {})
 		for forbidden_key in spec.get("forbidden_keys", []):
 			_remove_key_action(str(action_name), int(forbidden_key) as Key)

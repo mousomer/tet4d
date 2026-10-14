@@ -35,8 +35,15 @@ STABILITY_SEED_BASE="${STABILITY_SEED_BASE:-0}"
 # source mode the binding that decides which checkout it imports. Both come from
 # the governance resolver rather than being reconstructed here: a gate that
 # derived its own binding could verify a different environment than `gov doctor`
-# certified. A failure here aborts under `set -e` with the resolver's diagnostic.
-GOVERNED_ENV="$(./gov env)"
+# certified. Before that interpreter exists, failures use a fixed bootstrap
+# classification without echoing arbitrary resolver output.
+if GOVERNED_ENV="$(./gov env 2>/dev/null)"; then
+  :
+else
+  GOV_ENV_STATUS=$?
+  printf 'environment_resolution: failed (exit=%s); review the declared interpreter and machine overlay through the owning resolver.\n' "$GOV_ENV_STATUS" >&2
+  exit "$GOV_ENV_STATUS"
+fi
 eval "$GOVERNED_ENV"
 
 VERIFY_LOCK_DIR="state/.verify.lock"
@@ -121,15 +128,18 @@ require_repo_package() {
 
 run_step() {
   local name="$1"; shift
-  local tmp
+  local tmp status
   tmp="$(mktemp "$VERIFY_LOG_DIR/${name}.XXXXXX.log")"
 
   if [[ "$QUIET" == "1" ]]; then
-    if ! "$@" >"$tmp" 2>&1; then
+    if "$@" >"$tmp" 2>&1; then
+      :
+    else
+      status=$?
       echo "== FAILED: ${name} ==" >&2
       cat "$tmp" >&2
       rm -f "$tmp"
-      exit 1
+      exit "$status"
     fi
     rm -f "$tmp"
   else
@@ -140,22 +150,38 @@ run_step() {
 
 # These invocations are the shell-owned governance/policy enforcement graph.
 # The provenance validator derives family names from these real calls.
-run_governance_step() { run_step "$@"; }
+run_governance_step() {
+  local name="$1"; shift
+  # Only scanners that can echo matched content need bounded classifications.
+  # Keep ordinary checker diagnostics and the named provenance graph intact.
+  case "$name" in
+    git_sanitation_baseline|git_sanitation_repo|pack_sanitation|secret_scan)
+      "$PYTHON_BIN" tools/workspace_governance/diagnostics.py --checker "$name" --run "$@"
+      ;;
+    *) run_step "$name" "$@" ;;
+  esac
+}
 
 # Minimal output verification steps (same intent as ci_check.sh)
 require_module ruff ruff
 require_module pytest pytest
 require_repo_package
 
-run_step "workspace_governance" ./gov check
-run_step "environment_doctor" ./gov doctor
+# BEGIN workspace-governance managed verification
+# Native integration preserves the actual named governance graph after setup.
+run_governance_step "environment_doctor" ./gov doctor --json
+run_governance_step "config_reference" ./gov check --generated --summary --json
+run_governance_step "governance_inventory" "$PYTHON_BIN" tools/governance/export_governance_inventory.py --check
+run_governance_step "git_sanitation_baseline" bash scripts/check_git_sanitation.sh .
+run_governance_step "template_drift" bash scripts/check_policy_template_drift.sh .
+run_governance_step "pack_sanitation" "$PYTHON_BIN" tools/workspace_governance/sanitation.py --root .
+# END workspace-governance managed verification
 run_governance_step "policy_compliance" ./scripts/check_policy_compliance.sh
-run_governance_step "policy_compliance_repo" ./scripts/check_policy_compliance_repo.sh
+run_governance_step "policy_compliance_repo" ./scripts/check_policy_compliance_extensions_repo.sh
 run_governance_step "git_sanitation_repo" ./scripts/check_git_sanitation_repo.sh
 run_governance_step "topology_contract_codegen" "$PYTHON_BIN" tools/codegen/generate_topology_contract.py --check
 
-run_step "governance"     "$PYTHON_BIN" tools/governance/validate_governance.py
-run_governance_step "config_reference" "$PYTHON_BIN" tools/governance/generate_configuration_reference.py --check
+run_governance_step "governance" "$PYTHON_BIN" tools/governance/validate_governance.py
 run_governance_step "maintenance_docs" "$PYTHON_BIN" tools/governance/generate_maintenance_docs.py --check
 run_governance_step "secret_scan" "$PYTHON_BIN" tools/governance/scan_secrets.py
 run_governance_step "pygame_ce" "$PYTHON_BIN" tools/governance/check_pygame_ce.py

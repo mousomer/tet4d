@@ -31,7 +31,7 @@ func run() -> Array:
 		failures.append("Settings screen should focus its first preference")
 	var visited: Dictionary = {}
 	var current := first
-	for _index in range(32):
+	for _index in range(35):
 		if current == null or visited.has(current):
 			break
 		visited[current] = true
