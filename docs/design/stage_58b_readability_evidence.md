@@ -102,3 +102,19 @@ The final graphical matrix is `style-matrix-rotated/records.json`; comparative
 records are `baseline-graphical/records.json` and `allocation-only/records.json`.
 Scale/framing is frozen after this stage; remaining depth and contrast defects
 continue in 58C and rotated W-label tracking remains Stage 59.
+
+## Publication verification (2026-10-14)
+
+Implementation is committed at `21b361c4`, following the reference-size legend
+and responsive menu corrections (`3ad116c3`, `43dda6a0`). PR #153 includes these
+changes together with the earlier cockpit, lattice and Stage 57 work.
+
+The remote run on `21b361c4` stopped in baseline planning because the ready PR
+still carried active handoff metadata. Product lanes were skipped, not passed.
+Finalization clears the handoff state in accordance with its existing lifecycle
+contract. The normal pre-push verifier and required remote lanes must pass
+before merge; the master push run supplies post-merge CI evidence. Current
+remote results are linked from [PR #153](https://github.com/mousomer/tet4d/pull/153).
+
+This publication step does not change scale, geometry, styling or gameplay.
+Owner visual acceptance remains distinct from the recorded agent inspection.
