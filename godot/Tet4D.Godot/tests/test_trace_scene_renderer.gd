@@ -566,7 +566,10 @@ func _assert_cell_material(failures: Array, cell: Node3D, expected: Color, label
 	if material == null:
 		failures.append("%s: missing StandardMaterial3D" % label)
 		return
-	_assert_color(failures, material.albedo_color, expected, label)
+	# Stage 58C depth/slice weights scale a settled cell's colour; the material
+	# it was built from is the unweighted one.
+	var weight: float = cell.presentation_weight() if cell.has_method("presentation_weight") else 1.0
+	_assert_color(failures, material.albedo_color, Color(expected.r * weight, expected.g * weight, expected.b * weight, expected.a), label)
 
 
 func _assert_box_size(failures: Array, cell: Node3D, expected: float, label: String) -> void:

@@ -241,13 +241,16 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 	var probe_before_material := ReplayVisuals.probe_before_material(_display_mode)
 	var probe_after_material := ReplayVisuals.probe_after_material(_display_mode)
 	var event_material := ReplayVisuals.event_marker_material(_display_mode)
+	var receding_layers := SpatialReadability.recession_layers(_presentation.active_layer_indices(), _presentation.is_live)
 
 	for cell in _presentation.locked_cells():
 		var node := CellRendererScript.new()
 		node.name = "LockedCell"
 		node.set_meta("presentation_role", "locked")
 		node.set_meta("canonical_position", cell.get("position", []).duplicate())
-		node.set_meta("presentation_layer", _presentation.layer_index(cell.get("position", [])))
+		var layer := _presentation.layer_index(cell.get("position", []))
+		node.set_meta("presentation_layer", layer)
+		node.set_meta("slice_weight", SpatialReadability.slice_weight(SpatialReadability.slice_distance(layer, receding_layers)))
 		_cell_root.add_child(node)
 		var locked_color_id := int(cell.get("color_id", 0))
 		var locked_size := ReplayVisuals.LIVE_3D_LOCKED_CELL_SCALE if _presentation.uses_live_exterior_cells else ReplayVisuals.LIVE_LOCKED_CELL_SCALE
@@ -509,9 +512,10 @@ func _edge_weight() -> float:
 	return detail_weight * (1.55 if _high_contrast else 1.0)
 
 
-# Stage 58C: settled cells recede with camera depth across their own board box.
-# Weights depend only on the view direction in board space, so they follow
-# camera orbit and presentation rotation without frame-time state.
+# Stage 58C: settled cells recede with distance from the active 4D slice and
+# with camera depth across their own board box. Depth weights depend only on
+# the view direction in board space, so they follow camera orbit and
+# presentation rotation without frame-time state.
 func _refresh_settled_weights(force: bool = false) -> void:
 	if _cell_root == null:
 		return
@@ -523,12 +527,12 @@ func _refresh_settled_weights(force: bool = false) -> void:
 	for node in _cell_root.get_children():
 		if str(node.get_meta("presentation_role", "")) != "locked":
 			continue
-		var weight := 1.0
+		var weight := float(node.get_meta("slice_weight", 1.0))
 		if view != Vector3.ZERO:
 			var layer := int(node.get_meta("presentation_layer", 0))
 			if not depth_ranges.has(layer):
 				depth_ranges[layer] = SpatialReadability.depth_range(_presentation.slice_corners(layer), view)
-			weight = SpatialReadability.depth_weight(SpatialReadability.normalized_depth((node as Node3D).position, view, depth_ranges[layer]))
+			weight *= SpatialReadability.depth_weight(SpatialReadability.normalized_depth((node as Node3D).position, view, depth_ranges[layer]))
 		node.set_presentation_weight(SpatialReadability.quantized(weight))
 
 

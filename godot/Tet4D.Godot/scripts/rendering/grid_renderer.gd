@@ -4,6 +4,7 @@ class_name GridRenderer
 
 const GridDisplayMode = preload("res://scripts/presentation/grid_display_mode.gd")
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
+const SpatialReadability = preload("res://scripts/presentation/spatial_readability.gd")
 const PRESENTATION_ROLE_ACTIVE_FRAME := "board.frame_active"
 
 var _rear_faces: Array[Node3D] = []
@@ -24,7 +25,7 @@ func _process(_delta: float) -> void:
 # label placement update existing nodes and never recreate lattice batches.
 func rebuild(
 	dimension: int, projection, display_mode: String,
-	_live_2d: bool = false, show_w_labels: bool = true,
+	is_live: bool = false, show_w_labels: bool = true,
 	active_layers: Array = [], _board_detail: String = "standard",
 	high_contrast: bool = false, grid_mode: int = GridDisplayMode.Mode.BORDER,
 	grid_opacity: float = -1.0, boundary_opacity: float = -1.0,
@@ -49,7 +50,7 @@ func rebuild(
 		if opacities != _role_opacity_key:
 			_update_role_opacities(self, display_mode, high_contrast, enclosure_opacity, scaffold_opacity, cell_opacity, grid_opacity, boundary_opacity)
 			_role_opacity_key = opacities
-		_update_navigation(active_layers)
+		_update_navigation(active_layers, is_live)
 		return
 	_role_opacity_key = opacities
 	_structural_key = key.duplicate(true)
@@ -94,10 +95,19 @@ func rebuild(
 				_add_slice_label(w_index, projection.oriented_slice_bounds(w_index), display_mode,
 					active_layers.has(w_index), projection.mapper.slice_axis_label(),
 					projection.mapper.semantic_slice_coordinate(w_index))
-	_update_navigation(active_layers)
+	_update_navigation(active_layers, is_live)
 	_process(0.0)
 
-func _update_navigation(active_layers: Array) -> void:
+func _update_navigation(active_layers: Array, is_live: bool) -> void:
+	# Stage 58C: on live boards each inactive slice's scaffold recedes with its
+	# distance from the nearest active slice. Instance transparency keeps
+	# materials and topology untouched; the active-slice frame keeps full
+	# prominence.
+	var receding_layers := SpatialReadability.recession_layers(active_layers, is_live)
+	for slice_root in get_children():
+		if str(slice_root.get_meta("presentation_role", "")) == "board.slice_geometry":
+			var weight := SpatialReadability.slice_weight(SpatialReadability.slice_distance(int(slice_root.get_meta("presentation_layer")), receding_layers))
+			_set_scaffold_transparency(slice_root, 1.0 - weight)
 	for frame in _active_frames:
 		frame.visible = active_layers.has(int(frame.get_meta("presentation_layer")))
 	for label in _slice_labels:
@@ -107,6 +117,15 @@ func _update_navigation(active_layers: Array) -> void:
 		label.modulate = ReplayVisuals.color_for_role(ReplayVisuals.ROLE_TEXT, mode) if selected else ReplayVisuals.slice_label_color(mode)
 		label.font_size = ReplayVisuals.W_SLICE_LABEL_SELECTED_FONT_SIZE if selected else ReplayVisuals.W_SLICE_LABEL_FONT_SIZE
 		label.outline_size = ReplayVisuals.W_SLICE_LABEL_OUTLINE_SIZE + (2 if selected else 0)
+
+func _set_scaffold_transparency(node: Node, transparency: float) -> void:
+	for child in node.get_children():
+		if child.name == "ActiveSliceFrame":
+			continue
+		if child is GeometryInstance3D:
+			(child as GeometryInstance3D).transparency = transparency
+		_set_scaffold_transparency(child, transparency)
+
 
 func _add_enclosure(geometry, display_mode: String, opacity: float, boundary_opacity: float, high_contrast: bool, parent: Node3D) -> void:
 	var enclosure := MeshInstance3D.new()

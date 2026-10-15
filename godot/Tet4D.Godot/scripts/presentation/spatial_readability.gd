@@ -1,7 +1,8 @@
 extends RefCounted
 
 # Stage 58C spatial-readability weights. Presentation only: inputs are camera
-# direction and board geometry, never simulation state or frame time.
+# direction, board geometry and which slices hold the active piece, never
+# simulation state or frame time.
 #
 # A weight in (0, 1] scales a settled cell's colour toward the dark board
 # background, so the cell recedes while hue, opacity, topology and draw order
@@ -10,6 +11,12 @@ extends RefCounted
 # Settled weight at the far side of a board box along the view direction; the
 # near side keeps 1.0. Supported range [0.6, 1.0]: rear cells stay readable.
 const DEPTH_WEIGHT_REAR := 0.75
+# Inactive 4D slices recede with distance from the nearest active slice:
+# weight = floor + (1 - floor) * decay^distance. The active slice keeps 1.0;
+# distant slices approach the floor and never disappear. Supported floor
+# range [0.4, 0.9].
+const SLICE_WEIGHT_FLOOR := 0.6
+const SLICE_WEIGHT_DECAY := 0.5
 # Weights move in steps of this size, so camera motion rewrites a cell's
 # materials only when its weight visibly changes.
 const WEIGHT_QUANTUM := 1.0 / 128.0
@@ -37,6 +44,27 @@ static func normalized_depth(point: Vector3, forward: Vector3, range: Vector2) -
 	if range.y - range.x <= 0.0001:
 		return 0.0
 	return clampf((point.dot(forward) - range.x) / (range.y - range.x), 0.0, 1.0)
+
+
+# Slice steps to the nearest active slice; 0 when no slice is active, so
+# nothing recedes without an active piece (matching the active-slice frame).
+static func slice_distance(layer: int, active_layers: Array) -> int:
+	var distance := -1
+	for active_layer in active_layers:
+		var step := absi(layer - int(active_layer))
+		distance = step if distance < 0 else mini(distance, step)
+	return maxi(distance, 0)
+
+
+# Slices that settled cells and scaffold recede from. Only live boards recede:
+# their cells own their materials, while replay cells share one settled
+# material per board and keep their baseline presentation.
+static func recession_layers(active_layers: Array, is_live: bool) -> Array:
+	return active_layers if is_live else []
+
+
+static func slice_weight(distance: int) -> float:
+	return SLICE_WEIGHT_FLOOR + (1.0 - SLICE_WEIGHT_FLOOR) * pow(SLICE_WEIGHT_DECAY, absi(distance))
 
 
 static func quantized(weight: float) -> float:
