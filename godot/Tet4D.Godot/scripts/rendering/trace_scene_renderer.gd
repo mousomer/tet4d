@@ -12,6 +12,7 @@ const BoardPresentationModelScript = preload("res://scripts/presentation/board_p
 const SliceBasis4DScript = preload("res://scripts/presentation/slice_basis_4d.gd")
 const SliceLocalOrientationScript = preload("res://scripts/presentation/slice_local_orientation.gd")
 const PresentationProfileScript = preload("res://scripts/presentation/presentation_profile.gd")
+const SpatialReadability = preload("res://scripts/presentation/spatial_readability.gd")
 
 var current_slice_stride := 6.0
 var _presentation_profile = PresentationProfileScript.canonical_defaults()
@@ -44,6 +45,7 @@ var _live_4d_fit_reference: Dictionary = {}
 var _live_4d_fit_reference_layer_count := 1
 var _basis_fit_scale := 1.0
 var _basis_fit_position := Vector3.ZERO
+var _settled_weight_view := Vector3.ZERO
 
 var _grid: GridRenderer
 var _grid_root: Node3D
@@ -61,6 +63,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	_refresh_settled_weights()
 	if _basis_transition_progress >= 1.0:
 		return
 	_basis_transition_progress = minf(1.0, _basis_transition_progress + delta / maxf(_basis_transition_duration, 0.001))
@@ -244,6 +247,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		node.name = "LockedCell"
 		node.set_meta("presentation_role", "locked")
 		node.set_meta("canonical_position", cell.get("position", []).duplicate())
+		node.set_meta("presentation_layer", _presentation.layer_index(cell.get("position", [])))
 		_cell_root.add_child(node)
 		var locked_color_id := int(cell.get("color_id", 0))
 		var locked_size := ReplayVisuals.LIVE_3D_LOCKED_CELL_SCALE if _presentation.uses_live_exterior_cells else ReplayVisuals.LIVE_LOCKED_CELL_SCALE
@@ -318,6 +322,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 				(active_size + ReplayVisuals.LIVE_CELL_BORDER_DELTA * _edge_weight()) if _presentation.is_live else 0.0
 			)
 		node.basis = _presentation.local_render_basis()
+	_refresh_settled_weights(true)
 
 	for marker in _presentation.probe_markers():
 		var marker_node := EventMarkerRendererScript.new()
@@ -502,6 +507,40 @@ func presentation_preferences_snapshot() -> Dictionary:
 func _edge_weight() -> float:
 	var detail_weight := 0.9 if _board_detail == "minimal" else (1.25 if _board_detail == "full" else 1.0)
 	return detail_weight * (1.55 if _high_contrast else 1.0)
+
+
+# Stage 58C: settled cells recede with camera depth across their own board box.
+# Weights depend only on the view direction in board space, so they follow
+# camera orbit and presentation rotation without frame-time state.
+func _refresh_settled_weights(force: bool = false) -> void:
+	if _cell_root == null:
+		return
+	var view := _board_view_direction()
+	if not force and view.is_equal_approx(_settled_weight_view):
+		return
+	_settled_weight_view = view
+	var depth_ranges := {}
+	for node in _cell_root.get_children():
+		if str(node.get_meta("presentation_role", "")) != "locked":
+			continue
+		var weight := 1.0
+		if view != Vector3.ZERO:
+			var layer := int(node.get_meta("presentation_layer", 0))
+			if not depth_ranges.has(layer):
+				depth_ranges[layer] = SpatialReadability.depth_range(_presentation.slice_corners(layer), view)
+			weight = SpatialReadability.depth_weight(SpatialReadability.normalized_depth((node as Node3D).position, view, depth_ranges[layer]))
+		node.set_presentation_weight(SpatialReadability.quantized(weight))
+
+
+# Camera forward expressed in this renderer's board space; zero when the board
+# has no live exterior cells or no camera looks at it.
+func _board_view_direction() -> Vector3:
+	if not is_inside_tree() or not _presentation.uses_live_exterior_cells:
+		return Vector3.ZERO
+	var camera := get_viewport().get_camera_3d()
+	if camera == null:
+		return Vector3.ZERO
+	return (global_transform.basis.inverse() * -camera.global_transform.basis.z).normalized()
 
 
 func _matching_particle(particle_id: int, particles: Array) -> Dictionary:

@@ -2,6 +2,10 @@ extends Node3D
 
 class_name CellRenderer
 
+# Unweighted albedo and emission per material, captured on first weighting.
+var _base_colors: Dictionary = {}
+var _presentation_weight := 1.0
+
 
 func setup(
 	position: Vector3,
@@ -39,6 +43,30 @@ func setup_exterior_block(
 	if origin_marker_material != null and origin_marker_size > 0.0:
 		_add_origin_marker(size, origin_marker_size, origin_marker_material)
 	self.position = position
+
+
+# Stage 58C: a cell recedes by scaling every material colour it draws with
+# toward black; alpha, geometry and draw order are unchanged.
+func set_presentation_weight(weight: float) -> void:
+	if is_equal_approx(weight, _presentation_weight):
+		return
+	_presentation_weight = weight
+	if _base_colors.is_empty():
+		for child in get_children():
+			if not child is GeometryInstance3D:
+				continue
+			var material := (child as GeometryInstance3D).material_override as StandardMaterial3D
+			if material != null and not _base_colors.has(material):
+				_base_colors[material] = [material.albedo_color, material.emission]
+	for material in _base_colors:
+		var albedo: Color = _base_colors[material][0]
+		var emission: Color = _base_colors[material][1]
+		material.albedo_color = Color(albedo.r * weight, albedo.g * weight, albedo.b * weight, albedo.a)
+		material.emission = Color(emission.r * weight, emission.g * weight, emission.b * weight)
+
+
+func presentation_weight() -> float:
+	return _presentation_weight
 
 
 func _add_box(local_position: Vector3, size: Vector3, material: Material) -> void:
