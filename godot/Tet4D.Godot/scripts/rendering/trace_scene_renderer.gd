@@ -300,7 +300,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		if _presentation.uses_live_exterior_cells:
 			node.setup_exterior_block(
 				position,
-				_live_exterior_active_face_materials(active_color_id),
+				ReplayVisuals.live_3d_active_face_materials(_display_mode, active_color_id, _active_cell_opacity),
 				ReplayVisuals.live_3d_active_cell_border_material(_display_mode),
 				active_size,
 				active_size + ReplayVisuals.LIVE_3D_ACTIVE_CELL_BORDER_DELTA * _edge_weight(),
@@ -463,12 +463,6 @@ func _live_active_material(color_id: int, is_live_3d_snapshot: bool, is_live_sna
 	if is_live_snapshot:
 		return ReplayVisuals.live_active_cell_material(_display_mode, color_id, _active_cell_opacity)
 	return ReplayVisuals.gameplay_active_cell_material(_display_mode, _active_cell_opacity)
-
-
-func _live_exterior_active_face_materials(color_id: int) -> Dictionary:
-	if _presentation.is_live_4d:
-		return ReplayVisuals.live_4d_active_face_materials(_display_mode, color_id, _active_cell_opacity)
-	return ReplayVisuals.live_3d_active_face_materials(_display_mode, color_id, _active_cell_opacity)
 
 
 func _live_locked_border_material(is_live_3d_snapshot: bool, is_live_snapshot: bool) -> Material:

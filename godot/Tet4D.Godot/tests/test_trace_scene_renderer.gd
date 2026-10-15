@@ -224,8 +224,8 @@ func run() -> Array:
 		_assert_cell_material(
 			failures,
 			live_4d_active_cell,
-			ReplayVisuals.live_4d_active_face_materials(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC, 6).get("top").albedo_color,
-			"live 4D active cells use restrained exterior face material"
+			ReplayVisuals.live_3d_active_face_materials(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC, 6).get("top").albedo_color,
+			"live 4D active cells share the live active exterior face material"
 		)
 		_assert_live_3d_exterior_block(failures, live_4d_active_cell, "live 4D active cell")
 		_assert_live_3d_exterior_block(failures, live_4d_locked_cell, "live 4D locked cell")
