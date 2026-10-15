@@ -625,8 +625,10 @@ func _assert_live_3d_exterior_block(failures: Array, cell: Node3D, label: String
 				failures.append("%s face %d should use the configured translucent locked fill" % [label, index])
 			elif material.depth_draw_mode != BaseMaterial3D.DEPTH_DRAW_ALWAYS:
 				failures.append("%s face %d should write depth for camera-angle-stable structure" % [label, index])
-		elif material.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED or material.albedo_color.a < 0.99:
-			failures.append("%s face %d should be opaque" % [label, index])
+		elif material.albedo_color.a < 0.99:
+			failures.append("%s face %d should be visually opaque" % [label, index])
+		elif material.transparency != BaseMaterial3D.TRANSPARENCY_ALPHA or material.depth_draw_mode != BaseMaterial3D.DEPTH_DRAW_ALWAYS:
+			failures.append("%s face %d should composite over board scaffold on the depth-writing alpha path" % [label, index])
 	if label.contains("locked"):
 		var outline := cell.get_child(6) as MeshInstance3D
 		var outline_material := outline.material_override as StandardMaterial3D if outline != null else null

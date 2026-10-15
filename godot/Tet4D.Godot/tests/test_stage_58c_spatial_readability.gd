@@ -20,6 +20,7 @@ const FAR_3D := [0, 9, 0]
 func run() -> Array:
 	var failures: Array = []
 	_test_active_over_settled(failures)
+	_test_active_over_scaffold(failures)
 	_test_depth_weight_function(failures)
 	_test_slice_weight_function(failures)
 	await _test_rendered_depth_cue(failures)
@@ -37,6 +38,26 @@ func _test_active_over_settled(failures: Array) -> void:
 				var margin := _lightness(active[face]) - _lightness(settled[face])
 				if margin < ACTIVE_OVER_SETTLED_MIN_MARGIN:
 					failures.append("%s colour %d %s: active face must stay lighter than settled (margin %.3f)" % [theme, color_id, face, margin])
+
+
+# Board scaffold never writes depth and draws before the active piece in the
+# transparent pass, so Full lattice lines cannot cross an opaque-looking piece.
+func _test_active_over_scaffold(failures: Array) -> void:
+	for theme in THEMES:
+		var scaffold: Array = [
+			ReplayVisuals.board_enclosure_material(theme),
+			ReplayVisuals.board_scaffold_material(theme),
+			ReplayVisuals.board_internal_scaffold_material(theme),
+		]
+		for opacity in [1.0, 0.88]:
+			var active: Dictionary = ReplayVisuals.live_3d_active_face_materials(theme, 3, opacity)
+			for face in FACES:
+				var material: StandardMaterial3D = active[face]
+				if material.transparency != BaseMaterial3D.TRANSPARENCY_ALPHA or material.depth_draw_mode != BaseMaterial3D.DEPTH_DRAW_ALWAYS:
+					failures.append("%s active %s at opacity %.2f must use the depth-writing alpha path" % [theme, face, opacity])
+				for layer in scaffold:
+					if (layer as StandardMaterial3D).render_priority >= material.render_priority or (layer as StandardMaterial3D).depth_draw_mode != BaseMaterial3D.DEPTH_DRAW_DISABLED:
+						failures.append("%s board scaffold must composite beneath the active %s face" % [theme, face])
 
 
 func _test_depth_weight_function(failures: Array) -> void:

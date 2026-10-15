@@ -601,21 +601,26 @@ static func _make_lit_material(color: Color, emission_strength: float, use_alpha
 
 static func _live_3d_face_materials(base: Color, mode: String, active: bool, opacity: float = -1.0) -> Dictionary:
 	var emission := _role_emission(ROLE_LIVE_3D_ACTIVE if active else ROLE_LIVE_3D_LOCKED, mode)
-	var top := _shade_color(base.lerp(color_for_role(ROLE_LIVE_3D_FACE_HIGHLIGHT, mode), 0.18 if active else 0.04), 1.18 if active else 0.9)
-	var front := _shade_color(base, 1.02 if active else 0.8)
-	var right := _shade_color(base, 0.92 if active else 0.72)
-	var left := _shade_color(base, 0.82 if active else 0.66)
-	var back := _shade_color(base, 0.76 if active else 0.6)
-	var bottom := _shade_color(base, 0.68 if active else 0.54)
-	return {
-		"base": _apply_structural_opacity(_make_lit_material(base, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
-		"top": _apply_structural_opacity(_make_lit_material(top, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
-		"front": _apply_structural_opacity(_make_lit_material(front, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
-		"right": _apply_structural_opacity(_make_lit_material(right, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
-		"left": _apply_structural_opacity(_make_lit_material(left, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
-		"back": _apply_structural_opacity(_make_lit_material(back, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
-		"bottom": _apply_structural_opacity(_make_lit_material(bottom, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
+	var colors := {
+		"base": base,
+		"top": _shade_color(base.lerp(color_for_role(ROLE_LIVE_3D_FACE_HIGHLIGHT, mode), 0.18 if active else 0.04), 1.18 if active else 0.9),
+		"front": _shade_color(base, 1.02 if active else 0.8),
+		"right": _shade_color(base, 0.92 if active else 0.72),
+		"left": _shade_color(base, 0.82 if active else 0.66),
+		"back": _shade_color(base, 0.76 if active else 0.6),
+		"bottom": _shade_color(base, 0.68 if active else 0.54),
 	}
+	var materials := {}
+	for face in colors:
+		var material := _apply_structural_opacity(_make_lit_material(colors[face], emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity")
+		if active:
+			# Stage 58C: active faces always take the depth-writing alpha path, so
+			# board scaffold composites beneath them as it already does beneath
+			# translucent settled cells, instead of crossing an opaque piece.
+			material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			material.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
+		materials[face] = material
+	return materials
 
 
 static func _apply_structural_opacity(material: StandardMaterial3D, opacity: float, setting_id: String) -> StandardMaterial3D:

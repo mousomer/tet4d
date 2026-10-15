@@ -7,6 +7,11 @@ extends RefCounted
 # A weight in (0, 1] scales a settled cell's colour toward the dark board
 # background, so the cell recedes while hue, opacity, topology and draw order
 # stay unchanged. Active pieces are never weighted.
+#
+# These are presentation-only tunings of the existing visual language with no
+# player control (the Designer opacity settings keep their meaning), like the
+# face factors in ReplayVisuals, so they stay script constants rather than
+# registry settings. Tests pin their bounds and orderings, not their values.
 
 # Settled weight at the far side of a board box along the view direction; the
 # near side keeps 1.0. Supported range [0.6, 1.0]: rear cells stay readable.
