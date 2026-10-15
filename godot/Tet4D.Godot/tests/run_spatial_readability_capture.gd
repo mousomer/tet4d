@@ -289,14 +289,9 @@ func _cell_table() -> Array:
 		var position: Array = node.get_meta("canonical_position", [])
 		var color_id := int(colors.get(str(position), -1)) if role == "locked" else -1
 		cells.append({"node": node, "role": role, "position": position, "color": color_id,
-			"layer": _layer_of(position), "depth": ((node as Node3D).global_position - _camera.global_position).dot(forward)})
+			"layer": maxi(_renderer._presentation.layer_index(position), 0),
+			"depth": ((node as Node3D).global_position - _camera.global_position).dot(forward)})
 	return cells
-
-
-func _layer_of(position: Array) -> int:
-	if position.size() < 4:
-		return 0
-	return int(_renderer._presentation.projection.mapper.presentation_coordinate(position, true).get("layer_index", 0))
 
 
 func _pass(spec: Dictionary, cells: Array = []) -> Image:

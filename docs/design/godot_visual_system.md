@@ -89,7 +89,9 @@ bright frame.
 - Pause and game-over use text plus a bordered status badge; game over uses
   the error role without turning the full shell red.
 - Active basis-derived layers use a stronger outline and label weight. Inactive layers
-  remain visible with a quieter structural outline.
+  remain visible with a quieter structural outline; on live boards their
+  settled cells and scaffold recede with distance from the nearest active
+  slice, never below a visible floor.
 
 ## Board and shell relationship
 
@@ -108,7 +110,14 @@ with restrained or zero emission in the Instrument theme. Piece fill owns
 gameplay colour; the outline separates every constituent cell clearly even at
 3D/4D overview scale. Locked cells use semi-transparent fill controlled by the
 persistent `settled_cells.opacity` preference, plus a strong persistent outline
-so occupied structure remains unambiguous. The Pygame diagrammatic exterior
+so occupied structure remains unambiguous. Live 3D and 4D settled cells recede
+with camera-space depth across their board or slice box (colour weight 1.0
+near, 0.75 far) and, in Live 4D, with slice distance; opacity, geometry,
+topology and draw order are unchanged, active pieces are never weighted, and
+replays keep their baseline presentation. Live 3D and 4D active pieces
+share one exterior material on the depth-writing alpha path, so board scaffold
+composites beneath them as it does beneath translucent settled cells. The
+bounded weights live in `scripts/presentation/spatial_readability.gd`. The Pygame diagrammatic exterior
 view, clean cube-edge separation, and stable signed-slice rhythm remain the
 comparison standard.
 
