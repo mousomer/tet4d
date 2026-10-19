@@ -7,8 +7,9 @@
 1. Rebuilt all seven registered release consumers from `cdf9c3cf`, with
    synchronized Python/Godot versions and Android version code 901. The
    [full matrix](https://github.com/mousomer/tet4d/actions/runs/39270845987)
-   passed, and the checksum-bound `v0.9.1` draft is ready for the separate
-   publication gate.
+   passed. The [publication gate](https://github.com/mousomer/tet4d/actions/runs/39276389792)
+   revalidated the exact tag, manifest, checksums, and asset set before making
+   [v0.9.1 public](https://github.com/mousomer/tet4d/releases/tag/v0.9.1).
 2. Fix Windows release interpreter binding under PowerShell and pass the
    selected Python explicitly to the native pre-test build.
 

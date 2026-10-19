@@ -353,9 +353,11 @@ named status exception.
   packaging, porting, monetization, or storefront work.
 - Deferred: macOS public distribution, then iPadOS, until distribution nears.
 
-`v0.9.1` is a checksum-validated draft built from `cdf9c3cf` with all seven
-registered consumers. The [full rebuild](https://github.com/mousomer/tet4d/actions/runs/39270845987)
-passed; public release and physical-device acceptance remain separate gates.
+`v0.9.1` is [published](https://github.com/mousomer/tet4d/releases/tag/v0.9.1)
+from `cdf9c3cf` with all seven registered consumers. The
+[full rebuild](https://github.com/mousomer/tet4d/actions/runs/39270845987) and
+[publication gate](https://github.com/mousomer/tet4d/actions/runs/39276389792)
+passed; physical-device acceptance remains separate.
 Release control may release any validated subset of those consumers without changing the
 ten-cell product target matrix: the manual candidate workflow records the
 selected bytes in a v2 manifest before it creates a draft, and a separate
