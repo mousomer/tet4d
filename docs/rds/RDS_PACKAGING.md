@@ -53,10 +53,15 @@ otherwise contains a complete disposable project.
 
 ## 2. Current supported release path
 
-The current 0.9.0 release-control candidate is:
+The 0.9.1 rebuild selects `current_all`: all seven registered consumers,
+including the two transitional Designer tablet artifacts. It rebuilds one
+exact source commit into a checksum-bound draft release using the existing
+product/platform contract and separate publication gate.
+
+The current 0.9.1 release-control candidate is:
 
 - product: `Tet4D`;
-- version authority: `pyproject.toml` (`0.9.0` for this candidate);
+- version authority: `pyproject.toml` (`0.9.1` for this candidate);
 - engine: the exact Godot 4.7.2 stable build pinned in
   `config/project/policy_pack.json`;
 - platform: macOS 13 or newer;

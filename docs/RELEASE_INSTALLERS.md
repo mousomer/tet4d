@@ -53,7 +53,7 @@ Outputs are ignored local artifacts:
 
 ```text
 artifacts/godot/macos/Tet4D.app
-artifacts/godot/macos/Tet4D-0.9.0-macos-universal.zip
+artifacts/godot/macos/Tet4D-0.9.1-macos-universal.zip
 ```
 
 The versioned filename follows `pyproject.toml`; do not edit the export-preset
@@ -83,7 +83,7 @@ prefix forwarded through the compiler's process-wide `CL` option channel before
 strict package validation. Its generated output remains ignored:
 
 ```text
-artifacts/godot/windows/Tet4D-Designer-0.9.0-windows-x86_64.zip
+artifacts/godot/windows/Tet4D-Designer-0.9.1-windows-x86_64.zip
 ```
 
 The exact validator-approved candidate nominated for clean-machine testing is
@@ -226,7 +226,7 @@ runtime release evidence; keep all three products explicit.
 
 `.github/workflows/release-packaging.yml` is manual-only. It requires an exact
 lowercase 40-character `source_sha`; `release_scope` defaults to `current_all`,
-which selects the full registered matrix. An operator may replace that default
+which selects the full registered matrix. The 0.9.1 rebuild uses `current_all`. An operator may replace that default
 with a comma-separated set of registered `consumer_id` values; it is
 canonicalized by the Python-owned release contract. The workflow builds only the
 selected consumers: any registered subset is valid, and the initial 0.9.0

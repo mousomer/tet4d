@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.1 — 2026-10-19
+
+### Packaging
+
+1. Prepare a full rebuild of all seven registered release consumers from the
+   integrated source, with synchronized Python/Godot versions and Android
+   version code 901. The existing manifest validation and draft/publication
+   gates continue to apply.
+
 ## 2026-08-31
 
 ### Fixed

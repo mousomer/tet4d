@@ -49,7 +49,7 @@ def _archive(
     executable: bytes | None = None,
 ) -> Path:
     validator = _module()
-    archive_path = tmp_path / "Tet4D-Designer-0.9.0-windows-x86_64.zip"
+    archive_path = tmp_path / "Tet4D-Designer-0.9.1-windows-x86_64.zip"
     if resources is None:
         resources = set(validator.REQUIRED_PCK_RESOURCES)
         resources.add(validator.DESIGNER_IDENTITY_MARKER)
@@ -72,7 +72,7 @@ def _archive(
 def test_current_windows_portable_inventory_validates(tmp_path: Path) -> None:
     validator = _module()
     result = validator.validate(_archive(tmp_path), ROOT)
-    assert result["version"] == "0.9.0"
+    assert result["version"] == "0.9.1"
     assert result["file_count"] == 3
     assert result["python_runtime_included"] is False
     assert result["godot_editor_required"] is False

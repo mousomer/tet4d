@@ -213,7 +213,7 @@ def test_committed_release_preset_credentials_are_rejected(tmp_path: Path) -> No
 
 def _apk(tmp_path: Path, *, omit: str = "", unsigned: bool = False) -> Path:
     module = _module(PACKAGE_VALIDATOR, "android_package_validator")
-    archive_path = tmp_path / "Tet4D-Designer-0.9.0-android-arm64.apk"
+    archive_path = tmp_path / "Tet4D-Designer-0.9.1-android-arm64.apk"
     members = {
         "AndroidManifest.xml": module.APPLICATION_ID.encode("utf-16-le"),
         "classes.dex": b"dex\n035\x00",

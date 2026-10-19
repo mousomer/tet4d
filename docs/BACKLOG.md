@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-09-25
+Updated: 2026-10-19
 Scope: active work, explicit deferrals, and near-term acceptance boundaries.
 
 Completed chronology is recoverable from Git, merged PRs, CI, and
@@ -346,6 +346,10 @@ transitional tablet consumers retain Designer naming only under their closed,
 named status exception.
 
 ### Platform priority and release control
+
+- [ ] Rebuild 0.9.1 with `current_all` from one exact commit; require all seven
+  package artifacts and checksum-manifest validation before draft completion.
+  Public release and physical-device acceptance remain separate gates.
 
 - Near term: Stage 56H, then continued product and design work (see Stage 56).
 - Future release priority, once release work is justified: Windows, Linux, then

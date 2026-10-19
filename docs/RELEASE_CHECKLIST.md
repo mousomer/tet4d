@@ -58,7 +58,7 @@
 10. No keystore, certificate, provisioning profile, or other signing secret is
     committed on any platform.
 11. Reconcile `pyproject.toml`, `project.godot`, all live macOS/Windows/Android/
-    iPadOS export version fields, and the Android version code before a 0.9.0
+    iPadOS export version fields, and the Android version code before a 0.9.1
     candidate. The Godot engine remains the pinned 4.7.2 release.
 12. Dispatch `release-packaging.yml` manually with one exact lowercase
     40-character `source_sha`. Its `release_scope` defaults to `current_all`,
