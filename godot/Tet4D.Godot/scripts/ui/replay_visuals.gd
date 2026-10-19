@@ -262,19 +262,10 @@ static func live_3d_active_cell_material(mode: String = DISPLAY_MODE_PLAIN, colo
 	return _apply_opacity(_make_lit_material(base, _role_emission(ROLE_LIVE_3D_ACTIVE, mode), false), opacity, "active_cells.opacity")
 
 
-static func live_4d_active_cell_material(mode: String = DISPLAY_MODE_PLAIN, color_id: int = 1, opacity: float = -1.0) -> StandardMaterial3D:
-	var base := _trace_color(color_id, false).darkened(0.12).lerp(Color.WHITE, 0.06)
-	return _apply_opacity(_make_lit_material(base, _role_emission(ROLE_LIVE_3D_ACTIVE, mode) * 0.72, false), opacity, "active_cells.opacity")
-
-
+# Live 3D and 4D active pieces share one exterior material (Stage 58C).
 static func live_3d_active_face_materials(mode: String = DISPLAY_MODE_PLAIN, color_id: int = 1, opacity: float = -1.0) -> Dictionary:
 	var base := _trace_color(color_id, false).lerp(Color.WHITE, 0.13)
-	return _live_3d_face_materials(base, mode, true, -1.0, opacity)
-
-
-static func live_4d_active_face_materials(mode: String = DISPLAY_MODE_PLAIN, color_id: int = 1, opacity: float = -1.0) -> Dictionary:
-	var base := _trace_color(color_id, false).darkened(0.12).lerp(Color.WHITE, 0.06)
-	return _live_3d_face_materials(base, mode, true, _role_emission(ROLE_LIVE_3D_ACTIVE, mode) * 0.72, opacity)
+	return _live_3d_face_materials(base, mode, true, opacity)
 
 
 static func locked_cell_material(mode: String = DISPLAY_MODE_PLAIN, opacity: float = -1.0) -> StandardMaterial3D:
@@ -294,7 +285,7 @@ static func live_3d_locked_cell_material(mode: String = DISPLAY_MODE_PLAIN, colo
 
 static func live_3d_locked_face_materials(mode: String = DISPLAY_MODE_PLAIN, color_id: int = 1, opacity: float = -1.0) -> Dictionary:
 	var base := _trace_color(color_id, false).darkened(0.42).lerp(color_for_role(ROLE_LIVE_3D_LOCKED, mode), 0.28)
-	return _live_3d_face_materials(base, mode, false, -1.0, opacity)
+	return _live_3d_face_materials(base, mode, false, opacity)
 
 
 static func live_active_cell_border_material(mode: String = DISPLAY_MODE_PLAIN) -> StandardMaterial3D:
@@ -608,31 +599,28 @@ static func _make_lit_material(color: Color, emission_strength: float, use_alpha
 	return material
 
 
-static func _live_3d_face_materials(base: Color, mode: String, active: bool, emission_override: float = -1.0, opacity: float = -1.0) -> Dictionary:
-	var emission_role := ROLE_LIVE_3D_ACTIVE if active else ROLE_LIVE_3D_LOCKED
-	var emission := emission_override if emission_override >= 0.0 else _role_emission(emission_role, mode)
-	var active_boost := 0.14 if emission_override >= 0.0 else 0.18
-	var top_factor := 1.1 if emission_override >= 0.0 else 1.18
-	var front_factor := 0.96 if emission_override >= 0.0 else 1.02
-	var right_factor := 0.86 if emission_override >= 0.0 else 0.92
-	var left_factor := 0.78 if emission_override >= 0.0 else 0.82
-	var back_factor := 0.72 if emission_override >= 0.0 else 0.76
-	var bottom_factor := 0.64 if emission_override >= 0.0 else 0.68
-	var top := _shade_color(base.lerp(color_for_role(ROLE_LIVE_3D_FACE_HIGHLIGHT, mode), active_boost if active else 0.04), top_factor if active else 0.9)
-	var front := _shade_color(base, front_factor if active else 0.8)
-	var right := _shade_color(base, right_factor if active else 0.72)
-	var left := _shade_color(base, left_factor if active else 0.66)
-	var back := _shade_color(base, back_factor if active else 0.6)
-	var bottom := _shade_color(base, bottom_factor if active else 0.54)
-	return {
-		"base": _apply_structural_opacity(_make_lit_material(base, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
-		"top": _apply_structural_opacity(_make_lit_material(top, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
-		"front": _apply_structural_opacity(_make_lit_material(front, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
-		"right": _apply_structural_opacity(_make_lit_material(right, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
-		"left": _apply_structural_opacity(_make_lit_material(left, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
-		"back": _apply_structural_opacity(_make_lit_material(back, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
-		"bottom": _apply_structural_opacity(_make_lit_material(bottom, emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity"),
+static func _live_3d_face_materials(base: Color, mode: String, active: bool, opacity: float = -1.0) -> Dictionary:
+	var emission := _role_emission(ROLE_LIVE_3D_ACTIVE if active else ROLE_LIVE_3D_LOCKED, mode)
+	var colors := {
+		"base": base,
+		"top": _shade_color(base.lerp(color_for_role(ROLE_LIVE_3D_FACE_HIGHLIGHT, mode), 0.18 if active else 0.04), 1.18 if active else 0.9),
+		"front": _shade_color(base, 1.02 if active else 0.8),
+		"right": _shade_color(base, 0.92 if active else 0.72),
+		"left": _shade_color(base, 0.82 if active else 0.66),
+		"back": _shade_color(base, 0.76 if active else 0.6),
+		"bottom": _shade_color(base, 0.68 if active else 0.54),
 	}
+	var materials := {}
+	for face in colors:
+		var material := _apply_structural_opacity(_make_lit_material(colors[face], emission, false), opacity, "active_cells.opacity" if active else "settled_cells.opacity")
+		if active:
+			# Stage 58C: active faces always take the depth-writing alpha path, so
+			# board scaffold composites beneath them as it already does beneath
+			# translucent settled cells, instead of crossing an opaque piece.
+			material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			material.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
+		materials[face] = material
+	return materials
 
 
 static func _apply_structural_opacity(material: StandardMaterial3D, opacity: float, setting_id: String) -> StandardMaterial3D:
