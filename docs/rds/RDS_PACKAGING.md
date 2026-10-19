@@ -167,6 +167,11 @@ The current canonical files are:
 
 ## 4. Windows design-laboratory boundary
 
+Windows workflow steps must write interpreter bindings through the selected
+shell's environment-file interface. The native pre-test build receives the
+exact setup-python interpreter explicitly through `PYTHON_BIN`, as the package
+build does; it must not require machine-local governance configuration.
+
 1. Windows release builds use `template_release`, `arch=x86_64`, the exact
    Godot 4.7.2 editor/templates, and a MinGW cross-toolchain on non-Windows
    builders.

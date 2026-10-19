@@ -314,3 +314,30 @@ def test_tablet_build_steps_use_unambiguous_shell_blocks() -> None:
             f'GODOT_TEMPLATE_ROOT="$GODOT_TEMPLATE_ROOT" \\\n          packaging/godot/{script}'
             not in workflow
         )
+
+
+def test_windows_release_jobs_bind_python_through_the_selected_shell() -> None:
+    workflow = RELEASE_WORKFLOW.read_text(encoding="utf-8")
+    for job in ("package-python-windows", "package-designer-windows"):
+        section = workflow.split(f"  {job}:\n", 1)[1]
+        section = re.split(r"\n  [a-z][a-z0-9-]*:\n", section, maxsplit=1)[0]
+        binding = section.split("- name: Bind the governed interpreter\n", 1)[1]
+        binding = binding.split("\n      - ", 1)[0]
+        assert "shell: pwsh" in binding
+        assert '>> "$GITHUB_ENV"' not in binding
+        for variable in ("GOVERNANCE_PYTHON", "TET4D_PYTHON"):
+            assert (
+                f'"{variable}=${{{{ steps.setup-python.outputs.python-path }}}}"'
+                " | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8"
+            ) in binding
+
+        if job == "package-designer-windows":
+            build = section.split(
+                "- name: Build and validate Godot Windows release\n", 1
+            )[1]
+            build = build.split("\n      - ", 1)[0]
+            environment = build.split("run: |", 1)[0]
+            assert (
+                "PYTHON_BIN: ${{ steps.setup-python.outputs.python-path }}"
+                in environment
+            )

@@ -71,6 +71,8 @@ GODOT_TEMPLATE_ROOT=/path/to/Godot-4.7.2-templates \
 packaging/godot/build_windows.sh
 ```
 
+The Windows workflow binds its interpreter using PowerShell environment-file
+syntax and passes the selected Python explicitly to the native build.
 The script cross-builds the release GDExtension, stages `godot_designer` in a
 disposable project copy, exports from that copy, and validates the exact
 project copy, and validates the exact portable payload, PE binaries, version,

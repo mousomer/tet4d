@@ -8,6 +8,8 @@
    integrated source, with synchronized Python/Godot versions and Android
    version code 901. The existing manifest validation and draft/publication
    gates continue to apply.
+2. Fix Windows release interpreter binding under PowerShell and pass the
+   selected Python explicitly to the native pre-test build.
 
 ## 2026-08-31
 

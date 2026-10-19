@@ -186,9 +186,10 @@ jobs:
           python-version: "3.14"
 
       - name: Bind the governed interpreter
+        shell: pwsh
         run: |
-          echo "GOVERNANCE_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
-          echo "TET4D_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
+          "GOVERNANCE_PYTHON=${{ steps.setup-python.outputs.python-path }}" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "TET4D_PYTHON=${{ steps.setup-python.outputs.python-path }}" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: Build existing Python Windows package
         shell: pwsh
@@ -361,9 +362,10 @@ jobs:
           python-version: "3.14"
 
       - name: Bind the governed interpreter
+        shell: pwsh
         run: |
-          echo "GOVERNANCE_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
-          echo "TET4D_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
+          "GOVERNANCE_PYTHON=${{ steps.setup-python.outputs.python-path }}" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "TET4D_PYTHON=${{ steps.setup-python.outputs.python-path }}" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: Install build dependencies
         run: |
@@ -416,6 +418,8 @@ jobs:
 
       - name: Build and validate Godot Windows release
         shell: bash
+        env:
+          PYTHON_BIN: ${{ steps.setup-python.outputs.python-path }}
         run: |
           SCONS_PLATFORM=windows SCONS_ARCH=x86_64 SCONS_TARGET=template_debug \
             ./scripts/build_godot_tet4d_core.sh
