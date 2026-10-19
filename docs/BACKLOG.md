@@ -347,19 +347,16 @@ named status exception.
 
 ### Platform priority and release control
 
-- [ ] Rebuild 0.9.1 with `current_all` from one exact commit; require all seven
-  package artifacts and checksum-manifest validation before draft completion.
-  Public release and physical-device acceptance remain separate gates.
-
 - Near term: Stage 56H, then continued product and design work (see Stage 56).
 - Future release priority, once release work is justified: Windows, Linux, then
   Android tablets, in strategic order with overlap allowed; this starts no
   packaging, porting, monetization, or storefront work.
 - Deferred: macOS public distribution, then iPadOS, until distribution nears.
 
-`v0.9.0` was published on 2026-09-04 from `3d06bb96` with all seven registered
-consumers, after the Windows Designer package identity repair. Release control
-may release any validated subset of those consumers without changing the
+`v0.9.1` is a checksum-validated draft built from `cdf9c3cf` with all seven
+registered consumers. The [full rebuild](https://github.com/mousomer/tet4d/actions/runs/39270845987)
+passed; public release and physical-device acceptance remain separate gates.
+Release control may release any validated subset of those consumers without changing the
 ten-cell product target matrix: the manual candidate workflow records the
 selected bytes in a v2 manifest before it creates a draft, and a separate
 manual workflow publishes only that inspected, byte-validated draft.

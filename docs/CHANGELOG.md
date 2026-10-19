@@ -4,10 +4,11 @@
 
 ### Packaging
 
-1. Prepare a full rebuild of all seven registered release consumers from the
-   integrated source, with synchronized Python/Godot versions and Android
-   version code 901. The existing manifest validation and draft/publication
-   gates continue to apply.
+1. Rebuilt all seven registered release consumers from `cdf9c3cf`, with
+   synchronized Python/Godot versions and Android version code 901. The
+   [full matrix](https://github.com/mousomer/tet4d/actions/runs/39270845987)
+   passed, and the checksum-bound `v0.9.1` draft is ready for the separate
+   publication gate.
 2. Fix Windows release interpreter binding under PowerShell and pass the
    selected Python explicitly to the native pre-test build.
 
