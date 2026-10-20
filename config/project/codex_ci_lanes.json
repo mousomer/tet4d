@@ -238,6 +238,15 @@
         ]
       },
       {
+        "id": "live_translation_input_configuration",
+        "patterns": [
+          "config/keybindings/**"
+        ],
+        "requirements": [
+          "godot"
+        ]
+      },
+      {
         "id": "runtime_configuration",
         "patterns": [
           "config/**"

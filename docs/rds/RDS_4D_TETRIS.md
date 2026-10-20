@@ -268,6 +268,13 @@ Implementation structure for view `xw` / `zw`:
     ties-to-even, anchors remain layout-only, and outer `V/P` cannot enter
     command resolution.
 
+    Mandatory Live integration acceptance uses fixed specification data for
+    canonical commands and active-cell displacements after production input
+    events. It covers all cardinal L yaws with identity and signed XZ/XW/ZW
+    exact B turns, slice movement, framing, lifecycle and held repetition.
+    Broken outer-yaw, B/L and Absolute-dispatch mutations must be detected;
+    mapping-unit or HUD-legend agreement alone is insufficient.
+
     The following are durable presentation invariants:
 
     - a slice-local 3D Y rotation changes internal X/Z orientation consistently

@@ -34,6 +34,7 @@ const TEST_SCRIPTS := [
 	"res://tests/test_slice_basis_4d.gd",
 	"res://tests/test_slice_local_orientation.gd",
 	"res://tests/test_control_frame_mapping.gd",
+	"res://tests/test_live_relative_translation.gd",
 	"res://tests/test_next_piece_preview.gd",
 	"res://tests/test_ghost_piece.gd",
 	"res://tests/test_configurable_live_sessions.gd",
