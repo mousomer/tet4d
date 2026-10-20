@@ -7,8 +7,12 @@ Native movement, gravity, trace and replay implementations are unchanged.
 
 ## Diagnosis and scope
 
-The initial production-scene probe passed 290 independent command/displacement
-cases with explicit Relative setup. The inspected machine setup also selected
+The initial shared-scene probe passed 290 independent command/displacement
+cases with explicit Relative setup. Final review identified that the shared scene
+defaults to Designer. The corrected regression launches the shipped
+`game_bootstrap.tscn`, asserts `product_id == godot_game`, and uses game-menu
+exit/re-entry. That game fixture passed all 322 cases and all four mutation
+proofs were repeated against it. The inspected machine setup also selected
 Relative for both modes. A current production mapping defect was not reproduced;
 no mapping change is justified by these observations. Explicit Absolute setup
 reproduces canonical movement intentionally and is tested separately. This does
@@ -37,7 +41,7 @@ expected results. Each action requires native `last_command`, `accepted` status,
 a stable active-cell count and the exact delta of every cell on every axis.
 Opposite pairs must return every cell. No blocked move counts as success.
 
-The actual production scene uses fixed seed 1337, Embedded 2D pieces and empty
+The shipped game bootstrap uses fixed seed 1337, Embedded 2D pieces and empty
 6x10x6 / 6x10x6x6 bounded boards. The app's automatic process is disabled before
 frames advance gameplay. Camera interpolation and held polling receive explicit
 deltas. Mouse orbit/pan/zoom/Fit, exact basis actions, keyboard local yaw,
@@ -55,10 +59,11 @@ Use `GODOT_BIN` pointing at pinned `4.7.2.stable.official.ed1daf0bf`.
 - `./scripts/verify_focus.sh tests/unit/governance/test_classify_codex_ci_paths.py --pytest tests/unit/governance/test_classify_codex_ci_paths.py`:
   47 tests passed, including completion-marker and artifact assertions.
 - Godot semantic-boundary validation: passed, 182 scripts scanned.
-- `GODOT_BIN=/path/to/Godot ./scripts/verify_godot_4_7.sh`: exited 0, all
+- Initial `GODOT_BIN=/path/to/Godot ./scripts/verify_godot_4_7.sh`: exited 0, all
   85 registered scripts passed, the new regression ran at slot 34/85 with its
   explicit success marker, 59 topology transport parity cases passed, and
   the final headless boot passed without script errors or teardown leaks.
+  The final game-bootstrap fixture is now repeating this complete gate.
 - Mutation proof: all four runs failed on independent assertions as listed below;
   the restored 322-case focused run passed.
 - Working-checkout `CODEX_MODE=1 ./scripts/verify.sh` stopped at the secret
@@ -69,7 +74,8 @@ Use `GODOT_BIN` pointing at pinned `4.7.2.stable.official.ed1daf0bf`.
   scanner changes. `TET4D_PYTHON=<governed interpreter> CODEX_MODE=1 ./scripts/verify.sh`
   in that isolated source checkout exited 0 with `verify: OK`. Existing sanitation
   advisories remained warnings. The source-file byte comparison matched every
-  changed/new file before execution; only this results record was finalized later.
+  changed/new file before execution; the two-line game-fixture correction followed
+  this initial pass. Final source verification will be repeated after that correction.
 
 Mutation commands target disposable copies only; the checked-out production
 source is never mutated and needs no restoration:

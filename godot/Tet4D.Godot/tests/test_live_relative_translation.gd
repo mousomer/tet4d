@@ -31,9 +31,10 @@ func run() -> Array:
 	var tree := Engine.get_main_loop() as SceneTree
 	var original_size := tree.root.size
 	tree.root.size = Vector2i(1600, 960)
-	var root := (load("res://scenes/trace_replay.tscn") as PackedScene).instantiate()
+	var root := (load("res://scenes/game_bootstrap.tscn") as PackedScene).instantiate()
 	tree.root.add_child(root)
 	var app = root.get_node("App")
+	_check(app.product_id == "godot_game", "shipped game bootstrap owns this Live regression")
 	# Disable real-time gravity/repetition before any frame can advance gameplay.
 	# Input still reaches the real app, native bridge, renderer and HUD.
 	app.set_process(false)
@@ -233,7 +234,7 @@ func _lifecycle(app, hud, dimension: int) -> void:
 	_check_frame(app, hud, "relative", "after Reset View")
 	_check(_cells(app) == held_cells, "%dD Reset View preserves native cells" % dimension)
 	_check_row(app, dimension, THREE_D[0] if dimension == 3 else FOUR_D[0].rows[0], "%dD Reset View" % dimension)
-	app._enter_replay_mode()
+	app._return_to_main_menu()
 	app._start_configured_live_game(_setup("live_%dd" % dimension, dimension))
 	_check_frame(app, hud, "relative", "after mode re-entry")
 	_check_row(app, dimension, THREE_D[0] if dimension == 3 else FOUR_D[0].rows[0], "%dD mode re-entry" % dimension)
