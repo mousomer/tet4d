@@ -1,6 +1,6 @@
 # Live 3D/4D relative translation regression evidence
 
-Date: 2026-10-20. Routes: `godot_product_shell`, `governance_and_tooling`.
+Session: 2026-10-20 to 2026-10-21. Routes: `godot_product_shell`, `governance_and_tooling`.
 Execution mode: FEATURE. Layers: Godot input/presentation consumer, existing
 native-session provider, test/CI infrastructure and product documentation.
 Native movement, gravity, trace and replay implementations are unchanged.
@@ -29,7 +29,10 @@ legend; mapping units do not prove actual dispatch or successful displacement.
 A confirmed CI coverage defect allowed `config/keybindings/**` changes to select
 only Python evidence. That configuration now also requires the Godot lane.
 Tests assert lane selection for input, app, camera, basis, L, mapping, setup,
-regression and keybinding configuration dependencies. The required gate checks
+regression, keybinding configuration, GDExtension bindings and ND command/session
+providers. The adapter initially selected only `baseline, native`: the new
+routing assertion failed with `assert godot in (baseline, native)`. The correction
+selects `baseline, godot, native, integration` without changing native source. The required gate checks
 that every selected lane passed. The canonical Godot runner requires the new
 regression's explicit success marker, and CI uploads `godot-verification-log`.
 
@@ -57,7 +60,7 @@ Use `GODOT_BIN` pointing at pinned `4.7.2.stable.official.ed1daf0bf`.
 - `GODOT_BIN=/path/to/Godot ./scripts/test_live_relative_translation.sh`:
   initial 290-case baseline passed; expanded 322-case baseline passed with zero failures.
 - `./scripts/verify_focus.sh tests/unit/governance/test_classify_codex_ci_paths.py --pytest tests/unit/governance/test_classify_codex_ci_paths.py`:
-  47 tests passed, including completion-marker and artifact assertions.
+  55 tests passed, including provider routes, completion-marker and artifact assertions.
 - Godot semantic-boundary validation: passed, 182 scripts scanned.
 - Final `GODOT_BIN=/path/to/Godot ./scripts/verify_godot_4_7.sh`: exited 0, all
   85 registered scripts passed, the new regression ran at slot 34/85 with its
@@ -78,7 +81,8 @@ Use `GODOT_BIN` pointing at pinned `4.7.2.stable.official.ed1daf0bf`.
   the full repository gate passed again with the pinned Godot C++ submodule
   initialized at `5ffd70e34d0ab87009a9f0ffa3361bc8f4b09731`. The same scanner
   policy and 120-second bound passed with those dependency sources present.
-  Only documentation of these observed results was finalized afterward.
+  Runtime gameplay and regression code remain unchanged by the subsequent
+  reporting and CI-routing updates.
 
 Mutation commands target disposable copies only; the checked-out production
 source is never mutated and needs no restoration:

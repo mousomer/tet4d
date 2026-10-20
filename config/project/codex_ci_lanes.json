@@ -278,6 +278,17 @@
         ]
       },
       {
+        "id": "live_translation_native_boundary",
+        "patterns": [
+          "native/tet4d_core/src/godot/**",
+          "native/tet4d_core/src/core/plain_nd*",
+          "native/tet4d_core/include/tet4d_core/plain_nd*"
+        ],
+        "requirements": [
+          "godot"
+        ]
+      },
+      {
         "id": "native",
         "patterns": [
           "native/**"

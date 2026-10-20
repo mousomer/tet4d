@@ -149,7 +149,8 @@ explicit stepping replaces elapsed-time gravity and repeat polling. A blocked
 move fails acceptance. Live 3D separately consumes the presented outer-camera
 yaw, including during interpolation. Absolute preference cases remain canonical.
 The mandatory canonical Godot gate requires this regression's completion marker;
-the required GitHub lane retains its execution log. The focused runner supports
+the required GitHub lane retains its execution log. Native GDExtension bindings
+and ND command/session providers also select this lane. The focused runner supports
 isolated A (3D yaw), B-basis, B-local and C (Absolute dispatch) mutations without
 editing the checkout. Native movement, gravity and replay owners are unchanged.
 

@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-10-20
+Updated: 2026-10-21
 Scope: active work, explicit deferrals, and near-term acceptance boundaries.
 
 Completed chronology is recoverable from Git, merged PRs, CI, and
