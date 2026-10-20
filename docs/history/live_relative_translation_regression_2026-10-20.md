@@ -59,11 +59,11 @@ Use `GODOT_BIN` pointing at pinned `4.7.2.stable.official.ed1daf0bf`.
 - `./scripts/verify_focus.sh tests/unit/governance/test_classify_codex_ci_paths.py --pytest tests/unit/governance/test_classify_codex_ci_paths.py`:
   47 tests passed, including completion-marker and artifact assertions.
 - Godot semantic-boundary validation: passed, 182 scripts scanned.
-- Initial `GODOT_BIN=/path/to/Godot ./scripts/verify_godot_4_7.sh`: exited 0, all
+- Final `GODOT_BIN=/path/to/Godot ./scripts/verify_godot_4_7.sh`: exited 0, all
   85 registered scripts passed, the new regression ran at slot 34/85 with its
   explicit success marker, 59 topology transport parity cases passed, and
   the final headless boot passed without script errors or teardown leaks.
-  The final game-bootstrap fixture is now repeating this complete gate.
+  This complete gate passed again with the final shipped-game fixture.
 - Mutation proof: all four runs failed on independent assertions as listed below;
   the restored 322-case focused run passed.
 - Working-checkout `CODEX_MODE=1 ./scripts/verify.sh` stopped at the secret
@@ -74,8 +74,11 @@ Use `GODOT_BIN` pointing at pinned `4.7.2.stable.official.ed1daf0bf`.
   scanner changes. `TET4D_PYTHON=<governed interpreter> CODEX_MODE=1 ./scripts/verify.sh`
   in that isolated source checkout exited 0 with `verify: OK`. Existing sanitation
   advisories remained warnings. The source-file byte comparison matched every
-  changed/new file before execution; the two-line game-fixture correction followed
-  this initial pass. Final source verification will be repeated after that correction.
+  changed/new file before execution. After the shipped-game fixture correction,
+  the full repository gate passed again with the pinned Godot C++ submodule
+  initialized at `5ffd70e34d0ab87009a9f0ffa3361bc8f4b09731`. The same scanner
+  policy and 120-second bound passed with those dependency sources present.
+  Only documentation of these observed results was finalized afterward.
 
 Mutation commands target disposable copies only; the checked-out production
 source is never mutated and needs no restoration:
@@ -99,9 +102,13 @@ source remains unchanged.
 
 ## Acceptance boundary
 
-Hosted GitHub execution has not occurred for this unpushed patch. Local runner
-and workflow/routing inspection do not substitute for that requirement. Before
-merge, attach the required `godot-4-7` job URL and its artifact/log containing
-`test_live_relative_translation.gd` and
-`LIVE_RELATIVE_TRANSLATION_PASS: 3D + 4D`, then retire the backlog acceptance item.
-No visual quality, manual gameplay, publication or merge claim is made here.
+Hosted execution is recorded by [PR #155 checks](https://github.com/mousomer/tet4d/pull/155/checks)
+and the `godot-verification-log` artifact of its required Godot job. The PR's
+Verification section records the observed successful job URL and source head.
+Acceptance requires the actual log to contain `test_live_relative_translation.gd`
+and `LIVE_RELATIVE_TRANSLATION_PASS: 3D + 4D`, a successful canonical Godot job,
+and the required CI gate. Registration, selection, queued or cancelled runs,
+and unit/legend agreement do not establish hosted execution.
+
+The PR remains unmerged; review/merge is tracked in `docs/BACKLOG.md`. No visual
+quality, manual gameplay, other-device acceptance or merge claim is made here.

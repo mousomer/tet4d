@@ -20,7 +20,7 @@ phase-dependent work. It is not workflow authority, a CI diary, a completed
 stage archive, a task-contract ledger, or a future programme.
 ## Active Focus
 
-Live translation acceptance remains open in `docs/BACKLOG.md`; production is unchanged.
+Live translation PR review/merge is tracked in `docs/BACKLOG.md`; production is unchanged.
 
 Machine-readable handoff state. `status` is `active` only on a feature branch
 or draft PR and must name that branch; it is `none` on the default branch and
