@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-10-21
+Updated: 2026-10-19
 Scope: active work, explicit deferrals, and near-term acceptance boundaries.
 
 Completed chronology is recoverable from Git, merged PRs, CI, and
@@ -22,19 +22,6 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   facts)
 
 ## Active Work
-
-### P0 Live camera-relative translation review and merge
-
-- Mandatory production-scene regression covers independent native commands and
-  displacements in Relative 3D/4D, signed B and cardinal yaw, framing, lifecycle,
-  repetition and canonical Absolute controls. Canonical runner and dependency
-  lane routing must stay enforced; unit/legend agreement is insufficient.
-- Review and merge [PR #155](https://github.com/mousomer/tet4d/pull/155) after
-  the required CI gate passes; inspect the required Godot job and its retained
-  execution log. Local shipped-game mutation and canonical-gate evidence is in
-  `docs/history/live_relative_translation_regression_2026-10-20.md`.
-- No production mapping repair is justified unless the real Relative input
-  path fails independently; saved Absolute preference must be distinguished.
 
 ### Stage 56H spatial scaffold acceptance
 

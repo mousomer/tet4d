@@ -10,11 +10,11 @@ Native movement, gravity, trace and replay implementations are unchanged.
 The initial shared-scene probe passed 290 independent command/displacement
 cases with explicit Relative setup. Final review identified that the shared scene
 defaults to Designer. The corrected regression launches the shipped
-`game_bootstrap.tscn`, asserts `product_id == godot_game`, and uses game-menu
-exit/re-entry. That game fixture passed all 322 cases and all four mutation
-proofs were repeated against it. The inspected machine setup also selected
-Relative for both modes. A current production mapping defect was not reproduced;
-no mapping change is justified by these observations. Explicit Absolute setup
+`game_bootstrap.tscn`, asserts `product_id == godot_game`, and re-enters
+through the app's main-menu return and configured-launch handlers. That game
+fixture passed all 322 cases and all four mutation proofs were repeated against
+it. The inspected machine setup also selected Relative for both modes. A
+current production mapping defect was not reproduced; no mapping change is justified by these observations. Explicit Absolute setup
 reproduces canonical movement intentionally and is tested separately. This does
 not establish the cause of an earlier unrecorded gameplay observation.
 
@@ -48,10 +48,14 @@ The shipped game bootstrap uses fixed seed 1337, Embedded 2D pieces and empty
 6x10x6 / 6x10x6x6 bounded boards. The app's automatic process is disabled before
 frames advance gameplay. Camera interpolation and held polling receive explicit
 deltas. Mouse orbit/pan/zoom/Fit, exact basis actions, keyboard local yaw,
-restart, Reset View, re-entry and movement use the production input/view paths.
-The restart button uses its connected production handler. Held Input is released;
-the scene and viewport dimensions are restored. Isolated HOME/XDG directories
-prevent machine settings or test persistence from supplying accidental success.
+restart, Reset View and movement use the production input/view paths.
+The restart button uses its connected production handler. Re-entry calls
+`_return_to_main_menu` and `_start_configured_live_game` directly; it does not
+drive the menu UI and checks mapping without advancing frames after relaunch.
+On completion, held Input is released and the scene and viewport dimensions are
+restored; a script error that aborts the test skips that cleanup. Isolated
+HOME/XDG directories prevent machine settings or test persistence from
+supplying accidental success.
 
 ## Commands and observed results
 
@@ -114,5 +118,5 @@ and `LIVE_RELATIVE_TRANSLATION_PASS: 3D + 4D`, a successful canonical Godot job,
 and the required CI gate. Registration, selection, queued or cancelled runs,
 and unit/legend agreement do not establish hosted execution.
 
-The PR remains unmerged; review/merge is tracked in `docs/BACKLOG.md`. No visual
-quality, manual gameplay, other-device acceptance or merge claim is made here.
+Merge status belongs to the PR. No visual quality, manual gameplay,
+other-device acceptance or merge claim is made here.
