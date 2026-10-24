@@ -115,7 +115,60 @@ func _check_production_extraction() -> Array:
 		failures.append("LiveCockpit extraction must keep primary board and control deck non-overlapping")
 	if str(app._live_bridge.live_4d_state_hash()) != hash_before:
 		failures.append("LiveCockpit extraction must not mutate deterministic gameplay state")
+	failures.append_array(_check_4d_panel_structure(hud))
+	app._enter_live_3d_mode()
+	await tree.process_frame
+	await tree.process_frame
+	failures.append_array(_check_3d_panel_structure(hud))
 	root.queue_free()
 	await tree.process_frame
 	tree.root.size = original_size
+	return failures
+
+
+# The 4D helper set is the reference the 3D rail mirrors; pin it so the shared
+# rail work cannot reshape it.
+func _check_4d_panel_structure(hud) -> Array:
+	var failures: Array = []
+	var cockpit: Dictionary = hud.layout_contract_snapshot().get("live_cockpit", {})
+	if cockpit.get("deck_placement") != LiveCockpitScript.PLACEMENT_SPLIT or bool(cockpit.get("wide_rail", true)):
+		failures.append("Live 4D must keep its split side column, got %s" % cockpit.get("deck_placement"))
+	if hud._piece_preview_row.columns != 1:
+		failures.append("Live 4D must keep NEXT and HOLD stacked in its side column")
+	if hud._piece_control_strip.deterministic_snapshot().get("layout") != "wide":
+		failures.append("Live 4D must keep the wide MOVE / ROTATE / GAME legend")
+	var view: Dictionary = hud._live_view_control_strip.deterministic_snapshot()
+	if view.get("layout") != "wide" or view.get("roles") != ["view_exact", "view_orient"]:
+		failures.append("Live 4D VIEW must keep only TURN VIEW and LOOK, got %s" % str(view.get("roles")))
+	return failures
+
+
+# Live 3D shows the 4D helper set on the right: NEXT and HOLD as separate
+# panels, the wide legend, then VIEW, all visible without a toggle.
+func _check_3d_panel_structure(hud) -> Array:
+	var failures: Array = []
+	var layout: Dictionary = hud.layout_contract_snapshot()
+	var cockpit: Dictionary = layout.get("live_cockpit", {})
+	if cockpit.get("deck_placement") != LiveCockpitScript.PLACEMENT_SIDE or not bool(cockpit.get("wide_rail", false)) or not bool(cockpit.get("deck_visible", false)):
+		failures.append("Live 3D must show its helpers in the wide side rail, got %s" % cockpit.get("deck_placement"))
+	if cockpit.get("deck_row_assignment") != [["PieceState"], ["PieceControls"], ["ViewControls"]]:
+		failures.append("Live 3D rail must stack NEXT/HOLD, the legend, then VIEW, got %s" % str(cockpit.get("deck_row_assignment")))
+	var board: Rect2 = layout.get("game_area", Rect2())
+	var rail: Rect2 = layout.get("live_4d_deck", Rect2())
+	if rail.position.x < board.end.x:
+		failures.append("Live 3D rail must sit right of the board: board %s rail %s" % [board, rail])
+	if rail.size.x < LiveCockpitScript.WIDE_RAIL_MIN_WIDTH - 0.5:
+		failures.append("Live 3D rail must keep its wide-legend width, got %s" % rail.size.x)
+	for module in [hud._live_cockpit.piece_state, hud._live_cockpit.piece_controls, hud._live_cockpit.view_controls]:
+		if not (module as Control).is_visible_in_tree():
+			failures.append("Live 3D rail module %s must be visible by default" % module.name)
+	var next_rect: Rect2 = hud._next_piece_panel.get_global_rect()
+	var hold_rect: Rect2 = hud._hold_piece_panel.get_global_rect()
+	if hud._piece_preview_row.get_parent() != hud._live_cockpit.piece_state or next_rect.intersects(hold_rect) or next_rect.size.x <= 0.0 or hold_rect.size.x <= 0.0:
+		failures.append("Live 3D must show NEXT and HOLD as separate PIECE STATE panels")
+	if hud._piece_control_strip.deterministic_snapshot().get("layout") != "wide":
+		failures.append("Live 3D must use the 4D wide MOVE / ROTATE / GAME legend")
+	var view: Dictionary = hud._live_view_control_strip.deterministic_snapshot()
+	if view.get("layout") != "wide" or view.get("row_ids") != ["view_framing:Fit", "view_framing:Reset", "view_pointer:Orient", "view_pointer:Translate", "view_pointer:Zoom"]:
+		failures.append("Live 3D VIEW must list framing and pointer controls, got %s" % str(view.get("row_ids")))
 	return failures

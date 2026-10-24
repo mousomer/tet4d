@@ -158,20 +158,30 @@ func _assert_case(hud, app, case: Dictionary, mode: String) -> void:
 		_fail("%s must use placement %s, got %s" % [label, expected_placement, placement])
 	var side_rail := placement == CockpitScript.PLACEMENT_SIDE
 	var split := placement == CockpitScript.PLACEMENT_SPLIT
+	# The 2D rail omits VIEW; the 3D rail carries the 4D panel set, VIEW last.
+	var view_omitted := side_rail and mode.begins_with("2D")
 	var side_column: Rect2 = cockpit.get("side_column_rect", Rect2())
 	var flattened: Array = []
 	for row in cockpit.get("deck_row_assignment", []):
 		for module_name in row:
 			flattened.append(str(module_name))
 	var expected_order := ["PieceControls", "ViewControls", "PieceState"]
-	if side_rail:
+	if view_omitted:
 		expected_order = ["PieceState", "PieceControls"]
+	elif side_rail:
+		expected_order = ["PieceState", "PieceControls", "ViewControls"]
 	elif split:
 		expected_order = ["PieceControls"]
 	if flattened != expected_order:
 		_fail("%s must preserve module order %s, got %s" % [label, str(expected_order), str(flattened)])
+	# Live 3D helpers are always visible: on a standard window every rail panel
+	# is on screen without scrolling, not merely reachable.
+	if side_rail and not view_omitted and bool(case.get("next_hold_without_scroll", false)):
+		for index in range(modules.size()):
+			if not _contains(deck, modules[index]) or not _contains(usable, modules[index]):
+				_fail("%s must show rail module %d without scrolling: %s in %s" % [label, index, modules[index], deck])
 	for index in range(modules.size()):
-		if (side_rail and index == 1) or (split and index > 0):
+		if (view_omitted and index == 1) or (split and index > 0):
 			continue
 		if not _contains(rows_rect, modules[index]):
 			_fail("%s module %d must stay inside the deck row host: %s in %s" % [label, index, modules[index], rows_rect])

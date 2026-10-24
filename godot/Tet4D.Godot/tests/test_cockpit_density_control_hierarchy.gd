@@ -271,6 +271,9 @@ func _check_primary_surfaces(hud, mode: String, label: String) -> Array:
 				failures.append("%s %s rail must visibly contain NEXT/HOLD and the key legend" % [label, mode])
 			if not _precedes(state_module, piece_module):
 				failures.append("%s %s rail must stack NEXT/HOLD above the key legend" % [label, mode])
+			# The 3D rail carries the 4D panel set: VIEW sits below the legend.
+			if mode == "live_3d" and (not hud._live_view_control_strip.is_visible_in_tree() or (strict_containment and not _contains_rect(rows_rect, view_module)) or not _precedes(piece_module, view_module)):
+				failures.append("%s %s rail must show VIEW below the key legend" % [label, mode])
 		else:
 			if not layout.get("live_4d_deck_visible", false) or (strict_containment and (not _contains_rect(rows_rect, piece_module) or not _contains_rect(rows_rect, view_module) or not _contains_rect(rows_rect, state_module))):
 				failures.append("%s %s shared deck must visibly contain all three semantic modules" % [label, mode])

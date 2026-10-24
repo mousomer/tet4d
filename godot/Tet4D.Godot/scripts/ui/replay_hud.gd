@@ -782,7 +782,7 @@ func _configure_live_cockpit_mode(mode: String) -> void:
 			_hud_density,
 			mode,
 			LiveInputContractScript,
-			LiveViewControlStripScript.LAYOUT_WIDE if mode == GameSetupSpecScript.MODE_4D else LiveViewControlStripScript.LAYOUT_GRID
+			LiveViewControlStripScript.LAYOUT_WIDE if mode in [GameSetupSpecScript.MODE_3D, GameSetupSpecScript.MODE_4D] else LiveViewControlStripScript.LAYOUT_GRID
 		)
 		_style_applier.apply_to_tree(_live_view_control_strip, _style_manager)
 	_update_camera_guidance(mode)
@@ -808,7 +808,7 @@ func _refresh_piece_control_strip() -> void:
 		_style_applier.apply_to_tree(_piece_control_strip, _style_manager)
 
 
-func _apply_shell_minimums(live: bool, side_rail := false) -> void:
+func _apply_shell_minimums(live: bool, rail_width := 0.0) -> void:
 	var minimum := ReplayVisuals.supported_live_shell_minimum_size() if live else ReplayVisuals.supported_shell_minimum_size()
 	custom_minimum_size = minimum
 	if _viewer_screen != null:
@@ -820,7 +820,7 @@ func _apply_shell_minimums(live: bool, side_rail := false) -> void:
 	if _body_container != null:
 		# The 2D rail sits beside the body inside the same shell width, so the
 		# body gives up the rail's share or the rail is pushed off-screen.
-		var rail_share := (LiveCockpitScript.SIDE_RAIL_MIN_WIDTH + LiveCockpitScript.SIDE_RAIL_GAP) if side_rail else 0.0
+		var rail_share := (rail_width + LiveCockpitScript.SIDE_RAIL_GAP) if rail_width > 0.0 else 0.0
 		_body_container.custom_minimum_size = Vector2(
 			minimum.x - (ReplayVisuals.OUTER_MARGIN * 2) - rail_share,
 			ReplayVisuals.LIVE_BODY_MIN_HEIGHT if live else ReplayVisuals.BODY_MIN_HEIGHT
@@ -829,36 +829,42 @@ func _apply_shell_minimums(live: bool, side_rail := false) -> void:
 
 # Tall boards (2D, and 3D's upright well) take the side rail. Live 4D keeps the
 # deck below: its slice row is about 2.8:1, so a rail would shrink the boards,
-# while a full-width deck holds the legend sections side by side. The rail
-# drops VIEW: Fit View stays a header button, and mouse orbit is unlabelled
-# muscle memory, so its rows would only push the key legend down.
+# while a full-width deck holds the legend sections side by side. The 2D rail
+# drops VIEW: Fit View stays a header button, so its rows would only push the
+# key legend down. The 3D rail carries the 4D panel set instead - NEXT/HOLD,
+# the wide legend and VIEW - in a wider rail that shows them all unscrolled.
 func _uses_side_rail() -> bool:
 	return _active_live_mode in [GameSetupSpecScript.MODE_2D, GameSetupSpecScript.MODE_3D]
 
 
+func _uses_wide_rail() -> bool:
+	return _active_live_mode == GameSetupSpecScript.MODE_3D
+
+
 func _piece_legend_layout() -> String:
-	if _uses_side_rail():
+	if _active_live_mode == GameSetupSpecScript.MODE_2D:
 		return LivePieceControlStripScript.LAYOUT_RAIL
-	if _active_live_mode == GameSetupSpecScript.MODE_4D:
+	if _active_live_mode in [GameSetupSpecScript.MODE_3D, GameSetupSpecScript.MODE_4D]:
 		return LivePieceControlStripScript.LAYOUT_WIDE
 	return LivePieceControlStripScript.LAYOUT_DECK
 
 
 func _set_live_4d_deck_active(active: bool) -> void:
 	var side_rail := active and _uses_side_rail()
+	var wide_rail := side_rail and _uses_wide_rail()
 	var split := active and _active_live_mode == GameSetupSpecScript.MODE_4D
 	if _piece_preview_row != null:
 		_piece_preview_row.columns = 1 if split else 2
-	_apply_shell_minimums(active, side_rail or split)
+	_apply_shell_minimums(active, LiveCockpitScript.rail_minimum_width(wide_rail) if side_rail or split else 0.0)
 	if _live_4d_deck == null:
 		return
-	_live_4d_view_module.visible = not side_rail or not _live_cockpit.designer_panels().is_empty()
+	_live_4d_view_module.visible = not side_rail or wide_rail or not _live_cockpit.designer_panels().is_empty()
 	var placement := LiveCockpitScript.PLACEMENT_BELOW
 	if side_rail:
 		placement = LiveCockpitScript.PLACEMENT_SIDE
 	elif split:
 		placement = LiveCockpitScript.PLACEMENT_SPLIT
-	_live_cockpit.set_deck_placement(placement)
+	_live_cockpit.set_deck_placement(placement, wide_rail)
 	if active:
 		_piece_control_strip.reparent(_live_4d_piece_module, false)
 		_live_view_control_strip.reparent(_live_4d_view_module, false)

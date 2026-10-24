@@ -3,6 +3,11 @@ extends RefCounted
 const Surface = preload("res://scripts/ui/gameplay_viewport_surface.gd")
 const Catalog = preload("res://scripts/presentation/built_in_style_catalog.gd")
 const Profile = preload("res://scripts/presentation/presentation_profile.gd")
+const LegendDirectionProbeScript = preload("res://tests/support/legend_direction_probe.gd")
+
+# The upright 3D well fits by height, so viewport width beyond it is empty and
+# its rail spends that width on the 4D helper set. Guard the rendered board.
+const MIN_3D_BOARD_HEIGHT_SHARE := 0.55
 
 
 func run() -> Array:
@@ -35,10 +40,14 @@ func run() -> Array:
 		app._fit_view()
 		await _frames(tree, 4)
 		var geometry: Vector2 = hud.board_viewport_size()
+		if mode == "live_3d":
+			# Projection is in rendered pixels; convert to logical before sharing.
+			var board_height := LegendDirectionProbeScript.projected_content_height(app) * geometry.y / maxf(float(hud.game_viewport().size.y), 1.0)
+			if board_height / 720.0 < MIN_3D_BOARD_HEIGHT_SHARE:
+				failures.append("live_3d must retain the reclaimed board height, got %.0f of 720 (viewport %s)" % [board_height, geometry])
 		# Live 4D shows its whole legend at this opening window, which outranks
 		# the earlier 45% target; its floor now guards only pathological shrink.
-		var required_area := 0.55 if mode == "live_3d" else 0.35
-		if geometry.x * geometry.y / (1280 * 720) < required_area:
+		elif geometry.x * geometry.y / (1280 * 720) < 0.35:
 			failures.append("%s must retain the reclaimed gameplay allocation, got %s" % [mode, geometry])
 		var anchors: Dictionary = app._renderer._presentation.projection.mapper.layer_layout.snapshot()
 		var camera: Dictionary = app._camera_rig.presentation_snapshot()
