@@ -141,6 +141,19 @@ Live-4D orientation interactions that change the visible X/Z frame: mouse
 left-drag orbit, keyboard yaw, and keyboard pitch. Only `Q(q)` combines with
 `B` for discrete controls.
 
+`tests/test_live_relative_translation.gd` protects this boundary in the actual
+Live scene: fixed specification tables supply expected native commands and
+active-cell deltas for signed exact B turns and all four cardinal L yaws.
+Movement and view actions enter through `_unhandled_input`; deterministic
+explicit stepping replaces elapsed-time gravity and repeat polling. A blocked
+move fails acceptance. Live 3D separately consumes the presented outer-camera
+yaw, including during interpolation. Absolute preference cases remain canonical.
+The mandatory canonical Godot gate requires this regression's completion marker;
+the required GitHub lane retains its execution log. Native GDExtension bindings
+and ND command/session providers also select this lane. The focused runner supports
+isolated A (3D yaw), B-basis, B-local and C (Absolute dispatch) mutations without
+editing the checkout. Native movement, gravity and replay owners are unchanged.
+
 `local_pitch` is allowed but visual-only for command resolution. It is a tilt
 around the already selected local horizontal axis; it does not reassign local
 right or local positive depth, and the grammar contains no viewer-relative
