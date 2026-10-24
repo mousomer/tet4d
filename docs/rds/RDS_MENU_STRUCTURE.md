@@ -349,10 +349,15 @@ disabled control emits no activation.
    text wraps, and live-mode/density rebuilds reapply keycap styling.
    The live control deck caps its height at 28% of the shell (subject to its
    row floor), scrolling extra rows to preserve space for the primary board in compact windows.
-   Live 2D and 3D instead place the deck in a side rail beside their tall
-   boards (32% of the shell width, 280-460 px): NEXT/HOLD above a key-first
-   legend grouped MOVE / ROTATE / GAME that includes Hold, Pause and Restart
-   keys, with no VIEW module. Live 4D keeps the legend in the deck and moves
+   Live 2D and 3D instead place the deck in a side rail right of their tall
+   boards. The 2D rail (24% of the shell width, 260-320 px) holds NEXT/HOLD
+   above a key-first legend grouped MOVE / ROTATE / GAME that includes Hold,
+   Pause and Restart keys, with no VIEW module. The 3D rail carries the 4D
+   helper set, visible by default with no toggle: separate NEXT and HOLD
+   panels, the 4D wide MOVE / ROTATE / GAME legend, and a VIEW module of
+   framing keys and pointer gestures (40% of the width, 400-480 px). Every 3D
+   panel shows unscrolled on standard and wide windows; narrower shells keep
+   the 400 px rail and scroll it. Live 4D keeps the legend in the deck and moves
    NEXT/HOLD and a VIEW module of view turns and look into a scrolling side
    column (22% of the width, 300-340 px); narrow and small shells fall back to
    the reflowing deck. The camera fits 2D/3D boards plus their two spawn rows

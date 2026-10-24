@@ -41,14 +41,15 @@ func run() -> Array:
 	# The well is taller than wide, so its controls go beside it, as in 2D.
 	if cockpit.get("deck_placement") != LiveCockpitScript.PLACEMENT_SIDE or deck.position.x < game_area.end.x:
 		failures.append("Live 3D must place the control rail to the right of the board: board %s rail %s placement %s" % [game_area, deck, cockpit.get("deck_placement")])
-	if hud._live_cockpit.view_controls.visible:
-		failures.append("Live-3D rail must omit the VIEW module; mouse orbit and the Fit View button cover it")
-	var reset_rows: Array = hud._piece_control_strip.find_children("*", "HBoxContainer", true, false).filter(func(row):
+	# The rail carries the 4D helper set, so VIEW is shown and owns Reset.
+	if not hud._live_view_control_strip.is_visible_in_tree():
+		failures.append("Live-3D rail must show the VIEW module by default")
+	var reset_rows: Array = hud._live_view_control_strip.find_children("*", "HBoxContainer", true, false).filter(func(row):
 		var operation = row.get_node_or_null("LegendOperation")
-		return operation != null and operation.text == "Reset View"
+		return operation != null and operation.text == "Reset"
 	)
 	if reset_rows.size() != 1 or not reset_rows[0].is_visible_in_tree():
-		failures.append("Live-3D normal rail must visibly expose exactly one Reset View hint")
+		failures.append("Live-3D VIEW must visibly expose exactly one Reset View hint")
 	else:
 		var caps: Array = reset_rows[0].find_children("*", "Label", true, false).filter(func(label): return label.theme_type_variation == "KeycapLabel")
 		if caps.size() != 1 or caps[0].text != LiveInputContractScript.display_key("reset"):
@@ -59,8 +60,8 @@ func run() -> Array:
 		failures.append("Live-3D board must fill at least %d%% of the window height, got %.0fpx of %d" % [int(MIN_BOARD_HEIGHT_SHARE * 100.0), board_height, tree.root.size.y])
 
 	var piece: Dictionary = layout.get("piece_control_strip", {})
-	if piece.get("layout") != "rail" or not bool(piece.get("spatial", false)):
-		failures.append("Live-3D controls must use the spatial key-first rail legend, got layout %s" % piece.get("layout"))
+	if piece.get("layout") != "wide" or not bool(piece.get("spatial", false)):
+		failures.append("Live-3D controls must use the 4D spatial key-first wide legend, got layout %s" % piece.get("layout"))
 	var piece_ids: Array = piece.get("row_ids", [])
 	for required in ["translate:Sideways", "translate:Near/far", "drop:Soft drop", "drop:Hard drop", "rotate:Spin", "rotate:Turn", "rotate:Tip", "hold:Hold", "session:Pause", "session:Restart"]:
 		if required not in piece_ids:

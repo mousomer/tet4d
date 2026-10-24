@@ -53,6 +53,14 @@ const SIDE_RAIL_NARROW_WIDTH_SHARE := 0.24
 const SIDE_RAIL_MIN_WIDTH := 260.0
 const SIDE_RAIL_MAX_WIDTH := 320.0
 const SIDE_RAIL_GAP := 10
+# The Live 3D rail carries the 4D panel set - NEXT/HOLD, the wide MOVE/ROTATE/
+# GAME legend and VIEW - so every helper shows unscrolled on standard windows.
+# Standard windows get the width that sets ROTATE beside GAME and VIEW on two
+# lines; the upright well spares width far more easily than height. Narrower
+# shells keep the floor and scroll the rail.
+const WIDE_RAIL_WIDTH_SHARE := 0.40
+const WIDE_RAIL_MIN_WIDTH := 400.0
+const WIDE_RAIL_MAX_WIDTH := 480.0
 # The split column holds only NEXT/HOLD and stacked VIEW, so it stays narrower.
 const SPLIT_COLUMN_WIDTH_SHARE := 0.19
 # NEXT/HOLD reflow inside the column; their minimum must not resize gameplay.
@@ -85,6 +93,7 @@ var _natural_deck_height := 0.0
 var _scroll_required := false
 var _placement := PLACEMENT_BELOW
 var _requested_placement := PLACEMENT_BELOW
+var _wide_rail := false
 
 signal designer_geometry_changed(rects: Dictionary)
 
@@ -277,9 +286,14 @@ func _init() -> void:
 	header_slot.minimum_size_changed.connect(_on_deck_metrics_changed)
 
 
-func set_deck_placement(placement: String) -> void:
+func set_deck_placement(placement: String, wide_rail := false) -> void:
 	_requested_placement = placement if placement in [PLACEMENT_SIDE, PLACEMENT_SPLIT] else PLACEMENT_BELOW
+	_wide_rail = wide_rail and _requested_placement == PLACEMENT_SIDE
 	_apply_responsive_policy()
+
+
+static func rail_minimum_width(wide_rail: bool) -> float:
+	return WIDE_RAIL_MIN_WIDTH if wide_rail else SIDE_RAIL_MIN_WIDTH
 
 
 # A split column costs width a narrow window cannot spare, so narrow and small
@@ -356,6 +370,7 @@ func deterministic_snapshot() -> Dictionary:
 		"deck_modules": [str(piece_controls.name), str(view_controls.name), str(piece_state.name)],
 		"deck_visible": control_deck.visible,
 		"deck_placement": _placement,
+		"wide_rail": _wide_rail,
 		"side_column_rect": side_scroll.get_global_rect() if side_scroll.visible else Rect2(),
 		"responsive_profile": _responsive_profile,
 		"layout_size": _layout_size,
@@ -472,6 +487,8 @@ func _apply_responsive_policy() -> void:
 
 
 func _rail_width() -> float:
+	if _wide_rail:
+		return clampf(_layout_size.x * WIDE_RAIL_WIDTH_SHARE, WIDE_RAIL_MIN_WIDTH, WIDE_RAIL_MAX_WIDTH) if _layout_size.x > 1.0 else WIDE_RAIL_MIN_WIDTH
 	if _layout_size.x <= 1.0:
 		return SIDE_RAIL_MIN_WIDTH
 	var share := SIDE_RAIL_NARROW_WIDTH_SHARE if _responsive_profile in [PROFILE_NARROW, PROFILE_SMALL] else SIDE_RAIL_WIDTH_SHARE

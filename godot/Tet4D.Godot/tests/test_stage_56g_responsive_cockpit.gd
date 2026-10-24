@@ -326,6 +326,8 @@ func _assert_live_geometry(hud: Node, viewport_case: Dictionary, mode: String, v
 		failures.append("%s at profile %s must use placement %s, got %s" % [label, profile, expected_placement, placement])
 	var side_rail := placement == LiveCockpitScript.PLACEMENT_SIDE
 	var split := placement == LiveCockpitScript.PLACEMENT_SPLIT
+	# The 2D rail omits VIEW; the 3D rail carries the 4D panel set, VIEW last.
+	var view_omitted := side_rail and mode == "2D"
 	var side_column: Rect2 = cockpit.get("side_column_rect", Rect2())
 	if cockpit.get("deck_modules") != ["PieceControls", "ViewControls", "PieceState"]:
 		failures.append("%s must retain the shared PIECE / VIEW / PIECE STATE identity" % label)
@@ -334,17 +336,19 @@ func _assert_live_geometry(hud: Node, viewport_case: Dictionary, mode: String, v
 		for module_name in row:
 			flattened.append(str(module_name))
 	var expected_order := ["PieceControls", "ViewControls", "PieceState"]
-	if side_rail:
+	if view_omitted:
 		expected_order = ["PieceState", "PieceControls"]
+	elif side_rail:
+		expected_order = ["PieceState", "PieceControls", "ViewControls"]
 	elif split:
 		expected_order = ["PieceControls"]
 	if flattened != expected_order:
 		failures.append("%s must preserve semantic module order %s, got %s" % [label, str(expected_order), str(flattened)])
-	# Rail modes omit VIEW (index 1). In the split, NEXT/HOLD and VIEW live in a
+	# The 2D rail omits VIEW (index 1). In the split, NEXT/HOLD and VIEW live in a
 	# scrolling side column: NEXT/HOLD must be fully visible at its top, VIEW
 	# reachable below it.
 	for index in range(modules.size()):
-		if side_rail and index == 1:
+		if view_omitted and index == 1:
 			continue
 		if split and index > 0:
 			continue
@@ -379,7 +383,7 @@ func _assert_live_geometry(hud: Node, viewport_case: Dictionary, mode: String, v
 		for second in range(first + 1, modules.size()):
 			# Omitted VIEW, and side-column content clipped by its scroll, are not
 			# visible geometry that could overlap anything.
-			if (side_rail or split) and (first == 1 or second == 1):
+			if (view_omitted or split) and (first == 1 or second == 1):
 				continue
 			if modules[first].intersects(modules[second]):
 				failures.append("%s must not overlap semantic modules %d/%d" % [label, first, second])

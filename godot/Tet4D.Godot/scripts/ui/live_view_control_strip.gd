@@ -14,6 +14,9 @@ const LAYOUT_GRID := "grid"
 # in the full help and the header.
 const LAYOUT_WIDE := "wide"
 const WIDE_ROLES := ["view_exact", "view_orient"]
+# Live 3D has no keyboard view turns; its rail module lists framing and the
+# pointer gestures in the same key-first grammar under one VIEW heading.
+const WIDE_3D_ROLES := ["view_framing", "view_pointer"]
 
 var _mode := "live_4d"
 var _density := "normal"
@@ -77,7 +80,8 @@ func _init() -> void:
 func configure(basis_snapshot: Dictionary = {}, control_frame: Dictionary = {}, density: String = "normal", mode: String = "live_4d", authority = LiveInputContractScript, layout: String = LAYOUT_GRID) -> void:
 	var groups: Array = authority.view_control_groups(mode, basis_snapshot, control_frame)
 	if layout == LAYOUT_WIDE:
-		groups = groups.filter(func(group): return str(group.get("cockpit_role", "")) in WIDE_ROLES)
+		var roles := WIDE_3D_ROLES if mode == "live_3d" else WIDE_ROLES
+		groups = groups.filter(func(group): return str(group.get("cockpit_role", "")) in roles)
 	var source := "LiveInputContract" if authority == LiveInputContractScript else "injected_fixture"
 	# Provenance is part of the cached identity: an injected fixture that happens
 	# to yield identical groups must not keep reporting contract provenance.
@@ -161,6 +165,9 @@ func _rebuild() -> void:
 
 func _rebuild_wide() -> void:
 	var key_column := 2.0 * (float(ShellDesignTokensScript.FONT_CONTROL_HINT) * 1.4 + 4.0)
+	if _mode == "live_3d":
+		_rebuild_wide_3d()
+		return
 	for group in _groups:
 		var role := str(group.get("cockpit_role", ""))
 		var section := PassiveControlComponentsScript.section({"view_exact": "TURN VIEW", "view_orient": "LOOK"}.get(role, role.to_upper()), role, _density)
@@ -190,6 +197,33 @@ func _rebuild_wide() -> void:
 				_glyphs.append(glyph)
 			row_parent.add_child(row)
 		_wide_box.add_child(section)
+
+
+# Five stacked rows would push the rail past the height of a standard window,
+# so the rows flow: the short framing keys and the wheel share a line and the
+# two drags share the next, wrapping further only in a narrower rail.
+func _rebuild_wide_3d() -> void:
+	var section := PassiveControlComponentsScript.section("VIEW", "view", _density)
+	var flow := HFlowContainer.new()
+	flow.name = "ViewControlRowFlow"
+	flow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	flow.add_theme_constant_override("h_separation", ShellDesignTokensScript.SPACE_2)
+	flow.add_theme_constant_override("v_separation", 2)
+	section.add_child(flow)
+	var rows: Array = []
+	for group in _groups:
+		var role := str(group.get("cockpit_role", ""))
+		for item in group.get("items", []):
+			rows.append(_semantic_row(role, item))
+	var drags := rows.filter(func(semantic: Dictionary): return str(semantic["binding"]).ends_with("Drag"))
+	for semantic in rows.filter(func(candidate: Dictionary): return candidate not in drags) + drags:
+		var row := PassiveControlComponentsScript.key_first_row(str(semantic["operation"]), str(semantic["binding"]), str(semantic["role"]), 0.0)
+		row.size_flags_horizontal = Control.SIZE_FILL
+		var operation := row.get_node("LegendOperation") as Label
+		operation.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+		operation.size_flags_horizontal = Control.SIZE_FILL
+		flow.add_child(row)
+	_wide_box.add_child(section)
 
 
 func _section_title(role: String) -> String:

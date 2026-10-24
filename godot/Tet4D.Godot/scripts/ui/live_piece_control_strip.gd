@@ -337,16 +337,8 @@ func _build_spatial_legend(rows_by_role: Dictionary) -> void:
 			column.add_child(_rotation_row(semantic, cap_width * 2.0))
 	_groups_box.add_child(rotate)
 
+	# Reset View belongs to the VIEW module, which Live 3D and 4D both show.
 	var game_rows: Array = rows_by_role.get("hold", []) + rows_by_role.get("session", [])
-	if _mode == "live_3d":
-		# The full VIEW module is hidden in the rail. Consume its existing Reset
-		# descriptor here so the key remains discoverable without another panel.
-		for group in LiveInputContractScript.view_control_groups(_mode):
-			for item in group.get("items", []):
-				if str(_item_metadata(item).get("operation", "")) == "Reset":
-					var reset := _semantic_row("view_framing", item)
-					reset["operation"] = "Reset View"
-					game_rows.append(reset)
 	if not game_rows.is_empty():
 		var game := PassiveControlComponentsScript.section("GAME", "game", _density)
 		if _layout == LAYOUT_RAIL:

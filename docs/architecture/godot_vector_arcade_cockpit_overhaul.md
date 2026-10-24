@@ -695,6 +695,10 @@ existing cockpit: bounded side rails, a measured 4D legend deck and
 compact, style-independent header metrics. Every existing action and semantic
 control group stays reachable. Allocation follows the actual available shell;
 theme appearance cannot change those region constraints or the camera target.
+Live 3D's upright well fits by height, so viewport width beyond it is empty;
+its right-hand rail spends that width on the 4D helper set, and its 58B guard
+is the rendered board height (at least 55% of a 1280×720 window), not the
+viewport area.
 
 Adaptive slice layout maximizes usable cell scale in the actual gameplay region
 over all column counts, using the canonical fitted camera projection and the
