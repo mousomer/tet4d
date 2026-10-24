@@ -5,6 +5,10 @@ as a short documentation landing page; it owns no taxonomy or precedence.
 
 ## Common starting points
 
+- Installation and launch: root `README.md`, sections "Godot Version" and
+  "Python Version". It owns shared dependency setup, first-time builds, repeat
+  launches, and troubleshooting before development, release, and
+  project-background references.
 - Contributor governance: `AGENTS.md`, `docs/governance/*`
 - Config-first keybinding editing: `docs/KEYBINDINGS_EDITING.md`
 - Short practical keybinding guide: `docs/SHORT_KEYBINDINGS_GUIDE.md`

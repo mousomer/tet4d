@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-10-19
+Updated: 2026-10-24
 Scope: active work, explicit deferrals, and near-term acceptance boundaries.
 
 Completed chronology is recoverable from Git, merged PRs, CI, and
@@ -22,6 +22,16 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   facts)
 
 ## Active Work
+
+### README first-time setup acceptance
+
+The root README now groups shared dependency setup and the Godot/Python quick
+starts before development and project background. Python launch examples use
+`gov env` for both interpreter selection and source binding. The owner confirmed
+the shared-environment Python launcher works. Fresh-machine installation and
+interactive Godot/Python launches from the reorganized instructions remain to
+be exercised; local checks do not establish clean-machine acceptance. Runtime,
+packaging, and platform support contracts are unchanged.
 
 ### Stage 56H spatial scaffold acceptance
 
