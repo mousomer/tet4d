@@ -205,7 +205,8 @@
       {
         "id": "agent_skills",
         "patterns": [
-          "tools/agent-skills/**"
+          "tools/agent-skills/**",
+          "tools/artifact-board/**"
         ],
         "requirements": [
           "documentation"

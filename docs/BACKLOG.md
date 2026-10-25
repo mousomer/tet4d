@@ -51,10 +51,13 @@ engineering, oracle and fidelity register do not apply.
   build: no Web export exists. Owner review sizes are macOS windowed
   1280×720/800 and fullscreen.
 - [x] Phase 0: skills committed on a branch from `master`.
-- [ ] Phase 1: project board artifact in the cockpit look, cards from
-  `tools/artifact-board/items.json`: slices, owner tasks and artifacts only.
+- [x] Phase 1: the [Tet4D Board](https://claude.ai/artifact/H8A1LZV69hzv5B9SBN2Gbe)
+  in the default Vector Arcade palette. `tools/artifact-board/items.json` lists
+  the cards (slices, owner tasks, artifacts); `sync.cjs` turns it into the
+  board's database writes. Card statuses and owner notes belong to the owner.
 - [ ] Phase 2: Stage 58C decisions worksheet over captures of today's board.
-- [ ] Phase 3: QA sheets for P1 fullscreen and Stage 56H owner acceptance.
+- [ ] Phase 3: QA sheet for the Stage 56H playability checkpoint. P1 panels are
+  already owner-accepted and locked on macOS.
 - Text editor only when the owner asks to edit copy.
 
 ### Stage 56H spatial scaffold acceptance

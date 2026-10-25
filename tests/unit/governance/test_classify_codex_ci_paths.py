@@ -377,13 +377,16 @@ def test_nested_python_tests_stay_classified() -> None:
     assert "python" in result.verification_requirements
 
 
-def test_agent_skill_kits_stay_documentation_only() -> None:
+def test_agent_skill_kits_and_board_stay_documentation_only() -> None:
     result = classify_paths(
         [
             "tools/agent-skills/decision-worksheet/template.html",
             "tools/agent-skills/text-editor/kit/editor.js",
             "tools/agent-skills/video-game-development/workflow/board/sync.cjs",
             "tools/agent-skills/video-game-development/workflow/board/items.example.json",
+            "tools/artifact-board/board.html",
+            "tools/artifact-board/items.json",
+            "tools/artifact-board/sync.cjs",
         ],
         config=_repository_config(),
     )
