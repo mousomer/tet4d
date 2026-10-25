@@ -336,12 +336,16 @@ disabled control emits no activation.
    magnified rails and Designer chrome retain their required logical height. Initial
    Main Menu layout shows the title and focused Play action; layout changes
    keep the focused action reachable without overriding manual wheel scrolling.
-   Helper keycaps and action labels use at least 22 logical pixels in every
-   density. Compact density may reduce spacing, never text size; keycaps size
-   from their font metrics and operation labels wrap rather than truncate.
+   Helper keycaps and action labels are set at 22 logical pixels or more in
+   every density. Compact density may reduce spacing, never the set text size;
+   keycaps size from their font metrics and operation labels wrap rather than
+   truncate. Fitting (below) may then show a whole helper panel or the Main
+   Menu uniformly smaller, text and content together, down to its floor.
    Main and Advanced menu panels grow with the available window width and
-   height, with bounded outer margins. Command rows share extra vertical space,
-   wrap descriptions, and remain reachable by scrolling in compact windows.
+   height, with bounded outer margins. Command rows share extra vertical space
+   and wrap descriptions. The Main Menu scales as a whole to fit the window,
+   down to `MENU_FIT_SCALE_FLOOR`, and scrolls only below that floor; the
+   Advanced menu remains reachable by scrolling in compact windows.
    At maximum UI scale the scroll surface stays inside the physical window;
    shell minimums must not enlarge the transformed layout beyond its viewport.
    Guidance panels retain a 170 px minimum when the usable area permits, with compact padding so the larger
@@ -349,22 +353,35 @@ disabled control emits no activation.
    Below viable dimensions the guide bounds itself to the client area and
    scrolls its body while keeping Hide Guide accessible.
    Live header chrome retains its compact 18/16 px scale; onboarding guidance
-   uses the larger help scale. PIECE and VIEW scroll internally when their
-   readable rows exceed the available height, keeping NEXT/HOLD alongside them
-   on standard/wide windows. Normal deck rows reserve 220 px.
+   uses the larger help scale. Helper modules never scroll on their own: the
+   deck, rail or split column is the one scroll owner, and it scrolls only after
+   fitting. Deck rows below the board keep a per-profile row floor (220 px at
+   standard).
    Below the live header's measured width minimum, its navigation and session
    columns stack inside the client area so every action remains reachable.
    Preview status text wraps, and live-mode/density rebuilds reapply keycap styling.
-   The live control deck caps its height at 28% of the shell (subject to its
-   row floor), scrolling extra rows to preserve space for the primary board in compact windows.
-   Live 2D and 3D instead place the deck in a side rail beside their tall
-   boards (32% of the shell width, 280-460 px): NEXT/HOLD above a key-first
-   legend grouped MOVE / ROTATE / GAME that includes Hold, Pause and Restart
-   keys, with no VIEW module. Live 4D keeps the legend in the deck and moves
-   NEXT/HOLD and a VIEW module of view turns and look into a scrolling side
-   column (22% of the width, 300-340 px); narrow and small shells fall back to
-   the reflowing deck. The camera fits 2D/3D boards plus their two spawn rows
-   (1.06 / 1.10 clearance) and anchors them toward the rail when width is spare.
+   Helpers fit before they scroll, owned by `scripts/ui/live_cockpit.gd`: the
+   content gets its room, then gaps compact, then the panel scales uniformly
+   down to `FIT_SCALE_FLOOR`, and only what still overflows at the floor
+   scrolls.
+   Live 2D and 3D place the deck in a side rail beside their tall boards:
+   NEXT/HOLD above a key-first legend grouped MOVE / ROTATE / GAME that includes
+   Hold, Pause and Restart keys, with no VIEW module (3D lists Reset View with
+   GAME). The rail's share-based width (`SIDE_RAIL_*`) is a floor; it grows to
+   what its content needs, whole NEXT/HOLD names and, in 3D, the MOVE compass
+   beside its drop keys, but only into width the right-anchored board leaves
+   unused. Live 4D keeps the legend in the deck and moves NEXT/HOLD and a VIEW
+   module of view turns and look into a side column (`SPLIT_COLUMN_*`), which
+   spans the whole stage when the narrowed legend still keeps one line.
+   Narrow and small shells fall back to the reflowing deck below the board,
+   which leads with NEXT/HOLD and may use the stage height above a reserved
+   half for the board (`BOARD_RESERVE_STAGE_SHARE`, never below
+   `MAX_DECK_HEIGHT_SHARE`), capped by what the window leaves under the board;
+   Live 4D's board floor is `LIVE_4D_BODY_MIN_HEIGHT`. The camera fits 2D/3D
+   boards plus their two spawn rows (`LIVE_2D_FIT_MARGIN`,
+   `LIVE_3D_FIT_MARGIN`) and anchors them toward the rail when width is spare.
+   The Live 2D/3D/4D cockpit and the Main Menu are owner-accepted and locked by
+   `tests/test_locked_shell_layouts.gd`.
    The 3D/4D legend is spatial: movement is a compass whose arrows are measured
    from the camera (each keycap sits where its key moves the piece on screen),
    the 4D slice hop reads `Q ← slice → E`, and rotations and 4D view turns are
@@ -873,7 +890,8 @@ while preserving grid, panel geometry, HUD allocation, camera target and canonic
 slice spacing. Live cockpit rails and the 4D legend deck give gameplay the
 primary display area; at the 1280×720 opening window and above the 4D deck
 shows its whole measured legend unscrolled. Shorter windows, or an open guide,
-take the missing height from the deck first, down to a fifth of the cockpit, then scroll it;
+take the missing height from the deck first, down to a fifth of the cockpit,
+then shrink the legend to fit and scroll it only at the scale floor;
 sizing is recomputed from the current size. Every existing session action remains reachable. Save updates its associated saved
 design; Save As creates a new named complete design without changing the source;
 Load and Revert restore complete saved/opening state, including grid and geometry.

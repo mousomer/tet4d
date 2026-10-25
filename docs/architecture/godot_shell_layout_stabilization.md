@@ -74,9 +74,11 @@ inside the reserved inspector.
 `scripts/ui/responsive_panel_policy.gd` owns shared presentation fitting:
 constrain panels to the current usable application viewport, reflow controls
 from their measured minimum widths, compact spacing, then scroll only the
-content that still exceeds the available space. Fonts retain the existing
-menu/helper readability floors. UI scale is a user preference, not a fitting
-mechanism. Settings, setup, Designer and Design Laboratory consume this policy;
+content that still exceeds the available space. Live cockpit helpers and the
+Main Menu add one step before scrolling, uniform scaling of text and content
+together down to a floor (see "Live cockpit helper panels" below). Fonts keep
+their set sizes; only that scaling shows them smaller. UI scale is a user
+preference, not a fitting mechanism. Settings, setup, Designer and Design Laboratory consume this policy;
 their Apply/Start, Cancel/Close and Back actions stay reachable outside long
 content. Popups are clamped when opened and when their owning window resizes.
 
