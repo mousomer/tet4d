@@ -2,6 +2,7 @@ extends PanelContainer
 
 class_name DesignLaboratoryPanel
 
+const ResponsivePanelPolicy = preload("res://scripts/ui/responsive_panel_policy.gd")
 const BuiltInStyleCatalogScript = preload("res://scripts/presentation/built_in_style_catalog.gd")
 const PresentationProfileLibraryScript = preload("res://scripts/presentation/presentation_profile_library.gd")
 const PresentationProfileScript = preload("res://scripts/presentation/presentation_profile.gd")
@@ -114,7 +115,7 @@ func _build_ui() -> void:
 		remove_child(child)
 		child.queue_free()
 	name = "DesignLaboratoryPanel"
-	custom_minimum_size = Vector2(440, 560)
+	custom_minimum_size = Vector2.ZERO
 	var margin := MarginContainer.new()
 	for side in ["left", "top", "right", "bottom"]:
 		margin.add_theme_constant_override("margin_%s" % side, 16)
@@ -122,7 +123,7 @@ func _build_ui() -> void:
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 10)
 	margin.add_child(root)
-	var header := HBoxContainer.new()
+	var header := HFlowContainer.new()
 	root.add_child(header)
 	var title := Label.new()
 	title.text = "DESIGN LABORATORY"
@@ -139,8 +140,8 @@ func _build_ui() -> void:
 	subtitle.theme_type_variation = "SecondaryLabel"
 	root.add_child(subtitle)
 	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.name = "LaboratoryContentScroll"
+	ResponsivePanelPolicy.configure_scroll(scroll)
 	root.add_child(scroll)
 	var form := VBoxContainer.new()
 	form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -159,7 +160,7 @@ func _build_ui() -> void:
 	_preset_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_preset_detail.theme_type_variation = "SecondaryLabel"
 	form.add_child(_preset_detail)
-	var catalog_actions := HBoxContainer.new()
+	var catalog_actions := HFlowContainer.new()
 	var apply_button := Button.new()
 	apply_button.name = "ApplyLiveButton"
 	apply_button.text = "Apply Live"
@@ -185,6 +186,8 @@ func _build_ui() -> void:
 	_arm_a_assignment.name = "ArmAAssignmentLabel"
 	_arm_b_assignment = Label.new()
 	_arm_b_assignment.name = "ArmBAssignmentLabel"
+	_arm_a_assignment.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_arm_b_assignment.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	form.add_child(_arm_a_assignment)
 	form.add_child(_arm_b_assignment)
 	_blind_check = CheckBox.new()
@@ -201,7 +204,7 @@ func _build_ui() -> void:
 	start_button.text = "Start comparison"
 	start_button.pressed.connect(_start_comparison)
 	form.add_child(start_button)
-	var arm_row := HBoxContainer.new()
+	var arm_row := HFlowContainer.new()
 	_arm_a_button = Button.new()
 	_arm_a_button.name = "ShowArmAButton"
 	_arm_a_button.text = "Show A"
@@ -222,7 +225,7 @@ func _build_ui() -> void:
 	reset_button.pressed.connect(_reset_scenario)
 	arm_row.add_child(reset_button)
 	form.add_child(arm_row)
-	var capture_row := HBoxContainer.new()
+	var capture_row := HFlowContainer.new()
 	for arm in ["A", "B"]:
 		var capture_button := Button.new()
 		capture_button.text = "Capture %s" % arm
@@ -261,6 +264,7 @@ func _build_ui() -> void:
 	form.add_child(_labeled_control("Candidate", _nominate_select))
 	var export_button := Button.new()
 	export_button.text = "Nominate and export proposal"
+	export_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	export_button.pressed.connect(_export_nomination)
 	form.add_child(export_button)
 	# Externalising the finished bundle is the only part of nomination that
@@ -275,6 +279,10 @@ func _build_ui() -> void:
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_status.theme_type_variation = "SecondaryLabel"
 	root.add_child(_status)
+	for select in [_scenario_select, _catalog_select, _preference_select, _nominate_select]:
+		select.fit_to_longest_item = false
+		select.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		ResponsivePanelPolicy.bind_popup(select.get_popup(), self)
 
 
 func _refresh_catalogs() -> void:
@@ -585,7 +593,9 @@ static func _labeled_control(text: String, control: Control) -> HBoxContainer:
 	var label := Label.new()
 	label.text = text
 	label.custom_minimum_size = Vector2(138, 0)
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row.add_child(label)
 	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	control.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(control)
 	return row

@@ -127,9 +127,13 @@ Main Menu
   through a secondary `Advanced / Diagnostics` screen rather than competing
   with Play as a top-level action.
 - Godot Main Menu Play launches the current validated setup directly. Play
-  3D/4D and shortcuts `3`/`4` launch their mode-specific validated setups;
-  legacy `2` directly launches Play 2D. Change Setup (`C`) opens the current
-  mode's configuration without launching. Invalid drafts cannot launch by
+  2D/3D/4D and shortcuts `2`/`3`/`4` launch their mode-specific validated
+  setups, so every dimension stays a visible, selectable entry whatever the
+  current setup is. Change Setup (`C`) opens the current mode's configuration
+  without launching. The Main Menu is a single list of options grouped under
+  PLAY, DESIGN, LEARN and SYSTEM; it keeps its spacing and font sizes and
+  scales as a whole to fit the window, scrolling only below the readability
+  floor. Invalid drafts cannot launch by
   button or shortcut. See `docs/architecture/editable_board_setup_and_persistence.md`.
 
 ### 4.2 In-game pause menu map
@@ -340,13 +344,17 @@ disabled control emits no activation.
    wrap descriptions, and remain reachable by scrolling in compact windows.
    At maximum UI scale the scroll surface stays inside the physical window;
    shell minimums must not enlarge the transformed layout beyond its viewport.
-   Guidance panels retain a 170 px minimum with compact padding so the larger
+   Guidance panels retain a 170 px minimum when the usable area permits, with compact padding so the larger
    text preserves the primary board's required viewport share.
+   Below viable dimensions the guide bounds itself to the client area and
+   scrolls its body while keeping Hide Guide accessible.
    Live header chrome retains its compact 18/16 px scale; onboarding guidance
    uses the larger help scale. PIECE and VIEW scroll internally when their
    readable rows exceed the available height, keeping NEXT/HOLD alongside them
-   on standard/wide windows. Normal deck rows reserve 220 px. Preview status
-   text wraps, and live-mode/density rebuilds reapply keycap styling.
+   on standard/wide windows. Normal deck rows reserve 220 px.
+   Below the live header's measured width minimum, its navigation and session
+   columns stack inside the client area so every action remains reachable.
+   Preview status text wraps, and live-mode/density rebuilds reapply keycap styling.
    The live control deck caps its height at 28% of the shell (subject to its
    row floor), scrolling extra rows to preserve space for the primary board in compact windows.
    Live 2D and 3D instead place the deck in a side rail beside their tall
@@ -389,6 +397,12 @@ disabled control emits no activation.
 7. Overflowing settings/keybindings pages must show a shared vertical
    scrollbar only when content exceeds the viewport, and navigation must keep
    the focused row visible through auto-scroll.
+   Godot helper panels, setup/settings, Designer menus and dialogs first fit
+   the actual usable viewport, reflow controls and compact spacing while
+   preserving readable text. Scrolling is the fallback after those steps.
+   Essential actions remain accessible, popups clamp to the application area,
+   and both width and height, fullscreen, UI scale and content changes refresh
+   geometry. Helper overlays do not change Stage 58 board allocation.
 8. Control family must be chosen from semantic type first:
    `bool -> toggle`, `enum -> categorical selector`, `int/float -> slider or stepper`,
    `action -> button`, `submenu/picker -> navigation row`.

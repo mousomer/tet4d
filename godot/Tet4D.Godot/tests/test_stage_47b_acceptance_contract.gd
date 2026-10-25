@@ -19,8 +19,8 @@ func run() -> Array:
 		failures.append("main menu should initially focus Play")
 	_send_key(KEY_DOWN)
 	await tree.process_frame
-	if tree.root.gui_get_focus_owner() == null or str(tree.root.gui_get_focus_owner().name) != "CommandCard__Play_3D":
-		failures.append("Down should move main-menu focus from Play to Play 3D")
+	if tree.root.gui_get_focus_owner() == null or str(tree.root.gui_get_focus_owner().name) != "CommandCard__Play_2D":
+		failures.append("Down should move main-menu focus from Play to Play 2D")
 	hud.show_screen(hud.SCREEN_MAIN_MENU)
 	await tree.process_frame
 	hud.show_screen(hud.SCREEN_CONTROLS)

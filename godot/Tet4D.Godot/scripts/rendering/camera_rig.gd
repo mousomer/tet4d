@@ -69,6 +69,13 @@ var _fit_horizontal_anchor := 0.0
 # resizes it), and an offset baked from the previous mode's aspect pushed the
 # whole 2D board off-screen.
 var _fit_content_width := 0.0
+# Anchored content width per unit of visible height at a height-limited fit,
+# clearance included. Span and margin alone set it, so unlike the fitted
+# orthographic size it does not depend on the viewport aspect at fit time.
+var _fit_board_aspect := 0.0
+# Projected content span at the last fit, and whether its height set the fit.
+var _fit_span := Vector2.ZERO
+var _fit_height_limited := false
 const FIT_ANCHOR_CLEARANCE := 1.0
 var _view_context := "replay view"
 var _framing_status := "initial"
@@ -151,11 +158,39 @@ func fit_current_bounds(bounds: Dictionary, margin: float = 1.14, content_boxes:
 	if _camera != null and _camera.projection == Camera3D.PROJECTION_ORTHOGONAL:
 		_camera.size = _base_orthographic_size
 	_apply_fit_horizontal_anchor(min_pos, max_pos, content_boxes)
+	var fit_span := _projected_span(min_pos, max_pos, _target_yaw, _target_pitch, content_boxes)
+	_fit_board_aspect = (fit_span.x + 2.0 * FIT_ANCHOR_CLEARANCE) / maxf(fit_span.y * margin, 0.001) if _fit_horizontal_anchor > 0.0 else 0.0
+	_fit_span = fit_span
+	# The size is the larger of the height and width needs; equal to the height
+	# need means nothing beside the board narrowed what it draws.
+	var height_need := maxf(_projected_span(min_pos, max_pos, _current_yaw, _current_pitch, content_boxes).y * margin, 4.0)
+	_fit_height_limited = _base_orthographic_size <= height_need * 1.0001
 	_snap_framing_to_targets()
+
+
+# Logical on-screen size of the fitted board in a board viewport of the given
+# logical height: its projected span at the orthographic scale. This is what
+# the player sees, unlike the viewport rect around it; zoom is included.
+func drawn_content_size(viewport_height: float) -> Vector2:
+	if _camera == null or _camera.projection != Camera3D.PROJECTION_ORTHOGONAL or _camera.size <= 0.0:
+		return Vector2.ZERO
+	return _fit_span * viewport_height / _camera.size
+
+
+# True when the last fit was set by the board's height alone. A height-limited
+# board draws at the same size however much width surrounds it.
+func fitted_height_limited() -> bool:
+	return _fit_height_limited
 
 
 func set_fit_horizontal_anchor(anchor: float) -> void:
 	_fit_horizontal_anchor = clampf(anchor, 0.0, 1.0)
+
+
+# How wide the anchored board draws per unit of board-viewport height; 0 when
+# the fit is not anchored. A host can give the remaining width to a rail.
+func fitted_board_aspect() -> float:
+	return _fit_board_aspect
 
 
 func _apply_fit_horizontal_anchor(min_pos: Vector3, max_pos: Vector3, content_boxes: Array) -> void:
@@ -214,6 +249,9 @@ func clear_presentation_state() -> void:
 		_camera.projection = Camera3D.PROJECTION_ORTHOGONAL
 		_camera.size = DEFAULT_ORTHOGRAPHIC_SIZE
 		_fit_content_width = 0.0
+		_fit_board_aspect = 0.0
+		_fit_span = Vector2.ZERO
+		_fit_height_limited = false
 		_update_camera()
 
 

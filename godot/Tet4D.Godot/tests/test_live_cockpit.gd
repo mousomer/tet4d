@@ -57,7 +57,8 @@ func _assert_component_grammar() -> Array:
 	for row in packed.get("deck_row_assignment", []):
 		for module_name in row:
 			flattened.append(str(module_name))
-	if flattened != ["PieceControls", "ViewControls", "PieceState"]:
+	# Rows pack NEXT/HOLD first, as in the rail and the split column.
+	if flattened != ["PieceState", "PieceControls", "ViewControls"]:
 		failures.append("reflow must preserve semantic module order across rows, got %s" % str(flattened))
 	var source := FileAccess.get_file_as_string("res://scripts/ui/live_cockpit.gd")
 	for forbidden in ["TraceSceneRenderer", "LiveInputContract", "CameraRig", "render_snapshot", "InputMap", "piece_control_groups"]:

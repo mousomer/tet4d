@@ -6,6 +6,7 @@ const GameSetupSpecScript = preload("res://scripts/ui/game_setup/game_setup_spec
 const SetupFieldRegistryScript = preload("res://scripts/ui/game_setup/setup_field_registry.gd")
 const SetupFieldSpecScript = preload("res://scripts/ui/game_setup/setup_field_spec.gd")
 const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
+const ResponsivePanelPolicyScript = preload("res://scripts/ui/responsive_panel_policy.gd")
 
 signal start_requested(setup: Dictionary)
 signal back_requested()
@@ -54,6 +55,11 @@ var _section_errors := {}
 # Mode applicability and conditional visibility come from the declared taxonomy
 # rather than a second copy of the same rules in this panel.
 var _seed_spec
+var _setup_panel: PanelContainer
+var _setup_margin: MarginContainer
+var _setup_layout: VBoxContainer
+var _actions: PanelContainer
+var _selector_rows: Array[BoxContainer] = []
 
 
 func configure(model) -> void:
@@ -62,6 +68,7 @@ func configure(model) -> void:
 
 
 func _ready() -> void:
+	resized.connect(_queue_responsive_layout)
 	if _model != null:
 		_rebuild()
 
@@ -74,26 +81,32 @@ func _rebuild() -> void:
 	_scroll = ScrollContainer.new()
 	_scroll.name = "SetupScroll"
 	_scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	ResponsivePanelPolicyScript.configure_scroll(_scroll)
 	add_child(_scroll)
+	_scroll.resized.connect(_queue_responsive_layout)
 	var center := CenterContainer.new()
 	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	center.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_scroll.add_child(center)
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(720, 0)
+	panel.name = "SetupContentPanel"
 	panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	center.add_child(panel)
+	_setup_panel = panel
+	_setup_panel.resized.connect(func() -> void: call_deferred("_ensure_current_focus_visible"))
 	var margin := MarginContainer.new()
 	for side in ["left", "top", "right", "bottom"]:
 		margin.add_theme_constant_override("margin_%s" % side, ShellDesignTokensScript.SPACE_5)
 	panel.add_child(margin)
+	_setup_margin = margin
 	var layout := VBoxContainer.new()
 	layout.name = "SetupLayout"
 	layout.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_3)
 	margin.add_child(layout)
+	_setup_layout = layout
 	_title = Label.new()
 	_title.text = GameSetupSpecScript.mode_label(_model.current_mode)
+	_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_title.theme_type_variation = "AccentLabel"
 	_title.add_theme_font_size_override("font_size", ShellDesignTokensScript.FONT_SCREEN_TITLE)
 	layout.add_child(_title)
@@ -107,10 +120,17 @@ func _rebuild() -> void:
 	_build_speed_group(layout)
 	_build_advanced_section(layout)
 	_build_controls_section(layout)
-	_build_actions(layout)
+	_actions = PanelContainer.new()
+	_actions.name = "SetupActions"
+	add_child(_actions)
+	var actions_layout := VBoxContainer.new()
+	_actions.add_child(actions_layout)
+	_build_actions(actions_layout)
+	_actions.minimum_size_changed.connect(_queue_responsive_layout)
 
 	_refresh_from_model()
 	_board_selector.call_deferred("grab_focus")
+	_queue_responsive_layout()
 
 
 func _clear_build_state() -> void:
@@ -138,6 +158,11 @@ func _clear_build_state() -> void:
 	_start_button = null
 	_reveal_button = null
 	_seed_spec = null
+	_setup_panel = null
+	_setup_margin = null
+	_setup_layout = null
+	_actions = null
+	_selector_rows.clear()
 
 
 func first_focus_control() -> Control:
@@ -289,7 +314,7 @@ func _build_actions(layout: VBoxContainer) -> void:
 	layout.add_child(_start_button)
 	_register_focus_control(_start_button)
 
-	var secondary := HBoxContainer.new()
+	var secondary := BoxContainer.new()
 	secondary.name = "SecondaryActions"
 	secondary.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_2)
 	layout.add_child(secondary)
@@ -361,6 +386,49 @@ func set_section_expanded(section_id: String, expanded: bool) -> void:
 		button.grab_focus()
 	elif expanded:
 		_ensure_visible(button)
+	_queue_responsive_layout()
+
+
+func _queue_responsive_layout() -> void:
+	call_deferred("_apply_responsive_layout")
+
+
+func _apply_responsive_layout() -> void:
+	if _scroll == null or _setup_panel == null or _actions == null or not is_inside_tree():
+		return
+	var compact := ResponsivePanelPolicyScript.is_compact(size)
+	var padding := ShellDesignTokensScript.COMPACT_PADDING if compact else ShellDesignTokensScript.PANEL_PADDING
+	for side in ["left", "top", "right", "bottom"]:
+		_setup_margin.add_theme_constant_override("margin_%s" % side, padding)
+	ResponsivePanelPolicyScript.compact_spacing(_setup_layout, size)
+	var footer_width := ResponsivePanelPolicyScript.bounded_width(size.x, ShellDesignTokensScript.MENU_MIN_WIDTH)
+	_actions.size.x = footer_width
+	var footer_height := _actions.get_combined_minimum_size().y
+	_actions.position = Vector2((size.x - footer_width) * 0.5, maxf(0.0, size.y - footer_height))
+	_actions.size = Vector2(footer_width, footer_height)
+	_scroll.offset_bottom = -minf(size.y, footer_height + ShellDesignTokensScript.SPACE_2)
+	var available_width := maxf(0.0, _scroll.size.x - _scroll.get_v_scroll_bar().size.x)
+	_setup_panel.custom_minimum_size.x = ResponsivePanelPolicyScript.bounded_width(available_width, ShellDesignTokensScript.MENU_MIN_WIDTH)
+	var panel_width := _setup_panel.custom_minimum_size.x - _setup_panel.get_theme_stylebox("panel").get_minimum_size().x - padding * 2.0
+	for row in _selector_rows:
+		var label := row.get_child(0) as Label
+		var selector := row.get_child(1) as OptionButton
+		var label_width := label.get_theme_font("font").get_string_size(label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, label.get_theme_font_size("font_size")).x
+		label.custom_minimum_size.x = minf(label_width, maxf(panel_width, 0.0))
+		selector.custom_minimum_size.x = label.custom_minimum_size.x
+		ResponsivePanelPolicyScript.reflow_row(row, panel_width)
+	var secondary := _actions.find_child("SecondaryActions", true, false) as BoxContainer
+	if secondary != null:
+		ResponsivePanelPolicyScript.reflow_row(secondary, footer_width)
+	call_deferred("_ensure_current_focus_visible")
+
+
+func _ensure_current_focus_visible() -> void:
+	if not is_inside_tree():
+		return
+	var focused := get_viewport().gui_get_focus_owner()
+	if focused != null:
+		_ensure_visible(focused)
 
 
 func _apply_section_state(section_id: String) -> void:
@@ -412,13 +480,22 @@ func _field_applies(field_id: String) -> bool:
 
 
 func _add_selector(layout: VBoxContainer, label_text: String) -> OptionButton:
+	var row := BoxContainer.new()
+	row.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_2)
+	layout.add_child(row)
+	_selector_rows.append(row)
 	var label := Label.new()
 	label.text = label_text
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.theme_type_variation = "SecondaryLabel"
-	layout.add_child(label)
+	row.add_child(label)
 	var selector := OptionButton.new()
+	selector.fit_to_longest_item = false
+	selector.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	selector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	layout.add_child(selector)
+	row.add_child(selector)
+	if is_inside_tree():
+		ResponsivePanelPolicyScript.bind_popup(selector.get_popup(), self)
 	_register_focus_control(selector)
 	return selector
 
@@ -797,7 +874,8 @@ func _configure_focus() -> void:
 func _ensure_visible(control: Control) -> void:
 	if _scroll == null or not is_instance_valid(control) or not control.is_inside_tree():
 		return
-	_scroll.ensure_control_visible(control)
+	if _scroll.is_ancestor_of(control):
+		_scroll.ensure_control_visible(control)
 
 
 func _on_selector_gui_input(selector: OptionButton, event: InputEvent) -> void:

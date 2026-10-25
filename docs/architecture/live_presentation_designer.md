@@ -119,11 +119,14 @@ palette architecture.
 
 ## Cockpit viewability
 
-The Designer is a bounded panel inside the existing game-area rect, or the
-cockpit surface while full Designer panel manipulation is active. Full mode uses an internal scroll container and
-occupies less than a majority of ordinary board width. Compact mode becomes a
-small A/B strip. Hidden mode removes the overlay while retaining the detached
-session.
+The Designer is an overlay bounded by the usable application viewport,
+independently of the game-area or detached-board allocation. Its preferred
+position follows the board/cockpit; it contracts, reflows and compacts before
+scrolling readable content. Full mode occupies less than a majority of ordinary
+viewport width and keeps close actions outside the content scroll. Compact mode
+becomes a small A/B strip. Hidden mode removes the overlay while retaining the
+detached session. Width, height, UI scale and fullscreen changes recalculate
+these bounds without reducing the board to accommodate the editor.
 
 The board and active/Ghost pieces remain visible beside/behind the bounded
 panel. NEXT and HOLD remain together in their shared module; full Designer mode

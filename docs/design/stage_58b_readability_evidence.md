@@ -125,3 +125,27 @@ script 78/84, with no reported assertion failure. Publication gives this suite
 a separate bounded 1800-second budget, retaining all tests and the 900-second
 watchdog for other Godot steps. A fresh complete run is required; the timed-out
 run is not acceptance evidence.
+
+## Amendment: drawn-board allocation (2026-10-25)
+
+The 2D/3D side rail now grows into width the right-anchored board leaves
+unused, so NEXT/HOLD names and the 3D MOVE row stop trimming and wrapping.
+That narrows the gameplay viewport rect without changing the board the player
+sees: the board is fitted by its height and anchored beside the rail. The
+viewport-rect share was a proxy for that board and no longer tracks it, so the
+58B allocation contract now measures the drawn board.
+
+- Measure: the fitted content's projected span at the orthographic scale,
+  in logical points (`CameraRig.drawn_content_size`).
+- Share at 1280×720: 3D 0.194 and 4D 0.340 of the window, against floors of
+  0.18 and 0.32. The earlier 55%/35% floors were viewport-rect shares.
+- Preserved: the drawn board is identical across all six styles even when a
+  style's fonts resize the rail and so the viewport rect (3D measured 320×558
+  points with viewports of 655, 736 and 752 points width).
+- Not narrowed: the Live 3D fit must stay height-limited
+  (`CameraRig.fitted_height_limited`); a rail that cut into the board would
+  make it width-limited and shrink what is drawn.
+
+Pitch is unchanged: the viewport height (580 points at 1280×720 for 3D) and the
+fit are unchanged, and only the empty width beside the board moved to the rail.
+`tests/test_stage_58b_readability.gd` carries these assertions.

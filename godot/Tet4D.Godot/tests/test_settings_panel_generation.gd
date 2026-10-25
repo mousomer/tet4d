@@ -138,7 +138,7 @@ func _assert_wrapped_setting_label(failures: Array, content: Node, setting_id: S
 	var row := content.get_node_or_null("SettingRow__%s" % setting_id.replace(".", "__"))
 	if row == null:
 		return
-	var row_content := row.get_node_or_null("SettingRowContent") as HBoxContainer
+	var row_content := row.get_node_or_null("SettingRowContent") as BoxContainer
 	if row_content == null:
 		failures.append("%s should render as a setting card with row content" % setting_id)
 		return
