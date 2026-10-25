@@ -36,6 +36,27 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   `docs/design/stage_58b_readability_evidence.md`. Windows, Linux and handheld
   devices still need their own rendered evidence.
 
+### Owner workflow adoption
+
+The `video-game-development`, `decision-worksheet` and `text-editor` agent
+skills live in `tools/agent-skills/`; `.claude/skills/` and `.agents/skills/`
+hold discovery pointers only. They are project workflow, not governance-pack
+skills. tet4d is an original native game, so the playbook's reverse
+engineering, oracle and fidelity register do not apply.
+
+- Mapping: the plan stays in this file, handoff in `CURRENT_STATE.md`, product
+  answers in `docs/rds/*`; owner decisions are numbered and recorded in the RDS
+  or architecture document they change. No `BUILD_PLAN.md` or decision register.
+- QA sheets name a local launch recipe and seeded settings instead of a published
+  build: no Web export exists. Owner review sizes are macOS windowed
+  1280×720/800 and fullscreen.
+- [x] Phase 0: skills committed on a branch from `master`.
+- [ ] Phase 1: project board artifact in the cockpit look, cards from
+  `tools/artifact-board/items.json`: slices, owner tasks and artifacts only.
+- [ ] Phase 2: Stage 58C decisions worksheet over captures of today's board.
+- [ ] Phase 3: QA sheets for P1 fullscreen and Stage 56H owner acceptance.
+- Text editor only when the owner asks to edit copy.
+
 ### Stage 56H spatial scaffold acceptance
 
 Cumulative NONE/BORDER/FULL roles now require cached edge geometry rather than

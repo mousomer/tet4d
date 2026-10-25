@@ -1,0 +1,251 @@
+<meta charset="utf-8">
+<title>SET ME: the sheet title, as in SHEET.title</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Decisions worksheet (skill: decision-worksheet). This default look is Dungeon Raid's: give
+   the page the project's own (its board's colours, type and corners) in one look file every sheet passes through. */
+:root {
+  --bg: #121733; --panel: #1f2750; --panel-2: #2a3366; --line: #3b4580; --slot: #4a3e82;
+  --fg: #e9e8f5; --muted: #a3a6c9; --title: #fdf926; --rec: #7fd4ff; --built: #8fe388; --ok: #8fe388; --err: #ff8a7a;
+  --display: "Grenze Gotisch", "Palatino Linotype", Georgia, serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 15px/1.55 var(--body); margin: 0; }
+.wrap { max-width: 980px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 64px; }
+h1 { font: 700 2.3rem/1.1 var(--display); color: var(--title); margin: 0 0 8px; text-wrap: balance; }
+h2 { font: 700 1.55rem/1.2 var(--display); margin: 34px 0 6px; text-wrap: balance; }
+.lede, .note { color: var(--muted); max-width: 70ch; }
+.lede b, .note b { color: var(--fg); font-weight: 600; }
+.lede a, .note a { color: var(--rec); }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; background: var(--bg); border-bottom: 1px solid var(--line);
+  padding-block: 10px; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: 0.88rem; }
+.bar .count { font-variant-numeric: tabular-nums; color: var(--fg); font-weight: 600; }
+#saveNote { color: var(--muted); }
+#saveNote[data-state="error"] { color: var(--err); }
+.ask { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin: 12px 0; }
+.ask[data-answered="true"] { border-color: color-mix(in srgb, var(--ok) 55%, var(--line)); }
+.ask.comment-only { background: transparent; border-style: dashed; }
+.ask.comment-only .comment { margin-top: 4px; }
+.ask h3 { margin: 0 0 4px; font: 600 1rem var(--body); }
+.ask p { margin: 0 0 10px; color: var(--muted); font-size: 0.92rem; max-width: 70ch; }
+.opts { margin: 0; padding: 0; display: grid; gap: 8px; }
+.opt { display: grid; grid-template-columns: 3.6em 1fr; gap: 10px; align-items: baseline; width: 100%; text-align: left;
+  font: inherit; color: var(--fg); background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px;
+  padding: 9px 12px; cursor: pointer; }
+.opt:hover { border-color: var(--slot); }
+.opt[aria-checked="true"] { background: var(--slot); border-color: var(--title); }
+.opt:focus-visible { outline: 2px solid var(--title); outline-offset: 2px; }
+.opt .what { min-width: 0; }
+.num { font: 600 0.9rem var(--body); color: var(--title); font-variant-numeric: tabular-nums; }
+.tag { font-size: 0.8rem; font-weight: 500; white-space: nowrap; }
+.tag.built { color: var(--built); }
+.tag.rec { color: var(--rec); }
+.opt[aria-checked="true"] .tag { color: var(--fg); }
+.comment { display: grid; gap: 4px; margin-top: 10px; }
+.comment label { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+textarea { width: 100%; min-height: 2.6em; resize: vertical; font: inherit; color: var(--fg); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+textarea:focus-visible { outline: 2px solid var(--title); outline-offset: 1px; }
+.saved { font-size: 0.8rem; color: var(--ok); min-height: 1.2em; }
+figure { margin: 14px 0 0; overflow-x: auto; }
+figure img { display: block; max-width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); }
+figure.narrow img { max-width: min(100%, 320px); }
+figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; }
+ul.defaults { margin: 6px 0 0; padding-left: 1.2em; color: var(--muted); max-width: 75ch; }
+ul.defaults li { margin: 4px 0; }
+ul.defaults b { color: var(--fg); font-weight: 600; }
+
+/* Tap a picture: full screen at full size, scroll with a finger; - / + zoom; x or Esc closes. */
+figure img { cursor: zoom-in; }
+figure figcaption::after { content: " (tap the picture to enlarge)"; color: var(--muted); }
+.lightbox { position: fixed; inset: 0; z-index: 50; background: var(--bg); overflow: auto;
+  -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.lightbox img { display: block; max-width: none !important; height: auto; margin: 64px 16px 24px; border-radius: 6px; }
+.lb-bar { position: fixed; z-index: 51; top: calc(env(safe-area-inset-top, 0px) + 10px); right: 10px; display: flex; gap: 8px; }
+.lb-bar button { min-width: 44px; height: 44px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--panel-2); color: var(--fg); font: 600 18px/1 var(--body); cursor: pointer; }
+.lb-bar .lb-zoom { min-width: 64px; font-size: 14px; color: var(--muted); background: var(--panel); }
+.group { font: 700 1.9rem/1.15 var(--display); color: var(--title); margin: 48px 0 0; padding-top: 18px; border-top: 2px solid var(--line); }
+</style>
+
+<div class="wrap">
+  <h1 id="title"></h1>
+  <p class="lede" id="lede"></p>
+  <div class="bar" role="status">
+    <span class="count" id="count"></span>
+    <span id="saveNote">Connecting…</span>
+  </div>
+  <div id="sections"></div>
+</div>
+
+<script>
+// ---- FILL IN: the sheet's content. HTML strings are written by the author (trusted). ----------------------------
+// Numbering is hierarchical and stable: section "1", question "1.1", option "1.1.1" (or "2.1" when the question
+// is the whole section). `id` is the db document id (letters, digits, - _). tag: 'built' (what the current build
+// already does), 'rec' (recommended), or omit. A section may have a figure (a file published next to the page),
+// a note, a list of defaults, and any number of questions.
+const SHEET = {
+  title: 'Project Decisions',
+  storageKey: 'project-decisions',        // localStorage fallback key (outside claude.ai)
+  lede: 'Tap an option to choose it (tap again to clear) and add a comment if you like; everything saves as you go and Claude reads it back. <span class="tag built">Built now</span> marks what the build already does: it stays until you answer.',
+  sections: [
+    {
+      num: '1', title: 'Example section',
+      note: 'Optional context for the whole section.',
+      figure: { src: 'fig-example.jpg', alt: 'What the picture shows', caption: '', narrow: false },
+      asks: [
+        { id: 'q1-1', num: '1.1', title: 'Example question', text: 'Optional detail.',
+          options: [
+            { v: '1.1.1', html: 'The option the build uses now.', tag: 'built' },
+            { v: '1.1.2', html: 'An alternative.' },
+            { v: '1.1.3', html: 'Something else (say what in the comment).' },
+          ] },
+      ],
+    },
+    {
+      num: '2', title: 'Defaults I am applying',
+      defaults: ['<b>A default:</b> what it is and why.'],
+      asks: [
+        { id: 'q2', num: '2', title: 'These defaults', options: [
+          { v: '2.1', html: 'All fine.' },
+          { v: '2.2', html: 'Change some (say which in the comment).' },
+        ] },
+      ],
+    },
+  ],
+};
+// -----------------------------------------------------------------------------------------------------------------
+
+const TAGS = { built: 'Built now', rec: 'Recommended' };
+document.title = SHEET.title;
+document.getElementById('title').textContent = SHEET.title;
+document.getElementById('lede').innerHTML = SHEET.lede;
+const host = document.getElementById('sections');
+for (const sec of SHEET.sections) {
+  if (sec.group) { const g = document.createElement('div'); g.className = 'group'; g.textContent = sec.group; host.append(g); }  // a heading over several sections
+  const h2 = document.createElement('h2'); h2.textContent = `${sec.num} · ${sec.title}`; host.append(h2);
+  if (sec.note) { const p = document.createElement('p'); p.className = 'note'; p.innerHTML = sec.note; host.append(p); }
+  for (const fig of (sec.figures || (sec.figure ? [sec.figure] : []))) {   // `figure`, or several in `figures`
+    const f = document.createElement('figure'); if (fig.narrow) f.className = 'narrow';
+    const img = document.createElement('img'); img.src = fig.src; img.alt = fig.alt || ''; img.loading = 'lazy'; f.append(img);
+    if (fig.caption) { const c = document.createElement('figcaption'); c.innerHTML = fig.caption; f.append(c); }
+    host.append(f);
+  }
+  if (sec.defaults) {
+    const ul = document.createElement('ul'); ul.className = 'defaults';
+    for (const d of sec.defaults) { const li = document.createElement('li'); li.innerHTML = d; ul.append(li); }
+    host.append(ul);
+  }
+  // Every section without a question gets a comment box of its own (id c<num>), so any part can be commented on.
+  const sectionAsks = (sec.asks && sec.asks.length) ? sec.asks : [{ id: 'c' + String(sec.num).replace(/[^A-Za-z0-9_-]/g, '_'), num: sec.num, title: 'Comments on this section', commentOnly: true, options: [] }];
+  for (const a of sectionAsks) {
+    const s = document.createElement('section'); s.className = a.commentOnly ? 'ask comment-only' : 'ask'; s.dataset.q = a.id;
+    const h3 = document.createElement('h3'); h3.textContent = `${a.num} ${a.title}`; s.append(h3);
+    if (a.text) { const p = document.createElement('p'); p.innerHTML = a.text; s.append(p); }
+    const opts = document.createElement('div'); opts.className = 'opts'; opts.setAttribute('role', 'radiogroup'); opts.setAttribute('aria-label', `${a.num} ${a.title}`);
+    for (const o of a.options) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'opt'; b.setAttribute('role', 'radio'); b.dataset.v = o.v;
+      b.innerHTML = `<span class="num"></span><span class="what">${o.html}${o.tag ? ` <span class="tag ${o.tag}">${TAGS[o.tag]}</span>` : ''}</span>`;
+      b.querySelector('.num').textContent = o.v;
+      opts.append(b);
+    }
+    if (!a.commentOnly) s.append(opts);
+    host.append(s);
+  }
+}
+
+const state = {};                     // question id -> { choice, comment }
+let store = null;                     // db collection, or null (kept on this device only)
+const asks = [...document.querySelectorAll('.ask')];
+
+function note(text, err) { const n = document.getElementById('saveNote'); n.textContent = text; n.dataset.state = err ? 'error' : ''; }
+function flash(q, text) { const el = document.getElementById(q + '-saved'); if (el) el.textContent = text; }
+
+function render() {
+  let answered = 0;
+  for (const sec of asks) {
+    const q = sec.dataset.q, s = state[q] || {};
+    if (s.choice) answered++;
+    sec.dataset.answered = String(!!s.choice);
+    sec.querySelectorAll('.opt').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.v === s.choice)));
+    const ta = sec.querySelector('textarea');
+    if (document.activeElement !== ta && ta.value !== (s.comment || '')) ta.value = s.comment || '';
+  }
+  const total = asks.filter((s) => !s.classList.contains('comment-only')).length;
+  document.getElementById('count').textContent = `${answered} of ${total} answered`;
+}
+
+async function write(q) {
+  const s = state[q] || {};
+  const body = { choice: s.choice || '', comment: s.comment || '', updatedAt: new Date().toISOString() };
+  if (!store) { try { localStorage.setItem(SHEET.storageKey, JSON.stringify(state)); } catch {} flash(q, 'Saved on this device'); return; }
+  flash(q, 'Saving…');
+  try { await store.doc(q).set(body); flash(q, 'Saved'); }
+  catch (e) { flash(q, ''); note(e && e.code === 'invalid_argument' ? 'You can view answers but not change them.' : 'Could not save. Check your connection and try again.', true); }
+}
+
+for (const sec of asks) {
+  const q = sec.dataset.q;
+  const box = document.createElement('div'); box.className = 'comment';
+  box.innerHTML = `<label for="${q}-comment">Comment</label><textarea id="${q}-comment" rows="2" placeholder="Optional: anything to add or change"></textarea><span class="saved" id="${q}-saved"></span>`;
+  sec.append(box);
+  sec.querySelectorAll('.opt').forEach((b) => b.addEventListener('click', () => {
+    const s = state[q] = { ...(state[q] || {}) };
+    s.choice = s.choice === b.dataset.v ? '' : b.dataset.v;     // tap again to clear
+    render(); write(q);
+  }));
+  const ta = box.querySelector('textarea');
+  let timer = null;
+  const commit = () => { const s = state[q] = { ...(state[q] || {}) }; if ((s.comment || '') === ta.value) return; s.comment = ta.value; render(); write(q); };
+  ta.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(commit, 700); });
+  ta.addEventListener('blur', () => { clearTimeout(timer); commit(); });
+}
+render();
+
+(async () => {
+  let db = null;
+  try { db = window.claude ? await window.claude.use('db') : null; } catch {}
+  if (!db) {
+    try { Object.assign(state, JSON.parse(localStorage.getItem(SHEET.storageKey) || '{}')); } catch {}
+    render();
+    note('Saved answers are unavailable here; choices are kept on this device only.');
+    return;
+  }
+  store = db.collection('answers');
+  store.onSnapshot((snap) => {
+    for (const d of snap.docs) { const b = d.data(); state[d.id] = { choice: b.choice || '', comment: b.comment || '' }; }
+    render();
+    note('Answers save automatically. Tap a choice again to clear it.');
+  }, () => note('Lost the connection to saved answers. Reload the page.', true));
+})();
+
+// Tap a picture to enlarge: full screen at its full size (fit to the screen first if smaller), scroll with a finger,
+// - / + zoom by steps, x / Esc / the back of the overlay closes.
+(() => {
+  let box = null, img = null, zoom = 1, label = null;
+  const fit = () => Math.min(1, (innerWidth - 32) / img.naturalWidth);
+  const apply = () => { img.style.width = Math.round(img.naturalWidth * zoom) + 'px'; label.textContent = Math.round(zoom * 100) + '%'; };
+  const close = () => { if (!box) return; box.remove(); document.querySelector('.lb-bar')?.remove(); box = null; document.body.style.overflow = ''; };
+  const step = (k) => {
+    const cx = (box.scrollLeft + innerWidth / 2) / img.offsetWidth, cy = (box.scrollTop + innerHeight / 2) / img.offsetHeight;
+    zoom = Math.max(fit(), Math.min(3, zoom * k)); apply();
+    box.scrollLeft = cx * img.offsetWidth - innerWidth / 2; box.scrollTop = cy * img.offsetHeight - innerHeight / 2;
+  };
+  document.addEventListener('click', (e) => {
+    const src = e.target.closest && e.target.closest('figure img');
+    if (!src || box) return;
+    box = document.createElement('div'); box.className = 'lightbox'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', src.alt || 'Picture');
+    img = document.createElement('img'); img.src = src.src; img.alt = src.alt || ''; box.append(img);
+    const bar = document.createElement('div'); bar.className = 'lb-bar';
+    const mk = (t, aria, fn, cls) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = t; b.setAttribute('aria-label', aria); if (cls) b.className = cls; b.addEventListener('click', fn); bar.append(b); return b; };
+    mk('\u2212', 'Zoom out', () => step(1 / 1.5)); label = mk('', 'Actual size', () => { zoom = 1; apply(); }, 'lb-zoom'); mk('+', 'Zoom in', () => step(1.5)); mk('\u2715', 'Close', close);
+    box.addEventListener('click', (ev) => { if (ev.target === box) close(); });
+    document.body.append(box, bar); document.body.style.overflow = 'hidden';
+    const start = () => { zoom = Math.max(fit(), 1); apply(); };
+    img.complete ? start() : img.addEventListener('load', start, { once: true });
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+})();
+</script>
