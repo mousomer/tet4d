@@ -154,6 +154,11 @@ func _check_production_layout() -> Array:
 	if projected_share < 0.94 or projected_share > 0.96:
 		failures.append("authoritative Live 4D bounds should use about 95 percent of the limiting viewport dimension, got %.4f" % projected_share)
 
+	# Gravity ticks on a 0.5 s wall clock, and the Designer steps below span
+	# many frames: a slower runner would see a gravity step, not a leak from
+	# presentation. Hold gravity so the hash isolates presentation alone.
+	var was_paused: bool = app._live_4d_paused
+	app._live_4d_paused = true
 	var deterministic_before := str(app._live_bridge.live_4d_state_hash())
 	hud._open_presentation_designer()
 	await tree.process_frame
@@ -206,6 +211,7 @@ func _check_production_layout() -> Array:
 	failures.append_array(_check_primary_surfaces(hud, "live_4d", "Designer compact"))
 	if str(app._live_bridge.live_4d_state_hash()) != deterministic_before:
 		failures.append("cockpit/Designer presentation must not mutate deterministic Live 4D state")
+	app._live_4d_paused = was_paused
 
 	for scale_id in ["large", "extra_large"]:
 		hud._apply_ui_scale(scale_id)
