@@ -41,6 +41,8 @@ var _source := "LiveInputContract"
 var _screen_directions := {}
 var _glyphs: Array = []
 var _slice_keys_reversed := false
+var _detached_layout := false
+var _requested_layout := LAYOUT_DECK
 
 
 func _init() -> void:
@@ -82,6 +84,9 @@ func _init() -> void:
 
 
 func configure(mode: String, basis_snapshot: Dictionary = {}, control_frame: Dictionary = {}, density: String = "normal", authority = LiveInputContractScript, layout: String = LAYOUT_DECK) -> void:
+	_requested_layout = layout
+	if _detached_layout and layout == LAYOUT_WIDE:
+		layout = LAYOUT_RAIL
 	var legend := layout in [LAYOUT_RAIL, LAYOUT_WIDE]
 	var groups: Array = authority.play_legend_groups(mode, basis_snapshot, control_frame) if legend else authority.piece_control_groups(mode, basis_snapshot, control_frame)
 	var source := "LiveInputContract" if authority == LiveInputContractScript else "injected_fixture"
@@ -97,6 +102,44 @@ func configure(mode: String, basis_snapshot: Dictionary = {}, control_frame: Dic
 	_source = source
 	_signature = next_signature
 	_rebuild()
+
+
+func set_detached_layout(enabled: bool) -> void:
+	if _detached_layout == enabled:
+		return
+	_detached_layout = enabled
+	var layout := LAYOUT_RAIL if enabled and _requested_layout == LAYOUT_WIDE else _requested_layout
+	_set_layout(layout)
+	_signature = ""
+	_rebuild()
+
+
+# Width at which the legend's height-costly flows stop wrapping: the wide deck
+# keeps every section on one line, the rail keeps the MOVE compass beside its
+# drop keys. The GAME key rows are meant to wrap and are not asked for. A
+# flow's own minimum is only its widest item, so a host deciding how much width
+# to give the legend has to ask for the whole line.
+func unwrapped_width() -> float:
+	var width := get_combined_minimum_size().x
+	var flows: Array = _groups_box.find_children("LegendMoveBody", "FlowContainer", true, false)
+	if _groups_box is FlowContainer:
+		flows.append(_groups_box)
+	for flow in flows:
+		var flow_control := flow as Control
+		if not flow_control.is_visible_in_tree():
+			continue
+		var line := 0.0
+		var count := 0
+		for child in flow_control.get_children():
+			if child is Control and (child as Control).visible:
+				line += (child as Control).get_combined_minimum_size().x
+				count += 1
+		line += float(maxi(count - 1, 0) * flow_control.get_theme_constant("h_separation"))
+		# Flows fill their width, so the laid-out difference is the margins and
+		# padding around them; minimums would add the widest sibling instead.
+		var chrome := size.x - flow_control.size.x if size.x > 1.0 and flow_control.size.x > 1.0 else get_combined_minimum_size().x - flow_control.get_combined_minimum_size().x
+		width = maxf(width, chrome + line)
+	return width
 
 
 func deterministic_snapshot() -> Dictionary:

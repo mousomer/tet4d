@@ -694,7 +694,14 @@ as the main scale constraint. Stage 58B gives live boards a larger share of the
 existing cockpit: bounded side rails, a measured 4D legend deck and
 compact, style-independent header metrics. Every existing action and semantic
 control group stays reachable. Allocation follows the actual available shell;
-theme appearance cannot change those region constraints or the camera target.
+theme appearance cannot change the drawn board or the camera target.
+
+Allocation is measured on the drawn board, not the viewport rect. A
+right-anchored, height-limited 2D/3D board leaves unused width beside it, and
+the side rail may take that width for its content, so a style's fonts can
+change the rail and the viewport rect while the drawn board stays identical.
+The rail never makes the 3D fit width-limited. The evidence and floors are
+recorded in `docs/design/stage_58b_readability_evidence.md`.
 
 Adaptive slice layout maximizes usable cell scale in the actual gameplay region
 over all column counts, using the canonical fitted camera projection and the
@@ -904,7 +911,9 @@ NEXT/HOLD identity, availability, geometry, palette ownership, and gameplay
 authority do not change.
 
 The live top action stack uses one row so recovered vertical space enlarges
-the board viewport before framing is considered. Live-4D framing continues to
+the board viewport before framing is considered. Below the measured header
+width minimum it stacks its navigation and session columns within the client
+area; normal Stage 58 allocation remains unchanged. Live-4D framing continues to
 consume the authoritative collection bounds. Its bounded clearance is 10% per
 projected dimension; it introduces no translation offset and does not merge
 local geometry, slice-set layout, collection bounds, or camera authority.

@@ -20,6 +20,8 @@ phase-dependent work. It is not workflow authority, a CI diary, a completed
 stage archive, a task-contract ledger, or a future programme.
 ## Active Focus
 
+Fullscreen-panel, live-helper and Main Menu responsiveness (owner-accepted and locked) is tracked in `docs/BACKLOG.md`.
+
 Machine-readable handoff state. `status` is `active` only on a feature branch
 or draft PR and must name that branch; it is `none` on the default branch and
 on any non-draft PR targeting it. `tools/governance/validate_handoff_lifecycle.py`

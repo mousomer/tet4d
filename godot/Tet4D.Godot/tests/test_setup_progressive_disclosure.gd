@@ -456,14 +456,17 @@ func _check_navigation(failures: Array) -> void:
 	await tree.process_frame
 	await tree.process_frame
 	var scroll := panel.get_child(0) as ScrollContainer
-	if scroll == null or scroll.horizontal_scroll_mode != ScrollContainer.SCROLL_MODE_DISABLED:
+	if scroll == null or scroll.get_h_scroll_bar().visible:
 		failures.append("setup must keep viewport-safe vertical scrolling")
 	else:
 		panel._start_button.grab_focus()
 		await tree.process_frame
 		await tree.process_frame
-		if not _is_within_scroll(scroll, panel._start_button):
-			failures.append("focusing Start must scroll it into view at the compact viewport")
+		var footer := panel.find_child("SetupActions", true, false) as Control
+		if footer == null or scroll.is_ancestor_of(panel._start_button):
+			failures.append("Start must remain in a fixed footer outside long setup content")
+		elif not panel.get_global_rect().grow(1.0).encloses(footer.get_global_rect()):
+			failures.append("setup actions must stay visible at the compact viewport")
 	tree.root.size = original_size
 	await _free_panel(harness)
 

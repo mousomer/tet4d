@@ -34,20 +34,31 @@ func run() -> Array:
 		await _frames(tree, 12)
 		app._fit_view()
 		await _frames(tree, 4)
-		var geometry: Vector2 = hud.board_viewport_size()
-		# Live 4D shows its whole legend at this opening window, which outranks
-		# the earlier 45% target; its floor now guards only pathological shrink.
-		var required_area := 0.55 if mode == "live_3d" else 0.35
+		# Allocation is measured on the drawn board, not the viewport rect: the
+		# 2D/3D rail grows into width the right-anchored, height-limited board
+		# leaves unused, which narrows the viewport but not what the player sees.
+		var geometry: Vector2 = app._camera_rig.drawn_content_size(hud.board_viewport_size().y)
+		# Shares of the window the accepted boards draw at 1280x720 (3D 0.194,
+		# 4D 0.340), less a small tolerance. Live 4D shows its whole legend at
+		# this opening window, which outranks a larger 4D target.
+		var required_area := 0.18 if mode == "live_3d" else 0.32
 		if geometry.x * geometry.y / (1280 * 720) < required_area:
-			failures.append("%s must retain the reclaimed gameplay allocation, got %s" % [mode, geometry])
+			failures.append("%s must retain the reclaimed gameplay allocation, drew %s" % [mode, geometry])
+		# The rail sits beside the 3D board: if the fit stopped being set by the
+		# board's height, the rail would be narrowing the drawn board.
+		if mode == "live_3d" and not app._camera_rig.fitted_height_limited():
+			failures.append("%s rail must not narrow the drawn board" % mode)
 		var anchors: Dictionary = app._renderer._presentation.projection.mapper.layer_layout.snapshot()
 		var camera: Dictionary = app._camera_rig.presentation_snapshot()
 		for record in catalog.list_styles():
 			var style = catalog.style_profile(str(record["style_id"]))["profile"]
 			app.apply_presentation_profile(app._presentation_profile.with_style_of(style))
 			await _frames(tree, 8)
-			if hud.board_viewport_size().distance_to(geometry) > 0.1:
-				failures.append("%s / %s must preserve viewport allocation" % [mode, record["style_id"]])
+			# A style's fonts may resize the rail and so the viewport rect; the
+			# board the player sees must not change.
+			var drawn: Vector2 = app._camera_rig.drawn_content_size(hud.board_viewport_size().y)
+			if drawn.distance_to(geometry) > 0.1:
+				failures.append("%s / %s must preserve the drawn board, got %s from %s" % [mode, record["style_id"], drawn, geometry])
 			if mode == "live_4d" and app._renderer._presentation.projection.mapper.layer_layout.snapshot() != anchors:
 				failures.append("%s / %s must preserve slice positions and spacing" % [mode, record["style_id"]])
 			var after: Dictionary = app._camera_rig.presentation_snapshot()
@@ -59,9 +70,10 @@ func run() -> Array:
 			if hud.game_viewport().size != expected or hud.game_viewport().msaa_3d != Viewport.MSAA_4X:
 				failures.append("gameplay must render at displayed pixel extent with 4x MSAA")
 		# Retina-style backing pixels change resolution, never logical allocation.
+		var allocation: Vector2 = hud.board_viewport_size()
 		tree.root.size = Vector2i(2560, 1440)
 		await _frames(tree, 8)
-		if hud.board_viewport_size().distance_to(geometry) > 0.1 or hud.game_viewport().size != Vector2i(geometry * 2.0):
+		if hud.board_viewport_size().distance_to(allocation) > 0.1 or hud.game_viewport().size != Vector2i(allocation * 2.0):
 			failures.append("doubling backing pixels must double rendering without resizing the board")
 		tree.root.size = Vector2i(1280, 720)
 		await _frames(tree, 4)

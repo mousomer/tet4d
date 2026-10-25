@@ -5,6 +5,8 @@ class_name LiveCockpit
 const DesignerPanelFrame = preload("res://scripts/ui/designer_panel_frame.gd")
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
+const ResponsivePanelPolicy = preload("res://scripts/ui/responsive_panel_policy.gd")
+const FitScaleContainerScript = preload("res://scripts/ui/fit_scale_container.gd")
 
 const PROFILE_WIDE := "wide"
 const PROFILE_STANDARD := "standard"
@@ -26,11 +28,27 @@ const MAX_DECK_ROWS := 3
 # overflow keeps every control reachable at any size; the cost is that not all
 # of them are visible at once, which is the accepted tradeoff for small shells.
 const MAX_DECK_HEIGHT_SHARE := 0.20
+# The camera fits the board to any rect, so the board has no aspect-derived
+# demand to measure. Below it the deck may instead take the stage height above
+# this reserved board share before it scrolls; MAX_DECK_HEIGHT_SHARE stays the
+# floor it never drops beneath.
+const BOARD_RESERVE_STAGE_SHARE := 0.5
+# Smallest uniform scale a helper panel shrinks to before it scrolls. It keeps
+# the 22-unit control hints at about 13 units, the smallest helper text that
+# stays readable at the 1280-unit design canvas.
+const FIT_SCALE_FLOOR := 0.6
+# Resolution of the scale search; finer steps cost frames, not legibility.
+const FIT_SCALE_STEP := 0.02
+# Frames a fit waits for its host's layout before deciding with what it has.
+const FIT_SETTLE_FRAMES := 30
+# Outer shell margin above and below the cockpit.
+const DECK_VERTICAL_INSET := 24.0
 # Product contract for the Live 4D legend deck: at the supported 1280x720
 # opening window (720 logical px tall) and above, it shows the whole measured
 # legend. Below it the deck gives up exactly the missing height, so the board
 # keeps its reference-window allocation, until it reaches the standard compact
-# share; from there both shrink together and the legend scrolls. Header height
+# share; from there both shrink together and the legend scales down to fit, scrolling
+# only at FIT_SCALE_FLOOR. Header height
 # beyond the plain live top bar (an open guide) counts as missing height too.
 const LEGEND_FULL_FIT_HEIGHT := 720.0
 # Outer shell margin on each side of the cockpit.
@@ -61,8 +79,14 @@ const SPLIT_COLUMN_MAX_WIDTH := 280.0
 
 var header_slot: VBoxContainer
 var board_stage: HBoxContainer
+# Board plus, in the 4D split, the legend deck under it; the side column beside
+# this spans the whole stage height instead of only the board's.
+var board_column: VBoxContainer
 var primary_board_surface: VBoxContainer
 var side_column: VBoxContainer
+# Between each scroll and its content: helpers shrink to fit before scrolling.
+var side_fit
+var deck_fit
 var side_scroll: ScrollContainer
 var control_deck: VBoxContainer
 var deck_scroll: ScrollContainer
@@ -83,6 +107,19 @@ var _last_module_heights := Vector3.ZERO
 var _last_header_height := -1.0
 var _natural_deck_height := 0.0
 var _scroll_required := false
+var _side_column_natural_height := 0.0
+var _side_column_scroll_required := false
+var _last_stage_height := -1.0
+var _last_host_widths := Vector2(-1.0, -1.0)
+var _split_full_height := false
+var _board_aspect := 0.0
+# The height the deck below the board may take before it scrolls.
+var _deck_room := 0.0
+var _board_viewport: Control
+# Modules whose gaps are halved because their relaxed height overflowed, and
+# per fit group ("deck", "side") whether it is compact and its relaxed height.
+var _compacted: Array[String] = []
+var _fit_states: Dictionary = {}
 var _placement := PLACEMENT_BELOW
 var _requested_placement := PLACEMENT_BELOW
 
@@ -101,6 +138,8 @@ func set_designer_layout_enabled(enabled: bool, board: Control) -> void:
 		return
 	_designer_enabled = enabled
 	if enabled:
+		# Detached frames size and scroll on their own; they take relaxed spacing.
+		_reset_fit()
 		_designer_deck_visible = control_deck.visible
 		_designer_host = Control.new()
 		_designer_host.name = "DesignerCockpitSurface"
@@ -207,9 +246,16 @@ func _init() -> void:
 	board_stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	board_stage.add_theme_constant_override("separation", SIDE_RAIL_GAP)
 	add_child(board_stage)
+	board_column = VBoxContainer.new()
+	board_column.name = "BoardColumn"
+	board_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	board_column.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	board_column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	board_column.add_theme_constant_override("separation", 4)
+	board_stage.add_child(board_column)
 	primary_board_surface = _slot("PrimaryBoardSurface")
 	primary_board_surface.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	board_stage.add_child(primary_board_surface)
+	board_column.add_child(primary_board_surface)
 	# Scrolls as a whole so a short window never pushes the deck off-screen;
 	# NEXT/HOLD sit at its top and stay visible.
 	side_scroll = ScrollContainer.new()
@@ -227,7 +273,11 @@ func _init() -> void:
 	side_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	side_column.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	side_column.add_theme_constant_override("separation", 6)
-	side_scroll.add_child(side_column)
+	side_fit = FitScaleContainerScript.new()
+	side_fit.name = "SideColumnFit"
+	side_fit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	side_scroll.add_child(side_fit)
+	side_fit.add_child(side_column)
 	control_deck = VBoxContainer.new()
 	control_deck.name = "ControlDeck"
 	control_deck.visible = false
@@ -247,7 +297,12 @@ func _init() -> void:
 	deck_row_host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	deck_row_host.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	deck_row_host.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	deck_scroll.add_child(deck_row_host)
+	deck_fit = FitScaleContainerScript.new()
+	deck_fit.name = "DeckRowsFit"
+	deck_fit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	deck_fit.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	deck_scroll.add_child(deck_fit)
+	deck_fit.add_child(deck_row_host)
 	for row_index in range(MAX_DECK_ROWS):
 		var row := HBoxContainer.new()
 		row.name = "DeckRow%d" % row_index
@@ -275,6 +330,7 @@ func _init() -> void:
 	for module in [piece_controls, view_controls, piece_state]:
 		module.minimum_size_changed.connect(_on_deck_metrics_changed)
 	header_slot.minimum_size_changed.connect(_on_deck_metrics_changed)
+	side_scroll.resized.connect(_on_deck_metrics_changed)
 
 
 func set_deck_placement(placement: String) -> void:
@@ -295,6 +351,7 @@ func _relocate(next_placement: String) -> void:
 		return
 	var leaving_split := _placement == PLACEMENT_SPLIT
 	_placement = next_placement
+	_reset_fit()
 	var side := _placement == PLACEMENT_SIDE
 	side_scroll.visible = _placement == PLACEMENT_SPLIT
 	if _placement == PLACEMENT_SPLIT:
@@ -305,9 +362,10 @@ func _relocate(next_placement: String) -> void:
 		# Row assignment reparents every module it packs; seed them back first.
 		for module in [view_controls, piece_state]:
 			(module as Control).reparent(deck_rows[0], false)
-	control_deck.reparent(board_stage if side else self, false)
-	if not side:
-		move_child(control_deck, get_child_count() - 1)
+	# The split host is chosen per pass by _place_split_deck; start full width.
+	var host: Container = board_stage if side else self
+	_split_full_height = false
+	_move_deck(host)
 	control_deck.size_flags_horizontal = Control.SIZE_SHRINK_END if side else Control.SIZE_EXPAND_FILL
 	control_deck.size_flags_vertical = Control.SIZE_EXPAND_FILL if side else Control.SIZE_FILL
 	for row in deck_rows:
@@ -367,6 +425,17 @@ func deterministic_snapshot() -> Dictionary:
 		"deck_row_count": _row_assignment.size(),
 		"deck_natural_height": _natural_deck_height,
 		"deck_scroll_required": _scroll_required,
+		"side_column_natural_height": _side_column_natural_height,
+		"side_column_scroll_required": _side_column_scroll_required,
+		"compacted_modules": _compacted.duplicate(),
+		"deck_fit_scale": deck_fit.fit_scale,
+		"side_fit_scale": side_fit.fit_scale,
+		"stage_rect": board_stage.get_global_rect(),
+		"board_spare_height": _board_spare_height(),
+		"deck_room": _deck_room,
+		"split_column_full_height": _split_full_height,
+		"board_content_aspect": _board_aspect,
+		"rail_width": control_deck.size.x if _placement == PLACEMENT_SIDE else 0.0,
 		"deck_rows_rect": deck_row_host.get_global_rect(),
 		"deck_row_assignment": _row_assignment.duplicate(true),
 		"deck_minimum_width": control_deck.get_combined_minimum_size().x,
@@ -387,9 +456,11 @@ func _on_deck_metrics_changed() -> void:
 		return
 	var width := _packing_width()
 	var minimums := _module_minimums()
-	if is_equal_approx(width, _last_packing_width) and minimums.is_equal_approx(_last_module_minimums) and _module_heights().is_equal_approx(_last_module_heights) and is_equal_approx(_header_height(), _last_header_height):
+	if is_equal_approx(width, _last_packing_width) and minimums.is_equal_approx(_last_module_minimums) and _module_heights().is_equal_approx(_last_module_heights) and is_equal_approx(_header_height(), _last_header_height) and is_equal_approx(_stage_constraint(), _last_stage_height) and _host_widths().is_equal_approx(_last_host_widths):
 		if _placement == PLACEMENT_SIDE:
 			_update_side_scroll_state()
+		elif _placement == PLACEMENT_SPLIT:
+			_update_split_scroll_state()
 		return
 	_apply_responsive_policy()
 
@@ -431,6 +502,8 @@ func _apply_responsive_policy() -> void:
 		return
 	control_deck.custom_minimum_size.x = 0.0
 	side_scroll.custom_minimum_size.x = clampf(_layout_size.x * SPLIT_COLUMN_WIDTH_SHARE, SPLIT_COLUMN_MIN_WIDTH, SPLIT_COLUMN_MAX_WIDTH) if _placement == PLACEMENT_SPLIT else 0.0
+	if _placement == PLACEMENT_SPLIT:
+		_place_split_deck()
 	var row_height := _row_height_for_profile()
 	var row_separation := _row_separation_for_profile()
 	var deck_separation := 8 if _responsive_profile in [PROFILE_NARROW, PROFILE_SMALL] else 6
@@ -439,26 +512,55 @@ func _apply_responsive_policy() -> void:
 	_apply_row_assignment(packed, row_separation)
 	_row_assignment = packed
 	control_deck.add_theme_constant_override("separation", deck_separation)
-	var row_count := packed.size()
-	var natural_height := _natural_height_for_rows(packed, row_height, deck_separation)
-	var height_cap := _layout_size.y * MAX_DECK_HEIGHT_SHARE if _layout_size.y > 1.0 else natural_height
-	var deck_height := minf(natural_height, maxf(height_cap, row_height))
+	var natural_height := 0.0
+	var deck_height := 0.0
 	if _placement == PLACEMENT_SPLIT:
 		# The legend's own measured height, not the profile row floor, bounded by
 		# the current cockpit height. Both inputs are re-read on every pass, so
 		# the deck never keeps a height a smaller window imposed.
-		natural_height = _natural_height_for_rows(packed, 0.0, deck_separation)
+		var measure := func() -> float: return _natural_height_for_rows(packed, 0.0, deck_separation)
+		var shortfall := 0.0
 		if _layout_size.y > 1.0:
 			var header_growth := maxf(_header_height() - float(ReplayVisuals.LIVE_TOP_BAR_HEIGHT), 0.0)
-			var shortfall := maxf(LEGEND_FULL_FIT_HEIGHT + header_growth - _layout_size.y, 0.0)
-			var compact := minf(natural_height, _layout_size.y * MAX_DECK_HEIGHT_SHARE)
-			deck_height = maxf(natural_height - shortfall, compact)
-		else:
-			deck_height = natural_height
-	deck_row_host.custom_minimum_size.y = natural_height
+			shortfall = maxf(LEGEND_FULL_FIT_HEIGHT + header_growth - _layout_size.y, 0.0)
+		var cap := _layout_size.y * MAX_DECK_HEIGHT_SHARE if _layout_size.y > 1.0 else INF
+		# The board keeps its reference allocation: the deck gives up exactly the
+		# missing height, measured against the relaxed legend.
+		var room_for := func(relaxed: float) -> float: return maxf(relaxed - shortfall, minf(relaxed, cap))
+		natural_height = _fit_height("deck", [piece_controls], measure, room_for, _deck_settled())
+		# Compact: the room follows the recorded relaxed legend, not the compact one.
+		var deck_state: Dictionary = _fit_states.get("deck", {})
+		var relaxed_legend := float(deck_state["relaxed"]) if bool(deck_state.get("compact", false)) else natural_height
+		deck_height = minf(natural_height, room_for.call(relaxed_legend))
+	else:
+		var measure := func() -> float: return _natural_height_for_rows(packed, row_height, deck_separation)
+		var height_cap := _layout_size.y * MAX_DECK_HEIGHT_SHARE if _layout_size.y > 1.0 else INF
+		var room := maxf(maxf(height_cap, row_height), _board_spare_height())
+		# Never more than the window leaves under the board's own minimum: a
+		# deck taller than that pushes itself, and its helpers, off-screen.
+		if _layout_size.y > 1.0:
+			var left := _stage_height() - primary_board_surface.get_combined_minimum_size().y - float(get_theme_constant("separation"))
+			room = minf(room, maxf(left, 0.0))
+		# But never below one row at the scale floor: a window too short for
+		# board, guide and deck together must not hide the helpers outright.
+		room = maxf(room, row_height * FIT_SCALE_FLOOR)
+		_deck_room = room
+		natural_height = _fit_height("deck", [piece_controls, view_controls, piece_state], measure, func(_relaxed: float) -> float: return room, _deck_settled())
+		deck_height = minf(natural_height, room)
+	# The rows lay out unscaled inside the fit box.
+	deck_row_host.custom_minimum_size.y = natural_height / deck_fit.fit_scale
 	control_deck.custom_minimum_size.y = deck_height
 	_natural_deck_height = natural_height
 	_scroll_required = natural_height > deck_height + 0.5
+	if _placement == PLACEMENT_SPLIT:
+		var column_room := side_scroll.size.y
+		_side_column_natural_height = _fit_height("side", [piece_state, view_controls], func() -> float: return side_column.get_combined_minimum_size().y, func(_relaxed: float) -> float: return column_room, side_scroll.size.x >= side_scroll.custom_minimum_size.x - 1.0)
+		_update_split_scroll_state()
+	else:
+		_side_column_natural_height = 0.0
+		_side_column_scroll_required = false
+	_last_stage_height = _stage_constraint()
+	_last_host_widths = _host_widths()
 	_last_packing_width = available
 	_last_module_minimums = _module_minimums()
 	_last_module_heights = _module_heights()
@@ -471,11 +573,75 @@ func _apply_responsive_policy() -> void:
 		call_deferred("_on_deck_metrics_changed")
 
 
+# The share-based width is the rail's floor. Above it the rail grows to what its
+# content asks for (full piece names, an unwrapped MOVE row) but only into the
+# width the right-anchored board leaves unused, so the board never shrinks.
 func _rail_width() -> float:
 	if _layout_size.x <= 1.0:
 		return SIDE_RAIL_MIN_WIDTH
 	var share := SIDE_RAIL_NARROW_WIDTH_SHARE if _responsive_profile in [PROFILE_NARROW, PROFILE_SMALL] else SIDE_RAIL_WIDTH_SHARE
-	return clampf(_layout_size.x * share, SIDE_RAIL_MIN_WIDTH, SIDE_RAIL_MAX_WIDTH)
+	var base := clampf(_layout_size.x * share, SIDE_RAIL_MIN_WIDTH, SIDE_RAIL_MAX_WIDTH)
+	var preferred := _rail_preferred_width()
+	if preferred <= base:
+		return base
+	return clampf(preferred, base, maxf(base, _rail_room_beside_board()))
+
+
+# Widest content need among the rail's modules, plus room for the rail's own
+# scrollbar so a scrolling rail does not rewrap into a taller one.
+func _rail_preferred_width() -> float:
+	var widest := 0.0
+	for module in [piece_state, piece_controls]:
+		if (module as Control).visible:
+			widest = maxf(widest, _module_preferred_width(module))
+	if widest <= 0.0:
+		return 0.0
+	return widest + deck_scroll.get_v_scroll_bar().get_combined_minimum_size().x
+
+
+# Helpers that can show more when wider say so: unwrapped_width() is the whole
+# control at its unwrapped line, preferred_width() one card laid out in a grid.
+func _module_preferred_width(module: Control) -> float:
+	var module_minimum := module.get_combined_minimum_size().x
+	var best := module_minimum
+	for node in module.find_children("*", "Control", true, false):
+		var control := node as Control
+		if not control.visible:
+			continue
+		if control.has_method("unwrapped_width"):
+			best = maxf(best, module_minimum - control.get_combined_minimum_size().x + float(control.unwrapped_width()))
+		elif control.has_method("preferred_width"):
+			var grid := control.get_parent() as GridContainer
+			if grid != null:
+				var columns := maxi(grid.columns, 1)
+				var row := float(columns) * float(control.preferred_width()) + float((columns - 1) * grid.get_theme_constant("h_separation"))
+				best = maxf(best, module_minimum - grid.get_combined_minimum_size().x + row)
+			else:
+				best = maxf(best, module_minimum - control.get_combined_minimum_size().x + float(control.preferred_width()))
+	return best
+
+
+# The fitted board's width per unit of height comes from the camera, so the
+# board's demand follows the current stage height and the rail may take the
+# rest. Unknown aspect or an unsettled stage leaves no room beyond the floor.
+func set_board_demand(aspect: float, board_viewport: Control) -> void:
+	_board_viewport = board_viewport
+	if is_equal_approx(aspect, _board_aspect):
+		return
+	_board_aspect = aspect
+	_apply_responsive_policy()
+
+
+func _rail_room_beside_board() -> float:
+	var stage_height := board_stage.size.y
+	if _board_aspect <= 0.0 or stage_height <= 1.0 or _board_viewport == null or not is_instance_valid(_board_viewport):
+		return 0.0
+	# Frame and padding between the board surface and the rendered viewport.
+	var inset := (primary_board_surface.size - _board_viewport.size).max(Vector2.ZERO)
+	var board_width := maxf(stage_height - inset.y, 0.0) * _board_aspect + inset.x
+	# The board surface's own minimum still binds when it exceeds the fit.
+	board_width = maxf(board_width, primary_board_surface.get_combined_minimum_size().x)
+	return _layout_size.x - DECK_HORIZONTAL_INSET - float(SIDE_RAIL_GAP) - board_width
 
 
 # The rail stacks visible modules top to bottom: what the player glances at
@@ -493,8 +659,13 @@ func _apply_side_policy() -> void:
 	var row_separation := ShellDesignTokensScript.SPACE_1
 	_apply_row_assignment(packed, row_separation)
 	_row_assignment = packed
-	_natural_deck_height = _natural_height_for_rows(packed, 0.0, row_separation)
-	deck_row_host.custom_minimum_size.y = _natural_deck_height
+	var rail_room := control_deck.size.y
+	_natural_deck_height = _fit_height("deck", [piece_state, piece_controls], func() -> float: return _natural_height_for_rows(packed, 0.0, row_separation), func(_relaxed: float) -> float: return rail_room, control_deck.size.x >= _rail_width() - 1.0)
+	deck_row_host.custom_minimum_size.y = _natural_deck_height / deck_fit.fit_scale
+	_side_column_natural_height = 0.0
+	_side_column_scroll_required = false
+	_last_stage_height = _stage_constraint()
+	_last_host_widths = _host_widths()
 	_last_packing_width = _packing_width()
 	_last_module_minimums = _module_minimums()
 	_last_module_heights = _module_heights()
@@ -507,19 +678,293 @@ func _update_side_scroll_state() -> void:
 	_scroll_required = available > 1.0 and _natural_deck_height > available + 0.5
 
 
+func _update_split_scroll_state() -> void:
+	var available := side_scroll.size.y
+	_side_column_scroll_required = available > 1.0 and _side_column_natural_height > available + 0.5
+
+
+# Helpers fit before they scroll, in three steps: relaxed spacing, then
+# halved gaps, then the whole module scaled down uniformly (text, keycaps,
+# glyphs and previews together) to FIT_SCALE_FLOOR. Only content that still
+# overflows at the floor scrolls.
+#
+# Minimum sizes settle only after a layout pass, so a step cannot be measured
+# in the pass that takes it. Each step therefore acts on a height two settled
+# frames agree on and records it: the relaxed height decides when to relax,
+# the compact height at the unscaled width sets the scale. Re-measuring while
+# scaled would read the wider, less wrapped layout and oscillate. The result
+# depends on the current size and content alone, never on history.
+# room_for maps the relaxed height to the room (only the split deck's room
+# depends on it). A host still at a transient width wraps its labels into a
+# meaningless height, so an unsettled pass measures but decides nothing.
+# Returns the height the group shows: its measured height times its scale.
+func _fit_height(group: String, modules: Array, measure: Callable, room_for: Callable, settled: bool) -> float:
+	var state: Dictionary = _fit_states.get(group, {"compact": false, "relaxed": 0.0, "pending": [-1.0, -1], "scale": 1.0, "compact_pending": [-1.0, -1], "width": 0.0, "room": 0.0, "searching": false, "lo": FIT_SCALE_FLOOR, "hi": 1.0})
+	var natural: float = measure.call()
+	var fit = _fit_box(group)
+	if not settled or not _fit_content_settled(group):
+		# Re-check once the host has been laid out. Nothing else may arrive
+		# to trigger it, and a group left undecided would keep scrolling.
+		var frame := Engine.get_process_frames()
+		if int(state.get("unsettled_since", -1)) < 0:
+			state["unsettled_since"] = frame
+		_fit_states[group] = state
+		if frame - int(state["unsettled_since"]) <= FIT_SETTLE_FRAMES:
+			_schedule_fit_settle()
+			return natural * fit.fit_scale
+	state["unsettled_since"] = -1
+	var scale := float(state["scale"])
+	if not bool(state["compact"]):
+		state["relaxed"] = natural
+		var room: float = room_for.call(natural)
+		if room > 1.0 and natural > room:
+			# Compact only on a relaxed height two frames agree on: the record is
+			# what later decides whether to relax, so it must not be mid-settle.
+			if _agreed(state, "pending", natural):
+				state["compact"] = true
+				_set_compact(modules, true)
+			_schedule_fit_settle()
+		else:
+			state["pending"] = [-1.0, -1]
+		scale = 1.0
+	else:
+		if scale >= 1.0:
+			# A record taken mid-settle can be too tall; the compact height plus
+			# the most the halved gaps could have saved bounds the true relaxed
+			# height. Only an unscaled measurement can bound it.
+			var bound := natural
+			for module in modules:
+				bound += ResponsivePanelPolicy.compact_savings_bound(module)
+			state["relaxed"] = minf(float(state["relaxed"]), bound)
+		var relaxed := float(state["relaxed"])
+		var room: float = room_for.call(relaxed)
+		if room <= 1.0 or relaxed <= room:
+			state["compact"] = false
+			scale = 1.0
+			_schedule_fit_settle()
+			_set_compact(modules, false)
+		elif _set_compact(modules, true) > 0:
+			# A strip rebuilt under compaction has an unknown relaxed height:
+			# relax it and let the next settled pass measure and decide again.
+			state["compact"] = false
+			scale = 1.0
+			_schedule_fit_settle()
+			_set_compact(modules, false)
+		else:
+			scale = _fit_scale_step(group, state, natural, scale, room)
+	if not is_equal_approx(scale, fit.fit_scale):
+		fit.fit_scale = scale
+		_schedule_fit_settle()
+	state["scale"] = scale
+	_fit_states[group] = state
+	return natural * scale
+
+
+# The scale step searches for the largest scale whose shown height fits the
+# room. Content laid out wider wraps less, so the shown height is not
+# proportional to the scale and one proportional guess over-shrinks: start
+# from that guess, which always fits, then bisect towards one. Each probe acts
+# only on a measurement two settled passes agree on. A new room or width
+# restarts from full scale, so the result never depends on resize history.
+func _fit_scale_step(group: String, state: Dictionary, natural: float, scale: float, room: float) -> float:
+	var host_width := _fit_host(group).size.x
+	if scale < 1.0 and (absf(host_width - float(state["width"])) > 1.0 or absf(room - float(state["room"])) > 0.5):
+		state["searching"] = false
+		state["compact_pending"] = [-1.0, -1]
+		_schedule_fit_settle()
+		return 1.0
+	if not _agreed(state, "compact_pending", natural):
+		# Not yet agreed: measure again once this pass has been laid out.
+		_schedule_fit_settle()
+		return scale
+	if scale >= 1.0:
+		if natural <= room:
+			return 1.0
+		state["searching"] = true
+		state["width"] = host_width
+		state["room"] = room
+		state["lo"] = FIT_SCALE_FLOOR
+		state["hi"] = 1.0
+		_schedule_fit_settle()
+		# Round down: rounding 612/613 to the nearest step gives 1.0, a "scaled"
+		# guess that changes nothing and would be retried forever.
+		return clampf(floorf(room / natural * 100.0) / 100.0, FIT_SCALE_FLOOR, 1.0 - FIT_SCALE_STEP * 0.5)
+	if not bool(state["searching"]):
+		return scale
+	# Strict: a scroll shows its bar for any overflow, even a fraction of a unit.
+	if natural * scale <= room:
+		state["lo"] = scale
+	else:
+		state["hi"] = scale
+	if float(state["hi"]) - float(state["lo"]) <= FIT_SCALE_STEP:
+		state["searching"] = false
+		return float(state["lo"])
+	_schedule_fit_settle()
+	return snappedf((float(state["lo"]) + float(state["hi"])) * 0.5, 0.01)
+
+
+# Two measurements agree only across a frame boundary. Deferred passes within
+# one frame can all run before the containers sort, and would agree on a
+# stale height; the result would then depend on timing, not on the layout.
+func _agreed(state: Dictionary, key: String, value: float) -> bool:
+	var frame := Engine.get_process_frames()
+	var pending: Array = state[key]
+	if absf(float(pending[0]) - value) > 0.5:
+		state[key] = [value, frame]
+		return false
+	if frame > int(pending[1]):
+		state[key] = [-1.0, -1]
+		return true
+	return false
+
+
+# True once every fit group has decided: nothing awaits agreement, no scale
+# search is running and no settle pass is queued. Layout checks wait for it.
+func fit_settled() -> bool:
+	if is_inside_tree() and get_tree().process_frame.is_connected(_apply_responsive_policy):
+		return false
+	for group in _fit_states:
+		var state: Dictionary = _fit_states[group]
+		if bool(state["searching"]) or float(state["pending"][0]) >= 0.0 or float(state["compact_pending"][0]) >= 0.0 or int(state.get("unsettled_since", -1)) >= 0:
+			return false
+	return true
+
+
+func _fit_box(group: String):
+	return side_fit if group == "side" else deck_fit
+
+
+# The content must have been laid out at the host's width: measured narrower,
+# its labels wrap into a height no settled layout would have.
+func _fit_content_settled(group: String) -> bool:
+	var fit = _fit_box(group)
+	var host := _fit_host(group)
+	var content: Control = fit.content()
+	if content == null or host.size.x <= 1.0:
+		return false
+	var bar := host.get_v_scroll_bar().get_combined_minimum_size().x
+	return fit.size.x >= host.size.x - bar - 1.0 and content.size.x * fit.fit_scale >= fit.size.x - 1.0
+
+
+# The scroll around a fit box: its width is set by layout alone, while the box
+# inside narrows whenever the scrollbar shows, which a fit itself toggles.
+func _fit_host(group: String) -> ScrollContainer:
+	return side_scroll if group == "side" else deck_scroll
+
+
+# The toggling pass already sees part of the new minimums, so the metric guard
+# can miss the change. Re-measure once the next frame has laid it out.
+func _schedule_fit_settle() -> void:
+	if is_inside_tree() and not get_tree().process_frame.is_connected(_apply_responsive_policy):
+		get_tree().process_frame.connect(_apply_responsive_policy, CONNECT_ONE_SHOT)
+
+
+func _set_compact(modules: Array, enabled: bool) -> int:
+	var fresh := 0
+	for module in modules:
+		# Always applied: a strip rebuilt since the last pass has relaxed gaps.
+		fresh += ResponsivePanelPolicy.compact_vertical_gaps(module, enabled)
+		var key := str((module as Control).name)
+		if enabled and not _compacted.has(key):
+			_compacted.append(key)
+		elif not enabled:
+			_compacted.erase(key)
+	return fresh
+
+
+# Each placement groups the modules differently, so a recorded relaxed height
+# is meaningless after a move or while the Designer owns the panels.
+func _reset_fit() -> void:
+	_set_compact([piece_controls, view_controls, piece_state], false)
+	_fit_states.clear()
+	for fit in [deck_fit, side_fit]:
+		fit.fit_scale = 1.0
+
+
+# The split column spans the whole stage only when the legend deck, narrowed to
+# sit under the board alone, still holds every section on one line with room
+# for its scrollbar. Otherwise the legend would wrap and grow taller than the
+# column gains, so the deck keeps the full width under board and column. The
+# line width does not depend on the deck's host, so this cannot flip-flop.
+func _place_split_deck() -> void:
+	var narrowed := _layout_size.x - DECK_HORIZONTAL_INSET - side_scroll.custom_minimum_size.x - float(SIDE_RAIL_GAP)
+	narrowed -= deck_scroll.get_v_scroll_bar().get_combined_minimum_size().x
+	var full_height := _layout_size.x > 1.0 and _legend_single_line_width() <= narrowed
+	var host: Container = board_column if full_height else self
+	if full_height != _split_full_height or control_deck.get_parent() != host:
+		_split_full_height = full_height
+		_reset_fit()
+		_move_deck(host)
+
+
+# The policy often runs from the deck's own resized signal, which a container
+# emits while sorting its children. A queue_sort raised then is dropped
+# because the sort is still pending, so the container the deck left would keep
+# the deck's height as dead space. Re-sort both parents after this pass.
+func _move_deck(host: Container) -> void:
+	var previous := control_deck.get_parent() as Container
+	if previous != host:
+		control_deck.reparent(host, false)
+	host.move_child(control_deck, host.get_child_count() - 1)
+	for container in [previous, host]:
+		if container != null:
+			(container as Container).queue_sort.call_deferred()
+
+
+func _legend_single_line_width() -> float:
+	for child in piece_controls.get_children():
+		if child.has_method("unwrapped_width"):
+			return float(child.unwrapped_width())
+	return piece_controls.get_combined_minimum_size().x
+
+
+# Only a deck narrower than its packing width wraps into a misleading height; a
+# shell held wider by its minimum size is a settled, if wider, layout.
+func _deck_settled() -> bool:
+	var expected := _packing_width()
+	return control_deck.size.x > 1.0 and control_deck.size.x >= expected - maxf(2.0, expected * 0.02)
+
+
+# Height below the header that the stage (board plus a deck under it) can use.
+func _stage_height() -> float:
+	if _layout_size.y <= 1.0:
+		return 0.0
+	return maxf(_layout_size.y - DECK_VERTICAL_INSET - _header_height() - float(get_theme_constant("separation")) * 2.0, 0.0)
+
+
+func _board_spare_height() -> float:
+	return _stage_height() * (1.0 - BOARD_RESERVE_STAGE_SHARE)
+
+
+# Beside-the-board placements size their scroll from the laid-out stage, so a
+# stage resize must re-run the fit even when no module metric changed.
+func _stage_constraint() -> float:
+	return board_stage.size.y if _placement in [PLACEMENT_SIDE, PLACEMENT_SPLIT] else -1.0
+
+
 # Packing must consume the CONSTRAINT, not the result. control_deck.size.x is
 # the deck's own laid-out width, which when the deck overflows is its minimum -
 # so reading it makes the deck conclude it has room for the very arrangement
 # that overflowed, and it never reflows.
 func _packing_width() -> float:
 	if _layout_size.x > 1.0:
-		return maxf(_layout_size.x - DECK_HORIZONTAL_INSET, 1.0)
+		var width := _layout_size.x - DECK_HORIZONTAL_INSET
+		if _placement == PLACEMENT_SPLIT and _split_full_height:
+			# The split deck sits under the board, beside the full-height column.
+			width -= side_scroll.custom_minimum_size.x + float(SIDE_RAIL_GAP)
+		return maxf(width, 1.0)
 	var deck_width := control_deck.size.x
 	return deck_width if deck_width > 1.0 else 0.0
 
 
+func _host_widths() -> Vector2:
+	return Vector2(control_deck.size.x, side_scroll.size.x if side_scroll.visible else 0.0)
+
+
 func _pack_rows(available: float, row_separation: int) -> Array:
-	var modules := [piece_controls] if _placement == PLACEMENT_SPLIT else [piece_controls, view_controls, piece_state]
+	# NEXT/HOLD first, as in the rail and the split column: when a short window
+	# can show only one row, it is the one the player glances at most.
+	var modules := [piece_controls] if _placement == PLACEMENT_SPLIT else [piece_state, piece_controls, view_controls]
 	if available <= 0.0:
 		return [modules.map(func(module): return str((module as Control).name))]
 	var rows: Array = []
@@ -584,7 +1029,10 @@ func _natural_height_for_rows(packed: Array, profile_floor: float, row_separatio
 				(module_by_name[str(name_value)] as Control).get_combined_minimum_size().y
 			)
 		height += measured_row_height
-	return height + float(row_separation * maxi(packed.size() - 1, 0))
+	# Rows stack in deck_row_host, so its own gap separates them; a style's
+	# theme can set that gap, and assuming another one misjudges a tight fit.
+	var gap := maxi(row_separation, deck_row_host.get_theme_constant("separation"))
+	return height + float(gap * maxi(packed.size() - 1, 0))
 
 
 func _row_height_for_profile() -> float:

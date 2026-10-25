@@ -87,7 +87,7 @@ func run() -> Array:
 	elif started[0].has("last_selected") or started[0].has("random_mode_index"):
 		failures.append("Start should not emit persistence or legacy-index fields")
 	var scroll := panel.get_child(0) as ScrollContainer
-	if scroll == null or scroll.horizontal_scroll_mode != ScrollContainer.SCROLL_MODE_DISABLED:
+	if scroll == null or scroll.get_h_scroll_bar().visible:
 		failures.append("setup screen should use viewport-safe vertical scrolling")
 	var app = TraceReplayAppScript.new()
 	app._bundle = BundleLoader.load_bundle()

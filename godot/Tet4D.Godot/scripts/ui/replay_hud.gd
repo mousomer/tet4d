@@ -33,6 +33,8 @@ const GridDisplayMode = preload("res://scripts/presentation/grid_display_mode.gd
 const PresentationDesignerScript = preload("res://scripts/ui/presentation_designer.gd")
 const DesignLaboratoryPanelScript = preload("res://scripts/ui/design_laboratory_panel.gd")
 const SafeAreaInsetsScript = preload("res://scripts/ui/safe_area_insets.gd")
+const ResponsivePanelPolicy = preload("res://scripts/ui/responsive_panel_policy.gd")
+const FitScaleContainerScript = preload("res://scripts/ui/fit_scale_container.gd")
 
 signal trace_family_selected(trace_type: String)
 signal case_selected(case_id: String)
@@ -125,7 +127,7 @@ var _hint_label: VBoxContainer
 var _mode_hint_strip: VBoxContainer
 var _viewport_title: Label
 var _viewport_hint: Label
-var _top_bar: HBoxContainer
+var _top_bar: BoxContainer
 var _viewport_inner: MarginContainer
 var _viewer_nav: VBoxContainer
 var _viewer_nav_label: Label
@@ -142,6 +144,10 @@ var _designer_button: Button
 var _design_menu_header: Control
 var _design_lab_button: Button
 var _main_menu_focus_order: Array[Control] = []
+# The main menu's fit-to-window box and its last decision inputs.
+var _main_menu_fit
+var _main_menu_fit_room := Vector2.ZERO
+var _main_menu_overflow_scale := 2.0
 # The game product hides Designer and Design Laboratory affordances (R3.3);
 # the Designer product keeps them. Defaults to the Designer shell.
 var _design_affordances_enabled := true
@@ -346,6 +352,13 @@ func start_current_validated_setup(mode: String = "") -> bool:
 func set_control_frame_snapshot(snapshot: Dictionary) -> void:
 	_control_frame_snapshot = snapshot.duplicate(true)
 	_refresh_piece_control_strip()
+
+
+# The fitted board's width per unit of board-viewport height. The cockpit gives
+# the width a right-anchored 2D/3D board leaves unused to the side rail.
+func set_board_content_aspect(aspect: float) -> void:
+	if _live_cockpit != null:
+		_live_cockpit.set_board_demand(aspect, _game_viewport_container)
 
 
 # Measured screen directions of each movement key and rotation axis; the 3D/4D
@@ -823,8 +836,10 @@ func _apply_shell_minimums(live: bool, side_rail := false) -> void:
 		var rail_share := (LiveCockpitScript.SIDE_RAIL_MIN_WIDTH + LiveCockpitScript.SIDE_RAIL_GAP) if side_rail else 0.0
 		_body_container.custom_minimum_size = Vector2(
 			minimum.x - (ReplayVisuals.OUTER_MARGIN * 2) - rail_share,
-			ReplayVisuals.LIVE_BODY_MIN_HEIGHT if live else ReplayVisuals.BODY_MIN_HEIGHT
+			(ReplayVisuals.LIVE_4D_BODY_MIN_HEIGHT if _active_live_mode == GameSetupSpecScript.MODE_4D else ReplayVisuals.LIVE_BODY_MIN_HEIGHT) if live else ReplayVisuals.BODY_MIN_HEIGHT
 		)
+	# These are desktop floors; a smaller window clamps them again.
+	_apply_shell_extents()
 
 
 # Tall boards (2D, and 3D's upright well) take the side rail. Live 4D keeps the
@@ -924,12 +939,9 @@ func configure_design_laboratory(callbacks: Dictionary) -> bool:
 	_design_laboratory = DesignLaboratoryPanelScript.new()
 	_design_laboratory.z_index = 80
 	_design_laboratory.visible = false
-	_design_laboratory.set_anchors_preset(Control.PRESET_LEFT_WIDE)
-	_design_laboratory.offset_left = 12.0
-	_design_laboratory.offset_top = 12.0
-	_design_laboratory.offset_right = 472.0
-	_design_laboratory.offset_bottom = -12.0
 	add_child(_design_laboratory)
+	_design_laboratory.minimum_size_changed.connect(func() -> void: call_deferred("_layout_design_laboratory"))
+	_layout_design_laboratory()
 	_design_laboratory.close_requested.connect(func() -> void:
 		_design_laboratory.close()
 		main_menu_requested.emit()
@@ -972,6 +984,8 @@ func open_design_laboratory() -> void:
 		return
 	show_screen(SCREEN_VIEWER)
 	_design_laboratory.open()
+	_layout_design_laboratory()
+	call_deferred("_layout_design_laboratory")
 
 
 func _ensure_current_design() -> void:
@@ -1004,16 +1018,18 @@ func design_laboratory_snapshot() -> Dictionary:
 func _apply_safe_area_insets() -> void:
 	if _shell_root_margin == null:
 		return
-	var insets := SafeAreaInsetsScript.current()
+	var insets := safe_area_insets()
+	# Margins are in this HUD's local units, which the UI scale magnifies.
 	for side in ["left", "top", "right", "bottom"]:
 		_shell_root_margin.add_theme_constant_override(
 			"margin_%s" % side,
-			ReplayVisuals.OUTER_MARGIN + int(insets.get(side, 0))
+			ReplayVisuals.OUTER_MARGIN + int(ceilf(float(insets.get(side, 0)) / maxf(_ui_scale_factor, 0.01)))
 		)
 
 
+# Safe-area insets in canvas units, the space layout runs in.
 func safe_area_insets() -> Dictionary:
-	return SafeAreaInsetsScript.current()
+	return SafeAreaInsetsScript.current_in_canvas(get_viewport_rect().size)
 
 
 func design_laboratory_visible() -> bool:
@@ -1033,6 +1049,10 @@ func _build_presentation_designer() -> void:
 	_presentation_designer = PresentationDesignerScript.new()
 	_presentation_designer.z_index = 50
 	add_child(_presentation_designer)
+	_presentation_designer.controls_rebuilt.connect(func() -> void:
+		_style_applier.apply_to_tree(_presentation_designer, _style_manager)
+		call_deferred("_layout_presentation_designer")
+	)
 	if not _presentation_designer.configure(_settings_registry):
 		push_error("Presentation Designer requires a valid presentation registry")
 	_live_cockpit.designer_geometry_changed.connect(_presentation_designer.synchronize_panel_geometry)
@@ -1094,21 +1114,38 @@ func _layout_presentation_designer() -> void:
 	var local_origin: Vector2 = inverse * game_rect.position
 	var local_far: Vector2 = inverse * (game_rect.position + game_rect.size)
 	var local_rect := Rect2(local_origin, local_far - local_origin)
-	var inset := 8.0
-	# Linux and macOS font metrics differ slightly. When the board cannot hold
-	# the full editor's 260px floor plus insets, preserve the detached session in
-	# its established compact state instead of allowing the panel to escape the
-	# gameplay surface.
-	if _presentation_designer.state() == PresentationDesignerScript.STATE_FULL and local_rect.size.y < 276.0:
-		_presentation_designer.collapse_to_compact()
+	var inset := float(ShellDesignTokensScript.SPACE_2)
+	# An editor is an overlay: fit it to the client area without changing the
+	# detached board's geometry or collapsing the editor on a height-only resize.
+	var usable := _usable_overlay_rect(inset)
 	if _presentation_designer.state() == PresentationDesignerScript.STATE_COMPACT:
-		var compact_width := minf(maxf(320.0, local_rect.size.x * 0.38), maxf(220.0, local_rect.size.x - inset * 2.0))
-		_presentation_designer.position = local_rect.position + Vector2(inset, inset)
-		_presentation_designer.size = Vector2(compact_width, 44.0)
+		var preferred := Rect2(local_rect.position + Vector2(inset, inset), Vector2(ShellDesignTokensScript.DESIGNER_PREFERRED_WIDTH, _presentation_designer.get_combined_minimum_size().y))
+		var fitted := ResponsivePanelPolicy.fit_rect(preferred, usable)
+		_presentation_designer.position = fitted.position
+		_presentation_designer.size = fitted.size
 	else:
-		var full_width := minf(maxf(300.0, local_rect.size.x * 0.42), minf(420.0, maxf(260.0, local_rect.size.x - inset * 2.0)))
-		_presentation_designer.position = local_rect.position + Vector2(inset, inset)
-		_presentation_designer.size = Vector2(full_width, maxf(260.0, local_rect.size.y - inset * 2.0))
+		var preferred := Rect2(local_rect.position + Vector2(inset, inset), Vector2(ShellDesignTokensScript.DESIGNER_PREFERRED_WIDTH, usable.size.y))
+		var fitted := ResponsivePanelPolicy.fit_rect(preferred, usable)
+		_presentation_designer.position = fitted.position
+		_presentation_designer.size = fitted.size
+
+
+func _usable_overlay_rect(inset: float) -> Rect2:
+	# Overlays use the shell's usable client area independently of board sizing.
+	var insets := safe_area_insets()
+	var origin := Vector2(float(insets.get("left", 0)), float(insets.get("top", 0))) / maxf(_ui_scale_factor, 0.01)
+	var available := get_viewport_rect().size / maxf(_ui_scale_factor, 0.01)
+	var far := available - Vector2(float(insets.get("right", 0)), float(insets.get("bottom", 0))) / maxf(_ui_scale_factor, 0.01)
+	return Rect2(origin, (far - origin).max(Vector2.ZERO)).grow(-inset)
+
+
+func _layout_design_laboratory() -> void:
+	if _design_laboratory == null:
+		return
+	var usable := _usable_overlay_rect(float(ShellDesignTokensScript.COMPACT_PADDING))
+	var fitted := ResponsivePanelPolicy.fit_rect(Rect2(usable.position, Vector2(ShellDesignTokensScript.LABORATORY_PREFERRED_WIDTH, usable.size.y)), usable)
+	_design_laboratory.position = fitted.position
+	_design_laboratory.size = fitted.size
 
 
 func set_display_mode(mode: String) -> void:
@@ -2248,11 +2285,13 @@ func _build_layout() -> void:
 	_live_cockpit = LiveCockpitScript.new()
 	outer.add_child(_live_cockpit)
 
-	var top_bar := HBoxContainer.new()
+	var top_bar := BoxContainer.new()
 	_top_bar = top_bar
+	top_bar.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	top_bar.custom_minimum_size = Vector2(0, ReplayVisuals.TOP_BAR_HEIGHT)
 	top_bar.add_theme_constant_override("separation", ReplayVisuals.PANEL_GAP)
 	_live_cockpit.header_slot.add_child(top_bar)
+	top_bar.minimum_size_changed.connect(func() -> void: call_deferred("_apply_responsive_layout"))
 
 	var viewer_nav := VBoxContainer.new()
 	_viewer_nav = viewer_nav
@@ -2626,6 +2665,7 @@ func _build_layout() -> void:
 	_camera_view_action_menu.text = "View Actions"
 	_camera_view_action_menu.tooltip_text = "Apply a named view action; this does not select a persistent camera mode"
 	var view_action_popup := _camera_view_action_menu.get_popup()
+	ResponsivePanelPolicy.bind_popup(view_action_popup, self)
 	view_action_popup.about_to_popup.connect(func() -> void:
 		_live_interaction_owns_input = not _active_live_mode.is_empty()
 	)
@@ -2896,35 +2936,64 @@ func _make_menu_surface(screen: Control, scroll_name: String) -> PanelContainer:
 	scroll.name = scroll_name
 	scroll.focus_mode = Control.FOCUS_ALL
 	scroll.follow_focus = true
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	ResponsivePanelPolicy.configure_scroll(scroll)
 	_fill_parent(scroll)
 	screen.add_child(scroll)
+	# The main menu keeps its list, spacing and font sizes, and shrinks as a
+	# whole to fit the window instead; other menus compact their padding.
+	var main_menu := scroll_name == "MainMenuScroll"
+	var host: Container = scroll
+	if main_menu:
+		_main_menu_fit = FitScaleContainerScript.new()
+		_main_menu_fit.name = "MainMenuFit"
+		_main_menu_fit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_main_menu_fit.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		scroll.add_child(_main_menu_fit)
+		host = _main_menu_fit
 	var surround := MarginContainer.new()
 	surround.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	surround.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	surround.add_theme_constant_override("margin_top", ShellDesignTokensScript.SPACE_4)
 	surround.add_theme_constant_override("margin_bottom", ShellDesignTokensScript.SPACE_4)
-	scroll.add_child(surround)
+	host.add_child(surround)
 	surround.resized.connect(func() -> void: call_deferred("_ensure_menu_focus_visible", scroll))
 	scroll.resized.connect(func() -> void: call_deferred("_ensure_menu_focus_visible", scroll))
-	scroll.resized.connect(func() -> void:
+	# Side margins follow the width the content is laid out at, which a fitted
+	# main menu widens by its scale.
+	surround.resized.connect(func() -> void:
 		var side_margin := maxi(ShellDesignTokensScript.SPACE_4, int(minf(
-			scroll.size.x * ShellDesignTokensScript.MENU_SIDE_MARGIN_SHARE,
-			(scroll.size.x - ShellDesignTokensScript.MENU_MIN_WIDTH) * 0.5
+			surround.size.x * ShellDesignTokensScript.MENU_SIDE_MARGIN_SHARE,
+			(surround.size.x - ShellDesignTokensScript.MENU_MIN_WIDTH) * 0.5
 		)))
-		surround.add_theme_constant_override("margin_left", side_margin)
-		surround.add_theme_constant_override("margin_right", side_margin)
+		if surround.get_theme_constant("margin_left") != side_margin:
+			surround.add_theme_constant_override("margin_left", side_margin)
+			surround.add_theme_constant_override("margin_right", side_margin)
 	)
 	var panel := PanelContainer.new()
 	panel.name = "%sPanel" % scroll_name
 	surround.add_child(panel)
+	if main_menu:
+		scroll.resized.connect(func() -> void: call_deferred("_fit_main_menu"))
+		# Showing the menu resizes nothing, so it must fit when it appears.
+		scroll.visibility_changed.connect(func() -> void: call_deferred("_fit_main_menu"))
+		surround.minimum_size_changed.connect(func() -> void: call_deferred("_fit_main_menu"))
+		return panel
+	scroll.resized.connect(func() -> void:
+		var padding := ShellDesignTokensScript.COMPACT_PADDING if ResponsivePanelPolicy.is_compact(scroll.size) else ShellDesignTokensScript.PANEL_PADDING
+		surround.add_theme_constant_override("margin_top", padding)
+		surround.add_theme_constant_override("margin_bottom", padding)
+		for child in panel.get_children():
+			if child is MarginContainer:
+				for side in ["left", "right", "top", "bottom"]:
+					child.add_theme_constant_override("margin_%s" % side, padding)
+	)
 	return panel
 
 
 func _build_main_menu_screen(screen: Control) -> void:
 	var panel := _make_menu_surface(screen, "MainMenuScroll")
-	_main_menu_scroll = panel.get_parent().get_parent() as ScrollContainer
+	# panel -> surround -> fit box -> scroll
+	_main_menu_scroll = panel.get_parent().get_parent().get_parent() as ScrollContainer
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", ShellDesignTokensScript.SPACE_6)
 	margin.add_theme_constant_override("margin_top", ShellDesignTokensScript.SPACE_6)
@@ -2960,6 +3029,11 @@ func _build_main_menu_screen(screen: Control) -> void:
 		start_current_validated_setup()
 	)
 	layout.add_child(live_button)
+	var live_2d_button := _make_command_card("Play 2D", "Plain bounded board · the best place to start", "2")
+	live_2d_button.pressed.connect(func() -> void:
+		start_current_validated_setup(GameSetupSpecScript.MODE_2D)
+	)
+	layout.add_child(live_2d_button)
 	var live_3d_button := _make_command_card("Play 3D", "Plain bounded board · direct XY, XZ, and YZ rotations", "3")
 	live_3d_button.pressed.connect(func() -> void:
 		start_current_validated_setup(GameSetupSpecScript.MODE_3D)
@@ -3008,7 +3082,7 @@ func _build_main_menu_screen(screen: Control) -> void:
 	var quit_button := _make_command_card("Quit", "Close the Godot product shell", "Esc")
 	quit_button.pressed.connect(_emit_quit_requested)
 	layout.add_child(quit_button)
-	_main_menu_focus_order = [live_button, live_3d_button, live_4d_button, change_setup_button, design_lab_button, controls_button, about_button, settings_button, advanced_button, quit_button]
+	_main_menu_focus_order = [live_button, live_2d_button, live_3d_button, live_4d_button, change_setup_button, design_lab_button, controls_button, about_button, settings_button, advanced_button, quit_button]
 	_configure_main_menu_focus()
 	_screen_focus_targets[SCREEN_MAIN_MENU] = live_button
 
@@ -3096,6 +3170,9 @@ func _build_browser_screen(screen: Control) -> void:
 		case_selected.emit(case_id)
 	)
 	layout.add_child(_case_browser)
+	# The standalone browser can spend its full width on rows; the replay
+	# sidebar's preferred height must not force this screen below the viewport.
+	_case_browser.custom_minimum_size = Vector2.ZERO
 
 
 func _build_settings_screen(screen: Control) -> void:
@@ -3128,10 +3205,7 @@ func _build_controls_screen(screen: Control) -> void:
 	_controls_scroll = ScrollContainer.new()
 	_controls_scroll.name = "ControlsHelpScroll"
 	_controls_scroll.focus_mode = Control.FOCUS_ALL
-	_controls_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_controls_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	_controls_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_controls_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	ResponsivePanelPolicy.configure_scroll(_controls_scroll)
 	layout.add_child(_controls_scroll)
 	var grid := GridContainer.new()
 	grid.columns = 2
@@ -3140,6 +3214,8 @@ func _build_controls_screen(screen: Control) -> void:
 	grid.add_theme_constant_override("h_separation", ReplayVisuals.PANEL_GAP)
 	grid.add_theme_constant_override("v_separation", ReplayVisuals.PANEL_GAP)
 	_controls_scroll.add_child(grid)
+	_controls_scroll.follow_focus = true
+	_controls_scroll.resized.connect(func() -> void: grid.columns = 1 if _controls_scroll.size.x < ShellDesignTokensScript.MENU_MIN_WIDTH else 2)
 	grid.add_child(_control_mode_card("Replay", "Inspect exported traces frame by frame without moving pieces.", "replay"))
 	grid.add_child(_control_mode_card("Live Plain 2D", "Best first play mode with classic movement, rotation, and drop.", "live_2d"))
 	grid.add_child(_control_mode_card("Live Plain 3D", "Playable plain 3D with direct XY, XZ, and YZ plane rotations.", "live_3d"))
@@ -3155,14 +3231,22 @@ func _build_diagnostics_screen(screen: Control) -> void:
 	layout.add_theme_constant_override("separation", ReplayVisuals.PANEL_GAP)
 	screen.add_child(layout)
 	layout.add_child(_screen_nav("Diagnostics"))
+	var scroll := ScrollContainer.new()
+	scroll.name = "DiagnosticsContentScroll"
+	ResponsivePanelPolicy.configure_scroll(scroll)
+	layout.add_child(scroll)
+	var content := VBoxContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.add_theme_constant_override("separation", ReplayVisuals.PANEL_GAP)
+	scroll.add_child(content)
 	_diagnostics_screen_panel = DiagnosticsPanelScript.new()
 	_diagnostics_screen_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_diagnostics_screen_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	layout.add_child(_diagnostics_screen_panel)
+	content.add_child(_diagnostics_screen_panel)
 	_event_screen_panel = EventListPanelScript.new()
 	_event_screen_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_event_screen_panel.size_flags_vertical = Control.SIZE_FILL
-	layout.add_child(_event_screen_panel)
+	content.add_child(_event_screen_panel)
 
 
 func _build_about_screen(screen: Control) -> void:
@@ -3176,10 +3260,7 @@ func _build_about_screen(screen: Control) -> void:
 	_about_scroll = ScrollContainer.new()
 	_about_scroll.name = "AboutScroll"
 	_about_scroll.focus_mode = Control.FOCUS_ALL
-	_about_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_about_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	_about_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_about_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	ResponsivePanelPolicy.configure_scroll(_about_scroll)
 	layout.add_child(_about_scroll)
 	var panel := PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -3521,14 +3602,50 @@ func _on_shell_window_size_changed() -> void:
 func _apply_responsive_layout() -> void:
 	_sync_design_resolution()
 	_apply_shell_extents()
+	_apply_safe_area_insets()
+	call_deferred("_fit_main_menu")
+	if _top_bar != null:
+		var available_width := maxf(0.0, _usable_overlay_rect(float(ReplayVisuals.OUTER_MARGIN)).size.x)
+		_top_bar.custom_minimum_size.x = available_width
+		ResponsivePanelPolicy.reflow_row(_top_bar, available_width)
 	if _live_cockpit != null:
 		_live_cockpit.set_available_size(size, apparent_layout_size(), _hud_density)
 	_layout_presentation_designer()
+	_layout_design_laboratory()
 	# Container allocation settles after this callback. Re-apply once against
 	# the final game-area rect so an already-open Designer follows a resize
 	# instead of retaining the previous viewport's height for one layout epoch.
 	call_deferred("_layout_presentation_designer")
 	_log_geometry_diagnostics("responsive-compat")
+
+
+# Shows the main menu at the largest scale that fits the window, never above
+# its designed size and never below MENU_FIT_SCALE_FLOOR, under
+# which it scrolls. Laid out wider when scaled down, its descriptions wrap
+# less, so growing back is checked against the last scale that overflowed at
+# this size, which keeps a wrap threshold from flipping it back and forth.
+func _fit_main_menu() -> void:
+	if _main_menu_fit == null or _main_menu_scroll == null or not _main_menu_scroll.is_visible_in_tree():
+		return
+	var content: Control = _main_menu_fit.content()
+	var room := _main_menu_scroll.size
+	if content == null or room.y <= 1.0:
+		return
+	if not room.is_equal_approx(_main_menu_fit_room):
+		_main_menu_fit_room = room
+		_main_menu_overflow_scale = 2.0
+	var current: float = _main_menu_fit.fit_scale
+	var natural := content.get_combined_minimum_size().y
+	var wanted := clampf(floorf(room.y / maxf(natural, 1.0) * 100.0) / 100.0, ShellDesignTokensScript.MENU_FIT_SCALE_FLOOR, 1.0)
+	if natural * current > room.y:
+		_main_menu_overflow_scale = minf(_main_menu_overflow_scale, current)
+		wanted = minf(wanted, current - 0.01)
+	elif wanted <= current or wanted >= _main_menu_overflow_scale:
+		return
+	wanted = maxf(wanted, ShellDesignTokensScript.MENU_FIT_SCALE_FLOOR)
+	if not is_equal_approx(wanted, current):
+		_main_menu_fit.fit_scale = wanted
+		call_deferred("_fit_main_menu")
 
 
 # Menu and gameplay canvases magnify above their respective reference sizes.
@@ -3543,8 +3660,29 @@ func _apply_shell_extents() -> void:
 	# outside the real window instead of letting the content scroll within it.
 	var minimum := ReplayVisuals.supported_live_shell_minimum_size() if not _active_live_mode.is_empty() else ReplayVisuals.supported_shell_minimum_size()
 	custom_minimum_size = minimum.min(available)
+	# The scene root also carries the desktop minimum. In an externally
+	# constrained viewport its centered growth would otherwise shift every
+	# child above the client area even though the HUD itself already fits.
+	var parent_control := get_parent() as Control
+	if parent_control != null:
+		parent_control.custom_minimum_size = minimum.min(viewport_size)
 	if _shell_root_margin != null:
 		_shell_root_margin.custom_minimum_size = custom_minimum_size
+	# The viewer screen and its outer column carry the same desktop minimum.
+	# Left unclamped, the column stays 520 units tall in a shorter window and
+	# runs the board and every helper panel off the bottom edge.
+	var inner := available
+	if _shell_root_margin != null:
+		inner -= Vector2(
+			_shell_root_margin.get_theme_constant("margin_left") + _shell_root_margin.get_theme_constant("margin_right"),
+			_shell_root_margin.get_theme_constant("margin_top") + _shell_root_margin.get_theme_constant("margin_bottom")
+		)
+	inner = inner.max(Vector2.ZERO)
+	if _viewer_screen != null:
+		_viewer_screen.custom_minimum_size = _viewer_screen.custom_minimum_size.min(inner)
+		if _viewer_screen.get_child_count() > 0 and _viewer_screen.get_child(0) is Control:
+			var outer := _viewer_screen.get_child(0) as Control
+			outer.custom_minimum_size = outer.custom_minimum_size.min(inner)
 	offset_left = 0.0
 	offset_top = 0.0
 	offset_right = available.x
@@ -3643,7 +3781,10 @@ func _rect_text(node: Control) -> String:
 func _control_rect(node: Control) -> Rect2:
 	if node == null:
 		return Rect2()
-	return Rect2(node.global_position, node.size)
+	# Sizes stay in HUD units, as before, but include any scale applied inside
+	# the HUD: a cockpit helper scaled to fit shows its size times that scale.
+	var inner_scale := node.get_global_transform().get_scale() / get_global_transform().get_scale()
+	return Rect2(node.global_position, node.size * inner_scale)
 
 
 func _scroll_contract(scroll: ScrollContainer) -> Dictionary:

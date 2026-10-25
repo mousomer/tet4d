@@ -102,7 +102,8 @@ func run() -> Array:
 		await _resize(tree, Vector2i(960, 720))
 		# A long menu's panel already exceeds the window; its visible scroll
 		# surface must grow even when the content's minimum height stays fixed.
-		var menu_surface := panel.get_parent().get_parent() as ScrollContainer
+		# The main menu's panel sits in a fit-to-window box inside its scroll.
+		var menu_surface := _scroll_ancestor(panel)
 		var standard_height := menu_surface.size.y
 		await _resize(tree, Vector2i(960, 900))
 		if menu_surface.size.y <= standard_height:
@@ -112,8 +113,8 @@ func run() -> Array:
 		await _resize(tree, Vector2i(720, 600))
 		hud._apply_ui_scale("extra_large")
 		await _settle(tree)
-		var scroll := panel.get_parent().get_parent() as ScrollContainer
-		var quit_or_back := hud.find_child("QuitApplicationButton" if screen == HudScript.SCREEN_MAIN_MENU else "CommandCard__Back_to_Main_Menu", true, false) as Button
+		var scroll := _scroll_ancestor(panel)
+		var quit_or_back := hud.find_child("CommandCard__Quit" if screen == HudScript.SCREEN_MAIN_MENU else "CommandCard__Back_to_Main_Menu", true, false) as Button
 		quit_or_back.grab_focus()
 		await _settle(tree)
 		# Resize with the last row focused: container sorting must retain reachability.
@@ -170,3 +171,10 @@ func _resize(tree: SceneTree, points: Vector2i) -> void:
 	else:
 		DisplayServer.window_set_size(Vector2i(Vector2(points) * DisplayServer.screen_get_scale()))
 	await _settle(tree)
+
+
+func _scroll_ancestor(node: Node) -> ScrollContainer:
+	var ancestor := node.get_parent()
+	while ancestor != null and not ancestor is ScrollContainer:
+		ancestor = ancestor.get_parent()
+	return ancestor as ScrollContainer

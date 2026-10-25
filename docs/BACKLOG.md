@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-09-25
+Updated: 2026-10-25
 Scope: active work, explicit deferrals, and near-term acceptance boundaries.
 
 Completed chronology is recoverable from Git, merged PRs, CI, and
@@ -22,6 +22,19 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   facts)
 
 ## Active Work
+
+### P1 fullscreen panels, live helpers and menu responsiveness
+
+- Helpers fit before they scroll: settings, setup, Designer, Design Laboratory,
+  guides and the live cockpit give content its room, compact gaps, then scale
+  text and content together (cockpit floor 0.6, Main Menu floor 0.5).
+- Owner-accepted and locked on 2026-10-25 by
+  `godot/Tet4D.Godot/tests/test_locked_shell_layouts.gd`: the Live 2D/3D side
+  rail, the Live 4D split and small-window deck, and the single-list Main Menu
+  with Play 2D/3D/4D. Changing them is a product decision.
+- Stage 58B allocation now measures the drawn board; see
+  `docs/design/stage_58b_readability_evidence.md`. Windows, Linux and handheld
+  devices still need their own rendered evidence.
 
 ### Stage 56H spatial scaffold acceptance
 

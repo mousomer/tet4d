@@ -5,8 +5,10 @@ class_name PresentationDesigner
 const PresentationProfileScript = preload("res://scripts/presentation/presentation_profile.gd")
 const PresentationProfileLibraryScript = preload("res://scripts/presentation/presentation_profile_library.gd")
 const BuiltInStyleCatalogScript = preload("res://scripts/presentation/built_in_style_catalog.gd")
+const ResponsivePanelPolicy = preload("res://scripts/ui/responsive_panel_policy.gd")
 
 signal panel_focus_requested(panel_name: String)
+signal controls_rebuilt()
 
 signal profile_preview_requested(profile, restore_geometry: bool)
 signal state_changed(state: String)
@@ -40,8 +42,9 @@ var _pending_delete_profile_id := ""
 var _pending_export_profile_id := ""
 
 var _full_root: VBoxContainer
+var _full_chrome: VBoxContainer
 var _full_scroll: ScrollContainer
-var _compact_root: HBoxContainer
+var _compact_root: VBoxContainer
 var _groups_box: VBoxContainer
 var _slot_state_label: Label
 var _status_label: Label
@@ -592,22 +595,23 @@ func deterministic_snapshot() -> Dictionary:
 
 
 func _build_surface() -> void:
+	_full_chrome = VBoxContainer.new()
+	_full_chrome.name = "DesignerFullChrome"
+	add_child(_full_chrome)
 	_full_scroll = ScrollContainer.new()
 	_full_scroll.name = "DesignerFullScroll"
-	_full_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_full_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_full_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_full_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	add_child(_full_scroll)
+	ResponsivePanelPolicy.configure_scroll(_full_scroll)
+	_full_chrome.add_child(_full_scroll)
 	_full_root = VBoxContainer.new()
 	_full_root.name = "DesignerFull"
 	_full_root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_full_root.add_theme_constant_override("separation", 7)
 	_full_scroll.add_child(_full_root)
 
-	var header := HBoxContainer.new()
+	var header := HFlowContainer.new()
 	header.add_theme_constant_override("separation", 6)
-	_full_root.add_child(header)
+	_full_chrome.add_child(header)
+	_full_chrome.move_child(header, 0)
 	var title := Label.new()
 	title.text = "CURRENT DESIGN"
 	title.theme_type_variation = "AccentLabel"
@@ -621,21 +625,25 @@ func _build_surface() -> void:
 	header.add_child(compact_button)
 	_first_full_focus = compact_button
 	var hide_button := Button.new()
+	hide_button.name = "DesignerHideButton"
 	hide_button.text = "Hide"
 	hide_button.tooltip_text = "Hide without discarding A, B, or the current preview"
 	hide_button.pressed.connect(hide_preserving_preview)
 	header.add_child(hide_button)
 
-	var panel_row := HBoxContainer.new()
+	var panel_row := HFlowContainer.new()
 	panel_row.name = "DesignerPanelSelection"
 	_full_root.add_child(panel_row)
 	var panel_choice := OptionButton.new()
 	panel_choice.name = "DesignerPanelChoice"
 	panel_choice.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel_choice.fit_to_longest_item = false
+	panel_choice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	for entry in [["Board", "GameArea"], ["Piece controls", "PieceControls"], ["View controls", "ViewControls"], ["NEXT / HOLD", "PieceState"]]:
 		panel_choice.add_item(str(entry[0]))
 		panel_choice.set_item_metadata(panel_choice.item_count - 1, str(entry[1]))
 	panel_row.add_child(panel_choice)
+	ResponsivePanelPolicy.bind_popup(panel_choice.get_popup(), self)
 	var raise_button := Button.new()
 	raise_button.name = "DesignerRaisePanel"
 	raise_button.text = "Bring Panel Forward"
@@ -714,7 +722,7 @@ func _build_surface() -> void:
 	_built_in_description_label.theme_type_variation = "DimLabel"
 	_built_in_description_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_built_in_root.add_child(_built_in_description_label)
-	var built_in_actions := HBoxContainer.new()
+	var built_in_actions := HFlowContainer.new()
 	built_in_actions.name = "DesignerBuiltInStyleActions"
 	built_in_actions.add_theme_constant_override("separation", 5)
 	_built_in_root.add_child(built_in_actions)
@@ -751,7 +759,7 @@ func _build_surface() -> void:
 	_library_root.visible = false
 	_library_root.add_theme_constant_override("separation", 5)
 	_full_root.add_child(_library_root)
-	var name_row := HBoxContainer.new()
+	var name_row := HFlowContainer.new()
 	name_row.add_theme_constant_override("separation", 5)
 	_library_root.add_child(name_row)
 	_profile_name_input = LineEdit.new()
@@ -782,9 +790,8 @@ func _build_surface() -> void:
 	_profile_list.item_activated.connect(func(_index: int) -> void: _load_selected_from_ui())
 	_library_root.add_child(_profile_list)
 
-	var lifecycle_grid := GridContainer.new()
+	var lifecycle_grid := HFlowContainer.new()
 	lifecycle_grid.name = "DesignerProfileLifecycleActions"
-	lifecycle_grid.columns = 4
 	_library_root.add_child(lifecycle_grid)
 	for action in [
 		["Load", "Load selected profile into current design without changing A", _load_selected_from_ui],
@@ -801,16 +808,11 @@ func _build_surface() -> void:
 		button.pressed.connect(action[2])
 		lifecycle_grid.add_child(button)
 
-	var scroll := ScrollContainer.new()
-	scroll.name = "DesignerParameterScroll"
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_full_root.add_child(scroll)
 	_groups_box = VBoxContainer.new()
 	_groups_box.name = "DesignerGroups"
 	_groups_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_groups_box.add_theme_constant_override("separation", 8)
-	scroll.add_child(_groups_box)
+	_full_root.add_child(_groups_box)
 
 	_status_label = Label.new()
 	_status_label.name = "DesignerStatus"
@@ -818,7 +820,7 @@ func _build_surface() -> void:
 	_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_full_root.add_child(_status_label)
 
-	var reset_row := HBoxContainer.new()
+	var reset_row := HFlowContainer.new()
 	reset_row.add_theme_constant_override("separation", 5)
 	_full_root.add_child(reset_row)
 	var reset_b := Button.new()
@@ -832,36 +834,38 @@ func _build_surface() -> void:
 	factory_button.pressed.connect(reset_working_to_factory_defaults)
 	reset_row.add_child(factory_button)
 
-	var finish_row := HBoxContainer.new()
+	var finish_row := HFlowContainer.new()
 	finish_row.add_theme_constant_override("separation", 5)
-	_full_root.add_child(finish_row)
+	_full_chrome.add_child(finish_row)
 	var keep_button := Button.new()
 	keep_button.text = "Keep & Hide"
 	keep_button.pressed.connect(keep_working_and_hide)
 	finish_row.add_child(keep_button)
 
-	_compact_root = HBoxContainer.new()
+	_compact_root = VBoxContainer.new()
 	_compact_root.name = "DesignerCompact"
 	_compact_root.add_theme_constant_override("separation", 5)
 	add_child(_compact_root)
 	_compact_state_label = Label.new()
 	_compact_state_label.name = "DesignerCompactState"
 	_compact_state_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_compact_state_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_compact_state_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_compact_root.add_child(_compact_state_label)
+	var compact_actions := HFlowContainer.new()
+	_compact_root.add_child(compact_actions)
 	var compact_toggle := Button.new()
 	compact_toggle.text = "A ↔ B"
 	compact_toggle.tooltip_text = "Toggle frozen comparison snapshots"
 	compact_toggle.pressed.connect(toggle_slots)
-	_compact_root.add_child(compact_toggle)
+	compact_actions.add_child(compact_toggle)
 	var expand_button := Button.new()
 	expand_button.text = "Expand"
 	expand_button.pressed.connect(expand_to_full)
-	_compact_root.add_child(expand_button)
+	compact_actions.add_child(expand_button)
 	var compact_hide := Button.new()
 	compact_hide.text = "Hide"
 	compact_hide.pressed.connect(hide_preserving_preview)
-	_compact_root.add_child(compact_hide)
+	compact_actions.add_child(compact_hide)
 
 	_overwrite_confirmation = ConfirmationDialog.new()
 	_overwrite_confirmation.title = "Save Presentation Profile"
@@ -887,6 +891,8 @@ func _build_surface() -> void:
 	_export_dialog.filters = PackedStringArray(["*.json ; Tet4D presentation profile JSON"])
 	_export_dialog.file_selected.connect(_on_export_file_selected)
 	add_child(_export_dialog)
+	for dialog in [_overwrite_confirmation, _delete_confirmation, _import_dialog, _export_dialog]:
+		ResponsivePanelPolicy.bind_popup(dialog, self)
 	_refresh_built_in_list()
 	_refresh_all_text("Open the Designer to begin a detached preview session.")
 
@@ -1177,6 +1183,7 @@ func _rebuild_registry_controls() -> void:
 		_build_parameter_row(advanced_rows, spec)
 	_sync_controls_from_working()
 	_refresh_all_text("Editing %d live-applicable parameters for %s." % [_applicable_ids.size(), _runtime_context.replace("_", " ").to_upper()])
+	controls_rebuilt.emit()
 
 
 func _build_owner_group(owner: String, specs: Array) -> void:
@@ -1191,6 +1198,7 @@ func _build_owner_group(owner: String, specs: Array) -> void:
 	box.add_child(header)
 	var title := Label.new()
 	title.text = _owner_label(owner).to_upper()
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title.theme_type_variation = "SecondaryLabel"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
@@ -1212,6 +1220,7 @@ func _build_parameter_row(parent: VBoxContainer, spec) -> void:
 	row.add_child(label_row)
 	var label := Label.new()
 	label.text = spec.label()
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.tooltip_text = spec.description()
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	label_row.add_child(label)
@@ -1265,6 +1274,8 @@ func _build_parameter_row(parent: VBoxContainer, spec) -> void:
 		"enum":
 			var options := OptionButton.new()
 			options.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			options.fit_to_longest_item = false
+			options.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			options.tooltip_text = spec.description()
 			for option in spec.data.get("options", []):
 				if option is Dictionary:
@@ -1272,6 +1283,7 @@ func _build_parameter_row(parent: VBoxContainer, spec) -> void:
 					options.set_item_metadata(options.item_count - 1, str(option.get("value", "")))
 			options.item_selected.connect(_on_enum_selected.bind(spec.id(), options))
 			row.add_child(options)
+			ResponsivePanelPolicy.bind_popup(options.get_popup(), self)
 			entry["primary"] = options
 		_:
 			var unsupported := Label.new()
@@ -1372,6 +1384,8 @@ func _refresh_state_visibility() -> void:
 	visible = _state != STATE_HIDDEN
 	if _full_scroll != null:
 		_full_scroll.visible = _state == STATE_FULL
+	if _full_chrome != null:
+		_full_chrome.visible = _state == STATE_FULL
 	if _full_root != null:
 		_full_root.visible = _state == STATE_FULL
 	if _compact_root != null:

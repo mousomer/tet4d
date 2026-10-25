@@ -171,10 +171,10 @@ func _test_live_app_integration() -> Array:
 	if designer == null or designer.state() != DesignerScript.STATE_FULL or not hud.live_interaction_owns_input():
 		failures.append("opening the live Designer should show the full editor and transfer gameplay input ownership")
 	var layout: Dictionary = hud.layout_contract_snapshot()
-	var game_rect: Rect2 = hud._live_cockpit._designer_host.get_global_rect()
+	var game_rect: Rect2 = hud.get_viewport_rect()
 	var designer_rect: Rect2 = designer.get_global_rect()
-	if not _rect_contains_rect(game_rect, designer_rect) or designer_rect.size.x >= game_rect.size.x * 0.65:
-		failures.append("full Designer should remain bounded inside the board area without obscuring the whole board")
+	if not _rect_contains_rect(game_rect, designer_rect) or designer_rect.size.x >= game_rect.size.x * 0.5:
+		failures.append("full Designer should fit the usable viewport while leaving a majority of ordinary viewport width for the board")
 	var deck_rect: Rect2 = layout.get("live_4d_deck", Rect2())
 	# The deck scrolls when constrained, so modules are contained by its row
 	# host rather than its visible rect.
@@ -297,15 +297,14 @@ func _test_live_app_integration() -> Array:
 		await tree.process_frame
 		await tree.process_frame
 		await tree.process_frame
-		var responsive_game: Rect2 = hud._live_cockpit._designer_host.get_global_rect() if not hud._live_cockpit.designer_panels().is_empty() else hud._game_area.get_global_rect()
-		if not _rect_contains_rect(responsive_game, designer.get_global_rect()):
-			failures.append("Designer should remain inside the game area after resize to %s: state=%s designer=%s game=%s" % [viewport_size, designer.state(), designer.get_global_rect(), responsive_game])
+		var usable_viewport: Rect2 = hud.get_viewport_rect()
+		if not _rect_contains_rect(usable_viewport, designer.get_global_rect()):
+			failures.append("Designer should remain inside the usable viewport after resize to %s: state=%s designer=%s viewport=%s" % [viewport_size, designer.state(), designer.get_global_rect(), usable_viewport])
 		designer.collapse_to_compact()
 		for frame in range(10):
 			await tree.process_frame
-		responsive_game = hud._game_area.get_global_rect()
-		if not _rect_contains_rect(responsive_game, designer.get_global_rect()):
-			failures.append("compact Designer should remain inside the game area after resize to %s" % str(viewport_size))
+		if not _rect_contains_rect(usable_viewport, designer.get_global_rect()):
+			failures.append("compact Designer should remain inside the usable viewport after resize to %s" % str(viewport_size))
 		designer.expand_to_full()
 		await tree.process_frame
 

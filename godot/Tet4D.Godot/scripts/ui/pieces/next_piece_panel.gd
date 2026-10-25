@@ -90,6 +90,10 @@ func set_style_manager(style_manager) -> void:
 	_thumbnail.set_style_manager(style_manager)
 
 
+func preferred_width() -> float:
+	return PiecePreviewLayoutScript.preferred_width(self, _piece_label)
+
+
 func deterministic_snapshot() -> Dictionary:
 	return {
 		"visible": visible,

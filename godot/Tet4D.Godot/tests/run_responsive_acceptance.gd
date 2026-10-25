@@ -163,7 +163,7 @@ func _assert_case(hud, app, case: Dictionary, mode: String) -> void:
 	for row in cockpit.get("deck_row_assignment", []):
 		for module_name in row:
 			flattened.append(str(module_name))
-	var expected_order := ["PieceControls", "ViewControls", "PieceState"]
+	var expected_order := ["PieceState", "PieceControls", "ViewControls"]
 	if side_rail:
 		expected_order = ["PieceState", "PieceControls"]
 	elif split:

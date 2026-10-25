@@ -50,6 +50,21 @@ an official stable patch and checksums, audit the official migration guide,
 advance godot-cpp to a matching immutable API commit, perform a clean native
 rebuild, and update the migration record and CI together.
 
+Rendered panel acceptance uses a real window and records requested versus
+observed client sizes, screenshots, geometry findings, and actual fullscreen
+transitions. Run against a disposable project/user-data copy for clean defaults:
+
+```bash
+/path/to/Godot --path godot/Tet4D.Godot --script tests/run_panel_responsive_acceptance.gd -- capture_dir=/tmp/tet4d-panel-captures fullscreen
+```
+
+The default matrix is 1512×982, 1440×900, 1280×720, 1024×640 and 800×500 at
+standard and maximum UI scale, including 2D/3D/4D setup, menus, editors, helper
+panels and dialogs. `size=800x500 scale=extra_large` narrows diagnosis; omit both
+for acceptance. Without capture/fullscreen arguments the same geometry runner
+also runs headless. Inspect the PNGs as well as `observations.json`; geometry
+alone cannot establish text contrast or visual usability.
+
 ## Design Laboratory
 
 Open `Design Laboratory` from the main menu (or press `L` while the main menu
