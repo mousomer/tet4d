@@ -798,4 +798,3 @@ comment.
 
 Read `workflow/README.md` for how the pieces fit, then each folder's README before using its template. Every template
 ships Dungeon Raid's look: give it the project's own (§11.1, one look per project) before the first page goes out.
-
