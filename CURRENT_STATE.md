@@ -59,8 +59,9 @@ No active handoff.
 
 ## Next Acceptance Boundary
 
-Stage 58B scale/framing is frozen; depth and contrast hierarchy continues in
-58C. Owner playability review remains separate from agent visual inspection.
+Stage 58B scale/framing is frozen; the 58C hierarchy awaits owner play
+acceptance (58C.7) and 58D framing/side rail follows. Owner playability
+review remains separate from agent visual inspection.
 The Stage 56H human playability checkpoint retains its task contract at
 `docs/tasks/live_4d_cockpit_convergence.md`; Stage 56I polish and the 190/200
 A/B decision remain separate. The authorized governance distribution 1.3.1 is active;

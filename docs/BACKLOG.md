@@ -127,16 +127,20 @@ opacity, colour, scale, camera and depth tuning belong to later stages.
   changes: 3D 27.785 → 34.785 pt; default 4D 15.017 → 23.230 pt; seven-slice
   4D 7.672 → 13.793 pt. Full evidence and incremental attribution:
   `docs/design/stage_58b_readability_evidence.md`.
-- P2 (58C): no depth cue beyond occlusion and face shading (orthographic,
-  depth-uniform materials); near-axis views read z-separated cells as coplanar.
-- P2 (58C): inactive 4D slices match active-slice cell and grid prominence; only
-  the navigation frame marks active slices.
-- P2 (58C): the active piece differs from same-colour settled cells mainly by
-  luminance and the origin marker; weakest with settled opacity 1.0.
-- P2 (58C, Full only): front lattice lines cross active-piece faces.
+- [x] 58C hierarchy (implemented 2026-10-15, owner play acceptance pending): on
+  live 3D/4D boards, active pieces share one material; settled cells recede with
+  camera depth and, in 4D, with slice distance (slice scaffold too); board
+  scaffold composites beneath the active piece; replays are unchanged. Evidence,
+  measurements and rejected candidates:
+  `docs/design/stage_58c_spatial_readability_evidence.md`.
+- [ ] 58C.7: owner play acceptance of 3D/4D readability across styles and grids.
+- P2 (58C residual): dark active hues (blue, then red and purple) keep the
+  smallest lightness margin over same-colour settled cells; a uniform active
+  lift trades chroma for lightness and was not adopted.
 - P3: rotated 4D views detach and clip W labels up to 20 pt (Stage 59 slice
-  identity); Tron Grid Flow background shows through the board (58C); catalog
-  `display.grid_mode` values are inert because grid mode is style-independent.
+  identity); Tron Grid Flow background shows through the board (58C residual,
+  style-owned); catalog `display.grid_mode` values are inert because grid mode
+  is style-independent.
 - Acceptable: no board-geometry clipping in any case; deterministic 4D slice
   placement independent of the active piece; Border lattice subordinate to cells;
   style does not change grid mode; orbit/zoom recover through Fit View.
@@ -373,6 +377,10 @@ Acceptance boundary:
 
 - Godot game / Windows and Godot game / Linux need distinct distributable
   packages and acceptance; the existing Windows package is Designer only;
+  Linux acceptance must cover the native core in windowed sessions: with the
+  default static libstdc++ link, `live_3d_snapshot_json` crashed under Mesa's
+  LLVM-based lavapipe (Stage 58C container; headless runs unaffected) and
+  `use_static_cpp=no` avoided it. GPU drivers are unverified;
 - Godot game / Android must replace the transitional Designer-identity tablet
   export with game identity and entry semantics (Godot game / iPadOS is a
   long-term option; see Release and platform); and

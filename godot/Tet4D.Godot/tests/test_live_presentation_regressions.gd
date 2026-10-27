@@ -20,7 +20,7 @@ func _assert_structural_material_contract(failures: Array) -> void:
 	for role_case in [
 		{"name": "locked", "materials": ReplayVisuals.live_3d_locked_face_materials(ReplayVisuals.DISPLAY_MODE_TRON, 3, 0.92), "alpha": 0.92},
 		{"name": "locked alternate translucent style", "materials": ReplayVisuals.live_3d_locked_face_materials(ReplayVisuals.DISPLAY_MODE_PLAIN, 3, 0.78), "alpha": 0.78},
-		{"name": "active", "materials": ReplayVisuals.live_4d_active_face_materials(ReplayVisuals.DISPLAY_MODE_PLAIN, 3, 0.70), "alpha": 0.70},
+		{"name": "active", "materials": ReplayVisuals.live_3d_active_face_materials(ReplayVisuals.DISPLAY_MODE_PLAIN, 3, 0.70), "alpha": 0.70},
 	]:
 		for face_name in ["top", "front", "right", "left", "back", "bottom"]:
 			var material := role_case["materials"].get(face_name) as StandardMaterial3D
