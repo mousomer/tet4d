@@ -182,6 +182,16 @@ overflows at the readability floor.
   board's demand follows the stage height, and the rail never takes the
   board's width or the board surface's minimum. The board's on-screen size is
   unchanged.
+- The cockpit's metric signals (deck and split-column resizes, module and
+  header minimum sizes) never run placement inline. They can fire while Godot
+  propagates visibility or sorts a container, when it refuses `add_child` on
+  the node being notified; `reparent()` has already removed the node by then,
+  so a refused move leaves the Live 4D deck with no parent at all. A burst
+  queues one check for the next frame (`_queue_deck_metrics_check`), and
+  `fit_settled()` stays false while it waits; signals raised by the policy's
+  own pass are dropped. A `call_deferred` check would run in the idle flush
+  that sorts the containers its pass resized, feed each pass back as new work
+  and overflow the message queue.
 
 `tests/support/panel_responsive_probe.gd#inspect_cockpit` fails a deck, rail
 or split column that scrolls before compacting or above the scale floor, a
