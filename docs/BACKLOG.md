@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-10-25
+Updated: 2026-10-27
 Scope: active work, explicit deferrals, and near-term acceptance boundaries.
 
 Completed chronology is recoverable from Git, merged PRs, CI, and
@@ -22,6 +22,23 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   facts)
 
 ## Active Work
+
+### UI and cockpit orchestration repair
+
+- [x] Record result lock, committed-master source identity and supplied windowed
+  baseline: `docs/design/ui_cockpit_result_lock_2026_10_27.md`.
+- [x] Detail bounded implementation phases in
+  `docs/plans/ui_cockpit_orchestration_repair.md`; this backlog owns task status.
+- [ ] R1 / P2: owner-approved finish-orbit-then-fit behavior, post-easing corner
+  containment and relative-control notification. Source/case prepared, not run.
+- [ ] R2 / P3: cancel abandoned helper search and pending measurements.
+  Source/cases prepared, not run; migrate private fixtures with HelperFitState.
+- [ ] Extract helper state, policy/coordinator, Designer session and shell
+  conversion incrementally against the locked results. Broad work not started.
+- No tests, application/CI or capture runs under the current owner instruction;
+  only secrets/string sanitation. Existing recordings are historical evidence.
+- Continue on `codex/ui-cockpit-orchestration` from master `e37441bb`; preserve
+  the dirty release checkout and master CI/workflow rules.
 
 ### P1 fullscreen panels, live helpers and menu responsiveness
 

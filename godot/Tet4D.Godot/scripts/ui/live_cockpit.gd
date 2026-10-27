@@ -739,6 +739,7 @@ func _fit_height(group: String, modules: Array, measure: Callable, room_for: Cal
 		var relaxed := float(state["relaxed"])
 		var room: float = room_for.call(relaxed)
 		if room <= 1.0 or relaxed <= room:
+			_cancel_fit_search(state)
 			state["compact"] = false
 			scale = 1.0
 			_schedule_fit_settle()
@@ -746,6 +747,7 @@ func _fit_height(group: String, modules: Array, measure: Callable, room_for: Cal
 		elif _set_compact(modules, true) > 0:
 			# A strip rebuilt under compaction has an unknown relaxed height:
 			# relax it and let the next settled pass measure and decide again.
+			_cancel_fit_search(state)
 			state["compact"] = false
 			scale = 1.0
 			_schedule_fit_settle()
@@ -760,6 +762,18 @@ func _fit_height(group: String, modules: Array, measure: Callable, room_for: Cal
 	return natural * scale
 
 
+# A larger room or rebuilt content invalidates the whole search, including
+# outstanding measurements. Idle relaxed layout must never retain busy flags.
+func _cancel_fit_search(state: Dictionary) -> void:
+	state["searching"] = false
+	state["pending"] = [-1.0, -1]
+	state["compact_pending"] = [-1.0, -1]
+	state["width"] = 0.0
+	state["room"] = 0.0
+	state["lo"] = FIT_SCALE_FLOOR
+	state["hi"] = 1.0
+
+
 # The scale step searches for the largest scale whose shown height fits the
 # room. Content laid out wider wraps less, so the shown height is not
 # proportional to the scale and one proportional guess over-shrinks: start
@@ -769,8 +783,7 @@ func _fit_height(group: String, modules: Array, measure: Callable, room_for: Cal
 func _fit_scale_step(group: String, state: Dictionary, natural: float, scale: float, room: float) -> float:
 	var host_width := _fit_host(group).size.x
 	if scale < 1.0 and (absf(host_width - float(state["width"])) > 1.0 or absf(room - float(state["room"])) > 0.5):
-		state["searching"] = false
-		state["compact_pending"] = [-1.0, -1]
+		_cancel_fit_search(state)
 		_schedule_fit_settle()
 		return 1.0
 	if not _agreed(state, "compact_pending", natural):

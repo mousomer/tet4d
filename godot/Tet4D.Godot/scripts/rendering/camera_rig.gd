@@ -141,6 +141,10 @@ func establish_outer_view(
 func fit_current_bounds(bounds: Dictionary, margin: float = 1.14, content_boxes: Array = []) -> void:
 	if not bounds.get("ok", false):
 		return
+	# Owner decision: explicit Fit finishes the requested orbit before measuring.
+	# No interpolation may carry the camera away from the fitted pose afterward.
+	var yaw_before := _current_yaw
+	_snap_orientation_to_targets()
 	var min_pos: Vector3 = bounds.get("min", Vector3.ZERO)
 	var max_pos: Vector3 = bounds.get("max", Vector3.ZERO)
 	var size := max_pos - min_pos
@@ -166,6 +170,10 @@ func fit_current_bounds(bounds: Dictionary, margin: float = 1.14, content_boxes:
 	var height_need := maxf(_projected_span(min_pos, max_pos, _current_yaw, _current_pitch, content_boxes).y * margin, 4.0)
 	_fit_height_limited = _base_orthographic_size <= height_need * 1.0001
 	_snap_framing_to_targets()
+	# Finishing an orbit can cross a relative-control quadrant. Notify after all
+	# fit values are coherent; the next process tick now has no yaw change.
+	if not is_equal_approx(yaw_before, _current_yaw):
+		presented_orientation_changed.emit()
 
 
 # Logical on-screen size of the fitted board in a board viewport of the given

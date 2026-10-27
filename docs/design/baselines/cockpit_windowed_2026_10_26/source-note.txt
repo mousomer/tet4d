@@ -1,0 +1,1 @@
+Pre-R1/R2 windowed baseline: run_panel_responsive_acceptance.gd with capture_dir and fullscreen, main checkout runtime == master bda1abe7 for UI files, Godot 4.7.2, macOS, isolated HOME. 3 runs, 410 observations each, byte-identical. 0 findings.

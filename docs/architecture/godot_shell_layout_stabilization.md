@@ -69,6 +69,17 @@ same contract. The right inspector keeps its reserved width and remains
 vertically scrollable; horizontal scrolling is disabled so panel content wraps
 inside the reserved inspector.
 
+## Orchestration repair boundary
+
+The accepted results and supplied pre-repair observations are locked in
+`docs/design/ui_cockpit_result_lock_2026_10_27.md`. The bounded plan is
+`docs/plans/ui_cockpit_orchestration_repair.md`; broad extraction has not started.
+Owner decision (2026-10-27): explicit Fit finishes the requested orbit before
+measuring size, anchor and board demand; normal orbit easing is unchanged.
+Leaving/restarting a helper-fit search clears pending/search state. These two
+source repairs and regression cases are prepared, but functional verification
+remains prohibited. No layout or scale retuning is authorized.
+
 ## Responsive panel contract
 
 `scripts/ui/responsive_panel_policy.gd` owns shared presentation fitting:

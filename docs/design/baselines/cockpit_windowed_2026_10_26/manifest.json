@@ -1,0 +1,1465 @@
+{
+  "schema_version": 1,
+  "inspected_on": "2026-10-27",
+  "provenance": "Owner-supplied Claude review and copied run records; execution was not repeated.",
+  "reported_execution_date": "2026-10-26",
+  "reported_engine": "Godot 4.7.2",
+  "reported_platform": "macOS, windowed with fullscreen transitions, isolated HOME",
+  "reported_runtime_source": "bda1abe7, before R1/R2",
+  "runs": [
+    {
+      "source_file": "observations-run1.json",
+      "sha256": "9687a9225c3b95d29affe4d748f658148c31c437c1cbbabebc450f8b7ded9ca9",
+      "observations": 410,
+      "recorded_failures": 0
+    },
+    {
+      "source_file": "observations-run2.json",
+      "sha256": "9687a9225c3b95d29affe4d748f658148c31c437c1cbbabebc450f8b7ded9ca9",
+      "observations": 410,
+      "recorded_failures": 0
+    },
+    {
+      "source_file": "observations-run3.json",
+      "sha256": "9687a9225c3b95d29affe4d748f658148c31c437c1cbbabebc450f8b7ded9ca9",
+      "observations": 410,
+      "recorded_failures": 0
+    }
+  ],
+  "external_capture_directory": "/private/tmp/tet4d-cockpit-baseline-2026-10-26/captures-run3",
+  "png_count": 358,
+  "pngs": [
+    {
+      "file": "_1024__640__extra_large_about.png",
+      "sha256": "14c29b1032a968df40fc755da62bc7c2cb8d446ac444fedc336f79c99d9dc544"
+    },
+    {
+      "file": "_1024__640__extra_large_advanced.png",
+      "sha256": "855411f08892b0f4c7cee84664801abc0faf3420e0bd15810873b522cc0518ec"
+    },
+    {
+      "file": "_1024__640__extra_large_browser.png",
+      "sha256": "9ba97a558f7cc97e790ca8ef1461bcb8fc14c0bf2902618b3996b28516f17680"
+    },
+    {
+      "file": "_1024__640__extra_large_cockpit_live_2d.png",
+      "sha256": "1b5757da7b86f11e5bd109ba3a2275e237158f40f517515106dc217e99928257"
+    },
+    {
+      "file": "_1024__640__extra_large_cockpit_live_3d.png",
+      "sha256": "f0ccc749aeab029cfc117a08d360c0f3a35a05b8c4bd9c693c1350686571a73a"
+    },
+    {
+      "file": "_1024__640__extra_large_cockpit_live_4d.png",
+      "sha256": "afd3b3a782ca4c2a92459ca4b2432793692a79ef3a185f8ee7b25389bdd35b6e"
+    },
+    {
+      "file": "_1024__640__extra_large_controls.png",
+      "sha256": "319881252d698f546be7d227582f879838a42a6663eec769d0d408f0981f7bd9"
+    },
+    {
+      "file": "_1024__640__extra_large_design-laboratory.png",
+      "sha256": "35b24bab68109c222661aef82afda5d2a98e5edd3e5ba889ba2cab28c6e6ac6b"
+    },
+    {
+      "file": "_1024__640__extra_large_designer_live_2d.png",
+      "sha256": "361d1e7a6d6aaabde14c02a4524605eaddb3a36035d892beafbf4576ef5df372"
+    },
+    {
+      "file": "_1024__640__extra_large_designer_live_3d.png",
+      "sha256": "616ab93fc910b60580177424ea554e34db9a0fe544a706c09bfbac7349a207f9"
+    },
+    {
+      "file": "_1024__640__extra_large_designer_live_4d.png",
+      "sha256": "a82320a3492cdee7c8a1717e28a0e29ffb3219fc832595cf9675884288f9be96"
+    },
+    {
+      "file": "_1024__640__extra_large_diagnostics.png",
+      "sha256": "029f565601dfa178cc2ff17c3fd522ba27c3f7cc6c4c1d5803324d2cf12de051"
+    },
+    {
+      "file": "_1024__640__extra_large_dialog_Delete_Presentation_Profile.png",
+      "sha256": "151af0e040bb7be2b8f8d05e0c0c59c1312156e06205d9f78b8ce398103d3b6a"
+    },
+    {
+      "file": "_1024__640__extra_large_dialog_Export_Presentation_Profile.png",
+      "sha256": "d2ab18a49380532604d9c1455341da4b1b88992e03ff5590c0a29c0e61cf83b2"
+    },
+    {
+      "file": "_1024__640__extra_large_dialog_Open_a_File.png",
+      "sha256": "d177d359d5b8d379f5ee8542f1d39abc4c0cf2ef396df7633c0e43ab6b039091"
+    },
+    {
+      "file": "_1024__640__extra_large_dialog_Save_Presentation_Profile.png",
+      "sha256": "e7371ff085f1381a52cba190bbef3383f0cb2729d7d103afca5cb56af7ab656f"
+    },
+    {
+      "file": "_1024__640__extra_large_guide_live_2d.png",
+      "sha256": "9f7e2b3d7f19f8565a2043d1b0fc9a8543adde6d3ad2f106d768dcfcd6fed5cf"
+    },
+    {
+      "file": "_1024__640__extra_large_guide_live_3d.png",
+      "sha256": "248c9cec495b4e8c9c308585f3879d250512af75e011ca47cec55434d04622cf"
+    },
+    {
+      "file": "_1024__640__extra_large_guide_live_4d.png",
+      "sha256": "74cfb0feb5888875fc0b46b53b5d9cb8f5e2ebad5b51a2ca724269794480a2bb"
+    },
+    {
+      "file": "_1024__640__extra_large_helper_live_2d_PieceControls.png",
+      "sha256": "6866e475071ade55628644c7dbf56038391c3e3280a4a456b68d0e644a38e9f9"
+    },
+    {
+      "file": "_1024__640__extra_large_helper_live_2d_PieceState.png",
+      "sha256": "aed8890ad702252d694d2d374bcc012cbc5c6b1774fcdcfccd69a3809336b527"
+    },
+    {
+      "file": "_1024__640__extra_large_helper_live_2d_ViewControls.png",
+      "sha256": "0cafc8b9b6708d7c1e9800a9a4b6265657277b44f81931ceff80b1fa69672e2c"
+    },
+    {
+      "file": "_1024__640__extra_large_helper_live_3d_PieceControls.png",
+      "sha256": "80301f2bdca161e52d0f6f3bcdf0e0eede631c4a33d9aa1eb4810d48e6b9a08d"
+    },
+    {
+      "file": "_1024__640__extra_large_helper_live_3d_PieceState.png",
+      "sha256": "928edd69eb784d3561e0ec87dcc92b114639e8f0b473473111f1bfc4667f4ba3"
+    },
+    {
+      "file": "_1024__640__extra_large_helper_live_3d_ViewControls.png",
+      "sha256": "44077a125a6cac38e2cbe3946754bedf898ede556b80ab975cd287ec44288d1a"
+    },
+    {
+      "file": "_1024__640__extra_large_helper_live_4d_PieceControls.png",
+      "sha256": "4d1600782dc6cdfb6637ea97d29dd151f83613e90073113093f7c922c7cd1340"
+    },
+    {
+      "file": "_1024__640__extra_large_helper_live_4d_PieceState.png",
+      "sha256": "755654dab0031a0c014fc48ac83ff913a53854d88fbd599a5b368d0b171c6242"
+    },
+    {
+      "file": "_1024__640__extra_large_helper_live_4d_ViewControls.png",
+      "sha256": "2ec449853adddbb8c2e6bd209eb081dee4a566a16a51b09d959a42be4c423f4f"
+    },
+    {
+      "file": "_1024__640__extra_large_main_menu.png",
+      "sha256": "f0c52aa14d5dcc8616dc8ec42d0a00cdf361ff18a58f63a658f6c3039909b98a"
+    },
+    {
+      "file": "_1024__640__extra_large_settings.png",
+      "sha256": "c26ad2735f5509eb21f5ae6c40f30c5afa4610797f818819ece3ef2219b6170b"
+    },
+    {
+      "file": "_1024__640__extra_large_setup_live_2d.png",
+      "sha256": "9a085281d9e5d062b8dd7f58150d8f25cdd7fd00ff4516e9bcc946532c4f0318"
+    },
+    {
+      "file": "_1024__640__extra_large_setup_live_3d.png",
+      "sha256": "8e51866f85c018be802ad85d566fbdcf5f9b5970d7f7bb12eff3eec0f9b05f24"
+    },
+    {
+      "file": "_1024__640__extra_large_setup_live_4d.png",
+      "sha256": "ef1bb0bb3d87baff883367724bac6b3735e38f1a49d99026948a5978e4620778"
+    },
+    {
+      "file": "_1024__640__standard_about.png",
+      "sha256": "4f167f305fc8f5c0bc9a7c23340ca7bf8f4ed58aa689e58b619a30667471c6b4"
+    },
+    {
+      "file": "_1024__640__standard_advanced.png",
+      "sha256": "5b15a815147e5ee96acd7c9f0a13e5f95c0c540b5cdd20d12f8a63662f5ded3e"
+    },
+    {
+      "file": "_1024__640__standard_browser.png",
+      "sha256": "26049009afff37f38912dd90416c2c20a721602b80a89fd540a3860896196e14"
+    },
+    {
+      "file": "_1024__640__standard_cockpit_live_2d.png",
+      "sha256": "07fc2b1000c8d27ea53eec62961ba9becb073ca5daa5e8cff8d9bcd6c06affc7"
+    },
+    {
+      "file": "_1024__640__standard_cockpit_live_3d.png",
+      "sha256": "3637f44185a31982489df344105550cc600c934168e9207829212dab11f96d87"
+    },
+    {
+      "file": "_1024__640__standard_cockpit_live_4d.png",
+      "sha256": "b64d510ad746968a1697c77215f41026d14b20f40ec5c9cbfa379359dd29f296"
+    },
+    {
+      "file": "_1024__640__standard_controls.png",
+      "sha256": "1f1dc0016c030d0e76862822fe81effcf7835a5e3e054d408ab7d0b6d96cc220"
+    },
+    {
+      "file": "_1024__640__standard_design-laboratory.png",
+      "sha256": "9493f239852a61647eba563b9c7c519577be233cf289952a2015deff630970eb"
+    },
+    {
+      "file": "_1024__640__standard_designer_live_2d.png",
+      "sha256": "c83e0818f20358ce4df85d799db934404904846e25b434c20adb333d68f40b14"
+    },
+    {
+      "file": "_1024__640__standard_designer_live_3d.png",
+      "sha256": "2d8bc92f6e6bd96278a7a9577974f7040d138d4925e30cd3b7337265356438a1"
+    },
+    {
+      "file": "_1024__640__standard_designer_live_4d.png",
+      "sha256": "b2a3031596e37666606a1db637647a3417eb1a81029632e176ddeaceda2f438a"
+    },
+    {
+      "file": "_1024__640__standard_diagnostics.png",
+      "sha256": "34135c85dae8f545a591d58f3abd148c4b37563a53fea9a23eb11f29a54eb622"
+    },
+    {
+      "file": "_1024__640__standard_dialog_Delete_Presentation_Profile.png",
+      "sha256": "d76274d6290766d5f0950a54e600773a3196698312d4c63b1bf61df3fe49c656"
+    },
+    {
+      "file": "_1024__640__standard_dialog_Export_Presentation_Profile.png",
+      "sha256": "a0b21c49a4e1c6e686e68b102a98497aed737e3a7a6c6c0e80267f01f4e26912"
+    },
+    {
+      "file": "_1024__640__standard_dialog_Open_a_File.png",
+      "sha256": "bb67788884067de540792519df618062d65e973add1da326dbd697c79e3c67d6"
+    },
+    {
+      "file": "_1024__640__standard_dialog_Save_Presentation_Profile.png",
+      "sha256": "cb2be9448c68167b392c541f2bef09596af6d545cd949ed8a88a6714a27e2b0d"
+    },
+    {
+      "file": "_1024__640__standard_guide_live_2d.png",
+      "sha256": "23898a51dec5a92f0ef6591a6c8c63959f4cef17b8161ff285a57c3ee77ccec0"
+    },
+    {
+      "file": "_1024__640__standard_guide_live_3d.png",
+      "sha256": "a0cb6929f175741d7a99f2064540a3fb21d940017ee151321696ce128a10b688"
+    },
+    {
+      "file": "_1024__640__standard_guide_live_4d.png",
+      "sha256": "204ab6b07763fee6c3d0a91de9d33c4aa453434b37157fcf3b223d979afc44d8"
+    },
+    {
+      "file": "_1024__640__standard_helper_live_2d_PieceControls.png",
+      "sha256": "bfb4f0880887ff29f9bde59c1c2e911d4a5b73471bd9626ad5585a940084d483"
+    },
+    {
+      "file": "_1024__640__standard_helper_live_2d_PieceState.png",
+      "sha256": "03370d8907b9fc518717894ab8680d3bb7eb741546c1f3ff2c64eb2e0d2b9fc3"
+    },
+    {
+      "file": "_1024__640__standard_helper_live_2d_ViewControls.png",
+      "sha256": "711883c639c237bed4738e5c34a9e1abc6d1c174d99c02ebbd4261797be388d6"
+    },
+    {
+      "file": "_1024__640__standard_helper_live_3d_PieceControls.png",
+      "sha256": "5a702f348d8ab3ac8e101a3535db82f856fd6e3fca08ccbf321e53f8c446e95c"
+    },
+    {
+      "file": "_1024__640__standard_helper_live_3d_PieceState.png",
+      "sha256": "4d58d9253dbf6f4076f82d665fe77912a117cfde8b85e093b854ce81fe513d31"
+    },
+    {
+      "file": "_1024__640__standard_helper_live_3d_ViewControls.png",
+      "sha256": "8e4633e43f77e10fa20e23eb7c8d2afd7b3138b70d27654965816c1b44519928"
+    },
+    {
+      "file": "_1024__640__standard_helper_live_4d_PieceControls.png",
+      "sha256": "7ba8d85a0a709cb59fa1c26a5a92694b2fd2b54289cd0a18f52e50a559cd8b0c"
+    },
+    {
+      "file": "_1024__640__standard_helper_live_4d_PieceState.png",
+      "sha256": "cb64906b36f37bcbe1369ae364e25c1b3bb4d55c8752d5789745c0f7eb89355f"
+    },
+    {
+      "file": "_1024__640__standard_helper_live_4d_ViewControls.png",
+      "sha256": "f105ac2f5d9a6427cb36ff0d9327d70b69d5f280f4f277b674733db8f37f7f4c"
+    },
+    {
+      "file": "_1024__640__standard_main_menu.png",
+      "sha256": "529e2b9f385a880d1c2d1225b3eb3fe885dc04d778189bbbfbd30cb7d75e70b9"
+    },
+    {
+      "file": "_1024__640__standard_settings.png",
+      "sha256": "7c1b0112f0762f9760e81f5720a8fde7256f9ca81c79479c19204d06ff0fb767"
+    },
+    {
+      "file": "_1024__640__standard_setup_live_2d.png",
+      "sha256": "faf09ebe3527ee4675376cf5a98e99a8edea9a1409718c3f76bbcdb4852cb1f1"
+    },
+    {
+      "file": "_1024__640__standard_setup_live_3d.png",
+      "sha256": "dfa4b282728de53d723f8663c19b4cbb3ecdd07dd2d9ff9a7d829c282bc13261"
+    },
+    {
+      "file": "_1024__640__standard_setup_live_4d.png",
+      "sha256": "3ec5d2fa66e9e61d6d9a50db072a6e112f29b2a59cc6dc8bad0a9c6de9d2e2e5"
+    },
+    {
+      "file": "_1280__720__extra_large_about.png",
+      "sha256": "c0307f9f7926de0697bcbdbc41bc3ba1caf423a7566e873f57aaa530a3f0c68d"
+    },
+    {
+      "file": "_1280__720__extra_large_advanced.png",
+      "sha256": "5d28f2260e21a89e404730399149b05cdb72a05080c8afd8e67daa7952ccd58f"
+    },
+    {
+      "file": "_1280__720__extra_large_browser.png",
+      "sha256": "cd0affba46f43efd27ae74daf54a097f1d349818310a9db58a5a768ab89f262a"
+    },
+    {
+      "file": "_1280__720__extra_large_cockpit_live_2d.png",
+      "sha256": "edecab3b6445846cb1e0656d7ee50b612301cdef2087bc33e216127d1dcc08a5"
+    },
+    {
+      "file": "_1280__720__extra_large_cockpit_live_3d.png",
+      "sha256": "b62cd2887e4afa1986110865b0420ab84734e5d9596eacfd6b08bc1ce18c5d91"
+    },
+    {
+      "file": "_1280__720__extra_large_cockpit_live_4d.png",
+      "sha256": "37df36dd9a014b119fa2e0434e36f8c579e28e28b9fd5d26fe0f20b3e89ed9b9"
+    },
+    {
+      "file": "_1280__720__extra_large_controls.png",
+      "sha256": "47e5a876a78df6e28c25ca968b2ec53dc4efa492531c789dd6ae8179755fafcc"
+    },
+    {
+      "file": "_1280__720__extra_large_design-laboratory.png",
+      "sha256": "86906850ca68e8cb5d93e4f5d1b22da249b53559cbc71f0f68f6ad4acf5744f1"
+    },
+    {
+      "file": "_1280__720__extra_large_designer_live_2d.png",
+      "sha256": "54abc3319590b082fc551b817a916601755095d75e57842211b0a621e40e5d17"
+    },
+    {
+      "file": "_1280__720__extra_large_designer_live_3d.png",
+      "sha256": "d059d242a5e21658a60d967db8d6066b97bfeadcd08262366d9757038c6a7ced"
+    },
+    {
+      "file": "_1280__720__extra_large_designer_live_4d.png",
+      "sha256": "fc5ef6e09fee6fdf2d195227547fa33e0df671918fb5029f9914603dfb3ff08b"
+    },
+    {
+      "file": "_1280__720__extra_large_diagnostics.png",
+      "sha256": "e33b43e1a38cd495b380e6396f6a8b8d8c9d78544945550f33ad5dbf7c617179"
+    },
+    {
+      "file": "_1280__720__extra_large_dialog_Delete_Presentation_Profile.png",
+      "sha256": "c1a0af0dc397649f61418c36ab292934ac0a7ad40a0ab2a7245184eddaf85d47"
+    },
+    {
+      "file": "_1280__720__extra_large_dialog_Export_Presentation_Profile.png",
+      "sha256": "81e18a49c80e4d3ff6f6da66c82146f9f85d5410c0e1adbfcd988725f376cb8f"
+    },
+    {
+      "file": "_1280__720__extra_large_dialog_Open_a_File.png",
+      "sha256": "ea159d6400a00f585abef27a2eac1234fd6a97b715c8fd5910e3a9d5e920e05d"
+    },
+    {
+      "file": "_1280__720__extra_large_dialog_Save_Presentation_Profile.png",
+      "sha256": "6c9797fe122f060d9f5cec4d2aa3ce3140870eaf261b389e543a7194dc644d91"
+    },
+    {
+      "file": "_1280__720__extra_large_guide_live_2d.png",
+      "sha256": "d32da1aa20cb4b8400c64f2850e23c009f139490fddd990b702fee5328b78acc"
+    },
+    {
+      "file": "_1280__720__extra_large_guide_live_3d.png",
+      "sha256": "1f5c622486447cd5df57a2679b9ea40d06ac1ee45acc86cd22961b6edeb938d6"
+    },
+    {
+      "file": "_1280__720__extra_large_guide_live_4d.png",
+      "sha256": "3cdf1988920fade658fac765b0e4196ea3aae7a246b6629e2c8757af6ec433ee"
+    },
+    {
+      "file": "_1280__720__extra_large_helper_live_2d_PieceControls.png",
+      "sha256": "3a18d7eba5aa415b946b097d53ceec64854511e60d69cface70c5036d73e5895"
+    },
+    {
+      "file": "_1280__720__extra_large_helper_live_2d_PieceState.png",
+      "sha256": "d76a4e188a8f8816880481210a7116879e62ec0de817ab20fec7f3bef1c79267"
+    },
+    {
+      "file": "_1280__720__extra_large_helper_live_2d_ViewControls.png",
+      "sha256": "cb6f81674572a9b7774b465a3c87ac57cf9a7c320f0aa0afb04fb73dfbd9db3c"
+    },
+    {
+      "file": "_1280__720__extra_large_helper_live_3d_PieceControls.png",
+      "sha256": "ab69cf5a4f3b3804466bb7f847335200bbad98bc5ca0757782cf0e46446ca874"
+    },
+    {
+      "file": "_1280__720__extra_large_helper_live_3d_PieceState.png",
+      "sha256": "c964583eef7123cc3d82169ce4a208616974542fdff0ac64efde8fb1ef7d3db1"
+    },
+    {
+      "file": "_1280__720__extra_large_helper_live_3d_ViewControls.png",
+      "sha256": "9ad204a067eab9a044786069876491b00cca6d2c7bce3c5fc27563d557e0b002"
+    },
+    {
+      "file": "_1280__720__extra_large_helper_live_4d_PieceControls.png",
+      "sha256": "677faf81239e7ed1d2c84e68dd5326bf6550df8b0e5ef589fbc8655d7c6d4a59"
+    },
+    {
+      "file": "_1280__720__extra_large_helper_live_4d_PieceState.png",
+      "sha256": "fff4b846dfa277208fcdbe7e7e4bd3c4f2d2f42b25e24573ddf513909169ee6f"
+    },
+    {
+      "file": "_1280__720__extra_large_helper_live_4d_ViewControls.png",
+      "sha256": "01d8627ccc2822e14a226ac69a269ffc79996bef79502f9bea5ce464cb77e4ad"
+    },
+    {
+      "file": "_1280__720__extra_large_main_menu.png",
+      "sha256": "ee4a713ae4348737bbd7cc827be7147088fee61fcd45ce6929195ac9b351725b"
+    },
+    {
+      "file": "_1280__720__extra_large_settings.png",
+      "sha256": "192966afcf5ea778c007f04c8dac21b1613e2074d269bb91a44e4d8c15de7dcd"
+    },
+    {
+      "file": "_1280__720__extra_large_setup_live_2d.png",
+      "sha256": "3e0538158bfe4329c84403fd7e0feef6753162ff6d662d90c7550b1a894dc0c0"
+    },
+    {
+      "file": "_1280__720__extra_large_setup_live_3d.png",
+      "sha256": "e8dadb8251c7de163d7130e281338c67fee7540f110e0ad1c7085e1804228383"
+    },
+    {
+      "file": "_1280__720__extra_large_setup_live_4d.png",
+      "sha256": "cfe1868825b022de52e2c2c119703d678a71971b2d046b2083618b4f4e4cb573"
+    },
+    {
+      "file": "_1280__720__standard_about.png",
+      "sha256": "3ad45609a23071d6ba8441210044552217cc393224cce396378ecfc51e427e1f"
+    },
+    {
+      "file": "_1280__720__standard_advanced.png",
+      "sha256": "6256bef59e6a536c313325e35ba7145bee2f9cccfeb00cb41715fc17697c8a99"
+    },
+    {
+      "file": "_1280__720__standard_browser.png",
+      "sha256": "7fff1bcecf38fda49fe177a11d88a0daa6a42b1831bd2e6760d91837a89ff168"
+    },
+    {
+      "file": "_1280__720__standard_cockpit_live_2d.png",
+      "sha256": "6728fed198fd5f64f569b663da6f5d1a96d95479a84a0a273de3de0a1993ce55"
+    },
+    {
+      "file": "_1280__720__standard_cockpit_live_3d.png",
+      "sha256": "cf758426a0c3711c3119dcac909a38405b2ae82858c54ec7af0d89526a29d31d"
+    },
+    {
+      "file": "_1280__720__standard_cockpit_live_4d.png",
+      "sha256": "1fe8e4339a38719025c807b5d704b803dbad828e020fb68fe25bc5613f57c74e"
+    },
+    {
+      "file": "_1280__720__standard_controls.png",
+      "sha256": "988965ed9c894d80eda2e59a2b7c9bb8193a83d8554c3af4612ac53696ca2634"
+    },
+    {
+      "file": "_1280__720__standard_design-laboratory.png",
+      "sha256": "b310b989b190adc0e1dd764eee44940d82e69607f0547ec4eeeb52766e9253ff"
+    },
+    {
+      "file": "_1280__720__standard_designer_live_2d.png",
+      "sha256": "60ce5900813bbc6d38e492ed2bf416c604138dea0cac54b12d478c453feca386"
+    },
+    {
+      "file": "_1280__720__standard_designer_live_3d.png",
+      "sha256": "d13a1f3da967d84a282bc5ae1ac5805760d49879f5574da8020996e122a80339"
+    },
+    {
+      "file": "_1280__720__standard_designer_live_4d.png",
+      "sha256": "d1c85308bcf385f71e6c3705c80d63f8e8c59a370d89809290522d1eae15ea30"
+    },
+    {
+      "file": "_1280__720__standard_diagnostics.png",
+      "sha256": "735643e17f5d59250c77c946b9c5a3d5239d7c5b9b3b031aa88b05e41e169d79"
+    },
+    {
+      "file": "_1280__720__standard_dialog_Delete_Presentation_Profile.png",
+      "sha256": "45a6299932105b292ba4e2c8ff17aaa17cd4f4fa40f389bba2b6d481bc015826"
+    },
+    {
+      "file": "_1280__720__standard_dialog_Export_Presentation_Profile.png",
+      "sha256": "de57e2c3d7222bf90f8efa2c524db7058ca44ff635a8858e98473cb0af400cd0"
+    },
+    {
+      "file": "_1280__720__standard_dialog_Open_a_File.png",
+      "sha256": "0cef5f3385b55633d72c3f303c3ee830608744429e8e132b62f6979772cc9df2"
+    },
+    {
+      "file": "_1280__720__standard_dialog_Save_Presentation_Profile.png",
+      "sha256": "4fbd4046ce4cf6113f7c23e65a3c6792f49a3b14b117763b83ad5402559612de"
+    },
+    {
+      "file": "_1280__720__standard_guide_live_2d.png",
+      "sha256": "fefb8d9d7d7223ff06a459d22a89113665e3d75f6f4dfe28e8e5e07a39551d66"
+    },
+    {
+      "file": "_1280__720__standard_guide_live_3d.png",
+      "sha256": "075b60ec55d02e7f482f763c925b575f94197ade1c5326df18c914c245cfb291"
+    },
+    {
+      "file": "_1280__720__standard_guide_live_4d.png",
+      "sha256": "1476c6ada51f89f4acd103d4f549e9344f7648e4da7ee3ef05b8c57e2bb3654e"
+    },
+    {
+      "file": "_1280__720__standard_helper_live_2d_PieceControls.png",
+      "sha256": "44e3475ca0c0716b7052c1c604d4a2d5c8490f7b6a2a7dfb4ded98004ff95c66"
+    },
+    {
+      "file": "_1280__720__standard_helper_live_2d_PieceState.png",
+      "sha256": "9f382e34834913970a6303a3b1926f6eaf501d9e3ff495fc318df199f45d5122"
+    },
+    {
+      "file": "_1280__720__standard_helper_live_2d_ViewControls.png",
+      "sha256": "3dab0250e67cec16acedbb8f3a47a9675543b7d4c3560314ec58b8e9d85a9557"
+    },
+    {
+      "file": "_1280__720__standard_helper_live_3d_PieceControls.png",
+      "sha256": "87b540e1264d32867a29e4d2dadef3bf8bc0cadf375d996c1ee160579766c05e"
+    },
+    {
+      "file": "_1280__720__standard_helper_live_3d_PieceState.png",
+      "sha256": "fbe3a48b754ce656d9192813d0c15450ee0e1e3ba0bdd9394036ce1853a262f2"
+    },
+    {
+      "file": "_1280__720__standard_helper_live_3d_ViewControls.png",
+      "sha256": "de9b15ccb75ef858e1baf3b8b3c5bf8fb563d8c81d173892718c1acecbc6c308"
+    },
+    {
+      "file": "_1280__720__standard_helper_live_4d_PieceControls.png",
+      "sha256": "ed1a4bfa499e2a697443cd63319e73e0a490e29d3ca8761c504059daa910e84f"
+    },
+    {
+      "file": "_1280__720__standard_helper_live_4d_PieceState.png",
+      "sha256": "d7558616914a0c4c45b92984aac78dd2d7fa6c0dc0c61cb19451c173203497d1"
+    },
+    {
+      "file": "_1280__720__standard_helper_live_4d_ViewControls.png",
+      "sha256": "092282920eab4916a5674fc3be8574ef7d30096695c2f374c6f96a16902a717a"
+    },
+    {
+      "file": "_1280__720__standard_main_menu.png",
+      "sha256": "8e59437e7312a998e6ce52b277dde63cbf8e80ce0266b23c631633201f89073f"
+    },
+    {
+      "file": "_1280__720__standard_settings.png",
+      "sha256": "9eb442cd230bad3d92c3c24516b19f92f9e8640a8353ec9a3216430baa2ab808"
+    },
+    {
+      "file": "_1280__720__standard_setup_live_2d.png",
+      "sha256": "d3ed7beaf6952071cdfb253187de408c2eb70d6181df1b6e00ca99d78ed951c7"
+    },
+    {
+      "file": "_1280__720__standard_setup_live_3d.png",
+      "sha256": "83c2f777f701e0079e0654d0d1d4d79aaa1233098d69f3dd7a8b1202dcab2d76"
+    },
+    {
+      "file": "_1280__720__standard_setup_live_4d.png",
+      "sha256": "2f34b442cc86ea2afbe8144e31ddceadece67cd578298c64e9192a7313e6c2f6"
+    },
+    {
+      "file": "_1440__900__extra_large_about.png",
+      "sha256": "604a475531abe6421157adcc182f1b0a007d614ebe2a2825c20a09ef35999e99"
+    },
+    {
+      "file": "_1440__900__extra_large_advanced.png",
+      "sha256": "e39eaaa0adde1f17d127b6dac3829e5e2df83f2a9c3ed36db68f39c4f4e7417d"
+    },
+    {
+      "file": "_1440__900__extra_large_browser.png",
+      "sha256": "43b95c5e09febac3007cdf3f5a07ec045fba70e160af39a7d58be2d54c3f1db1"
+    },
+    {
+      "file": "_1440__900__extra_large_cockpit_live_2d.png",
+      "sha256": "06f64ec18e7425148cef7cbced4af6efc3466fd8adc597b1ad0126384dd0c034"
+    },
+    {
+      "file": "_1440__900__extra_large_cockpit_live_3d.png",
+      "sha256": "114d805baa04d6e4028088a75af865ad552f65d35f77b8c017fcb74adb2aa7a2"
+    },
+    {
+      "file": "_1440__900__extra_large_cockpit_live_4d.png",
+      "sha256": "9383e263fa078dc6b16f1285df4853e83d38268864f3395c9bf923eff9369302"
+    },
+    {
+      "file": "_1440__900__extra_large_controls.png",
+      "sha256": "aa7cb4007ffd1904ad548529c51dc7a741e76b04f6f49bcbe9a5bb2daf621a9c"
+    },
+    {
+      "file": "_1440__900__extra_large_design-laboratory.png",
+      "sha256": "86a1d60a7bad8a8202169359fe8260766f23a197bf443906440beb1cc3cf799d"
+    },
+    {
+      "file": "_1440__900__extra_large_designer_live_2d.png",
+      "sha256": "524949231bc73f36c4b5c491c8a8f6e4c418ac4ca78fe7ae4d08037645796d6d"
+    },
+    {
+      "file": "_1440__900__extra_large_designer_live_3d.png",
+      "sha256": "c5299dfa98e844f025d23820bf970bb03a1fbd96cba456402d93767a0a15fd7a"
+    },
+    {
+      "file": "_1440__900__extra_large_designer_live_4d.png",
+      "sha256": "041dc5cccec5d752cb9f74f6693fbb54040790cda08dee45d28e4aecf1801356"
+    },
+    {
+      "file": "_1440__900__extra_large_diagnostics.png",
+      "sha256": "b34177ccf21b8b851db7a19ebfc3b42d57b98ebadba05225dd0fb1b36e73d7da"
+    },
+    {
+      "file": "_1440__900__extra_large_dialog_Delete_Presentation_Profile.png",
+      "sha256": "a44e308b44c4a9b9b56e27ab5ba16dc99a47ff744d96c11a30a1a7702f469326"
+    },
+    {
+      "file": "_1440__900__extra_large_dialog_Export_Presentation_Profile.png",
+      "sha256": "659cbd1c7e66d84478a64555f6672c027dde929873b5b0ab944493c35c491b6f"
+    },
+    {
+      "file": "_1440__900__extra_large_dialog_Open_a_File.png",
+      "sha256": "923ff31b1f1577b15b4cff7afb5b6a6e64bac85b6b42978ab816b987702a4287"
+    },
+    {
+      "file": "_1440__900__extra_large_dialog_Save_Presentation_Profile.png",
+      "sha256": "0f1eb700afda08b0eeb8fea8fbcf856f2191360b4aa6618e0a533c5fda102653"
+    },
+    {
+      "file": "_1440__900__extra_large_guide_live_2d.png",
+      "sha256": "7e2f97f34b20fb8e5c7002205e05c4375d80dcdd03213b5bb91d68fca0ced275"
+    },
+    {
+      "file": "_1440__900__extra_large_guide_live_3d.png",
+      "sha256": "5deee7df481c3769287d0a31be125e35a944fe1ca6678078ecfc494a12a1f174"
+    },
+    {
+      "file": "_1440__900__extra_large_guide_live_4d.png",
+      "sha256": "9bf5b7e4324de09c6bccaf84bfa0e17a757de9ee2a0afdf7b5119952f6a68662"
+    },
+    {
+      "file": "_1440__900__extra_large_helper_live_2d_PieceControls.png",
+      "sha256": "9bf3cba1819c4f167726fa18ed53ee03dcd221d349d532d83cae353e1c52c6fa"
+    },
+    {
+      "file": "_1440__900__extra_large_helper_live_2d_PieceState.png",
+      "sha256": "97f686b78a5e425c8947afed18233f894987c6630b2fb5ff3f5c72477bbbef20"
+    },
+    {
+      "file": "_1440__900__extra_large_helper_live_2d_ViewControls.png",
+      "sha256": "27270cf683db9751a7f35d5d506098bfdfb3ab9483d6cc54b02e29dcc059ed2b"
+    },
+    {
+      "file": "_1440__900__extra_large_helper_live_3d_PieceControls.png",
+      "sha256": "440311614c34231d74c03790b1a2e14559cff500bd276314c0588f023b78b8cd"
+    },
+    {
+      "file": "_1440__900__extra_large_helper_live_3d_PieceState.png",
+      "sha256": "b0d523ce526e9abeeb925114d0092910e0c02a65b8ffb68e0ff5342952806499"
+    },
+    {
+      "file": "_1440__900__extra_large_helper_live_3d_ViewControls.png",
+      "sha256": "6ee29b645c4aada649ba47b1b28c408ffc8df382020480c7e07736c9aa7ef8ea"
+    },
+    {
+      "file": "_1440__900__extra_large_helper_live_4d_PieceControls.png",
+      "sha256": "88989a5f3948ac3762109add009aff80badb971ce651eed347a70da22b3eee37"
+    },
+    {
+      "file": "_1440__900__extra_large_helper_live_4d_PieceState.png",
+      "sha256": "269cf21c40c0e307cac4b7ca5c03e3eb2e6944f639b2699eb5f673a67ddd799b"
+    },
+    {
+      "file": "_1440__900__extra_large_helper_live_4d_ViewControls.png",
+      "sha256": "6a4c2dda722823d81e695112fab08ba11081cbd66b1693f7845b32bab12444cc"
+    },
+    {
+      "file": "_1440__900__extra_large_main_menu.png",
+      "sha256": "23a2d19e241539fc66a2110259bb854c336349283006c9d69dc2dd758c9ead6d"
+    },
+    {
+      "file": "_1440__900__extra_large_settings.png",
+      "sha256": "0c8c20162ac54d003f957026c3e397eeabd92138f81680e87055574f6a197a60"
+    },
+    {
+      "file": "_1440__900__extra_large_setup_live_2d.png",
+      "sha256": "877ade6ee8ac9fb2a23a03010bb735a86fe9d6e1159b9ee5422cb7c82096c905"
+    },
+    {
+      "file": "_1440__900__extra_large_setup_live_3d.png",
+      "sha256": "89e8ece1a773d526e36bad3f95f9a745a377b62e499f41b56a327b0ddb6c0236"
+    },
+    {
+      "file": "_1440__900__extra_large_setup_live_4d.png",
+      "sha256": "fad3551e5b50b3199882f133e80305606b764200da2ae465e369c483d4807c14"
+    },
+    {
+      "file": "_1440__900__standard_about.png",
+      "sha256": "f4689269c23876ae87c88cd4b49f0ac64492f2110776c23cfb489dafc16cc8fc"
+    },
+    {
+      "file": "_1440__900__standard_advanced.png",
+      "sha256": "5cef5a789598083086952b6464cf05170168459414a6a6487b57032583aa987c"
+    },
+    {
+      "file": "_1440__900__standard_browser.png",
+      "sha256": "3baddf0889ff0e16a3facb50bc4d90c5b12571b930376d6443bd3044b6200655"
+    },
+    {
+      "file": "_1440__900__standard_cockpit_live_2d.png",
+      "sha256": "68530c39b763faace611fd861bab1c3e4d413c6729e401f0c4cd9eba27bfa148"
+    },
+    {
+      "file": "_1440__900__standard_cockpit_live_3d.png",
+      "sha256": "ec386b28f3bf59e2dccbe26076a21b64595926386691798bc65a6e4fd20ccea2"
+    },
+    {
+      "file": "_1440__900__standard_cockpit_live_4d.png",
+      "sha256": "ed311712dea09099946bc51e864b394d405143fe656141669d93b2777d0a2e32"
+    },
+    {
+      "file": "_1440__900__standard_controls.png",
+      "sha256": "ad7b2c3b9616b23a060e108d29578b42e54139eb05aa5ff0f18a553afb57e2a3"
+    },
+    {
+      "file": "_1440__900__standard_design-laboratory.png",
+      "sha256": "6623d0ea99615b042dc0a5f9738bb872f3a33e76b18ca575755ab90520c0f16b"
+    },
+    {
+      "file": "_1440__900__standard_designer_live_2d.png",
+      "sha256": "ff0c4471b58fef499b1953dad2e74a38a92d6feb4886f8fb268a7f4174bcca75"
+    },
+    {
+      "file": "_1440__900__standard_designer_live_3d.png",
+      "sha256": "1351dcdf82d0b5b56134a0678aa0cf740ee08a37684e1d66426763786e321146"
+    },
+    {
+      "file": "_1440__900__standard_designer_live_4d.png",
+      "sha256": "77c758aacf797bdfe06cc5c266e8d69ed1c9494681c14188860e11f6e6322824"
+    },
+    {
+      "file": "_1440__900__standard_diagnostics.png",
+      "sha256": "49a407812230a3a28b7f46b0ba6a8d71d1f9f25d9fbe30572e7b0d69d22109dc"
+    },
+    {
+      "file": "_1440__900__standard_dialog_Delete_Presentation_Profile.png",
+      "sha256": "aa415535c91b27b83beff50c3c13d856fa016784a0c79be0eeae5a0e7559bfda"
+    },
+    {
+      "file": "_1440__900__standard_dialog_Export_Presentation_Profile.png",
+      "sha256": "64ea61881ac88e9ff265c6d8567bd7307d858b077be946fc412abd2b6445948b"
+    },
+    {
+      "file": "_1440__900__standard_dialog_Open_a_File.png",
+      "sha256": "a871de82ae301d96faa8b02d6fb5c7edd0a3fe98d459c3d1aa601048de4e1fc5"
+    },
+    {
+      "file": "_1440__900__standard_dialog_Save_Presentation_Profile.png",
+      "sha256": "e108d300182f9eaf50c2a65e82a2a7dd4ec11a2a67b091757e83b4bcba7717c2"
+    },
+    {
+      "file": "_1440__900__standard_guide_live_2d.png",
+      "sha256": "ed2542e8363f498513105c5745f4317cb1009e889460c81bfc247f6d42cf9966"
+    },
+    {
+      "file": "_1440__900__standard_guide_live_3d.png",
+      "sha256": "c09722cddc24120a745559fa4c56aaa762acb7c753b24a968556a310d97c2c11"
+    },
+    {
+      "file": "_1440__900__standard_guide_live_4d.png",
+      "sha256": "a8d3dbc38f168cdb949496eb550350887e3e912695e0956ea3278494405d8e74"
+    },
+    {
+      "file": "_1440__900__standard_helper_live_2d_PieceControls.png",
+      "sha256": "11bd57bc18058f7b0c3f41288213d3cb519a19fa9738fbdf92a80a5e52e9a393"
+    },
+    {
+      "file": "_1440__900__standard_helper_live_2d_PieceState.png",
+      "sha256": "cfd64edb54ac412d6930effe159827a3fce824c9836698b8ca1ff3d67b3fec8b"
+    },
+    {
+      "file": "_1440__900__standard_helper_live_2d_ViewControls.png",
+      "sha256": "ee9465851dcda1133bf2a395a05606d98fa023293c58c7220162fd2fcf71896e"
+    },
+    {
+      "file": "_1440__900__standard_helper_live_3d_PieceControls.png",
+      "sha256": "d39ce80d39dd371d420c47052c2d1a1a0c8e70c0c83a6a3e67f0295ffae3858b"
+    },
+    {
+      "file": "_1440__900__standard_helper_live_3d_PieceState.png",
+      "sha256": "7a1e94a0647d2d8e30f7a473604b4ac6a4aeb3e24721d9ecdd825aaff45c98f3"
+    },
+    {
+      "file": "_1440__900__standard_helper_live_3d_ViewControls.png",
+      "sha256": "18ed8260a396675a97cc9731e687a972443b20c6e05c95efbe45363fd8763b13"
+    },
+    {
+      "file": "_1440__900__standard_helper_live_4d_PieceControls.png",
+      "sha256": "0b1d25975a9fb37a584cfe417dc19d9522e67e3f0c43ad03b25a41600dadec81"
+    },
+    {
+      "file": "_1440__900__standard_helper_live_4d_PieceState.png",
+      "sha256": "254c4c104d6ae6948a8459316c28e9fd7310b72e2648a48b0c8ac831e436befd"
+    },
+    {
+      "file": "_1440__900__standard_helper_live_4d_ViewControls.png",
+      "sha256": "0e377584e07d39ff2ad09375a6d36dad69dc1d894498ad1bda90f5882885fd1b"
+    },
+    {
+      "file": "_1440__900__standard_main_menu.png",
+      "sha256": "cc52e30aff26bb006f271a80c34a45fd23a4d9287a61ef4eaef83cc46a5a8e9e"
+    },
+    {
+      "file": "_1440__900__standard_settings.png",
+      "sha256": "57a314586caa62d4840cb1bdabaa5c3580550ea0e95a6b9742fc3881e0592fb3"
+    },
+    {
+      "file": "_1440__900__standard_setup_live_2d.png",
+      "sha256": "f34a3821c8840b43c338b50baa67aa989f8cbbe0d9484c5227fa18db893b00ae"
+    },
+    {
+      "file": "_1440__900__standard_setup_live_3d.png",
+      "sha256": "6e5b0c362063329384c06bcba211bebfd123c13b643173b87ee88eb75ed5a844"
+    },
+    {
+      "file": "_1440__900__standard_setup_live_4d.png",
+      "sha256": "962d6eccfc014e279a83b1dd061a0fecc57ee55e448f05de87347a4a165b5c24"
+    },
+    {
+      "file": "_1512__982__extra_large_about.png",
+      "sha256": "169cf62cf957a878c60ead228cfcd73167c06c09fc875a492eccda3c57be1c45"
+    },
+    {
+      "file": "_1512__982__extra_large_advanced.png",
+      "sha256": "6b2b04d5e71d89d97bb14341cc5357ad46c1836f4d5d5608f92ce1fe5de9414d"
+    },
+    {
+      "file": "_1512__982__extra_large_browser.png",
+      "sha256": "900090615e66469226d8bf709edfe252be8ad24c5c9967f32c47aca9cd9df268"
+    },
+    {
+      "file": "_1512__982__extra_large_cockpit_live_2d.png",
+      "sha256": "d013bac17e82501f061d168a739f7fa639d0008216b043180d8f53c7ad0c602d"
+    },
+    {
+      "file": "_1512__982__extra_large_cockpit_live_3d.png",
+      "sha256": "6e079785149a8e5895fc361da74b25993c44f81d4daebd72f68ab966814457e6"
+    },
+    {
+      "file": "_1512__982__extra_large_cockpit_live_4d.png",
+      "sha256": "48eb7f66e98d3a259b0516355c49ebbf507481f410c98fedd7dccc7f423ec53a"
+    },
+    {
+      "file": "_1512__982__extra_large_controls.png",
+      "sha256": "1efc4aca4a3d60addd5e30d54ebbdb2e7087394b59cd7537267d2ebeff6222d5"
+    },
+    {
+      "file": "_1512__982__extra_large_design-laboratory.png",
+      "sha256": "63459ee7c9dcd1829a8cc0e5f9a3a7d80557c765d348605c623c9fb16f0092b3"
+    },
+    {
+      "file": "_1512__982__extra_large_designer_live_2d.png",
+      "sha256": "54faf4b3c8860f80075b26007fdc397dd1d4c80f21b27ea4983b1b6297b07969"
+    },
+    {
+      "file": "_1512__982__extra_large_designer_live_3d.png",
+      "sha256": "2985ef084eef56c80bc4e02b5580987fd0595bd5546393ef2d4e4bca483a0034"
+    },
+    {
+      "file": "_1512__982__extra_large_designer_live_4d.png",
+      "sha256": "ce3fec4209e50df98783e79245a31d1335a7257dae6f4160dc3f226f273122c9"
+    },
+    {
+      "file": "_1512__982__extra_large_diagnostics.png",
+      "sha256": "db237f1bdd877bad039b0b6012a83420a29853fe84b552e8fbbaba33fd5c96b5"
+    },
+    {
+      "file": "_1512__982__extra_large_dialog_Delete_Presentation_Profile.png",
+      "sha256": "b589f00297931c1d5d8e89db939901a24d3b06b101ac2f7e788eaa06627afc1d"
+    },
+    {
+      "file": "_1512__982__extra_large_dialog_Export_Presentation_Profile.png",
+      "sha256": "c6b1f8823b0a522909f0f569e8de611393657435b5bff7299d8d828fea06f14a"
+    },
+    {
+      "file": "_1512__982__extra_large_dialog_Open_a_File.png",
+      "sha256": "16dc1eb823ed9ef9d698d79c25eec0242c5a062bbba90197c8670fcafccff314"
+    },
+    {
+      "file": "_1512__982__extra_large_dialog_Save_Presentation_Profile.png",
+      "sha256": "89a55f66c6c884c3f6144a354e56c102344f28c0657d32c0258fe8506ef97592"
+    },
+    {
+      "file": "_1512__982__extra_large_guide_live_2d.png",
+      "sha256": "a6ef1aa10e599ef2dfc508caa6f0ce5fbc7d64f2807728b27f856d06650aeffc"
+    },
+    {
+      "file": "_1512__982__extra_large_guide_live_3d.png",
+      "sha256": "929a058ac97390c202ad435561dad87616dcc7c55e55e374a06324587609e915"
+    },
+    {
+      "file": "_1512__982__extra_large_guide_live_4d.png",
+      "sha256": "0411016e762e10cbcfdd1fa7a540bb533f38b2277cf2730c08b1dd79309ea2dc"
+    },
+    {
+      "file": "_1512__982__extra_large_helper_live_2d_PieceControls.png",
+      "sha256": "81fb1046402819ceb503363b38cae69ad9649282c375b01f0443c960c52307f2"
+    },
+    {
+      "file": "_1512__982__extra_large_helper_live_2d_PieceState.png",
+      "sha256": "9db4ec3c237669ec8f43f73552eb06ceb1b44c8ee904533124e9bfa90b4782d2"
+    },
+    {
+      "file": "_1512__982__extra_large_helper_live_2d_ViewControls.png",
+      "sha256": "3db3358aeb686cdb711caa2f0b192352b856b352c52eff38796c73903881be73"
+    },
+    {
+      "file": "_1512__982__extra_large_helper_live_3d_PieceControls.png",
+      "sha256": "f8798f3d7bfe145230b0187278fe76f9c7399a74aacf552e19fe7debd3fd10ab"
+    },
+    {
+      "file": "_1512__982__extra_large_helper_live_3d_PieceState.png",
+      "sha256": "ca361d51c24f4bdd66cf3ca16ca149998ec51998d0d211a3269f6af34904b0e0"
+    },
+    {
+      "file": "_1512__982__extra_large_helper_live_3d_ViewControls.png",
+      "sha256": "077426a09752280f39b83df01f1e4d7220011f7bcc1f6453f7b474436677b14c"
+    },
+    {
+      "file": "_1512__982__extra_large_helper_live_4d_PieceControls.png",
+      "sha256": "1d42c3ed89efaad886ee46a8383cb9dd550b3f18d35cf249b0542a7b064805c5"
+    },
+    {
+      "file": "_1512__982__extra_large_helper_live_4d_PieceState.png",
+      "sha256": "7e94684d7379cec4660e90759dc83c626ee9c01657186978bb3a23043eadadef"
+    },
+    {
+      "file": "_1512__982__extra_large_helper_live_4d_ViewControls.png",
+      "sha256": "30d4da3af7ff9eebe0bf5d6b2bdaadbfcd30fe487d18b76ed4a3bb04be9aa465"
+    },
+    {
+      "file": "_1512__982__extra_large_main_menu.png",
+      "sha256": "7870cb2d50d339e597acff92052ffe940aaaa4b0c61f57a4d76be6192c32570f"
+    },
+    {
+      "file": "_1512__982__extra_large_settings.png",
+      "sha256": "e61e20c55ee954eb532adb464bd4054a6bb6828d34ee83bb445a67e7d16835c8"
+    },
+    {
+      "file": "_1512__982__extra_large_setup_live_2d.png",
+      "sha256": "1353370cb659d9e0e4a81e180b1f5e68d779af18c60f5fbd892891a4a35c549e"
+    },
+    {
+      "file": "_1512__982__extra_large_setup_live_3d.png",
+      "sha256": "74c5020d950e6b55a3e716ab07c313c8e782ced3e3687692ee9b49b76aa625c3"
+    },
+    {
+      "file": "_1512__982__extra_large_setup_live_4d.png",
+      "sha256": "141bf0fdbd649cd38d517c0dcb120d0ba21a9525fd4e9757b2086bf28ca25f98"
+    },
+    {
+      "file": "_1512__982__standard_about.png",
+      "sha256": "eeab1416b5067d14b8c85302d4cd5c7fb3d0589bcc69cc07f35a70de56df2d23"
+    },
+    {
+      "file": "_1512__982__standard_advanced.png",
+      "sha256": "dfaf06abde593ece0e33681553fb4b26915772a169108d2ea2cb0a0d692b63dc"
+    },
+    {
+      "file": "_1512__982__standard_browser.png",
+      "sha256": "c595dffeb5964023fe6c0d29f4306520baf9d4c27f1692e3989b4c44e0e41ef7"
+    },
+    {
+      "file": "_1512__982__standard_cockpit_live_2d.png",
+      "sha256": "567d485c7b432f7487a9142bf83bd6da0344e2575d08ad2e0e9cc8edabec8636"
+    },
+    {
+      "file": "_1512__982__standard_cockpit_live_3d.png",
+      "sha256": "ed8e598ef2d82a79fcc46f4b523ad480b590d25feeb3d89d7a9351d4d33b1f94"
+    },
+    {
+      "file": "_1512__982__standard_cockpit_live_4d.png",
+      "sha256": "46b1fe030df58898169cd4c9e2a4ffa5e3ded00a27a9c635ad2edf88ef49f5c0"
+    },
+    {
+      "file": "_1512__982__standard_controls.png",
+      "sha256": "216d801b9002a12a11e67a05d3d68c8c45efbe9f13a14df6a6af81afe6b6c081"
+    },
+    {
+      "file": "_1512__982__standard_design-laboratory.png",
+      "sha256": "d3ef37af13505a33aa689e9e6bbb8fa1bb1948f5b27cf49770a2f875a31a6f45"
+    },
+    {
+      "file": "_1512__982__standard_designer_live_2d.png",
+      "sha256": "0a234898c5e3e533abb9b83139cda9d70c5c52dfa61975fe3251606c6a1839f9"
+    },
+    {
+      "file": "_1512__982__standard_designer_live_3d.png",
+      "sha256": "70f24d7aa2c7dd8de0334ef30b4dd8ddeb00be7d236347f3a6f0ae429c3db398"
+    },
+    {
+      "file": "_1512__982__standard_designer_live_4d.png",
+      "sha256": "0c3e0197c8ed485a7e0248495d22b5e3635a40bebd4121705611083c1dc1e847"
+    },
+    {
+      "file": "_1512__982__standard_diagnostics.png",
+      "sha256": "ff9d6f7dcdb8dc7d44daebc95a77117921782f1c3cd949a1fbaf1ba17af51459"
+    },
+    {
+      "file": "_1512__982__standard_dialog_Delete_Presentation_Profile.png",
+      "sha256": "ac4b0352707285ab026094984040d843e79849a0ecadc4510353742b9cb9e2ad"
+    },
+    {
+      "file": "_1512__982__standard_dialog_Export_Presentation_Profile.png",
+      "sha256": "d965a287ac2e05652b0f148e6e837f6215336b05c13f199e5d1f572196fc9c41"
+    },
+    {
+      "file": "_1512__982__standard_dialog_Open_a_File.png",
+      "sha256": "85210a22464b504ec7f418c4857a6e5cce0c5850359b58a29d1fd50a197321dd"
+    },
+    {
+      "file": "_1512__982__standard_dialog_Save_Presentation_Profile.png",
+      "sha256": "0e39e6024bd5fcfdc0f1d90ca76cc975dfc985243254b24e647c7df4dd410c26"
+    },
+    {
+      "file": "_1512__982__standard_guide_live_2d.png",
+      "sha256": "30453ee0071e93168158998dc769c78c102af0235489d0a90f583c7c65aad791"
+    },
+    {
+      "file": "_1512__982__standard_guide_live_3d.png",
+      "sha256": "2f4154d90661c941c13b3be64c5fb370a10d36e847909949959cc700fa0562a3"
+    },
+    {
+      "file": "_1512__982__standard_guide_live_4d.png",
+      "sha256": "4f69bdd771ffcb30b40e934b00518f8b7f0a69c5058c8dbf4f60c87f4bb885dc"
+    },
+    {
+      "file": "_1512__982__standard_helper_live_2d_PieceControls.png",
+      "sha256": "151ef86f6579d467d41069f53a4c6629c160ba43d7544767e21c00c7c6929328"
+    },
+    {
+      "file": "_1512__982__standard_helper_live_2d_PieceState.png",
+      "sha256": "c20790f9afe33f30652f8a4b6166ba882bf9b62bf5227218e824961d7b3f1b74"
+    },
+    {
+      "file": "_1512__982__standard_helper_live_2d_ViewControls.png",
+      "sha256": "dc8b6159be13bd73d5910aae7058e8ae44cfff6d39778a33f00ca09f40d332bb"
+    },
+    {
+      "file": "_1512__982__standard_helper_live_3d_PieceControls.png",
+      "sha256": "1763460c29440e70d5f952df9920c2f50ee10ab86448ddf3943500d5fb249f8b"
+    },
+    {
+      "file": "_1512__982__standard_helper_live_3d_PieceState.png",
+      "sha256": "343c89823012a289ad30b02489f5dd860c81552a5b751d62eec8c8c461790b3c"
+    },
+    {
+      "file": "_1512__982__standard_helper_live_3d_ViewControls.png",
+      "sha256": "fee9a527a0c7f31f601450fee9e5ff1ea501934f18ae1f700f06eba575456b6b"
+    },
+    {
+      "file": "_1512__982__standard_helper_live_4d_PieceControls.png",
+      "sha256": "8afbec87399b80c24a15c040544de5e908f6c47b8c85a1df4341a25c265171e7"
+    },
+    {
+      "file": "_1512__982__standard_helper_live_4d_PieceState.png",
+      "sha256": "50046cd60c6bbcb45766a58d9abca245fa5dc37ac479a3d6b9a48c03eeb1b9f8"
+    },
+    {
+      "file": "_1512__982__standard_helper_live_4d_ViewControls.png",
+      "sha256": "a2e28c98cc3900d3f99391b7ddf568632dd7b2fb68dd6755d00f64ada8734fa4"
+    },
+    {
+      "file": "_1512__982__standard_main_menu.png",
+      "sha256": "06db0c91b88b854def7a9aa2882767ba7646c3964ec8b0f04c9ecfb3027bce13"
+    },
+    {
+      "file": "_1512__982__standard_settings.png",
+      "sha256": "bb060e045c7d57993062826dae88be1da38a8926954439ba5fe1f5095668b36f"
+    },
+    {
+      "file": "_1512__982__standard_setup_live_2d.png",
+      "sha256": "bacebe766e35200a2160e5849fd18ffea2225467f33bc45c2d6e690a79058f38"
+    },
+    {
+      "file": "_1512__982__standard_setup_live_3d.png",
+      "sha256": "509e108dc4598ce21844caa6fb997e53314949483d20864c0e50281712d13f0e"
+    },
+    {
+      "file": "_1512__982__standard_setup_live_4d.png",
+      "sha256": "75ce588a1bcfe3ac6de5b38a485f0c94baa449df5290b95b3645f7457f074afa"
+    },
+    {
+      "file": "_800__500__extra_large_about.png",
+      "sha256": "5f94bf5cb1c32ee3599a75df4493c05dcb973a5877fedeee9f49c6d8003da5d0"
+    },
+    {
+      "file": "_800__500__extra_large_advanced.png",
+      "sha256": "d96c88fe68ef91087fa6ff476430158a4bef6d0b2921a7dfaa2424fccfd8bef4"
+    },
+    {
+      "file": "_800__500__extra_large_browser.png",
+      "sha256": "098dc256b5218ee81ac56cc5f2fab314653ac81fbb87b3c7edc468fa40699d43"
+    },
+    {
+      "file": "_800__500__extra_large_cockpit_live_2d.png",
+      "sha256": "57b9b78c9a5a0eb6934b6140ea96bb4f1c6e067598ed14263af4d8158c246088"
+    },
+    {
+      "file": "_800__500__extra_large_cockpit_live_3d.png",
+      "sha256": "796ae8074f1049ba8ce879bc5ed0df0a73dd013b708cdbf97787a99ef9f960bf"
+    },
+    {
+      "file": "_800__500__extra_large_cockpit_live_4d.png",
+      "sha256": "2c2efa63b067f23b5bff2a8fecd3c0fcd99e509e3d399987127087287402aa95"
+    },
+    {
+      "file": "_800__500__extra_large_controls.png",
+      "sha256": "4b232deb2c36b704829f3abb20950ceaebca4bc372a425e932267c4326d252b2"
+    },
+    {
+      "file": "_800__500__extra_large_design-laboratory.png",
+      "sha256": "447fb8f7dc214e53327bbdb8b4281de54bf59d64337a93ed9e511952e9fe89d4"
+    },
+    {
+      "file": "_800__500__extra_large_designer_live_2d.png",
+      "sha256": "b14a36df193efcc17c2a0b754a4b57c0d7e4241360a4a9340bed48c3b51f6206"
+    },
+    {
+      "file": "_800__500__extra_large_designer_live_3d.png",
+      "sha256": "ec85e20421e8a36526376fe890b975c548cb4667b7e466cf50a485dac6548a9e"
+    },
+    {
+      "file": "_800__500__extra_large_designer_live_4d.png",
+      "sha256": "2bd8f30b871a80e977f665f868b40e902443ed3e43918d82b407e14d78e5249b"
+    },
+    {
+      "file": "_800__500__extra_large_diagnostics.png",
+      "sha256": "a876729a64902d5e189efbf4122430a21acefb44c4d426aa835cce343edf86da"
+    },
+    {
+      "file": "_800__500__extra_large_dialog_Delete_Presentation_Profile.png",
+      "sha256": "72e472c5cc79a985c577c3ec75b2ef80a6554bf2ac360b9b0e9245fba9511301"
+    },
+    {
+      "file": "_800__500__extra_large_dialog_Export_Presentation_Profile.png",
+      "sha256": "c099c333093c06c10f1c3f557b7b9c4b8469e7bcd423171bb898d413abb7c5aa"
+    },
+    {
+      "file": "_800__500__extra_large_dialog_Open_a_File.png",
+      "sha256": "9bd2852ce6deecd83292ab1a28ed561104f77887c3821197d83c76c0c9f0f45f"
+    },
+    {
+      "file": "_800__500__extra_large_dialog_Save_Presentation_Profile.png",
+      "sha256": "cda33743636b09089d3a710a8aa7dd63069e7ece37c781d687b69561aabbd679"
+    },
+    {
+      "file": "_800__500__extra_large_guide_live_2d.png",
+      "sha256": "7b15d5d12b727f8a801f62fbc03d5510f4f94b4a4d8680a8e3b836dc7b364d49"
+    },
+    {
+      "file": "_800__500__extra_large_guide_live_3d.png",
+      "sha256": "017d2afc8f8fe75c7c68e38190dd389727e968cdcaea3d521a116483661b9407"
+    },
+    {
+      "file": "_800__500__extra_large_guide_live_4d.png",
+      "sha256": "8a401edf7f2dbe5af29e995da95d9ab46ed77d977c20a15512ed8a3b46d03a26"
+    },
+    {
+      "file": "_800__500__extra_large_helper_live_2d_PieceControls.png",
+      "sha256": "ec5f277fe1edf5e49df5c8bbc69eeb8f6b2b06c31d08b2f9e7aad6c675521a9b"
+    },
+    {
+      "file": "_800__500__extra_large_helper_live_2d_PieceState.png",
+      "sha256": "bc23deaae85acd70340eb7c7ed2daf2329f680af1a2045c2f39192f06cc1d345"
+    },
+    {
+      "file": "_800__500__extra_large_helper_live_2d_ViewControls.png",
+      "sha256": "f2544c5a4da70c7c552184f0b55eb69395c3564bc72a8592a736023ebbc6fe40"
+    },
+    {
+      "file": "_800__500__extra_large_helper_live_3d_PieceControls.png",
+      "sha256": "a01a5aefa2f2c609a4713105aa0c658398de492218590cd4d1a11de97cbf128c"
+    },
+    {
+      "file": "_800__500__extra_large_helper_live_3d_PieceState.png",
+      "sha256": "62dd6734fc6e18fbf05cf944212febc35c236156135ebba0f81be2800cabd63d"
+    },
+    {
+      "file": "_800__500__extra_large_helper_live_3d_ViewControls.png",
+      "sha256": "6559be93d2ef726f627312026b5bee3329bb2a7b1f4747dae9680801dd70bd0c"
+    },
+    {
+      "file": "_800__500__extra_large_helper_live_4d_PieceControls.png",
+      "sha256": "6cfe2e86b45486c7f693946ebd0a6d3104773f91e796b5dd9728e84b80530450"
+    },
+    {
+      "file": "_800__500__extra_large_helper_live_4d_PieceState.png",
+      "sha256": "cceb25707795e14f8bc33128d36f4924ffc5e28150df21c6494994c31b0468ec"
+    },
+    {
+      "file": "_800__500__extra_large_helper_live_4d_ViewControls.png",
+      "sha256": "c014a199d34486a4947b74aac51a22f11c2028e96770ffe68532c5cf59eb6971"
+    },
+    {
+      "file": "_800__500__extra_large_main_menu.png",
+      "sha256": "1bd3b4c5d60e0e546e613d643125fd995d87bd1614279f95412eaf30ffe47d4e"
+    },
+    {
+      "file": "_800__500__extra_large_settings.png",
+      "sha256": "657ec51ceeadb4f48208f605e7ce73dc28a2b01614663a947ae450df56cf7af4"
+    },
+    {
+      "file": "_800__500__extra_large_setup_live_2d.png",
+      "sha256": "bdbc77227a5577e43b9fb111dd5639256dc4296244292bc77f0813386990f542"
+    },
+    {
+      "file": "_800__500__extra_large_setup_live_3d.png",
+      "sha256": "7d68e4b40974eefc7bac56baccfa30f0422e5f6cff88beb9b64f56336797bd38"
+    },
+    {
+      "file": "_800__500__extra_large_setup_live_4d.png",
+      "sha256": "7b81bb5ffae1c007525cdde82fc4a4eaff3dc5553860115b3c67bb6df7167e92"
+    },
+    {
+      "file": "_800__500__standard_about.png",
+      "sha256": "4edb81d84d82dd18401e23d1a50dc6a69d58e8fbf629bdbe73d5da070f4ada4f"
+    },
+    {
+      "file": "_800__500__standard_advanced.png",
+      "sha256": "ad651abf1e32733db11b49d7e66b69161c5efe06d2806ddce3e1f63928eea380"
+    },
+    {
+      "file": "_800__500__standard_browser.png",
+      "sha256": "1e74c5f370a773ff470f7b9081dde96761cd0e187cdfa1ac154ff84cfaa18e1c"
+    },
+    {
+      "file": "_800__500__standard_cockpit_live_2d.png",
+      "sha256": "3c9d0eb19f034cc1d2cfa5a5612ecf671dee114d5906b5fd3ba7cf2158c660c8"
+    },
+    {
+      "file": "_800__500__standard_cockpit_live_3d.png",
+      "sha256": "68ccf465baf42351ab310833aea13d0e101c27f391ba6850b3ac04c201a3cedd"
+    },
+    {
+      "file": "_800__500__standard_cockpit_live_4d.png",
+      "sha256": "4d7a1ac0a4ec2fad191bea9c0adb4ccb3375b72eace8a14074440c105aa7a98d"
+    },
+    {
+      "file": "_800__500__standard_controls.png",
+      "sha256": "fe00bf56206412f9bdc8432d8f3dd7c9233df9f856164753c16b5a8cabac14c3"
+    },
+    {
+      "file": "_800__500__standard_design-laboratory.png",
+      "sha256": "954a55a993cac6ad03695429ef656601e40ddab9470394079b88a3ae9af053a0"
+    },
+    {
+      "file": "_800__500__standard_designer_live_2d.png",
+      "sha256": "871121950b19e3ca810271cb39d027386f4eef13557f2a6ca78bc6bc38014190"
+    },
+    {
+      "file": "_800__500__standard_designer_live_3d.png",
+      "sha256": "dc097fa5012225b71c1e20379d8a34d02a9944ac682a2c759f22883216397407"
+    },
+    {
+      "file": "_800__500__standard_designer_live_4d.png",
+      "sha256": "e02a209de32ceabb8d19b39ee795c908259c234115987c5e3f1aa465306c5f92"
+    },
+    {
+      "file": "_800__500__standard_diagnostics.png",
+      "sha256": "b0f863d9eb66550a22c32ffbec24e5d17869f8556e50b62b0c75343b8f79bb5e"
+    },
+    {
+      "file": "_800__500__standard_dialog_Delete_Presentation_Profile.png",
+      "sha256": "2a53b66e7f7d8a26289cfba7c376f923d0ecb69c96425be0fe7919f1445e9098"
+    },
+    {
+      "file": "_800__500__standard_dialog_Export_Presentation_Profile.png",
+      "sha256": "72c4e082902962c8aebe04ea454d1f0ef250feb55abbff59ef7aa131ef091611"
+    },
+    {
+      "file": "_800__500__standard_dialog_Open_a_File.png",
+      "sha256": "dab9de67b53095ec394923f9dd01051efd673338205ef28e3f8401923513f3c1"
+    },
+    {
+      "file": "_800__500__standard_dialog_Save_Presentation_Profile.png",
+      "sha256": "6243abe5f48ca757a5a177273c224bdec2ffa545c4c3bf621bebc9935994cb94"
+    },
+    {
+      "file": "_800__500__standard_guide_live_2d.png",
+      "sha256": "e6a5d46338f35ff29de778d966e53b82d5c05bd8196e9842f68f1daba8a24abe"
+    },
+    {
+      "file": "_800__500__standard_guide_live_3d.png",
+      "sha256": "870d54955d796190e4f8f3e51e0d555bf6421b29590e021269a8d37430904e7c"
+    },
+    {
+      "file": "_800__500__standard_guide_live_4d.png",
+      "sha256": "8e9f49ff1888bc7f1be0cc0516339e01f75d2f098358b0af88d94d108d237008"
+    },
+    {
+      "file": "_800__500__standard_helper_live_2d_PieceControls.png",
+      "sha256": "a283f409fcf2656937c3521c8ae15211168af290fb7f52d38cd792dd6f22bf0d"
+    },
+    {
+      "file": "_800__500__standard_helper_live_2d_PieceState.png",
+      "sha256": "4b313820ea1fe9b00157348197d6a50333440a99ab965a6413fa02c7134fe600"
+    },
+    {
+      "file": "_800__500__standard_helper_live_2d_ViewControls.png",
+      "sha256": "6e3c44d25f3891cdcb0724f39272da6a2673de2942361b89db176c6f8ed1133c"
+    },
+    {
+      "file": "_800__500__standard_helper_live_3d_PieceControls.png",
+      "sha256": "b935db0e9dce5e61cf9c5439c065850b28a5aef1c47846cbc42d566c3acad715"
+    },
+    {
+      "file": "_800__500__standard_helper_live_3d_PieceState.png",
+      "sha256": "535d816bde03bc0b6b751a0e79df026d48f8965d78e5b9cc529ffee7e7b86293"
+    },
+    {
+      "file": "_800__500__standard_helper_live_3d_ViewControls.png",
+      "sha256": "6ffa8e207b0c6141f0ad433862c30406ecf3526a93d2789414c2d12582e7c35b"
+    },
+    {
+      "file": "_800__500__standard_helper_live_4d_PieceControls.png",
+      "sha256": "908961d354dbd4ab101606afe8581b3842d2fc3e1d0635cee9ea7afb1148dfea"
+    },
+    {
+      "file": "_800__500__standard_helper_live_4d_PieceState.png",
+      "sha256": "c4994f7899e6d71d0e507211ad7cfc7256b927a7b2955d2dcbb0eb8db1a968a6"
+    },
+    {
+      "file": "_800__500__standard_helper_live_4d_ViewControls.png",
+      "sha256": "abf688d290cea8a4dd0ee80ba4b1ed37c1b7ef5e9e922babe05d7fd1ce04d0f3"
+    },
+    {
+      "file": "_800__500__standard_main_menu.png",
+      "sha256": "bb218d423a3935c51ee2f328b389b41cf99e0ef25e590662da8c6e491c0b9a60"
+    },
+    {
+      "file": "_800__500__standard_settings.png",
+      "sha256": "781737dbbd4c065d9bccab23570368859a19c6870e32285b2706eda0408cab2b"
+    },
+    {
+      "file": "_800__500__standard_setup_live_2d.png",
+      "sha256": "fa1beb50a0ffec42d3cdf3c207f176088d758e92c244e5053f9093354609c092"
+    },
+    {
+      "file": "_800__500__standard_setup_live_3d.png",
+      "sha256": "2d83a71fde5d229adcc21c9d5acf8c3c38c4690473ede2a93f519e3544001f5d"
+    },
+    {
+      "file": "_800__500__standard_setup_live_4d.png",
+      "sha256": "ea73ff1b18804afba7b433e2e7d169040c282b072500ee63b9212c714fc8fef6"
+    },
+    {
+      "file": "actual-mode-0_controls.png",
+      "sha256": "d184f7d8040aa96105567392c32bb10f592bf649bd430bba5dc8b60b20c93b9f"
+    },
+    {
+      "file": "actual-mode-0_designer_live_2d.png",
+      "sha256": "51f6d84ec9bc539973b0b0826521ce8cdd1a9304e23fee3e42c3410c58f292cf"
+    },
+    {
+      "file": "actual-mode-0_designer_live_3d.png",
+      "sha256": "81f46cab01e51c3e733338c50977d9be329d3bf8ebd71c902ef7d03f2d50c062"
+    },
+    {
+      "file": "actual-mode-0_designer_live_4d.png",
+      "sha256": "c739581413334f1d393e4a86d22a8f915a9e28a1f69833011e7d57a0f9ea2b8f"
+    },
+    {
+      "file": "actual-mode-0_guide_live_2d.png",
+      "sha256": "7160c38d3446e2bbbb0a6dab7995c30d5776074b1a04e2771fe5ce9feb7781c6"
+    },
+    {
+      "file": "actual-mode-0_guide_live_3d.png",
+      "sha256": "8a410838d185ec6cb3865705e766db56e9fb7ddcf7324237c30ddc753c4fe914"
+    },
+    {
+      "file": "actual-mode-0_guide_live_4d.png",
+      "sha256": "0c4d25f3760230bb5acc2fd3f37233659cc41c04bb63dac88a962cd88a74af39"
+    },
+    {
+      "file": "actual-mode-0_laboratory.png",
+      "sha256": "f1f3b59eca6c0c6c68f5b0a6d4939a318502227f4318180afda5a1b90fc1ff89"
+    },
+    {
+      "file": "actual-mode-0_main_menu.png",
+      "sha256": "010c10d478583e24b754257e1ae526d1188907393270266667a2ade625c8e551"
+    },
+    {
+      "file": "actual-mode-0_settings.png",
+      "sha256": "95f3119b6e446a5d577a4a77575667884c6429c65446440beca6a93be43514ed"
+    },
+    {
+      "file": "actual-mode-0_setup_live_2d.png",
+      "sha256": "d37f6365dfcc7226c3728e5fbc467940abbb5e8cc72914ccc5bc8e01678f6b1f"
+    },
+    {
+      "file": "actual-mode-0_setup_live_3d.png",
+      "sha256": "5e71b2bdfa726c4d4f153b0dba1111fc5d4aa01f5e963b7fb00f023a6fc2c0ab"
+    },
+    {
+      "file": "actual-mode-0_setup_live_4d.png",
+      "sha256": "6d9a5df1217e0e93bc3423893abfbe995bd993259b71db52db5e2a3ee6abff9a"
+    },
+    {
+      "file": "actual-mode-3_controls.png",
+      "sha256": "1d4421891df46f68f39582cc4d0b4c56b646363269c6225e05bbf360f0c6f770"
+    },
+    {
+      "file": "actual-mode-3_designer_live_2d.png",
+      "sha256": "523c8d046576d4b55dac658be93e1065a96949b102c7740ed5e1847cf313f32c"
+    },
+    {
+      "file": "actual-mode-3_designer_live_3d.png",
+      "sha256": "ec5a6dc324e2d561d7770dd8bc3bb8078f94a9a731bcf8573e9d56c9b0e4ba80"
+    },
+    {
+      "file": "actual-mode-3_designer_live_4d.png",
+      "sha256": "682e0364b851bc975e88b6a10966c0e1bbe7626173fac3c5f68c41134eac99dc"
+    },
+    {
+      "file": "actual-mode-3_guide_live_2d.png",
+      "sha256": "6e9fe3b9a613d34298ec4a0081b1db13e15be1fd9789ecac880a8ba7deba0410"
+    },
+    {
+      "file": "actual-mode-3_guide_live_3d.png",
+      "sha256": "2d9e78d7fc2ae2ce8593a945561b74e24b68fd4b5c7eb061e2237f1896a40d78"
+    },
+    {
+      "file": "actual-mode-3_guide_live_4d.png",
+      "sha256": "025b16fefc4725df26f742e0c4d63b6852e6f85ec196bc6b8a4fded5e69b108b"
+    },
+    {
+      "file": "actual-mode-3_laboratory.png",
+      "sha256": "44b3cff577cb0790527e474f695bf10b8c88a07361249401941e0e2a7de070dc"
+    },
+    {
+      "file": "actual-mode-3_main_menu.png",
+      "sha256": "0cd1d89028d76aaf9a14847153372ff0e5e99d6aa77cf55274d07a3b0e27f063"
+    },
+    {
+      "file": "actual-mode-3_settings.png",
+      "sha256": "af93e2ff6214c2d0f3d571cfd19ce78acbbbd1c18d3f3fbc0fbca6f48ad65979"
+    },
+    {
+      "file": "actual-mode-3_setup_live_2d.png",
+      "sha256": "00d0c9fb6e3d638612df1b937cfdd9131b4bd0db427cba79693458ca022e5adb"
+    },
+    {
+      "file": "actual-mode-3_setup_live_3d.png",
+      "sha256": "baf8e1a37bf952d5e1129577a4d41363207b59b61463723cbd352cb060270439"
+    },
+    {
+      "file": "actual-mode-3_setup_live_4d.png",
+      "sha256": "a7fe800135e62673f4263ac723841c1c356a72c54e3a2cd1f8010277e5a7934a"
+    },
+    {
+      "file": "height-only_1280x500.png",
+      "sha256": "b1f3d7968f75e7c704aeacb74f03b274d0c0e205fed71e2306292b7aa9cc097f"
+    },
+    {
+      "file": "height-only_1280x900.png",
+      "sha256": "f3f1bf285bc3143423fca844738edc2a48f8ea478a84ff873e33391b49104baa"
+    }
+  ]
+}

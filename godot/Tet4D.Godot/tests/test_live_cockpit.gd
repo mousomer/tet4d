@@ -5,8 +5,37 @@ const LiveCockpitScript = preload("res://scripts/ui/live_cockpit.gd")
 
 func run() -> Array:
 	var failures: Array = []
+	failures.append_array(_assert_fit_search_cancellation())
 	failures.append_array(await _assert_component_grammar())
 	failures.append_array(await _check_production_extraction())
+	return failures
+
+
+func _assert_fit_search_cancellation() -> Array:
+	var failures: Array = []
+	for reason in ["larger room", "rebuilt content"]:
+		var cockpit = LiveCockpitScript.new()
+		# A measured, width-settled group partway through its scale search.
+		# Keep it outside the tree so queued layout cannot change this fixture.
+		cockpit.deck_scroll.size = Vector2(400, 300)
+		cockpit.deck_fit.fit_scale = 0.8
+		cockpit.deck_fit.size = Vector2(400, 300)
+		cockpit.deck_row_host.size = Vector2(500, 300)
+		cockpit._fit_states["deck"] = {
+			"compact": true, "relaxed": 180.0 if reason == "larger room" else 300.0,
+			"pending": [180.0, 0], "scale": 0.8, "compact_pending": [140.0, 0],
+			"width": 400.0, "room": 120.0, "searching": true, "lo": 0.6, "hi": 0.9,
+		}
+		var modules: Array = [] if reason == "larger room" else [cockpit.piece_controls]
+		cockpit._packing_in_progress = true
+		cockpit._fit_height("deck", modules, func() -> float: return 140.0, func(_relaxed: float) -> float: return 200.0, true)
+		cockpit._packing_in_progress = false
+		var state: Dictionary = cockpit._fit_states["deck"]
+		if bool(state["compact"]) or not is_equal_approx(cockpit.deck_fit.fit_scale, 1.0):
+			failures.append("%s must return the group to relaxed full scale" % reason)
+		if not cockpit.fit_settled():
+			failures.append("%s must cancel the search and outstanding measurements" % reason)
+		cockpit.free()
 	return failures
 
 
