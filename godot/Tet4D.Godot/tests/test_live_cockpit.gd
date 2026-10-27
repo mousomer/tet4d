@@ -6,7 +6,43 @@ const LiveCockpitScript = preload("res://scripts/ui/live_cockpit.gd")
 func run() -> Array:
 	var failures: Array = []
 	failures.append_array(await _assert_component_grammar())
+	failures.append_array(await _assert_metrics_signal_during_visibility_propagation())
 	failures.append_array(await _check_production_extraction())
+	return failures
+
+
+# Showing the viewer screen propagates visibility down the cockpit, and Godot
+# refuses add_child on a node while it notifies its children. A module metric
+# signal emitted then must not reparent the deck mid-propagation: reparent()
+# removes it first, so a refused add leaves the deck with no parent at all
+# (Live 4D reached after 2D/3D showed no lower helper panel).
+func _assert_metrics_signal_during_visibility_propagation() -> Array:
+	var failures: Array = []
+	var cockpit = LiveCockpitScript.new()
+	var tree := Engine.get_main_loop() as SceneTree
+	tree.root.add_child(cockpit)
+	cockpit.set_available_size(Vector2(1600.0, 960.0), Vector2(1600.0, 960.0), "standard")
+	cockpit.set_deck_placement(LiveCockpitScript.PLACEMENT_SIDE)
+	await tree.process_frame
+	await tree.process_frame
+	# A mode switch that requested the split before its first layout pass.
+	cockpit._requested_placement = LiveCockpitScript.PLACEMENT_SPLIT
+	var probe := Control.new()
+	cockpit.board_column.add_child(probe)
+	# A shown module re-measures; the changed minimum is what makes the policy act.
+	probe.visibility_changed.connect(func() -> void:
+		cockpit.piece_controls.custom_minimum_size.y += 1.0
+		cockpit.piece_controls.minimum_size_changed.emit())
+	cockpit.board_column.visible = false
+	cockpit.board_column.visible = true
+	await tree.process_frame
+	await tree.process_frame
+	if cockpit.control_deck.get_parent() == null:
+		failures.append("a metrics signal during visibility propagation must not orphan the control deck")
+	elif cockpit.deck_placement() != LiveCockpitScript.PLACEMENT_SPLIT:
+		failures.append("the deferred metrics pass must still apply the requested split, got %s" % cockpit.deck_placement())
+	cockpit.queue_free()
+	await tree.process_frame
 	return failures
 
 

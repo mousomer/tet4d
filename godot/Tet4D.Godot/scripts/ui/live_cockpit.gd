@@ -101,6 +101,7 @@ var _density := "standard"
 var _responsive_profile := PROFILE_STANDARD
 var _row_assignment: Array = []
 var _packing_in_progress := false
+var _deck_metrics_check_queued := false
 var _last_packing_width := -1.0
 var _last_module_minimums := Vector3.ZERO
 var _last_module_heights := Vector3.ZERO
@@ -326,11 +327,29 @@ func _init() -> void:
 	# layout pass: the deck's own width, and each module's minimum once its
 	# strip is reparented in. Without re-packing on those signals the deck keeps
 	# whatever arrangement a transient early width produced.
-	control_deck.resized.connect(_on_deck_metrics_changed)
+	control_deck.resized.connect(_queue_deck_metrics_check)
 	for module in [piece_controls, view_controls, piece_state]:
-		module.minimum_size_changed.connect(_on_deck_metrics_changed)
-	header_slot.minimum_size_changed.connect(_on_deck_metrics_changed)
-	side_scroll.resized.connect(_on_deck_metrics_changed)
+		module.minimum_size_changed.connect(_queue_deck_metrics_check)
+	header_slot.minimum_size_changed.connect(_queue_deck_metrics_check)
+	side_scroll.resized.connect(_queue_deck_metrics_check)
+
+
+# These signals fire while Godot propagates visibility or sorts a container,
+# when it refuses add_child on the node being notified. The policy reparents
+# the deck and modules, and a refused reparent leaves the node with no parent
+# at all, so the check runs once the notification is over. Signals raised by
+# the policy's own pass are dropped as before, and a burst coalesces into one
+# check: queuing every emission would feed each pass's resizes back as work.
+func _queue_deck_metrics_check() -> void:
+	if _packing_in_progress or _deck_metrics_check_queued:
+		return
+	_deck_metrics_check_queued = true
+	call_deferred("_run_queued_deck_metrics_check")
+
+
+func _run_queued_deck_metrics_check() -> void:
+	_deck_metrics_check_queued = false
+	_on_deck_metrics_changed()
 
 
 func set_deck_placement(placement: String) -> void:
