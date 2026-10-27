@@ -32,6 +32,10 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   `godot/Tet4D.Godot/tests/test_locked_shell_layouts.gd`: the Live 2D/3D side
   rail, the Live 4D split and small-window deck, and the single-list Main Menu
   with Play 2D/3D/4D. Changing them is a product decision.
+- [x] Live 4D lower helper deck missing after 2D/3D play (2026-10-27): a
+  metric signal reparented the deck during visibility propagation and Godot's
+  refused add left it parentless. Deferred, coalesced metric checks fix it;
+  `test_live_cockpit.gd` reproduces the engine refusal. Owner-confirmed in play.
 - Stage 58B allocation now measures the drawn board; see
   `docs/design/stage_58b_readability_evidence.md`. Windows, Linux and handheld
   devices still need their own rendered evidence.
