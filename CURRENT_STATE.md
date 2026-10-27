@@ -20,7 +20,7 @@ phase-dependent work. It is not workflow authority, a CI diary, a completed
 stage archive, a task-contract ledger, or a future programme.
 ## Active Focus
 
-UI/cockpit repair: `docs/plans/ui_cockpit_orchestration_repair.md`; master-based branch, R1/R2 prepared, unverified.
+UI/cockpit repair: `52986aa2` pushed on `codex/ui-cockpit-orchestration`; R1/R2 unverified. Static review and open fixes: `docs/plans/ui_cockpit_code_review_2026_10_27.md`.
 
 Machine-readable handoff state. `status` is `active` only on a feature branch
 or draft PR and must name that branch; it is `none` on the default branch and

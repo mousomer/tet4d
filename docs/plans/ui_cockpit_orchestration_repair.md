@@ -199,3 +199,23 @@ private-field compatibility is not part of the result lock. Other existing
 private-field tests are migrated with their owning phase, not used to prevent it.
 Existing recordings and source inspection do not establish fresh execution,
 rendering, or owner acceptance of either repair.
+
+## Continued static review
+
+R1/R2 and the result lock were committed and pushed at `52986aa2` before the
+continued review. The findings and exact source paths are recorded in
+`docs/plans/ui_cockpit_code_review_2026_10_27.md`; backlog status remains open.
+
+- F1: include input/render-space delta conversion in phase 5's shell boundary;
+  preserve current pan signs and prove root-space movement across display scales.
+- F2: phase 2's helper state and phase 3's coordinator must invalidate completed
+  fits on content/theme generation changes, not only host constraints.
+- F3: repair group Reset against the current saved/loaded baseline as a small
+  separate correctness change before extracting Designer lifecycle in phase 4.
+- F4: keep laboratory capture settling and asynchronous identity validation as
+  an adjacent explicit follow-up; do not hide it inside the cockpit extraction.
+- F5: reconcile the authority map with the approved Fit exception in a narrow
+  documentation change.
+
+No additional runtime changes or functional execution accompanied this review.
+The review is a source-based assessment, not acceptance of these future repairs.

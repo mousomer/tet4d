@@ -39,6 +39,17 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   only secrets/string sanitation. Existing recordings are historical evidence.
 - Continue on `codex/ui-cockpit-orchestration` from master `e37441bb`; preserve
   the dirty release checkout and master CI/workflow rules.
+- Published R1/R2 and result lock at `52986aa2`. Static follow-up findings:
+  `docs/plans/ui_cockpit_code_review_2026_10_27.md`.
+- [ ] F1 / P2: convert pan deltas consistently between root input and the
+  gameplay render surface; preserve reflection signs.
+- [ ] F2 / P2: invalidate completed helper fits on content/theme changes,
+  including edits to existing controls at unchanged host constraints.
+- [ ] F3 / P2: make owner Reset use the current saved/loaded design baseline.
+- [ ] F4 / P2, adjacent follow-up: capture only a settled layout generation,
+  with session/arm/fingerprint revalidation after asynchronous waits.
+- [ ] F5 / P3: clarify the owner-approved pending-orbit Fit exception in the
+  architecture authority map.
 
 ### P1 fullscreen panels, live helpers and menu responsiveness
 
