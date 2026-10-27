@@ -187,9 +187,11 @@ overflows at the readability floor.
   propagates visibility or sorts a container, when it refuses `add_child` on
   the node being notified; `reparent()` has already removed the node by then,
   so a refused move leaves the Live 4D deck with no parent at all. A burst
-  queues one deferred check (`_queue_deck_metrics_check`); signals raised by
-  the policy's own pass are dropped, since queuing them feeds each pass's
-  resizes back as new work and floods the message queue.
+  queues one check for the next frame (`_queue_deck_metrics_check`), and
+  `fit_settled()` stays false while it waits; signals raised by the policy's
+  own pass are dropped. A `call_deferred` check would run in the idle flush
+  that sorts the containers its pass resized, feed each pass back as new work
+  and overflow the message queue.
 
 `tests/support/panel_responsive_probe.gd#inspect_cockpit` fails a deck, rail
 or split column that scrolls before compacting or above the scale floor, a
