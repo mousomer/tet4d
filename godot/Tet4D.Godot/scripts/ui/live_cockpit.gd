@@ -337,14 +337,16 @@ func _init() -> void:
 # These signals fire while Godot propagates visibility or sorts a container,
 # when it refuses add_child on the node being notified. The policy reparents
 # the deck and modules, and a refused reparent leaves the node with no parent
-# at all, so the check runs once the notification is over. Signals raised by
-# the policy's own pass are dropped as before, and a burst coalesces into one
-# check: queuing every emission would feed each pass's resizes back as work.
+# at all, so the check runs on the next frame, like the fit settle passes.
+# Signals raised by the policy's own pass are dropped as before, and a burst
+# coalesces into one check. A deferred call would run inside the same idle
+# flush that sorts the containers it resized, so each pass would queue the
+# next and flood the message queue.
 func _queue_deck_metrics_check() -> void:
-	if _packing_in_progress or _deck_metrics_check_queued:
+	if _packing_in_progress or _deck_metrics_check_queued or not is_inside_tree():
 		return
 	_deck_metrics_check_queued = true
-	call_deferred("_run_queued_deck_metrics_check")
+	get_tree().process_frame.connect(_run_queued_deck_metrics_check, CONNECT_ONE_SHOT)
 
 
 func _run_queued_deck_metrics_check() -> void:
@@ -840,6 +842,8 @@ func _agreed(state: Dictionary, key: String, value: float) -> bool:
 # True once every fit group has decided: nothing awaits agreement, no scale
 # search is running and no settle pass is queued. Layout checks wait for it.
 func fit_settled() -> bool:
+	if _deck_metrics_check_queued:
+		return false
 	if is_inside_tree() and get_tree().process_frame.is_connected(_apply_responsive_policy):
 		return false
 	for group in _fit_states:
