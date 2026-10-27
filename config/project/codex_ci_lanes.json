@@ -203,6 +203,16 @@
         ]
       },
       {
+        "id": "agent_skills",
+        "patterns": [
+          "tools/agent-skills/**",
+          "tools/artifact-board/**"
+        ],
+        "requirements": [
+          "documentation"
+        ]
+      },
+      {
         "id": "python",
         "patterns": [
           "front.py",

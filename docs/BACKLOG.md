@@ -36,6 +36,30 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   `docs/design/stage_58b_readability_evidence.md`. Windows, Linux and handheld
   devices still need their own rendered evidence.
 
+### Owner workflow adoption
+
+The `video-game-development`, `decision-worksheet` and `text-editor` agent
+skills live in `tools/agent-skills/`; `.claude/skills/` and `.agents/skills/`
+hold discovery pointers only. They are project workflow, not governance-pack
+skills. tet4d is an original native game, so the playbook's reverse
+engineering, oracle and fidelity register do not apply.
+
+- Mapping: the plan stays in this file, handoff in `CURRENT_STATE.md`, product
+  answers in `docs/rds/*`; owner decisions are numbered and recorded in the RDS
+  or architecture document they change. No `BUILD_PLAN.md` or decision register.
+- QA sheets name a local launch recipe and seeded settings instead of a published
+  build: no Web export exists. Owner review sizes are macOS windowed
+  1280×720/800 and fullscreen.
+- [x] Phase 0: skills committed on a branch from `master`.
+- [x] Phase 1: the [Tet4D Board](https://claude.ai/artifact/H8A1LZV69hzv5B9SBN2Gbe)
+  in the default Vector Arcade palette. `tools/artifact-board/items.json` lists
+  the cards (slices, owner tasks, artifacts); `sync.cjs` turns it into the
+  board's database writes. Card statuses and owner notes belong to the owner.
+- [ ] Phase 2: Stage 58C decisions worksheet over captures of today's board.
+- [ ] Phase 3: QA sheet for the Stage 56H playability checkpoint. P1 panels are
+  already owner-accepted and locked on macOS.
+- Text editor only when the owner asks to edit copy.
+
 ### Stage 56H spatial scaffold acceptance
 
 Cumulative NONE/BORDER/FULL roles now require cached edge geometry rather than
