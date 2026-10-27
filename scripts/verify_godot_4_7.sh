@@ -208,6 +208,12 @@ GODOT_STEP_TIMEOUT_SECONDS="$GODOT_REPLAY_TEST_TIMEOUT_SECONDS" \
   --headless --path "$PROJECT_COPY" --script tests/run_tests.gd
 assert_no_script_error "replay tests" "$REPLAY_TEST_LOG"
 assert_no_teardown_leak "replay tests" "$REPLAY_TEST_LOG"
+# The P0 event-to-native movement regression is mandatory, including when a
+# test aborts with a typed empty return or its registration is accidentally lost.
+if ! grep -q '^LIVE_RELATIVE_TRANSLATION_PASS: 3D + 4D$' "$REPLAY_TEST_LOG"; then
+  echo "Mandatory Live 3D/4D relative translation regression did not pass." >&2
+  exit 1
+fi
 TOPOLOGY_TRANSPORT_PARITY_LOG="$VERIFY_ROOT/topology_transport_parity.log"
 run_godot_step "topology transport parity" "$TOPOLOGY_TRANSPORT_PARITY_LOG" quiet \
   env "${GODOT_ENV[@]}" "$GODOT_BIN" \

@@ -344,7 +344,18 @@ jobs:
           ./scripts/test_godot_tet4d_core.sh
 
       - name: Verify Godot import, scripts, resources, GDExtension, and startup
-        run: GODOT_BIN="$GODOT_BIN" ./scripts/verify_godot_4_7.sh
+        run: |
+          set -o pipefail
+          GODOT_BIN="$GODOT_BIN" ./scripts/verify_godot_4_7.sh \
+            | tee "$RUNNER_TEMP/godot-verification.log"
+
+      - name: Preserve canonical Godot and Live translation execution evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-verification-log
+          path: ${{ runner.temp }}/godot-verification.log
+          if-no-files-found: warn
 
       - name: Confirm verification left the checkout clean
         run: |
