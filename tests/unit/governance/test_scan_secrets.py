@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -154,3 +155,60 @@ def test_clean_tree_passes(scan_root: Path, capsys: pytest.CaptureFixture[str]) 
     assert (
         output.strip() == "Secret scan passed: no potential secret patterns detected."
     )
+
+
+def test_excluded_trees_are_not_entered_and_visible_leaks_still_fail(
+    scan_root: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write(scan_root / "state" / "nested" / "ignored.txt", _long_token())
+    _write(scan_root / "src" / "visible.txt", _long_token())
+    config = json.loads(scanner.CONFIG_PATH.read_text())
+    config["exclude_dirs"] = ["state"]
+    scanner.CONFIG_PATH.write_text(json.dumps(config))
+    original = os.scandir
+
+    def guarded_scandir(path: str | Path) -> os.ScandirIterator:
+        assert "state" not in Path(path).relative_to(scan_root).parts
+        return original(path)
+
+    monkeypatch.setattr(os, "scandir", guarded_scandir)
+    findings = scanner.run_scan()
+    assert [(item.rel_path, item.pattern_id) for item in findings] == [
+        ("src/visible.txt", "long_demo")
+    ]
+
+
+def test_explicit_scan_root_inside_excluded_tree_is_not_entered(
+    scan_root: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write(scan_root / "state" / "nested" / "ignored.txt", _long_token())
+    config = json.loads(scanner.CONFIG_PATH.read_text())
+    config.update(scan_roots=["state/nested"], exclude_dirs=["state"])
+    scanner.CONFIG_PATH.write_text(json.dumps(config))
+
+    def forbidden_scandir(path: str | Path) -> os.ScandirIterator:
+        pytest.fail(f"entered an excluded tree: {path}")
+
+    monkeypatch.setattr(os, "scandir", forbidden_scandir)
+    assert scanner.run_scan() == []
+
+
+def test_path_exclusion_prunes_only_that_directory(
+    scan_root: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write(scan_root / ".claude" / "worktrees" / "other" / "leak.txt", _long_token())
+    _write(scan_root / ".claude" / "settings.txt", _long_token())
+    _write(scan_root / "docs" / "worktrees" / "notes.txt", _long_token())
+    config = json.loads(scanner.CONFIG_PATH.read_text())
+    config["exclude_dirs"] = [".claude/worktrees"]
+    scanner.CONFIG_PATH.write_text(json.dumps(config))
+    original = os.scandir
+
+    def guarded_scandir(path: str | Path) -> os.ScandirIterator:
+        rel = Path(path).relative_to(scan_root).as_posix()
+        assert not rel.startswith(".claude/worktrees"), rel
+        return original(path)
+
+    monkeypatch.setattr(os, "scandir", guarded_scandir)
+    findings = sorted(item.rel_path for item in scanner.run_scan())
+    assert findings == [".claude/settings.txt", "docs/worktrees/notes.txt"]

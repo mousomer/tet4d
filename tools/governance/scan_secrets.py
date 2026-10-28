@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from dataclasses import dataclass
 from fnmatch import fnmatch
@@ -113,7 +114,8 @@ def _compile_allowlist(payload: dict[str, Any]) -> list[AllowlistRule]:
 
 def _is_binary(path: Path) -> bool:
     try:
-        sample = path.read_bytes()[:2048]
+        with path.open("rb") as stream:
+            sample = stream.read(2048)
     except OSError:
         return True
     return b"\0" in sample
@@ -132,21 +134,33 @@ def _iter_candidate_files(
         project_root = PROJECT_ROOT.resolve()
         if root != project_root and project_root not in root.parents:
             continue
-        for path in root.rglob("*"):
-            if path.is_dir():
-                continue
-            rel = _relative_path_in_project(path, project_root)
-            if rel is None:
-                continue
-            if _should_skip_candidate(
-                path,
-                rel,
-                exclude_dirs=exclude_dirs,
-                exclude_globs=exclude_globs,
-                max_file_bytes=max_file_bytes,
-            ):
-                continue
-            candidates.append((rel, path))
+        root_rel = _relative_path_in_project(root, project_root)
+        if root_rel is not None and _under_excluded_dir(root_rel, exclude_dirs):
+            continue
+        # Filtering after rglob still enumerates every ignored build/state file.
+        # Prune the declared exclusions before descent; retain the same file rules.
+        for directory, children, names in os.walk(root, followlinks=False):
+            directory_rel = _relative_path_in_project(Path(directory), project_root)
+            children[:] = sorted(
+                name
+                for name in children
+                if not _is_excluded_dir(
+                    name if directory_rel in (None, ".") else f"{directory_rel}/{name}",
+                    exclude_dirs,
+                )
+            )
+            for name in sorted(names):
+                path = Path(directory) / name
+                rel = _relative_path_in_project(path, project_root)
+                if rel is None or _should_skip_candidate(
+                    path,
+                    rel,
+                    exclude_dirs=exclude_dirs,
+                    exclude_globs=exclude_globs,
+                    max_file_bytes=max_file_bytes,
+                ):
+                    continue
+                candidates.append((rel, path))
     return candidates
 
 
@@ -157,6 +171,20 @@ def _relative_path_in_project(path: Path, project_root: Path) -> str | None:
         return None
 
 
+def _is_excluded_dir(rel_dir: str, exclude_dirs: set[str]) -> bool:
+    # A bare name excludes that directory at any depth; an entry containing "/"
+    # excludes exactly that repo-relative directory.
+    return rel_dir in exclude_dirs or rel_dir.rsplit("/", 1)[-1] in exclude_dirs
+
+
+def _under_excluded_dir(rel_dir: str, exclude_dirs: set[str]) -> bool:
+    parts = [part for part in rel_dir.split("/") if part not in ("", ".")]
+    return any(
+        _is_excluded_dir("/".join(parts[: index + 1]), exclude_dirs)
+        for index in range(len(parts))
+    )
+
+
 def _should_skip_candidate(
     path: Path,
     rel: str,
@@ -165,8 +193,7 @@ def _should_skip_candidate(
     exclude_globs: list[str],
     max_file_bytes: int,
 ) -> bool:
-    parts = rel.split("/")
-    if any(part in exclude_dirs for part in parts[:-1]):
+    if _under_excluded_dir(rel.rsplit("/", 1)[0] if "/" in rel else "", exclude_dirs):
         return True
     if any(fnmatch(rel, pattern) for pattern in exclude_globs):
         return True

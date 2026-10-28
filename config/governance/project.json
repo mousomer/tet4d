@@ -345,9 +345,9 @@
           "feature"
         ],
         "mode": "FEATURE",
-        "priority": 100,
+        "priority": 90,
         "routes": [
-          "python_reference_engine"
+          "godot_product_shell"
         ]
       },
       {
@@ -449,6 +449,406 @@
         "priority": 350,
         "routes": [
           "godot_product_shell"
+        ]
+      },
+      {
+        "id": "godot-shared-contract",
+        "match_all": [
+          "godot",
+          "shared contract"
+        ],
+        "mode": "STRUCTURAL_CHANGE",
+        "priority": 450,
+        "routes": [
+          "godot_product_shell",
+          "python_reference_engine",
+          "native_deterministic_core"
+        ]
+      },
+      {
+        "id": "godot-tree-file-owner",
+        "match_all": [
+          "godot/tet4d.godot/"
+        ],
+        "mode": "FEATURE",
+        "priority": 94,
+        "routes": [
+          "godot_product_shell"
+        ]
+      },
+      {
+        "id": "named-godot-file-owner",
+        "match_all": [
+          " godot/"
+        ],
+        "mode": "FEATURE",
+        "priority": 93,
+        "routes": [
+          "godot_product_shell"
+        ]
+      },
+      {
+        "id": "python-source-file-owner",
+        "match_all": [
+          "src/tet4d/"
+        ],
+        "mode": "FEATURE",
+        "priority": 92,
+        "routes": [
+          "python_reference_engine"
+        ]
+      },
+      {
+        "id": "native-core-file-owner",
+        "match_all": [
+          "native/tet4d_core/"
+        ],
+        "mode": "FEATURE",
+        "priority": 91,
+        "routes": [
+          "native_deterministic_core"
+        ]
+      },
+      {
+        "id": "mixed-owner-python-wording-godot-tree",
+        "match_all": [
+          "python",
+          "godot/tet4d.godot/"
+        ],
+        "mode": "FEATURE",
+        "priority": 364,
+        "routes": [
+          "godot_product_shell",
+          "python_reference_engine",
+          "native_deterministic_core"
+        ]
+      },
+      {
+        "id": "mixed-owner-python-wording-godot-path",
+        "match_all": [
+          "python",
+          " godot/"
+        ],
+        "mode": "FEATURE",
+        "priority": 363,
+        "routes": [
+          "godot_product_shell",
+          "python_reference_engine",
+          "native_deterministic_core"
+        ]
+      },
+      {
+        "id": "mixed-owner-godot-python-source",
+        "match_all": [
+          "godot",
+          "src/tet4d/"
+        ],
+        "mode": "FEATURE",
+        "priority": 362,
+        "routes": [
+          "godot_product_shell",
+          "python_reference_engine",
+          "native_deterministic_core"
+        ]
+      },
+      {
+        "id": "mixed-owner-godot-native-core",
+        "match_all": [
+          "godot",
+          "native/tet4d_core/"
+        ],
+        "mode": "FEATURE",
+        "priority": 361,
+        "routes": [
+          "godot_product_shell",
+          "python_reference_engine",
+          "native_deterministic_core"
+        ]
+      },
+      {
+        "id": "mixed-owner-python-native-core",
+        "match_all": [
+          "python",
+          "native/tet4d_core/"
+        ],
+        "mode": "FEATURE",
+        "priority": 360,
+        "routes": [
+          "godot_product_shell",
+          "python_reference_engine",
+          "native_deterministic_core"
+        ]
+      },
+      {
+        "id": "mixed-owner-python-source-native-core",
+        "match_all": [
+          "src/tet4d/",
+          "native/tet4d_core/"
+        ],
+        "mode": "FEATURE",
+        "priority": 359,
+        "routes": [
+          "godot_product_shell",
+          "python_reference_engine",
+          "native_deterministic_core"
+        ]
+      },
+      {
+        "id": "ci-platform-routing-repair-with-godot-owner",
+        "match_all": [
+          "ci classification",
+          "platform routing",
+          "godot/tet4d.godot/"
+        ],
+        "mode": "STRUCTURAL_CHANGE",
+        "priority": 397,
+        "routes": [
+          "governance_and_tooling",
+          "packaging_and_release",
+          "godot_product_shell"
+        ]
+      },
+      {
+        "id": "ci-platform-routing-repair-with-python-owner",
+        "match_all": [
+          "ci classification",
+          "platform routing",
+          "src/tet4d/"
+        ],
+        "mode": "STRUCTURAL_CHANGE",
+        "priority": 396,
+        "routes": [
+          "governance_and_tooling",
+          "packaging_and_release",
+          "python_reference_engine"
+        ]
+      },
+      {
+        "id": "ci-platform-routing-repair-with-native-owner",
+        "match_all": [
+          "ci classification",
+          "platform routing",
+          "native/tet4d_core/"
+        ],
+        "mode": "STRUCTURAL_CHANGE",
+        "priority": 395,
+        "routes": [
+          "governance_and_tooling",
+          "packaging_and_release",
+          "native_deterministic_core"
+        ]
+      },
+      {
+        "id": "product-platform-routing-repair-with-godot-owner",
+        "match_all": [
+          "product-platform routing",
+          "repair",
+          "godot/tet4d.godot/"
+        ],
+        "mode": "STRUCTURAL_CHANGE",
+        "priority": 394,
+        "routes": [
+          "governance_and_tooling",
+          "packaging_and_release",
+          "godot_product_shell"
+        ]
+      },
+      {
+        "id": "product-platform-routing-repair-with-python-owner",
+        "match_all": [
+          "product-platform routing",
+          "repair",
+          "src/tet4d/"
+        ],
+        "mode": "STRUCTURAL_CHANGE",
+        "priority": 393,
+        "routes": [
+          "governance_and_tooling",
+          "packaging_and_release",
+          "python_reference_engine"
+        ]
+      },
+      {
+        "id": "product-platform-routing-repair-with-native-owner",
+        "match_all": [
+          "product-platform routing",
+          "repair",
+          "native/tet4d_core/"
+        ],
+        "mode": "STRUCTURAL_CHANGE",
+        "priority": 392,
+        "routes": [
+          "governance_and_tooling",
+          "packaging_and_release",
+          "native_deterministic_core"
+        ]
+      },
+      {
+        "id": "topology-explorer-with-godot-owner",
+        "match_all": [
+          "topology",
+          "explorer",
+          "godot/tet4d.godot/"
+        ],
+        "mode": "FEATURE",
+        "priority": 391,
+        "routes": [
+          "topology_and_explorer",
+          "godot_product_shell"
+        ]
+      },
+      {
+        "id": "topology-explorer-with-python-owner",
+        "match_all": [
+          "topology",
+          "explorer",
+          "src/tet4d/"
+        ],
+        "mode": "FEATURE",
+        "priority": 390,
+        "routes": [
+          "topology_and_explorer",
+          "python_reference_engine"
+        ]
+      },
+      {
+        "id": "topology-explorer-with-native-owner",
+        "match_all": [
+          "topology",
+          "explorer",
+          "native/tet4d_core/"
+        ],
+        "mode": "FEATURE",
+        "priority": 389,
+        "routes": [
+          "topology_and_explorer",
+          "native_deterministic_core"
+        ]
+      },
+      {
+        "id": "packaging-release-with-godot-owner",
+        "match_all": [
+          "packaging",
+          "release",
+          "godot/tet4d.godot/"
+        ],
+        "mode": "STRUCTURAL_CHANGE",
+        "priority": 388,
+        "routes": [
+          "packaging_and_release",
+          "godot_product_shell"
+        ]
+      },
+      {
+        "id": "packaging-release-with-python-owner",
+        "match_all": [
+          "packaging",
+          "release",
+          "src/tet4d/"
+        ],
+        "mode": "STRUCTURAL_CHANGE",
+        "priority": 387,
+        "routes": [
+          "packaging_and_release",
+          "python_reference_engine"
+        ]
+      },
+      {
+        "id": "packaging-release-with-native-owner",
+        "match_all": [
+          "packaging",
+          "release",
+          "native/tet4d_core/"
+        ],
+        "mode": "STRUCTURAL_CHANGE",
+        "priority": 386,
+        "routes": [
+          "packaging_and_release",
+          "native_deterministic_core"
+        ]
+      },
+      {
+        "id": "product-planning-with-godot-owner",
+        "match_all": [
+          "product",
+          "planning",
+          "godot/tet4d.godot/"
+        ],
+        "mode": "FEATURE",
+        "priority": 385,
+        "routes": [
+          "product_planning",
+          "godot_product_shell"
+        ]
+      },
+      {
+        "id": "product-planning-with-python-owner",
+        "match_all": [
+          "product",
+          "planning",
+          "src/tet4d/"
+        ],
+        "mode": "FEATURE",
+        "priority": 384,
+        "routes": [
+          "product_planning",
+          "python_reference_engine"
+        ]
+      },
+      {
+        "id": "product-planning-with-native-owner",
+        "match_all": [
+          "product",
+          "planning",
+          "native/tet4d_core/"
+        ],
+        "mode": "FEATURE",
+        "priority": 383,
+        "routes": [
+          "product_planning",
+          "native_deterministic_core"
+        ]
+      },
+      {
+        "id": "governance-with-godot-owner",
+        "match_all": [
+          "governance",
+          "change",
+          "godot/tet4d.godot/"
+        ],
+        "mode": "STRUCTURAL_CHANGE",
+        "priority": 382,
+        "routes": [
+          "governance_and_tooling",
+          "godot_product_shell"
+        ]
+      },
+      {
+        "id": "governance-with-python-owner",
+        "match_all": [
+          "governance",
+          "change",
+          "src/tet4d/"
+        ],
+        "mode": "STRUCTURAL_CHANGE",
+        "priority": 381,
+        "routes": [
+          "governance_and_tooling",
+          "python_reference_engine"
+        ]
+      },
+      {
+        "id": "governance-with-native-owner",
+        "match_all": [
+          "governance",
+          "change",
+          "native/tet4d_core/"
+        ],
+        "mode": "STRUCTURAL_CHANGE",
+        "priority": 380,
+        "routes": [
+          "governance_and_tooling",
+          "native_deterministic_core"
         ]
       }
     ]

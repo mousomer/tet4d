@@ -147,6 +147,10 @@ opacity, colour, scale, camera and depth tuning belong to later stages.
 Recheck the isolated macOS ObjectDB profiler snapshot-storage advisory when the
 pinned engine or temporary-path strategy changes; see the Godot 4.7.2 audit.
 
+### Governance repair outcome comparison
+
+Matched-task follow-up for the bounded repair: `docs/plans/governance_repairs_2026_10.md`.
+
 ### Governance-manifest quality calibration
 
 Safety ceilings, including the machine-policy 80 KiB advisory and 96 KiB hard
