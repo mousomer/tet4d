@@ -668,3 +668,13 @@ The historical E4b tests cover seam isolation, all-mode canonical reset, the
 then-framing-only Fit, gameplay/preference preservation, restart/new-game/context lifecycle,
 action routing, retirement checks, and reset-category persistence. This record
 does not claim the required focused real-window review has been accepted.
+
+## Mouse pan coordinate boundary
+
+Mouse-motion `relative` delivered to the app is in root-viewport units.
+`GameplayViewportSurface.root_delta_to_render`, delegated through ReplayHud,
+converts it by the inverse surface canvas transform and the actual render-size
+to logical-size ratio. Translation is excluded from the delta. CameraRig's
+`pan_screen` consumes render pixels; it retains existing direction/reflection
+semantics. A projected point follows the requested root-space drag distance
+across UI scales and render densities. Window stretch is not applied twice.

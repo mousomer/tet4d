@@ -342,6 +342,7 @@ func pan_focus(offset: Vector3) -> void:
 		_update_camera()
 
 
+# delta is expressed in this camera viewport's render pixels.
 func pan_screen(delta: Vector2) -> void:
 	if _camera == null:
 		return

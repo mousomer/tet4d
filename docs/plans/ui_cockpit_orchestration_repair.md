@@ -86,7 +86,7 @@ to `test_live_cockpit.gd`; later cover actual resize/rebuild sequences too.
 ## Intended ownership
 
 `HelperFitState`, `CockpitLayoutCoordinator` and `CockpitLayoutPolicy` are
-implemented, as is DesignerPanelSession. ShellViewportLayout remains proposed.
+implemented, as are DesignerPanelSession and ShellViewportLayout.
 Keep them inside the owning Godot UI/presentation directories.
 
 | Owner | Responsibility | Must not own |
@@ -230,7 +230,7 @@ continued review. The findings and exact source paths are recorded in
   evidence is recorded in the verification history.
 
 The original review was static. F3 now uses the saved/loaded baseline and
-passes regression cases after Load, Save and Save As. Shell extraction and F1/F4 work remain open. Phase 2 and F2 have focused evidence in
+passes regression cases after Load, Save and Save As. Shell conversion and F1 now have focused regression evidence; F4 remains open. Phase 2 and F2 have focused evidence in
 `docs/history/ui_cockpit_helper_fit_verification_2026_10_30.md`; broader
 integration/visual gates remain pending.
 
@@ -247,3 +247,9 @@ Phase 4 delegates detached panel lifecycle to DesignerPanelSession and replaces
 HUD access to cockpit host/constraint internals with public APIs. Synchronous
 restoration and session-revision guards protect close/reopen. Evidence and
 remaining limits: `docs/history/designer_panel_session_verification_2026_10_30.md`.
+
+Phase 5 extracts pure shell conversions without retuning accepted layouts. F1
+converts root input through the actual gameplay surface before camera pan.
+ReplayHud retains construction, OS queries, preference application and routing;
+this phase does not claim a complete decomposition of all HUD responsibilities.
+Evidence: `docs/history/shell_viewport_layout_verification_2026_10_30.md`.

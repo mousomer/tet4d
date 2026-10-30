@@ -46,7 +46,8 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   style-matrix checks pass; full/manual acceptance remains pending.
 - [x] Phase 4: extract DesignerPanelSession; synchronous restoration and stale-
   callback/reopen regressions pass through public APIs.
-- [ ] Extract shell conversion and fix F1 against the locked results.
+- [x] Extract shell conversion and fix F1 against the locked results; focused
+  evidence: `docs/history/shell_viewport_layout_verification_2026_10_30.md`.
 - Owner now authorizes relevant tests. Focused camera/cockpit/Designer/profile
   suites pass; full gate, remote CI and manual/capture acceptance are pending.
   Evidence: `docs/history/ui_cockpit_focused_verification_2026_10_30.md`.
@@ -55,8 +56,9 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   and independent branches are outside this batch.
 - Published R1/R2 and result lock at `52986aa2`. Static follow-up findings:
   `docs/plans/ui_cockpit_code_review_2026_10_27.md`.
-- [ ] F1 / P2: convert pan deltas consistently between root input and the
-  gameplay render surface; preserve reflection signs.
+- [x] F1 / P2: convert root-input pan deltas through the actual gameplay render
+  surface; projected-distance regressions preserve reflection signs. Manual
+  pointer/device acceptance remains pending.
 - [x] F2 / P2: invalidate completed fits on intrinsic content/theme changes;
   existing-label/font edits match clean entry without probe-induced restarts.
   Evidence: `docs/history/ui_cockpit_helper_fit_verification_2026_10_30.md`.

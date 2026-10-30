@@ -47,6 +47,7 @@ const TEST_SCRIPTS := [
 	"res://tests/test_coordinate_mapper.gd",
 	"res://tests/test_board_presentation_model.gd",
 	"res://tests/test_camera_rig.gd",
+	"res://tests/test_shell_viewport_layout.gd",
 	"res://tests/test_live_4d_orientation_rosette.gd",
 	"res://tests/test_live_4d_slice_tiling.gd",
 	"res://tests/test_live_board_visual_grammar.gd",

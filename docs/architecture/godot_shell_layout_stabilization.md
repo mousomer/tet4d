@@ -75,8 +75,8 @@ The accepted results and supplied pre-repair observations are locked in
 `docs/design/ui_cockpit_result_lock_2026_10_27.md`. The bounded plan is
 `docs/plans/ui_cockpit_orchestration_repair.md`; the helper-state extraction is
 implemented, and ordinary layout scheduling/policy are extracted. Designer
-panel lifecycle is delegated to DesignerPanelSession; shell conversion remains
-pending.
+panel lifecycle is delegated to DesignerPanelSession; ShellViewportLayout owns
+scalar/rectangle conversions, while ReplayHud retains composition and OS queries.
 Owner decision (2026-10-27): explicit Fit finishes the requested orbit before
 measuring size, anchor and board demand; normal orbit easing is unchanged.
 Leaving/restarting a helper-fit search clears pending/search state. These two
@@ -309,3 +309,18 @@ supported viewport sizes, that:
   on incidental child panel sizes.
 - Layout regression coverage catches inspector collapse or game-panel
   over-expansion.
+
+## Shell coordinate ownership
+
+`ShellViewportLayout` is a pure conversion helper. It owns window-point scale,
+design-resolution rounding, UI-local safe-area insets, usable overlay rectangles
+and root-input to render-pixel deltas. ReplayHud still reads the OS/client state,
+applies extents and margins, persists preferences and routes navigation. Existing
+menu/live reference sizes, scale floors and accepted allocation stay unchanged.
+
+`GameplayViewportSurface.root_delta_to_render` uses its current canvas transform,
+logical extent and actual SubViewport size. Root input is already in viewport
+units; applying window stretch again would double-convert it. The app converts
+right-drag motion through the HUD's public surface adapter before CameraRig pan.
+CameraRig owns direction/reflection and consumes render pixels. This separation
+restores pointer-distance movement without changing fit, geometry or grid rules.

@@ -330,11 +330,10 @@ func _handle_camera_input(event: InputEvent) -> void:
 				_refresh_camera_status()
 		elif _mouse_panning:
 			if _camera_rig != null:
-				# One apparent screen convention covers every live mode and both
-				# drag gestures: input moves the rendered volume the way it moves.
-				# `pan_screen` already does that, so the delta passes through
-				# unnegated and no mode may special-case its own direction.
-				_camera_rig.pan_screen(event.relative)
+				# Input is in root-viewport units; the camera consumes render pixels.
+				# Convert at the real surface boundary without changing pan signs.
+				var render_delta: Vector2 = _hud.game_viewport_render_delta(event.relative) if _hud != null else event.relative
+				_camera_rig.pan_screen(render_delta)
 				_refresh_camera_status()
 
 
