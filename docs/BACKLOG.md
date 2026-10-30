@@ -64,8 +64,10 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   Evidence: `docs/history/ui_cockpit_helper_fit_verification_2026_10_30.md`.
 - [x] F3 / P2: owner Reset uses the current saved/loaded design baseline;
   regressions pass after Load, Save and Save As, with owner/storage isolation.
-- [ ] F4 / P2, adjacent follow-up: capture only a settled layout generation,
-  with session/arm/fingerprint revalidation after asynchronous waits.
+- [ ] F4 / P2: implement the readiness handshake, serialized capture lifetime
+  and post-await session/arm/fingerprint checks in repair-plan steps 2–3.
+- [ ] Complete dependency/composition review, integrated local gates, manual
+  acceptance and exact-head/merged-master CI per repair-plan steps 4–6.
 - [x] F5 / P3: align the owning camera contract, authority map and dependent
   Fit references with the owner-approved pending-orbit exception. Replace the
   published machine-local capture path with a portable evidence ID and state

@@ -59,7 +59,7 @@ No active handoff.
 
 ## Next Acceptance Boundary
 
-Next: F4 capture settling/identity validation; retain integration/manual gates.
+Next: execute the full repair plan, starting with F4 readiness/capture steps 1–3.
 Relevant tests authorized; full gate/remote CI pending. 58B scale stays frozen.
 The Stage 56H human playability checkpoint retains its task contract at
 `docs/tasks/live_4d_cockpit_convergence.md`; Stage 56I polish and the 190/200

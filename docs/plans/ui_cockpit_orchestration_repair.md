@@ -1,255 +1,255 @@
 # UI and cockpit orchestration repair plan
 
-## Decision, scope and status
+Updated: 2026-10-30. Implementation checkpoint: `2049ff26` on
+`codex/ui-cockpit-orchestration`, draft PR #162. This document owns sequencing
+and acceptance; `docs/BACKLOG.md` owns open-task status and `docs/history/`
+owns execution records. Planned work below is not implemented evidence.
 
-Owner instruction, 2026-10-27: lock actual results and plan orchestration repairs,
-including the preceding P2/P3 findings. Product behavior remains governed by
-existing RDS and architecture authorities. This is a bounded Godot implementation
-restructure within existing presentation ownership, not an authority transfer.
+## Goal and authority
 
-The normative preservation boundary is
-`docs/design/ui_cockpit_result_lock_2026_10_27.md`; its source manifest identifies
-the committed master baseline. Do not use a historical branch commit alone as a
-substitute for the source/evidence records. Implementation starts on
-`codex/ui-cockpit-orchestration` at master `e37441bb`, in a separate worktree.
-The dirty release checkout is not the refactor base and is left untouched.
-Master's CI classification and workflow changes are retained. Master
-`9b2a7e43` was subsequently integrated at `91987bb1`, preserving its deck
-reparent protection and next-frame metric checks alongside R1/R2. The original
-pre-repair evidence identity remains `e37441bb`; no new baseline was promoted.
+Finish the UI orchestration repairs with explicit ownership, bounded deferred
+work and trustworthy capture provenance. Preserve the accepted screens and
+interaction behavior. File size alone is not an extraction criterion.
 
-Status: result lock recorded; R1/R2 source fixes and regression cases prepared;
-Seven relevant suites including state, locked layouts and style matrix pass.
-Helper-state and ordinary coordinator/policy extraction are implemented;
-Designer panel-session lifecycle is implemented; shell conversion remains pending.
-The owner authorizes relevant tests; full gate, remote CI and
-manual acceptance remain pending. F3 is fixed against the existing contract.
-Evidence: `docs/history/ui_cockpit_focused_verification_2026_10_30.md`.
-Scoped secrets/string sanitation covers the 16 changed/new files: no secrets
-or newly introduced string/whitespace issues. Existing RDS formatting and the
-byte-preserved observation file are retained. This is not functional evidence.
+Authorities: `docs/design/ui_cockpit_result_lock_2026_10_27.md`,
+`docs/architecture/godot_shell_layout_stabilization.md`,
+`docs/architecture/camera_gui_preset_semantics.md`,
+`docs/architecture/live_presentation_designer.md`,
+`docs/architecture/design_evaluation_laboratory.md`, the 3D/4D RDS and
+`docs/architecture/authority_map.md`. Governance and verification follow the
+project dispatcher and `docs/governance/CHANGE_GOVERNANCE.md` and
+`docs/governance/VERIFICATION.md`. No semantic authority transfer is proposed.
 
-## Problem to solve
+The locked source/evidence baseline remains master `e37441bb`; master
+`9b2a7e43` was integrated at `91987bb1`. Neither later implementation nor a
+passing CI run silently promotes a new visual baseline. Preserve the supplied
+2026-10-26 observations and provenance, including the separately documented
+publication-only final-LF correction. Leave other checkouts untouched.
 
-The subsystem split is useful: native execution owns gameplay; Godot owns
-presentation, and profiles, controls and styling have dedicated components.
-The coupling is concentrated in `ReplayHud` and `LiveCockpit`:
+## Current implementation and evidence
 
-- HUD navigation, settings application, viewport transforms, helper fitting and
-  Designer transitions reach into one another's private fields.
-- Cockpit placement, measurement, compaction, scale-search state, node reparenting
-  and deferred settling are mixed in one mutable control.
-- Both signals and explicit deferred calls can request another layout. It is
-  difficult to identify which context a measurement or callback belongs to.
-- Camera fitting and rail budgeting need one geometric observation. Review found
-  R1 mixing poses and R2 leaving abandoned fitting state busy; their repairs
-  now have focused automated evidence; broader acceptance remains pending.
-
-The goal is explicit ownership and bounded state transitions. Smaller files are
-useful only when they remove shared mutable state and private cross-owner access.
-
-## Immediate repairs
-
-### R1: finish the pending orbit before fitting
-
-Owner decision, 2026-10-27: Fit View finishes the requested mouse orbit
-immediately, then computes the fit. Snap current yaw/pitch/roll to their existing
-targets before any bounds projection. This is not a canonical-view reset and
-changes no target, margin, topology or 4D local/basis semantics. Orbit interpolation outside fit requests continues unchanged.
-
-Complete size, anchor, drawn-span and rail-demand calculation for that stable
-pose, then notify relative-control consumers of the presented yaw change. The
-following process tick cannot silently finish a different orientation.
-
-Acceptance: an asymmetric cuboid has different current and target angles. Fit
-finishes the pending orientation. Advance the camera afterward and project all
-actual cuboid corners through Camera3D into the viewport; they must remain
-contained and the pose/fit size must stay stable. Do not accept only immediate
-assertions of the fit's cached span. The regression in `test_camera_rig.gd` uses
-public pose snapshots, projected corners and the normal orientation signal.
-The focused camera case passes. Full production rail/visual acceptance remains
-a later gate.
-
-### R2: cancel the whole helper-fit search
-
-Keep cancellation local to the current owner. Clear search flag, both pending
-measurement records, recorded search constraint and interval when relaxation,
-rebuilt content or a changed constraint abandons a search. Return to full scale
-and let a new context obtain fresh measurements. Do not leave diagnostic busy
-state after the actual layout becomes idle.
-
-Acceptance: interrupt an active search with a larger room and separately with
-rebuilt content. Both paths return to relaxed full scale with no outstanding
-measurement/search state and report settled. Add these state-transition cases
-to `test_live_cockpit.gd`; later cover actual resize/rebuild sequences too.
-
-## Intended ownership
-
-`HelperFitState`, `CockpitLayoutCoordinator` and `CockpitLayoutPolicy` are
-implemented, as are DesignerPanelSession and ShellViewportLayout.
-Keep them inside the owning Godot UI/presentation directories.
-
-| Owner | Responsibility | Must not own |
+| Work | Implementation | Remaining acceptance |
 | --- | --- | --- |
-| `CameraRig` | Presented pose, fit observation, camera application; exposes board demand as presentation data. | HUD nodes, rail policy, native commands. |
-| `ShellViewportLayout` | One conversion from actual client/backing pixels, UI scale and safe area into usable logical rectangles. | Preferences persistence, navigation, board/camera semantics. |
-| `CockpitLayoutPolicy` | Compute placement, module order, budgets and row packing from an explicit context and measured metrics. | Scene-tree mutation, deferred callbacks, text shaping. |
-| `HelperFitState` | Relaxed/compact/probing/scrolling transitions, constraints, pending samples and cancellation for one group. | Node references, native state, viewport allocation. |
-| `CockpitLayoutCoordinator` | Own invalidation, measurement/apply phases, context generations and completion. | Product defaults, native rules, profile persistence. |
-| `LiveCockpit` | Build slots, retain node references, measure controls and apply a decision through public methods. | A second policy/search scheduler. |
-| `DesignerPanelSession` | Enter/leave detached layout, panel origins, geometry, ordering and synchronous restoration. | Profile composition/storage or camera refits. |
-| `ReplayHud` | Compose surfaces, route navigation/settings intent and connect public owner APIs. | Fit-search internals, private frame dictionaries or duplicate coordinate conversion. |
+| R1: Fit finishes the existing pending orbit, then fits | Implemented; actual projected-corner regression and orientation notification | Integrated rail/visual review |
+| R2: cancel abandoned helper search and pending samples | Implemented; public HelperFitState transition coverage | Integrated transition/manual review |
+| Phase 2 / F2: helper state and intrinsic-content invalidation | Implemented; height-neutral edits preserve settled fits | Integrated review |
+| Phase 3: sole cockpit scheduler and pure layout policy | Implemented; generation-bound callbacks; resize-roundtrip fix retained | Final dependency audit |
+| Phase 4: DesignerPanelSession lifecycle | Implemented; synchronous restoration and close/reopen regression | Integrated Designer review |
+| F3: group Reset uses saved/loaded baseline | Implemented; Load, Save and Save As regressions | Integrated Designer review |
+| Phase 5 / F1: shell conversions and pan distance | Implemented at `2049ff26`; old input handler reproduces four failures | Physical pointer/HiDPI review |
+| F5: Fit documentation consistency | Reconciled | Preserve during final docs review |
+| F4: settled, identity-safe laboratory capture | Open | Steps 2–3 below |
+| Final composition review, full gate and owner acceptance | Open | Steps 4–6 below |
 
-Avoid a new general-purpose framework, global service locator or event bus.
-Retain the existing `ResponsivePanelPolicy` and `FitScaleContainer` as small
-mechanisms where suitable; do not create competing implementations.
+At `2049ff26`, 12 focused scripts and the separate six-style 3D/4D matrix
+passed. Publication formatting, scoped sanitation and governance checks passed.
+Claude base `32752f8b` completed remote CI successfully; run `41103770668` for
+`2049ff26` was in progress when this plan was updated. This is a dated snapshot,
+not a claim about a future head. The full local repository gate and human
+acceptance for the current phase remain pending.
 
-## Data and lifecycle contracts
+Evidence: `docs/history/ui_cockpit_focused_verification_2026_10_30.md`,
+`ui_cockpit_helper_fit_verification_2026_10_30.md`,
+`ui_cockpit_coordinator_verification_2026_10_30.md`,
+`designer_panel_session_verification_2026_10_30.md`,
+`ui_cockpit_review_fixes_verification_2026_10_30.md` and
+`shell_viewport_layout_verification_2026_10_30.md`, all under `docs/history/`.
+Historical static findings remain in
+`docs/plans/ui_cockpit_code_review_2026_10_27.md`; current status is above.
 
-- A layout context names mode/product, placement preference, usable logical
-  bounds, UI scale, density, guide/overlay state and camera-fit observation.
-  Measured minimums/unwrapped widths carry the context generation they describe.
-- Policy yields a decision: placement, module assignment, region budgets and
-  required helper-fit actions. Policy does not query arbitrary scene nodes.
-- Reflowed text still uses Godot's actual measurement; do not build a parallel
-  font/layout engine or infer final wrapped height from a width formula.
-- One coordinator coalesces invalidations. A change of width, height, UI scale,
-  theme/content, mode, guide or Designer ownership advances the context and
-  cancels superseded probes. Old deferred work cannot publish a new decision.
-- Measurement, apply and completion are distinct. A stable same-generation
-  observation may advance a helper fit. An unchanged decision writes no new overrides.
-  An idle state has no scheduled work and no pending/search flags.
-- Synchronous explicit Fit/Reset remains synchronous when visible geometry is
-  valid; explicit Fit first finishes the pending orbit, per the owner decision. Do not replace it with arbitrary frame delays or a timer-based repair.
-- Public APIs expose viewport/demand, layout decisions, session transitions and
-  snapshots. HUD/app callers stop accessing cockpit private fields incrementally.
-- Designer exit restores parents, order, visibility and layout modes before
-  releasing frames. Close/reopen and pending callbacks cannot restore a newer
-  session using an older session's state. Session geometry stays nonpersistent
-  except through the existing explicit profile contract.
+## Ownership to preserve
 
-## Incremental delivery
-
-| Phase | Work | Completion boundary |
+| Owner | Responsibility | Boundary |
 | --- | --- | --- |
-| 0 | Record result lock, source identity and evidence limits. | Accepted output is explicit; no new acceptance claim. |
-| 1 | R1/R2 fixes only, with regression cases. | Focused camera/cockpit suites pass; broader integration and visual acceptance pending. |
-| 2 | Extract `HelperFitState`; keep current policy and view tree. | One group owner, same decisions/floors; migrate R2 fixtures from `_fit_states` to the new public state/transition API in this same phase. |
-| 3 | Separate policy/measurement/application; establish coordinator as the sole layout scheduler. | Same packing, budgets and result lock; obsolete callbacks cannot apply; idle work is bounded. |
-| 4 | Extract Designer session lifecycle and replace private cross-owner access with public adapters. | Geometry/profile isolation and ordinary-layout restoration preserved. |
-| 5 | Isolate shell coordinate conversion and reduce HUD to composition/routing. | One viewport/safe-area conversion; menu, setup, overlays and cockpit preserve results. |
-| 6 | Review the final dependency flow and perform authorized acceptance. | Result lock, functional gates and owner visual review pass; no retained duplicate owners. |
+| CameraRig | Pose, fit, projection and render-pixel pan | No HUD policy, native commands or root-input conversion |
+| ShellViewportLayout | Pure client/UI/safe-area/rectangle and delta conversions | No OS queries, persistence or camera semantics |
+| GameplayViewportSurface | Actual logical/render extents and canvas transform | No assumed density or second input stretch conversion |
+| CockpitLayoutPolicy | Placement, packing and numeric budgets | No nodes, scheduling or font engine |
+| HelperFitState | One group's fit transitions, samples and cancellation | No scene references or deferred work |
+| CockpitLayoutCoordinator | Ordinary layout scheduling, generations and idle state | No profile storage or duplicate policy |
+| LiveCockpit | Build, measure and apply decisions to controls | No second scheduler or private state shared with HUD |
+| DesignerPanelSession | Detached ownership, frame geometry and synchronous restoration | No profile semantics or camera refits |
+| ReplayHud | Compose surfaces, query environment and route public owner APIs | No duplicate conversion or lifecycle/search internals |
+| DesignComparisonSession | Frozen arms, shown arm and comparison identity | No renderer or capture scheduling |
+| Laboratory capture orchestration | Coordinate readiness, request lifetime and identity checks | No replacement gameplay fingerprint or comparison store |
+| DesignCaptureStore | Persist images and their validated provenance | No guessing whether the renderer is settled |
 
-Each phase is a separate reviewable commit when implementation is authorized.
-Finish and review a phase before continuing. Move a bounded responsibility with
-its consumers; do not keep the old and new owner permanently active. If a
-phase changes the result lock, stop and seek an explicit product decision.
-Do not combine extraction with UI polish or scale/framing changes.
+Prefer public adapters on existing owners. Introduce a small capture operation
+owner only if request lifetime cannot stay clear in the panel; avoid a generic
+workflow framework, global event bus or second layout scheduler.
 
-## Acceptance and verification plan
+## Step 1 — establish the exact implementation checkpoint
 
-Focused automated evidence is recorded separately; it does not establish all
-functional or visual acceptance steps below. Relevant tests are now permitted.
+1. Read current local/remote heads, worktree changes, PR state and CI results.
+   Preserve unrelated work and retain the existing draft PR.
+2. Resolve governance routes and pinned runtime. Inspect any new upstream diff
+   before integrating it; do not assume an earlier green run covers new code.
+3. Review unresolved failures first. Preserve Claude's resize-roundtrip,
+   height-neutral fit and public Designer-surface test fixes.
+4. Record the base for the F4 commit and the applicable evidence set.
 
-0. Preserve the supplied 2026-10-26 observations (three identical runs, 410
-   observations, zero recorded failures) as historical pre-repair evidence. See
-   `docs/design/baselines/cockpit_windowed_2026_10_26/README.md`. Compare future
-   same-environment runs by exact bytes first; inspect every difference rather
-   than regenerating the baseline. Screenshots remain independently relevant.
-1. Review the owning source and public callers; inspect encoding/literal escapes,
-   secret exposure and diff sanitation. Keep existing test expectations intact.
-2. Once permitted, run R1/R2 regressions and cancellation cases for mode changes,
-   guide toggles, content/style rebuild, resize during probing and Designer
-   close/reopen. Compare clean entry with the same context reached by transitions.
-3. Preserve native hashes/commands, Relative/Absolute movement, held-input timing,
-   Stage 57 restart, saved profiles and explicit A/B/Designer semantics. Keep the
-   mandatory translation runner and its CI marker/lane selection.
-4. Compare settled regions, drawn content and independently projected content
-   corners across the locked windows/modes/styles. Do not use only the fit
-   method's own reported span as its correctness oracle. Preserve no clipping,
-   no needless helper scrolling and backing-pixel render density.
-5. When authorized, run the focused suites, then serial canonical repository and
-   pinned Godot gates. Real macOS fullscreen/HiDPI and other device/platform
-   claims require their own evidence. Hosted CI is separate from local evidence.
-6. Owner review compares the accepted screens before/after at actual window sizes,
-   with any visible differences identified. A passing geometry check or source
-   manifest does not establish visual acceptance.
+Acceptance: exact source identity is recorded; every failing/pending lane is
+accounted for. No code change is required merely to refresh status.
 
-Keep unexecuted acceptance boundaries explicitly pending.
-Do not publish/merge these changes as functionally accepted or silently mark
-future gates complete. Record authorized evidence before completing a phase.
+## Step 2 — define and expose capture readiness
 
-## Exclusions and rollback
+First update the laboratory and shell architecture contracts with the bounded
+capture handshake. Trace existing coordinator, helper-fit, HUD layout and app
+presentation-guard owners; use their public state rather than private polling.
 
-No HUD redesign, control removal, new defaults, scale/framing retuning, depth or
-contrast work, W-label tracking, grid topology/material changes, gameplay/native
-semantics, packaging/platform support change or governance-pack migration.
-The stale shown-slot A/B preview is separate; extracting session plumbing must
-preserve current behavior and must not silently expand into repairing it.
+The readiness observation must identify the presentation/layout revision and
+report whether ordinary layout work, helper probes, viewport sizing and the
+app's profile-application guard have completed. Coordinator generation alone
+is insufficient unless every relevant producer participates. A content/theme,
+window/UI-scale, mode or ownership change invalidates the observation.
 
-Keep result locks and evidence when reverting a failed extraction. Revert only
-the responsible phase through a reviewed ordinary Git change; never reset the
-working tree over pre-existing edits. Review fixes can be retained independently
-of the broader extraction. User confirmation is needed for product deviations,
-not for routine implementation choices inside the locked behavior.
+Wait for a settled observation, then a draw of that state, then revalidate it.
+A draw is necessary for pixels but is not proof that layout has settled. A
+process-frame count, arbitrary sleep or cached fit span is not a substitute.
+Use a bounded wait with a diagnostic failure, and cancellation on owner teardown;
+a headless test must not hang waiting for a draw signal it cannot receive.
+Choose the bound through the existing configuration convention and observed
+settling behavior; document it instead of scattering magic constants.
 
-## Review reconciliation and remaining limits
+Acceptance: a public readiness adapter correctly distinguishes pending,
+settled, superseded and cancelled work. Fit remains synchronous where visible
+geometry is valid. Existing layout choices and camera targets are unchanged.
 
-The supplied review correctly identifies the transient-pose weakness in the
-first R1 attempt. Its statement that `_process()` clears `_fit_span` does not
-match current master/source: it updates the camera and emits orientation change,
-without that clearing operation. The stale final-fit problem still stands.
-R2 is retained. R1 now follows the owner's explicit finish-orbit decision.
+## Step 3 — repair F4 capture lifetime and provenance
 
-R2 fixtures now use the public HelperFitState transition interface and are
-registered in `test_helper_fit_state.gd`; they no longer inject `_fit_states`.
-Private-field compatibility is not part of the result lock. Other existing
-private-field tests are migrated with their owning phase, not used to prevent it.
-Existing recordings and source inspection do not establish fresh execution,
-rendering, or owner acceptance of either repair.
+Implement one active capture operation per laboratory panel. Reject a second
+request while busy with a clear status; do not queue an unbounded request list.
+Disable capture controls while active, but also enforce serialization in code.
+Mutations from other paths must still invalidate the operation.
 
-## Continued static review
+1. Before activation, freeze request/session identity, both arm snapshot hashes,
+   requested arm, scenario/non-style fingerprint and the original shown arm.
+2. Activate through the existing profile-application path and verify success.
+3. Await Step 2 readiness. After every asynchronous boundary, revalidate request
+   lifetime, comparison identity, requested shown arm, hashes and fingerprint.
+4. After the matching draw, read pixels and revalidate again before storage.
+   Use the frozen validated metadata, not a fresh unrelated session snapshot.
+5. Abort diagnostically on timeout, changed identity, close, teardown or failed
+   application. A stale operation cannot write images or restore an old arm.
+6. For a pair, use one operation identity for A and B. Each image must carry its
+   own validated arm provenance. Report a partial failure honestly; never claim
+   a complete pair unless both succeed. Preserve valid existing captures and
+   avoid destructive cleanup or an unnecessary capture-schema migration.
+7. Restore the originally shown arm after pair success or recoverable failure
+   only while this operation still owns the unchanged comparison. Await its
+   readiness; report restoration failure separately from capture success.
+8. Release busy state through one completion/cancellation path. An older
+   completion cannot clear a newer operation's state.
 
-R1/R2 and the result lock were committed and pushed at `52986aa2` before the
-continued review. The findings and exact source paths are recorded in
-`docs/plans/ui_cockpit_code_review_2026_10_27.md`; backlog status remains open.
+Required regression cases:
 
-- F1: include input/render-space delta conversion in phase 5's shell boundary;
-  preserve current pan signs and prove root-space movement across display scales.
-- F2: helper state now invalidates completed fits on intrinsic content/theme
-  changes, excluding allocation/scale probes. Existing-label and font edits
-  match clean-entry results. Phase 3 now owns generation-bound queued work and pure policy decisions.
-- F3: repaired group Reset against the current saved/loaded baseline, with
-  focused Load/Save/Save As regressions passing before phase 4 extraction.
-- F4: keep laboratory capture settling and asynchronous identity validation as
-  an adjacent explicit follow-up; do not hide it inside the cockpit extraction.
-- F5: documentation reconciliation is implemented across the owning camera
-  contract, authority map and dependent Fit references. Evidence metadata now
-  uses a portable capture ID; screenshots still need an external bundle.
-  The immediate handoff boundary is integrated R1/R2 acceptance. That batch established no functional or visual acceptance; subsequent focused
-  evidence is recorded in the verification history.
+- Multi-pass fitting and profile guard: no image/store call before readiness.
+- Layout revision changes during settling and between settling and drawing.
+- Arm reassignment, new comparison, scenario reset and fingerprint change while
+  awaiting; stale requests write nothing and cannot restore the old arm.
+- Duplicate single/pair request, panel close/reopen and teardown while waiting.
+- Timeout, failed apply, image read failure, store failure and pair partial
+  failure; busy state clears and a later valid request can succeed.
+- Successful A/B pair: exact arm hashes and non-style identity match each image;
+  original shown arm is restored without gameplay commands or profile writes.
 
-The original review was static. F3 now uses the saved/loaded baseline and
-passes regression cases after Load, Save and Save As. Shell conversion and F1 now have focused regression evidence; F4 remains open. Phase 2 and F2 have focused evidence in
-`docs/history/ui_cockpit_helper_fit_verification_2026_10_30.md`; broader
-integration/visual gates remain pending.
+Use controllable completion/draw adapters for deterministic lifecycle tests,
+then a production runtime integration case with actual multi-pass layout.
+Register cases in the existing laboratory runners. Demonstrate the old one-draw
+path fails the regression without weakening assertions. Real rendered PNG
+acceptance remains separate from headless sequencing evidence.
 
-Review fixes after the first completed remote Godot lane (resize round trip,
-stale Designer test read, fit replay on height-neutral edits) are recorded in
-`docs/history/ui_cockpit_review_fixes_verification_2026_10_30.md`.
+Acceptance: pixels and metadata belong to the same settled frozen arm; stale
+operations cannot publish. The laboratory's complete-profile and blind-label
+contracts, immutable comparison arms and native fingerprint authority hold.
+Deliver the handshake and its F4 consumer together if either alone would leave
+an unused or incomplete API; keep that commit separate from broad cleanup.
 
-Phase 3 implementation and evidence are recorded in
-`docs/history/ui_cockpit_coordinator_verification_2026_10_30.md`. The coordinator
-owns scheduling revisions; measurements are read fresh rather than stored in
-queued callbacks. No accepted visual parameters or layout results are retuned.
+## Step 4 — finish the dependency and composition review
 
-Phase 4 delegates detached panel lifecycle to DesignerPanelSession and replaces
-HUD access to cockpit host/constraint internals with public APIs. Synchronous
-restoration and session-revision guards protect close/reopen. Evidence and
-remaining limits: `docs/history/designer_panel_session_verification_2026_10_30.md`.
+Trace public entry points through app → HUD → cockpit/session/layout owners.
+Review navigation, settings/profile application, mode changes, guides, ordinary
+versus detached layouts, window/safe-area changes and shutdown. Check for:
 
-Phase 5 extracts pure shell conversions without retuning accepted layouts. F1
-converts root input through the actual gameplay surface before camera pan.
-ReplayHud retains construction, OS queries, preference application and routing;
-this phase does not claim a complete decomposition of all HUD responsibilities.
-Evidence: `docs/history/shell_viewport_layout_verification_2026_10_30.md`.
+- Remaining private cross-owner calls, including HUD access to laboratory
+  comparison/activation internals; replace only verified boundary violations
+  with narrow public operations that preserve behavior.
+- Duplicate conversion, policy or scheduling owners and stale deferred work.
+- Measurements retained across changed contexts, tree-exit callbacks affecting
+  new sessions, and tests coupled to removed private implementation fields.
+- Main-menu fit invalidation on intrinsic content/theme changes. This was a
+  review concern, not a reproduced defect; promote it only with a concrete
+  normal-user trigger and a failing behavior regression.
+
+For each finding, record trigger, consequence, owner and bounded repair. Fix
+confirmed in-scope defects separately with relevant tests. Do not extract every
+remaining HUD responsibility for file-size reduction. Record unresolved debt
+explicitly and remove duplicate dead paths only when their callers are known.
+
+Acceptance: final dependency flow has one owner per concern; no newly retained
+private lifecycle/search dependency or speculative defect is marked resolved.
+
+## Step 5 — integrated automated and human acceptance
+
+Run focused checks first against the actual final diff. Relevant tests are
+authorized. Include camera, shell conversion, helper/coordinator/fit container,
+responsive resize history, density hierarchy, locked layouts, Designer/session,
+profile library and laboratory capture/runtime suites; repeat the style matrix.
+Use the manifest-pinned runtime and declared interpreter. Expand only for new
+changes, failures or unresolved risk. Record reused versus freshly built native
+artifacts. Never treat a script/parse error as an empty passing result.
+
+Before completion, run `CODEX_MODE=1 ./scripts/verify.sh` and the declared pinned
+Godot verification path serially, or explicitly retain any user-restricted or
+blocked gate as outstanding. Include canonical text formatting, applicable Ruff
+format/lint, semantic-boundary, generated-document freshness, handoff and
+secrets/string checks. Verify CI selection includes the mandatory translation
+runner/marker and all diff-required lanes. Do not bypass failures or redefine
+scanner rules to manufacture a pass.
+
+Manual review uses the existing local launch recipe and seeded settings at
+1280×720, 1280×800 and fullscreen on macOS, plus small/wide resize round trips.
+Cover 2D navigation preservation and actual 3D/4D gameplay. Verify:
+
+- Fit during eased orbit finishes the requested pose; no subsequent clipping.
+- Pointer-distance pan at actual UI/HiDPI scales; reflection signs unchanged.
+- Helpers settle without stale busy state, needless scrolling or visible
+  height-neutral fit replay after NEXT/HOLD changes.
+- Designer open/close/reopen, detached placement, profiles and all Reset paths.
+- Capture under differing arm UI scale/density; inspect PNGs and metadata,
+  interrupt pending capture, and confirm safe recovery.
+- Stage 57 controls/restart, movement modes, input timing, native state identity,
+  grid semantics, style-invariant board geometry and backing-pixel rendering.
+
+Compare same-environment observations by exact bytes first; inspect differences
+rather than regenerating the lock. Inspect screenshots independently. Record
+source, seed/settings, runtime, platform/window, expected/observed result and
+owner verdict. Hosted CI does not substitute for manual or other-device proof.
+
+## Step 6 — publish, review and close
+
+Update owning contracts before finalizing changed semantics; keep backlog,
+CURRENT_STATE and evidence records consistent. Commit bounded phases separately.
+Run the applicable publication gate, push, then inspect CI for that exact head;
+fix failures and verify the replacement head. Keep PR title/body aligned with
+the final implementation and list remaining manual/device limitations.
+
+Merge only when required CI and integrated acceptance are satisfied under the
+existing owner authorization. Verify the merged master SHA and its remote CI;
+a green feature-head run is not merged-master proof. Confirm local/remote state
+and leave a clean handoff. Mark R1/R2 and the overall programme complete only
+when their remaining acceptance is recorded, not when source extraction ends.
+
+## Exclusions, rollback and completion boundary
+
+No HUD redesign, removed controls, new defaults, scale/framing retuning, grid
+or Border/Full changes, gameplay/native semantics, packaging support change or
+governance migration. Depth/contrast hierarchy belongs to 58C; W-label tracking
+belongs to Stage 59. The stale Designer A/B preview remains separate unless an
+explicit scope decision brings it in. F4 touches capture orchestration only.
+
+Revert a failed bounded phase through an ordinary reviewed commit, preserving
+result locks, evidence and unrelated work. Stop for an owner product decision
+if a repair requires changing the accepted screens or interaction contract.
+Completion requires F4 correctness, resolved in-scope review findings, applicable
+local and remote gates, recorded manual acceptance and verified integration.
