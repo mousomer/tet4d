@@ -5,39 +5,72 @@ const LiveCockpitScript = preload("res://scripts/ui/live_cockpit.gd")
 
 func run() -> Array:
 	var failures: Array = []
-	failures.append_array(_assert_fit_search_cancellation())
+	failures.append_array(await _assert_existing_content_refit())
 	failures.append_array(await _assert_component_grammar())
 	failures.append_array(await _assert_metrics_signal_during_visibility_propagation())
 	failures.append_array(await _check_production_extraction())
 	return failures
 
 
-func _assert_fit_search_cancellation() -> Array:
+func _assert_existing_content_refit() -> Array:
 	var failures: Array = []
-	for reason in ["larger room", "rebuilt content"]:
-		var cockpit = LiveCockpitScript.new()
-		# A measured, width-settled group partway through its scale search.
-		# Keep it outside the tree so queued layout cannot change this fixture.
-		cockpit.deck_scroll.size = Vector2(400, 300)
-		cockpit.deck_fit.fit_scale = 0.8
-		cockpit.deck_fit.size = Vector2(400, 300)
-		cockpit.deck_row_host.size = Vector2(500, 300)
-		cockpit._fit_states["deck"] = {
-			"compact": true, "relaxed": 180.0 if reason == "larger room" else 300.0,
-			"pending": [180.0, 0], "scale": 0.8, "compact_pending": [140.0, 0],
-			"width": 400.0, "room": 120.0, "searching": true, "lo": 0.6, "hi": 0.9,
-		}
-		var modules: Array = [] if reason == "larger room" else [cockpit.piece_controls]
-		cockpit._packing_in_progress = true
-		cockpit._fit_height("deck", modules, func() -> float: return 140.0, func(_relaxed: float) -> float: return 200.0, true)
-		cockpit._packing_in_progress = false
-		var state: Dictionary = cockpit._fit_states["deck"]
-		if bool(state["compact"]) or not is_equal_approx(cockpit.deck_fit.fit_scale, 1.0):
-			failures.append("%s must return the group to relaxed full scale" % reason)
-		if not cockpit.fit_settled():
-			failures.append("%s must cancel the search and outstanding measurements" % reason)
-		cockpit.free()
+	var tree := Engine.get_main_loop() as SceneTree
+	var cockpit = _content_fixture(tree, 40)
+	await _settle_fit(tree, cockpit)
+	var before := float(cockpit.deterministic_snapshot()["deck_fit_scale"])
+	var label: Label = cockpit.piece_controls.get_child(0)
+	# Edit the same node, at the same host constraints, in both directions.
+	for lines in [16, 48, 16]:
+		label.text = "Existing content\n".repeat(lines)
+		await _settle_fit(tree, cockpit)
+		var clean = _content_fixture(tree, lines)
+		await _settle_fit(tree, clean)
+		var actual: Dictionary = cockpit.deterministic_snapshot()
+		var expected: Dictionary = clean.deterministic_snapshot()
+		if not cockpit.fit_settled() or not clean.fit_settled():
+			failures.append("content fits must converge without repeated invalidation")
+		if absf(float(actual["deck_fit_scale"]) - float(expected["deck_fit_scale"])) > 0.001:
+			failures.append("existing-label edit must match clean-entry scale for %s lines" % lines)
+		if lines == 16 and float(actual["deck_fit_scale"]) <= before:
+			failures.append("shorter existing content must recover a larger scale")
+		clean.queue_free()
+		await tree.process_frame
+	for font_size in [32, 16]:
+		label.add_theme_font_size_override("font_size", font_size)
+		await _settle_fit(tree, cockpit)
+		var clean = _content_fixture(tree, 16, font_size)
+		await _settle_fit(tree, clean)
+		if not cockpit.fit_settled() or absf(float(cockpit.deterministic_snapshot()["deck_fit_scale"]) - float(clean.deterministic_snapshot()["deck_fit_scale"])) > 0.001:
+			failures.append("existing font-metric changes must match clean entry")
+		clean.queue_free()
+		await tree.process_frame
+	cockpit.queue_free()
+	await tree.process_frame
 	return failures
+
+
+func _content_fixture(tree: SceneTree, lines: int, font_size: int = 16):
+	var cockpit = LiveCockpitScript.new()
+	tree.root.add_child(cockpit)
+	cockpit.size = Vector2(900, 500)
+	var label := Label.new()
+	label.text = "Existing content\n".repeat(lines)
+	label.add_theme_font_size_override("font_size", font_size)
+	cockpit.piece_controls.add_child(label)
+	cockpit.set_available_size(Vector2(900, 500), Vector2(900, 500))
+	cockpit.set_deck_placement(LiveCockpitScript.PLACEMENT_SIDE)
+	cockpit.set_control_deck_visible(true)
+	return cockpit
+
+
+func _settle_fit(tree: SceneTree, cockpit) -> void:
+	# Let minimum-size signals enqueue their first pass before checking idle.
+	for _frame in range(4):
+		await tree.process_frame
+	for _frame in range(160):
+		if cockpit.fit_settled():
+			return
+		await tree.process_frame
 
 
 # Showing the viewer screen propagates visibility down the cockpit, and Godot

@@ -68,6 +68,12 @@ increase and decrease existing-label height after a completed fit, without
 rebuilding nodes or resizing the host; compare with clean entry into each final
 context. Implement with `HelperFitState` and coordinator invalidation.
 
+Resolution, 2026-10-30: HelperFitState now owns transitions and invalidates
+completed fits from intrinsic content keys. Existing-label and font edits
+converge to clean-entry scale in focused production-control tests. R2 fixtures
+now use the public state API. Context-wide coordinator extraction remains
+separate; see `docs/history/ui_cockpit_helper_fit_verification_2026_10_30.md`.
+
 ### F3 / P2 — group Reset ignores the saved/loaded baseline
 
 `presentation_designer.gd:313–320` restores an owner's values from

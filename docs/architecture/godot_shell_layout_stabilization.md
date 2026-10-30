@@ -73,7 +73,8 @@ inside the reserved inspector.
 
 The accepted results and supplied pre-repair observations are locked in
 `docs/design/ui_cockpit_result_lock_2026_10_27.md`. The bounded plan is
-`docs/plans/ui_cockpit_orchestration_repair.md`; broad extraction has not started.
+`docs/plans/ui_cockpit_orchestration_repair.md`; the helper-state extraction is
+implemented, while coordinator and session extraction remain pending.
 Owner decision (2026-10-27): explicit Fit finishes the requested orbit before
 measuring size, anchor and board demand; normal orbit easing is unchanged.
 Leaving/restarting a helper-fit search clears pending/search state. These two
@@ -81,6 +82,25 @@ source repairs now pass focused camera/cockpit suites under the owner's
 relevant-test authorization. Full integration/manual acceptance remains pending;
 see `docs/history/ui_cockpit_focused_verification_2026_10_30.md`. No layout or
 scale retuning is authorized.
+
+## Helper fit ownership
+
+`HelperFitState` owns one group's relaxed/compact/probing transitions, recorded
+height, sample agreement, scale interval and cancellation. Its public `observe`
+operation consumes scalar measurements, a transient room policy, frame number
+and intrinsic content identity; it returns compact/scale/remeasure decisions.
+It stores no scene nodes and schedules no work. `LiveCockpit` measures and
+applies those decisions through the existing fit containers and next-frame
+scheduler. Packing policy, floor 0.6, step 0.02 and settle limit 30 are retained.
+
+`ResponsivePanelPolicy.fit_content_key` observes intrinsic content: existing
+control identity/visibility, text, font metrics, custom minimums, relevant theme
+and spacing inputs. Compacted gaps use their recorded relaxed values. Measured
+wrapping, allocated sizes and fit scale are excluded because they change during
+probes. A changed key discards the old sample and restarts at relaxed full scale;
+thus editing an existing label or font cannot retain a completed stale fit.
+Constraint changes and fresh-subtree cancellation keep their previous behavior.
+This is local content invalidation, not the planned context-generation coordinator.
 
 ## Responsive panel contract
 

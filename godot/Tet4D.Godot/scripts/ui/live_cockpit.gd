@@ -6,6 +6,7 @@ const DesignerPanelFrame = preload("res://scripts/ui/designer_panel_frame.gd")
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
 const ResponsivePanelPolicy = preload("res://scripts/ui/responsive_panel_policy.gd")
+const HelperFitState = preload("res://scripts/ui/helper_fit_state.gd")
 const FitScaleContainerScript = preload("res://scripts/ui/fit_scale_container.gd")
 
 const PROFILE_WIDE := "wide"
@@ -36,11 +37,7 @@ const BOARD_RESERVE_STAGE_SHARE := 0.5
 # Smallest uniform scale a helper panel shrinks to before it scrolls. It keeps
 # the 22-unit control hints at about 13 units, the smallest helper text that
 # stays readable at the 1280-unit design canvas.
-const FIT_SCALE_FLOOR := 0.6
-# Resolution of the scale search; finer steps cost frames, not legibility.
-const FIT_SCALE_STEP := 0.02
-# Frames a fit waits for its host's layout before deciding with what it has.
-const FIT_SETTLE_FRAMES := 30
+const FIT_SCALE_FLOOR := HelperFitState.SCALE_FLOOR
 # Outer shell margin above and below the cockpit.
 const DECK_VERTICAL_INSET := 24.0
 # Product contract for the Live 4D legend deck: at the supported 1280x720
@@ -550,8 +547,8 @@ func _apply_responsive_policy() -> void:
 		var room_for := func(relaxed: float) -> float: return maxf(relaxed - shortfall, minf(relaxed, cap))
 		natural_height = _fit_height("deck", [piece_controls], measure, room_for, _deck_settled())
 		# Compact: the room follows the recorded relaxed legend, not the compact one.
-		var deck_state: Dictionary = _fit_states.get("deck", {})
-		var relaxed_legend := float(deck_state["relaxed"]) if bool(deck_state.get("compact", false)) else natural_height
+		var deck_state = _fit_states.get("deck")
+		var relaxed_legend: float = deck_state.relaxed_height() if deck_state != null and deck_state.is_compact() else natural_height
 		deck_height = minf(natural_height, room_for.call(relaxed_legend))
 	else:
 		var measure := func() -> float: return _natural_height_for_rows(packed, row_height, deck_separation)
@@ -720,136 +717,28 @@ func _update_split_scroll_state() -> void:
 # meaningless height, so an unsettled pass measures but decides nothing.
 # Returns the height the group shows: its measured height times its scale.
 func _fit_height(group: String, modules: Array, measure: Callable, room_for: Callable, settled: bool) -> float:
-	var state: Dictionary = _fit_states.get(group, {"compact": false, "relaxed": 0.0, "pending": [-1.0, -1], "scale": 1.0, "compact_pending": [-1.0, -1], "width": 0.0, "room": 0.0, "searching": false, "lo": FIT_SCALE_FLOOR, "hi": 1.0})
-	var natural: float = measure.call()
-	var fit = _fit_box(group)
-	if not settled or not _fit_content_settled(group):
-		# Re-check once the host has been laid out. Nothing else may arrive
-		# to trigger it, and a group left undecided would keep scrolling.
-		var frame := Engine.get_process_frames()
-		if int(state.get("unsettled_since", -1)) < 0:
-			state["unsettled_since"] = frame
+	var state = _fit_states.get(group)
+	if state == null:
+		state = HelperFitState.new()
 		_fit_states[group] = state
-		if frame - int(state["unsettled_since"]) <= FIT_SETTLE_FRAMES:
-			_schedule_fit_settle()
-			return natural * fit.fit_scale
-	state["unsettled_since"] = -1
-	var scale := float(state["scale"])
-	if not bool(state["compact"]):
-		state["relaxed"] = natural
-		var room: float = room_for.call(natural)
-		if room > 1.0 and natural > room:
-			# Compact only on a relaxed height two frames agree on: the record is
-			# what later decides whether to relax, so it must not be mid-settle.
-			if _agreed(state, "pending", natural):
-				state["compact"] = true
-				_set_compact(modules, true)
-			_schedule_fit_settle()
-		else:
-			state["pending"] = [-1.0, -1]
-		scale = 1.0
-	else:
-		if scale >= 1.0:
-			# A record taken mid-settle can be too tall; the compact height plus
-			# the most the halved gaps could have saved bounds the true relaxed
-			# height. Only an unscaled measurement can bound it.
-			var bound := natural
-			for module in modules:
-				bound += ResponsivePanelPolicy.compact_savings_bound(module)
-			state["relaxed"] = minf(float(state["relaxed"]), bound)
-		var relaxed := float(state["relaxed"])
-		var room: float = room_for.call(relaxed)
-		if room <= 1.0 or relaxed <= room:
-			_cancel_fit_search(state)
-			state["compact"] = false
-			scale = 1.0
-			_schedule_fit_settle()
-			_set_compact(modules, false)
-		elif _set_compact(modules, true) > 0:
-			# A strip rebuilt under compaction has an unknown relaxed height:
-			# relax it and let the next settled pass measure and decide again.
-			_cancel_fit_search(state)
-			state["compact"] = false
-			scale = 1.0
-			_schedule_fit_settle()
-			_set_compact(modules, false)
-		else:
-			scale = _fit_scale_step(group, state, natural, scale, room)
+	var natural: float = measure.call()
+	var savings := 0.0
+	var content_key: Array = []
+	for module in modules:
+		savings += ResponsivePanelPolicy.compact_savings_bound(module)
+		content_key.append_array(ResponsivePanelPolicy.fit_content_key(module))
+	var fresh: bool = state.is_compact() and _set_compact(modules, true) > 0
+	var decision: Dictionary = state.observe(natural, room_for, _fit_host(group).size.x,
+		settled and _fit_content_settled(group), Engine.get_process_frames(), savings, fresh, content_key)
+	_set_compact(modules, bool(decision["compact"]))
+	var fit = _fit_box(group)
+	var scale := float(decision["scale"])
 	if not is_equal_approx(scale, fit.fit_scale):
 		fit.fit_scale = scale
 		_schedule_fit_settle()
-	state["scale"] = scale
-	_fit_states[group] = state
+	if bool(decision["remeasure"]):
+		_schedule_fit_settle()
 	return natural * scale
-
-
-# A larger room or rebuilt content invalidates the whole search, including
-# outstanding measurements. Idle relaxed layout must never retain busy flags.
-func _cancel_fit_search(state: Dictionary) -> void:
-	state["searching"] = false
-	state["pending"] = [-1.0, -1]
-	state["compact_pending"] = [-1.0, -1]
-	state["width"] = 0.0
-	state["room"] = 0.0
-	state["lo"] = FIT_SCALE_FLOOR
-	state["hi"] = 1.0
-
-
-# The scale step searches for the largest scale whose shown height fits the
-# room. Content laid out wider wraps less, so the shown height is not
-# proportional to the scale and one proportional guess over-shrinks: start
-# from that guess, which always fits, then bisect towards one. Each probe acts
-# only on a measurement two settled passes agree on. A new room or width
-# restarts from full scale, so the result never depends on resize history.
-func _fit_scale_step(group: String, state: Dictionary, natural: float, scale: float, room: float) -> float:
-	var host_width := _fit_host(group).size.x
-	if scale < 1.0 and (absf(host_width - float(state["width"])) > 1.0 or absf(room - float(state["room"])) > 0.5):
-		_cancel_fit_search(state)
-		_schedule_fit_settle()
-		return 1.0
-	if not _agreed(state, "compact_pending", natural):
-		# Not yet agreed: measure again once this pass has been laid out.
-		_schedule_fit_settle()
-		return scale
-	if scale >= 1.0:
-		if natural <= room:
-			return 1.0
-		state["searching"] = true
-		state["width"] = host_width
-		state["room"] = room
-		state["lo"] = FIT_SCALE_FLOOR
-		state["hi"] = 1.0
-		_schedule_fit_settle()
-		# Round down: rounding 612/613 to the nearest step gives 1.0, a "scaled"
-		# guess that changes nothing and would be retried forever.
-		return clampf(floorf(room / natural * 100.0) / 100.0, FIT_SCALE_FLOOR, 1.0 - FIT_SCALE_STEP * 0.5)
-	if not bool(state["searching"]):
-		return scale
-	# Strict: a scroll shows its bar for any overflow, even a fraction of a unit.
-	if natural * scale <= room:
-		state["lo"] = scale
-	else:
-		state["hi"] = scale
-	if float(state["hi"]) - float(state["lo"]) <= FIT_SCALE_STEP:
-		state["searching"] = false
-		return float(state["lo"])
-	_schedule_fit_settle()
-	return snappedf((float(state["lo"]) + float(state["hi"])) * 0.5, 0.01)
-
-
-# Two measurements agree only across a frame boundary. Deferred passes within
-# one frame can all run before the containers sort, and would agree on a
-# stale height; the result would then depend on timing, not on the layout.
-func _agreed(state: Dictionary, key: String, value: float) -> bool:
-	var frame := Engine.get_process_frames()
-	var pending: Array = state[key]
-	if absf(float(pending[0]) - value) > 0.5:
-		state[key] = [value, frame]
-		return false
-	if frame > int(pending[1]):
-		state[key] = [-1.0, -1]
-		return true
-	return false
 
 
 # True once every fit group has decided: nothing awaits agreement, no scale
@@ -860,8 +749,8 @@ func fit_settled() -> bool:
 	if is_inside_tree() and get_tree().process_frame.is_connected(_apply_responsive_policy):
 		return false
 	for group in _fit_states:
-		var state: Dictionary = _fit_states[group]
-		if bool(state["searching"]) or float(state["pending"][0]) >= 0.0 or float(state["compact_pending"][0]) >= 0.0 or int(state.get("unsettled_since", -1)) >= 0:
+		var state = _fit_states[group]
+		if not state.settled():
 			return false
 	return true
 

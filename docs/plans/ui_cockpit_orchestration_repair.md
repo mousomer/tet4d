@@ -19,8 +19,10 @@ reparent protection and next-frame metric checks alongside R1/R2. The original
 pre-repair evidence identity remains `e37441bb`; no new baseline was promoted.
 
 Status: result lock recorded; R1/R2 source fixes and regression cases prepared;
-focused camera/cockpit/Designer/profile suites pass. Broad extraction has not
-started. The owner now authorizes relevant tests; full gate, remote CI and
+Seven relevant suites including state, locked layouts and style matrix pass.
+Helper-state
+extraction is implemented; coordinator/session extraction remains pending.
+The owner authorizes relevant tests; full gate, remote CI and
 manual acceptance remain pending. F3 is fixed against the existing contract.
 Evidence: `docs/history/ui_cockpit_focused_verification_2026_10_30.md`.
 Scoped secrets/string sanitation covers the 16 changed/new files: no secrets
@@ -83,7 +85,8 @@ to `test_live_cockpit.gd`; later cover actual resize/rebuild sequences too.
 
 ## Intended ownership
 
-Names below describe proposed components; they are not existing implementations.
+`HelperFitState` is implemented; the other extraction names below remain
+proposed components rather than existing implementations.
 Keep them inside the owning Godot UI/presentation directories.
 
 | Owner | Responsibility | Must not own |
@@ -198,9 +201,9 @@ match current master/source: it updates the camera and emits orientation change,
 without that clearing operation. The stale final-fit problem still stands.
 R2 is retained. R1 now follows the owner's explicit finish-orbit decision.
 
-R2's current focused fixture intentionally accesses the legacy private search
-state. Phase 2 must migrate it to the public HelperFitState transition interface;
-private-field compatibility is not part of the result lock. Other existing
+R2 fixtures now use the public HelperFitState transition interface and are
+registered in `test_helper_fit_state.gd`; they no longer inject `_fit_states`.
+Private-field compatibility is not part of the result lock. Other existing
 private-field tests are migrated with their owning phase, not used to prevent it.
 Existing recordings and source inspection do not establish fresh execution,
 rendering, or owner acceptance of either repair.
@@ -213,8 +216,9 @@ continued review. The findings and exact source paths are recorded in
 
 - F1: include input/render-space delta conversion in phase 5's shell boundary;
   preserve current pan signs and prove root-space movement across display scales.
-- F2: phase 2's helper state and phase 3's coordinator must invalidate completed
-  fits on content/theme generation changes, not only host constraints.
+- F2: helper state now invalidates completed fits on intrinsic content/theme
+  changes, excluding allocation/scale probes. Existing-label and font edits
+  match clean-entry results. Phase 3 still owns context-wide coordination.
 - F3: repaired group Reset against the current saved/loaded baseline, with
   focused Load/Save/Save As regressions passing before phase 4 extraction.
 - F4: keep laboratory capture settling and asynchronous identity validation as
@@ -227,4 +231,6 @@ continued review. The findings and exact source paths are recorded in
 
 The original review was static. F3 now uses the saved/loaded baseline and
 passes regression cases after Load, Save and Save As. The remaining extraction
-and F1/F2/F4 work are still open; focused results do not close their gates.
+and F1/F4 work are still open. Phase 2 and F2 have focused evidence in
+`docs/history/ui_cockpit_helper_fit_verification_2026_10_30.md`; broader
+integration/visual gates remain pending.

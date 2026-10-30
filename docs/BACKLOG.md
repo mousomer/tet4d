@@ -33,10 +33,12 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   containment and relative-control notification. Focused camera/cockpit suites
   pass; full integration/manual acceptance remains pending.
 - [ ] R2 / P3: cancel abandoned helper search and pending measurements.
-  Focused cockpit cases pass; migrate private fixtures with HelperFitState
-  and retain full integration/manual acceptance.
-- [ ] Extract helper state, policy/coordinator, Designer session and shell
-  conversion incrementally against the locked results. Broad work not started.
+  Focused cockpit/state cases pass; fixtures migrated to the public
+  HelperFitState API. Full integration/manual acceptance remains pending.
+- [x] Phase 2: extract HelperFitState and migrate private R2 state fixtures;
+  focused state/cockpit/locked-layout suites pass.
+- [ ] Extract policy/coordinator, Designer session and shell conversion
+  incrementally against the locked results.
 - Owner now authorizes relevant tests. Focused camera/cockpit/Designer/profile
   suites pass; full gate, remote CI and manual/capture acceptance are pending.
   Evidence: `docs/history/ui_cockpit_focused_verification_2026_10_30.md`.
@@ -47,8 +49,9 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   `docs/plans/ui_cockpit_code_review_2026_10_27.md`.
 - [ ] F1 / P2: convert pan deltas consistently between root input and the
   gameplay render surface; preserve reflection signs.
-- [ ] F2 / P2: invalidate completed helper fits on content/theme changes,
-  including edits to existing controls at unchanged host constraints.
+- [x] F2 / P2: invalidate completed fits on intrinsic content/theme changes;
+  existing-label/font edits match clean entry without probe-induced restarts.
+  Evidence: `docs/history/ui_cockpit_helper_fit_verification_2026_10_30.md`.
 - [x] F3 / P2: owner Reset uses the current saved/loaded design baseline;
   regressions pass after Load, Save and Save As, with owner/storage isolation.
 - [ ] F4 / P2, adjacent follow-up: capture only a settled layout generation,
