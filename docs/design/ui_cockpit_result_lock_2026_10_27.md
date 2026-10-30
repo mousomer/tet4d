@@ -15,9 +15,10 @@ records committed baseline hashes, not an unnamed working tree.
 Historical observed output is retained under
 `docs/design/baselines/cockpit_windowed_2026_10_26/`. Three supplied observation
 files have identical SHA-256 `9687a9225c3b95d29affe4d748f658148c31c437c1cbbabebc450f8b7ded9ca9`:
-410 observations each, with zero recorded failures. One exact observation file
-is copied into the repository; all three identities and 358 PNG identities are
-recorded. The PNG bundle was externally retained at inspection; the manifest
+410 observations each, with zero recorded failures. The repository copy adds
+exactly one final LF for publication formatting; its separate hash and original
+source hash are recorded in `manifest.json`. All three run identities and
+358 PNG identities are recorded. The PNG bundle was externally retained at inspection; the manifest
 uses a portable capture ID and does not establish durable retrieval. Obtain
 the bundle before any screenshot comparison claim.
 This is inspection of existing evidence, not a new run or new visual sign-off.
@@ -82,15 +83,16 @@ The prior changed-file sanitation result belongs to the superseded release-tree
 revision. This master-based revision passed a scoped secret scan of all 16
 changed/new files, with no findings. String sanitation and diff whitespace
 checks found no newly introduced issues. Existing RDS Markdown line breaks/BOM
-and the observation file's original missing final newline are retained; the
-latter preserves its recorded hash. No repository-wide scan or new functional
-result is claimed.
+are retained. The original observation hash remains provenance; the repository
+copy now appends exactly one LF and records its own hash. No repository-wide
+scan or new functional result is claimed.
 
 Subsequent evidence (2026-10-30): the owner authorized relevant tests. Focused
 camera/cockpit/Designer/profile suites pass; see
 `docs/history/ui_cockpit_focused_verification_2026_10_30.md`. This supersedes
 the earlier execution restriction for relevant tests only, without changing the
-locked source identity or observation bytes. Full gate, remote CI and manual
+locked source identity or observation data. The declared final-LF normalization
+changes only the repository representation. Full gate, remote CI and manual
 acceptance remain pending.
 
 The bounded migration and acceptance gates are in

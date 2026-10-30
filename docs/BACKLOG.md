@@ -25,6 +25,10 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ### UI and cockpit orchestration repair
 
+- [x] Correct baseline publication: append one LF, retain original provenance
+  hash and record published hash; regression covers the actual formatter and
+  the exact normalization. Run canonical text formatting before each push.
+
 - [x] Record result lock, committed-master source identity and supplied windowed
   baseline: `docs/design/ui_cockpit_result_lock_2026_10_27.md`.
 - [x] Detail bounded implementation phases in

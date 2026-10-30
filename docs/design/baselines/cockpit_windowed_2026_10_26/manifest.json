@@ -1462,5 +1462,11 @@
     }
   ],
   "external_capture_id": "tet4d-cockpit-baseline-2026-10-26/captures-run3",
-  "external_capture_status": "Externally retained at inspection; no durable retrieval location is published. Obtain the evidence bundle before screenshot comparison."
+  "external_capture_status": "Externally retained at inspection; no durable retrieval location is published. Obtain the evidence bundle before screenshot comparison.",
+  "repository_observation": {
+    "file": "observations.json",
+    "normalization": "append exactly one LF to supplied bytes",
+    "source_sha256": "9687a9225c3b95d29affe4d748f658148c31c437c1cbbabebc450f8b7ded9ca9",
+    "sha256": "9c30e34ba64a30cfa7f9c3d1da5a21e71e61b577acff4b7b1f814b334a1019f4"
+  }
 }

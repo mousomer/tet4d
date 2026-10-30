@@ -62,3 +62,19 @@ Scoped secrets/string sanitation over all 12 changed/new files and
 - `godot/Tet4D.Godot/scripts/ui/responsive_panel_policy.gd`: `117ca497b76dbfdc645bed9b3ac5ac29addf78b4c59fa52efa1b9b1613ab7cee`
 - `godot/Tet4D.Godot/tests/test_helper_fit_state.gd`: `e3d8cfbb37ae54a35bcf5bcf2191dcabc964f620bc9f5e7abe3ed57152bc22b3`
 - `godot/Tet4D.Godot/tests/test_live_cockpit.gd`: `b3874822b481a9dfc69586b1d4919f8d0eb0bf41f2808911b4a286b59b82463f`
+
+## Publication correction
+
+Remote CI run `41057922971` stopped at text formatting because the unchanged
+historical observation copy lacked a final newline. The focused sanitizer
+had treated those bytes as intentional provenance, while the canonical
+formatter has no exception. Diff-only repetition missed the unchanged file.
+The repository copy now appends exactly one LF; the manifest separately records
+supplied and published hashes. The original bytes are recovered by removing
+that single LF. Geometry and original source identity are unchanged.
+
+`test_cockpit_baseline_publication.py` reproduces the failure before repair and
+passes all three cases afterward, including actual formatter rejection and
+acceptance in a temporary Git repository. The canonical
+`scripts/check_text_formatting.sh` now passes and is a required relevant
+pre-publication check even when functional testing is scoped.
