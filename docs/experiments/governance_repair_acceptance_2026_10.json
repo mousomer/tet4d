@@ -1,0 +1,64 @@
+{
+  "status": "frozen-before-rule-edits",
+  "provenance": "September\u2013October2026 all-project manifest audit and explicit repair request; discovered acceptance cases, not independent holdouts",
+  "routing": [
+    {
+      "id": "R1",
+      "task": "Add a moderate Godot feature",
+      "expected_routes": [
+        "godot_product_shell"
+      ],
+      "source": "audit routes/probes.json and architecture Python naming boundary"
+    },
+    {
+      "id": "R2",
+      "task": "Make a small Python-only change",
+      "expected_routes": [
+        "python_reference_engine"
+      ],
+      "source": "explicit repair request"
+    },
+    {
+      "id": "R3",
+      "task": "Change Godot and a shared contract",
+      "expected_routes": [
+        "godot_product_shell",
+        "python_reference_engine",
+        "native_deterministic_core"
+      ],
+      "source": "cross-layer authority and explicit repair request"
+    },
+    {
+      "id": "R4",
+      "task": "Python-only change in godot/app/presentation_profile.gd",
+      "required_routes": [
+        "godot_product_shell"
+      ],
+      "source": "named Godot file ownership; wording must not conceal the owner"
+    }
+  ],
+  "structural": [
+    {
+      "id": "S1",
+      "expected": "Managed dispatch outside every fenced example; historical text retained",
+      "source": "Gifted AGENTS open historical prompt fences"
+    },
+    {
+      "id": "S2",
+      "expected": "Raizor default workspace environment and explicit existing-runtime selection; no environment creation/install",
+      "source": "inherited workspace/Raizor doctrine and current runner"
+    },
+    {
+      "id": "S3",
+      "expected": "Depth/Bird entrypoints point to owning specs and safe validation; preserve data/classification distinctions",
+      "source": "explicit repair request"
+    },
+    {
+      "id": "S4",
+      "expected": "Excluded scanner directories pruned before traversal, with same in-scope findings",
+      "source": "secret scanner timeout and configured exclusions"
+    }
+  ],
+  "independent_holdouts": [],
+  "holdout_limitation": "No independent behavior holdout has been run. Later unseen task selection must be made before execution under the follow-up protocol."
+}

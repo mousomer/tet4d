@@ -2077,7 +2077,7 @@ Parameters:
 Top-level keys: `allowlist`, `exclude_dirs`, `exclude_globs`, `max_file_bytes`, `patterns`, `scan_roots`, `version`
 Parameters:
 - `allowlist[]`: array[`empty`]
-- `exclude_dirs[]`: array[`string`]; examples: `".git"`, `".venv"`, `"__pycache__"`
+- `exclude_dirs[]`: array[`string`]; examples: `".git"`, `".claude/worktrees"`, `".venv"`
 - `exclude_globs[]`: array[`string`]; examples: `"assets/help/*.gif"`, `"assets/help/*.png"`, `"tests/replay/golden/*"`
 - `max_file_bytes`: `1048576` (`int`)
 - `patterns[]`: array[`object`]

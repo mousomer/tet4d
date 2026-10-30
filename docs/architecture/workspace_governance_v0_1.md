@@ -167,6 +167,42 @@ must name that surface. The `python`, `reference engine` and `oracle` scenarios
 sit at distinct priorities (100, 200 and 250), so naming several never ties.
 Generic feature nouns such as topology, replay or parity do not imply Python.
 
+### Runtime and file-ownership precedence
+
+Route selection is compositional. Explicit runtime requirements and the actual
+ownership of named files take precedence over task-size or complexity labels.
+Read `godot/` ownership as `godot_product_shell`, `src/tet4d/` reference code as
+`python_reference_engine`, and `native/` as `native_deterministic_core`; consult
+the authority map for shared contracts and union their provider/consumer routes.
+A “Python-only” label cannot remove Godot guidance when the named file is Godot.
+Add Python context if Python really changes; resolve an inconsistent brief before
+claiming implementation acceptance. Size alone never implies the Python engine.
+
+The resolver encodes this with case-insensitive path tokens: `godot/tet4d.godot/`
+and ` godot/` (leading space, so `packaging/godot/` and `artifacts/godot/` do
+not match), `src/tet4d/` and `native/tet4d_core/`. The resolver picks one
+scenario, so composition is explicit:
+
+- Plain owner-path scenarios (91–94) only outrank `moderate-feature` and the
+  default; they never replace another scenario's routes or mode.
+- When a runtime word or second owner path disagrees with a named path, the
+  mixed-owner scenarios (359–364) select all three code routes and `FEATURE`,
+  because crossed ownership escalates a local fix.
+- Each non-code scenario (governance, packaging, planning, topology and the two
+  platform-routing repairs) has one composition per code root (380–397). It keeps
+  that scenario's mode and adds the owner's route.
+
+Three independent cues (for example a non-code scenario, a small-defect wording
+and a path) still resolve to one scenario and can omit a route; compose those
+from the manifest.
+
+The CLI projects representative scenarios, not exhaustive natural-language
+ownership. Its result cannot remove a route required by explicit runtime or
+file evidence. Consumers compose missing routes from the declared manifest.
+The frozen repair cases and their expected route sets are recorded in
+`docs/experiments/governance_repair_acceptance_2026_10.json`; these test declared
+selection and written guidance, not whether an agent understood it.
+
 ## Pack updates and sanitation
 
 `VERSION`, `MANIFEST.json`, and `config/governance/workspace.lock.json` identify

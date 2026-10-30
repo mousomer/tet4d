@@ -36,6 +36,11 @@ Select every route matching the actual work; zero, one, or several may match:
 - `governance_and_tooling`
 - `packaging_and_release`
 
+Explicit runtime requirements and actual named-file ownership outrank generic
+size/complexity wording. Compose all real providers and consumers; an inconsistent
+“Python-only” label cannot erase a named Godot file owner. Resolver scenarios are
+representative projections and never waive additional task/diff-owned routes.
+
 Route labels select additional context and default evidence. They do not assign
 exclusive ownership, and no route is primary. Union the selected routes'
 authorities, dispatch files, and default verification, then add obligations

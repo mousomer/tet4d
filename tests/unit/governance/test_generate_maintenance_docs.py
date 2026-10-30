@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from uuid import uuid4
 
 import tools.governance.generate_maintenance_docs as maint_doc
 
@@ -9,12 +8,6 @@ import tools.governance.generate_maintenance_docs as maint_doc
 def _write_text(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
-
-
-def _scratch_root() -> Path:
-    root = Path(".tmp_test_generate_maintenance_docs") / uuid4().hex
-    root.mkdir(parents=True, exist_ok=False)
-    return root
 
 
 def _metrics_payload() -> dict[str, object]:
@@ -172,8 +165,10 @@ class Router:
     )
 
 
-def test_render_maintenance_docs_replaces_generated_sections(monkeypatch) -> None:
-    scratch_root = _scratch_root()
+def test_render_maintenance_docs_replaces_generated_sections(
+    monkeypatch, tmp_path: Path
+) -> None:
+    scratch_root = tmp_path
     current_state = scratch_root / "CURRENT_STATE.md"
     project_structure = scratch_root / "docs" / "PROJECT_STRUCTURE.md"
     _write_text(current_state, _current_state_template())
@@ -274,8 +269,8 @@ def test_render_maintenance_docs_replaces_generated_sections(monkeypatch) -> Non
     assert "Manual midpoint." in rendered_structure
 
 
-def test_check_generated_docs_detects_stale_output(monkeypatch) -> None:
-    scratch_root = _scratch_root()
+def test_check_generated_docs_detects_stale_output(monkeypatch, tmp_path: Path) -> None:
+    scratch_root = tmp_path
     current_state = scratch_root / "CURRENT_STATE.md"
     project_structure = scratch_root / "docs" / "PROJECT_STRUCTURE.md"
     _write_text(current_state, _current_state_template())
