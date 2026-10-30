@@ -54,3 +54,10 @@ and generated maintenance-document checks passed. Canonical tracked-text
 formatting, pinned Ruff lint/format for the publication regression, scoped
 secrets/string sanitation and diff whitespace passed. CURRENT_STATE stays at
 150 lines. No full pre-push test gate is claimed from these focused checks.
+
+Remote follow-up: run `41065963311` passed baseline planning but the semantic
+boundary guard matched the word `invalidate` in the UI scheduling API. That
+method only cancels queued presentation work. Its declaration now carries the
+existing `display-only` annotation with an explicit explanation; scanner rules
+and scope are unchanged. The owning semantic-boundary checker and aggregate
+governance validator pass locally. Remote acceptance still requires a new run.

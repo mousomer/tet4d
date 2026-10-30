@@ -40,6 +40,8 @@ func apply_now() -> void:
 
 # Ownership changes (for example detached Designer panels) can invalidate old
 # work without applying ordinary cockpit placement in the new owner.
+# Cancels queued presentation work; does not compute gameplay validity.
+# tet4d-semantic-boundary: allow display-only
 func invalidate() -> void:
 	_generation += 1
 	_cancel_pending()
