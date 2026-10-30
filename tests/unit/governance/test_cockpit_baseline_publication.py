@@ -45,14 +45,23 @@ def test_formatter_enforces_newline_on_tracked_evidence(
     evidence = tmp_path / "docs/design/baselines/sample/observations.json"
     evidence.parent.mkdir(parents=True)
     evidence.write_bytes(b'{"observations": []}' + (b"\n" if final_newline else b""))
-    env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
-    env.update(TET4D_TEST_PYTHON=sys.executable, GIT_CONFIG_GLOBAL=os.devnull,
-               GIT_CONFIG_SYSTEM=os.devnull)
+    env = {
+        key: value for key, value in os.environ.items() if not key.startswith("GIT_")
+    }
+    env.update(
+        TET4D_TEST_PYTHON=sys.executable,
+        GIT_CONFIG_GLOBAL=os.devnull,
+        GIT_CONFIG_SYSTEM=os.devnull,
+    )
     subprocess.run(["git", "init", "-q"], cwd=tmp_path, env=env, check=True)
     subprocess.run(["git", "add", "docs"], cwd=tmp_path, env=env, check=True)
     result = subprocess.run(
-        ["bash", "scripts/check_text_formatting.sh"], cwd=tmp_path,
-        env=env, capture_output=True, text=True, check=False,
+        ["bash", "scripts/check_text_formatting.sh"],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
     )
     assert result.returncode == (0 if final_newline else 2), result.stderr
     if not final_newline:
