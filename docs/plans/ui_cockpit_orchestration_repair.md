@@ -21,7 +21,7 @@ pre-repair evidence identity remains `e37441bb`; no new baseline was promoted.
 Status: result lock recorded; R1/R2 source fixes and regression cases prepared;
 Seven relevant suites including state, locked layouts and style matrix pass.
 Helper-state and ordinary coordinator/policy extraction are implemented;
-Designer session and shell conversion remain pending.
+Designer panel-session lifecycle is implemented; shell conversion remains pending.
 The owner authorizes relevant tests; full gate, remote CI and
 manual acceptance remain pending. F3 is fixed against the existing contract.
 Evidence: `docs/history/ui_cockpit_focused_verification_2026_10_30.md`.
@@ -86,7 +86,7 @@ to `test_live_cockpit.gd`; later cover actual resize/rebuild sequences too.
 ## Intended ownership
 
 `HelperFitState`, `CockpitLayoutCoordinator` and `CockpitLayoutPolicy` are
-implemented. DesignerPanelSession and ShellViewportLayout remain proposed.
+implemented, as is DesignerPanelSession. ShellViewportLayout remains proposed.
 Keep them inside the owning Godot UI/presentation directories.
 
 | Owner | Responsibility | Must not own |
@@ -230,8 +230,7 @@ continued review. The findings and exact source paths are recorded in
   evidence is recorded in the verification history.
 
 The original review was static. F3 now uses the saved/loaded baseline and
-passes regression cases after Load, Save and Save As. Designer/shell extraction
-and F1/F4 work remain open. Phase 2 and F2 have focused evidence in
+passes regression cases after Load, Save and Save As. Shell extraction and F1/F4 work remain open. Phase 2 and F2 have focused evidence in
 `docs/history/ui_cockpit_helper_fit_verification_2026_10_30.md`; broader
 integration/visual gates remain pending.
 
@@ -239,3 +238,8 @@ Phase 3 implementation and evidence are recorded in
 `docs/history/ui_cockpit_coordinator_verification_2026_10_30.md`. The coordinator
 owns scheduling revisions; measurements are read fresh rather than stored in
 queued callbacks. No accepted visual parameters or layout results are retuned.
+
+Phase 4 delegates detached panel lifecycle to DesignerPanelSession and replaces
+HUD access to cockpit host/constraint internals with public APIs. Synchronous
+restoration and session-revision guards protect close/reopen. Evidence and
+remaining limits: `docs/history/designer_panel_session_verification_2026_10_30.md`.

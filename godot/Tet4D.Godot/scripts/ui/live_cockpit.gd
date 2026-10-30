@@ -2,7 +2,7 @@ extends VBoxContainer
 
 class_name LiveCockpit
 
-const DesignerPanelFrame = preload("res://scripts/ui/designer_panel_frame.gd")
+const DesignerPanelSession = preload("res://scripts/ui/designer_panel_session.gd")
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
 const ResponsivePanelPolicy = preload("res://scripts/ui/responsive_panel_policy.gd")
@@ -124,113 +124,54 @@ var _requested_placement := PLACEMENT_BELOW
 
 signal designer_geometry_changed(rects: Dictionary)
 
-var _designer_host: Control
-var _designer_frames: Dictionary = {}
-var _designer_origins: Dictionary = {}
-var _designer_rects: Dictionary = {}
-var _designer_enabled := false
-var _designer_deck_visible := false
+var _designer_session = DesignerPanelSession.new()
 
 
 func set_designer_layout_enabled(enabled: bool, board: Control) -> void:
-	if enabled == _designer_enabled:
+	if enabled == _designer_session.active():
 		return
-	_designer_enabled = enabled
 	_layout_coordinator.invalidate()
 	if enabled:
-		# Detached frames size and scroll on their own; they take relaxed spacing.
 		_reset_fit()
-		_designer_deck_visible = control_deck.visible
-		_designer_host = Control.new()
-		_designer_host.name = "DesignerCockpitSurface"
-		_designer_host.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		_designer_host.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		add_child(_designer_host)
-		_designer_host.resized.connect(_constrain_designer_panels)
-		for entry in [["Board", board], ["Piece controls", piece_controls], ["View controls", view_controls], ["NEXT / HOLD", piece_state]]:
-			var panel: Control = entry[1]
-			var key := str(panel.name)
-			_designer_origins[key] = {"parent": panel.get_parent(), "index": panel.get_index(), "visible": panel.visible}
-			var frame = DesignerPanelFrame.new()
-			_designer_host.add_child(frame)
-			frame.configure(str(entry[0]), panel, panel != board)
-			panel.show()
-			frame.geometry_edited.connect(func(rect: Rect2) -> void:
-				_designer_rects[key] = rect
-				designer_geometry_changed.emit(designer_geometry_snapshot())
-			)
-			_designer_frames[key] = frame
-		board_stage.hide()
-		control_deck.hide()
-		call_deferred("_constrain_designer_panels")
+		_designer_session.open(self, board_stage, control_deck, [
+			["Board", board, false], ["Piece controls", piece_controls, true],
+			["View controls", view_controls, true], ["NEXT / HOLD", piece_state, true]])
 	else:
-		for key in _designer_frames:
-			var frame = _designer_frames[key]
-			_designer_rects[key] = Rect2(frame.position, frame.size)
-			var origin: Dictionary = _designer_origins[key]
-			frame.content.reparent(origin["parent"], false)
-			frame.content.visible = origin["visible"]
-			origin["parent"].move_child(frame.content, mini(origin["index"], origin["parent"].get_child_count() - 1))
-		_designer_host.queue_free()
-		_designer_host = null
-		_designer_frames.clear()
-		_designer_origins.clear()
-		board_stage.show()
-		control_deck.visible = _designer_deck_visible
+		_designer_session.close()
 		_apply_responsive_policy()
 
 
 func designer_panels() -> Dictionary:
-	return _designer_frames.duplicate()
+	return _designer_session.panels()
+
+
+func designer_session_revision() -> int:
+	return _designer_session.revision()
+
+
+func designer_surface_rect() -> Rect2:
+	return _designer_session.surface_rect()
 
 
 func designer_geometry_snapshot() -> Dictionary:
-	var result: Dictionary = {}
-	for key in _designer_rects:
-		var rect: Rect2 = _designer_rects[key]
-		result[key] = [rect.position.x, rect.position.y, rect.size.x, rect.size.y]
-	return result
+	return _designer_session.geometry_snapshot()
 
 
 func restore_designer_geometry(rects: Dictionary) -> void:
-	_designer_rects.clear()
-	for key in rects:
-		var data: Array = rects[key]
-		_designer_rects[key] = Rect2(float(data[0]), float(data[1]), float(data[2]), float(data[3]))
-	_constrain_designer_panels()
+	_designer_session.restore_geometry(rects)
 
 
 func raise_designer_panel(panel_name: String) -> void:
-	if _designer_enabled and _designer_frames.has(panel_name):
-		_designer_host.move_child(_designer_frames[panel_name], _designer_host.get_child_count() - 1)
+	_designer_session.raise_panel(panel_name)
 
 
-func _constrain_designer_panels() -> void:
-	if not _designer_enabled or _designer_host == null or _designer_host.size.x < 1:
-		return
-	var extent := _designer_host.size
-	var index := 0
-	for key in _designer_frames:
-		var frame = _designer_frames[key]
-		var gap := 8.0
-		var half_width := (extent.x - gap) * 0.65
-		var right_origin := half_width + gap
-		var column_width := extent.x - right_origin
-		var module_width := column_width
-		var row_height := (extent.y - gap * 2) / 3.0
-		var initial := Rect2(Vector2.ZERO, Vector2(half_width, extent.y))
-		if index == 1:
-			initial = Rect2(Vector2(right_origin, 0), Vector2(module_width, row_height))
-		elif index == 2:
-			initial = Rect2(Vector2(right_origin, row_height + gap), Vector2(module_width, row_height))
-		elif index == 3:
-			initial = Rect2(Vector2(right_origin, (row_height + gap) * 2), Vector2(module_width, row_height))
-		frame.constrain(_designer_rects.get(key, initial))
-		_designer_rects[key] = Rect2(frame.position, frame.size)
-		index += 1
+func constrain_designer_panels() -> void:
+	_designer_session.constrain()
 
 
 func _init() -> void:
+	add_child(_designer_session)
+	_designer_session.geometry_changed.connect(func(rects: Dictionary) -> void: designer_geometry_changed.emit(rects))
 	_layout_coordinator.configure(_apply_layout, _on_deck_metrics_changed)
 	add_child(_layout_coordinator)
 	name = "LiveCockpit"
@@ -392,8 +333,8 @@ func deck_placement() -> String:
 
 
 func set_control_deck_visible(enabled: bool, density: String = "standard") -> void:
-	if _designer_enabled:
-		_designer_deck_visible = enabled
+	if _designer_session.active():
+		_designer_session.set_restored_deck_visibility(enabled)
 	else:
 		control_deck.visible = enabled
 	_density = density
@@ -495,8 +436,8 @@ func _apply_responsive_policy() -> void:
 
 
 func _apply_layout() -> void:
-	if _designer_enabled:
-		_constrain_designer_panels()
+	if _designer_session.active():
+		constrain_designer_panels()
 		return
 	_responsive_profile = responsive_profile_for_size(_apparent_size) if _apparent_size.x > 0.0 else PROFILE_STANDARD
 	_relocate(_effective_placement())

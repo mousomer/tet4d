@@ -44,7 +44,9 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 - [x] Phase 3: extract ordinary cockpit scheduling into one coordinator and
   numeric layout decisions into a pure policy. Focused scheduling, layout and
   style-matrix checks pass; full/manual acceptance remains pending.
-- [ ] Extract Designer session and shell conversion against the locked results.
+- [x] Phase 4: extract DesignerPanelSession; synchronous restoration and stale-
+  callback/reopen regressions pass through public APIs.
+- [ ] Extract shell conversion and fix F1 against the locked results.
 - Owner now authorizes relevant tests. Focused camera/cockpit/Designer/profile
   suites pass; full gate, remote CI and manual/capture acceptance are pending.
   Evidence: `docs/history/ui_cockpit_focused_verification_2026_10_30.md`.

@@ -1079,14 +1079,16 @@ func _build_presentation_designer() -> void:
 			var metadata: Dictionary = source.design_state()
 			_live_cockpit.restore_designer_geometry(metadata.get("panel_rects", {}))
 			if current_preview and not metadata.has("panel_rects"):
-				call_deferred("_capture_opening_designer_geometry")
+				call_deferred("_capture_opening_designer_geometry", _live_cockpit.designer_session_revision())
 		_update_live_view_action_labels()
 		call_deferred("_layout_presentation_designer")
 	)
 
 
-func _capture_opening_designer_geometry() -> void:
-	_live_cockpit._constrain_designer_panels()
+func _capture_opening_designer_geometry(revision: int) -> void:
+	if revision != _live_cockpit.designer_session_revision() or _live_cockpit.designer_panels().is_empty():
+		return
+	_live_cockpit.constrain_designer_panels()
 	var rects: Dictionary = _live_cockpit.designer_geometry_snapshot()
 	_presentation_designer.initialize_panel_geometry(rects)
 
@@ -1106,7 +1108,7 @@ func _layout_presentation_designer() -> void:
 	# editor usable within the cockpit while its board is manipulated.
 	var frames: Dictionary = _live_cockpit.designer_panels()
 	if not frames.is_empty():
-		game_rect = _live_cockpit._designer_host.get_global_rect()
+		game_rect = _live_cockpit.designer_surface_rect()
 		if game_rect.size.x <= 0.0 or game_rect.size.y <= 0.0:
 			return
 	_presentation_designer_game_rect = _game_area.get_global_rect()

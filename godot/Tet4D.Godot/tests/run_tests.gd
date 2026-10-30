@@ -55,6 +55,7 @@ const TEST_SCRIPTS := [
 	"res://tests/test_live_cockpit.gd",
 	"res://tests/test_helper_fit_state.gd",
 	"res://tests/test_cockpit_layout_coordinator.gd",
+	"res://tests/test_designer_panel_session.gd",
 	"res://tests/test_live_3d_shared_cockpit.gd",
 	"res://tests/test_live_4d_spatial_legend.gd",
 	"res://tests/test_live_2d_shared_cockpit.gd",

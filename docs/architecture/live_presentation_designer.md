@@ -184,8 +184,8 @@ registry, NEXT, HOLD, geometry, basis, camera, or persistence authority.
 ## Stage 56H panel geometry and grid independence
 
 Full Designer mode enables labelled Move and Resize handles for the board,
-piece controls, view controls, and NEXT/HOLD panels. The cockpit owns detached
-panel rectangles; scroll containers preserve access to controls at their minimum
+piece controls, view controls, and NEXT/HOLD panels. The cockpit delegates
+detached panel lifecycle and rectangles to `DesignerPanelSession`; scroll containers preserve access to controls at their minimum
 sizes (300×160 logical pixels for control panels, 320×360 for the board,
 including handles and board chrome; constrained by the available surface). Rectangles are constrained to the available cockpit surface, including
 after window changes. The panel selector and Bring Panel Forward action recover
@@ -193,6 +193,16 @@ any overlapping panel without changing its geometry, profile, or gameplay. Compa
 responsive cockpit and disable all manipulation. Session rectangles survive reopening Designer and are persisted in the optional
 design-state extension of the profile snapshot. Older profiles without the
 extension restore default cockpit geometry.
+
+`DesignerPanelSession` records parents, sibling indices, visibility and sizing
+flags before detaching any panel. Closing restores detached control modes,
+parents, sibling order and sizing synchronously before old frames are released.
+Old frame cleanup therefore cannot reset a reopened session. Geometry edits
+and deferred opening constraints carry a session revision; callbacks from a
+closed session cannot change the next one's geometry. Pending HUD opening-
+geometry capture is guarded by that revision too. HUD consumes public cockpit
+surface/constraint APIs instead of detached-host fields. The session owns no
+profile composition, storage, camera fit or gameplay operation.
 
 The board panel contains the real gameplay viewport surface. Moving/resizing panels
 never calls Fit directly: resolved inner visibility/size signals use the same

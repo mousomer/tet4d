@@ -75,7 +75,8 @@ The accepted results and supplied pre-repair observations are locked in
 `docs/design/ui_cockpit_result_lock_2026_10_27.md`. The bounded plan is
 `docs/plans/ui_cockpit_orchestration_repair.md`; the helper-state extraction is
 implemented, and ordinary layout scheduling/policy are extracted. Designer
-session and shell conversion extraction remain pending.
+panel lifecycle is delegated to DesignerPanelSession; shell conversion remains
+pending.
 Owner decision (2026-10-27): explicit Fit finishes the requested orbit before
 measuring size, anchor and board demand; normal orbit easing is unchanged.
 Leaving/restarting a helper-fit search clears pending/search state. These two
@@ -124,7 +125,7 @@ values. It performs no scene-tree reads or mutation. LiveCockpit adapts measured
 controls into those inputs and applies the results. The previous second
 metrics flag, process-frame fit connection and deferred policy recheck path are
 removed. Godot's own container-sort notifications remain; detached Designer
-panel constraints remain with the session boundary pending phase 4.
+panel constraints belong to DesignerPanelSession under the Designer contract.
 
 ## Responsive panel contract
 
