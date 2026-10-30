@@ -61,6 +61,7 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   pointer/device acceptance remains pending.
 - [x] F2 / P2: invalidate completed fits on intrinsic content/theme changes;
   existing-label/font edits match clean entry without probe-induced restarts.
+  Repeated unchanged observations must retain idle state for capture readiness.
   Evidence: `docs/history/ui_cockpit_helper_fit_verification_2026_10_30.md`.
 - [x] F3 / P2: owner Reset uses the current saved/loaded design baseline;
   regressions pass after Load, Save and Save As, with owner/storage isolation.

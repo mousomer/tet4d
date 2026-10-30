@@ -40,6 +40,11 @@ func run() -> Array:
 		failures.append("a height-neutral edit must keep a settled fit, not replay its search")
 	if not is_equal_approx(_solve(renamed, 350.0, "new", 101), settled_scale):
 		failures.append("a height-neutral edit must stay at the settled scale")
+	for frame in range(200, 210):
+		var repeated: Dictionary = renamed.observe(350.0, func(_h: float) -> float: return 200.0, 400.0, true, frame, 0.0, false, ["new"])
+		if not renamed.settled() or bool(repeated["remeasure"]) or not is_equal_approx(float(repeated["scale"]), settled_scale):
+			failures.append("unchanged settled fit must stay idle under repeated layout observations")
+			break
 	var same_frame = FitState.new()
 	var room := func(_h: float) -> float: return 100.0
 	same_frame.observe(300.0, room, 400.0, true, 1, 0.0, false, ["x"])

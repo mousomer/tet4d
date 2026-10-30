@@ -106,6 +106,9 @@ gap savings) keeps its fit: a new piece name in a fixed-width NEXT/HOLD label
 changes the key every piece, and restarting would replay the search visibly
 for the same result.
 Constraint changes and fresh-subtree cancellation keep their previous behavior.
+A completed scaled fit remains settled under repeated identical observations.
+It must not reopen sample agreement merely because an owner measures it again;
+intrinsic-content or width/room changes still invalidate it through the same owner.
 This remains local content invalidation; queued layout work is owned by the
 coordinator described below.
 

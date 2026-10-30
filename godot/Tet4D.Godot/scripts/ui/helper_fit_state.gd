@@ -113,6 +113,11 @@ func _scale_step(natural: float, width: float, room: float, frame: int) -> float
 		cancel_search()
 		_remeasure = true
 		return 1.0
+	# A completed scaled fit needs no new sample agreement for an unchanged
+	# context. Starting one here makes repeated layout observations busy again.
+	# Intrinsic changes reset above; width/room changes reset immediately above.
+	if _scale < 1.0 and not _searching:
+		return _scale
 	if not _agreed(true, natural, frame):
 		_remeasure = true
 		return _scale
