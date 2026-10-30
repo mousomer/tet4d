@@ -2,6 +2,8 @@ extends TextureRect
 
 # Layout uses logical points. The texture renders at the displayed pixel extent,
 # including canvas scaling and the window stretch transform (HiDPI/UI scaling).
+const ShellViewportLayout = preload("res://scripts/ui/shell_viewport_layout.gd")
+
 var render_viewport: SubViewport
 
 
@@ -32,3 +34,9 @@ func sync_resolution() -> void:
 	var pixels := render_size(size, Vector2(transform.x.length(), transform.y.length()))
 	if render_viewport.size != pixels:
 		render_viewport.size = pixels
+
+
+func root_delta_to_render(root_delta: Vector2) -> Vector2:
+	if render_viewport == null or not is_inside_tree():
+		return Vector2.ZERO
+	return ShellViewportLayout.render_delta(root_delta, get_global_transform_with_canvas(), size, Vector2(render_viewport.size))

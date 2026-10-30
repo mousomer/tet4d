@@ -48,6 +48,7 @@ var _playback_accumulator := 0.0
 var _mouse_orbiting := false
 var _mouse_panning := false
 var _pending_fit_view := false
+var _presentation_profile_revision := 0
 var _presentation_layout_guard_revision := 0
 var _presentation_layout_guard_active := false
 var _mode := MODE_REPLAY
@@ -152,6 +153,7 @@ func _deferred_ready() -> void:
 		"apply_style": Callable(self, "apply_presentation_style"),
 		"current_fingerprint": Callable(self, "_design_laboratory_fingerprint"),
 		"capture_image": Callable(self, "_capture_design_laboratory_image"),
+		"capture_readiness": Callable(self, "_design_capture_readiness"),
 		"build_identity": Callable(self, "_design_laboratory_build_identity"),
 	}):
 		push_error("Design Laboratory could not be configured")
@@ -330,11 +332,10 @@ func _handle_camera_input(event: InputEvent) -> void:
 				_refresh_camera_status()
 		elif _mouse_panning:
 			if _camera_rig != null:
-				# One apparent screen convention covers every live mode and both
-				# drag gestures: input moves the rendered volume the way it moves.
-				# `pan_screen` already does that, so the delta passes through
-				# unnegated and no mode may special-case its own direction.
-				_camera_rig.pan_screen(event.relative)
+				# Input is in root-viewport units; the camera consumes render pixels.
+				# Convert at the real surface boundary without changing pan signs.
+				var render_delta: Vector2 = _hud.game_viewport_render_delta(event.relative) if _hud != null else event.relative
+				_camera_rig.pan_screen(render_delta)
 				_refresh_camera_status()
 
 
@@ -814,6 +815,18 @@ func _design_laboratory_fingerprint() -> Dictionary:
 	}
 
 
+func _design_capture_readiness() -> Dictionary:
+	var observation: Dictionary = _hud.capture_layout_observation() if _hud != null else {"ready": false}
+	observation["application_revision"] = _presentation_profile_revision
+	observation["camera"] = _camera_rig.presentation_snapshot() if _camera_rig != null else {}
+	return {
+		"ready": bool(observation.get("ready", false)) and not _presentation_layout_guard_active and not _pending_fit_view,
+		"token": var_to_str(observation).sha256_text(),
+		"drawn_frame": Engine.get_frames_drawn(),
+		"profile_hash": DesignValueScript.canonical_hash(_presentation_profile.snapshot()),
+	}
+
+
 func _capture_design_laboratory_image() -> Image:
 	var viewport := _hud.game_viewport() if _hud != null else null
 	return viewport.get_texture().get_image() if viewport != null and viewport.get_texture() != null else Image.new()
@@ -1285,6 +1298,7 @@ func restore_presentation_design(profile) -> bool:
 func apply_presentation_profile(profile, restore_geometry: bool = false) -> bool:
 	if profile == null or not profile.has_method("contract_conforms") or not profile.contract_conforms():
 		return false
+	_presentation_profile_revision += 1
 	var previous_ghost_enabled := _ghost_enabled
 	# A complete design can restore real panel geometry. Let the existing
 	# resolved-region lifecycle fit that change, as it does for handle edits.

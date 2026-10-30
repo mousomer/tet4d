@@ -6,7 +6,15 @@ Scope: Godot product-shell view lifecycle, preset actions, fit/reset, and prefer
 Canonical owner: this file
 Consumes: docs/architecture/4d_presentation_interaction_architecture.md
 Stage: 54E-4b focused visible review accepted
-Last updated: 2026-08-20
+Last updated: 2026-10-30
+
+The pending-orbit exception in section 6 supersedes earlier stage descriptions
+of Fit as strictly framing-only or preserving an unsettled presented pose.
+Historical E4a/E4b audit and execution records below describe their original
+stage; they do not verify the R1 repair. Its source and regression case are
+prepared; focused camera/cockpit suites now pass. Full integration and visual
+acceptance remain pending; see
+`docs/history/ui_cockpit_focused_verification_2026_10_30.md`.
 
 ## 1. Purpose, authority, and stage boundary
 
@@ -163,7 +171,7 @@ persistence. Bookmarks are out of scope.
 | Live-4D signed basis `B` | `EXACT_BASIS` | current 4D presentation context; never persisted | Reset View through basis owner |
 | Live-4D `L.local_yaw`, `L.local_pitch` | `SLICE_LOCAL_ORIENTATION` | current 4D presentation context; never persisted | Reset View through local-orientation owner |
 | slice anchors, rows, columns, spacing, fit reference | `SLICE_LAYOUT` | derived current-context state; never persisted | Reset View rebuilds canonical layout |
-| focus, pan, zoom, size, distance, reflection, camera orientation | mode's `OUTER_FRAMING` / camera owner | current presentation context; never persisted | Reset View through mode owner; Fit changes framing only |
+| focus, pan, zoom, size, distance, reflection, camera orientation | mode's `OUTER_FRAMING` / camera owner | current presentation context; never persisted | Reset View through mode owner; Fit completes existing orbit targets, then reframes |
 | camera projection type | `PROJECTION` presentation owner | transient canonical-view state; never persisted because no player choice exists | Reset View; Fit preserves it |
 | `display.projection_strength` | persistent display presentation preference | local shell | Display Settings reset |
 | `display.window_mode`, `display.windowed_size` | persistent shell/display preference | local shell | Display Settings reset |
@@ -207,23 +215,30 @@ and canonical fitted focus/pan/zoom/framing. It also restores any other
 transient view state the implementation audit proves is needed for the same
 canonical result. The operation changes no native gameplay state.
 
-## 6. Fit View is framing-only
+## 6. Fit View completes the requested orbit, then fits
 
-There is one separate ordinary command named **Fit View**. It frames the
-currently presented board/content in the viewport.
+There is one separate ordinary command named **Fit View**. Per the owner
+decision of 2026-10-27, it first completes any pending outer-camera orbit by
+copying the existing requested yaw/pitch/roll targets into presented state,
+then frames the board/content at that stable pose. It does not choose a new
+orientation target or restore a canonical view. With no pending orbit,
+orientation is unchanged.
 
 Fit View preserves gameplay, `B`, `L`, slice layout and anchors, semantic
-arrangement, current orientation, projection type, accessibility preferences,
-display preferences, and replay content. It may change only the focus, pan,
-zoom, distance/orthographic size, and fit reference required to frame the
-already-current geometry.
+arrangement, requested orientation, projection type, reflection-active state,
+accessibility/display preferences, and replay content. After completing the
+pending orbit, it may change focus, pan, zoom, distance/orthographic size, and
+fit reference as required to frame the current geometry. Fit measurements,
+anchor and board demand use that same settled pose. If presented yaw changes,
+relative-control consumers are notified after the fit is coherent. Advancing
+the camera afterward must not move it away from the fitted pose.
 
 E4b must provide explicit rig-side orientation and framing operations plus the
 app-side composition seam:
 
 ```text
 CameraRig.establish_outer_view(yaw, pitch, roll, reflection_active)
-CameraRig.fit_current_bounds(bounds, margin)       # reads current orientation; writes framing only
+CameraRig.fit_current_bounds(bounds, margin)       # settles existing orbit targets, then fits
 TraceReplayApp._establish_canonical_view_and_fit(mode)
 ```
 
@@ -247,8 +262,10 @@ preferences, or shell settings. It must not call the current broad
 provides the bounded orientation-only snap/update needed by this contract.
 
 The existing `fit_bounds()` path is replaced by `fit_current_bounds()`; it
-cannot serve both contracts while it also writes yaw/pitch/roll, reflection,
-projection, and identity bookkeeping. Public `_fit_view()` calls only
+must not choose yaw/pitch/roll targets or write reflection-active state,
+projection, or identity bookkeeping. Completing the existing orientation
+targets before fitting is the bounded exception described above.
+Public `_fit_view()` calls only
 `fit_current_bounds()`. Mode entry, context re-entry, application
 initialization, and Reset View call
 `TraceReplayApp._establish_canonical_view_and_fit(mode)`. That orchestrator
@@ -269,7 +286,7 @@ Tetris run.
 
 | Operation | 2D | 3D | Live 4D | Replay | Gameplay / deterministic content | Persistent preferences |
 | --- | --- | --- | --- | --- | --- | --- |
-| Fit View | reframe flat current view | preserve orientation; reframe | preserve `B`, `L`, layout, orientation; reframe | preserve replay view orientation; reframe | unchanged | unchanged |
+| Fit View | finish pending orbit, reframe flat view | finish requested orbit; reframe | preserve `B`, `L`, layout and outer targets; finish pending outer orbit, reframe | finish requested replay orbit; reframe | unchanged | unchanged |
 | Reset View | canonical flat view + fit | canonical 3D view + fit | identity `B`, default `L`, canonical layout/view + fit | canonical replay view + fit | unchanged | unchanged |
 | Restart Game | preserve current view | preserve current view | preserve complete current `B/L/layout/V/P` | n/a | reset live gameplay | unchanged |
 | new game, same mode/context | preserve current view | preserve current view | preserve complete current view | n/a | establish new live gameplay | unchanged |
@@ -411,8 +428,9 @@ not authorization for a broader 2D visual redesign.
 view is the existing accepted external diagram view (`LIVE_3D_DISPLAY_YAW_RAD`,
 `LIVE_3D_DISPLAY_PITCH_RAD`, zero roll, orthographic projection, no 4D
 reflection): yaw `0.5585053606381855`, pitch `0.4537856055185257` today. Reset View restores
-that orientation and fits. Fit View preserves the current orientation and
-projection while reframing. Live-4D `B` and `L` do not exist in this mode.
+that orientation and fits. Fit View completes the existing requested orbit
+before reframing, preserving its targets and projection. Live-4D `B` and `L`
+do not exist in this mode.
 
 ### 9.3 Live 4D
 
@@ -422,8 +440,9 @@ and fitted framing. Canonical/default `L` is explicitly
 `local_yaw = 0.0`, `local_pitch = 0.0`. The current accepted mount is yaw
 `3.5779249665883754`, pitch `0.3490658503988659`, zero roll, with horizontal
 reflection active. Reset View restores all of it through the separate owners.
-Fit View preserves `B`, `L`, layout, mount/orientation, reflection, and
-projection while reframing only.
+Fit View preserves `B`, `L`, layout, requested outer mount/orientation,
+reflection-active state and projection. Any pending outer orbit completes
+before framing, per section 6; it never resets `L`.
 
 ### 9.4 Replay
 
@@ -448,9 +467,8 @@ projection. E4b adds no projection setting.
 
 The currently supported fitted production path is orthographic, so projection
 preservation is not presently observable across multiple selectable projection
-types. E4b proves that framing-only Fit does not assign projection and that the
-supported orthographic state remains unchanged; it does not invent a
-perspective-mode regression. If another projection mode is added later, the
+types. Fit must not assign projection, and the supported orthographic state
+must remain unchanged. Acceptance does not invent a perspective-mode regression. If another projection mode is added later, the
 same invariant becomes directly executable across those modes.
 
 `display.projection_strength` remains a persistent renderer-emphasis setting
@@ -481,25 +499,26 @@ absorb unrelated human-review defects.
 | --- | --- | --- |
 | `scripts/rendering/camera_rig.gd` — identity and diagnostics | `_current_view_preset`; writes in initialization, dead zero-caller `frame_board()`, `fit_bounds()`, `clear_presentation_state()`, `apply_preset()`, `apply_framing_preset()`, `_mark_custom_view()`; readers `current_preset_id()` and `view_status_text()`; coupled `_current_view_octant` / `_current_fit_state` | remove `_current_view_preset`, `_mark_custom_view()`, and `current_preset_id()`; remove every write/read; make `view_status_text()` report projection, numeric orientation/framing, non-identity context, and framing status without `CameraPresetScript.label()`; thereby remove both replay unknown-ID fallback and known-ID false labels such as Live-4D `Camera: Iso` at outer yaw 205 degrees; rename/refactor octant/fit fields as retained diagnostics; update every writer plus `test_camera_rig.gd` and direct-field/status assertions in `test_live_2d_shell.gd` |
 | `scripts/rendering/camera_rig.gd` — outer orientation | no bounded arbitrary absolute outer-orientation seam; `fit_bounds()` and `apply_preset()` currently combine subsets of this responsibility with framing/identity; broad `_snap_to_targets()` copies both orientation and framing targets | add `establish_outer_view(yaw, pitch, roll, reflection_active)` exactly as section 6 specifies; write target and snapped current yaw/pitch/roll plus reflection-active presentation state only; use an orientation-only snap/update; support arbitrary mode canonical values as well as action targets; perform no fitting and change no projection, framing, identity, `B`, `L`, layout, gameplay/replay content, or preferences |
-| `scripts/rendering/camera_rig.gd` — fit and action seams | `fit_bounds()`, `apply_framing_preset(id)`, `apply_preset(id)`, `_snap_to_targets()`; dead `frame_board()` has zero runtime/test callers | delete `frame_board()` with no compatibility replacement; replace `fit_bounds()` with framing-only `fit_current_bounds(bounds, margin)`, which reads current orientation for projected sizing but never writes orientation/projection/reflection-active state/identity; canonical state is established by `TraceReplayApp._establish_canonical_view_and_fit(mode)` using `establish_outer_view()` before fit; replace `apply_framing_preset(id)` with ID-independent `restore_fitted_framing()` under section 8.1; replace `apply_preset(id)` with `apply_outer_view_action(id)`, which resolves a 3D/replay action target and calls `establish_outer_view()` before that framing helper; ensure orientation and framing snaps cannot copy each other's targets |
+| `scripts/rendering/camera_rig.gd` — fit and action seams | `fit_bounds()`, `apply_framing_preset(id)`, `apply_preset(id)`, `_snap_to_targets()`; dead `frame_board()` has zero runtime/test callers | delete `frame_board()` with no compatibility replacement; replace `fit_bounds()` with `fit_current_bounds(bounds, margin)`, which completes existing orientation targets before projected sizing but never chooses new targets or writes projection/reflection-active state/identity; canonical state is established by `TraceReplayApp._establish_canonical_view_and_fit(mode)` using `establish_outer_view()` before fit; replace `apply_framing_preset(id)` with ID-independent `restore_fitted_framing()` under section 8.1; replace `apply_preset(id)` with `apply_outer_view_action(id)`, which resolves a 3D/replay action target and calls `establish_outer_view()` before that framing helper; keep low-level orientation and framing snaps separate; Fit explicitly composes them in section 6 order |
 | `scripts/presentation/camera_preset.gd` — action definitions | six `PRESETS` records with yaw/pitch/zoom/pan; `CUSTOM`; `label()` fallback/special case | retain the six IDs, labels, yaw, and pitch as action definitions; remove uniform `zoom`/`pan`; remove `CUSTOM` and its label branch after camera/HUD identity retirement; keep unknown-ID validation explicit; update `test_live_board_visual_grammar.gd`, `test_camera_rig.gd`, and preset assertions in `test_live_2d_shell.gd`. No `resolve_id()` or membership-tolerance runtime work exists |
 | `scripts/app/trace_replay_app.gd` — dispatch and lifecycle | `camera_preset_requested` callback; `_apply_live_4d_preset()`; `_fit_view()`; `current_preset_id()` reads at action completion and `_refresh_camera_status()`; entry/reset/new-game/setup/menu/mode paths | remove both identity reads and HUD selection sync; replace the Live-4D seam with `_apply_live_4d_view_action(id)` routing yaw/pitch through `L`, preserving outer reflection, then calling `restore_fitted_framing()`; dispatch 3D/replay through `apply_outer_view_action(id)`; route public Fit to `fit_current_bounds()` only; add `_establish_canonical_view_and_fit(mode)`, which chooses canonical mode values, resets `B`/`L`/layout/projection through their owners, calls `establish_outer_view()` for outer mount/reflection, then fits; preserve view across live reset/same-context new game; canonicalize only at entry, Reset, re-entry, and application initialization; retain teardown on setup/menu/mode exit |
 | `scripts/ui/replay_hud.gd` — View surface | `CameraPresetSelector` `OptionButton`, `set_camera_preset(id)`, `camera_preset_requested`, `fit_view_requested`, `basis_reset_requested`, and its Reset View button | replace the selected `OptionButton` model with an action menu/button surface that emits the same six IDs but displays no persistent selection; remove `set_camera_preset()`; hide named actions in 2D; rename the misleading basis signal to `reset_view_requested` and connect it to mode-aware composite reset; expose exactly one Reset View and one Fit View; retain status text without a named-current-view claim |
-| `scripts/input/live_input_contract.gd`, `scripts/ui/replay_hud.gd`, `scripts/ui/onboarding/live_onboarding_model.gd` — help/input wording | Camera/Framing groups, `LIVE_4D_HELP_TEXT`, quick-help rows, and onboarding copy including the incorrect current sentence “Fit View restores orientation” | use View terminology; state Fit is framing-only, Restart preserves same-context view, and Reset restores the complete canonical view; route one composite Reset View and one framing-only Fit View; add no reset families; update `test_live_input_contract.gd` and `test_replay_viewer_layout.gd` |
-| Live 2D path (`TraceReplayApp` + `CameraRig`) | `_fit_view()` falls through to default replay yaw/pitch/pseudo-ID | canonical establishment calls `establish_outer_view(0.0, 0.0, 0.0, false)` and establishes orthographic projection before fit; Fit changes framing only and exposes no named orientation actions |
-| Live 3D path (`TraceReplayApp` + `CameraRig`) | `_fit_view()` supplies `LIVE_3D_DISPLAY_*`; preset callback calls `apply_preset()` | canonical Reset calls `establish_outer_view(LIVE_3D_DISPLAY_YAW_RAD, LIVE_3D_DISPLAY_PITCH_RAD, 0.0, false)` and establishes orthographic projection before fit; Fit preserves current orientation/projection/reflection; named actions resolve their target and call the same outer-orientation seam followed by framing restoration |
-| Live 4D owners (`TraceReplayApp`, basis/orientation/layout owners, `CameraRig`) | `_restore_live_4d_presentation_defaults()`, `_reset_live_4d_view()`, `_apply_live_4d_preset()`, `_fit_view()` | canonical Reset composes identity `B`, `L=(0.0,0.0)`, layout, orthographic projection, `establish_outer_view(LIVE_4D_DISPLAY_YAW_RAD, LIVE_4D_DISPLAY_PITCH_RAD, 0.0, true)`, and fit; Fit preserves all but framing; named action orientation always bypasses the rig and reaches `L`, preserving outer mount/reflection |
-| Replay path (`TraceReplayApp` + `CameraRig`) | default `fit_bounds()` path writes `PYTHON_DIAGRAM_REPLAY_VIEW`; `view_status_text()` falls back to Iso label | canonical Reset establishes orthographic projection, calls `establish_outer_view(PYTHON_DISPLAY_YAW_RAD, PYTHON_DISPLAY_PITCH_RAD, 0.0, false)`, then fits; Fit preserves current orientation/projection/reflection/content; remove pseudo-ID assignment and `Camera: Iso` fallback without creating a public replay preset |
+| `scripts/input/live_input_contract.gd`, `scripts/ui/replay_hud.gd`, `scripts/ui/onboarding/live_onboarding_model.gd` — help/input wording | Camera/Framing groups, `LIVE_4D_HELP_TEXT`, quick-help rows, and onboarding copy including the incorrect current sentence “Fit View restores orientation” | use View terminology; state Fit completes the requested orbit before framing, Restart preserves same-context view, and Reset restores the complete canonical view; route one composite Reset View and one Fit View with the section 6 orbit-completion exception; add no reset families; update `test_live_input_contract.gd` and `test_replay_viewer_layout.gd` |
+| Live 2D path (`TraceReplayApp` + `CameraRig`) | `_fit_view()` falls through to default replay yaw/pitch/pseudo-ID | canonical establishment calls `establish_outer_view(0.0, 0.0, 0.0, false)` and establishes orthographic projection before fit; Fit uses section 6 and exposes no named orientation actions |
+| Live 3D path (`TraceReplayApp` + `CameraRig`) | `_fit_view()` supplies `LIVE_3D_DISPLAY_*`; preset callback calls `apply_preset()` | canonical Reset calls `establish_outer_view(LIVE_3D_DISPLAY_YAW_RAD, LIVE_3D_DISPLAY_PITCH_RAD, 0.0, false)` and establishes orthographic projection before fit; Fit preserves requested orientation/projection/reflection; named actions resolve their target and call the same outer-orientation seam followed by framing restoration |
+| Live 4D owners (`TraceReplayApp`, basis/orientation/layout owners, `CameraRig`) | `_restore_live_4d_presentation_defaults()`, `_reset_live_4d_view()`, `_apply_live_4d_preset()`, `_fit_view()` | canonical Reset composes identity `B`, `L=(0.0,0.0)`, layout, orthographic projection, `establish_outer_view(LIVE_4D_DISPLAY_YAW_RAD, LIVE_4D_DISPLAY_PITCH_RAD, 0.0, true)`, and fit; Fit preserves `B`/`L`/layout and requested outer orientation, completing any pending outer orbit before framing; named action orientation always bypasses the rig and reaches `L`, preserving outer mount/reflection |
+| Replay path (`TraceReplayApp` + `CameraRig`) | default `fit_bounds()` path writes `PYTHON_DIAGRAM_REPLAY_VIEW`; `view_status_text()` falls back to Iso label | canonical Reset establishes orthographic projection, calls `establish_outer_view(PYTHON_DISPLAY_YAW_RAD, PYTHON_DISPLAY_PITCH_RAD, 0.0, false)`, then fits; Fit preserves requested orientation/projection/reflection/content; remove pseudo-ID assignment and `Camera: Iso` fallback without creating a public replay preset |
 | `config/shell_settings_registry.json` — UI-scale declaration | `display.ui_scale` is category `display`, persistent local-shell preference | preserve the stable setting ID and persistence, change operational category/ownership to accessibility so generated/reset routing agrees with the accepted owner |
 | `scripts/ui/settings_panel.gd` — reset routing | `reset_display_settings_to_defaults()` resets `display/theme/camera`; `reset_accessibility_settings_to_defaults()` resets `accessibility` | with the registry category corrected, Display Reset preserves UI scale and Accessibility Reset restores it; update `test_shell_display_settings.gd`, `test_shell_settings_persistence.gd`, and `test_accessibility_runtime.gd` expectations |
 
 Implementation ordering:
 
 1. Add `establish_outer_view()`, its orientation-only snap/update, and the
-   separate framing-only camera seams with snapshots that expose every affected
+   separate framing helpers, with Fit composing orbit completion and framing
+   as section 6 requires, and snapshots that expose every affected
    property; delete zero-caller `frame_board()`.
 2. Route mode entry and Reset View through canonical establishment plus fit.
-3. Route Fit View through framing only.
+3. Route Fit View through orbit completion followed by framing, per section 6.
 4. Decouple live gameplay reset/new-game from presentation reset.
 5. Make teardown/re-entry explicit for every mode.
 6. Convert named presets to actions and remove obsolete selected identity.
@@ -527,9 +546,12 @@ operation, alongside deterministic state/hash evidence where applicable.
   pan, zoom, focus, and framing; invoke Reset View; assert the complete
   canonical presentation and unchanged gameplay snapshot/hash.
 - **Fit View in every mode:** begin from noncanonical orientation and, in 4D,
-  nonidentity `B`, nondefault `L`, and current layout; invoke Fit; assert all
-  orientation/basis/layout/projection state unchanged, gameplay/replay content
-  unchanged, and only required framing changed. On today's production path,
+  nonidentity `B`, nondefault `L`, and current layout; invoke Fit; assert
+  orientation targets and basis/layout/projection state unchanged, existing
+  pending orbit completed, gameplay/replay content unchanged, and only required
+  framing changed afterward. Advance the camera and check actual projected
+  corners remain contained and presented yaw consumers were notified.
+  On today's production path,
   assert orthographic projection remains orthographic and the Fit code performs
   no projection assignment; do not fabricate a supported perspective case.
 - **Restart/new game:** mutate the current view, restart gameplay and start a
@@ -540,7 +562,7 @@ operation, alongside deterministic state/hash evidence where applicable.
 - **2D:** assert entry/reset yaw, pitch, roll, projection, reflection, and
   camera-space presentation are flat/front-on and simple.
 - **3D:** assert Reset restores canonical 3D orientation and Fit preserves a
-  manually changed orientation.
+  manually requested orientation, completing pending interpolation first.
 - **Replay:** assert Reset/Fit affect presentation only and preserve document,
   frame, events, and deterministic content.
 - **Preset actions:** every action reaches its target; subsequent manual
@@ -562,7 +584,8 @@ After automated evidence passes, record a real-window Godot 4.7.1 review with
 environment and per-scenario evidence. Verify:
 
 - 2D entry and Reset View are flat, front-on, and simple;
-- Fit preserves current orientation/layout/basis while making content fit;
+- Fit completes the requested orbit, preserves its targets/layout/basis, and
+  keeps content fitted after subsequent camera advancement;
 - Reset View restores the complete canonical view in 2D, 3D, 4D, and replay;
 - Restart Game and same-context new game preserve the current view;
 - setup/menu/mode exit followed by re-entry establishes a fresh canonical view;
@@ -580,7 +603,7 @@ Visual plausibility does not replace deterministic-isolation tests.
 The corrected design closes the independent review findings at contract level:
 
 - UI scale has one accessibility owner and an exact operational reset target.
-- Fit has a framing-only public path separate from canonical establishment.
+- Fit has a bounded orbit-completion and framing path separate from canonical establishment.
 - the contradictory continuous preset-identity model is removed rather than
   repaired;
 - the lifecycle matrix covers 2D, 3D, 4D, replay, restart, same-context new
@@ -626,8 +649,9 @@ them is not a fix.
 
 The Godot runtime now implements the accepted ownership model:
 
-- `CameraRig.establish_outer_view()` uses an orientation-only snap, while
-  `fit_current_bounds()` and `restore_fitted_framing()` use a framing-only snap;
+- `CameraRig.establish_outer_view()` uses an orientation-only snap;
+  `fit_current_bounds()` now completes existing orientation targets before its
+  framing snap, while `restore_fitted_framing()` remains framing-only;
 - the app composes explicit canonical projection, mode-owned orientation/state,
   and framing for 2D, 3D, Live 4D, and replay;
 - Restart Game and same-context New Random Game preserve current view, while
@@ -640,7 +664,17 @@ The Godot runtime now implements the accepted ownership model:
 - `display.ui_scale` retains its persisted ID/schema while Accessibility Reset,
   rather than Display Reset, owns its default restoration.
 
-Executable tests cover seam isolation, all-mode canonical reset, framing-only
-Fit, gameplay/preference preservation, restart/new-game/context lifecycle,
+The historical E4b tests cover seam isolation, all-mode canonical reset, the
+then-framing-only Fit, gameplay/preference preservation, restart/new-game/context lifecycle,
 action routing, retirement checks, and reset-category persistence. This record
 does not claim the required focused real-window review has been accepted.
+
+## Mouse pan coordinate boundary
+
+Mouse-motion `relative` delivered to the app is in root-viewport units.
+`GameplayViewportSurface.root_delta_to_render`, delegated through ReplayHud,
+converts it by the inverse surface canvas transform and the actual render-size
+to logical-size ratio. Translation is excluded from the delta. CameraRig's
+`pan_screen` consumes render pixels; it retains existing direction/reflection
+semantics. A projected point follows the requested root-space drag distance
+across UI scales and render densities. Window stretch is not applied twice.

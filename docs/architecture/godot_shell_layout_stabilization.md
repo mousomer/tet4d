@@ -69,6 +69,74 @@ same contract. The right inspector keeps its reserved width and remains
 vertically scrollable; horizontal scrolling is disabled so panel content wraps
 inside the reserved inspector.
 
+## Orchestration repair boundary
+
+The accepted results and supplied pre-repair observations are locked in
+`docs/design/ui_cockpit_result_lock_2026_10_27.md`. The bounded plan is
+`docs/plans/ui_cockpit_orchestration_repair.md`; the helper-state extraction is
+implemented, and ordinary layout scheduling/policy are extracted. Designer
+panel lifecycle is delegated to DesignerPanelSession; ShellViewportLayout owns
+scalar/rectangle conversions, while ReplayHud retains composition and OS queries.
+Owner decision (2026-10-27): explicit Fit finishes the requested orbit before
+measuring size, anchor and board demand; normal orbit easing is unchanged.
+Leaving/restarting a helper-fit search clears pending/search state. These two
+source repairs now pass focused camera/cockpit suites under the owner's
+relevant-test authorization. Full integration/manual acceptance remains pending;
+see `docs/history/ui_cockpit_focused_verification_2026_10_30.md`. No layout or
+scale retuning is authorized.
+
+## Helper fit ownership
+
+`HelperFitState` owns one group's relaxed/compact/probing transitions, recorded
+height, sample agreement, scale interval and cancellation. Its public `observe`
+operation consumes scalar measurements, a transient room policy, frame number
+and intrinsic content identity; it returns compact/scale/remeasure decisions.
+It stores no scene nodes and schedules no work. `LiveCockpit` measures and
+applies those decisions through the existing fit containers and next-frame
+scheduler. Packing policy, floor 0.6, step 0.02 and settle limit 30 are retained.
+
+`ResponsivePanelPolicy.fit_content_key` observes intrinsic content: existing
+control identity/visibility, text, font metrics, custom minimums, relevant theme
+and spacing inputs. Compacted gaps use their recorded relaxed values. Measured
+wrapping, allocated sizes and fit scale are excluded because they change during
+probes. A changed key discards the old sample and restarts at relaxed full scale;
+thus editing an existing label or font cannot retain a completed stale fit.
+A settled group whose new sample matches its last one (same height, width and
+gap savings) keeps its fit: a new piece name in a fixed-width NEXT/HOLD label
+changes the key every piece, and restarting would replay the search visibly
+for the same result.
+Constraint changes and fresh-subtree cancellation keep their previous behavior.
+A completed scaled fit remains settled under repeated identical observations.
+It must not reopen sample agreement merely because an owner measures it again;
+intrinsic-content or width/room changes still invalidate it through the same owner.
+Hiding the live deck cancels helper probes and ordinary pending work; inactive
+metric signals cannot restart fitting. Reactivation takes fresh measurements.
+Replay capture must not wait for an invisible live helper search.
+This remains local content invalidation; queued layout work is owned by the
+coordinator described below.
+
+## Layout coordination and policy
+
+`CockpitLayoutCoordinator`, owned as a child of LiveCockpit, is the only
+scheduler of ordinary cockpit policy/fit work. Metrics bursts and fit requests
+coalesce on one next-frame callback. Fit requests take priority because they
+already remeasure the current controls. Synchronous context setters call
+`apply_now`, which advances the scheduling generation, cancels obsolete queued
+work and applies immediately. Requests produced during application remain
+queued for a later measurement pass. Designer ownership changes invalidate
+old queued work without applying ordinary placement; tree exit disconnects it.
+Completion requires coordinator idle plus every helper state settled.
+
+Callbacks carry a scheduling generation and read fresh measurements. No queued
+callback stores a measured layout or a policy decision from an old context.
+`CockpitLayoutPolicy` computes placement, row packing, floor/gap decisions,
+row heights, deck room and rail spare-width choices from explicit measured
+values. It performs no scene-tree reads or mutation. LiveCockpit adapts measured
+controls into those inputs and applies the results. The previous second
+metrics flag, process-frame fit connection and deferred policy recheck path are
+removed. Godot's own container-sort notifications remain; detached Designer
+panel constraints belong to DesignerPanelSession under the Designer contract.
+
 ## Responsive panel contract
 
 `scripts/ui/responsive_panel_policy.gd` owns shared presentation fitting:
@@ -164,6 +232,11 @@ overflows at the readability floor.
   search from full scale, so the result depends on the current size and
   content, never on resize history. `LiveCockpit.fit_settled()` reports when
   every step has decided; layout checks wait for it.
+- The fit box places its content by hand, so it owns the placement invariant
+  (content size = box size / scale, at least the content minimum). A sort
+  during a resize can read a transient minimum, such as text still wrapped at
+  the old width, that settles back before Godot reports it; no re-sort follows.
+  An oversized placement is therefore re-checked on the next frame.
 - The Live 4D split column spans the whole stage height beside board and
   legend deck whenever the narrowed deck still holds the legend's single line
   with room for its scrollbar; otherwise the deck keeps the full width and the
@@ -242,3 +315,18 @@ supported viewport sizes, that:
   on incidental child panel sizes.
 - Layout regression coverage catches inspector collapse or game-panel
   over-expansion.
+
+## Shell coordinate ownership
+
+`ShellViewportLayout` is a pure conversion helper. It owns window-point scale,
+design-resolution rounding, UI-local safe-area insets, usable overlay rectangles
+and root-input to render-pixel deltas. ReplayHud still reads the OS/client state,
+applies extents and margins, persists preferences and routes navigation. Existing
+menu/live reference sizes, scale floors and accepted allocation stay unchanged.
+
+`GameplayViewportSurface.root_delta_to_render` uses its current canvas transform,
+logical extent and actual SubViewport size. Root input is already in viewport
+units; applying window stretch again would double-convert it. The app converts
+right-drag motion through the HUD's public surface adapter before CameraRig pan.
+CameraRig owns direction/reflection and consumes render pixels. This separation
+restores pointer-distance movement without changing fit, geometry or grid rules.

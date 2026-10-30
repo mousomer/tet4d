@@ -49,3 +49,21 @@ func _notification(what: int) -> void:
 	child.position = Vector2.ZERO
 	child.size = (size / fit_scale).max(minimum)
 	child.scale = Vector2(fit_scale, fit_scale)
+	# A sort during a resize can read a transient minimum: wrapped text still
+	# measured at the old width. When it settles back, the child's minimum has
+	# not changed since its last report, so no re-sort is queued and the child
+	# keeps the stale size. Re-check an oversized placement once settled.
+	if minimum.x > size.x / fit_scale + 0.5 or minimum.y > size.y / fit_scale + 0.5:
+		_queue_placement_check()
+
+
+func _queue_placement_check() -> void:
+	if not is_inside_tree() or get_tree().process_frame.is_connected(_check_placement):
+		return
+	get_tree().process_frame.connect(_check_placement, CONNECT_ONE_SHOT)
+
+
+func _check_placement() -> void:
+	var child := content()
+	if child != null and not child.size.is_equal_approx((size / fit_scale).max(child.get_combined_minimum_size())):
+		queue_sort()

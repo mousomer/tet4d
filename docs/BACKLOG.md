@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-10-25
+Updated: 2026-10-31
 Scope: active work, explicit deferrals, and near-term acceptance boundaries.
 
 Completed chronology is recoverable from Git, merged PRs, CI, and
@@ -22,6 +22,26 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   facts)
 
 ## Active Work
+
+### UI and cockpit follow-up
+
+The orchestration repair and R1/R2/F1–F5 were accepted after owner review on
+2026-10-31, with known issues retained. Acceptance/evidence:
+`docs/history/ui_cockpit_owner_acceptance_2026_10_31.md`; implementation plan:
+`docs/plans/ui_cockpit_orchestration_repair.md`. Publication and merged-master
+checks are tracked on PR #162; acceptance does not assert historical PNG parity.
+
+- [ ] Designer text sizing: owner reports that text is too large. Reproduce
+  effective font/control scale in windowed/fullscreen Designer, then plan a
+  bounded proportional reduction with readable controls and reachable actions.
+  Preserve gameplay viewport, board geometry and the accepted cockpit result;
+  do not mix this follow-up into the accepted orchestration repair.
+- [ ] Replay toolbar at 1280×720: rendered controls extend beyond the root
+  image in capture evidence `tet4d-window-capture-pp_xdorx`. Assess against the
+  historical baseline before a bounded responsive repair; toolbar construction
+  is unchanged by orchestration work. No scale/framing retuning in this batch.
+- [ ] Main-menu intrinsic-content fit invalidation remains an unconfirmed
+  review concern; establish a normal-user trigger before promoting a defect.
 
 ### P1 fullscreen panels, live helpers and menu responsiveness
 

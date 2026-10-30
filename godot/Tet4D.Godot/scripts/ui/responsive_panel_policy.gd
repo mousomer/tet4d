@@ -42,6 +42,41 @@ static func compact_spacing(container: BoxContainer, available: Vector2) -> void
 const _RELAXED_META := "fit_compact_relaxed"
 
 
+# Intrinsic content identity excludes allocation, scale and measured wrapping:
+# those change during the fit's own probes. Compaction uses its recorded relaxed
+# constants, so halving a gap does not masquerade as new content. Colour-only
+# values are excluded; replacing a Theme invalidates conservatively.
+static func fit_content_key(root: Control) -> Array:
+	var key: Array = []
+	var ancestor: Node = root
+	while ancestor != null:
+		if ancestor is Control and ancestor.theme != null:
+			key.append([ancestor.theme.get_instance_id(), ancestor.theme.default_base_scale])
+		ancestor = ancestor.get_parent()
+	var targets: Array = [root]
+	targets.append_array(root.find_children("*", "Control", true, false))
+	for control in targets:
+		key.append([control.get_instance_id(), control.visible, control.custom_minimum_size])
+		if control is Label or control is Button or control is RichTextLabel or control is LineEdit:
+			key.append([control.text, control.get_theme_font("font").get_instance_id(), control.get_theme_font_size("font_size")])
+		var names: Array = []
+		if control is BoxContainer:
+			names = ["separation"]
+		elif control is GridContainer or control is FlowContainer:
+			names = ["h_separation", "v_separation"]
+		elif control is MarginContainer:
+			names = ["margin_left", "margin_top", "margin_right", "margin_bottom"]
+		var stored: Dictionary = control.get_meta(_RELAXED_META, {})
+		for constant in names:
+			var value: int = control.get_theme_constant(constant)
+			if stored.has(constant) and value == int(stored[constant][2]):
+				value = int(stored[constant][1])
+			key.append(value)
+		if control is PanelContainer:
+			key.append(control.get_theme_stylebox("panel").get_minimum_size())
+	return key
+
+
 static func compact_vertical_gaps(root: Node, enabled: bool) -> int:
 	var fresh := 0
 	var targets: Array[Control] = []

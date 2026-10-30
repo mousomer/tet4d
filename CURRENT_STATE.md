@@ -20,7 +20,7 @@ phase-dependent work. It is not workflow authority, a CI diary, a completed
 stage archive, a task-contract ledger, or a future programme.
 ## Active Focus
 
-Fullscreen-panel, live-helper and Main Menu responsiveness (owner-accepted and locked) is tracked in `docs/BACKLOG.md`.
+UI/cockpit repair accepted after owner review; Designer text-size follow-up remains. Acceptance: `docs/history/ui_cockpit_owner_acceptance_2026_10_31.md`. Plan: `docs/plans/ui_cockpit_orchestration_repair.md`.
 
 Machine-readable handoff state. `status` is `active` only on a feature branch
 or draft PR and must name that branch; it is `none` on the default branch and
@@ -59,8 +59,8 @@ No active handoff.
 
 ## Next Acceptance Boundary
 
-Stage 58B scale/framing is frozen; depth and contrast hierarchy continues in
-58C. Owner playability review remains separate from agent visual inspection.
+Next: bounded Designer text-size review; replay toolbar assessment stays separate.
+Repair accepted; publication/master CI is tracked on PR #162. 58B scale stays frozen.
 The Stage 56H human playability checkpoint retains its task contract at
 `docs/tasks/live_4d_cockpit_convergence.md`; Stage 56I polish and the 190/200
 A/B decision remain separate. The authorized governance distribution 1.3.1 is active;

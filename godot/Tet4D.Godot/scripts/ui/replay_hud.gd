@@ -32,6 +32,7 @@ const PresentationProfileScript = preload("res://scripts/presentation/presentati
 const GridDisplayMode = preload("res://scripts/presentation/grid_display_mode.gd")
 const PresentationDesignerScript = preload("res://scripts/ui/presentation_designer.gd")
 const DesignLaboratoryPanelScript = preload("res://scripts/ui/design_laboratory_panel.gd")
+const ShellViewportLayout = preload("res://scripts/ui/shell_viewport_layout.gd")
 const SafeAreaInsetsScript = preload("res://scripts/ui/safe_area_insets.gd")
 const ResponsivePanelPolicy = preload("res://scripts/ui/responsive_panel_policy.gd")
 const FitScaleContainerScript = preload("res://scripts/ui/fit_scale_container.gd")
@@ -241,13 +242,13 @@ var _piece_preview_row: GridContainer
 var _piece_control_strip: PanelContainer
 var _live_view_control_strip: PanelContainer
 var _live_cockpit
-const DESIGN_RESOLUTION_MIN_WIDTH := 640.0
-const DESIGN_RESOLUTION_MIN_HEIGHT := 480.0
+const DESIGN_RESOLUTION_MIN_WIDTH := ShellViewportLayout.DESIGN_MINIMUM.x
+const DESIGN_RESOLUTION_MIN_HEIGHT := ShellViewportLayout.DESIGN_MINIMUM.y
 # Menus scale with their opening size on both axes; live/replay preserves the
 # taller reference canvas required by the gameplay rails and Designer chrome.
-const MENU_REFERENCE_SIZE := Vector2(1280.0, 720.0)
-const DESIGN_REFERENCE_SIZE := Vector2(1280.0, 800.0)
-const MAX_WINDOW_UI_SCALE := 2.0
+const MENU_REFERENCE_SIZE := ShellViewportLayout.MENU_REFERENCE
+const DESIGN_REFERENCE_SIZE := ShellViewportLayout.LIVE_REFERENCE
+const MAX_WINDOW_UI_SCALE := ShellViewportLayout.MAX_WINDOW_SCALE
 # Menu text may shrink with a smaller window only down to the RDS 18 px
 # readable-body target; below it the logical canvas grows and menus reflow.
 const MENU_READABLE_BODY_POINTS := 18.0
@@ -1018,12 +1019,12 @@ func design_laboratory_snapshot() -> Dictionary:
 func _apply_safe_area_insets() -> void:
 	if _shell_root_margin == null:
 		return
-	var insets := safe_area_insets()
+	var insets := ShellViewportLayout.local_insets(safe_area_insets(), _ui_scale_factor)
 	# Margins are in this HUD's local units, which the UI scale magnifies.
 	for side in ["left", "top", "right", "bottom"]:
 		_shell_root_margin.add_theme_constant_override(
 			"margin_%s" % side,
-			ReplayVisuals.OUTER_MARGIN + int(ceilf(float(insets.get(side, 0)) / maxf(_ui_scale_factor, 0.01)))
+			ReplayVisuals.OUTER_MARGIN + int(ceilf(float(insets.get(side, 0))))
 		)
 
 
@@ -1058,12 +1059,12 @@ func _build_presentation_designer() -> void:
 	_live_cockpit.designer_geometry_changed.connect(_presentation_designer.synchronize_panel_geometry)
 	_presentation_designer.comparison.changed.connect(_update_live_view_action_labels)
 	_presentation_designer.comparison_activate = func(side: String) -> bool:
-		if _design_laboratory != null and _design_laboratory._comparison.active():
-			return _design_laboratory._activate_arm(side)
+		if _design_laboratory != null and _design_laboratory.comparison_active():
+			return _design_laboratory.show_comparison_arm(side)
 		return _presentation_designer.preview_comparison_snapshot(side)
 	_presentation_designer.comparison_edit_requested = func() -> void:
 		if _design_laboratory != null:
-			_design_laboratory._comparison.end()
+			_design_laboratory.end_comparison()
 	_presentation_designer.panel_focus_requested.connect(_live_cockpit.raise_designer_panel)
 	_presentation_designer.profile_preview_requested.connect(func(profile, restore_geometry: bool) -> void:
 		if restore_geometry:
@@ -1079,14 +1080,16 @@ func _build_presentation_designer() -> void:
 			var metadata: Dictionary = source.design_state()
 			_live_cockpit.restore_designer_geometry(metadata.get("panel_rects", {}))
 			if current_preview and not metadata.has("panel_rects"):
-				call_deferred("_capture_opening_designer_geometry")
+				call_deferred("_capture_opening_designer_geometry", _live_cockpit.designer_session_revision())
 		_update_live_view_action_labels()
 		call_deferred("_layout_presentation_designer")
 	)
 
 
-func _capture_opening_designer_geometry() -> void:
-	_live_cockpit._constrain_designer_panels()
+func _capture_opening_designer_geometry(revision: int) -> void:
+	if revision != _live_cockpit.designer_session_revision() or _live_cockpit.designer_panels().is_empty():
+		return
+	_live_cockpit.constrain_designer_panels()
 	var rects: Dictionary = _live_cockpit.designer_geometry_snapshot()
 	_presentation_designer.initialize_panel_geometry(rects)
 
@@ -1106,14 +1109,11 @@ func _layout_presentation_designer() -> void:
 	# editor usable within the cockpit while its board is manipulated.
 	var frames: Dictionary = _live_cockpit.designer_panels()
 	if not frames.is_empty():
-		game_rect = _live_cockpit._designer_host.get_global_rect()
+		game_rect = _live_cockpit.designer_surface_rect()
 		if game_rect.size.x <= 0.0 or game_rect.size.y <= 0.0:
 			return
 	_presentation_designer_game_rect = _game_area.get_global_rect()
-	var inverse := get_global_transform().affine_inverse()
-	var local_origin: Vector2 = inverse * game_rect.position
-	var local_far: Vector2 = inverse * (game_rect.position + game_rect.size)
-	var local_rect := Rect2(local_origin, local_far - local_origin)
+	var local_rect := ShellViewportLayout.local_rect(game_rect, get_global_transform())
 	var inset := float(ShellDesignTokensScript.SPACE_2)
 	# An editor is an overlay: fit it to the client area without changing the
 	# detached board's geometry or collapsing the editor on a height-only resize.
@@ -1132,11 +1132,7 @@ func _layout_presentation_designer() -> void:
 
 func _usable_overlay_rect(inset: float) -> Rect2:
 	# Overlays use the shell's usable client area independently of board sizing.
-	var insets := safe_area_insets()
-	var origin := Vector2(float(insets.get("left", 0)), float(insets.get("top", 0))) / maxf(_ui_scale_factor, 0.01)
-	var available := get_viewport_rect().size / maxf(_ui_scale_factor, 0.01)
-	var far := available - Vector2(float(insets.get("right", 0)), float(insets.get("bottom", 0))) / maxf(_ui_scale_factor, 0.01)
-	return Rect2(origin, (far - origin).max(Vector2.ZERO)).grow(-inset)
+	return ShellViewportLayout.usable_rect(get_viewport_rect().size, safe_area_insets(), _ui_scale_factor, inset)
 
 
 func _layout_design_laboratory() -> void:
@@ -1424,6 +1420,27 @@ func show_replay_viewer() -> void:
 
 func current_screen() -> String:
 	return _current_screen
+
+
+func capture_layout_observation() -> Dictionary:
+	var viewport := game_viewport()
+	return {
+		"ready": viewport != null and viewport.size.x > 0 and viewport.size.y > 0 and (_live_cockpit == null or _live_cockpit.fit_settled()),
+		"screen": _current_screen,
+		"canvas": get_viewport_rect(),
+		"ui_scale": _ui_scale_factor,
+		"safe_area": safe_area_insets(),
+		"surface": game_viewport_global_rect(),
+		"render_size": viewport.size if viewport != null else Vector2i.ZERO,
+		"generation": _live_cockpit.layout_generation() if _live_cockpit != null else 0,
+		"cockpit": _live_cockpit.deterministic_snapshot() if _live_cockpit != null else {},
+	}
+
+
+func game_viewport_render_delta(root_delta: Vector2) -> Vector2:
+	if _game_viewport_container == null:
+		return Vector2.ZERO
+	return _game_viewport_container.root_delta_to_render(root_delta)
 
 
 func game_viewport_global_rect() -> Rect2:
@@ -3654,7 +3671,7 @@ func _fit_main_menu() -> void:
 func _apply_shell_extents() -> void:
 	var viewport_size := get_viewport_rect().size
 	var ui_scale := maxf(_ui_scale_factor, 0.01)
-	var available := viewport_size / ui_scale
+	var available := ShellViewportLayout.available_size(viewport_size, ui_scale)
 	# Window.min_size owns the physical window floor. Reapplying that floor to
 	# transformed Controls makes large text push the menu's scroll viewport
 	# outside the real window instead of letting the content scroll within it.
@@ -3701,13 +3718,8 @@ func _sync_design_resolution() -> void:
 	var window_pixels := Vector2(DisplayServer.window_get_size())
 	if window_pixels.x <= 0.0 or window_pixels.y <= 0.0:
 		return
-	var display_scale := maxf(DisplayServer.screen_get_scale(), 0.01)
-	var points := window_pixels / display_scale
-	var logical := points / _window_ui_scale(points)
-	var target := Vector2i(
-		int(ceil(maxf(logical.x, DESIGN_RESOLUTION_MIN_WIDTH))),
-		int(ceil(maxf(logical.y, DESIGN_RESOLUTION_MIN_HEIGHT)))
-	)
+	var target := ShellViewportLayout.design_resolution(window_pixels, DisplayServer.screen_get_scale(),
+		_current_screen != SCREEN_VIEWER, MIN_MENU_WINDOW_SCALE)
 	if window.content_scale_size != target:
 		window.content_scale_size = target
 
@@ -3717,10 +3729,7 @@ func _sync_design_resolution() -> void:
 # so a shorter window shrinks menu text as surely as a narrower one. It is
 # recomputed from the reference on every resize, never from the prior scale.
 static func menu_window_scale(window_points: Vector2) -> float:
-	if window_points.x <= 0.0 or window_points.y <= 0.0:
-		return 1.0
-	var fit := minf(window_points.x / MENU_REFERENCE_SIZE.x, window_points.y / MENU_REFERENCE_SIZE.y)
-	return clampf(fit, MIN_MENU_WINDOW_SCALE, MAX_WINDOW_UI_SCALE)
+	return ShellViewportLayout.window_scale(window_points, MENU_REFERENCE_SIZE, MIN_MENU_WINDOW_SCALE)
 
 
 func _window_ui_scale(points: Vector2) -> float:
@@ -3730,10 +3739,7 @@ func _window_ui_scale(points: Vector2) -> float:
 # How much the shell is magnified for a window of this size in points: 1.0 up
 # to the reference window, then proportional to whichever axis is tighter.
 static func window_ui_scale(window_points: Vector2) -> float:
-	if window_points.x <= 0.0 or window_points.y <= 0.0:
-		return 1.0
-	var fit := minf(window_points.x / DESIGN_REFERENCE_SIZE.x, window_points.y / DESIGN_REFERENCE_SIZE.y)
-	return clampf(fit, 1.0, MAX_WINDOW_UI_SCALE)
+	return ShellViewportLayout.window_scale(window_points, DESIGN_REFERENCE_SIZE, 1.0)
 
 
 # The responsive breakpoint domain is what the player actually sees, not the
@@ -3749,10 +3755,8 @@ func apparent_layout_size() -> Vector2:
 	var window_pixels := Vector2(DisplayServer.window_get_size())
 	if window_pixels.x <= 0.0 or window_pixels.y <= 0.0:
 		return size
-	var display_scale := maxf(DisplayServer.screen_get_scale(), 0.01)
-	var ui_scale := maxf(_ui_scale_factor, 0.01)
-	var points := window_pixels / display_scale
-	return points / _window_ui_scale(points) / ui_scale
+	return ShellViewportLayout.apparent_size(window_pixels, DisplayServer.screen_get_scale(),
+		_ui_scale_factor, _current_screen != SCREEN_VIEWER, MIN_MENU_WINDOW_SCALE)
 
 
 func _log_geometry_diagnostics(reason: String) -> void:
