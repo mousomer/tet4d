@@ -101,6 +101,7 @@ var _density := "standard"
 var _responsive_profile := PROFILE_STANDARD
 var _row_assignment: Array = []
 var _packing_in_progress := false
+var _deck_metrics_check_queued := false
 var _last_packing_width := -1.0
 var _last_module_minimums := Vector3.ZERO
 var _last_module_heights := Vector3.ZERO
@@ -326,11 +327,31 @@ func _init() -> void:
 	# layout pass: the deck's own width, and each module's minimum once its
 	# strip is reparented in. Without re-packing on those signals the deck keeps
 	# whatever arrangement a transient early width produced.
-	control_deck.resized.connect(_on_deck_metrics_changed)
+	control_deck.resized.connect(_queue_deck_metrics_check)
 	for module in [piece_controls, view_controls, piece_state]:
-		module.minimum_size_changed.connect(_on_deck_metrics_changed)
-	header_slot.minimum_size_changed.connect(_on_deck_metrics_changed)
-	side_scroll.resized.connect(_on_deck_metrics_changed)
+		module.minimum_size_changed.connect(_queue_deck_metrics_check)
+	header_slot.minimum_size_changed.connect(_queue_deck_metrics_check)
+	side_scroll.resized.connect(_queue_deck_metrics_check)
+
+
+# These signals fire while Godot propagates visibility or sorts a container,
+# when it refuses add_child on the node being notified. The policy reparents
+# the deck and modules, and a refused reparent leaves the node with no parent
+# at all, so the check runs on the next frame, like the fit settle passes.
+# Signals raised by the policy's own pass are dropped as before, and a burst
+# coalesces into one check. A deferred call would run inside the same idle
+# flush that sorts the containers it resized, so each pass would queue the
+# next and flood the message queue.
+func _queue_deck_metrics_check() -> void:
+	if _packing_in_progress or _deck_metrics_check_queued or not is_inside_tree():
+		return
+	_deck_metrics_check_queued = true
+	get_tree().process_frame.connect(_run_queued_deck_metrics_check, CONNECT_ONE_SHOT)
+
+
+func _run_queued_deck_metrics_check() -> void:
+	_deck_metrics_check_queued = false
+	_on_deck_metrics_changed()
 
 
 func set_deck_placement(placement: String) -> void:
@@ -834,6 +855,8 @@ func _agreed(state: Dictionary, key: String, value: float) -> bool:
 # True once every fit group has decided: nothing awaits agreement, no scale
 # search is running and no settle pass is queued. Layout checks wait for it.
 func fit_settled() -> bool:
+	if _deck_metrics_check_queued:
+		return false
 	if is_inside_tree() and get_tree().process_frame.is_connected(_apply_responsive_policy):
 		return false
 	for group in _fit_states:
