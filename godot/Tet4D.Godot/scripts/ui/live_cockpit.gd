@@ -285,7 +285,7 @@ func _init() -> void:
 # flush that sorts the containers it resized, so each pass would queue the
 # next and flood the message queue.
 func _queue_deck_metrics_check() -> void:
-	if not _layout_coordinator.applying():
+	if control_deck.visible and not _layout_coordinator.applying():
 		_layout_coordinator.request_metrics()
 
 
@@ -398,7 +398,7 @@ func deterministic_snapshot() -> Dictionary:
 # band starts at 800, so the arrangement has to follow measurement, not a
 # hard-coded shape. Module identity and order are preserved in every profile.
 func _on_deck_metrics_changed() -> void:
-	if _layout_coordinator.applying():
+	if not control_deck.visible or _layout_coordinator.applying():
 		return
 	var width := _packing_width()
 	var minimums := _module_minimums()
@@ -441,6 +441,9 @@ func _apply_layout() -> void:
 		return
 	_responsive_profile = responsive_profile_for_size(_apparent_size) if _apparent_size.x > 0.0 else PROFILE_STANDARD
 	_relocate(_effective_placement())
+	if not control_deck.visible:
+		_reset_fit()
+		return
 	if _placement == PLACEMENT_SIDE:
 		_apply_side_policy()
 		_layout_coordinator.request_metrics()

@@ -5,6 +5,7 @@ const LiveCockpitScript = preload("res://scripts/ui/live_cockpit.gd")
 
 func run() -> Array:
 	var failures: Array = []
+	failures.append_array(await _assert_inactive_fit_cancellation())
 	failures.append_array(await _assert_existing_content_refit())
 	failures.append_array(await _assert_component_grammar())
 	failures.append_array(await _assert_metrics_signal_during_visibility_propagation())
@@ -84,6 +85,7 @@ func _assert_metrics_signal_during_visibility_propagation() -> Array:
 	var tree := Engine.get_main_loop() as SceneTree
 	tree.root.add_child(cockpit)
 	cockpit.set_available_size(Vector2(1600.0, 960.0), Vector2(1600.0, 960.0), "standard")
+	cockpit.set_control_deck_visible(true)
 	cockpit.set_deck_placement(LiveCockpitScript.PLACEMENT_SIDE)
 	await tree.process_frame
 	await tree.process_frame
@@ -114,6 +116,8 @@ func _assert_component_grammar() -> Array:
 	var tree := Engine.get_main_loop() as SceneTree
 	tree.root.add_child(cockpit)
 	await tree.process_frame
+	# Packing assertions describe an active cockpit, not an invisible deck.
+	cockpit.set_control_deck_visible(true)
 	var snapshot: Dictionary = cockpit.deterministic_snapshot()
 	if snapshot.get("slots") != ["Header", "PrimaryBoardSurface", "ControlDeck"]:
 		failures.append("LiveCockpit must expose the shared header/primary/deck grammar")
@@ -217,4 +221,25 @@ func _check_production_extraction() -> Array:
 	root.queue_free()
 	await tree.process_frame
 	tree.root.size = original_size
+	return failures
+
+
+func _assert_inactive_fit_cancellation() -> Array:
+	var failures: Array = []
+	var tree := Engine.get_main_loop() as SceneTree
+	var cockpit = _content_fixture(tree, 40)
+	await tree.process_frame
+	cockpit.set_control_deck_visible(false)
+	if not cockpit.fit_settled():
+		failures.append("hiding a cockpit must cancel all probes and queued work synchronously")
+	for _frame in range(10):
+		await tree.process_frame
+	if not cockpit.fit_settled():
+		failures.append("inactive cockpit metric signals must not restart hidden fitting")
+	cockpit.set_control_deck_visible(true)
+	await _settle_fit(tree, cockpit)
+	if not cockpit.fit_settled():
+		failures.append("reactivated cockpit must obtain fresh measurements and settle")
+	cockpit.queue_free()
+	await tree.process_frame
 	return failures

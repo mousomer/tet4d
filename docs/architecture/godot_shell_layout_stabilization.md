@@ -109,6 +109,9 @@ Constraint changes and fresh-subtree cancellation keep their previous behavior.
 A completed scaled fit remains settled under repeated identical observations.
 It must not reopen sample agreement merely because an owner measures it again;
 intrinsic-content or width/room changes still invalidate it through the same owner.
+Hiding the live deck cancels helper probes and ordinary pending work; inactive
+metric signals cannot restart fitting. Reactivation takes fresh measurements.
+Replay capture must not wait for an invisible live helper search.
 This remains local content invalidation; queued layout work is owned by the
 coordinator described below.
 
