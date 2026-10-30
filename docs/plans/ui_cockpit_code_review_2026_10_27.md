@@ -119,6 +119,12 @@ pending requested orbit before fitting. Clarify that exception in the map;
 do not change the target orientation or canonical-reset semantics. This is a
 documentation mismatch, not another requested runtime behavior change.
 
+Resolution, 2026-10-30: the owning camera contract, authority map, keybindings
+and dependent architecture references now describe the pending-orbit exception.
+The associated documentation compliance repairs also replace the absolute
+capture path with a portable ID and make the immediate handoff boundary clear.
+This closes F5 at documentation level; R1/R2 runtime acceptance remains pending.
+
 ## Structural assessment and prior findings
 
 The repo has meaningful subsystem boundaries. Gameplay/native semantics,

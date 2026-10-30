@@ -234,8 +234,9 @@ These fixed bindings apply only to normal Godot Live-4D gameplay:
    the Pygame 4D camera bindings place `yaw_pos` on `L`, `yaw_neg` on `O`,
    `pitch_pos` on `I`, and `pitch_neg` on `K` for exactly that reason.
 6. Framing `V/P`: `-/=/+` and wheel zoom, right-drag pan, and double-click or
-   the visible Fit View button. Fit View is framing-only; `F/G` remain the
-   Live-4D XZ piece-rotation pair.
+   the visible Fit View button. Fit View completes any pending requested outer
+   orbit, then fits without changing orientation targets, `B`, or `L`; `F/G`
+   remain the Live-4D XZ piece-rotation pair.
 7. Normal Live-4D gameplay registers no roll action. Generic low-level roll is
    reserved for non-gameplay free-inspection/Explorer consumers.
 8. Exact `B`, continuous yaw/pitch `L`, anchors/layout, focus/pan, zoom,

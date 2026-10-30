@@ -26,7 +26,6 @@
       "recorded_failures": 0
     }
   ],
-  "external_capture_directory": "/private/tmp/tet4d-cockpit-baseline-2026-10-26/captures-run3",
   "png_count": 358,
   "pngs": [
     {
@@ -1461,5 +1460,7 @@
       "file": "height-only_1280x900.png",
       "sha256": "f3f1bf285bc3143423fca844738edc2a48f8ea478a84ff873e33391b49104baa"
     }
-  ]
+  ],
+  "external_capture_id": "tet4d-cockpit-baseline-2026-10-26/captures-run3",
+  "external_capture_status": "Externally retained at inspection; no durable retrieval location is published. Obtain the evidence bundle before screenshot comparison."
 }

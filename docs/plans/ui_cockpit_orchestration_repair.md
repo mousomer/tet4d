@@ -13,7 +13,10 @@ the committed master baseline. Do not use a historical branch commit alone as a
 substitute for the source/evidence records. Implementation starts on
 `codex/ui-cockpit-orchestration` at master `e37441bb`, in a separate worktree.
 The dirty release checkout is not the refactor base and is left untouched.
-Master's CI classification and workflow changes are retained.
+Master's CI classification and workflow changes are retained. Master
+`9b2a7e43` was subsequently integrated at `91987bb1`, preserving its deck
+reparent protection and next-frame metric checks alongside R1/R2. The original
+pre-repair evidence identity remains `e37441bb`; no new baseline was promoted.
 
 Status: result lock recorded; R1/R2 source fixes and regression cases prepared;
 functional verification pending. Broad extraction has not started. The owner
@@ -214,8 +217,11 @@ continued review. The findings and exact source paths are recorded in
   separate correctness change before extracting Designer lifecycle in phase 4.
 - F4: keep laboratory capture settling and asynchronous identity validation as
   an adjacent explicit follow-up; do not hide it inside the cockpit extraction.
-- F5: reconcile the authority map with the approved Fit exception in a narrow
-  documentation change.
+- F5: documentation reconciliation is implemented across the owning camera
+  contract, authority map and dependent Fit references. Evidence metadata now
+  uses a portable capture ID; screenshots still need an external bundle.
+  The immediate handoff boundary is integrated R1/R2 acceptance. No functional
+  or visual acceptance is claimed for this documentation/integration batch.
 
 No additional runtime changes or functional execution accompanied this review.
 The review is a source-based assessment, not acceptance of these future repairs.

@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-10-27
+Updated: 2026-10-30
 Scope: active work, explicit deferrals, and near-term acceptance boundaries.
 
 Completed chronology is recoverable from Git, merged PRs, CI, and
@@ -37,8 +37,9 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   conversion incrementally against the locked results. Broad work not started.
 - No tests, application/CI or capture runs under the current owner instruction;
   only secrets/string sanitation. Existing recordings are historical evidence.
-- Continue on `codex/ui-cockpit-orchestration` from master `e37441bb`; preserve
-  the dirty release checkout and master CI/workflow rules.
+- Continue on `codex/ui-cockpit-orchestration`; master `9b2a7e43` is integrated
+  at `91987bb1`. Original evidence remains based on `e37441bb`; other checkouts
+  and independent branches are outside this batch.
 - Published R1/R2 and result lock at `52986aa2`. Static follow-up findings:
   `docs/plans/ui_cockpit_code_review_2026_10_27.md`.
 - [ ] F1 / P2: convert pan deltas consistently between root input and the
@@ -48,8 +49,10 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 - [ ] F3 / P2: make owner Reset use the current saved/loaded design baseline.
 - [ ] F4 / P2, adjacent follow-up: capture only a settled layout generation,
   with session/arm/fingerprint revalidation after asynchronous waits.
-- [ ] F5 / P3: clarify the owner-approved pending-orbit Fit exception in the
-  architecture authority map.
+- [x] F5 / P3: align the owning camera contract, authority map and dependent
+  Fit references with the owner-approved pending-orbit exception. Replace the
+  published machine-local capture path with a portable evidence ID and state
+  retrieval limits; update the immediate handoff acceptance boundary.
 
 ### P1 fullscreen panels, live helpers and menu responsiveness
 

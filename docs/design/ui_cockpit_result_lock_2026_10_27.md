@@ -17,7 +17,9 @@ Historical observed output is retained under
 files have identical SHA-256 `9687a9225c3b95d29affe4d748f658148c31c437c1cbbabebc450f8b7ded9ca9`:
 410 observations each, with zero recorded failures. One exact observation file
 is copied into the repository; all three identities and 358 PNG identities are
-recorded. The PNG files remain in the supplied external capture directory.
+recorded. The PNG bundle was externally retained at inspection; the manifest
+uses a portable capture ID and does not establish durable retrieval. Obtain
+the bundle before any screenshot comparison claim.
 This is inspection of existing evidence, not a new run or new visual sign-off.
 
 Sources of acceptance are the owner-accepted 2026-10-25 layout contract in

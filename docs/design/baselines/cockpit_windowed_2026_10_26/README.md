@@ -7,7 +7,9 @@ The owner supplied these historical 2026-10-26 runs during review on
 - All three supplied runs: 410 observations and zero recorded failures;
   SHA-256 `9687a9225c3b95d29affe4d748f658148c31c437c1cbbabebc450f8b7ded9ca9`.
 - `manifest.json` records run identities, reported environment/source and 358
-  screenshot hashes. PNGs remain at the external directory named there.
+  screenshot hashes. PNGs were externally retained at inspection, identified by
+  the portable capture ID in the manifest. No durable retrieval location is
+  published; obtain that bundle before claiming screenshot equivalence.
 - `source-note.txt` retains the supplied provenance note without rewriting it.
 
 The reported runtime is master `bda1abe7`, before R1/R2. Current implementation
