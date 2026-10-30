@@ -20,6 +20,8 @@ var _hi := 1.0
 var _unsettled_since := -1
 var _content_key: Array = []
 var _remeasure := false
+# The last sample and the inputs it was taken under.
+var _sample := [-1.0, -1.0, -1.0]
 
 
 func is_compact() -> bool:
@@ -53,10 +55,17 @@ func cancel_search() -> void:
 
 func observe(natural: float, room_for: Callable, width: float, ready: bool, frame: int, savings_bound: float, fresh_compaction: bool, content_key: Array) -> Dictionary:
 	_remeasure = false
+	var previous: Array = _sample
+	_sample = [natural, width, savings_bound]
 	if _content_key != content_key:
 		var changed := not _content_key.is_empty()
 		_content_key = content_key.duplicate(true)
-		if changed:
+		# An edit that leaves a settled group's measurements unchanged (a new
+		# piece name in a fixed-width label) leaves its fit unchanged too;
+		# restarting would replay the whole search for the same result.
+		var same := settled() and absf(natural - float(previous[0])) <= 0.5 \
+			and absf(width - float(previous[1])) <= 0.5 and is_equal_approx(savings_bound, float(previous[2]))
+		if changed and not same:
 			cancel_search()
 			_compact = false
 			_relaxed = 0.0

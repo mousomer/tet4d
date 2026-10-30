@@ -32,6 +32,14 @@ func run() -> Array:
 		var clean := _solve(FitState.new(), height, "new", 101)
 		if after < FitState.SCALE_FLOOR or clean < FitState.SCALE_FLOOR or not is_equal_approx(after, clean) or not state.settled():
 			failures.append("changed content must converge like clean entry, height %s" % height)
+	# A new piece name in a fixed-width label: new content, same measurements.
+	var renamed = FitState.new()
+	var settled_scale := _solve(renamed, 350.0, "old", 0)
+	var kept: Dictionary = renamed.observe(350.0, func(_h: float) -> float: return 200.0, 400.0, true, 100, 0.0, false, ["new"])
+	if not kept["compact"] or not is_equal_approx(float(kept["scale"]), settled_scale):
+		failures.append("a height-neutral edit must keep a settled fit, not replay its search")
+	if not is_equal_approx(_solve(renamed, 350.0, "new", 101), settled_scale):
+		failures.append("a height-neutral edit must stay at the settled scale")
 	var same_frame = FitState.new()
 	var room := func(_h: float) -> float: return 100.0
 	same_frame.observe(300.0, room, 400.0, true, 1, 0.0, false, ["x"])

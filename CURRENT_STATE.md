@@ -20,7 +20,7 @@ phase-dependent work. It is not workflow authority, a CI diary, a completed
 stage archive, a task-contract ledger, or a future programme.
 ## Active Focus
 
-UI/cockpit: DesignerPanelSession extracted; nine relevant suites pass. Evidence/limits: `docs/history/designer_panel_session_verification_2026_10_30.md`. Plan: `docs/plans/ui_cockpit_orchestration_repair.md`.
+UI/cockpit: review fixes for the resize round trip, a stale Designer test read and fit replay on new pieces. Evidence: `docs/history/ui_cockpit_review_fixes_verification_2026_10_30.md`. Plan: `docs/plans/ui_cockpit_orchestration_repair.md`.
 
 Machine-readable handoff state. `status` is `active` only on a feature branch
 or draft PR and must name that branch; it is `none` on the default branch and

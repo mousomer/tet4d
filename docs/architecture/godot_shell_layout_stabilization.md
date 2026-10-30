@@ -101,6 +101,10 @@ and spacing inputs. Compacted gaps use their recorded relaxed values. Measured
 wrapping, allocated sizes and fit scale are excluded because they change during
 probes. A changed key discards the old sample and restarts at relaxed full scale;
 thus editing an existing label or font cannot retain a completed stale fit.
+A settled group whose new sample matches its last one (same height, width and
+gap savings) keeps its fit: a new piece name in a fixed-width NEXT/HOLD label
+changes the key every piece, and restarting would replay the search visibly
+for the same result.
 Constraint changes and fresh-subtree cancellation keep their previous behavior.
 This remains local content invalidation; queued layout work is owned by the
 coordinator described below.
@@ -222,6 +226,11 @@ overflows at the readability floor.
   search from full scale, so the result depends on the current size and
   content, never on resize history. `LiveCockpit.fit_settled()` reports when
   every step has decided; layout checks wait for it.
+- The fit box places its content by hand, so it owns the placement invariant
+  (content size = box size / scale, at least the content minimum). A sort
+  during a resize can read a transient minimum, such as text still wrapped at
+  the old width, that settles back before Godot reports it; no re-sort follows.
+  An oversized placement is therefore re-checked on the next frame.
 - The Live 4D split column spans the whole stage height beside board and
   legend deck whenever the narrowed deck still holds the legend's single line
   with room for its scrollbar; otherwise the deck keeps the full width and the

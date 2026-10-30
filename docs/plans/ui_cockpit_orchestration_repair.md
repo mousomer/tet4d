@@ -234,6 +234,10 @@ passes regression cases after Load, Save and Save As. Shell extraction and F1/F4
 `docs/history/ui_cockpit_helper_fit_verification_2026_10_30.md`; broader
 integration/visual gates remain pending.
 
+Review fixes after the first completed remote Godot lane (resize round trip,
+stale Designer test read, fit replay on height-neutral edits) are recorded in
+`docs/history/ui_cockpit_review_fixes_verification_2026_10_30.md`.
+
 Phase 3 implementation and evidence are recorded in
 `docs/history/ui_cockpit_coordinator_verification_2026_10_30.md`. The coordinator
 owns scheduling revisions; measurements are read fresh rather than stored in
