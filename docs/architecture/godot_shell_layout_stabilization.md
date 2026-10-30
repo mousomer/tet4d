@@ -74,7 +74,8 @@ inside the reserved inspector.
 The accepted results and supplied pre-repair observations are locked in
 `docs/design/ui_cockpit_result_lock_2026_10_27.md`. The bounded plan is
 `docs/plans/ui_cockpit_orchestration_repair.md`; the helper-state extraction is
-implemented, while coordinator and session extraction remain pending.
+implemented, and ordinary layout scheduling/policy are extracted. Designer
+session and shell conversion extraction remain pending.
 Owner decision (2026-10-27): explicit Fit finishes the requested orbit before
 measuring size, anchor and board demand; normal orbit easing is unchanged.
 Leaving/restarting a helper-fit search clears pending/search state. These two
@@ -100,7 +101,30 @@ wrapping, allocated sizes and fit scale are excluded because they change during
 probes. A changed key discards the old sample and restarts at relaxed full scale;
 thus editing an existing label or font cannot retain a completed stale fit.
 Constraint changes and fresh-subtree cancellation keep their previous behavior.
-This is local content invalidation, not the planned context-generation coordinator.
+This remains local content invalidation; queued layout work is owned by the
+coordinator described below.
+
+## Layout coordination and policy
+
+`CockpitLayoutCoordinator`, owned as a child of LiveCockpit, is the only
+scheduler of ordinary cockpit policy/fit work. Metrics bursts and fit requests
+coalesce on one next-frame callback. Fit requests take priority because they
+already remeasure the current controls. Synchronous context setters call
+`apply_now`, which advances the scheduling generation, cancels obsolete queued
+work and applies immediately. Requests produced during application remain
+queued for a later measurement pass. Designer ownership changes invalidate
+old queued work without applying ordinary placement; tree exit disconnects it.
+Completion requires coordinator idle plus every helper state settled.
+
+Callbacks carry a scheduling generation and read fresh measurements. No queued
+callback stores a measured layout or a policy decision from an old context.
+`CockpitLayoutPolicy` computes placement, row packing, floor/gap decisions,
+row heights, deck room and rail spare-width choices from explicit measured
+values. It performs no scene-tree reads or mutation. LiveCockpit adapts measured
+controls into those inputs and applies the results. The previous second
+metrics flag, process-frame fit connection and deferred policy recheck path are
+removed. Godot's own container-sort notifications remain; detached Designer
+panel constraints remain with the session boundary pending phase 4.
 
 ## Responsive panel contract
 

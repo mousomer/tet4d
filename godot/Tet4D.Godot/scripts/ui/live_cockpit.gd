@@ -6,6 +6,8 @@ const DesignerPanelFrame = preload("res://scripts/ui/designer_panel_frame.gd")
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
 const ResponsivePanelPolicy = preload("res://scripts/ui/responsive_panel_policy.gd")
+const LayoutCoordinator = preload("res://scripts/ui/cockpit_layout_coordinator.gd")
+const LayoutPolicy = preload("res://scripts/ui/cockpit_layout_policy.gd")
 const HelperFitState = preload("res://scripts/ui/helper_fit_state.gd")
 const FitScaleContainerScript = preload("res://scripts/ui/fit_scale_container.gd")
 
@@ -18,9 +20,9 @@ const PROFILE_SMALL := "small"
 # display scale and by the requested UI scale. They are not logical viewport
 # coordinates, which stay pinned to the design resolution under canvas_items
 # stretch and therefore cannot express how large the shell actually looks.
-const WIDE_MIN_WIDTH := 1680.0
-const STANDARD_MIN_WIDTH := 1180.0
-const NARROW_MIN_WIDTH := 800.0
+const WIDE_MIN_WIDTH := LayoutPolicy.WIDE_MIN_WIDTH
+const STANDARD_MIN_WIDTH := LayoutPolicy.STANDARD_MIN_WIDTH
+const NARROW_MIN_WIDTH := LayoutPolicy.NARROW_MIN_WIDTH
 
 const MAX_DECK_ROWS := 3
 # Reflow buys width at a height cost: every extra control row adds height while
@@ -97,8 +99,7 @@ var _apparent_size := Vector2.ZERO
 var _density := "standard"
 var _responsive_profile := PROFILE_STANDARD
 var _row_assignment: Array = []
-var _packing_in_progress := false
-var _deck_metrics_check_queued := false
+var _layout_coordinator = LayoutCoordinator.new()
 var _last_packing_width := -1.0
 var _last_module_minimums := Vector3.ZERO
 var _last_module_heights := Vector3.ZERO
@@ -135,6 +136,7 @@ func set_designer_layout_enabled(enabled: bool, board: Control) -> void:
 	if enabled == _designer_enabled:
 		return
 	_designer_enabled = enabled
+	_layout_coordinator.invalidate()
 	if enabled:
 		# Detached frames size and scroll on their own; they take relaxed spacing.
 		_reset_fit()
@@ -229,6 +231,8 @@ func _constrain_designer_panels() -> void:
 
 
 func _init() -> void:
+	_layout_coordinator.configure(_apply_layout, _on_deck_metrics_changed)
+	add_child(_layout_coordinator)
 	name = "LiveCockpit"
 	add_theme_constant_override("separation", 4)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -340,15 +344,8 @@ func _init() -> void:
 # flush that sorts the containers it resized, so each pass would queue the
 # next and flood the message queue.
 func _queue_deck_metrics_check() -> void:
-	if _packing_in_progress or _deck_metrics_check_queued or not is_inside_tree():
-		return
-	_deck_metrics_check_queued = true
-	get_tree().process_frame.connect(_run_queued_deck_metrics_check, CONNECT_ONE_SHOT)
-
-
-func _run_queued_deck_metrics_check() -> void:
-	_deck_metrics_check_queued = false
-	_on_deck_metrics_changed()
+	if not _layout_coordinator.applying():
+		_layout_coordinator.request_metrics()
 
 
 func set_deck_placement(placement: String) -> void:
@@ -359,10 +356,7 @@ func set_deck_placement(placement: String) -> void:
 # A split column costs width a narrow window cannot spare, so narrow and small
 # shells fall back to the reflowing deck below the board.
 func _effective_placement() -> String:
-	if _requested_placement == PLACEMENT_SPLIT and _responsive_profile in [PROFILE_NARROW, PROFILE_SMALL]:
-		return PLACEMENT_BELOW
-	return _requested_placement
-
+	return LayoutPolicy.placement(_requested_placement, _responsive_profile)
 
 func _relocate(next_placement: String) -> void:
 	if next_placement == _placement:
@@ -416,14 +410,7 @@ func set_available_size(layout_size: Vector2, apparent_size: Vector2, density: S
 
 
 func responsive_profile_for_size(apparent_size: Vector2) -> String:
-	if apparent_size.x >= WIDE_MIN_WIDTH:
-		return PROFILE_WIDE
-	if apparent_size.x >= STANDARD_MIN_WIDTH:
-		return PROFILE_STANDARD
-	if apparent_size.x >= NARROW_MIN_WIDTH:
-		return PROFILE_NARROW
-	return PROFILE_SMALL
-
+	return LayoutPolicy.profile(apparent_size)
 
 func deterministic_snapshot() -> Dictionary:
 	return {
@@ -470,7 +457,7 @@ func deterministic_snapshot() -> Dictionary:
 # band starts at 800, so the arrangement has to follow measurement, not a
 # hard-coded shape. Module identity and order are preserved in every profile.
 func _on_deck_metrics_changed() -> void:
-	if _packing_in_progress:
+	if _layout_coordinator.applying():
 		return
 	var width := _packing_width()
 	var minimums := _module_minimums()
@@ -504,19 +491,18 @@ func _module_heights() -> Vector3:
 
 
 func _apply_responsive_policy() -> void:
+	_layout_coordinator.apply_now()
+
+
+func _apply_layout() -> void:
 	if _designer_enabled:
 		_constrain_designer_panels()
 		return
-	if _packing_in_progress:
-		return
-	_packing_in_progress = true
 	_responsive_profile = responsive_profile_for_size(_apparent_size) if _apparent_size.x > 0.0 else PROFILE_STANDARD
 	_relocate(_effective_placement())
 	if _placement == PLACEMENT_SIDE:
 		_apply_side_policy()
-		_packing_in_progress = false
-		if is_inside_tree():
-			call_deferred("_on_deck_metrics_changed")
+		_layout_coordinator.request_metrics()
 		return
 	control_deck.custom_minimum_size.x = 0.0
 	side_scroll.custom_minimum_size.x = clampf(_layout_size.x * SPLIT_COLUMN_WIDTH_SHARE, SPLIT_COLUMN_MIN_WIDTH, SPLIT_COLUMN_MAX_WIDTH) if _placement == PLACEMENT_SPLIT else 0.0
@@ -544,7 +530,7 @@ func _apply_responsive_policy() -> void:
 		var cap := _layout_size.y * MAX_DECK_HEIGHT_SHARE if _layout_size.y > 1.0 else INF
 		# The board keeps its reference allocation: the deck gives up exactly the
 		# missing height, measured against the relaxed legend.
-		var room_for := func(relaxed: float) -> float: return maxf(relaxed - shortfall, minf(relaxed, cap))
+		var room_for := func(relaxed: float) -> float: return LayoutPolicy.split_deck_room(relaxed, shortfall, cap)
 		natural_height = _fit_height("deck", [piece_controls], measure, room_for, _deck_settled())
 		# Compact: the room follows the recorded relaxed legend, not the compact one.
 		var deck_state = _fit_states.get("deck")
@@ -553,15 +539,8 @@ func _apply_responsive_policy() -> void:
 	else:
 		var measure := func() -> float: return _natural_height_for_rows(packed, row_height, deck_separation)
 		var height_cap := _layout_size.y * MAX_DECK_HEIGHT_SHARE if _layout_size.y > 1.0 else INF
-		var room := maxf(maxf(height_cap, row_height), _board_spare_height())
-		# Never more than the window leaves under the board's own minimum: a
-		# deck taller than that pushes itself, and its helpers, off-screen.
-		if _layout_size.y > 1.0:
-			var left := _stage_height() - primary_board_surface.get_combined_minimum_size().y - float(get_theme_constant("separation"))
-			room = minf(room, maxf(left, 0.0))
-		# But never below one row at the scale floor: a window too short for
-		# board, guide and deck together must not hide the helpers outright.
-		room = maxf(room, row_height * FIT_SCALE_FLOOR)
+		var left := _stage_height() - primary_board_surface.get_combined_minimum_size().y - float(get_theme_constant("separation"))
+		var room := LayoutPolicy.below_deck_room(height_cap, row_height, _board_spare_height(), left, _layout_size.y > 1.0, FIT_SCALE_FLOOR)
 		_deck_room = room
 		natural_height = _fit_height("deck", [piece_controls, view_controls, piece_state], measure, func(_relaxed: float) -> float: return room, _deck_settled())
 		deck_height = minf(natural_height, room)
@@ -583,12 +562,10 @@ func _apply_responsive_policy() -> void:
 	_last_module_minimums = _module_minimums()
 	_last_module_heights = _module_heights()
 	_last_header_height = _header_height()
-	_packing_in_progress = false
 	# Both packing inputs are only final after a layout pass, and the first pass
 	# may see a transient width. Re-check once the pass settles; the width and
 	# minimum guards make this converge rather than loop.
-	if is_inside_tree():
-		call_deferred("_on_deck_metrics_changed")
+	_layout_coordinator.request_metrics()
 
 
 # The share-based width is the rail's floor. Above it the rail grows to what its
@@ -602,7 +579,7 @@ func _rail_width() -> float:
 	var preferred := _rail_preferred_width()
 	if preferred <= base:
 		return base
-	return clampf(preferred, base, maxf(base, _rail_room_beside_board()))
+	return LayoutPolicy.rail_width(base, preferred, _rail_room_beside_board())
 
 
 # Widest content need among the rail's modules, plus room for the rail's own
@@ -656,10 +633,8 @@ func _rail_room_beside_board() -> float:
 		return 0.0
 	# Frame and padding between the board surface and the rendered viewport.
 	var inset := (primary_board_surface.size - _board_viewport.size).max(Vector2.ZERO)
-	var board_width := maxf(stage_height - inset.y, 0.0) * _board_aspect + inset.x
-	# The board surface's own minimum still binds when it exceeds the fit.
-	board_width = maxf(board_width, primary_board_surface.get_combined_minimum_size().x)
-	return _layout_size.x - DECK_HORIZONTAL_INSET - float(SIDE_RAIL_GAP) - board_width
+	return LayoutPolicy.rail_room(_layout_size.x, stage_height, inset, _board_aspect,
+		primary_board_surface.get_combined_minimum_size().x, DECK_HORIZONTAL_INSET + float(SIDE_RAIL_GAP))
 
 
 # The rail stacks visible modules top to bottom: what the player glances at
@@ -744,9 +719,7 @@ func _fit_height(group: String, modules: Array, measure: Callable, room_for: Cal
 # True once every fit group has decided: nothing awaits agreement, no scale
 # search is running and no settle pass is queued. Layout checks wait for it.
 func fit_settled() -> bool:
-	if _deck_metrics_check_queued:
-		return false
-	if is_inside_tree() and get_tree().process_frame.is_connected(_apply_responsive_policy):
+	if not _layout_coordinator.idle():
 		return false
 	for group in _fit_states:
 		var state = _fit_states[group]
@@ -780,8 +753,7 @@ func _fit_host(group: String) -> ScrollContainer:
 # The toggling pass already sees part of the new minimums, so the metric guard
 # can miss the change. Re-measure once the next frame has laid it out.
 func _schedule_fit_settle() -> void:
-	if is_inside_tree() and not get_tree().process_frame.is_connected(_apply_responsive_policy):
-		get_tree().process_frame.connect(_apply_responsive_policy, CONNECT_ONE_SHOT)
+	_layout_coordinator.request_fit()
 
 
 func _set_compact(modules: Array, enabled: bool) -> int:
@@ -854,7 +826,7 @@ func _deck_settled() -> bool:
 func _stage_height() -> float:
 	if _layout_size.y <= 1.0:
 		return 0.0
-	return maxf(_layout_size.y - DECK_VERTICAL_INSET - _header_height() - float(get_theme_constant("separation")) * 2.0, 0.0)
+	return LayoutPolicy.stage_height(_layout_size.y, _header_height(), DECK_VERTICAL_INSET, float(get_theme_constant("separation")))
 
 
 func _board_spare_height() -> float:
@@ -887,28 +859,11 @@ func _host_widths() -> Vector2:
 
 
 func _pack_rows(available: float, row_separation: int) -> Array:
-	# NEXT/HOLD first, as in the rail and the split column: when a short window
-	# can show only one row, it is the one the player glances at most.
-	var modules := [piece_controls] if _placement == PLACEMENT_SPLIT else [piece_state, piece_controls, view_controls]
-	if available <= 0.0:
-		return [modules.map(func(module): return str((module as Control).name))]
-	var rows: Array = []
-	var current: Array = []
-	var current_width := 0.0
-	for module in modules:
-		var module_width: float = (module as Control).get_combined_minimum_size().x
-		var addition := module_width if current.is_empty() else module_width + float(row_separation)
-		if not current.is_empty() and current_width + addition > available:
-			rows.append(current)
-			current = [str((module as Control).name)]
-			current_width = module_width
-		else:
-			current.append(str((module as Control).name))
-			current_width += addition
-	if not current.is_empty():
-		rows.append(current)
-	return rows
-
+	var sources := [piece_controls] if _placement == PLACEMENT_SPLIT else [piece_state, piece_controls, view_controls]
+	var measurements: Array = []
+	for module in sources:
+		measurements.append({"name": str(module.name), "width": module.get_combined_minimum_size().x})
+	return LayoutPolicy.pack_rows(measurements, available, row_separation)
 
 func _apply_row_assignment(packed: Array, row_separation: int) -> void:
 	var module_by_name := {
@@ -940,44 +895,18 @@ func _apply_row_assignment(packed: Array, row_separation: int) -> void:
 
 
 func _natural_height_for_rows(packed: Array, profile_floor: float, row_separation: int) -> float:
-	var module_by_name := {
-		str(piece_controls.name): piece_controls,
-		str(view_controls.name): view_controls,
-		str(piece_state.name): piece_state,
-	}
-	var height := 0.0
-	for names in packed:
-		var measured_row_height := profile_floor
-		for name_value in names:
-			measured_row_height = maxf(
-				measured_row_height,
-				(module_by_name[str(name_value)] as Control).get_combined_minimum_size().y
-			)
-		height += measured_row_height
-	# Rows stack in deck_row_host, so its own gap separates them; a style's
-	# theme can set that gap, and assuming another one misjudges a tight fit.
+	var heights: Dictionary = {}
+	for module in [piece_controls, view_controls, piece_state]:
+		heights[str(module.name)] = module.get_combined_minimum_size().y
 	var gap := maxi(row_separation, deck_row_host.get_theme_constant("separation"))
-	return height + float(gap * maxi(packed.size() - 1, 0))
-
+	return LayoutPolicy.rows_height(packed, heights, profile_floor, gap)
 
 func _row_height_for_profile() -> float:
-	var base := 150.0 if _density == "compact" else 220.0
-	match _responsive_profile:
-		PROFILE_NARROW:
-			return minf(base, 170.0)
-		PROFILE_SMALL:
-			return minf(base, 150.0)
-	return base
+	return LayoutPolicy.row_height(_responsive_profile, _density)
 
 
 func _row_separation_for_profile() -> int:
-	match _responsive_profile:
-		PROFILE_NARROW:
-			return 8
-		PROFILE_SMALL:
-			return 6
-	return 10
-
+	return LayoutPolicy.row_separation(_responsive_profile)
 
 func _widest_module_minimum() -> float:
 	return maxf(

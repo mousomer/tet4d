@@ -41,8 +41,10 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   HelperFitState API. Full integration/manual acceptance remains pending.
 - [x] Phase 2: extract HelperFitState and migrate private R2 state fixtures;
   focused state/cockpit/locked-layout suites pass.
-- [ ] Extract policy/coordinator, Designer session and shell conversion
-  incrementally against the locked results.
+- [x] Phase 3: extract ordinary cockpit scheduling into one coordinator and
+  numeric layout decisions into a pure policy. Focused scheduling, layout and
+  style-matrix checks pass; full/manual acceptance remains pending.
+- [ ] Extract Designer session and shell conversion against the locked results.
 - Owner now authorizes relevant tests. Focused camera/cockpit/Designer/profile
   suites pass; full gate, remote CI and manual/capture acceptance are pending.
   Evidence: `docs/history/ui_cockpit_focused_verification_2026_10_30.md`.
