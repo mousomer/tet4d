@@ -28,6 +28,7 @@ func run() -> Array:
 	var catalog = CatalogScript.new(registry)
 	failures.append_array(await _test_menu_entry(tree, app, hud))
 	failures.append_array(await _test_runtime_matrix(tree, app, scenarios, catalog))
+	failures.append_array(await _test_capture_readiness(tree, app, hud, scenarios, catalog))
 
 	root.queue_free()
 	await tree.process_frame
@@ -141,4 +142,69 @@ func _test_runtime_matrix(tree: SceneTree, app, scenarios, catalog) -> Array:
 			await tree.process_frame
 			if DesignValueScript.canonical_hash(app._design_laboratory_fingerprint()) != before_hash:
 				failures.append("rendering %s accumulated hidden non-style state in %s" % [style_id, scenario_id])
+	return failures
+
+
+func _test_capture_readiness(tree: SceneTree, app, hud, scenarios, catalog) -> Array:
+	var failures: Array = []
+	var records: Array = scenarios.list_scenarios()
+	var scenario: Dictionary = {}
+	for record in records:
+		if str(record.get("scenario_id", "")) == "live_4d_next_hold_ghost_v1":
+			scenario = record
+	var loaded: Dictionary = app._load_design_laboratory_scenario(scenario)
+	var styles: Array = catalog.list_styles()
+	var profile = catalog.style_profile(str(styles.back().get("style_id"))).get("profile")
+	if not bool(loaded.get("ok", false)) or profile == null:
+		return ["capture readiness requires an actual deterministic scenario and profile"]
+	profile = profile.with_overrides({"display.ui_scale": "large"})
+	if not app.restore_presentation_design(profile):
+		return ["capture readiness must apply the complete production profile"]
+	if bool(app._design_capture_readiness().get("ready", true)):
+		failures.append("capture readiness must include the application's pending profile guard")
+	var previous := ""
+	var stable := false
+	for _frame in range(int(ProjectSettings.get_setting("design_lab/capture/max_settle_frames", 0))):
+		await tree.process_frame
+		var observation: Dictionary = app._design_capture_readiness()
+		var token := str(observation.get("token", ""))
+		if bool(observation.get("ready", false)) and token == previous:
+			stable = true
+			break
+		previous = token if bool(observation.get("ready", false)) else ""
+	if not stable:
+		failures.append("production layout and camera must reach a stable ready observation within the configured budget")
+	hud.apply_shell_settings()
+	await tree.process_frame
+	# State is observational: reading it cannot mutate native scenario identity.
+	if DesignValueScript.canonical_hash(app._design_laboratory_fingerprint()) != str(loaded.get("fingerprint_hash", "")):
+		failures.append("capture readiness must preserve the native/non-style scenario fingerprint")
+	# Replay owns no live helper fit. A hidden cockpit cannot keep capture busy.
+	for record in records:
+		if str(record.get("scenario_id", "")) == "plain_2d_sparse_v1":
+			app._load_design_laboratory_scenario(record)
+	app.restore_presentation_design(profile)
+	stable = false
+	previous = ""
+	for _frame in range(int(ProjectSettings.get_setting("design_lab/capture/max_settle_frames", 0))):
+		await tree.process_frame
+		var replay_ready: Dictionary = app._design_capture_readiness()
+		var replay_token := str(replay_ready.get("token", ""))
+		if bool(replay_ready.get("ready", false)) and replay_token == previous:
+			stable = true
+			break
+		previous = replay_token if bool(replay_ready.get("ready", false)) else ""
+	if not stable:
+		failures.append("replay capture must become ready without inactive live-helper probes")
+	# A complete-profile round trip in 3D must invalidate the capture token too,
+	# even though that mode does not use the 4D framing guard.
+	for record in records:
+		if str(record.get("scenario_id", "")) == "live_3d_next_hold_ghost_v1":
+			app._load_design_laboratory_scenario(record)
+	var token_before: String = str(app._design_capture_readiness().get("token", ""))
+	app.restore_presentation_design(profile)
+	var token_after: String = str(app._design_capture_readiness().get("token", ""))
+	app.restore_presentation_design(profile)
+	if token_after == token_before or str(app._design_capture_readiness().get("token", "")) == token_after:
+		failures.append("every 3D profile application must invalidate capture readiness, including equal-snapshot round trips")
 	return failures

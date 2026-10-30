@@ -1059,12 +1059,12 @@ func _build_presentation_designer() -> void:
 	_live_cockpit.designer_geometry_changed.connect(_presentation_designer.synchronize_panel_geometry)
 	_presentation_designer.comparison.changed.connect(_update_live_view_action_labels)
 	_presentation_designer.comparison_activate = func(side: String) -> bool:
-		if _design_laboratory != null and _design_laboratory._comparison.active():
-			return _design_laboratory._activate_arm(side)
+		if _design_laboratory != null and _design_laboratory.comparison_active():
+			return _design_laboratory.show_comparison_arm(side)
 		return _presentation_designer.preview_comparison_snapshot(side)
 	_presentation_designer.comparison_edit_requested = func() -> void:
 		if _design_laboratory != null:
-			_design_laboratory._comparison.end()
+			_design_laboratory.end_comparison()
 	_presentation_designer.panel_focus_requested.connect(_live_cockpit.raise_designer_panel)
 	_presentation_designer.profile_preview_requested.connect(func(profile, restore_geometry: bool) -> void:
 		if restore_geometry:
@@ -1420,6 +1420,21 @@ func show_replay_viewer() -> void:
 
 func current_screen() -> String:
 	return _current_screen
+
+
+func capture_layout_observation() -> Dictionary:
+	var viewport := game_viewport()
+	return {
+		"ready": viewport != null and viewport.size.x > 0 and viewport.size.y > 0 and (_live_cockpit == null or _live_cockpit.fit_settled()),
+		"screen": _current_screen,
+		"canvas": get_viewport_rect(),
+		"ui_scale": _ui_scale_factor,
+		"safe_area": safe_area_insets(),
+		"surface": game_viewport_global_rect(),
+		"render_size": viewport.size if viewport != null else Vector2i.ZERO,
+		"generation": _live_cockpit.layout_generation() if _live_cockpit != null else 0,
+		"cockpit": _live_cockpit.deterministic_snapshot() if _live_cockpit != null else {},
+	}
 
 
 func game_viewport_render_delta(root_delta: Vector2) -> Vector2:

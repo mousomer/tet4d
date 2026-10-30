@@ -15,6 +15,7 @@ const TEST_SCRIPTS := [
 	"res://tests/test_built_in_style_catalog.gd",
 	"res://tests/test_design_evaluation_laboratory.gd",
 	"res://tests/test_design_laboratory_runtime.gd",
+	"res://tests/test_design_capture_operation.gd",
 	"res://tests/test_product_bootstraps.gd",
 	"res://tests/test_cross_platform_design_boundary.gd",
 	"res://tests/test_shell_settings_store.gd",

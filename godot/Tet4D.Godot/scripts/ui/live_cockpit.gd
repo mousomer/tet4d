@@ -660,6 +660,10 @@ func _fit_height(group: String, modules: Array, measure: Callable, room_for: Cal
 	return natural * scale
 
 
+func layout_generation() -> int:
+	return _layout_coordinator.generation()
+
+
 # True once every fit group has decided: nothing awaits agreement, no scale
 # search is running and no settle pass is queued. Layout checks wait for it.
 func fit_settled() -> bool:

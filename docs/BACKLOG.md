@@ -38,7 +38,9 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   pass; full integration/manual acceptance remains pending.
 - [ ] R2 / P3: cancel abandoned helper search and pending measurements.
   Focused cockpit/state cases pass; fixtures migrated to the public
-  HelperFitState API. Full integration/manual acceptance remains pending.
+  HelperFitState API. Inactive live-deck work is cancelled at the owner;
+  evidence: `docs/history/inactive_cockpit_verification_2026_10_30.md`.
+  Full integration/manual acceptance remains pending.
 - [x] Phase 2: extract HelperFitState and migrate private R2 state fixtures;
   focused state/cockpit/locked-layout suites pass.
 - [x] Phase 3: extract ordinary cockpit scheduling into one coordinator and
@@ -49,7 +51,8 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 - [x] Extract shell conversion and fix F1 against the locked results; focused
   evidence: `docs/history/shell_viewport_layout_verification_2026_10_30.md`.
 - Owner now authorizes relevant tests. Focused camera/cockpit/Designer/profile
-  suites pass; full gate, remote CI and manual/capture acceptance are pending.
+  suites and full local gates pass; published-head CI and owner acceptance
+  remain required. Capture/runtime evidence is recorded in the F4 history.
   Evidence: `docs/history/ui_cockpit_focused_verification_2026_10_30.md`.
 - Continue on `codex/ui-cockpit-orchestration`; master `9b2a7e43` is integrated
   at `91987bb1`. Original evidence remains based on `e37441bb`; other checkouts
@@ -65,14 +68,20 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   Evidence: `docs/history/ui_cockpit_helper_fit_verification_2026_10_30.md`.
 - [x] F3 / P2: owner Reset uses the current saved/loaded design baseline;
   regressions pass after Load, Save and Save As, with owner/storage isolation.
-- [ ] F4 / P2: implement the readiness handshake, serialized capture lifetime
-  and post-await session/arm/fingerprint checks in repair-plan steps 2–3.
+- [x] F4 / P2: readiness handshake, serialized capture lifetime and post-await
+  identity/profile checks implemented. Focused and real macOS 3D/4D captures
+  pass; evidence: `docs/history/design_capture_verification_2026_10_30.md`.
 - [ ] Complete dependency/composition review, integrated local gates, manual
   acceptance and exact-head/merged-master CI per repair-plan steps 4–6.
 - [x] F5 / P3: align the owning camera contract, authority map and dependent
   Fit references with the owner-approved pending-orbit exception. Replace the
   published machine-local capture path with a portable evidence ID and state
   retrieval limits; update the immediate handoff acceptance boundary.
+
+- [ ] Replay toolbar at 1280×720: rendered controls extend beyond the root
+  image in capture evidence `tet4d-window-capture-pp_xdorx`. Assess against the
+  historical baseline before a bounded responsive repair; toolbar construction
+  is unchanged by orchestration work. No scale/framing retuning in this batch.
 
 ### P1 fullscreen panels, live helpers and menu responsiveness
 

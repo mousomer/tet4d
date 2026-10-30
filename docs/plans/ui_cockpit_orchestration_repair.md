@@ -1,6 +1,6 @@
 # UI and cockpit orchestration repair plan
 
-Updated: 2026-10-30. Implementation checkpoint: `2049ff26` on
+Updated: 2026-10-30. Implementation base: `5f139ef2`, with F4 in this change, on
 `codex/ui-cockpit-orchestration`, draft PR #162. This document owns sequencing
 and acceptance; `docs/BACKLOG.md` owns open-task status and `docs/history/`
 owns execution records. Planned work below is not implemented evidence.
@@ -38,22 +38,26 @@ publication-only final-LF correction. Leave other checkouts untouched.
 | F3: group Reset uses saved/loaded baseline | Implemented; Load, Save and Save As regressions | Integrated Designer review |
 | Phase 5 / F1: shell conversions and pan distance | Implemented at `2049ff26`; old input handler reproduces four failures | Physical pointer/HiDPI review |
 | F5: Fit documentation consistency | Reconciled | Preserve during final docs review |
-| F4: settled, identity-safe laboratory capture | Open | Steps 2–3 below |
-| Final composition review, full gate and owner acceptance | Open | Steps 4–6 below |
+| F4: settled, identity-safe laboratory capture | Implemented; focused and real-window 3D/4D pair capture pass | Final integrated/owner review |
+| Final composition review, full gate and owner acceptance | Dependency review and local gates completed; publication CI/owner review pending | Steps 5–6 below |
 
 At `2049ff26`, 12 focused scripts and the separate six-style 3D/4D matrix
 passed. Publication formatting, scoped sanitation and governance checks passed.
 Claude base `32752f8b` completed remote CI successfully; run `41103770668` for
-`2049ff26` was in progress when this plan was updated. This is a dated snapshot,
-not a claim about a future head. The full local repository gate and human
-acceptance for the current phase remain pending.
+`2049ff26` also completed successfully. This is a dated snapshot,
+not a claim about a future head. The final local repository and pinned Godot gates passed (94 scripts and
+59 shared transport cases). Exact publication-head CI and owner acceptance
+remain required.
 
 Evidence: `docs/history/ui_cockpit_focused_verification_2026_10_30.md`,
 `ui_cockpit_helper_fit_verification_2026_10_30.md`,
 `ui_cockpit_coordinator_verification_2026_10_30.md`,
 `designer_panel_session_verification_2026_10_30.md`,
 `ui_cockpit_review_fixes_verification_2026_10_30.md` and
-`shell_viewport_layout_verification_2026_10_30.md`, all under `docs/history/`.
+`shell_viewport_layout_verification_2026_10_30.md`,
+`helper_fit_idle_verification_2026_10_30.md`,
+`inactive_cockpit_verification_2026_10_30.md` and
+`design_capture_verification_2026_10_30.md`, all under `docs/history/`.
 Historical static findings remain in
 `docs/plans/ui_cockpit_code_review_2026_10_27.md`; current status is above.
 
