@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-10-30
+Updated: 2026-10-31
 Scope: active work, explicit deferrals, and near-term acceptance boundaries.
 
 Completed chronology is recoverable from Git, merged PRs, CI, and
@@ -23,65 +23,25 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ## Active Work
 
-### UI and cockpit orchestration repair
+### UI and cockpit follow-up
 
-- [x] Correct baseline publication: append one LF, retain original provenance
-  hash and record published hash; regression covers the actual formatter and
-  the exact normalization. Run canonical text formatting before each push.
+The orchestration repair and R1/R2/F1–F5 were accepted after owner review on
+2026-10-31, with known issues retained. Acceptance/evidence:
+`docs/history/ui_cockpit_owner_acceptance_2026_10_31.md`; implementation plan:
+`docs/plans/ui_cockpit_orchestration_repair.md`. Publication and merged-master
+checks are tracked on PR #162; acceptance does not assert historical PNG parity.
 
-- [x] Record result lock, committed-master source identity and supplied windowed
-  baseline: `docs/design/ui_cockpit_result_lock_2026_10_27.md`.
-- [x] Detail bounded implementation phases in
-  `docs/plans/ui_cockpit_orchestration_repair.md`; this backlog owns task status.
-- [ ] R1 / P2: owner-approved finish-orbit-then-fit behavior, post-easing corner
-  containment and relative-control notification. Focused camera/cockpit suites
-  pass; full integration/manual acceptance remains pending.
-- [ ] R2 / P3: cancel abandoned helper search and pending measurements.
-  Focused cockpit/state cases pass; fixtures migrated to the public
-  HelperFitState API. Inactive live-deck work is cancelled at the owner;
-  evidence: `docs/history/inactive_cockpit_verification_2026_10_30.md`.
-  Full integration/manual acceptance remains pending.
-- [x] Phase 2: extract HelperFitState and migrate private R2 state fixtures;
-  focused state/cockpit/locked-layout suites pass.
-- [x] Phase 3: extract ordinary cockpit scheduling into one coordinator and
-  numeric layout decisions into a pure policy. Focused scheduling, layout and
-  style-matrix checks pass; full/manual acceptance remains pending.
-- [x] Phase 4: extract DesignerPanelSession; synchronous restoration and stale-
-  callback/reopen regressions pass through public APIs.
-- [x] Extract shell conversion and fix F1 against the locked results; focused
-  evidence: `docs/history/shell_viewport_layout_verification_2026_10_30.md`.
-- Owner now authorizes relevant tests. Focused camera/cockpit/Designer/profile
-  suites and full local gates pass; published-head CI and owner acceptance
-  remain required. Capture/runtime evidence is recorded in the F4 history.
-  Evidence: `docs/history/ui_cockpit_focused_verification_2026_10_30.md`.
-- Continue on `codex/ui-cockpit-orchestration`; master `9b2a7e43` is integrated
-  at `91987bb1`. Original evidence remains based on `e37441bb`; other checkouts
-  and independent branches are outside this batch.
-- Published R1/R2 and result lock at `52986aa2`. Static follow-up findings:
-  `docs/plans/ui_cockpit_code_review_2026_10_27.md`.
-- [x] F1 / P2: convert root-input pan deltas through the actual gameplay render
-  surface; projected-distance regressions preserve reflection signs. Manual
-  pointer/device acceptance remains pending.
-- [x] F2 / P2: invalidate completed fits on intrinsic content/theme changes;
-  existing-label/font edits match clean entry without probe-induced restarts.
-  Repeated unchanged observations must retain idle state for capture readiness.
-  Evidence: `docs/history/ui_cockpit_helper_fit_verification_2026_10_30.md`.
-- [x] F3 / P2: owner Reset uses the current saved/loaded design baseline;
-  regressions pass after Load, Save and Save As, with owner/storage isolation.
-- [x] F4 / P2: readiness handshake, serialized capture lifetime and post-await
-  identity/profile checks implemented. Focused and real macOS 3D/4D captures
-  pass; evidence: `docs/history/design_capture_verification_2026_10_30.md`.
-- [ ] Complete dependency/composition review, integrated local gates, manual
-  acceptance and exact-head/merged-master CI per repair-plan steps 4–6.
-- [x] F5 / P3: align the owning camera contract, authority map and dependent
-  Fit references with the owner-approved pending-orbit exception. Replace the
-  published machine-local capture path with a portable evidence ID and state
-  retrieval limits; update the immediate handoff acceptance boundary.
-
+- [ ] Designer text sizing: owner reports that text is too large. Reproduce
+  effective font/control scale in windowed/fullscreen Designer, then plan a
+  bounded proportional reduction with readable controls and reachable actions.
+  Preserve gameplay viewport, board geometry and the accepted cockpit result;
+  do not mix this follow-up into the accepted orchestration repair.
 - [ ] Replay toolbar at 1280×720: rendered controls extend beyond the root
   image in capture evidence `tet4d-window-capture-pp_xdorx`. Assess against the
   historical baseline before a bounded responsive repair; toolbar construction
   is unchanged by orchestration work. No scale/framing retuning in this batch.
+- [ ] Main-menu intrinsic-content fit invalidation remains an unconfirmed
+  review concern; establish a normal-user trigger before promoting a defect.
 
 ### P1 fullscreen panels, live helpers and menu responsiveness
 

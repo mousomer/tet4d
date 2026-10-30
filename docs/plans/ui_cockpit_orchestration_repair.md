@@ -1,6 +1,6 @@
 # UI and cockpit orchestration repair plan
 
-Updated: 2026-10-30. Implementation base: `5f139ef2`, with F4 in this change, on
+Updated: 2026-10-31. Implementation base: `5f139ef2`, with F4 in this change, on
 `codex/ui-cockpit-orchestration`, draft PR #162. This document owns sequencing
 and acceptance; `docs/BACKLOG.md` owns open-task status and `docs/history/`
 owns execution records. Planned work below is not implemented evidence.
@@ -30,24 +30,26 @@ publication-only final-LF correction. Leave other checkouts untouched.
 
 | Work | Implementation | Remaining acceptance |
 | --- | --- | --- |
-| R1: Fit finishes the existing pending orbit, then fits | Implemented; actual projected-corner regression and orientation notification | Integrated rail/visual review |
-| R2: cancel abandoned helper search and pending samples | Implemented; public HelperFitState transition coverage | Integrated transition/manual review |
-| Phase 2 / F2: helper state and intrinsic-content invalidation | Implemented; height-neutral edits preserve settled fits | Integrated review |
-| Phase 3: sole cockpit scheduler and pure layout policy | Implemented; generation-bound callbacks; resize-roundtrip fix retained | Final dependency audit |
-| Phase 4: DesignerPanelSession lifecycle | Implemented; synchronous restoration and close/reopen regression | Integrated Designer review |
-| F3: group Reset uses saved/loaded baseline | Implemented; Load, Save and Save As regressions | Integrated Designer review |
-| Phase 5 / F1: shell conversions and pan distance | Implemented at `2049ff26`; old input handler reproduces four failures | Physical pointer/HiDPI review |
+| R1: Fit finishes the existing pending orbit, then fits | Implemented; actual projected-corner regression and orientation notification | Owner accepted 2026-10-31 |
+| R2: cancel abandoned helper search and pending samples | Implemented; public HelperFitState transition coverage | Owner accepted 2026-10-31 |
+| Phase 2 / F2: helper state and intrinsic-content invalidation | Implemented; height-neutral edits preserve settled fits | Owner accepted 2026-10-31 |
+| Phase 3: sole cockpit scheduler and pure layout policy | Implemented; generation-bound callbacks; resize-roundtrip fix retained | Dependency audit complete |
+| Phase 4: DesignerPanelSession lifecycle | Implemented; synchronous restoration and close/reopen regression | Owner accepted 2026-10-31 |
+| F3: group Reset uses saved/loaded baseline | Implemented; Load, Save and Save As regressions | Owner accepted 2026-10-31 |
+| Phase 5 / F1: shell conversions and pan distance | Implemented at `2049ff26`; old input handler reproduces four failures | Owner accepted; device evidence remains bounded |
 | F5: Fit documentation consistency | Reconciled | Preserve during final docs review |
-| F4: settled, identity-safe laboratory capture | Implemented; focused and real-window 3D/4D pair capture pass | Final integrated/owner review |
-| Final composition review, full gate and owner acceptance | Dependency review and local gates completed; publication CI/owner review pending | Steps 5–6 below |
+| F4: settled, identity-safe laboratory capture | Implemented; focused and real-window 3D/4D pair capture pass | Owner accepted 2026-10-31 |
+| Final composition review, full gate and owner acceptance | Dependency/local gates complete; owner accepted; publication/master CI required | Steps 5–6 below |
 
 At `2049ff26`, 12 focused scripts and the separate six-style 3D/4D matrix
 passed. Publication formatting, scoped sanitation and governance checks passed.
 Claude base `32752f8b` completed remote CI successfully; run `41103770668` for
 `2049ff26` also completed successfully. This is a dated snapshot,
 not a claim about a future head. The final local repository and pinned Godot gates passed (94 scripts and
-59 shared transport cases). Exact publication-head CI and owner acceptance
-remain required.
+59 shared transport cases). Remote run `41113454645` passed for implementation
+head `0d91729b`. Owner review accepted that implementation on 2026-10-31, while
+retaining the too-large Designer text as separate work. The acceptance-only
+documentation head and merged master still require their own CI verification.
 
 Evidence: `docs/history/ui_cockpit_focused_verification_2026_10_30.md`,
 `ui_cockpit_helper_fit_verification_2026_10_30.md`,
@@ -60,6 +62,10 @@ Evidence: `docs/history/ui_cockpit_focused_verification_2026_10_30.md`,
 `design_capture_verification_2026_10_30.md`, all under `docs/history/`.
 Historical static findings remain in
 `docs/plans/ui_cockpit_code_review_2026_10_27.md`; current status is above.
+
+Owner acceptance: `docs/history/ui_cockpit_owner_acceptance_2026_10_31.md`.
+Designer text sizing and replay-toolbar assessment stay in `docs/BACKLOG.md`;
+acceptance does not imply those issues were fixed or promote a visual baseline.
 
 ## Ownership to preserve
 
