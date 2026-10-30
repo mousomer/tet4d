@@ -30,13 +30,16 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 - [x] Detail bounded implementation phases in
   `docs/plans/ui_cockpit_orchestration_repair.md`; this backlog owns task status.
 - [ ] R1 / P2: owner-approved finish-orbit-then-fit behavior, post-easing corner
-  containment and relative-control notification. Source/case prepared, not run.
+  containment and relative-control notification. Focused camera/cockpit suites
+  pass; full integration/manual acceptance remains pending.
 - [ ] R2 / P3: cancel abandoned helper search and pending measurements.
-  Source/cases prepared, not run; migrate private fixtures with HelperFitState.
+  Focused cockpit cases pass; migrate private fixtures with HelperFitState
+  and retain full integration/manual acceptance.
 - [ ] Extract helper state, policy/coordinator, Designer session and shell
   conversion incrementally against the locked results. Broad work not started.
-- No tests, application/CI or capture runs under the current owner instruction;
-  only secrets/string sanitation. Existing recordings are historical evidence.
+- Owner now authorizes relevant tests. Focused camera/cockpit/Designer/profile
+  suites pass; full gate, remote CI and manual/capture acceptance are pending.
+  Evidence: `docs/history/ui_cockpit_focused_verification_2026_10_30.md`.
 - Continue on `codex/ui-cockpit-orchestration`; master `9b2a7e43` is integrated
   at `91987bb1`. Original evidence remains based on `e37441bb`; other checkouts
   and independent branches are outside this batch.
@@ -46,7 +49,8 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   gameplay render surface; preserve reflection signs.
 - [ ] F2 / P2: invalidate completed helper fits on content/theme changes,
   including edits to existing controls at unchanged host constraints.
-- [ ] F3 / P2: make owner Reset use the current saved/loaded design baseline.
+- [x] F3 / P2: owner Reset uses the current saved/loaded design baseline;
+  regressions pass after Load, Save and Save As, with owner/storage isolation.
 - [ ] F4 / P2, adjacent follow-up: capture only a settled layout generation,
   with session/arm/fingerprint revalidation after asynchronous waits.
 - [x] F5 / P3: align the owning camera contract, authority map and dependent

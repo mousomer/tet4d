@@ -19,9 +19,10 @@ reparent protection and next-frame metric checks alongside R1/R2. The original
 pre-repair evidence identity remains `e37441bb`; no new baseline was promoted.
 
 Status: result lock recorded; R1/R2 source fixes and regression cases prepared;
-functional verification pending. Broad extraction has not started. The owner
-forbids test execution except secrets/string sanitation, so the verification
-steps below are future acceptance requirements, not commands to run now.
+focused camera/cockpit/Designer/profile suites pass. Broad extraction has not
+started. The owner now authorizes relevant tests; full gate, remote CI and
+manual acceptance remain pending. F3 is fixed against the existing contract.
+Evidence: `docs/history/ui_cockpit_focused_verification_2026_10_30.md`.
 Scoped secrets/string sanitation covers the 16 changed/new files: no secrets
 or newly introduced string/whitespace issues. Existing RDS formatting and the
 byte-preserved observation file are retained. This is not functional evidence.
@@ -40,7 +41,7 @@ The coupling is concentrated in `ReplayHud` and `LiveCockpit`:
   difficult to identify which context a measurement or callback belongs to.
 - Camera fitting and rail budgeting need one geometric observation. Review found
   R1 mixing poses and R2 leaving abandoned fitting state busy; their repairs
-  remain functionally unverified.
+  now have focused automated evidence; broader acceptance remains pending.
 
 The goal is explicit ownership and bounded state transitions. Smaller files are
 useful only when they remove shared mutable state and private cross-owner access.
@@ -64,7 +65,8 @@ actual cuboid corners through Camera3D into the viewport; they must remain
 contained and the pose/fit size must stay stable. Do not accept only immediate
 assertions of the fit's cached span. The regression in `test_camera_rig.gd` uses
 public pose snapshots, projected corners and the normal orientation signal.
-It is prepared but has not run. Production rail integration remains a later gate.
+The focused camera case passes. Full production rail/visual acceptance remains
+a later gate.
 
 ### R2: cancel the whole helper-fit search
 
@@ -128,7 +130,7 @@ mechanisms where suitable; do not create competing implementations.
 | Phase | Work | Completion boundary |
 | --- | --- | --- |
 | 0 | Record result lock, source identity and evidence limits. | Accepted output is explicit; no new acceptance claim. |
-| 1 | R1/R2 fixes only, with regression cases. | Source review now; functional and production integration evidence pending authorization. |
+| 1 | R1/R2 fixes only, with regression cases. | Focused camera/cockpit suites pass; broader integration and visual acceptance pending. |
 | 2 | Extract `HelperFitState`; keep current policy and view tree. | One group owner, same decisions/floors; migrate R2 fixtures from `_fit_states` to the new public state/transition API in this same phase. |
 | 3 | Separate policy/measurement/application; establish coordinator as the sole layout scheduler. | Same packing, budgets and result lock; obsolete callbacks cannot apply; idle work is bounded. |
 | 4 | Extract Designer session lifecycle and replace private cross-owner access with public adapters. | Geometry/profile isolation and ordinary-layout restoration preserved. |
@@ -143,8 +145,8 @@ Do not combine extraction with UI polish or scale/framing changes.
 
 ## Acceptance and verification plan
 
-No functional or visual acceptance step below has been executed for this
-change. Source review, inspection of existing records and string sanitation are permitted now.
+Focused automated evidence is recorded separately; it does not establish all
+functional or visual acceptance steps below. Relevant tests are now permitted.
 
 0. Preserve the supplied 2026-10-26 observations (three identical runs, 410
    observations, zero recorded failures) as historical pre-repair evidence. See
@@ -170,7 +172,7 @@ change. Source review, inspection of existing records and string sanitation are 
    with any visible differences identified. A passing geometry check or source
    manifest does not establish visual acceptance.
 
-While execution remains prohibited, keep the implementation marked unverified.
+Keep unexecuted acceptance boundaries explicitly pending.
 Do not publish/merge these changes as functionally accepted or silently mark
 future gates complete. Record authorized evidence before completing a phase.
 
@@ -213,15 +215,16 @@ continued review. The findings and exact source paths are recorded in
   preserve current pan signs and prove root-space movement across display scales.
 - F2: phase 2's helper state and phase 3's coordinator must invalidate completed
   fits on content/theme generation changes, not only host constraints.
-- F3: repair group Reset against the current saved/loaded baseline as a small
-  separate correctness change before extracting Designer lifecycle in phase 4.
+- F3: repaired group Reset against the current saved/loaded baseline, with
+  focused Load/Save/Save As regressions passing before phase 4 extraction.
 - F4: keep laboratory capture settling and asynchronous identity validation as
   an adjacent explicit follow-up; do not hide it inside the cockpit extraction.
 - F5: documentation reconciliation is implemented across the owning camera
   contract, authority map and dependent Fit references. Evidence metadata now
   uses a portable capture ID; screenshots still need an external bundle.
-  The immediate handoff boundary is integrated R1/R2 acceptance. No functional
-  or visual acceptance is claimed for this documentation/integration batch.
+  The immediate handoff boundary is integrated R1/R2 acceptance. That batch established no functional or visual acceptance; subsequent focused
+  evidence is recorded in the verification history.
 
-No additional runtime changes or functional execution accompanied this review.
-The review is a source-based assessment, not acceptance of these future repairs.
+The original review was static. F3 now uses the saved/loaded baseline and
+passes regression cases after Load, Save and Save As. The remaining extraction
+and F1/F2/F4 work are still open; focused results do not close their gates.

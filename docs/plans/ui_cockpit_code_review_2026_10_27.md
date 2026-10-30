@@ -81,6 +81,12 @@ press the owner's Reset. The group returns to X while individual Reset and
 Revert return to Y. A subsequent save can persist the unintended old values.
 The existing group-reset case only covers the original opening baseline.
 
+Resolution, 2026-10-30: group Reset now reads the saved/loaded baseline and
+its tooltip explains that boundary. New regression cases fail on the old code
+after Save As, Save and Load, and pass on the repaired code. They check another
+owner, frozen comparison and write-count isolation through public APIs. See
+`docs/history/ui_cockpit_focused_verification_2026_10_30.md`.
+
 Repair: resolve one current reset baseline and use it for both parameter and
 owner reset, including the displayed message. Future acceptance: exercise
 group Reset after Load, Save and Save As, with an opening profile distinct from

@@ -77,8 +77,10 @@ The accepted results and supplied pre-repair observations are locked in
 Owner decision (2026-10-27): explicit Fit finishes the requested orbit before
 measuring size, anchor and board demand; normal orbit easing is unchanged.
 Leaving/restarting a helper-fit search clears pending/search state. These two
-source repairs and regression cases are prepared, but functional verification
-remains prohibited. No layout or scale retuning is authorized.
+source repairs now pass focused camera/cockpit suites under the owner's
+relevant-test authorization. Full integration/manual acceptance remains pending;
+see `docs/history/ui_cockpit_focused_verification_2026_10_30.md`. No layout or
+scale retuning is authorized.
 
 ## Responsive panel contract
 

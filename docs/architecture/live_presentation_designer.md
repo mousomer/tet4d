@@ -87,6 +87,9 @@ registry-generated rows; they required no new control type.
 ## Baselines and comparison
 
 Parameter/group Reset uses the complete saved/opening working baseline.
+Both resolve the latest successful Save, Save As or Load; before those
+operations they use the opening profile. Group Reset changes only applicable
+values owned by that group and performs no storage write.
 Revert restores that baseline including grid, appearance, density, base-style
 provenance and panel geometry. Save, Save As and Load establish a new baseline;
 style application and comparison adoption do not. Internally `revert_style`

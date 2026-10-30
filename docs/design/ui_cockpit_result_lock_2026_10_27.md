@@ -63,9 +63,9 @@ These exceptions correct the two recorded findings. They do not authorize
 scale/framing retuning or changes to the settled accepted layouts. Unexpected
 visual differences remain discrepancies for owner review, not new baselines.
 
-## Evidence limits and current verification
+## Evidence limits and recorded verification
 
-This record adds no fresh execution, screenshot, device result or owner
+The original 2026-10-27 lock added no fresh execution, screenshot, device result or owner
 acceptance; it now preserves supplied pre-repair recordings. Earlier numerical/rendered evidence remains attributed to its
 original record. The prior review turn ran selected checks before the owner
 prohibited tests; those results do not verify the new R1/R2 edits.
@@ -85,6 +85,13 @@ checks found no newly introduced issues. Existing RDS Markdown line breaks/BOM
 and the observation file's original missing final newline are retained; the
 latter preserves its recorded hash. No repository-wide scan or new functional
 result is claimed.
+
+Subsequent evidence (2026-10-30): the owner authorized relevant tests. Focused
+camera/cockpit/Designer/profile suites pass; see
+`docs/history/ui_cockpit_focused_verification_2026_10_30.md`. This supersedes
+the earlier execution restriction for relevant tests only, without changing the
+locked source identity or observation bytes. Full gate, remote CI and manual
+acceptance remain pending.
 
 The bounded migration and acceptance gates are in
 `docs/plans/ui_cockpit_orchestration_repair.md`. Depth/contrast remains 58C,

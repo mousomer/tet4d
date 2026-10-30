@@ -20,7 +20,7 @@ phase-dependent work. It is not workflow authority, a CI diary, a completed
 stage archive, a task-contract ledger, or a future programme.
 ## Active Focus
 
-UI/cockpit repair: `52986aa2` pushed on `codex/ui-cockpit-orchestration`; R1/R2 unverified. Static review and open fixes: `docs/plans/ui_cockpit_code_review_2026_10_27.md`.
+UI/cockpit: master integrated; F3 fixed, four focused suites pass. Evidence/limits: `docs/history/ui_cockpit_focused_verification_2026_10_30.md`. Plan: `docs/plans/ui_cockpit_orchestration_repair.md`.
 
 Machine-readable handoff state. `status` is `active` only on a feature branch
 or draft PR and must name that branch; it is `none` on the default branch and
@@ -59,8 +59,8 @@ No active handoff.
 
 ## Next Acceptance Boundary
 
-Next: accept integrated R1/R2 and documentation before orchestration extraction.
-Tests/CI remain prohibited except secrets/string sanitation; 58B scale stays frozen.
+Next: HelperFitState/content invalidation; retain R1/R2 integration/manual gates.
+Relevant tests authorized; full gate/remote CI pending. 58B scale stays frozen.
 The Stage 56H human playability checkpoint retains its task contract at
 `docs/tasks/live_4d_cockpit_convergence.md`; Stage 56I polish and the 190/200
 A/B decision remain separate. The authorized governance distribution 1.3.1 is active;

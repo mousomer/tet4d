@@ -472,6 +472,7 @@ func _test_designer_boundary(registry) -> Array:
 	var saved_id := str(saved.get("record", {}).get("profile_id", ""))
 	if library.load_profile(saved_id).get("profile").values() != working_at_save:
 		failures.append("Save As must persist working B even while immutable A is displayed")
+	failures.append_array(_assert_group_reset_baseline(designer, library, "Save As"))
 	designer.set_comparison_snapshot("B")
 	designer.show_slot(DesignerScript.SLOT_WORKING)
 	var stored_before_edit: Dictionary = library.load_profile(saved_id).get("profile").values()
@@ -486,6 +487,7 @@ func _test_designer_boundary(registry) -> Array:
 		failures.append("A/B display switching should neither save nor affect semantic dirty state")
 	if not bool(designer.save_working().get("ok", false)) or designer.working_profile_dirty():
 		failures.append("explicit Save should update only the stable profile and clear dirty state")
+	failures.append_array(_assert_group_reset_baseline(designer, library, "Save"))
 
 	var comparison = _asymmetric_profile(registry)
 	var comparison_saved: Dictionary = library.save_new("Comparison Profile", comparison)
@@ -501,6 +503,7 @@ func _test_designer_boundary(registry) -> Array:
 		failures.append("loading B must not recapture or mutate immutable A")
 	if previews.is_empty() or previews[-1].get("values", {}) != comparison.values():
 		failures.append("loading should apply detached B through the existing preview boundary")
+	failures.append_array(_assert_group_reset_baseline(designer, library, "Load"))
 	var loaded_stored: Dictionary = library.load_profile(comparison_id).get("profile").values()
 	designer.set_parameter_value("board.grid_opacity", 0.2)
 	if library.load_profile(comparison_id).get("profile").values() != loaded_stored:
@@ -531,6 +534,33 @@ func _test_designer_boundary(registry) -> Array:
 		failures.append("delete and overwrite UI actions should use deliberate confirmation")
 	designer.queue_free()
 	await tree.process_frame
+	return failures
+
+
+func _assert_group_reset_baseline(designer, library, operation: String) -> Array:
+	var failures: Array = []
+	var baseline = designer.working_profile()
+	var reference_before: Dictionary = designer.reference_profile().snapshot()
+	var writes_before := int(library.deterministic_snapshot().get("write_count", -1))
+	var other_theme := "plain" if baseline.value("theme.name") == "tron" else "tron"
+	designer.set_parameter_value("theme.name", other_theme)
+	designer.set_parameter_value("ghost.enabled", not bool(baseline.value("ghost.enabled")))
+	designer.set_parameter_value("ghost.opacity", 1.1)
+	if not designer.reset_owner("GHOST_PRESENTATION"):
+		failures.append("group Reset must succeed after %s" % operation)
+	if designer.working_profile().values_for_owner("GHOST_PRESENTATION") != baseline.values_for_owner("GHOST_PRESENTATION"):
+		failures.append("group Reset after %s must use the new baseline, not the opening profile" % operation)
+	if designer.working_profile().value("theme.name") != other_theme:
+		failures.append("group Reset after %s must preserve another owner's edits" % operation)
+	designer.set_parameter_value("ghost.opacity", 1.1)
+	if not designer.reset_parameter("ghost.opacity") or designer.working_profile().value("ghost.opacity") != baseline.value("ghost.opacity"):
+		failures.append("parameter and group Reset must agree after %s" % operation)
+	if designer.reference_profile().snapshot() != reference_before:
+		failures.append("Reset after %s must preserve the frozen comparison" % operation)
+	if int(library.deterministic_snapshot().get("write_count", -1)) != writes_before:
+		failures.append("Reset after %s must perform no storage writes" % operation)
+	# Keep the surrounding persistence scenarios independent of these edits.
+	designer.restore_design(baseline)
 	return failures
 
 

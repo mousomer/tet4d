@@ -12,7 +12,9 @@ The pending-orbit exception in section 6 supersedes earlier stage descriptions
 of Fit as strictly framing-only or preserving an unsettled presented pose.
 Historical E4a/E4b audit and execution records below describe their original
 stage; they do not verify the R1 repair. Its source and regression case are
-prepared, but functional and visual acceptance remain pending.
+prepared; focused camera/cockpit suites now pass. Full integration and visual
+acceptance remain pending; see
+`docs/history/ui_cockpit_focused_verification_2026_10_30.md`.
 
 ## 1. Purpose, authority, and stage boundary
 
