@@ -5,18 +5,28 @@ Status: active
 Source of truth: this file for product priorities, phase sequencing, and
 completion gates  
 Supersedes: none  
-Last updated: 2026-08-25
+Last updated: 2026-11-01
 
 ## 1. Purpose
 
 This document defines the active long-term product programme for Tet4D.
 
-Its first and overriding goal is:
+Its original first goal was delivery of a professional bounded 2D/3D/4D
+Godot game. That goal passed `PROFESSIONAL_CORE_GAME_READY` in Stage 54G.
 
-> Deliver a fully playable, professionally presented four-dimensional game in
-> Godot, with an architecture ready for professional gaming features and later
-> extension into topology, spatial exploration, challenge campaigns, and
-> physics simulation.
+The next overriding goal is:
+
+> Enable users to practise and acquire four-dimensional spatial competence,
+> and evaluate that learning with controlled, reproducible measurements,
+> while preserving the completed professional game as the foundation.
+
+A successful game session is not itself evidence of transferable 4D spatial
+intuition. The research programme must distinguish interface familiarity,
+memorised sequences, task-specific skill, and transfer to unfamiliar 4D problems.
+
+Long-term ambitions remain first-class topology games, a full topology
+laboratory, challenge campaigns, physics simulation, and professional
+distribution. They do not block the first learning experiment.
 
 This document owns:
 
@@ -58,8 +68,13 @@ The first major gate is:
 PROFESSIONAL_CORE_GAME_READY
 ```
 
-Tet4D must pass this gate before topology, the full Explorer, challenge
-campaigns, or simulation become the dominant implementation focus.
+Tet4D passed this gate during Stage 54G; the accepted result remains
+`PROFESSIONAL_CORE_GAME_READY: YES`. The completed gate is not reopened by
+the new research priorities. Outstanding Stage 56H/58C and cockpit defects are
+bounded follow-up work, not evidence that the historical gate never passed.
+
+The new research-readiness gates in Phases II-IV are additional gates, not
+retroactive replacements for the professional-core gate.
 
 Passing the gate means that the 4D game is not merely technically functional.
 It is:
@@ -121,11 +136,11 @@ This supports several player paths.
 ### Spatial-learning path
 
 ```text
-contextual help
--> free manipulation
--> spatial challenges
--> placement and clearing puzzles
--> 4D challenge campaign
+contextual help and baseline assessment
+-> free 3D/4D manipulation in Explorer
+-> post-practice and held-out transfer assessment
+-> optional spatial challenges and campaigns
+-> delayed retention assessment
 ```
 
 ### Simulation path
@@ -191,8 +206,10 @@ the only permitted board shapes where the runtime supports a validated range.
 Topology is not simply an advanced feature after 4D. Two-dimensional bounded,
 strip, and Möbius games are independently meaningful.
 
-This does not change the immediate priority: complete the professional bounded
-4D game before topology becomes the principal implementation programme.
+The professional bounded game is already accepted. The next priority is a
+bounded Godot spatial-practice Explorer and the evidence needed to test spatial
+learning. First-class non-bounded topological games remain a later programme;
+the Python topology playground and its canonical semantics are preserved.
 
 ### 4.6 Exploration is a learning mode
 
@@ -218,6 +235,8 @@ Examples include:
 
 The project already has:
 
+- the accepted professional bounded Godot core, with later readability and
+  cockpit corrections tracked separately in `docs/BACKLOG.md`;
 - bounded 2D, 3D, and 4D live play;
 - deterministic state transitions;
 - multiple piece sets;
@@ -1357,103 +1376,179 @@ Phase I is complete only when the following hold.
 Passing this gate does not require complete topology, Explorer, challenge, or
 physics features.
 
-## 8. Phase II — First-Class Topological Games
+## 8. Phase II — Explorer as Spatial Practice
+
+Status: next major capability  
+Dependency: accepted bounded game, stable presentation/input contracts, and
+bounded correctness/readability follow-up; no prerequisite to deliver topology
+games or the full topology editor.
+
+The first Godot Explorer is a **practice tool**, not the entire Topology
+Playground migration. Its first acceptance gate is
+`EXPLORER_LEARNING_READY`.
+
+### Scope of the first practice Explorer
+
+- Use the inherited Python Explorer/Sandbox as a semantic reference where
+  semantics are inherited; avoid creating another movement/rotation authority.
+- Permit deliberate movement in both directions along X, Y, Z, and W without
+  time pressure; Y is not privileged by gravity unless explicitly enabled.
+- Provide precise object/piece rotations, including all relevant 4D rotation
+  planes, separately from camera orbit, view-basis rotations and slice navigation.
+- Support exact orientation reset, undo/retry or deterministic restart, coordinate
+  inspection, marked targets, and inspectable 3D/4D cell adjacency.
+- Convey which projected 3D boxes belong to neighboring 4D cells, without
+  implying that projection overlap or visible proximity proves adjacency.
+- Preserve the Editor / Sandbox / Play conceptual separation. The practice
+  Sandbox path may ship before the full Godot editor or topology laboratory.
+- Allow transition from practice into ordinary bounded Play without altering
+  authoritative gameplay or deterministic replay semantics.
+- Keep non-bounded topology present at the architecture/data-contract boundary
+  but hidden or disabled in the first Godot study UX. Do not disable or remove
+  the established Python topology tools or their semantics.
+
+### Gate: EXPLORER_LEARNING_READY
+
+A new user can discover and execute movement, object rotation, camera orbit,
+basis reorientation and slice navigation; recover from disorientation; explain
+which state changed; and complete representative coordinate, adjacency and
+orientation tasks. Verify with representative human sessions, not only automated
+interaction tests. The exact acceptance tasks belong to the scoped Explorer
+stage; automated tests also guard rotation invariants, camera-relative
+translation, projection labels, and gameplay/presentation isolation.
+
+Do not expand this gate into a full topology port, a challenge campaign, new
+input devices or a new rendering engine.
+
+## 9. Phase III — Professional UI and Research Infrastructure
+
+Status: next after the practice Explorer; assessment design can proceed in
+parallel with Explorer construction.
+
+The detailed, subordinate research plan is
+`docs/plans/spatial_intuition_research_plan.md`. This programme owns order and
+gates; the plan specifies experimental design proposals and data requirements,
+not durable product behaviour or a new semantic authority.
+
+### 9.1 Professional UI review and correction
+
+Review contrast hierarchy, active/settled/ghost distinction, depth and
+occlusion, 4D slice hierarchy, text legibility, key-discovery, camera/basis
+feedback, navigation and cockpit density. Review novice comprehension as
+well as expert visual judgement. Use the existing Design Laboratory and the
+Stage 58C/59 evidence rather than inventing another styling system.
+
+Preserve the accepted Stage 58B board allocation, locked cockpit/layout
+contracts and correct renderer semantics. A structural redesign of an accepted
+layout requires an explicit product decision and new human evidence. Close
+confirmed defects through bounded PRs, not a blanket UI rewrite.
+
+### 9.2 Experimental assessment before data-schema implementation
+
+Define the testable claim and distinguish learned controls from spatial
+competence. Specify baseline, intervention, matched control or comparison,
+held-out transfer tasks, and retention assessment. Score correctness and error
+classes in addition to speed, exposure and hints. Use reproducible scenarios
+and versioned task definitions, so later UI or gameplay changes do not silently
+alter the meaning of outcomes.
+
+Build only the minimal assessment/challenge task slice needed for the first
+experiment here. The full curriculum belongs to Phase IV.
+
+### 9.3 User identity, persistence and research telemetry
+
+Only after the measurement contract is drafted, design consent-aware,
+pseudonymous participant identity; local recovery; server session and progress
+storage; reproducible event ingestion; export/deletion; and secure access.
+Account/login UX must not be confused with proof of scientific validity.
+
+Separate canonical gameplay/simulation state from participant records and
+derived metrics. Establish an explicit versioned serialization and privacy
+contract before implementation. The existing governance-agent telemetry and
+Design Laboratory evaluation persistence are not substitutes for participant
+research telemetry.
+
+### Gate: RESEARCH_PLATFORM_READY
+
+The bounded Explorer and reviewed study UI work; versioned task definitions and
+scoring are frozen for the pilot; participant consent and withdrawal are
+supported; offline/network interruption does not silently lose accepted events;
+and stored task/session data can be reconstructed and exported. No claim of
+research-platform readiness follows merely from account creation or a server
+deployment.
+
+## 10. Phase IV — Human Experiment and Challenge Curriculum
 
 Status: planned  
-Dependency: professional core-game gate, except for isolated architecture work
+Dependency: `RESEARCH_PLATFORM_READY` and the approved study protocol.
 
-### Stage 55A — 2D topology games
+### 10.1 First experiment
 
-Expose three first-class 2D games:
+Run a bounded pilot of instrumentation, usability, recruitment and task
+difficulty. Correct defects before a controlled experiment. The full study
+should estimate learning using baseline/post and held-out transfer performance,
+appropriate controls and, where feasible, delayed retention. Report uncertainty,
+missingness, selection bias, attrition and negative results.
 
-1. `Bounded`
-2. `Strip`
-3. `Möbius Strip`
+Gate: `FIRST_EXPERIMENT_COMPLETE` requires analyzable, reproducible
+participant data and a documented analysis. It does **not** require that the
+hypothesis be confirmed.
 
-Requirements:
+### 10.2 General challenge and learning system
 
-- normal setup access;
-- concise visual explanation;
-- visible seam behaviour;
-- exact canonical topology transport;
-- deterministic identity;
-- no silent fallback to bounded play;
-- product labels separate from stable internal IDs;
-- inherited topology semantics reused rather than rewritten;
-- Strip and Möbius extent/seam-safety rules activated through the Stage 54B
-  board-extent interface.
+After the measurement vertical slice, extend the data-driven challenge
+runner to a full optional curriculum:
 
-The mapping from current generic topology presets to these product concepts
-must be verified rather than assumed.
-
-### Stage 55B — Higher-dimensional topology play
-
-After 2D topology acceptance:
-
-- expose selected canonical 3D and 4D topology presets;
-- preserve exact topology transport;
-- show seam and transformation feedback;
-- distinguish topology effects from projection, slice navigation, and basis
-  rotation;
-- retain bounded play as the default reference case.
-
-Do not expose every editor possibility as an ordinary game preset.
-
-## 9. Phase III — Explorer as Spatial Practice
-
-Status: planned  
-Dependency: stable view-basis controls; topology support may be incremental
-
-The Godot Explorer is a player-facing practice environment. It should preserve
-the accepted conceptual distinction among Editor, Sandbox, and Play. The
-Sandbox/practice path may arrive before the complete editor migration.
-
-The Explorer permits deliberate movement in both directions along every axis:
-
-```text
-X ±
-Y ±
-Z ±
-W ±
-```
-
-Y is not privileged by gravity unless an experiment explicitly enables
-gravity.
-
-The Explorer exposes continuous and exact camera controls, complete 4D basis
-control including Y/slice exchange, independent camera/basis/slice/object
-state, reset operations, coordinate inspection, topology selection, deliberate
-seam traversal, and transition into Play.
-
-Explorer must not create a second movement, rotation, or topology rule system.
-
-## 10. Phase IV — Challenge and Learning System
-
-Status: planned  
-Dependency: stable gameplay, basis controls, and a reusable Explorer path
-
-The primary tutorial becomes a data-driven challenge system.
-
-Challenge families include:
-
-- target-pose challenges;
-- piece-rotation challenges;
-- camera-orientation challenges;
-- view-basis challenges;
-- navigation challenges;
-- placement challenges;
-- line/plane/hyperplane-clearing puzzles;
-- topology challenges;
+- target-pose and piece-rotation challenges;
+- camera-orientation and view-basis challenges;
+- navigation, adjacency and coordinate challenges;
+- placement and line/plane/hyperplane-clearing puzzles;
+- later topology challenges;
 - scored and constrained puzzle campaigns.
 
-Begin with a small representative vertical slice rather than the complete
-campaign.
+Re-use the Explorer for free practice and retry; do not force every player onto
+one conceptual progression ladder. Research assessments remain isolated from
+training content so that item memorisation is not mistaken for transfer.
 
-## 11. Phase V — Unified Product
+## 11. Phase V — First-Class Topological Games and Full Topology Lab
 
-Status: long-term
+Status: deferred until the initial research programme is operational; bounded
+planning and topology-authority preservation may proceed independently.
 
-The mature product connects activities without collapsing their ownership.
+### 11.1 First-class 2D topology games
+
+Expose `Bounded`, `Strip`, and `Möbius Strip` through ordinary setup with
+visible seam behavior, concise explanations, deterministic canonical
+transport, safe dimension limits, stable topology identity and no silent
+fallback to bounded play. Activate seam-safety rules through the shared
+board-extent interface. Verify the mapping of existing generic presets to
+these named product modes; do not assume equivalence.
+
+This retains the older programme's Stage 55A concept as long-term scope; new
+implementation stages must be assigned against current repository state.
+
+### 11.2 Higher-dimensional topology play
+
+After 2D topology acceptance, expose selected canonical 3D/4D topology
+presets with exact seam and transform feedback. Distinguish topology from
+projection, slice navigation, camera and basis changes. Keep bounded play the
+default reference. Do not expose every editor possibility as an ordinary game
+preset.
+
+### 11.3 Full Godot Topology Laboratory
+
+Migrate the mature Editor / Sandbox / Play workflows only under the current
+topology authority and trace/parity protocol, including explicit seam editing,
+probe traversal, diagnostics, topology profile persistence and
+`Play This Topology` semantics. Preserve the established Python reference and
+its non-bounded modes until their authority is intentionally transferred.
+
+## 12. Phase VI — Unified Simulation and Professional Distribution
+
+Status: long-term; independent work may be scoped when it has a concrete
+research or product need.
+
+The mature product connects the activities without collapsing their owners:
 
 ```text
 Play -> Game Over -> Replay / Explore Final Board / Simulate
@@ -1462,13 +1557,23 @@ Challenge -> Practise in Explorer -> Retry
 Constructed State -> Run Physics Simulation
 ```
 
-Simulation may consume a game board, Explorer state, challenge state, topology
-profile, or constructed scenario through an explicit versioned conversion
-boundary.
+The existing Python locked-cell explosion simulator and deterministic traces
+remain foundations. A general simulation may consume game, Explorer, topology,
+challenge or constructed state only through an explicit versioned conversion
+boundary. Gameplay state must not silently become physics state.
 
-Gameplay state must not be silently reinterpreted as physics state.
+Professional polish and commercialization remain later options: campaign
+completion, advanced previews/holds, gamepad, audio, achievements, storefront
+distribution and possible monetization. Do not start these merely because the
+research order has changed.
 
-## 12. Authority Model
+Distribution priority, when justified by research deployment or commercial
+need, remains **Windows -> Linux -> Android tablets**. Public macOS packaging
+is deferred, and iPadOS remains a later option. This is a priority sequence,
+not a new claim of package support or a change to
+`product_platform_contract`.
+
+## 13. Authority Model
 
 Authority is subsystem-specific.
 
@@ -1499,7 +1604,7 @@ example:
 - ghost: Godot presentation over an inherited read-only landing query;
 - Hold: genuinely new deterministic state requiring authority establishment.
 
-## 13. Implementation and PR Discipline
+## 14. Implementation and PR Discipline
 
 Each implementation PR must have one bounded semantic objective.
 
@@ -1531,46 +1636,43 @@ Every implementation PR must identify:
 - visible-GUI acceptance where relevant;
 - remaining risks and deferrals.
 
-## 14. Immediate Execution Order
+## 15. Reprioritized Execution Order
 
-The active order is:
+The accepted professional-core programme through Stage 54G remains complete,
+including `PROFESSIONAL_CORE_GAME_READY: YES`. Its detailed implementation
+record above is not a new to-do list.
 
-1. Stages 54B-1, 54B-2, 54C, 54D-1, and 54D-2 are integrated on `master`
-   through PR #63 at `c93dcc8cfa93857d514a14b925002efc4404b007`.
-2. Stage 54E-1 — presentation-space architecture/design is complete, human
-   accepted, and merged at `7e3558f823dd496b8896eabe6da9c18951bdb005`.
-3. Stage 54D-3 — Hold is COMPLETE / DETERMINISTIC AUTHORITY ESTABLISHED /
-   HUMAN VISIBLE ACCEPTED as `AE-0055`.
-4. Stage 54E-2a — presentation state and coordinate decomposition is complete
-   and reviewed green.
-5. Stage 54E-2b — renderer composition — is complete and reviewed green;
-   Stage 54E-2c — interaction and camera-rig separation — is complete and
-   reviewed green; Stage 54E-2d — lifecycle, authority, and contract
-   reconciliation — is complete and reviewed green. Aggregate Stage 54E-2 is
-   complete and reviewed green.
-6. Stage 54E-3 — setup/menu information architecture — is COMPLETE / REVIEWED
-   GREEN: Stage 54E-3a taxonomy and classification and Stage 54E-3b
-   progressive-disclosure rendering are implemented and accepted by external
-   technical review, with automated evidence and a recorded real-window
-   acceptance checklist.
-7. Stage 54E-4a is REVIEWED GREEN. Stage 54E-4b implements the accepted
-   contract and is COMPLETE / FOCUSED VISIBLE REVIEW ACCEPTED; aggregate Stage
-   54E-4 is COMPLETE / REVIEWED GREEN.
-8. Stage 54E-5 — cockpit consolidation — is COMPLETE / HUMAN PRODUCT REVIEW
-   ACCEPTED, with focused/full automated evidence and normal, smaller, and
-   larger real-window review.
-9. Stage 54F — integrated professional playability/visual acceptance is
-   complete and human accepted.
-10. Stage 54G — COMPLETE / FINAL MANUAL RELEASE ACCEPTANCE PASSED; it closes
-    the Stage 54 Professional Core Game programme and
-    `PROFESSIONAL_CORE_GAME_READY` is `YES`.
-11. Stage 55A — first-class 2D bounded, Strip, and Möbius games.
-12. Later Explorer, challenge, topology, and simulation phases.
+The new priority order is:
 
-Stage numbers do not imply that 54D-3 must run before 54E-1. Stage 54D-2
-corrected the reviewed live-grid readability weakness and has developer/user
-Ghost/board visual acceptance; this is not Stage 54F integrated acceptance.
+| Priority | Workstream | Dependency or acceptance boundary |
+| --- | --- | --- |
+| P0 | Bounded existing-game corrections | Designer sizing, confirmed cockpit/replay defects, camera-relative movement and active Stage 58C/59 readability; preserve accepted layouts |
+| P1 | Godot bounded spatial-practice Explorer | `EXPLORER_LEARNING_READY`; independent 4D rotations, basis, slices, coordinates and adjacency |
+| P2 | Professional UI review and verified fixes | Expert and novice comprehension checks, including 3D/4D depth and cockpit hierarchy |
+| P3 | Study protocol and minimal assessment tasks | Baseline, held-out transfer, control/comparison and reproducible scoring before telemetry schema freezes |
+| P4 | Participant identity, persistence and telemetry | Consent-aware versioned backend/local recovery and data reconstructability |
+| P5 | Pilot and first controlled learning experiment | `RESEARCH_PLATFORM_READY` then `FIRST_EXPERIMENT_COMPLETE` |
+| P6 | Research distribution | Windows then Linux after a reproducible study build is needed; no implied support-matrix change |
+| P7 | Full challenge/tutorial curriculum | Expand after an assessment vertical slice and initial study results |
+| P8 | 2D then selected 3D/4D topology games | Reuse existing canonical topology transport and extent contract |
+| P9 | Complete Godot Topology Laboratory | Preserve Editor/Sandbox/Play semantics and Python-to-native parity |
+| P10 | Broader product/platform features | Android tablets, gamepad, audio and advanced gameplay only when justified |
+| P11 | Unified physics/simulation | Versioned state conversion, explosion simulation foundation |
+| P12 | Commercial professional product | Campaign, distribution, possible monetization |
+| P13 | Later platforms | Public macOS and iPadOS, deferred |
+
+P3 assessment design can overlap P1 and P2. P4 infrastructure design can begin
+after the data contract is established, but deployment must not be treated as
+a substitute for research readiness. P6 can be pulled forward if participant
+recruitment requires a validated Windows/Linux build. No priority label by
+itself authorizes implementation, changes an RDS, alters the release support
+matrix, or establishes a new semantic owner.
+
+Open and deferred work is tracked in `docs/BACKLOG.md`. A feature implementation
+needs a bounded task contract, routed authorities, appropriate test and human
+evidence, and a separate reviewed PR. Implementation stages are numbered
+against the current repository, not inferred from historical stage labels.
 
 Compaction or splitting of `docs/history/DONE_SUMMARIES.md` belongs to a
 separate documentation-hygiene batch. Historical archive size is not active
-product work and must not be mixed into Phase I implementation PRs.
+product work and must not be mixed into this programme.
