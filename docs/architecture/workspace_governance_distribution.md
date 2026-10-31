@@ -133,3 +133,26 @@ private registry. Public fleet metadata carries the portable verifier declaratio
 and a versioned hash binding to that complete private policy. Execution uses
 the original declaration; the hash preserves policy-drift detection. Project
 tests are one-time owner migrations and never continuing installer postimages.
+
+## Consumer compatibility and renewed evidence
+
+Shared runtime source must satisfy the reviewed consumers' existing formatting
+and complexity checks as well as the kit's behavioural meta-tests. A
+behaviour-preserving parser refactor retains the bounded Make graph, diagnostics,
+unsupported forms and ordering contract; it does not relax consumer checks.
+Publish changed source under a successor immutable release before guarded
+adoption. Re-review a changed native verifier body against its actual invocation
+graph and retained obligations before updating its private registry binding.
+
+Tool executable bytes are part of execution identity. An updated approved tool
+requires fresh baseline and applicable product collection; historical evidence
+remains unchanged. Missing product contracts, unresolved Git identity, vanished
+external locations and incomplete discovery are separate findings. Their repair
+must establish the missing fact rather than substitute structural success for
+product acceptance or change a protected location to make the audit pass.
+
+A private `retired_absent` lifecycle for a previously resolved temporary external
+store retains its original identity, owner and preservation policy. Fresh lstat
+absence is reported as `governed_absent`; reappearance or unreadability rejects.
+This state certifies neither adoption nor product behavior and cannot clear
+unresolved Git identity or scan-coverage findings.
