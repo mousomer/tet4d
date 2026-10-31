@@ -1,11 +1,11 @@
 # Spatial Intuition Research Plan
 
-Role: spec  
-Status: active  
-Source of truth: this file for proposed spatial-learning study design and participant data requirements; programme priority and gates remain with `docs/plans/professional_godot_game_programme.md`  
-Supersedes: none  
-Last updated: 2026-11-01  
-Programme authority: `docs/plans/professional_godot_game_programme.md`  
+Role: spec
+Status: active
+Source of truth: this file for proposed spatial-learning study design and participant data requirements; programme priority and gates remain with `docs/plans/professional_godot_game_programme.md`
+Supersedes: none
+Last updated: 2026-11-01
+Programme authority: `docs/plans/professional_godot_game_programme.md`
 Active execution/debt: `docs/BACKLOG.md`
 
 ## 1. Objective and hypothesis
