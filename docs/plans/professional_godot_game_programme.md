@@ -1378,7 +1378,7 @@ physics features.
 
 ## 8. Phase II — Explorer as Spatial Practice
 
-Status: next major capability  
+Status: next major capability
 Dependency: accepted bounded game, stable presentation/input contracts, and
 bounded correctness/readability follow-up; no prerequisite to deliver topology
 games or the full topology editor.
