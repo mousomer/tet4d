@@ -1,0 +1,337 @@
+{
+  "schema_version": 1,
+  "references": [
+    {
+      "path": ".governance/baseline/check_git_sanitation.sh",
+      "warning_class": "absolute-unix",
+      "line_sha256": [
+        "a3a664a1ea803f1afb9f463cc79ed85f42ba59bdc32b111744342007fdb84058"
+      ],
+      "reason": "Scanner or bounded diagnostic must recognize the exact prohibited path syntax."
+    },
+    {
+      "path": "tools/workspace_governance/validators/core.py",
+      "warning_class": "absolute-unix",
+      "line_sha256": [
+        "e13e80828192149dca9dd71901581c1364792f35bbf96f5d79a378ba872c3d62"
+      ],
+      "reason": "Scanner or bounded diagnostic must recognize the exact prohibited path syntax."
+    },
+    {
+      "path": ".governance/baseline/check_git_sanitation.sh",
+      "warning_class": "absolute-windows",
+      "line_sha256": [
+        "77b705f4a92ba0d9c7924cb2068373d26f450aebe330141b2412af925449d987"
+      ],
+      "reason": "Scanner or bounded diagnostic must recognize the exact prohibited path syntax."
+    },
+    {
+      "path": "scripts/check_git_sanitation_repo.sh",
+      "warning_class": "absolute-windows",
+      "line_sha256": [
+        "7a6167b54e1d067d3985f398632de665c975e4d039afd669b0c0fa9ef23f1995"
+      ],
+      "reason": "Scanner or bounded diagnostic must recognize the exact prohibited path syntax."
+    },
+    {
+      "path": ".agents/skills/decision-worksheet/SKILL.md",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "927e6e9f1dc5202d77c0ad92f6f03d78760a291632e5e9809fed0f05c5813545"
+      ],
+      "reason": "Required relative link resolves to the canonical skill inside this repository."
+    },
+    {
+      "path": ".agents/skills/governance-context/SKILL.md",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "c2e79d930b7132ca6287c42c1bf74be7af5be50e699cdbc6b906766cbb2dc16d"
+      ],
+      "reason": "Required relative link resolves to the canonical skill inside this repository."
+    },
+    {
+      "path": ".agents/skills/governance-maintenance/SKILL.md",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "12a325ca234932c1808e751b1dfe838e792c176e2d5d141c4616fe59d93b8046"
+      ],
+      "reason": "Required relative link resolves to the canonical skill inside this repository."
+    },
+    {
+      "path": ".agents/skills/text-editor/SKILL.md",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "3c6cc8ad64c9b5145095a9784df650d61b653d3c792f8276cef4961a85009b4a"
+      ],
+      "reason": "Required relative link resolves to the canonical skill inside this repository."
+    },
+    {
+      "path": ".agents/skills/video-game-development/SKILL.md",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "38c3c9e652041ac72e2137b88aca4b47876a3ae134d0834df5a22e089a14265f"
+      ],
+      "reason": "Required relative link resolves to the canonical skill inside this repository."
+    },
+    {
+      "path": ".claude/skills/decision-worksheet/SKILL.md",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "927e6e9f1dc5202d77c0ad92f6f03d78760a291632e5e9809fed0f05c5813545"
+      ],
+      "reason": "Required relative link resolves to the canonical skill inside this repository."
+    },
+    {
+      "path": ".claude/skills/governance-context/SKILL.md",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "c2e79d930b7132ca6287c42c1bf74be7af5be50e699cdbc6b906766cbb2dc16d"
+      ],
+      "reason": "Required relative link resolves to the canonical skill inside this repository."
+    },
+    {
+      "path": ".claude/skills/governance-maintenance/SKILL.md",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "12a325ca234932c1808e751b1dfe838e792c176e2d5d141c4616fe59d93b8046"
+      ],
+      "reason": "Required relative link resolves to the canonical skill inside this repository."
+    },
+    {
+      "path": ".claude/skills/text-editor/SKILL.md",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "3c6cc8ad64c9b5145095a9784df650d61b653d3c792f8276cef4961a85009b4a"
+      ],
+      "reason": "Required relative link resolves to the canonical skill inside this repository."
+    },
+    {
+      "path": ".claude/skills/video-game-development/SKILL.md",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "38c3c9e652041ac72e2137b88aca4b47876a3ae134d0834df5a22e089a14265f"
+      ],
+      "reason": "Required relative link resolves to the canonical skill inside this repository."
+    },
+    {
+      "path": ".governance/baseline/check_git_sanitation.sh",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "29cdc5303a8cbbf50999c6445a2b6abaf2fb66c85719c4247d31a5ab0c78ee30",
+        "a48dc4d8c0bcb50b8407d24793a0906507e3799489c6519f4d600d28405e203d"
+      ],
+      "reason": "Scanner or bounded diagnostic must recognize the exact prohibited path syntax."
+    },
+    {
+      "path": "godot/Tet4D.Godot/export_presets.cfg",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "10c71b36fb1c5dad9d64c4021398661c49746b4120a59e6e35081ea69001f4be",
+        "88c4ccf1f788b45fc817b2f48a151d05675c8dce067a6c012f09a8609063dc6e",
+        "2b5b5b9c5d7a717fd8b0618923cb3ca161a1bba00b9dc6e1c50c5d91d7701114",
+        "89aeb930507ca9e47cc1da24c5ccb970ff1efa48aff7246b9fa7d630632d1918"
+      ],
+      "reason": "Relative build/export or installed application resource path; not user-controlled traversal."
+    },
+    {
+      "path": "godot/Tet4D.Godot/tests/test_built_in_style_catalog.gd",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "11a4dca76c58aea9bf4601d6ee17b8fc2a45e15a8423c02f5962ac4cc5dae273"
+      ],
+      "reason": "Intentional invalid-path input or warning text in sanitation regression coverage."
+    },
+    {
+      "path": "godot/Tet4D.Godot/tests/test_presentation_profile_library.gd",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "b561d67a8e1ed12a1c5afca49d208bdc67b3c47060c67e0dad2b0049089ae0e0",
+        "033a790fa235794e5faefbc7d05857065e58c840b9a6a16b92f210f6104e4c6d",
+        "b4e62a3025b4b347865b5935ab4cec2f340d2f2d22b1d4bad50e52e64dc21353"
+      ],
+      "reason": "Intentional invalid-path input or warning text in sanitation regression coverage."
+    },
+    {
+      "path": "native/tet4d_core/SConstruct",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "ad935fe978cfaf9a9731e5877d4f3ddc191985ae389d4647aa99fe445aaac8cd",
+        "542b7f843d67fc5b71264331601874603d760d6517b249a9ae356b0e875594ab",
+        "177df00eeb213aac444061723f5c7014d3a7966ff938301ed9f751da4ebd1c93",
+        "3608481cf5b17c0febff2c567feada08039873ab1b1d380a1011489b7089e089",
+        "3c6061be5c28e2aea3928ade0a5fee35a04a77f54630e1d1b474a1c490e539f7"
+      ],
+      "reason": "Relative build/export or installed application resource path; not user-controlled traversal."
+    },
+    {
+      "path": "packaging/godot/build_android.sh",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "cff2d1781e37d935ac24c7eb54afd1781f158d7a4cff3dbfd732f03963af8787",
+        "1778d91039c079b7a261ff3928a345d604f951920af1d5843eee2b73b636762e"
+      ],
+      "reason": "Relative build/export or installed application resource path; not user-controlled traversal."
+    },
+    {
+      "path": "packaging/godot/build_ipados.sh",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "cff2d1781e37d935ac24c7eb54afd1781f158d7a4cff3dbfd732f03963af8787",
+        "e2b265626d5199ee3635efab357a2892e819ebf74f3647df2c936c0f0da3ab7d"
+      ],
+      "reason": "Relative build/export or installed application resource path; not user-controlled traversal."
+    },
+    {
+      "path": "packaging/godot/build_macos.sh",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "cff2d1781e37d935ac24c7eb54afd1781f158d7a4cff3dbfd732f03963af8787"
+      ],
+      "reason": "Relative build/export or installed application resource path; not user-controlled traversal."
+    },
+    {
+      "path": "packaging/godot/build_windows.sh",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "cff2d1781e37d935ac24c7eb54afd1781f158d7a4cff3dbfd732f03963af8787",
+        "b70cc3f8fa2fa126365898982892dc44913b4f025e72031dfec2f2e4b555d8e6"
+      ],
+      "reason": "Relative build/export or installed application resource path; not user-controlled traversal."
+    },
+    {
+      "path": "packaging/godot/smoke_macos.sh",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "cff2d1781e37d935ac24c7eb54afd1781f158d7a4cff3dbfd732f03963af8787"
+      ],
+      "reason": "Relative build/export or installed application resource path; not user-controlled traversal."
+    },
+    {
+      "path": "packaging/scripts/build_linux.sh",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "cff2d1781e37d935ac24c7eb54afd1781f158d7a4cff3dbfd732f03963af8787"
+      ],
+      "reason": "Relative build/export or installed application resource path; not user-controlled traversal."
+    },
+    {
+      "path": "packaging/scripts/build_macos.sh",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "cff2d1781e37d935ac24c7eb54afd1781f158d7a4cff3dbfd732f03963af8787",
+        "8e65081e7e633795dcd3aa37e8d228fbe171932c80f069c16672f27b10ab6532"
+      ],
+      "reason": "Relative build/export or installed application resource path; not user-controlled traversal."
+    },
+    {
+      "path": "tests/unit/engine/test_keybindings.py",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "95af1ceaa2dd88887c703ad3f12e6fbb02371d9077e916bdd75e8be3afb4cdef"
+      ],
+      "reason": "Intentional invalid-path input or warning text in sanitation regression coverage."
+    },
+    {
+      "path": "tests/unit/engine/test_product_profiles.py",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "2b4c9e7e5426ffb9418cfa90d631ae2345960a38e9905265d5bb5f13236467f6"
+      ],
+      "reason": "Intentional invalid-path input or warning text in sanitation regression coverage."
+    },
+    {
+      "path": "tests/unit/engine/test_project_config.py",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "98335ace9b7f03fcace08caf8829ac68a2155c383b53ea569506314e40601644",
+        "5bc0b03f3fad45a539fb8478cc4a8c85457f06629db7eeb438565e955b77bcf9",
+        "460187c05af889d297793c6adee580aabdeda26ced40ca82b51f98f931c25991"
+      ],
+      "reason": "Intentional invalid-path input or warning text in sanitation regression coverage."
+    },
+    {
+      "path": "tests/unit/engine/test_runtime_config.py",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "e9a53815e3c99b17111f6bc90218b6a1d20147b43543d029ccba518be9cd8cc6"
+      ],
+      "reason": "Intentional invalid-path input or warning text in sanitation regression coverage."
+    },
+    {
+      "path": "tests/unit/engine/test_score_analyzer.py",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "ac59acaa7000668df38bf101f8ba0ac2d51cef0bfd3ef6f34b8e474dc8db7f97"
+      ],
+      "reason": "Intentional invalid-path input or warning text in sanitation regression coverage."
+    },
+    {
+      "path": "tests/unit/governance/test_check_godot_settings_externalization.py",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "bdaff75c319d673a340b0ab45dce8116d4b68beaf746e83d3ed9b676e5334db4"
+      ],
+      "reason": "Intentional invalid-path input or warning text in sanitation regression coverage."
+    },
+    {
+      "path": "tests/unit/governance/test_classify_codex_ci_paths.py",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "ecc8c216b1d52a587e91f1e4475cc5e0904ec8fb91defd339e6df2aca729bf5f"
+      ],
+      "reason": "Intentional invalid-path input or warning text in sanitation regression coverage."
+    },
+    {
+      "path": "tests/unit/governance/test_governance_validate_project_contracts.py",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "8897b01beaf67daf579b054772c51b091824919b37fb34e9595f08a80dd8ca3c",
+        "9f779596fb92f654a40fa0dd6471c666d4c5c4c58abf94c907bc1ffd41e75fb1",
+        "c7e8c015daa4c9efd99d30533dca89d17ecb178c8a21fca4dacffbaee670aa94",
+        "fc081a0991d44caaf70bf59801b60331e728e36c4d63df54696c3db11ecc9830"
+      ],
+      "reason": "Intentional invalid-path input or warning text in sanitation regression coverage."
+    },
+    {
+      "path": "tests/unit/governance/test_validate_handoff_lifecycle.py",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "3af916a38d1fe939db715f5599771682161a8bcc5315fcb57c0c02e3883c3f67",
+        "3af916a38d1fe939db715f5599771682161a8bcc5315fcb57c0c02e3883c3f67"
+      ],
+      "reason": "Intentional invalid-path input or warning text in sanitation regression coverage."
+    },
+    {
+      "path": "tests/unit/workspace_governance/test_native_integration.py",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "3c3cef89e4e94b11049e5a380110e520975b1e6c37491917695187deae7784dc"
+      ],
+      "reason": "Intentional invalid-path input or warning text in sanitation regression coverage."
+    },
+    {
+      "path": "tools/agent-skills/text-editor/SKILL.md",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "309eb40a83889c3ad2f55ecb3442010f835cc5be6e9077a4dc2d2ebed7292882"
+      ],
+      "reason": "Documented relative JavaScript module-root example."
+    },
+    {
+      "path": "tools/experiments/governance_manifest_quality/measurement.py",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "4eea72724be42493273b474625bd4bedefef462087044b1cd4d16d0e453486e3"
+      ],
+      "reason": "Validator literal rejects escaping paths before measurement."
+    },
+    {
+      "path": "tools/workspace_governance/diagnostics.py",
+      "warning_class": "parent-traversal",
+      "line_sha256": [
+        "82361480be7878a8873a17bd1c3c8584c3b767539dece8a9aa1e72ca77b1a6ce"
+      ],
+      "reason": "Scanner or bounded diagnostic must recognize the exact prohibited path syntax."
+    }
+  ]
+}
