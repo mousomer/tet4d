@@ -93,7 +93,7 @@ def test_shell_baseline_warns_on_unreviewed_references(tmp_path: Path) -> None:
         shutil.copy2(REPOSITORY / relative, destination)
     resolver = tmp_path / "scripts/resolve_python_env.sh"
     resolver.write_text(
-        f"#!/bin/sh\nprintf '%s\\n' '{sys.executable}'\n", encoding="utf-8"
+        "#!/bin/sh\nprintf '%s\\n' \"$SANITATION_TEST_PYTHON\"\n", encoding="utf-8"
     )
     resolver.chmod(0o755)
     source = ".." + "/reviewed-negative-input"
@@ -104,6 +104,7 @@ def test_shell_baseline_warns_on_unreviewed_references(tmp_path: Path) -> None:
         key: value for key, value in os.environ.items() if not key.startswith("GIT_")
     }
     env.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_SYSTEM=os.devnull)
+    env["SANITATION_TEST_PYTHON"] = sys.executable
     subprocess.run(["git", "init", "-q"], cwd=tmp_path, env=env, check=True)
     subprocess.run(["git", "add", "."], cwd=tmp_path, env=env, check=True)
 
