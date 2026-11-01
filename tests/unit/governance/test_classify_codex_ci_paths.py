@@ -478,3 +478,61 @@ def test_shared_product_profile_staging_selects_every_consuming_platform() -> No
         "platform_android",
         "platform_ipados",
     }
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "godot/Tet4D.Godot/scripts/app/trace_replay_app.gd",
+        "godot/Tet4D.Godot/scripts/input/live_input_contract.gd",
+        "godot/Tet4D.Godot/scripts/rendering/camera_rig.gd",
+        "godot/Tet4D.Godot/scripts/presentation/control_frame_mapping.gd",
+        "godot/Tet4D.Godot/scripts/presentation/slice_basis_4d.gd",
+        "godot/Tet4D.Godot/scripts/presentation/slice_local_orientation.gd",
+        "godot/Tet4D.Godot/scripts/ui/game_setup/game_setup_model.gd",
+        "godot/Tet4D.Godot/scripts/native/tet4d_core_bridge.gd",
+        "godot/Tet4D.Godot/tests/test_live_relative_translation.gd",
+        "native/tet4d_core/src/godot/tet4d_core_api.cpp",
+        "native/tet4d_core/src/godot/tet4d_core_api.h",
+        "native/tet4d_core/src/godot/register_types.cpp",
+        "native/tet4d_core/src/core/plain_nd_session.cpp",
+        "native/tet4d_core/include/tet4d_core/plain_nd_session.hpp",
+        "native/tet4d_core/src/core/plain_nd.cpp",
+        "native/tet4d_core/include/tet4d_core/plain_nd.hpp",
+        "config/keybindings/defaults.json",
+        "config/keybindings/catalog.json",
+    ],
+)
+def test_live_translation_dependencies_always_select_canonical_godot_lane(
+    path: str,
+) -> None:
+    from tools.governance.select_codex_ci_lanes import load_lane_config, select_lanes
+
+    resolution = classify_paths([path], config=_repository_config())
+    selected = select_lanes(
+        resolution.to_dict(),
+        config=load_lane_config(json.loads(DEFAULT_LANE_CONFIG_PATH.read_text())),
+    )
+
+    assert "godot" in selected.selected_lanes
+
+
+def test_canonical_godot_lane_executes_live_translation_regression() -> None:
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[3]
+    runner = (root / "godot/Tet4D.Godot/tests/run_tests.gd").read_text()
+    gate = (root / "scripts/verify_godot_4_7.sh").read_text()
+    workflow = (root / ".github/workflows/ci.yml").read_text()
+
+    assert '"res://tests/test_live_relative_translation.gd"' in runner
+    assert "--script tests/run_tests.gd" in gate
+    assert "^LIVE_RELATIVE_TRANSLATION_PASS: 3D + 4D$" in gate
+    godot_job = workflow.split("\n  godot-4-7:", 1)[1].split("\n  packaging:", 1)[0]
+    assert "lane_godot == 'true'" in godot_job
+    assert "./scripts/verify_godot_4_7.sh" in godot_job
+    assert 'tee "$RUNNER_TEMP/godot-verification.log"' in godot_job
+    assert "name: godot-verification-log" in godot_job
+    required_gate = workflow.split("\n  required-gate:", 1)[1]
+    assert "- godot-4-7" in required_gate
+    assert 'check_lane "$SELECT_GODOT" "$RESULT_GODOT" "godot"' in required_gate
