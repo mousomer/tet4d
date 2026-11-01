@@ -105,6 +105,12 @@ Viewer-consistent translation requirement:
    Resolver output, repeated input, helper text, and orientation-gizmo labels
    and directions must consume the same effective mapping for the currently
    rendered outer-camera yaw.
+8. Mandatory Live integration acceptance sends movement action events through
+   the production scene's `_unhandled_input` and checks both the canonical
+   native command and every active-cell displacement against fixed specification
+   data. All four cardinal yaws, opposite pairs, framing, restart, reset,
+   re-entry, held repetition and intentional Absolute controls are required.
+   Mapping-unit or HUD-legend agreement alone cannot establish correctness.
 
 ## 6. Rendering and UX
 
@@ -170,7 +176,10 @@ Relevant tests:
 4. Pointer camera controls provide orbit, pan, zoom, and a live XYZ orientation
    marker without mutating gameplay state. Shift owns soft drop, with Ctrl as
    an undisplayed compatibility binding (Stage 56H-R2.3); no live camera
-   gesture uses a keyboard modifier.
+   gesture uses a keyboard modifier. Fit View completes any pending requested
+   orbit before fitting framing at that orientation, without resetting the
+   requested orientation or mutating gameplay. Presented-yaw consumers update
+   after the fit.
 5. Replay/smoke tests pass.
 6. Embedded 2D and random-cell 3D sets are selectable and playable.
 7. Debug 3D piece set is selectable and supports fast layer-fill validation.

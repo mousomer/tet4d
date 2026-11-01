@@ -311,13 +311,13 @@ func reset_parameter(setting_id: String) -> bool:
 
 
 func reset_owner(owner: String) -> bool:
-	if _opening_profile == null or _registry == null:
+	if _saved_profile_baseline == null or _registry == null:
 		return false
 	var overrides: Dictionary = {}
 	for spec in _registry.settings_for_semantic_owner(owner):
 		if _applicable_ids.has(spec.id()):
-			overrides[spec.id()] = _opening_profile.value(spec.id())
-	return _replace_working_values(overrides, "Reset %s to the opening baseline." % _owner_label(owner))
+			overrides[spec.id()] = _saved_profile_baseline.value(spec.id())
+	return _replace_working_values(overrides, "Reset %s to the saved/opening baseline." % _owner_label(owner))
 
 
 func reset_working_to_opening() -> bool:
@@ -1204,7 +1204,7 @@ func _build_owner_group(owner: String, specs: Array) -> void:
 	header.add_child(title)
 	var reset_button := Button.new()
 	reset_button.text = "Reset group"
-	reset_button.tooltip_text = "Restore this group to the opening profile"
+	reset_button.tooltip_text = "Restore this group to the latest saved or loaded profile, or the opening profile before saving"
 	reset_button.pressed.connect(reset_owner.bind(owner))
 	header.add_child(reset_button)
 	for spec in specs:

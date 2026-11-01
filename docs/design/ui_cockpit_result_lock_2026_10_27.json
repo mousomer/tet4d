@@ -1,0 +1,67 @@
+{
+  "schema_version": 2,
+  "recorded_on": "2026-10-27",
+  "source_commit": "e37441bbd36e0bd9260dd167b4bb1f75c87fcd73",
+  "source_kind": "committed-master-before-review-repairs",
+  "branch": "codex/ui-cockpit-orchestration",
+  "supersedes": "dirty release-branch working-tree baseline on a0b00718",
+  "meaning": "Reproducible source identity. R1/R2 are allowed repairs; execution acceptance is separate.",
+  "files": [
+    {
+      "path": "docs/architecture/godot_shell_layout_stabilization.md",
+      "sha256": "31284f24f650e860a0f5c83edc3fd9e286509cdd095acd05f3227d3f562881a0"
+    },
+    {
+      "path": "godot/Tet4D.Godot/scripts/rendering/camera_rig.gd",
+      "sha256": "0dceb79d8522dd17f610400fbd245a1445ba9532ada7d26eb84efd5b80574b5c"
+    },
+    {
+      "path": "godot/Tet4D.Godot/scripts/ui/live_cockpit.gd",
+      "sha256": "9d35b282cf197e6915b2f9a280ee068e70b4c716ec1841d57acea74159b1caf4"
+    },
+    {
+      "path": "godot/Tet4D.Godot/tests/test_camera_rig.gd",
+      "sha256": "cc904febedcba0d384ed170bc00305e76a05c4d90ff3386311e399cb39cb0975"
+    },
+    {
+      "path": "godot/Tet4D.Godot/tests/test_live_cockpit.gd",
+      "sha256": "e4902162725fc2f6d80c3c7f9e340b94bea1f19e11c437bafff4ac90684c8b1f"
+    },
+    {
+      "path": "godot/Tet4D.Godot/scripts/app/trace_replay_app.gd",
+      "sha256": "cb86b83846ba46fef3458f95f1200b0bf24a1706fc86eaabd55610753ee524dc"
+    },
+    {
+      "path": "godot/Tet4D.Godot/scripts/ui/replay_hud.gd",
+      "sha256": "21b03e0549329f36067f09305697a5de9b28d35c69b3adad185bbf565a8be0bd"
+    },
+    {
+      "path": "godot/Tet4D.Godot/scripts/ui/fit_scale_container.gd",
+      "sha256": "bb26a17184e58d901efc7fa62cbf0ecfe29043dde2a6d2925daca83265dbcaaa"
+    },
+    {
+      "path": "godot/Tet4D.Godot/scripts/ui/responsive_panel_policy.gd",
+      "sha256": "cb7b90e1db0aa5447812d12a34a5ff330e05da37303c13370c84d5c6eaebd29b"
+    },
+    {
+      "path": "godot/Tet4D.Godot/scripts/ui/designer_panel_frame.gd",
+      "sha256": "fbfbd3a969d1d008b5afeb2c1ace49f2be4740c205e3db58416805b9a3f9633b"
+    },
+    {
+      "path": "godot/Tet4D.Godot/scripts/ui/safe_area_insets.gd",
+      "sha256": "df3425b49117efdd698dd71c697b9d7baf3e709d9a6498ced6fe026b6f60bf17"
+    },
+    {
+      "path": "godot/Tet4D.Godot/tests/test_locked_shell_layouts.gd",
+      "sha256": "3c8fc79d1aa00e688f7a34632c4001319bae1c7fdc71dec9f25aa9fe57511175"
+    },
+    {
+      "path": "godot/Tet4D.Godot/tests/test_stage_58b_readability.gd",
+      "sha256": "77cf2891e43d932da63134407233280ce7c1933d1a6bd9589fb365805965edb1"
+    },
+    {
+      "path": "godot/Tet4D.Godot/config/built_in_style_catalog.json",
+      "sha256": "ff890e109293413e34c50bbb5fd311c28c1152b37fdde8feac3e09c164ef2ac6"
+    }
+  ]
+}
