@@ -170,7 +170,10 @@ Relevant tests:
 4. Pointer camera controls provide orbit, pan, zoom, and a live XYZ orientation
    marker without mutating gameplay state. Shift owns soft drop, with Ctrl as
    an undisplayed compatibility binding (Stage 56H-R2.3); no live camera
-   gesture uses a keyboard modifier.
+   gesture uses a keyboard modifier. Fit View completes any pending requested
+   orbit before fitting framing at that orientation, without resetting the
+   requested orientation or mutating gameplay. Presented-yaw consumers update
+   after the fit.
 5. Replay/smoke tests pass.
 6. Embedded 2D and random-cell 3D sets are selectable and playable.
 7. Debug 3D piece set is selectable and supports fast layer-fill validation.

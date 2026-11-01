@@ -46,9 +46,11 @@ The following refinements make its visible consequences explicit:
    and translation. Fit then adds one modest framing margin to already complete
    required bounds; it does not compound an unscaled collection envelope with
    an excessive second safety factor.
-7. Fit remains framing-only and idempotent. It may change focus and zoom in
-   `V/P`; it changes no `B`, `L`, anchors, gameplay state, deterministic hash,
-   replay/trace identity, or persisted preference.
+7. Fit first completes any pending outer-camera orbit to its existing targets,
+   then fits focus and zoom in `V/P`. It chooses no new orientation target and
+   changes no `B`, `L`, anchors, gameplay state, deterministic hash, replay/trace
+   identity, or persisted preference. Repeating Fit at the settled pose is
+   idempotent; see `camera_gui_preset_semantics.md`, section 6.
 
 ## 1. Purpose and current audit result
 
@@ -704,8 +706,8 @@ their existing preference owners.
 | applying a Live-4D view action | unchanged | receives the action yaw/pitch target | unchanged | outer mount/reflection preserved; fitted framing restored | unchanged |
 
 The active forward-looking lifecycle, including mode-specific 2D/3D/4D/replay
-semantics, one composite Reset View, framing-only Fit View, and action-based
-presets, is canonical in `camera_gui_preset_semantics.md`. No current view
+semantics, one composite Reset View, Fit View with pending-orbit completion,
+and action-based presets, is canonical in `camera_gui_preset_semantics.md`. No current view
 state is persisted. A future saved-view/bookmark feature would require an
 explicit versioned contract and recovery rules.
 

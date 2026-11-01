@@ -58,6 +58,7 @@ func run() -> Array:
 		failures.append("camera fit should use projected bounds with margin, got size %.3f" % camera.size)
 	if bool(rig.presentation_snapshot().get("horizontal_reflection_active", false)) or presentation_root.transform != Transform3D.IDENTITY:
 		failures.append("generic replay fit must leave the world presentation unreflected")
+	_assert_fit_finishes_pending_orbit(failures, rig, camera)
 
 	rig.establish_outer_view(CameraRigScript.LIVE_3D_DISPLAY_YAW_RAD, CameraRigScript.LIVE_3D_DISPLAY_PITCH_RAD, 0.0, false)
 	rig.fit_current_bounds(
@@ -177,6 +178,46 @@ func run() -> Array:
 	viewport.queue_free()
 	await tree.process_frame
 	return failures
+
+
+func _assert_fit_finishes_pending_orbit(failures: Array, rig, camera: Camera3D) -> void:
+	# Use actual projected cuboid corners after the easing period, independently
+	# of the fit's cached span. A transient-pose-only repair cannot pass this.
+	rig.establish_outer_view(0.0, 0.0, 0.0, false)
+	rig.set_presentation_preferences(1.0, false, 1.0)
+	rig.orbit(Vector2(-120.0, 40.0))
+	var requested: Dictionary = rig.presentation_snapshot()
+	if is_equal_approx(float(requested["current_yaw"]), float(requested["target_yaw"])):
+		failures.append("Fit regression requires an unsettled pointer orbit")
+	var presented_yaws: Array = []
+	var observe := func() -> void: presented_yaws.append(rig.presentation_snapshot()["current_yaw"])
+	rig.presented_orientation_changed.connect(observe)
+	rig.set_fit_horizontal_anchor(1.0)
+	var low := Vector3(-2, -6, -8)
+	var high := Vector3(2, 6, 8)
+	rig.fit_current_bounds({"ok": true, "min": low, "max": high}, 1.04)
+	var fitted: Dictionary = rig.presentation_snapshot()
+	for axis in ["yaw", "pitch", "roll"]:
+		_assert_float(failures, float(fitted["current_" + axis]), float(requested["target_" + axis]), "Fit finishes pending " + axis)
+		_assert_float(failures, float(fitted["target_" + axis]), float(requested["target_" + axis]), "Fit keeps requested " + axis)
+	if presented_yaws.is_empty():
+		failures.append("Fit must notify relative-control consumers when it finishes an orbit")
+	var fitted_size := camera.size
+	# Explicit engine callback advancement is deterministic and uses no sleep.
+	rig._process(10.0)
+	_assert_float(failures, camera.size, fitted_size, "Fit size remains stable after easing")
+	var settled: Dictionary = rig.presentation_snapshot()
+	for axis in ["yaw", "pitch", "roll"]:
+		_assert_float(failures, float(settled["current_" + axis]), float(requested["target_" + axis]), "Fitted pose remains settled for " + axis)
+	var region := Rect2(Vector2.ZERO, camera.get_viewport().get_visible_rect().size).grow(0.5)
+	for x in [low.x, high.x]:
+		for y in [low.y, high.y]:
+			for z in [low.z, high.z]:
+				var corner := Vector3(x, y, z)
+				if not region.has_point(camera.unproject_position(corner)):
+					failures.append("Fit clips cuboid corner after easing: %s" % corner)
+	rig.presented_orientation_changed.disconnect(observe)
+	rig.set_fit_horizontal_anchor(0.0)
 
 
 func _assert_shared_orbit_input_contract(failures: Array) -> void:
