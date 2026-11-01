@@ -105,6 +105,12 @@ Viewer-consistent translation requirement:
    Resolver output, repeated input, helper text, and orientation-gizmo labels
    and directions must consume the same effective mapping for the currently
    rendered outer-camera yaw.
+8. Mandatory Live integration acceptance sends movement action events through
+   the production scene's `_unhandled_input` and checks both the canonical
+   native command and every active-cell displacement against fixed specification
+   data. All four cardinal yaws, opposite pairs, framing, restart, reset,
+   re-entry, held repetition and intentional Absolute controls are required.
+   Mapping-unit or HUD-legend agreement alone cannot establish correctness.
 
 ## 6. Rendering and UX
 
