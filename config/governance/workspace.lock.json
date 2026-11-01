@@ -1,5 +1,5 @@
 {
-  "content_sha256": "1b2b597301731e20a4b9958483fe3fbb17c765cf6d266c24f412981b0a932c8e",
+  "content_sha256": "743b308a0c99a2d6a0c3cd98aa22788934eccdfaa4b5156b90bd695e247a24dc",
   "files": [
     ".ruff.toml",
     "MANIFEST.json",
@@ -38,7 +38,7 @@
   "lock_algorithm": "sha256-path-and-content-v1",
   "pack_name": "workspace-governance",
   "pack_path": "tools/workspace_governance",
-  "revision": "v0.6.1-private-execution-metadata-1",
+  "revision": "v0.7-harness-repair-1",
   "schema_version": 1,
-  "version": "0.6.1"
+  "version": "0.7.0"
 }

@@ -1,18 +1,15 @@
 # CURRENT_STATE (Restart Handoff)
 
-Governance repair checkpoint (2026-10-04): distribution 1.3.1 / runtime 0.6.1 is
-published; the frozen portable gate passed 552 cases. Durable private state and
-440-file backup restoration are complete. Native integration, guarded rollout
-and fresh evidence follow the saved repair plan; current results and remaining
-coverage belong to its checkpoint and private fleet audit. Product work and
-deferred telemetry gates retain their existing scope.
-
-Integration review checkpoint (2026-10-05): Claude discovery adapters are now
-Git-visible, and ordinary named gate failures retain checker diagnostics and
-exit status. Scanner redaction remains bounded. Focused integration checks,
-a Git-visible checkout export and the canonical full gate pass.
-Ambient evidence matching and Make ordering remain shared-kit follow-up.
-Native verifier edits need guarded re-review before fleet acceptance. The Stage 56H unified baseline is committed at `0cb30958`.
+Harness repair consumes distribution 1.4.0 / runtime 0.7.0. Candidate and
+immutable kit gates, source/skill integrity, guarded direct adoption and manual
+owner migrations are retained in durable private receipts. Tet4D's current
+native verifier and committed project rules are preserved in the reviewed
+binding. The owner selected harness repairs and existing offline checks;
+the private fleet audit owns fresh scoped outcomes and remaining gaps.
+Protected data, historical releases/evidence, product authority and deferred
+telemetry gates remain intact. The plan is
+`docs/plans/policy_kit_logging_and_meta_testing_repairs.md`.
+The Stage 56H unified baseline is committed at `0cb30958`.
 ## Purpose
 
 This file contains only the compact state needed to resume staged or
@@ -63,15 +60,15 @@ Next: bounded Designer text-size review; replay toolbar assessment stays separat
 Repair accepted; publication/master CI is tracked on PR #162. 58B scale stays frozen.
 The Stage 56H human playability checkpoint retains its task contract at
 `docs/tasks/live_4d_cockpit_convergence.md`; Stage 56I polish and the 190/200
-A/B decision remain separate. The authorized governance distribution 1.3.1 is active;
+A/B decision remain separate. Governance distribution 1.4.0 / runtime 0.7.0 is active;
 its rollout and proof limits are recorded in
 `docs/plans/all_repository_governance_rollout.md` and the private fleet audit.
 P1b/P1c/P6 continuation and separate comparison/blocking gates remain required.
 The implemented repair contract is recorded in
 `docs/plans/policy_kit_logging_and_meta_testing_repairs.md`; fresh successor
-evidence is separate from the retained historical records. The nested boundary,
-orphaned locations, sanitation conflicts and census gaps remain open. IQA and
-RMBG product execution stay held at their owner boundaries.
+evidence is separate from the retained historical records. Unrecoverable Git metadata, unresolved product contracts, sanitation limits
+and census gaps remain separate acceptance boundaries. IQA product execution stays held at its model-download boundary; RMBG
+verification follows its reviewed temporary-input repair.
 The human session includes direct Play and `2`/`3`/`4` entry, `C` Change Setup,
 and frozen-setup Restart/Play Again under
 `docs/architecture/editable_board_setup_and_persistence.md`.

@@ -57,3 +57,10 @@ compatibility rules, an establishment record, and an authority-map update.
 Verification for behaviour changes and bug fixes is owned by
 `VERIFICATION.md`. Use `CONFIG_AND_GENERATED_DATA.md` for constants and
 generated outputs, and `NATIVE_AND_PLATFORM.md` for Godot/native boundaries.
+
+## Delegated context
+
+Delegation is optional. Put the task boundary, critical constraints, owning
+contracts and expected validation in the assignment; inline what the worker
+cannot reliably read. Check the result against that assignment; an
+acknowledgement or recorded read is not evidence of compliance.

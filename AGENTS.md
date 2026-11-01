@@ -24,6 +24,10 @@ semantics, ambiguity/conflict, boundary/escalation, provenance audit, or authori
 - `FEATURE`: identify the owner, neighboring contracts, and a bounded architecture surface.
 - `STRUCTURAL_CHANGE`: review authorities, routing, broad impact, migrations, and generated surfaces.
 
+Explicit runtimes and named-file ownership outrank size labels. Compose every
+required route from the manifest; a representative resolver projection is not an
+exhaustive selection. See `CHANGE_GOVERNANCE.md` under `docs/governance/`.
+
 Mode controls exploration cost only. Required evidence always resolves from
 the task, authority, actual diff, claims, and risk. Escalate a local fix when
 ownership is unclear or crossed, implementations disagree, a generated

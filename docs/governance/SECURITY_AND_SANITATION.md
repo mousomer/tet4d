@@ -20,6 +20,9 @@ copying it elsewhere. Use
 python tools/governance/scan_secrets.py
 ```
 
+Bare `exclude_dirs` names prune at any depth; `a/b` entries prune that exact path
+(nested `.claude/worktrees` gate themselves). A scanner timeout is a failure.
+
 ## String and path sanitation
 
 All external or user-controlled strings must use an approved shared sanitation

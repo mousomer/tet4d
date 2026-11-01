@@ -167,6 +167,10 @@ opacity, colour, scale, camera and depth tuning belong to later stages.
 Recheck the isolated macOS ObjectDB profiler snapshot-storage advisory when the
 pinned engine or temporary-path strategy changes; see the Godot 4.7.2 audit.
 
+### Governance repair outcome comparison
+
+Matched-task follow-up for the bounded repair: `docs/plans/governance_repairs_2026_10.md`.
+
 ### Governance-manifest quality calibration
 
 Safety ceilings, including the machine-policy 80 KiB advisory and 96 KiB hard
@@ -204,16 +208,20 @@ digest is likewise stale since iPadOS left hosted CI; that repair refreshes both
 
 ### Governance pack, telemetry and work-type rollout
 
-The owner authorized implementation of
-`docs/plans/policy_kit_logging_and_meta_testing_repairs.md`. Permanent private
-state, source history and backup restoration are complete. Distribution 1.3.1 /
-runtime 0.6.1 is published with execution/evidence hardening, release-pinned
-adapter validation, explicit P1a readiness and a separately packaged portable
-meta-test component. The frozen gate passed 552 cases; the 1.3.0 integration
-worktree passed its full source verifier before the bounded patch upgrade.
-Actual rollout, successor gates and current fleet results belong to the repair
-checkpoint and durable private audit. Failed products, unavailable evidence,
-IQA's model-download hold and RMBG's temporary-fixture boundary remain open.
+The owner's 2026-10-31 harness repair request extends
+`docs/plans/policy_kit_logging_and_meta_testing_repairs.md`. Distribution 1.4.0 /
+runtime 0.7.0 is the local successor: bounded Make parser helpers, mandatory
+runtime source-style checks in the immutable kit gate, explicit retired-store
+absence observations, reviewed native bindings and preserved mutable owner
+files. Candidate/frozen gates and guarded adoption are retained privately.
+Fresh approved execution evidence and current fleet outcomes belong to the
+private audit; source integrity and installation never establish product proof.
+Unrecoverable Git metadata, unavailable product contracts, protected scan gaps,
+and IQA's model-download hold remain open. RMBG verification follows the reviewed
+temporary-input repair; current results belong to the private collector.
+The owner limited this follow-up to the harness and existing offline checks.
+Raizor source/synthetic lanes preserve model, GPU, corpus, dependency-pin and
+human acceptance boundaries; new product contracts remain separate work.
 
 **Status (2026-10-04): all-repository implementation reactivated by the owner.**
 The rollout is `docs/plans/all_repository_governance_rollout.md`; distribution
@@ -235,26 +243,21 @@ Still deferred behind an evidence checkpoint and explicit approval: the non-self
 
 ### Policy kit logging and manifest meta testing repairs
 
-Implementation authorized on 2026-10-04:
-`docs/plans/policy_kit_logging_and_meta_testing_repairs.md`.
-Durable state and verified 440-file backup restoration are complete. The
-published 1.3.1 / 0.6.1 successor includes execution/evidence contracts, safe
-gate diagnostics, logging readiness, immutable skills and portable meta-tests;
-1.2.0 and its historical evidence remain unchanged. The final private audit
-retains fresh acceptance and all unresolved product, sanitation and coverage
-results. One nested direct checkout, nine orphaned markers and 155 scan errors
-remain open. Mutable human documents and project tests receive owner migrations
-instead of frozen installer postimages. P1b/P1c/P6 and scientific/product fixes
-retain their separate gates.
+The accepted repair contract and historical executions are retained in
+`docs/plans/policy_kit_logging_and_meta_testing_repairs.md`. Current shared source
+is distribution 1.4.0 / runtime 0.7.0; earlier releases and observations remain
+immutable. Actual collector records bind fresh tool bytes, source state and
+execution policy; historical passes are never retagged after an executable or
+input changes.
 
-The 2026-10-05 integration review confirmed ignored Claude adapters and suppressed
-ordinary failure diagnostics. Their bounded Tet4D repair passes Git-visible
-checkout and quiet/verbose failure regressions plus the canonical full gate.
-Shared-kit follow-up remains open: ambient `TERM` changes evidence matching,
-Make prerequisites can execute before governance, and whole-verifier pinning
-requires guarded re-review after native integration edits. System-Python
-bootstrap policy and portable default tool paths need a separate kit decision;
-no successor release or fleet adoption is claimed by this integration repair.
+Remaining work is substantive acceptance: project-specific product contracts,
+held execution decisions, missing Git metadata, inaccessible roots and complete
+sanitation coverage. Existing safe offline checks may establish only their
+explicit behavior boundary. Mutable human documents and project tests receive
+owner migrations instead of continuing installer postimages. P1b/P1c/P6 retain
+their separate continuation gate. Ambient TERM matching, system-Python bootstrap
+policy and portable default tool paths retain separate kit decisions; no
+undeclared logging or blocking policy is activated.
 
 ### Camera and relative-control contract
 
