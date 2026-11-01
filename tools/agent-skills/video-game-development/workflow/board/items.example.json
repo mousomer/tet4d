@@ -1,0 +1,6 @@
+[
+  {"id":"<artifact id of the test build>","title":"My Game","type":"game","topic":"builds","status":"reviewing","updated":"2026-10-15","version":"v12","note":"The test build: every sheet's links open it."},
+  {"id":"<artifact id of a worksheet>","title":"Layout Decisions","type":"worksheet","topic":"layout","status":"review","updated":"2026-10-15","note":"Six questions over today's screens, each option as a picture."},
+  {"id":"<artifact id of a QA sheet>","title":"S3 Test Sheet","type":"qa","topic":"play","status":"review","updated":"2026-10-15","version":"S3, 20 tests","note":"One test per skill; each link opens the build in that state."},
+  {"id":"slice-s4","title":"S4: the enemies","type":"slice","topic":"play","status":"claude","order":1,"updated":"2026-10-15","note":"Coming next: every special enemy and its ability, with its own test sheet."}
+]

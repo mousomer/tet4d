@@ -92,7 +92,7 @@ def test_explain_stable_authority_identity(authority_id: str) -> None:
     [
         ("small Godot UI defect", "LOCAL_FIX", "godot_product_shell"),
         ("small Python defect", "LOCAL_FIX", "python_reference_engine"),
-        ("moderate feature", "FEATURE", "python_reference_engine"),
+        ("moderate feature", "FEATURE", "godot_product_shell"),
         ("cross-layer change", "STRUCTURAL_CHANGE", "native_deterministic_core"),
         ("governance change", "STRUCTURAL_CHANGE", "governance_and_tooling"),
         ("packaging release change", "STRUCTURAL_CHANGE", "packaging_and_release"),
@@ -651,3 +651,150 @@ def test_workspace_local_override_is_used_by_cli_and_shell(tmp_path: Path) -> No
         )
         == 2
     )
+
+
+def test_frozen_manifest_repair_acceptance_cases() -> None:
+    cases = json.loads(
+        (
+            ROOT / "docs/experiments/governance_repair_acceptance_2026_10.json"
+        ).read_text()
+    )
+    for case in cases["routing"]:
+        entries = GovernanceResolver.for_root(ROOT).resolve(task=case["task"])[
+            "entries"
+        ]
+        actual = set(entries["routes"]["value"])
+        if "expected_routes" in case:
+            assert actual == set(case["expected_routes"]), case["id"]
+        else:
+            assert set(case["required_routes"]) <= actual, case["id"]
+
+
+def test_named_real_godot_file_cannot_be_hidden_by_python_only_wording() -> None:
+    # Additional post-discovery regression, not an independent behavioral holdout.
+    path = "godot/Tet4D.Godot/scripts/presentation/presentation_profile.gd"
+    assert (ROOT / path).is_file()
+    entries = GovernanceResolver.for_root(ROOT).resolve(
+        task=f"Python-only change in {path}"
+    )["entries"]
+    assert "godot_product_shell" in entries["routes"]["value"]
+
+
+def test_named_file_preserves_explicit_cross_layer_provider_consumer_routes() -> None:
+    # Post-discovery overlap regression; not an independent holdout.
+    entries = GovernanceResolver.for_root(ROOT).resolve(
+        task="Cross-layer change in godot/Tet4D.Godot/scripts/presentation/presentation_profile.gd"
+    )["entries"]
+    assert set(entries["routes"]["value"]) == {
+        "godot_product_shell",
+        "python_reference_engine",
+        "native_deterministic_core",
+    }
+
+
+# Post-review regressions (2026-10-28), not independent holdouts: an owner path
+# must not capture another tree's "godot/" segment, must not widen a small fix's
+# mode, and mixed runtime/path evidence must keep every owner's route.
+@pytest.mark.parametrize(
+    ("task", "mode", "routes"),
+    [
+        (
+            "Packaging release change for packaging/godot/export_presets.cfg",
+            "STRUCTURAL_CHANGE",
+            {"packaging_and_release"},
+        ),
+        (
+            "Fix a small Godot defect in godot/Tet4D.Godot/scripts/presentation/presentation_profile.gd",
+            "LOCAL_FIX",
+            {"godot_product_shell"},
+        ),
+        (
+            "Add a moderate feature to src/tet4d/engine/board.py",
+            "FEATURE",
+            {"python_reference_engine"},
+        ),
+        (
+            "Moderate feature in native/tet4d_core/",
+            "FEATURE",
+            {"native_deterministic_core"},
+        ),
+        (
+            "Small Godot defect in src/tet4d/engine/board.py",
+            "FEATURE",
+            {
+                "godot_product_shell",
+                "python_reference_engine",
+                "native_deterministic_core",
+            },
+        ),
+        (
+            "Small Python defect in godot/Tet4D.Godot/scripts/native/tet4d_core_bridge.gd",
+            "FEATURE",
+            {
+                "godot_product_shell",
+                "python_reference_engine",
+                "native_deterministic_core",
+            },
+        ),
+    ],
+)
+def test_named_owner_paths_compose_without_capturing_other_routes(
+    task: str, mode: str, routes: set[str]
+) -> None:
+    entries = GovernanceResolver.for_root(ROOT).resolve(task=task)["entries"]
+    assert entries["execution.mode"]["value"] == mode
+    assert set(entries["routes"]["value"]) == routes
+
+
+_CODE_ROUTES = {
+    "godot_product_shell",
+    "python_reference_engine",
+    "native_deterministic_core",
+}
+_OWNER_PATHS = {
+    "godot/Tet4D.Godot/export_presets.cfg": "godot_product_shell",
+    "src/tet4d/engine/board.py": "python_reference_engine",
+    "native/tet4d_core/src/board.cpp": "native_deterministic_core",
+}
+_NON_CODE_SCENARIOS = [
+    scenario
+    for scenario in json.loads((ROOT / "config/governance/project.json").read_text())[
+        "execution"
+    ]["representative_scenarios"]
+    if not set(scenario["routes"]) & _CODE_ROUTES
+]
+
+
+# Post-review overlap regressions (2026-10-28): a named owner path adds its
+# route to a non-code scenario and keeps that scenario's mode, including when
+# the brief also names a runtime.
+@pytest.mark.parametrize(
+    ("scenario", "path", "wording"),
+    [
+        (scenario, path, wording)
+        for scenario in _NON_CODE_SCENARIOS
+        for path in _OWNER_PATHS
+        for wording in ("", " python", " godot")
+    ],
+    ids=lambda value: value["id"] if isinstance(value, dict) else value,
+)
+def test_named_owner_path_composes_with_non_code_scenarios(
+    scenario: dict[str, object], path: str, wording: str
+) -> None:
+    task = f"{' '.join(scenario['match_all'])}{wording} for {path}"
+    entries = GovernanceResolver.for_root(ROOT).resolve(task=task)["entries"]
+    routes = set(entries["routes"]["value"])
+    assert entries["execution.mode"]["value"] == scenario["mode"], task
+    assert set(scenario["routes"]) <= routes, task
+    assert _OWNER_PATHS[path] in routes, task
+
+
+def test_reported_packaging_overlap_keeps_packaging_and_godot() -> None:
+    entries = GovernanceResolver.for_root(ROOT).resolve(
+        task="Packaging release change for godot/Tet4D.Godot/export_presets.cfg"
+    )["entries"]
+    assert entries["execution.mode"]["value"] == "STRUCTURAL_CHANGE"
+    assert set(entries["routes"]["value"]) == {
+        "packaging_and_release",
+        "godot_product_shell",
+    }

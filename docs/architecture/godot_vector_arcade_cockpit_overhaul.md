@@ -670,8 +670,10 @@ The top live cockpit exposes two visually distinct families:
 
 Restart Game is always reachable and remains a gameplay lifecycle operation
 that preserves the current view. Reset View remains presentation-only and
-restores the complete current-mode canonical view. Fit View remains
-framing-only. Their shared placement does not merge their semantics.
+restores the complete current-mode canonical view. Fit View completes any
+pending orbit to its existing targets before fitting; it does not choose a
+canonical orientation. The owning contract is section 6 of
+`camera_gui_preset_semantics.md`. Their shared placement does not merge their semantics.
 
 Stage 57 keeps the existing control legend and native reset/configure owners.
 `LiveInputContract` owns semantic groups and default bindings; runtime InputMap

@@ -253,7 +253,7 @@ func _check_primary_surfaces(hud, mode: String, label: String) -> Array:
 	if floating:
 		# The requested full Designer mode has free rectangles, not dock slots.
 		# Verify its geometry and scrolling, then retain shared content checks.
-		var host: Rect2 = hud._live_cockpit._designer_host.get_global_rect()
+		var host: Rect2 = hud._live_cockpit.designer_surface_rect()
 		if frames.size() != 4:
 			failures.append("Full Designer must expose all four cockpit panels")
 		for key in frames:

@@ -73,6 +73,11 @@ func constrain(rect: Rect2) -> void:
 	position = fitted.position
 
 
+func release_content() -> void:
+	_restore_detached_layout()
+	_detached_controls.clear()
+
+
 func _restore_detached_layout() -> void:
 	for reference in _detached_controls:
 		var control = reference.get_ref()

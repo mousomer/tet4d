@@ -137,7 +137,9 @@ System:
    visual-only in the admitted `[-40°, +60°]` gameplay domain.
 5. Outer `V/P` owns right-drag pan, wheel or `-/=/+` zoom, double-click/the
    visible Fit View action, canonical orthographic projection, and the fitted
-   reflection. Fit View changes framing only.
+   reflection. Fit View first completes any pending requested orbit, then fits
+   framing at that orientation. It does not reset the requested orientation,
+   exact `B`, or native gameplay; presented-yaw consumers update after the fit.
 6. `Backspace` Restart Game reconstructs the frozen current native setup and
    also resets `B/L/V/P`. Reset View is presentation-only. The internal
    basis-only reset changes only `B` and dependent layout/bounds.

@@ -1,0 +1,320 @@
+<meta charset="utf-8">
+<title>SET ME: the sheet title, as in SHEET.title</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* QA sheet (the video-game-development skill, workflow/qa-sheet/): one column of test cards under a sticky tally, each
+   test a link that opens the build in its state, Pass / Fail / Skip and a note, saved to the artifact's db. One
+   committed dark look; restyle the tokens to suit the project. */
+:root {
+  --bg: #121733; --panel: #1f2750; --panel-2: #2a3366; --slot: #4a3e82; --line: #3b4580;
+  --fg: #e9e8f5; --muted: #a3a6c9; --title: #fdf926;
+  --pass: #3fcf6e; --fail: #ff5a4e; --skip: #8f93b8;
+  --pass-bg: rgba(63, 207, 110, .14); --fail-bg: rgba(255, 90, 78, .14);
+  --display: "Grenze Gotisch", "Palatino Linotype", Georgia, serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 15px/1.5 var(--body); margin: 0; }
+.wrap { max-width: 860px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 64px; }
+h1 { font: 700 2.4rem/1.05 var(--display); color: var(--title); margin: 0 0 6px; text-wrap: balance; }
+.lede { color: var(--muted); max-width: 64ch; margin: 0 0 18px; }
+.lede b { color: var(--fg); font-weight: 600; }
+.notes { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 4px; font-size: .9rem; color: var(--muted); margin-bottom: 18px; }
+.notes b { color: var(--fg); font-weight: 600; }
+.notes:empty { display: none; }
+.tally { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px; border-bottom: 1px solid var(--line);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.meter { flex: 1 1 220px; min-width: 0; height: 10px; border-radius: 5px; background: var(--panel-2); overflow: hidden; display: flex; }
+.meter i { display: block; height: 100%; }
+.meter .p { background: var(--pass); } .meter .f { background: var(--fail); } .meter .s { background: var(--skip); }
+.counts { display: flex; flex-wrap: wrap; gap: 4px 14px; font-variant-numeric: tabular-nums; font-size: .9rem; }
+.counts .cp { color: var(--pass); } .counts .cf { color: var(--fail); } .counts .cs { color: var(--skip); } .counts .cu { color: var(--muted); }
+.filters { display: flex; gap: 6px; }
+.filters button { font: 500 .82rem var(--body); color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.filters button[aria-pressed="true"] { background: var(--slot); color: var(--fg); border-color: var(--slot); }
+.save-note { width: 100%; font-size: .8rem; color: var(--muted); }
+.save-note[data-state="error"] { color: var(--fail); }
+h2 { font: 700 1.5rem/1.2 var(--display); margin: 30px 0 4px; }
+.section-note { color: var(--muted); margin: 0 0 12px; font-size: .9rem; max-width: 64ch; }
+.list { display: grid; gap: 10px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 6px; min-width: 0; }
+.card[data-status="pass"] { border-color: color-mix(in srgb, var(--pass) 55%, var(--line)); }
+.card[data-status="fail"] { border-color: color-mix(in srgb, var(--fail) 65%, var(--line)); }
+.card[data-status="skip"] { border-style: dashed; }
+.card[data-status="skip"] .rows { opacity: .55; }
+.card[hidden] { display: none !important; }
+.head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; min-width: 0; }
+.num { font: 500 .8rem var(--mono); color: var(--muted); }
+.name { font: 600 1.05rem var(--body); color: var(--title); }
+.open { font: 500 .88rem var(--body); color: var(--fg); text-decoration: none; border-bottom: 1px solid var(--slot); padding-block: 4px; }
+.open:hover, .open:focus-visible { border-bottom-color: var(--title); outline: none; }
+.where { font: 500 .78rem var(--mono); color: var(--muted); overflow-wrap: anywhere; }
+.rows { display: grid; gap: 2px; min-width: 0; }
+.rows p { margin: 0; }
+.lbl { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-right: 6px; }
+.verdict { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; margin-top: 4px; min-width: 0; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; flex: none; }
+.seg button { font: 600 .88rem var(--body); background: transparent; color: var(--muted); border: 0; padding: 9px 16px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg .pass[aria-pressed="true"] { background: var(--pass-bg); color: var(--pass); }
+.seg .fail[aria-pressed="true"] { background: var(--fail-bg); color: var(--fail); }
+button.skip { flex: none; font: 600 .88rem var(--body); background: transparent; color: var(--muted); border: 1px dashed var(--line); border-radius: 8px; padding: 9px 14px; cursor: pointer; }
+button.skip[aria-pressed="true"] { color: var(--fg); border-style: solid; border-color: var(--skip); background: rgba(143, 147, 184, .16); }
+button:focus-visible, textarea:focus-visible { outline: 2px solid var(--title); outline-offset: 1px; }
+textarea { flex: 1 1 240px; min-width: 0; min-height: 38px; resize: vertical; font: .9rem/1.4 var(--body); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+textarea::placeholder { color: var(--muted); opacity: .8; }
+.card[data-status="fail"] textarea:placeholder-shown { border-color: var(--fail); }
+.saved { font-size: .75rem; color: var(--muted); align-self: center; min-width: 5ch; }
+/* Hold to compare: the new picture; holding it (finger, mouse, Space / Enter) shows the old one in its place. */
+.cmp { margin: 4px 0 0; display: grid; gap: 6px; justify-items: start; }
+.cmp .box { position: relative; padding: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--bg); touch-action: pan-y;
+  -webkit-touch-callout: none; user-select: none; cursor: pointer; max-width: min(100%, 420px); }
+.cmp img { display: block; width: 100%; height: auto; pointer-events: none; }
+.cmp .old { position: absolute; inset: 0; opacity: 0; }
+.cmp .box.held .old { opacity: 1; }
+.cmp .pill { position: absolute; top: 8px; left: 8px; padding: 2px 10px; border-radius: 99px; font: 600 .75rem/1.6 var(--body); color: var(--fg); background: rgba(0, 0, 0, .7); }
+.cmp figcaption { color: var(--muted); font-size: .82rem; }
+@media (max-width: 480px) { h1 { font-size: 2rem; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.save-act { font: 600 0.82rem var(--body); color: var(--fg); background: var(--slot); border: 1px solid var(--slot); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+</style>
+
+<div class="wrap">
+  <h1 id="title"></h1>
+  <p class="lede" id="lede"></p>
+  <div class="notes" id="notes"></div>
+  <div class="tally" aria-live="polite">
+    <div class="meter" role="img" id="meter" aria-label="Progress"><i class="p" id="mp"></i><i class="f" id="mf"></i><i class="s" id="ms"></i></div>
+    <div class="counts"><span class="cp" id="np"></span><span class="cf" id="nf"></span><span class="cs" id="ns"></span><span class="cu" id="nu"></span></div>
+    <div class="filters" role="group" aria-label="Show">
+      <button type="button" data-f="all" aria-pressed="true">All</button>
+      <button type="button" data-f="untested" aria-pressed="false">Untested</button>
+      <button type="button" data-f="fail" aria-pressed="false">Failed</button>
+    </div>
+    <div class="save-note" id="saveNote">Connecting to saved results…</div>
+  </div>
+  <main id="sections"></main>
+</div>
+
+<script>
+// ---- FILL IN: the sheet's content. HTML strings are written by the author (trusted). ----------------------------
+// A test: id (the db document id: letters, digits, - _; stable once the owner has seen it), link (appended to `base`,
+// usually a dev hash that builds the state, e.g. 'game-3-hp1-nsqa07-fresh'; a whole https link opens that page
+// instead), name, test (what to do), expect (what should happen), pic (optional: { now, before, note } pictures
+// published next to the sheet, the same size; holding the new one shows the old). A new round of fixes is a new
+// section with new ids; never reuse an id the owner has marked.
+const SHEET = {
+  title: 'Project QA Sheet',
+  storageKey: 'project-qa',                 // localStorage fallback key (outside claude.ai)
+  base: 'https://claude.ai/artifact/SET-ME#',
+  lede: 'Each test opens the test build in the state it needs; its own test storage keeps your real progress apart. Mark each test <b>Pass</b> or <b>Fail</b> (or <b>Skip</b> when it no longer applies), and say why when it fails. Results save as you go and Claude reads them back.',
+  notes: ['<b>Round 1:</b> what this build is and what changed.'],
+  sections: [
+    { title: 'Section', note: 'Optional context for the section.', tests: [
+      { id: 't01', link: 'some-state-nsqa01-fresh', name: 'A test', test: 'What to do.', expect: 'What should happen.' },
+    ] },
+  ],
+};
+// -----------------------------------------------------------------------------------------------------------------
+
+document.title = SHEET.title;
+document.getElementById('title').textContent = SHEET.title;
+document.getElementById('lede').innerHTML = SHEET.lede;
+document.getElementById('notes').innerHTML = (SHEET.notes || []).map((n) => `<span>${n}</span>`).join('');
+
+const state = {}, cards = {};          // id -> { status, comment }; id -> card
+let filter = 'all', store = null;      // store: the db collection, or null (kept on this device)
+const ref = (link) => (/^https:/.test(link) ? link : SHEET.base + link);
+
+function compare(pic) {
+  const f = document.createElement('figure'); f.className = 'cmp';
+  f.innerHTML = '<button type="button" class="box" aria-label="Hold to see the old version"><img class="now" alt=""><img class="old" alt=""><span class="pill">New</span></button>';
+  f.querySelector('.now').src = pic.now; f.querySelector('.old').src = pic.before;
+  if (pic.note) { const c = document.createElement('figcaption'); c.innerHTML = pic.note; f.append(c); }
+  const box = f.querySelector('.box'), pill = f.querySelector('.pill');
+  const hold = (on) => { box.classList.toggle('held', on); pill.textContent = on ? 'Before' : 'New'; };
+  box.addEventListener('touchstart', (e) => { e.preventDefault(); hold(true); }, { passive: false });   // no long-press callout or vibration
+  box.addEventListener('touchend', () => hold(false)); box.addEventListener('touchcancel', () => hold(false));
+  box.addEventListener('mousedown', () => hold(true)); addEventListener('mouseup', () => hold(false));
+  box.addEventListener('keydown', (e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); hold(true); } });
+  box.addEventListener('keyup', () => hold(false)); box.addEventListener('blur', () => hold(false));
+  return f;
+}
+
+function build() {
+  const root = document.getElementById('sections');
+  let n = 0;
+  for (const sec of SHEET.sections) {
+    const h = document.createElement('h2'); h.textContent = sec.title; root.append(h);
+    if (sec.note) { const p = document.createElement('p'); p.className = 'section-note'; p.innerHTML = sec.note; root.append(p); }
+    const list = document.createElement('div'); list.className = 'list'; root.append(list);
+    for (const t of sec.tests) {
+      n += 1;
+      const card = document.createElement('article'); card.className = 'card'; card.id = t.id;
+      card.innerHTML = `<div class="head"><span class="num">${String(n).padStart(2, '0')}</span><span class="name"></span><a class="open" target="_blank" rel="noopener">Open test ↗</a><span class="where"></span></div>
+        <div class="rows"><p><span class="lbl">Test</span><span class="t"></span></p><p><span class="lbl">Expect</span><span class="e"></span></p></div>`;
+      card.querySelector('.name').textContent = t.name;
+      card.querySelector('.open').href = ref(t.link);
+      card.querySelector('.where').textContent = /^https:/.test(t.link) ? 'another page' : '#' + t.link;
+      card.querySelector('.t').innerHTML = t.test; card.querySelector('.e').innerHTML = t.expect;
+      if (t.pic) card.append(compare(t.pic));
+      const v = document.createElement('div'); v.className = 'verdict';
+      v.innerHTML = `<div class="seg" role="group" aria-label="Result"><button type="button" class="pass" aria-pressed="false">Pass</button><button type="button" class="fail" aria-pressed="false">Fail</button></div>
+        <button type="button" class="skip" aria-pressed="false" title="This test no longer applies">Skip</button>
+        <textarea rows="1" placeholder="Note (say why when it fails)" aria-label="Note for ${t.name.replace(/"/g, '&quot;')}"></textarea><span class="saved" id="${t.id}-saved"></span>`;
+      card.append(v); list.append(card); cards[t.id] = card;
+      for (const st of ['pass', 'fail', 'skip']) v.querySelector('.' + st).addEventListener('click', () => setStatus(t.id, st));
+      const ta = v.querySelector('textarea');
+      let timer = null;
+      ta.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => setComment(t.id, ta.value), 700); });
+      ta.addEventListener('blur', () => { clearTimeout(timer); setComment(t.id, ta.value); });
+    }
+  }
+  document.querySelectorAll('.filters button').forEach((b) => b.addEventListener('click', () => {
+    filter = b.dataset.f;
+    document.querySelectorAll('.filters button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    render();
+  }));
+}
+
+function render() {
+  let p = 0, f = 0, k = 0, u = 0;
+  for (const id in cards) {
+    const s = state[id] || {}, card = cards[id], st = s.status || '';
+    if (st === 'pass') p++; else if (st === 'fail') f++; else if (st === 'skip') k++; else u++;
+    card.dataset.status = st;
+    for (const x of ['pass', 'fail', 'skip']) card.querySelector('.' + x).setAttribute('aria-pressed', String(st === x));
+    const ta = card.querySelector('textarea');
+    if (document.activeElement !== ta && ta.value !== (s.comment || '')) ta.value = s.comment || '';
+    card.hidden = (filter === 'untested' && !!st) || (filter === 'fail' && st !== 'fail');
+  }
+  const total = Math.max(1, p + f + k + u);
+  document.getElementById('mp').style.width = `${(p / total) * 100}%`;
+  document.getElementById('mf').style.width = `${(f / total) * 100}%`;
+  document.getElementById('ms').style.width = `${(k / total) * 100}%`;
+  document.getElementById('meter').setAttribute('aria-label', `${p} passed, ${f} failed, ${k} skipped, ${u} untested`);
+  document.getElementById('np').textContent = `${p} pass`;
+  document.getElementById('nf').textContent = `${f} fail`;
+  document.getElementById('ns').textContent = `${k} skipped`;
+  document.getElementById('nu').textContent = `${u} untested`;
+}
+
+function note(text, err) { const el = document.getElementById('saveNote'); el.textContent = text; el.dataset.state = err ? 'error' : ''; }
+function flash(id, text) { const el = document.getElementById(id + '-saved'); if (el) el.textContent = text; }
+const LOCAL = SHEET.storageKey;
+const pending = new Set();        // ids marked here and not yet in the db
+let unsub = null, slow = 0, tries = 0, retryT = 0;
+function keepLocal() {
+  try { localStorage.setItem(LOCAL, JSON.stringify(state)); localStorage.setItem(LOCAL + '-pending', JSON.stringify([...pending])); } catch {}
+}
+function loadLocal() {
+  try { Object.assign(state, JSON.parse(localStorage.getItem(LOCAL) || '{}')); } catch {}
+  try { for (const id of JSON.parse(localStorage.getItem(LOCAL + '-pending') || '[]')) pending.add(id); } catch {}
+}
+function action(label, fn) {
+  let b = document.getElementById('saveAct');
+  if (!label) { if (b) b.remove(); return; }
+  if (!b) { b = document.createElement('button'); b.id = 'saveAct'; b.type = 'button'; b.className = 'save-act'; document.getElementById('saveNote').after(b); }
+  b.textContent = label; b.onclick = fn;
+}
+const why = (e) => (e && (e.code || e.message)) || 'no answer';
+
+async function write(id) {
+  const s = state[id] || {};
+  if (!store) { pending.add(id); keepLocal(); flash(id, 'Kept on this device'); return; }
+  pending.add(id); keepLocal();
+  flash(id, 'Saving…');
+  try {
+    await store.doc(id).set({ status: s.status || '', comment: s.comment || '', updatedAt: s.at || new Date().toISOString() });
+    pending.delete(id); keepLocal(); flash(id, 'Saved');
+  } catch (e) {
+    flash(id, 'Kept on this device');
+    if (e && e.code === 'invalid_argument') note('You can view results but not change them.', true);
+    else note(`Could not save (${why(e)}). Your marks are kept on this device and are sent when the page connects again.`, true);
+  }
+}
+function setStatus(id, st) {
+  const s = state[id] = { ...(state[id] || {}) };
+  s.status = s.status === st ? '' : st;          // tap again to clear
+  s.at = new Date().toISOString();
+  render(); write(id);
+  if (s.status === 'fail') cards[id].querySelector('textarea').focus();
+}
+function setComment(id, text) {
+  const s = state[id] = { ...(state[id] || {}) };
+  if ((s.comment || '') === text) return;
+  s.comment = text; s.at = new Date().toISOString(); render(); write(id);
+}
+
+// The db's snapshot wins over this device's copy, except a mark still pending here, and, on the first answer, a mark
+// made here later than the db's (or one the db does not have at all): those are sent.
+function connect(db) {
+  if (unsub) { try { unsub(); } catch {} unsub = null; }
+  store = null;
+  const col = db.collection('results');
+  try {
+    unsub = col.onSnapshot((snap) => {
+      clearTimeout(slow); action(null);
+      const first = !store; store = col;
+      const seen = new Set();
+      for (const d of snap.docs) {
+        const b = d.data(), mine = state[d.id]; seen.add(d.id);
+        if (pending.has(d.id) && mine) continue;
+        if (first && mine && mine.at && (!b.updatedAt || mine.at > b.updatedAt)) { pending.add(d.id); continue; }
+        state[d.id] = { status: b.status || '', comment: b.comment || '', at: b.updatedAt || '' };
+      }
+      if (first) for (const [id, s] of Object.entries(state)) if (cards[id] && !seen.has(id) && (s.status || s.comment)) pending.add(id);
+      render(); keepLocal();
+      if (first) for (const id of [...pending]) { if (cards[id]) write(id); else pending.delete(id); }   // a test no longer on the sheet: dropped
+      note((first && tries ? 'Connected again. ' : '') + 'Results save automatically. Tap a verdict again to clear it; Skip marks a test that no longer applies.');
+      if (first) tries = 0;
+    }, (e) => {
+      // A dropped connection reconnects by itself, a little later each time (a fresh subscription is the db's only way
+      // back); a page whose access was withdrawn says so (the owner, 2026-10-16, after the playground lost its connection).
+      clearTimeout(slow); clearTimeout(retryT); store = null;
+      if (why(e) === 'revoked') { note('This page lost its access to its saved results (revoked). Your marks are kept on this device; reload the page to send them.', true); action(null); return; }
+      tries += 1;
+      const wait = [2, 5, 10, 20, 30][Math.min(tries, 5) - 1];
+      note(`Lost the connection to saved results (${why(e)}); reconnecting in ${wait} s. Your marks are kept on this device.`, true);
+      action('Reconnect now', () => { clearTimeout(retryT); note('Connecting to saved results…'); action(null); connect(db); });
+      retryT = setTimeout(() => { action(null); connect(db); }, wait * 1000);
+    });
+  } catch (e) {
+    note(`Could not connect to saved results (${why(e)}). Your marks are kept on this device.`, true);
+    action('Try again', () => { note('Connecting to saved results…'); action(null); connect(db); });
+    return;
+  }
+  clearTimeout(slow);
+  slow = setTimeout(() => stuck(db), 6000);
+}
+// Still no answer after 6 s: say so, and when the db waits on the viewer's permission, offer the button that asks.
+async function stuck(db) {
+  if (store) return;
+  let p = null, st = null;
+  try { p = await window.claude.use('permissions'); st = p ? await p.state('db') : null; } catch {}
+  if (store) return;
+  note(`Still connecting to saved results${st ? ` (permission: ${st})` : ''}. Your marks are kept on this device and are saved when it connects.`, st === 'denied');
+  if (p && st === 'prompt') action('Allow saving', async () => { try { await p.request(['db']); } catch {} note('Connecting to saved results…'); action(null); connect(db); });
+  else if (p && st === 'denied') action('Open permissions', async () => { try { await p.manage(); } catch {} note('Connecting to saved results…'); action(null); connect(db); });
+  else action('Try again', () => { note('Connecting to saved results…'); action(null); connect(db); });
+}
+
+loadLocal();
+let built = true;
+try { build(); render(); }
+catch (e) { built = false; note(`This sheet did not finish loading (${e && e.message}); marks are kept on this device only. Tell Claude.`, true); }
+if (built) (async () => {
+  let db = null, err = null;
+  slow = setTimeout(() => note('Still waiting for the page to answer. Your marks are kept on this device and are saved when it connects.'), 10000);
+  try { db = window.claude ? await window.claude.use('db') : null; } catch (e) { err = e; }
+  clearTimeout(slow);
+  if (!db) {
+    note(err ? `Saved results are unavailable here (${why(err)}); marks are kept on this device only.` : 'Saved results are unavailable here; marks are kept on this device only.');
+    return;
+  }
+  connect(db);
+})();
+</script>

@@ -148,6 +148,26 @@ restores the previously active arm after pair capture and verifies the same
 non-style fingerprint throughout. PNG pixels contain no injected preset names;
 metadata carries true and blind identities separately.
 
+Capture orchestration owns one cancellable request per panel. A duplicate is
+rejected while busy. The request freezes session, arm hashes, non-style identity
+and build metadata before activation. After every wait and before storage it
+checks that the same comparison and requested arm remain active, and that the
+actually applied complete profile hash equals the frozen arm hash. Closing,
+scenario reset or ending the comparison cancels pending work.
+
+Every complete-profile application advances an app-owned presentation revision,
+including equal-snapshot applications and 3D where no 4D fit guard is needed.
+A style round trip therefore cannot reuse a draw token from before application.
+The app supplies readiness from that revision, its guard, pending fit, camera pose,
+and the HUD's public cockpit/viewport observation. Two consecutive equal ready
+observations establish stability; a later completed draw must retain that token.
+The frame budget is `design_lab/capture/max_settle_frames` in project.godot.
+Failure to settle or draw within that budget is diagnostic, including headless
+renderers. No arbitrary delay replaces readiness. Each pair arm is independently
+validated and stored; partial failure is reported without deleting prior valid
+captures. Pair restoration runs only while the original comparison is still
+owned by the operation, and restoration failure is reported separately.
+
 ## 8. Nomination and portable export
 
 Explicit nomination resolves one frozen or current candidate through the
