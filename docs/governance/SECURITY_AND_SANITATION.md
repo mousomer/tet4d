@@ -53,6 +53,8 @@ a documented reason and focused tests.
 
 ## Repository and publication hygiene
 
+- Advisory path exceptions follow the exact, counted source-line review contract
+  in `docs/architecture/sanitation_reference_review.md`; strict checks stay independent.
 - Preserve unrelated user changes; stage only intentional paths and review the
   staged diff before commit.
 - Repository ignore rules define local/generated material. A tracked path must

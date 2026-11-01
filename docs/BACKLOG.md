@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-10-31
+Updated: 2026-11-01
 Scope: active work, explicit deferrals, and near-term acceptance boundaries.
 
 Completed chronology is recoverable from Git, merged PRs, CI, and
@@ -22,6 +22,12 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   facts)
 
 ## Active Work
+
+### Baseline sanitation reference review
+
+- [x] Review intentional baseline path references with exact, counted exceptions.
+  Contract and fleet validation limits:
+  `docs/architecture/sanitation_reference_review.md`.
 
 ### UI and cockpit follow-up
 
