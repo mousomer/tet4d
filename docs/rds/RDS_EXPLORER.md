@@ -312,14 +312,14 @@ unavailable object-rotation plane.
 Existing X/Z/W **intents** are remapped through signed view basis
 and relative yaw; this table names canonical axes, not fixed keys.
 The native session currently dispatches X/Z/W moves and all six
-rotation planes, but it does not dispatch \`move_y_neg/pos\`.
+rotation planes, but it does not dispatch `move_y_neg/pos`.
 Its current placement rule permits a spawning piece to be
 above the board's Y=0 top boundary. That existing spawn
 exception does not justify unbounded Explorer translations.
 
 ### 6.3 Additional Y-involving view turns: acceptance contract
 
-1. Keep one \`SliceBasis4D\`, shared projection pipeline and
+1. Keep one `SliceBasis4D`, shared projection pipeline and
    shared orientation state. Add Explorer-scoped admissible planes;
    normal Play still restricts exact view turns to XZ/XW/ZW.
 2. The new Y-bearing view turns alter **presentation only**,
@@ -328,12 +328,12 @@ exception does not justify unbounded Explorer translations.
 3. Generalize canonical-to-visible coordinate mapping, its inverse
    and visible board extents for all four signed basis slots. A
    basis that slices on Y may not treat the second visible slot
-   as canonical Y or blindly use \`dims[Y]\`.
+   as canonical Y or blindly use `dims[Y]`.
 4. Explorer's gravity is Off. Display canonical Y and the
    current **screen-vertical axis** distinctly. A tilted/
    Y-sliced view must never claim that canonical +Y remains
    visibly downward when it is not.
-5. Extend \`ControlFrameMapping\` consistently for relative
+5. Extend `ControlFrameMapping` consistently for relative
    movement, the added deliberate Y± actions, and all six
    object rotations after Y-changing view turns. Keep the
    absolute control frame a stable canonical escape path.
@@ -347,7 +347,7 @@ exception does not justify unbounded Explorer translations.
    and zero change to piece hash/replay identity on view-only
    actions.
 8. Publish new view actions/keys only through the existing
-   \`LiveInputContract\` and help system. The actual bindings
+   `LiveInputContract` and help system. The actual bindings
    for XY/YZ/YW are **EX-D7** (not yet selected); no private
    Explorer keymap may be created.
 
