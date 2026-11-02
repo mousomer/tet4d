@@ -25,7 +25,7 @@ Define requirements for `(x, y, z, w)` gameplay mode implemented by:
 2. Gravity axis: `y`.
 3. Typical setup defaults: `6 x 18 x 6 x 4`.
 4. Dedicated tutorial board profile: `8 x 20 x 7 x 6`.
-5. Exploration mode uses a fixed compact board profile: `8 x 9 x 7 x 6`.
+5. Legacy Python/Pygame exploration uses a fixed compact board profile: `8 x 9 x 7 x 6`. The new Godot Explorer inherits the validated Live 4D setup under `docs/rds/RDS_EXPLORER.md`.
 6. Clear rule: full `x-z-w` hyperlayer at fixed `y`.
 7. Lock and game-over semantics are shared with ND engine rules.
 8. Setup exposes topology preset:
@@ -412,6 +412,7 @@ Implemented in code:
 
 1. 4D advanced topology profiles are now split by gameplay mode: `normal_4d_topology` and `explorer_4d_topology`.
 2. Normal 4D play keeps the gravity axis bounded; `Y+` / `Y-` seams are illegal and must be rejected by engine validation.
-3. Explorer 4D may wrap `Y` and requires explicit upward traversal via the bindable `move_up` action.
-4. The fixed compact 4D exploration board profile is `8 x 9 x 7 x 6`.
+3. The established Python Topology Playground's Explorer 4D may wrap `Y` and requires explicit upward traversal via its bindable `move_up` action.
+4. The legacy Python 4D exploration board profile is `8 x 9 x 7 x 6`.
 5. The fixed 4D tutorial board profile is `8 x 20 x 7 x 6`.
+6. The new Godot Explorer is a bounded, gravity-free **Live 4D rules-policy variation**, not a separate game/renderer/input system. Its normative delta is `docs/rds/RDS_EXPLORER.md`; ordinary Godot Play remains governed by this RDS.
