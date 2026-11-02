@@ -218,6 +218,9 @@ func _process(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if _hud != null and _hud.handle_window_mode_shortcut(event):
+		get_viewport().set_input_as_handled()
+		return
 	if event is InputEventKey:
 		_track_physical_fallback(event)
 	if _hud != null and _hud.handle_main_menu_shortcut(event):
@@ -2657,8 +2660,10 @@ func _ensure_input_map() -> void:
 		var spec: Dictionary = live_action_specs.get(action_name, {})
 		for forbidden_key in spec.get("forbidden_keys", []):
 			_remove_key_action(str(action_name), int(forbidden_key) as Key)
-		for keycode in spec.get("keys", []):
-			_ensure_key_action(str(action_name), int(keycode) as Key)
+		var default_events := LiveInputContractScript.binding_events(str(action_name))
+		InputMap.add_action(action_name)
+		for binding_event in default_events:
+			InputMap.action_add_event(action_name, binding_event)
 	_ensure_mouse_action("camera_orbit", LiveInputContractScript.CAMERA_ORBIT_BUTTON)
 	_ensure_mouse_action("camera_pan", LiveInputContractScript.CAMERA_PAN_BUTTON)
 	_ensure_mouse_action("camera_zoom", MOUSE_BUTTON_WHEEL_UP)

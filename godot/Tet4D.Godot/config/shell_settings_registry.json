@@ -20,7 +20,7 @@
     {
       "id": "display.window_mode",
       "label": "Window Mode",
-      "description": "Switches between a resizable window and the current display.",
+      "description": "Switches between a resizable window and the current display. Press Alt+Enter or F11 to toggle from any screen.",
       "category": "display",
       "value_type": "enum",
       "control_type": "dropdown",

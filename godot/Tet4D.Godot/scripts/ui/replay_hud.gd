@@ -2179,6 +2179,21 @@ func _emit_camera_preferences() -> void:
 	)
 
 
+# Global shell input precedes GUI focus and gameplay routing.
+func handle_window_mode_shortcut(event: InputEvent) -> bool:
+	if event.is_echo() or not event.is_action_pressed("shell_toggle_fullscreen") or _settings_store == null:
+		return false
+	var current := str(_settings_store.value("display.window_mode"))
+	var window := get_window()
+	if window != null and DisplayServer.get_name() != "headless":
+		current = ShellPresentationPreferencesScript.window_mode_value(window.mode)
+	var target := ShellPresentationPreferencesScript.WINDOWED if current == ShellPresentationPreferencesScript.FULLSCREEN else ShellPresentationPreferencesScript.FULLSCREEN
+	_apply_window_mode(target)
+	_settings_store.set_value("display.window_mode", target)
+	_sync_all_setting_controls()
+	return true
+
+
 func _apply_window_mode(mode: String) -> void:
 	var window := get_window()
 	if window == null or DisplayServer.get_name() == "headless":
@@ -3651,15 +3666,21 @@ func _fit_main_menu() -> void:
 	if not room.is_equal_approx(_main_menu_fit_room):
 		_main_menu_fit_room = room
 		_main_menu_overflow_scale = 2.0
+	var window_factor := 1.0
+	if DisplayServer.get_name() != "headless":
+		window_factor = menu_window_scale(Vector2(DisplayServer.window_get_size()) / maxf(DisplayServer.screen_get_scale(), 0.01))
+	var readable_floor := clampf(MENU_READABLE_BODY_POINTS / (ShellDesignTokensScript.FONT_BODY * _ui_scale_factor * window_factor), ShellDesignTokensScript.MENU_FIT_SCALE_FLOOR, 1.0)
 	var current: float = _main_menu_fit.fit_scale
 	var natural := content.get_combined_minimum_size().y
-	var wanted := clampf(floorf(room.y / maxf(natural, 1.0) * 100.0) / 100.0, ShellDesignTokensScript.MENU_FIT_SCALE_FLOOR, 1.0)
-	if natural * current > room.y:
+	var wanted := clampf(floorf(room.y / maxf(natural, 1.0) * 100.0) / 100.0, readable_floor, 1.0)
+	if current < readable_floor:
+		wanted = readable_floor
+	elif natural * current > room.y:
 		_main_menu_overflow_scale = minf(_main_menu_overflow_scale, current)
 		wanted = minf(wanted, current - 0.01)
 	elif wanted <= current or wanted >= _main_menu_overflow_scale:
 		return
-	wanted = maxf(wanted, ShellDesignTokensScript.MENU_FIT_SCALE_FLOOR)
+	wanted = maxf(wanted, readable_floor)
 	if not is_equal_approx(wanted, current):
 		_main_menu_fit.fit_scale = wanted
 		call_deferred("_fit_main_menu")
@@ -3729,7 +3750,7 @@ func _sync_design_resolution() -> void:
 # so a shorter window shrinks menu text as surely as a narrower one. It is
 # recomputed from the reference on every resize, never from the prior scale.
 static func menu_window_scale(window_points: Vector2) -> float:
-	return ShellViewportLayout.window_scale(window_points, MENU_REFERENCE_SIZE, MIN_MENU_WINDOW_SCALE)
+	return ShellViewportLayout.window_scale(window_points, MENU_REFERENCE_SIZE, MIN_MENU_WINDOW_SCALE, 1.0)
 
 
 func _window_ui_scale(points: Vector2) -> float:

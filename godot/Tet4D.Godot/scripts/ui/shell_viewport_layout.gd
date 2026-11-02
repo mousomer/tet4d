@@ -43,19 +43,19 @@ static func render_delta(root_delta: Vector2, local_to_root: Transform2D, logica
 	return local_delta * render_size / logical_size
 
 
-static func window_scale(points: Vector2, reference: Vector2, minimum: float) -> float:
+static func window_scale(points: Vector2, reference: Vector2, minimum: float, maximum: float = MAX_WINDOW_SCALE) -> float:
 	if points.x <= 0.0 or points.y <= 0.0:
 		return 1.0
-	return clampf(minf(points.x / reference.x, points.y / reference.y), minimum, MAX_WINDOW_SCALE)
+	return clampf(minf(points.x / reference.x, points.y / reference.y), minimum, maximum)
 
 
 static func design_resolution(pixels: Vector2, display_scale: float, menu: bool, menu_minimum: float) -> Vector2i:
 	var points := pixels / maxf(display_scale, 0.01)
-	var factor := window_scale(points, MENU_REFERENCE if menu else LIVE_REFERENCE, menu_minimum if menu else 1.0)
+	var factor := window_scale(points, MENU_REFERENCE if menu else LIVE_REFERENCE, menu_minimum if menu else 1.0, 1.0 if menu else MAX_WINDOW_SCALE)
 	var logical := points / factor
 	return Vector2i(int(ceilf(maxf(logical.x, DESIGN_MINIMUM.x))), int(ceilf(maxf(logical.y, DESIGN_MINIMUM.y))))
 
 
 static func apparent_size(pixels: Vector2, display_scale: float, ui_scale: float, menu: bool, menu_minimum: float) -> Vector2:
 	var points := pixels / maxf(display_scale, 0.01)
-	return points / window_scale(points, MENU_REFERENCE if menu else LIVE_REFERENCE, menu_minimum if menu else 1.0) / maxf(ui_scale, 0.01)
+	return points / window_scale(points, MENU_REFERENCE if menu else LIVE_REFERENCE, menu_minimum if menu else 1.0, 1.0 if menu else MAX_WINDOW_SCALE) / maxf(ui_scale, 0.01)

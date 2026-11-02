@@ -15,6 +15,7 @@ const CAMERA_CONTROL_SPECS := {
 }
 
 const ACTION_SPECS := {
+	"shell_toggle_fullscreen": {"keys": [KEY_F11], "alt_keys": [KEY_ENTER], "display_key": KEY_F11},
 	"live_move_left": {"keys": [KEY_LEFT, KEY_A], "display_key": KEY_A},
 	"live_move_right": {"keys": [KEY_RIGHT, KEY_D], "display_key": KEY_D},
 	"live_rotate_cw": {"keys": [KEY_UP, KEY_W, KEY_X], "display_key": KEY_W},
@@ -356,6 +357,11 @@ static func binding_events(action_name: String) -> Array:
 	for keycode in ACTION_SPECS.get(action_name, {}).get("keys", []):
 		var event := InputEventKey.new()
 		event.keycode = int(keycode)
+		events.append(event)
+	for keycode in ACTION_SPECS.get(action_name, {}).get("alt_keys", []):
+		var event := InputEventKey.new()
+		event.keycode = int(keycode)
+		event.alt_pressed = true
 		events.append(event)
 	return events
 

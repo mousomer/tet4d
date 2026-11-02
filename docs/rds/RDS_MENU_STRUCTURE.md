@@ -331,7 +331,9 @@ disabled control emits no activation.
    window axis in both directions: a narrower or a shorter window shrinks menu
    text, and extra width never enlarges it while height is the limit. Menu
    scaling floors at 0.75× (24 px body renders at the 18 px target) and caps at
-   2×; smaller windows then keep that size and reflow/scroll. Live/replay uses
+   1×; larger windows provide more layout room without enlarging menu text,
+   and smaller windows keep the floor size and reflow/scroll. Main-menu fitting
+   must also preserve the 18 px body floor after window and UI scaling. Live/replay uses
    a 1280×800 point reference, scaled by the tighter axis between 1× and 2×, so
    magnified rails and Designer chrome retain their required logical height. Initial
    Main Menu layout shows the title and focused Play action; layout changes
@@ -558,6 +560,9 @@ Add persistent settings file:
 3. If settings file is missing, recreate with defaults.
 4. If keybinding profile files are missing, recreate from selected profile defaults.
 5. If fullscreen toggle fails, continue in windowed mode and show warning.
+6. Alt+Enter or F11 toggles fullscreen/windowed mode from menus and gameplay before GUI
+   focus or gameplay input handling. Ignore key-repeat and release events;
+   use the existing display settings store and restore the saved window size.
 
 ## 9. Implementation Notes (Current)
 

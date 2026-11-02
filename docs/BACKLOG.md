@@ -24,6 +24,10 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ## Active Work
 
+- [x] Desktop visual acceptance (owner confirmed): Alt+Enter or F11 toggles fullscreen/windowed from menus
+  and 2D/3D/4D gameplay, restores window size, and persists the selected mode.
+  Large-window menus retain normal text size instead of magnifying up to 2×.
+
 ### Spatial-intuition research priorities (planning; not implemented)
 
 The programme now prioritizes a bounded Godot Explorer, professional user
