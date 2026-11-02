@@ -35,11 +35,13 @@ accepted `PROFESSIONAL_CORE_GAME_READY: YES` remains valid. This is a
 documentation/priority decision, not approval to deploy a study or backend.
 
 - [ ] P0 **START NOW — Godot practice Explorer MVP**: bounded, gravity-free
-  4D manipulation using existing native geometry/legality queries and Godot
-  presentation owners, then 3D comparison and explicit adjacency cues. Route
-  through the E1 execution contract in
-  `docs/plans/spatial_intuition_research_plan.md`; verify separate object,
-  camera, basis and slice operations, reset and bounded-Play transition.
+  4D manipulation through a small rules policy on the **same Live 4D native
+  session/transform, Godot shell, input, camera, styles and renderer paths**;
+  then 3D comparison and explicit adjacency cues. The product contract is
+  `docs/rds/RDS_EXPLORER.md`, with E1 execution order in
+  `docs/plans/spatial_intuition_research_plan.md`. No separate Explorer
+  engine, keymap, style or cockpit. Verify Y±, rotation, view independence,
+  reset, mode isolation and safe return to Play.
   `EXPLORER_LEARNING_READY` is a later human gate, not a precondition to start.
 - [ ] P1 **Only demonstrated Explorer blockers**: if a camera-relative
   regression, clipped W indicator, unresponsive controls or viewport defect
