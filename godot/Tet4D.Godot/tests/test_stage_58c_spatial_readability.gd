@@ -191,6 +191,8 @@ func _test_rendered_slice_hierarchy(failures: Array) -> void:
 	var weights: Array = []
 	var scaffold: Array = []
 	var grid = renderer.get_node("GridRoot").get_child(0)
+	var generation: int = grid.scaffold_generation
+	var slice_nodes: Array = grid.get_children().map(func(node: Node) -> int: return node.get_instance_id())
 	var topology: Array = grid.grid_topology()
 	for layer in range(4):
 		weights.append(_weight(renderer, [1, 9, 1, layer]))
@@ -212,6 +214,8 @@ func _test_rendered_slice_hierarchy(failures: Array) -> void:
 		failures.append("every slice holding the active piece must keep full weight")
 	if not is_zero_approx(_slice_transparency(grid, 2)) or not is_equal_approx(_slice_transparency(grid, 3), scaffold[0]):
 		failures.append("scaffold emphasis must follow the active slices without a rebuild")
+	if renderer.get_node("GridRoot").get_child(0) != grid or grid.scaffold_generation != generation or grid.get_children().map(func(node: Node) -> int: return node.get_instance_id()) != slice_nodes:
+		failures.append("active-slice changes must preserve scaffold instance, generation and slice nodes")
 	if grid.grid_topology() != topology:
 		failures.append("slice emphasis must not change grid topology")
 	viewport.queue_free()

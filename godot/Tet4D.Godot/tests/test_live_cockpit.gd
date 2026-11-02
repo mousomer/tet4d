@@ -5,8 +5,108 @@ const LiveCockpitScript = preload("res://scripts/ui/live_cockpit.gd")
 
 func run() -> Array:
 	var failures: Array = []
+	failures.append_array(await _assert_inactive_fit_cancellation())
+	failures.append_array(await _assert_existing_content_refit())
 	failures.append_array(await _assert_component_grammar())
+	failures.append_array(await _assert_metrics_signal_during_visibility_propagation())
 	failures.append_array(await _check_production_extraction())
+	return failures
+
+
+func _assert_existing_content_refit() -> Array:
+	var failures: Array = []
+	var tree := Engine.get_main_loop() as SceneTree
+	var cockpit = _content_fixture(tree, 40)
+	await _settle_fit(tree, cockpit)
+	var before := float(cockpit.deterministic_snapshot()["deck_fit_scale"])
+	var label: Label = cockpit.piece_controls.get_child(0)
+	# Edit the same node, at the same host constraints, in both directions.
+	for lines in [16, 48, 16]:
+		label.text = "Existing content\n".repeat(lines)
+		await _settle_fit(tree, cockpit)
+		var clean = _content_fixture(tree, lines)
+		await _settle_fit(tree, clean)
+		var actual: Dictionary = cockpit.deterministic_snapshot()
+		var expected: Dictionary = clean.deterministic_snapshot()
+		if not cockpit.fit_settled() or not clean.fit_settled():
+			failures.append("content fits must converge without repeated invalidation")
+		if absf(float(actual["deck_fit_scale"]) - float(expected["deck_fit_scale"])) > 0.001:
+			failures.append("existing-label edit must match clean-entry scale for %s lines" % lines)
+		if lines == 16 and float(actual["deck_fit_scale"]) <= before:
+			failures.append("shorter existing content must recover a larger scale")
+		clean.queue_free()
+		await tree.process_frame
+	for font_size in [32, 16]:
+		label.add_theme_font_size_override("font_size", font_size)
+		await _settle_fit(tree, cockpit)
+		var clean = _content_fixture(tree, 16, font_size)
+		await _settle_fit(tree, clean)
+		if not cockpit.fit_settled() or absf(float(cockpit.deterministic_snapshot()["deck_fit_scale"]) - float(clean.deterministic_snapshot()["deck_fit_scale"])) > 0.001:
+			failures.append("existing font-metric changes must match clean entry")
+		clean.queue_free()
+		await tree.process_frame
+	cockpit.queue_free()
+	await tree.process_frame
+	return failures
+
+
+func _content_fixture(tree: SceneTree, lines: int, font_size: int = 16):
+	var cockpit = LiveCockpitScript.new()
+	tree.root.add_child(cockpit)
+	cockpit.size = Vector2(900, 500)
+	var label := Label.new()
+	label.text = "Existing content\n".repeat(lines)
+	label.add_theme_font_size_override("font_size", font_size)
+	cockpit.piece_controls.add_child(label)
+	cockpit.set_available_size(Vector2(900, 500), Vector2(900, 500))
+	cockpit.set_deck_placement(LiveCockpitScript.PLACEMENT_SIDE)
+	cockpit.set_control_deck_visible(true)
+	return cockpit
+
+
+func _settle_fit(tree: SceneTree, cockpit) -> void:
+	# Let minimum-size signals enqueue their first pass before checking idle.
+	for _frame in range(4):
+		await tree.process_frame
+	for _frame in range(160):
+		if cockpit.fit_settled():
+			return
+		await tree.process_frame
+
+
+# Showing the viewer screen propagates visibility down the cockpit, and Godot
+# refuses add_child on a node while it notifies its children. A module metric
+# signal emitted then must not reparent the deck mid-propagation: reparent()
+# removes it first, so a refused add leaves the deck with no parent at all
+# (Live 4D reached after 2D/3D showed no lower helper panel).
+func _assert_metrics_signal_during_visibility_propagation() -> Array:
+	var failures: Array = []
+	var cockpit = LiveCockpitScript.new()
+	var tree := Engine.get_main_loop() as SceneTree
+	tree.root.add_child(cockpit)
+	cockpit.set_available_size(Vector2(1600.0, 960.0), Vector2(1600.0, 960.0), "standard")
+	cockpit.set_control_deck_visible(true)
+	cockpit.set_deck_placement(LiveCockpitScript.PLACEMENT_SIDE)
+	await tree.process_frame
+	await tree.process_frame
+	# A mode switch that requested the split before its first layout pass.
+	cockpit._requested_placement = LiveCockpitScript.PLACEMENT_SPLIT
+	var probe := Control.new()
+	cockpit.board_column.add_child(probe)
+	# A shown module re-measures; the changed minimum is what makes the policy act.
+	probe.visibility_changed.connect(func() -> void:
+		cockpit.piece_controls.custom_minimum_size.y += 1.0
+		cockpit.piece_controls.minimum_size_changed.emit())
+	cockpit.board_column.visible = false
+	cockpit.board_column.visible = true
+	await tree.process_frame
+	await tree.process_frame
+	if cockpit.control_deck.get_parent() == null:
+		failures.append("a metrics signal during visibility propagation must not orphan the control deck")
+	elif cockpit.deck_placement() != LiveCockpitScript.PLACEMENT_SPLIT:
+		failures.append("the deferred metrics pass must still apply the requested split, got %s" % cockpit.deck_placement())
+	cockpit.queue_free()
+	await tree.process_frame
 	return failures
 
 
@@ -16,6 +116,8 @@ func _assert_component_grammar() -> Array:
 	var tree := Engine.get_main_loop() as SceneTree
 	tree.root.add_child(cockpit)
 	await tree.process_frame
+	# Packing assertions describe an active cockpit, not an invisible deck.
+	cockpit.set_control_deck_visible(true)
 	var snapshot: Dictionary = cockpit.deterministic_snapshot()
 	if snapshot.get("slots") != ["Header", "PrimaryBoardSurface", "ControlDeck"]:
 		failures.append("LiveCockpit must expose the shared header/primary/deck grammar")
@@ -57,7 +159,8 @@ func _assert_component_grammar() -> Array:
 	for row in packed.get("deck_row_assignment", []):
 		for module_name in row:
 			flattened.append(str(module_name))
-	if flattened != ["PieceControls", "ViewControls", "PieceState"]:
+	# Rows pack NEXT/HOLD first, as in the rail and the split column.
+	if flattened != ["PieceState", "PieceControls", "ViewControls"]:
 		failures.append("reflow must preserve semantic module order across rows, got %s" % str(flattened))
 	var source := FileAccess.get_file_as_string("res://scripts/ui/live_cockpit.gd")
 	for forbidden in ["TraceSceneRenderer", "LiveInputContract", "CameraRig", "render_snapshot", "InputMap", "piece_control_groups"]:
@@ -118,4 +221,25 @@ func _check_production_extraction() -> Array:
 	root.queue_free()
 	await tree.process_frame
 	tree.root.size = original_size
+	return failures
+
+
+func _assert_inactive_fit_cancellation() -> Array:
+	var failures: Array = []
+	var tree := Engine.get_main_loop() as SceneTree
+	var cockpit = _content_fixture(tree, 40)
+	await tree.process_frame
+	cockpit.set_control_deck_visible(false)
+	if not cockpit.fit_settled():
+		failures.append("hiding a cockpit must cancel all probes and queued work synchronously")
+	for _frame in range(10):
+		await tree.process_frame
+	if not cockpit.fit_settled():
+		failures.append("inactive cockpit metric signals must not restart hidden fitting")
+	cockpit.set_control_deck_visible(true)
+	await _settle_fit(tree, cockpit)
+	if not cockpit.fit_settled():
+		failures.append("reactivated cockpit must obtain fresh measurements and settle")
+	cockpit.queue_free()
+	await tree.process_frame
 	return failures

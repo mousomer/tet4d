@@ -1,0 +1,256 @@
+<title>Project Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* A project's artifact board (the video-game-development skill, workflow/board/README.md): four columns of cards,
+   the statuses, each column grouped by topic. The worksheets' navy look (the checklist's), the game's yellow lettering
+   for the titles, chips outlined in their meaning's colour. One dark look, on purpose. Crawl's board is the model. */
+:root {
+  --bg: #121733; --panel: #1f2750; --panel-2: #2a3366; --line: #3b4580; --ink: #e9e8f5; --muted: #a3a6c9;
+  --title: #fdf926; --link: #7fd4ff;
+  --t-game: #ffb347; --t-tool: #7fd4ff; --t-worksheet: #c4a1ff; --t-qa: #8fe388; --t-report: #ff9db0; --t-page: #fdf926; --t-slice: #5ee0c8; --t-task: #ff8a5c;
+  --s-review: #fdf926; --s-reviewing: #7fd4ff; --s-ready: #ffb347; --s-claude: #c4a1ff; --s-done: #8fe388;
+  --danger: #ff8a73;
+  --display: "Grenze Gotisch", "Palatino Linotype", Georgia, serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--ink); }
+body { font: 400 16px/1.5 var(--body); padding-block: 24px 48px; padding-inline: max(16px, 3vw); }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--title); outline-offset: 2px; }
+h1 { font: 700 clamp(2rem, 6vw, 2.8rem)/1.05 var(--display); color: var(--title); margin: 0; text-wrap: balance; }
+.lede { color: var(--muted); max-width: 64ch; margin: 8px 0 0; font-size: 15px; }
+.label { font: 600 13px/1 var(--body); letter-spacing: .06em; text-transform: uppercase; }
+.tally { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; padding: 0; list-style: none; }
+.tally li { padding: 9px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; display: flex; gap: 8px; align-items: center; font-variant-numeric: tabular-nums; }
+.dot { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--c); }
+
+/* filters */
+.filters { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: end; margin: 20px 0 0; padding: 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { color: var(--ink); background: var(--bg); border: 2px solid var(--line); border-radius: 22px; min-height: 44px; padding: 0 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+.chip[aria-pressed="true"] { border-color: var(--c, var(--title)); background: color-mix(in srgb, var(--c, var(--title)) 18%, var(--bg)); }
+.chip small { font: inherit; color: var(--muted); font-variant-numeric: tabular-nums; }
+label.field { display: grid; gap: 6px; color: var(--muted); min-width: 0; flex: 1 1 180px; }
+select, input[type=search], textarea { font: 400 16px/1.3 var(--body); color: var(--ink); background: var(--bg); border: 2px solid var(--line); border-radius: 8px; min-height: 44px; padding: 8px 10px; width: 100%; }
+textarea { min-height: 72px; resize: vertical; }
+
+/* the board */
+.tabs { display: none; }
+.board { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin: 18px 0 0; align-items: start; }
+.col { background: var(--panel); border: 1px solid var(--line); border-top: 4px solid var(--c); border-radius: 12px; min-width: 0; padding: 10px; display: grid; gap: 10px; align-content: start; min-height: 120px; }
+.col.over { outline: 3px dashed var(--c); outline-offset: -6px; }
+.col h2 { font: 700 1.45rem/1.1 var(--display); color: var(--c); margin: 2px 4px 0; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.col h2 span { font: 600 14px/1 var(--body); color: var(--muted); font-variant-numeric: tabular-nums; }
+.group { display: grid; gap: 8px; }
+.group h3 { color: var(--muted); margin: 6px 4px 0; }
+.card { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px 12px; display: grid; gap: 8px; min-width: 0; }
+.card[draggable="true"] { cursor: grab; }
+.card.dragging { opacity: .45; }
+.card.saving { opacity: .7; }
+.card .ttl { font-weight: 700; font-size: 17px; line-height: 1.25; text-decoration: none; color: var(--ink); overflow-wrap: anywhere; }
+.card .ttl:hover { text-decoration: underline; text-underline-offset: 3px; color: var(--link); }
+.card .ttl::after { content: " ↗"; color: var(--muted); font-weight: 400; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 14px; color: var(--muted); }
+.type { color: var(--ink); padding: 5px 8px; border-radius: 6px; background: var(--bg); box-shadow: inset 0 0 0 2px var(--c); }
+.ver { font-variant-numeric: tabular-nums; }
+.note { margin: 0; font-size: 15px; color: var(--ink); overflow-wrap: anywhere; white-space: pre-line; } /* (a task's steps, a line each) */
+.mine { margin: 0; font-size: 15px; font-style: italic; color: var(--ink); border-left: 3px solid var(--title); padding-left: 8px; overflow-wrap: anywhere; }
+.mine b { font-style: normal; color: var(--title); margin-right: 6px; }
+.row { display: flex; gap: 8px; align-items: center; }
+.row select { flex: 1; min-width: 0; }
+.btn { color: var(--ink); background: var(--bg); border: 2px solid var(--line); border-radius: 8px; min-height: 44px; padding: 0 12px; cursor: pointer; }
+.btn:hover, .chip:hover { border-color: var(--title); }
+.btn.go { border-color: var(--title); }
+.edit { display: grid; gap: 8px; }
+.empty { color: var(--muted); font-size: 15px; padding: 6px 4px; margin: 0; }
+.notice { margin: 18px 0 0; padding: 14px; border: 2px solid var(--line); border-radius: 12px; background: var(--panel); max-width: 64ch; }
+.toast { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--panel-2); border: 2px solid var(--danger); border-radius: 10px; padding: 10px 14px; max-width: calc(100% - 32px); font-size: 15px; z-index: 5; }
+
+.nudge { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin: 14px 0 0; }
+.nudge-msg { color: var(--muted); font-size: 15px; }
+@media (max-width: 899px) {
+  .tabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin: 18px 0 0; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; background: var(--bg); padding-block: 6px; }
+  .tab { font: 600 13px/1.2 var(--body); letter-spacing: .03em; text-transform: uppercase; color: var(--ink); background: var(--panel); border: 2px solid var(--line); border-bottom: 4px solid var(--c); border-radius: 8px; min-height: 54px; padding: 4px; cursor: pointer; display: grid; place-items: center; text-align: center; }
+  .tab[aria-selected="true"] { background: color-mix(in srgb, var(--c) 22%, var(--panel)); border-color: var(--c); }
+  .tab small { font: inherit; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .board { grid-template-columns: minmax(0, 1fr); margin-top: 8px; }
+  .col:not(.shown) { display: none; }
+  .tally { display: none; } /* the tabs carry the counts */
+  .col h2 { display: none; }
+}
+@media (prefers-reduced-motion: no-preference) { .card { transition: opacity .15s; } }
+</style>
+
+<header>
+  <h1>Project Board</h1>
+  <p class="lede">Every artifact of the project and where it stands: the game builds, the tools, the worksheets, the test sheets and the reports. Set a card's status as you go. When you're done with a sheet, move it to <b>Ready for Claude</b>: I pick it up, move it to With Claude while I work on it, and back to To review with the next round. When a sheet has nothing left (every test passed, or you say it's finished), I move it to Done. The Slices are the work coming up, With Claude in plan order (filter Slices to see what's next); each one's sheets get cards of their own. I add new cards and update the notes with every release; I never change your notes.</p>
+  <ul class="tally label" id="tally" aria-label="Cards in each column"></ul>
+  <div class="nudge" id="nudge" hidden>
+    <button class="btn go" id="nudgeBtn">Ask Claude to check Ready for Claude</button>
+    <span class="nudge-msg" id="nudgeMsg" role="status"></span>
+  </div>
+</header>
+
+<section class="filters" aria-label="Filters">
+  <div class="chips label" id="types" role="group" aria-label="Type"></div>
+  <label class="field" for="topic"><span class="label">Topic</span>
+    <select id="topic"><option value="">All topics</option></select>
+  </label>
+  <label class="field" for="q"><span class="label">Search</span>
+    <input id="q" type="search" placeholder="A name or a word in a note" autocomplete="off">
+  </label>
+</section>
+
+<div class="tabs" id="tabs" role="tablist" aria-label="Columns"></div>
+<main class="board" id="board" aria-live="polite"></main>
+<p class="notice" id="notice" hidden></p>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+const STATUSES = [
+  { id: "review", name: "To review", c: "var(--s-review)" },
+  { id: "reviewing", name: "In review", c: "var(--s-reviewing)" },
+  { id: "ready", name: "Ready for Claude", c: "var(--s-ready)" },   // the owner is done with it: Claude picks it up (owner, 2026-10-15)
+  { id: "claude", name: "With Claude", c: "var(--s-claude)" },
+  { id: "done", name: "Done", c: "var(--s-done)" },
+];
+const TYPES = [
+  { id: "game", name: "Game", plural: "Games", c: "var(--t-game)" },
+  { id: "tool", name: "Tool", plural: "Tools", c: "var(--t-tool)" },
+  { id: "worksheet", name: "Worksheet", plural: "Worksheets", c: "var(--t-worksheet)" },
+  { id: "qa", name: "Test sheet", plural: "Test sheets", c: "var(--t-qa)" },
+  { id: "report", name: "Report", plural: "Reports", c: "var(--t-report)" },
+  { id: "page", name: "Page", plural: "Pages", c: "var(--t-page)" },
+  { id: "slice", name: "Slice", plural: "Slices", c: "var(--t-slice)" },   // the work coming up (owner, 2026-10-15)
+  { id: "task", name: "Your task", plural: "Your tasks", c: "var(--t-task)" },   // the owner's own work (owner, 2026-10-16: "Transform this into its own ticket")
+];
+const TOPICS = [   // the project's topic groups: rename and add to taste
+  ["builds", "Game builds"], ["play", "Rules and play"], ["layout", "Screens and layout"], ["menus", "Menus and pop-ups"],
+  ["texts", "Texts"], ["look", "Look and feel"], ["launch", "Launch"], ["later", "After launch"],
+];
+// Slices in plan order (`order`), first; the rest newest first.
+const byPlan = (a, b) => (a.order != null || b.order != null ? (a.order ?? 1e9) - (b.order ?? 1e9)
+  : String(b.updated).localeCompare(String(a.updated))) || a.title.localeCompare(b.title);
+const topicName = (id) => (TOPICS.find(([k]) => k === id) || [id, id || "Other"])[1];
+const typeOf = (id) => TYPES.find((t) => t.id === id) || { id, name: id || "Other", plural: id || "Other", c: "var(--line)" };
+const statusOf = (id) => (STATUSES.some((s) => s.id === id) ? id : "review");
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+const store = { get(k){ try { return localStorage.getItem(k); } catch { return null; } }, set(k, v){ try { localStorage.setItem(k, v); } catch {} } };
+
+let items = [], db = null, col = null, loaded = false;
+const view = { type: store.get("board.type") || "", topic: store.get("board.topic") || "", q: "", tab: store.get("board.tab") || "review", editing: null };
+const saving = new Set();
+
+function toast(msg){ const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => (t.hidden = true), 4000); }
+function visible(){
+  const q = view.q.trim().toLowerCase();
+  return items.filter((it) => (!view.type || it.type === view.type) && (!view.topic || it.topic === view.topic)
+    && (!q || [it.title, it.note, it.userNote, topicName(it.topic), typeOf(it.type).name].join(" ").toLowerCase().includes(q)));
+}
+function cardHTML(it){
+  const t = typeOf(it.type), editing = view.editing === it.id, busy = saving.has(it.id);
+  const opts = STATUSES.map((s) => `<option value="${s.id}"${statusOf(it.status) === s.id ? " selected" : ""}>${s.name}</option>`).join("");
+  return `<article class="card${busy ? " saving" : ""}" data-id="${esc(it.id)}" draggable="${matchMedia("(min-width: 900px) and (pointer: fine)").matches}">
+    ${it.type === "slice" && !it.link ? `<span class="ttl">${esc(it.title)}</span>`
+      : `<a class="ttl" href="${esc(it.link || `https://claude.ai/artifact/${encodeURIComponent(it.id)}`)}" target="_blank" rel="noopener">${esc(it.title)}</a>`}
+    <div class="meta"><span class="type label" style="--c:${t.c}">${esc(t.name)}</span>${it.version ? `<span class="ver">${esc(it.version)}</span>` : ""}<span class="ver">${esc(it.updated || "")}</span></div>
+    ${it.note ? `<p class="note">${esc(it.note)}</p>` : ""}
+    ${it.userNote && !editing ? `<p class="mine"><b class="label">You</b>${esc(it.userNote)}</p>` : ""}
+    ${editing ? `<div class="edit"><label class="field" for="n-${esc(it.id)}"><span class="label">Your note</span><textarea id="n-${esc(it.id)}">${esc(it.userNote || "")}</textarea></label>
+      <div class="row"><button class="btn go label" data-act="save">Save note</button><button class="btn label" data-act="cancel">Cancel</button></div></div>`
+    : `<div class="row"><select aria-label="Status of ${esc(it.title)}" data-act="status"${busy ? " disabled" : ""}>${opts}</select><button class="btn label" data-act="note" aria-label="Write a note on ${esc(it.title)}">Note</button></div>`}
+  </article>`;
+}
+function render(){
+  const shown = visible();
+  $("#tally").innerHTML = STATUSES.map((s) => `<li style="--c:${s.c}"><span class="dot"></span>${s.name} ${items.filter((it) => statusOf(it.status) === s.id).length}</li>`).join("");
+  $("#types").innerHTML = [{ id: "", plural: "All", c: "var(--title)" }, ...TYPES].map((t) =>
+    `<button class="chip label" style="--c:${t.c}" aria-pressed="${view.type === t.id}" data-type="${t.id}">${t.plural} <small>${t.id ? items.filter((it) => it.type === t.id).length : items.length}</small></button>`).join("");
+  $("#tabs").innerHTML = STATUSES.map((s) => `<button class="tab" role="tab" style="--c:${s.c}" aria-selected="${view.tab === s.id}" data-tab="${s.id}">${s.name}<small>${shown.filter((it) => statusOf(it.status) === s.id).length}</small></button>`).join("");
+  $("#board").innerHTML = STATUSES.map((s) => {
+    const mine = shown.filter((it) => statusOf(it.status) === s.id);
+    const groups = TOPICS.map(([k]) => [k, mine.filter((it) => it.topic === k)]).concat([["", mine.filter((it) => !TOPICS.some(([k]) => k === it.topic))]]).filter(([, list]) => list.length);
+    const body = groups.map(([k, list]) => `<div class="group"><h3 class="label">${esc(topicName(k))}</h3>${list.sort(byPlan).map(cardHTML).join("")}</div>`).join("");
+    return `<section class="col${view.tab === s.id ? " shown" : ""}" style="--c:${s.c}" data-status="${s.id}" aria-label="${s.name}"><h2>${s.name} <span>${mine.length}</span></h2>${body || `<p class="empty">${items.length ? (view.type || view.topic || view.q.trim() ? "Nothing here with these filters." : "No cards in this column.") : loaded ? "No cards yet: I add every artifact of the project here with each release." : "Loading the cards..."}</p>`}</section>`;
+  }).join("");
+  const topic = $("#topic");
+  if(topic.options.length === 1) TOPICS.forEach(([k, l]) => topic.add(new Option(l, k)));
+  topic.value = view.topic;
+}
+async function write(id, data){
+  if(!col || saving.has(id)) return false;
+  saving.add(id); render();
+  try { await col.doc(id).update(data); return true; }
+  catch(e){ toast(`Couldn't save that change (${e?.code || "error"}). Try again in a moment.`); return false; }
+  finally { saving.delete(id); render(); }
+}
+const setStatus = (id, status) => { const it = items.find((x) => x.id === id); if(it && statusOf(it.status) !== status) write(id, { status, statusAt: new Date().toISOString() }); };
+
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-type],[data-tab],[data-act]"); if(!b) return;
+  if(b.dataset.type != null && b.classList.contains("chip")){ view.type = b.dataset.type; store.set("board.type", view.type); render(); return; }
+  if(b.dataset.tab){ view.tab = b.dataset.tab; store.set("board.tab", view.tab); render(); return; }
+  const id = b.closest(".card")?.dataset.id;
+  if(b.dataset.act === "note"){ view.editing = id; render(); document.getElementById("n-" + id)?.focus(); }
+  else if(b.dataset.act === "cancel"){ view.editing = null; render(); }
+  else if(b.dataset.act === "save"){ const v = document.getElementById("n-" + id)?.value.trim() ?? ""; view.editing = null; write(id, { userNote: v }); }
+});
+document.addEventListener("change", (e) => {
+  if(e.target.id === "topic"){ view.topic = e.target.value; store.set("board.topic", view.topic); render(); }
+  else if(e.target.dataset.act === "status") setStatus(e.target.closest(".card").dataset.id, e.target.value);
+});
+$("#q").addEventListener("input", (e) => { view.q = e.target.value; render(); });
+// drag and drop between columns (a computer with a mouse; the status picker works everywhere)
+let dragId = null;
+document.addEventListener("dragstart", (e) => { const c = e.target.closest?.(".card"); if(!c) return; dragId = c.dataset.id; c.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", dragId); });
+document.addEventListener("dragend", () => { dragId = null; document.querySelectorAll(".dragging,.over").forEach((n) => n.classList.remove("dragging", "over")); });
+document.addEventListener("dragover", (e) => { const c = e.target.closest?.(".col"); if(!c || !dragId) return; e.preventDefault(); document.querySelectorAll(".col.over").forEach((n) => n !== c && n.classList.remove("over")); c.classList.add("over"); });
+document.addEventListener("drop", (e) => { const c = e.target.closest?.(".col"); if(!c || !dragId) return; e.preventDefault(); const id = dragId; c.classList.remove("over"); setStatus(id, c.dataset.status); });
+
+render();
+(async () => {
+  db = window.claude ? await window.claude.use("db") : null;
+  if(!db){ const n = $("#notice"); n.hidden = false; n.textContent = "The board's cards live in its database, which isn't available in this view. Open the board from claude.ai to see and change them."; return; }
+  col = db.collection("items");
+  col.limit(1000).onSnapshot((snap) => { items = snap.docs.map((d) => ({ id: d.id, ...d.data() })); loaded = true; render(); },
+    (e) => { const n = $("#notice"); n.hidden = false; n.textContent = `The cards stopped updating (${e?.code || "error"}). Reload the page to reconnect.`; });
+})();
+
+// The nudge (the owner, 2026-10-16: "a button ... to push it back to you to check what's on your column"): a comment on
+// the board sent to the Claude sessions watching it (the comments capability's sendToClaude), listing the Ready cards.
+(async () => {
+  const c = window.claude ? await window.claude.use("comments") : null;
+  if(!c || !c.sendToClaude) return;
+  const box = $("#nudge"), btn = $("#nudgeBtn"), msg = $("#nudgeMsg");
+  const WHY = { writers_only: "Only the board's owner can send this to Claude.",
+    no_session: "No Claude session is watching this board right now. Open the project's session, or tell Claude in chat." };
+  let busy = false;
+  async function check(){
+    if(busy) return;
+    let st; try { st = await c.canSendToClaude(); } catch { st = "off"; }
+    box.hidden = st === "off";
+    btn.disabled = st !== "available";
+    msg.textContent = st === "available" ? "" : (WHY[st] || "");
+  }
+  check(); setTimeout(check, 5000);
+  document.addEventListener("visibilitychange", () => { if(!document.hidden) check(); });
+  btn.addEventListener("click", async () => {
+    const ready = items.filter((it) => statusOf(it.status) === "ready");
+    const text = (ready.length
+      ? `Please check the Ready for Claude column (${ready.length}): ${ready.map((it) => it.title).join("; ")}.`
+      : "Please check the board: nothing is in Ready for Claude, but I changed something.").slice(0, 3900);
+    busy = true; btn.disabled = true; msg.textContent = "Sending...";
+    try { await c.sendToClaude({ anchor: await c.anchorFor(btn), text }); msg.textContent = "Sent. Claude answers in the comment thread on this button."; }
+    catch(e){ msg.textContent = e?.code === "rate_limited" ? "Sent a moment ago. Give it a minute."
+      : e?.code === "claude_unavailable" ? "No Claude session could take it, so nothing was posted. Tell Claude in chat."
+      : e?.code === "consent_required" ? "Allow comments from this page, then press it again."
+      : `Couldn't send it (${e?.code || "error"}). Try again in a moment.`; }
+    finally { busy = false; setTimeout(check, 4000); }
+  });
+})();
+</script>

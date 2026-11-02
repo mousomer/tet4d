@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-09-25
+Updated: 2026-11-02
 Scope: active work, explicit deferrals, and near-term acceptance boundaries.
 
 Completed chronology is recoverable from Git, merged PRs, CI, and
@@ -22,6 +22,73 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   facts)
 
 ## Active Work
+
+### Baseline sanitation reference review
+
+- [x] Review intentional baseline path references with exact, counted exceptions.
+  Contract and fleet validation limits:
+  `docs/architecture/sanitation_reference_review.md`.
+
+### UI and cockpit follow-up
+
+The orchestration repair and R1/R2/F1–F5 were accepted after owner review on
+2026-10-31, with known issues retained. Acceptance/evidence:
+`docs/history/ui_cockpit_owner_acceptance_2026_10_31.md`; implementation plan:
+`docs/plans/ui_cockpit_orchestration_repair.md`. Publication and merged-master
+checks are tracked on PR #162; acceptance does not assert historical PNG parity.
+
+- [ ] Designer text sizing: owner reports that text is too large. Reproduce
+  effective font/control scale in windowed/fullscreen Designer, then plan a
+  bounded proportional reduction with readable controls and reachable actions.
+  Preserve gameplay viewport, board geometry and the accepted cockpit result;
+  do not mix this follow-up into the accepted orchestration repair.
+- [ ] Replay toolbar at 1280×720: rendered controls extend beyond the root
+  image in capture evidence `tet4d-window-capture-pp_xdorx`. Assess against the
+  historical baseline before a bounded responsive repair; toolbar construction
+  is unchanged by orchestration work. No scale/framing retuning in this batch.
+- [ ] Main-menu intrinsic-content fit invalidation remains an unconfirmed
+  review concern; establish a normal-user trigger before promoting a defect.
+
+### P1 fullscreen panels, live helpers and menu responsiveness
+
+- Helpers fit before they scroll: settings, setup, Designer, Design Laboratory,
+  guides and the live cockpit give content its room, compact gaps, then scale
+  text and content together (cockpit floor 0.6, Main Menu floor 0.5).
+- Owner-accepted and locked on 2026-10-25 by
+  `godot/Tet4D.Godot/tests/test_locked_shell_layouts.gd`: the Live 2D/3D side
+  rail, the Live 4D split and small-window deck, and the single-list Main Menu
+  with Play 2D/3D/4D. Changing them is a product decision.
+- [x] Live 4D lower helper deck missing after 2D/3D play (2026-10-27): a
+  metric signal reparented the deck during visibility propagation and Godot's
+  refused add left it parentless. Deferred, coalesced metric checks fix it;
+  `test_live_cockpit.gd` reproduces the engine refusal. Owner-confirmed in play.
+- Stage 58B allocation now measures the drawn board; see
+  `docs/design/stage_58b_readability_evidence.md`. Windows, Linux and handheld
+  devices still need their own rendered evidence.
+
+### Owner workflow adoption
+
+The `video-game-development`, `decision-worksheet` and `text-editor` agent
+skills live in `tools/agent-skills/`; `.claude/skills/` and `.agents/skills/`
+hold discovery pointers only. They are project workflow, not governance-pack
+skills. tet4d is an original native game, so the playbook's reverse
+engineering, oracle and fidelity register do not apply.
+
+- Mapping: the plan stays in this file, handoff in `CURRENT_STATE.md`, product
+  answers in `docs/rds/*`; owner decisions are numbered and recorded in the RDS
+  or architecture document they change. No `BUILD_PLAN.md` or decision register.
+- QA sheets name a local launch recipe and seeded settings instead of a published
+  build: no Web export exists. Owner review sizes are macOS windowed
+  1280×720/800 and fullscreen.
+- [x] Phase 0: skills committed on a branch from `master`.
+- [x] Phase 1: the [Tet4D Board](https://claude.ai/artifact/H8A1LZV69hzv5B9SBN2Gbe)
+  in the default Vector Arcade palette. `tools/artifact-board/items.json` lists
+  the cards (slices, owner tasks, artifacts); `sync.cjs` turns it into the
+  board's database writes. Card statuses and owner notes belong to the owner.
+- [ ] Phase 2: Stage 58C decisions worksheet over captures of today's board.
+- [ ] Phase 3: QA sheet for the Stage 56H playability checkpoint. P1 panels are
+  already owner-accepted and locked on macOS.
+- Text editor only when the owner asks to edit copy.
 
 ### Stage 56H spatial scaffold acceptance
 
@@ -93,6 +160,9 @@ opacity, colour, scale, camera and depth tuning belong to later stages.
   measurements and rejected candidates:
   `docs/design/stage_58c_spatial_readability_evidence.md`.
 - [ ] 58C.7: owner play acceptance of 3D/4D readability across styles and grids.
+- [ ] 58C.7 tradeoffs: accept or reject 3D blue at 13.1–14.3 ΔL* against the
+  proposed 15 margin, far-slice Arcade Neon/High Contrast readability, and dense
+  rebuild overhead. Historical Linux measurements do not establish Metal latency.
 - P2 (58C residual): dark active hues (blue, then red and purple) keep the
   smallest lightness margin over same-colour settled cells; a uniform active
   lift trades chroma for lightness and was not adopted.
@@ -109,6 +179,10 @@ opacity, colour, scale, camera and depth tuning belong to later stages.
 
 Recheck the isolated macOS ObjectDB profiler snapshot-storage advisory when the
 pinned engine or temporary-path strategy changes; see the Godot 4.7.2 audit.
+
+### Governance repair outcome comparison
+
+Matched-task follow-up for the bounded repair: `docs/plans/governance_repairs_2026_10.md`.
 
 ### Governance-manifest quality calibration
 
@@ -147,16 +221,20 @@ digest is likewise stale since iPadOS left hosted CI; that repair refreshes both
 
 ### Governance pack, telemetry and work-type rollout
 
-The owner authorized implementation of
-`docs/plans/policy_kit_logging_and_meta_testing_repairs.md`. Permanent private
-state, source history and backup restoration are complete. Distribution 1.3.1 /
-runtime 0.6.1 is published with execution/evidence hardening, release-pinned
-adapter validation, explicit P1a readiness and a separately packaged portable
-meta-test component. The frozen gate passed 552 cases; the 1.3.0 integration
-worktree passed its full source verifier before the bounded patch upgrade.
-Actual rollout, successor gates and current fleet results belong to the repair
-checkpoint and durable private audit. Failed products, unavailable evidence,
-IQA's model-download hold and RMBG's temporary-fixture boundary remain open.
+The owner's 2026-10-31 harness repair request extends
+`docs/plans/policy_kit_logging_and_meta_testing_repairs.md`. Distribution 1.4.0 /
+runtime 0.7.0 is the local successor: bounded Make parser helpers, mandatory
+runtime source-style checks in the immutable kit gate, explicit retired-store
+absence observations, reviewed native bindings and preserved mutable owner
+files. Candidate/frozen gates and guarded adoption are retained privately.
+Fresh approved execution evidence and current fleet outcomes belong to the
+private audit; source integrity and installation never establish product proof.
+Unrecoverable Git metadata, unavailable product contracts, protected scan gaps,
+and IQA's model-download hold remain open. RMBG verification follows the reviewed
+temporary-input repair; current results belong to the private collector.
+The owner limited this follow-up to the harness and existing offline checks.
+Raizor source/synthetic lanes preserve model, GPU, corpus, dependency-pin and
+human acceptance boundaries; new product contracts remain separate work.
 
 **Status (2026-10-04): all-repository implementation reactivated by the owner.**
 The rollout is `docs/plans/all_repository_governance_rollout.md`; distribution
@@ -178,26 +256,21 @@ Still deferred behind an evidence checkpoint and explicit approval: the non-self
 
 ### Policy kit logging and manifest meta testing repairs
 
-Implementation authorized on 2026-10-04:
-`docs/plans/policy_kit_logging_and_meta_testing_repairs.md`.
-Durable state and verified 440-file backup restoration are complete. The
-published 1.3.1 / 0.6.1 successor includes execution/evidence contracts, safe
-gate diagnostics, logging readiness, immutable skills and portable meta-tests;
-1.2.0 and its historical evidence remain unchanged. The final private audit
-retains fresh acceptance and all unresolved product, sanitation and coverage
-results. One nested direct checkout, nine orphaned markers and 155 scan errors
-remain open. Mutable human documents and project tests receive owner migrations
-instead of frozen installer postimages. P1b/P1c/P6 and scientific/product fixes
-retain their separate gates.
+The accepted repair contract and historical executions are retained in
+`docs/plans/policy_kit_logging_and_meta_testing_repairs.md`. Current shared source
+is distribution 1.4.0 / runtime 0.7.0; earlier releases and observations remain
+immutable. Actual collector records bind fresh tool bytes, source state and
+execution policy; historical passes are never retagged after an executable or
+input changes.
 
-The 2026-10-05 integration review confirmed ignored Claude adapters and suppressed
-ordinary failure diagnostics. Their bounded Tet4D repair passes Git-visible
-checkout and quiet/verbose failure regressions plus the canonical full gate.
-Shared-kit follow-up remains open: ambient `TERM` changes evidence matching,
-Make prerequisites can execute before governance, and whole-verifier pinning
-requires guarded re-review after native integration edits. System-Python
-bootstrap policy and portable default tool paths need a separate kit decision;
-no successor release or fleet adoption is claimed by this integration repair.
+Remaining work is substantive acceptance: project-specific product contracts,
+held execution decisions, missing Git metadata, inaccessible roots and complete
+sanitation coverage. Existing safe offline checks may establish only their
+explicit behavior boundary. Mutable human documents and project tests receive
+owner migrations instead of continuing installer postimages. P1b/P1c/P6 retain
+their separate continuation gate. Ambient TERM matching, system-Python bootstrap
+policy and portable default tool paths retain separate kit decisions; no
+undeclared logging or blocking policy is activated.
 
 ### Camera and relative-control contract
 

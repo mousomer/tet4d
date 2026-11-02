@@ -36,6 +36,9 @@ const VIEWPORT_PANEL_MIN_WIDTH := GAME_AREA_MIN_WIDTH
 const VIEWPORT_PANEL_COMPACT_MIN_WIDTH := GAME_AREA_MIN_WIDTH
 const BODY_MIN_HEIGHT := 400
 const LIVE_BODY_MIN_HEIGHT := 240
+# Live 4D draws a wide, short slice row that rarely uses the shared floor's
+# height; a lower floor lets a short window keep NEXT/HOLD on screen below it.
+const LIVE_4D_BODY_MIN_HEIGHT := 160
 const LIVE_SHELL_MIN_WIDTH := 680
 const LIVE_SHELL_MIN_HEIGHT := 520
 const BODY_MIN_WIDTH := LEFT_PANEL_WIDTH + GAME_AREA_MIN_WIDTH + RIGHT_PANEL_MIN_WIDTH + (BODY_GAP * 2)

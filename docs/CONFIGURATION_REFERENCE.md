@@ -34,6 +34,7 @@ Coverage:
 - `config/project/io_paths.json`
 - `config/project/policy/manifests/help_assets_manifest.json`
 - `config/project/policy/manifests/replay_manifest.json`
+- `config/project/policy/manifests/sanitation_references.json`
 - `config/project/policy/manifests/secret_scan.json`
 - `config/project/policy_pack.json`
 - `config/topology/designer_presets.json`
@@ -307,7 +308,7 @@ Parameters:
 - `skill_adapters[]`: array[`object`]
 - `skill_adapters[].name`: varies (`string`); examples: `"governance-context"`, `"governance-maintenance"`
 - `skill_adapters[].path`: varies (`string`); examples: `".agents/skills/governance-context/SKILL.md"`, `".claude/skills/governance-context/SKILL.md"`, `".agents/skills/governance-maintenance/SKILL.md"`
-- `skill_adapters[].release_manifest_sha256`: varies (`string`); examples: `"0dbb35dc8fcccc60f32de726eb0131a24759a6c683a8a5a6ea6b4a2d6d405856"`
+- `skill_adapters[].release_manifest_sha256`: varies (`string`); examples: `"f4500302c2cee58966055cfc906f146b51f841d3807c5a293870322b615a9373"`
 - `skill_adapters[].sha256`: varies (`string`); examples: `"013a4a955f5272545c9d000b0514fa10458dc1a31314ab4d3dfd1f6f2bfea9f9"`, `"fd416bb129ee2a2c758537a238adf09a0615694c951d4ced029fa5bab76af10b"`
 - `skill_adapters[].target`: varies (`string`); examples: `"tools/workspace_governance/skills/governance-context/SKILL.md"`, `"tools/workspace_governance/skills/governance-maintenance/SKILL.md"`
 - `verification.canonical.authority_ref`: `"legacy-policy-pack"` (`string`)
@@ -320,14 +321,14 @@ Parameters:
 ### `config/governance/workspace.lock.json`
 Top-level keys: `content_sha256`, `files`, `lock_algorithm`, `pack_name`, `pack_path`, `revision`, `schema_version`, `version`
 Parameters:
-- `content_sha256`: `"1b2b597301731e20a4b9958483fe3fbb17c765cf6d266c24f412981b0a932c8e"` (`string`)
+- `content_sha256`: `"743b308a0c99a2d6a0c3cd98aa22788934eccdfaa4b5156b90bd695e247a24dc"` (`string`)
 - `files[]`: array[`string`]; examples: `".ruff.toml"`, `"MANIFEST.json"`, `"VERSION"`
 - `lock_algorithm`: `"sha256-path-and-content-v1"` (`string`)
 - `pack_name`: `"workspace-governance"` (`string`)
 - `pack_path`: `"tools/workspace_governance"` (`string`)
-- `revision`: `"v0.6.1-private-execution-metadata-1"` (`string`)
+- `revision`: `"v0.7-harness-repair-1"` (`string`)
 - `schema_version`: `1` (`int`)
-- `version`: `"0.6.1"` (`string`)
+- `version`: `"0.7.0"` (`string`)
 
 ### `config/help/action_map.json`
 Top-level keys: `action_topics`, `default_topic`, `version`
@@ -2073,11 +2074,21 @@ Parameters:
 - `suites[].test_file`: `"tests/unit/engine/test_gameplay_replay.py"` (`string`)
 - `version`: `1` (`int`)
 
+### `config/project/policy/manifests/sanitation_references.json`
+Top-level keys: `references`, `schema_version`
+Parameters:
+- `references[]`: array[`object`]
+- `references[].line_sha256[]`: array[`string`]; examples: `"a3a664a1ea803f1afb9f463cc79ed85f42ba59bdc32b111744342007fdb84058"`, `"e13e80828192149dca9dd71901581c1364792f35bbf96f5d79a378ba872c3d62"`, `"77b705f4a92ba0d9c7924cb2068373d26f450aebe330141b2412af925449d987"`
+- `references[].path`: varies (`string`); examples: `".governance/baseline/check_git_sanitation.sh"`, `"tools/workspace_governance/validators/core.py"`, `"scripts/check_git_sanitation_repo.sh"`
+- `references[].reason`: varies (`string`); examples: `"Scanner or bounded diagnostic must recognize the exact prohibited pa...`, `"Required relative link resolves to the canonical skill inside this r...`, `"Relative build/export or installed application resource path; not us...`
+- `references[].warning_class`: varies (`string`); examples: `"absolute-unix"`, `"absolute-windows"`, `"parent-traversal"`
+- `schema_version`: `1` (`int`)
+
 ### `config/project/policy/manifests/secret_scan.json`
 Top-level keys: `allowlist`, `exclude_dirs`, `exclude_globs`, `max_file_bytes`, `patterns`, `scan_roots`, `version`
 Parameters:
 - `allowlist[]`: array[`empty`]
-- `exclude_dirs[]`: array[`string`]; examples: `".git"`, `".venv"`, `"__pycache__"`
+- `exclude_dirs[]`: array[`string`]; examples: `".git"`, `".claude/worktrees"`, `".venv"`
 - `exclude_globs[]`: array[`string`]; examples: `"assets/help/*.gif"`, `"assets/help/*.png"`, `"tests/replay/golden/*"`
 - `max_file_bytes`: `1048576` (`int`)
 - `patterns[]`: array[`object`]

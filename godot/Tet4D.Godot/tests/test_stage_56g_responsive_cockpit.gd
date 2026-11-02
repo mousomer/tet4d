@@ -119,7 +119,7 @@ func _check_resize_history(tree: SceneTree, scene: PackedScene) -> Array:
 			var guided_geometry := _deck_geometry(guided["hud"])
 			_assert_deck_safe(failures, guided_geometry, HISTORY_REFERENCE, "%s 1280x720 with guide open" % label)
 			guided["hud"]._set_onboarding_visible(false)
-			await _settle(tree)
+			await _settle(tree, guided["hud"])
 			_compare_geometry(failures, opening, _deck_geometry(guided["hud"]), "%s 1280x720 after closing the guide" % label)
 			guided["viewport"].queue_free()
 			await tree.process_frame
@@ -144,7 +144,7 @@ func _open_live_4d(tree: SceneTree, scene: PackedScene, catalog, look: Dictionar
 	root.get_node("App")._enter_live_4d_mode()
 	# Live entry may reopen the guide from persisted settings; normal play hides it.
 	hud._set_onboarding_visible(bool(look.get("guide", false)))
-	await _settle(tree)
+	await _settle(tree, hud)
 	return {"viewport": viewport, "hud": hud}
 
 
@@ -153,11 +153,19 @@ func _resize_case(tree: SceneTree, viewport: SubViewport, size: Vector2i, hud) -
 	# The shell listens to the root Window's size_changed, which a SubViewport
 	# resize never emits; deliver the same production callback it would.
 	hud._on_shell_window_size_changed()
-	await _settle(tree)
+	await _settle(tree, hud)
 
 
-func _settle(tree: SceneTree) -> void:
+# The cockpit fits its helpers over several frames (compact, then a scale
+# search); with a HUD, also wait, bounded, for that fit to settle.
+func _settle(tree: SceneTree, hud = null) -> void:
 	for frame in range(10):
+		await tree.process_frame
+	if hud == null:
+		return
+	for frame in range(120):
+		if hud._live_cockpit.fit_settled():
+			return
 		await tree.process_frame
 
 
@@ -173,6 +181,7 @@ func _deck_geometry(hud) -> Dictionary:
 		"deck_minimum_height": float(cockpit.get("deck_minimum_height", 0.0)),
 		"deck_natural_height": float(cockpit.get("deck_natural_height", 0.0)),
 		"deck_scroll_required": bool(cockpit.get("deck_scroll_required", false)),
+		"deck_fit_scale": float(cockpit.get("deck_fit_scale", 1.0)),
 		"deck_rows_rect": cockpit.get("deck_rows_rect", Rect2()),
 		"deck_placement": str(cockpit.get("deck_placement", "")),
 		"deck_row_assignment": str(cockpit.get("deck_row_assignment", [])),
@@ -226,11 +235,20 @@ func _assert_deck_safe(failures: Array, geometry: Dictionary, window: Vector2i, 
 		failures.append("%s must keep the board usable beside the legend, got %s" % [label, game_viewport])
 
 
+# A short window still takes deck height for the board. The legend then fits
+# by shrinking, compacting and then scaling uniformly, and scrolls only once
+# it is at the cockpit's scale floor.
 func _assert_legend_compacts(failures: Array, geometry: Dictionary, label: String) -> void:
 	var deck: Rect2 = geometry["deck_rect"]
 	var usable := Rect2(Vector2.ZERO, Vector2(HISTORY_SHORT))
-	if not geometry["deck_scroll_required"] or deck.size.y >= geometry["deck_natural_height"] - 0.5 or not geometry["deck_scrollbar_visible"]:
-		failures.append("%s must give up deck height and scroll the legend: deck %s natural %s" % [label, deck.size.y, geometry["deck_natural_height"]])
+	var unscaled_legend: float = (geometry["legend_content_minimum"] as Vector2).y
+	if deck.size.y >= unscaled_legend - 0.5:
+		failures.append("%s must give up deck height below the full legend: deck %s legend %s" % [label, deck.size.y, unscaled_legend])
+	var at_floor: bool = float(geometry["deck_fit_scale"]) <= LiveCockpitScript.FIT_SCALE_FLOOR + 0.001
+	if float(geometry["deck_fit_scale"]) >= 1.0:
+		failures.append("%s must shrink the legend to fit the short deck" % label)
+	if (geometry["deck_scrollbar_visible"] or geometry["deck_scroll_required"]) and not at_floor:
+		failures.append("%s must not scroll the legend above the scale floor (scale %s)" % [label, geometry["deck_fit_scale"]])
 	if not _contains_rect(usable, deck) or (geometry["game_area"] as Rect2).intersects(deck):
 		failures.append("%s must keep the compact deck inside the window and clear of the board: %s" % [label, deck])
 
@@ -333,7 +351,8 @@ func _assert_live_geometry(hud: Node, viewport_case: Dictionary, mode: String, v
 	for row in cockpit.get("deck_row_assignment", []):
 		for module_name in row:
 			flattened.append(str(module_name))
-	var expected_order := ["PieceControls", "ViewControls", "PieceState"]
+	# Below the board NEXT/HOLD come first, as in the rail and the split column.
+	var expected_order := ["PieceState", "PieceControls", "ViewControls"]
 	if side_rail:
 		expected_order = ["PieceState", "PieceControls"]
 	elif split:

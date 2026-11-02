@@ -1,24 +1,23 @@
 # CURRENT_STATE (Restart Handoff)
 
-Governance repair checkpoint (2026-10-04): distribution 1.3.1 / runtime 0.6.1 is
-published; the frozen portable gate passed 552 cases. Durable private state and
-440-file backup restoration are complete. Native integration, guarded rollout
-and fresh evidence follow the saved repair plan; current results and remaining
-coverage belong to its checkpoint and private fleet audit. Product work and
-deferred telemetry gates retain their existing scope.
-
-Integration review checkpoint (2026-10-05): Claude discovery adapters are now
-Git-visible, and ordinary named gate failures retain checker diagnostics and
-exit status. Scanner redaction remains bounded. Focused integration checks,
-a Git-visible checkout export and the canonical full gate pass.
-Ambient evidence matching and Make ordering remain shared-kit follow-up.
-Native verifier edits need guarded re-review before fleet acceptance. The Stage 56H unified baseline is committed at `0cb30958`.
+Harness repair consumes distribution 1.4.0 / runtime 0.7.0. Candidate and
+immutable kit gates, source/skill integrity, guarded direct adoption and manual
+owner migrations are retained in durable private receipts. Tet4D's current
+native verifier and committed project rules are preserved in the reviewed
+binding. The owner selected harness repairs and existing offline checks;
+the private fleet audit owns fresh scoped outcomes and remaining gaps.
+Protected data, historical releases/evidence, product authority and deferred
+telemetry gates remain intact. The plan is
+`docs/plans/policy_kit_logging_and_meta_testing_repairs.md`.
+The Stage 56H unified baseline is committed at `0cb30958`.
 ## Purpose
 
 This file contains only the compact state needed to resume staged or
 phase-dependent work. It is not workflow authority, a CI diary, a completed
 stage archive, a task-contract ledger, or a future programme.
 ## Active Focus
+
+UI/cockpit repair accepted after owner review; Designer text-size follow-up remains. Acceptance: `docs/history/ui_cockpit_owner_acceptance_2026_10_31.md`. Plan: `docs/plans/ui_cockpit_orchestration_repair.md`.
 
 Machine-readable handoff state. `status` is `active` only on a feature branch
 or draft PR and must name that branch; it is `none` on the default branch and
@@ -57,25 +56,26 @@ No active handoff.
 
 ## Next Acceptance Boundary
 
-Stage 58B scale/framing is frozen; the 58C hierarchy awaits owner play
-acceptance (58C.7) and 58D framing/side rail follows. Owner playability
-review remains separate from agent visual inspection.
+Next: bounded Designer text-size review; replay toolbar assessment stays separate.
+Repair accepted; publication/master CI is tracked on PR #162. 58B scale stays frozen.
+Stage 58C hierarchy awaits owner macOS/Metal play acceptance (58C.7), separate
+from agent inspection; 58D framing/side-rail work needs its own acceptance.
 The Stage 56H human playability checkpoint retains its task contract at
 `docs/tasks/live_4d_cockpit_convergence.md`; Stage 56I polish and the 190/200
-A/B decision remain separate. The authorized governance distribution 1.3.1 is active;
+A/B decision remain separate. Governance distribution 1.4.0 / runtime 0.7.0 is active;
 its rollout and proof limits are recorded in
 `docs/plans/all_repository_governance_rollout.md` and the private fleet audit.
 P1b/P1c/P6 continuation and separate comparison/blocking gates remain required.
 The implemented repair contract is recorded in
 `docs/plans/policy_kit_logging_and_meta_testing_repairs.md`; fresh successor
-evidence is separate from the retained historical records. The nested boundary,
-orphaned locations, sanitation conflicts and census gaps remain open. IQA and
-RMBG product execution stay held at their owner boundaries.
+evidence is separate from the retained historical records. Unrecoverable Git metadata, unresolved product contracts, sanitation limits
+and census gaps remain separate acceptance boundaries. IQA product execution stays held at its model-download boundary; RMBG
+verification follows its reviewed temporary-input repair.
 The human session includes direct Play and `2`/`3`/`4` entry, `C` Change Setup,
 and frozen-setup Restart/Play Again under
 `docs/architecture/editable_board_setup_and_persistence.md`.
-Shell readability uses 24/22 px text, contained menu scrolling, and visible launch
-Play. Scale: menus 1280×720 pt, tighter axis, 0.75–2×; live/replay 1280×800 pt, 1–2×.
+Shell readability uses 24/22 px text, a Main Menu that scales to fit (scrolling
+only below its floor), and visible launch Play. Scale: menus 1280×720 pt, tighter axis, 0.75–2×; live/replay 1280×800 pt, 1–2×.
 Include resizing, navigation, and guide layout in human acceptance.
 The correction on `claude/stage-56h-gameplay-ergonomics` from `0cb30958`
 requires actual-region fitting, styled legends, orthogonal grid modes, and
@@ -104,7 +104,7 @@ From `python scripts/arch_metrics.py`:
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 3.09`
+1. `delivery_size_pressure = 3.10`
 2. `code_balance = 1.91`
 <!-- END GENERATED:current_state_metric_snapshot -->
 

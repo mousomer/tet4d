@@ -21,6 +21,10 @@ config/quit_on_go_back=false
 config/features=PackedStringArray("4.7")
 config/tet4d_target_godot_version="4.7.2-stable"
 
+[design_lab]
+
+capture/max_settle_frames=240
+
 [display]
 
 window/size/viewport_width=1600

@@ -87,6 +87,9 @@ registry-generated rows; they required no new control type.
 ## Baselines and comparison
 
 Parameter/group Reset uses the complete saved/opening working baseline.
+Both resolve the latest successful Save, Save As or Load; before those
+operations they use the opening profile. Group Reset changes only applicable
+values owned by that group and performs no storage write.
 Revert restores that baseline including grid, appearance, density, base-style
 provenance and panel geometry. Save, Save As and Load establish a new baseline;
 style application and comparison adoption do not. Internally `revert_style`
@@ -119,11 +122,14 @@ palette architecture.
 
 ## Cockpit viewability
 
-The Designer is a bounded panel inside the existing game-area rect, or the
-cockpit surface while full Designer panel manipulation is active. Full mode uses an internal scroll container and
-occupies less than a majority of ordinary board width. Compact mode becomes a
-small A/B strip. Hidden mode removes the overlay while retaining the detached
-session.
+The Designer is an overlay bounded by the usable application viewport,
+independently of the game-area or detached-board allocation. Its preferred
+position follows the board/cockpit; it contracts, reflows and compacts before
+scrolling readable content. Full mode occupies less than a majority of ordinary
+viewport width and keeps close actions outside the content scroll. Compact mode
+becomes a small A/B strip. Hidden mode removes the overlay while retaining the
+detached session. Width, height, UI scale and fullscreen changes recalculate
+these bounds without reducing the board to accommodate the editor.
 
 The board and active/Ghost pieces remain visible beside/behind the bounded
 panel. NEXT and HOLD remain together in their shared module; full Designer mode
@@ -178,8 +184,8 @@ registry, NEXT, HOLD, geometry, basis, camera, or persistence authority.
 ## Stage 56H panel geometry and grid independence
 
 Full Designer mode enables labelled Move and Resize handles for the board,
-piece controls, view controls, and NEXT/HOLD panels. The cockpit owns detached
-panel rectangles; scroll containers preserve access to controls at their minimum
+piece controls, view controls, and NEXT/HOLD panels. The cockpit delegates
+detached panel lifecycle and rectangles to `DesignerPanelSession`; scroll containers preserve access to controls at their minimum
 sizes (300×160 logical pixels for control panels, 320×360 for the board,
 including handles and board chrome; constrained by the available surface). Rectangles are constrained to the available cockpit surface, including
 after window changes. The panel selector and Bring Panel Forward action recover
@@ -187,6 +193,16 @@ any overlapping panel without changing its geometry, profile, or gameplay. Compa
 responsive cockpit and disable all manipulation. Session rectangles survive reopening Designer and are persisted in the optional
 design-state extension of the profile snapshot. Older profiles without the
 extension restore default cockpit geometry.
+
+`DesignerPanelSession` records parents, sibling indices, visibility and sizing
+flags before detaching any panel. Closing restores detached control modes,
+parents, sibling order and sizing synchronously before old frames are released.
+Old frame cleanup therefore cannot reset a reopened session. Geometry edits
+and deferred opening constraints carry a session revision; callbacks from a
+closed session cannot change the next one's geometry. Pending HUD opening-
+geometry capture is guarded by that revision too. HUD consumes public cockpit
+surface/constraint APIs instead of detached-host fields. The session owns no
+profile composition, storage, camera fit or gameplay operation.
 
 The board panel contains the real gameplay viewport surface. Moving/resizing panels
 never calls Fit directly: resolved inner visibility/size signals use the same

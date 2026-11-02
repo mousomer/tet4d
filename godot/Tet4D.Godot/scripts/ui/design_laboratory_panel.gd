@@ -2,6 +2,7 @@ extends PanelContainer
 
 class_name DesignLaboratoryPanel
 
+const ResponsivePanelPolicy = preload("res://scripts/ui/responsive_panel_policy.gd")
 const BuiltInStyleCatalogScript = preload("res://scripts/presentation/built_in_style_catalog.gd")
 const PresentationProfileLibraryScript = preload("res://scripts/presentation/presentation_profile_library.gd")
 const PresentationProfileScript = preload("res://scripts/presentation/presentation_profile.gd")
@@ -9,6 +10,7 @@ const DesignScenarioCatalogScript = preload("res://scripts/design_lab/design_sce
 const DesignPresetResolverScript = preload("res://scripts/design_lab/design_preset_resolver.gd")
 const DesignComparisonSessionScript = preload("res://scripts/design_lab/design_comparison_session.gd")
 const DesignEvaluationStoreScript = preload("res://scripts/design_lab/design_evaluation_store.gd")
+const DesignCaptureOperationScript = preload("res://scripts/design_lab/design_capture_operation.gd")
 const DesignCaptureStoreScript = preload("res://scripts/design_lab/design_capture_store.gd")
 const DesignExportBundleScript = preload("res://scripts/design_lab/design_export_bundle.gd")
 const DesignExportTransportScript = preload("res://scripts/design_lab/design_export_transport.gd")
@@ -34,6 +36,10 @@ var _apply_selection: Callable
 var _apply_style: Callable
 var _apply_profile: Callable
 var _current_fingerprint: Callable
+var _capture_ui_revision := 0
+var _capture_operation = DesignCaptureOperationScript.new()
+var _capture_buttons: Array[Button] = []
+var _capture_readiness: Callable
 var _capture_image: Callable
 var _build_identity: Callable
 var _edit_candidate: Callable
@@ -74,6 +80,7 @@ func configure(registry, callbacks: Dictionary) -> bool:
 		_comparison.preview = callbacks["comparison"]
 	_current_fingerprint = callbacks.get("current_fingerprint", Callable())
 	_capture_image = callbacks.get("capture_image", Callable())
+	_capture_readiness = callbacks.get("capture_readiness", Callable())
 	_build_identity = callbacks.get("build_identity", Callable())
 	_edit_candidate = callbacks.get("edit_candidate", Callable())
 	if [_load_scenario, _apply_profile, _current_fingerprint, _capture_image, _build_identity, _edit_candidate].any(func(callback: Callable) -> bool: return not callback.is_valid()):
@@ -91,7 +98,26 @@ func open() -> void:
 
 
 func close() -> void:
+	_cancel_capture()
 	visible = false
+
+
+func _exit_tree() -> void:
+	_cancel_capture()
+
+
+func comparison_active() -> bool:
+	return _comparison.active()
+
+
+func show_comparison_arm(arm: String) -> bool:
+	_cancel_capture()
+	return _activate_arm(arm)
+
+
+func end_comparison() -> void:
+	_cancel_capture()
+	_comparison.end()
 
 
 func interaction_owns_input() -> bool:
@@ -101,6 +127,7 @@ func interaction_owns_input() -> bool:
 func deterministic_snapshot() -> Dictionary:
 	return {
 		"visible": visible,
+		"capture_busy": _capture_operation.busy(),
 		"scenario_count": _scenarios.list_scenarios().size() if _scenarios != null else 0,
 		"preset_count": _resolver.list_presets().size() if _resolver != null else 0,
 		"comparison": _comparison.snapshot(),
@@ -114,7 +141,7 @@ func _build_ui() -> void:
 		remove_child(child)
 		child.queue_free()
 	name = "DesignLaboratoryPanel"
-	custom_minimum_size = Vector2(440, 560)
+	custom_minimum_size = Vector2.ZERO
 	var margin := MarginContainer.new()
 	for side in ["left", "top", "right", "bottom"]:
 		margin.add_theme_constant_override("margin_%s" % side, 16)
@@ -122,7 +149,7 @@ func _build_ui() -> void:
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 10)
 	margin.add_child(root)
-	var header := HBoxContainer.new()
+	var header := HFlowContainer.new()
 	root.add_child(header)
 	var title := Label.new()
 	title.text = "DESIGN LABORATORY"
@@ -139,8 +166,8 @@ func _build_ui() -> void:
 	subtitle.theme_type_variation = "SecondaryLabel"
 	root.add_child(subtitle)
 	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.name = "LaboratoryContentScroll"
+	ResponsivePanelPolicy.configure_scroll(scroll)
 	root.add_child(scroll)
 	var form := VBoxContainer.new()
 	form.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -159,7 +186,7 @@ func _build_ui() -> void:
 	_preset_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_preset_detail.theme_type_variation = "SecondaryLabel"
 	form.add_child(_preset_detail)
-	var catalog_actions := HBoxContainer.new()
+	var catalog_actions := HFlowContainer.new()
 	var apply_button := Button.new()
 	apply_button.name = "ApplyLiveButton"
 	apply_button.text = "Apply Live"
@@ -185,12 +212,15 @@ func _build_ui() -> void:
 	_arm_a_assignment.name = "ArmAAssignmentLabel"
 	_arm_b_assignment = Label.new()
 	_arm_b_assignment.name = "ArmBAssignmentLabel"
+	_arm_a_assignment.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_arm_b_assignment.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	form.add_child(_arm_a_assignment)
 	form.add_child(_arm_b_assignment)
 	_blind_check = CheckBox.new()
 	_blind_check.text = "Blind labels"
 	_blind_check.button_pressed = false
 	_blind_check.toggled.connect(func(enabled: bool) -> void:
+		_cancel_capture()
 		if _comparison.active():
 			_comparison.set_blind(enabled)
 			_refresh_arm_labels()
@@ -201,16 +231,16 @@ func _build_ui() -> void:
 	start_button.text = "Start comparison"
 	start_button.pressed.connect(_start_comparison)
 	form.add_child(start_button)
-	var arm_row := HBoxContainer.new()
+	var arm_row := HFlowContainer.new()
 	_arm_a_button = Button.new()
 	_arm_a_button.name = "ShowArmAButton"
 	_arm_a_button.text = "Show A"
-	_arm_a_button.pressed.connect(func() -> void: _activate_arm("A"))
+	_arm_a_button.pressed.connect(func() -> void: show_comparison_arm("A"))
 	arm_row.add_child(_arm_a_button)
 	_arm_b_button = Button.new()
 	_arm_b_button.name = "ShowArmBButton"
 	_arm_b_button.text = "Show B"
-	_arm_b_button.pressed.connect(func() -> void: _activate_arm("B"))
+	_arm_b_button.pressed.connect(func() -> void: show_comparison_arm("B"))
 	arm_row.add_child(_arm_b_button)
 	_toggle_button = Button.new()
 	_toggle_button.name = "ToggleArmButton"
@@ -222,16 +252,18 @@ func _build_ui() -> void:
 	reset_button.pressed.connect(_reset_scenario)
 	arm_row.add_child(reset_button)
 	form.add_child(arm_row)
-	var capture_row := HBoxContainer.new()
+	var capture_row := HFlowContainer.new()
 	for arm in ["A", "B"]:
 		var capture_button := Button.new()
 		capture_button.text = "Capture %s" % arm
 		capture_button.pressed.connect(_capture_arm.bind(arm))
 		capture_row.add_child(capture_button)
+		_capture_buttons.append(capture_button)
 	var pair_button := Button.new()
 	pair_button.text = "Capture pair"
 	pair_button.pressed.connect(_capture_pair)
 	capture_row.add_child(pair_button)
+	_capture_buttons.append(pair_button)
 	form.add_child(capture_row)
 	form.add_child(_section_label("EVALUATION"))
 	_preference_select = OptionButton.new()
@@ -261,6 +293,7 @@ func _build_ui() -> void:
 	form.add_child(_labeled_control("Candidate", _nominate_select))
 	var export_button := Button.new()
 	export_button.text = "Nominate and export proposal"
+	export_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	export_button.pressed.connect(_export_nomination)
 	form.add_child(export_button)
 	# Externalising the finished bundle is the only part of nomination that
@@ -275,6 +308,10 @@ func _build_ui() -> void:
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_status.theme_type_variation = "SecondaryLabel"
 	root.add_child(_status)
+	for select in [_scenario_select, _catalog_select, _preference_select, _nominate_select]:
+		select.fit_to_longest_item = false
+		select.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		ResponsivePanelPolicy.bind_popup(select.get_popup(), self)
 
 
 func _refresh_catalogs() -> void:
@@ -326,6 +363,7 @@ func _resolve_selected(select: OptionButton) -> Dictionary:
 
 
 func _start_comparison() -> void:
+	_cancel_capture()
 	if _ensure_current.is_valid():
 		_ensure_current.call()
 	var scenario := _selected_scenario()
@@ -350,7 +388,12 @@ func _activate_arm(arm: String) -> bool:
 	if not bool(result.get("ok", false)):
 		_set_status(str(result.get("error", "Arm switch failed.")), true)
 		return false
-	_apply_snapshot(result.get("profile", {}))
+	if not _apply_snapshot(result.get("profile", {})):
+		_set_status("Comparison arm could not be applied.", true)
+		return false
+	if not bool(_comparison.verify_non_style_fingerprint(_current_fingerprint.call()).get("ok", false)):
+		_set_status("Comparison state changed while applying the arm.", true)
+		return false
 	_refresh_arm_labels()
 	return true
 
@@ -359,10 +402,11 @@ func _toggle_arm() -> void:
 	if not _comparison.active():
 		_set_status("Start a comparison first.", true)
 		return
-	_activate_arm("B" if _comparison.shown_arm() == "A" else "A")
+	show_comparison_arm("B" if _comparison.shown_arm() == "A" else "A")
 
 
 func _reset_scenario() -> void:
+	_cancel_capture()
 	if not _comparison.active():
 		_set_status("Start a comparison first.", true)
 		return
@@ -378,6 +422,7 @@ func _reset_scenario() -> void:
 
 
 func _apply_selected() -> void:
+	_cancel_capture()
 	var resolved := _resolve_selected(_catalog_select)
 	var applied := false
 	if bool(resolved.get("ok", false)):
@@ -393,6 +438,7 @@ func _apply_selected() -> void:
 
 
 func _set_selected_arm(arm: String) -> void:
+	_cancel_capture()
 	var resolved := _resolve_selected(_catalog_select)
 	if not bool(resolved.get("ok", false)):
 		_set_status(str(resolved.get("error", "Preset could not be assigned.")), true)
@@ -415,6 +461,7 @@ func _set_selected_arm(arm: String) -> void:
 
 
 func _duplicate_selected() -> void:
+	_cancel_capture()
 	var descriptor := _selected_descriptor(_catalog_select)
 	var result: Dictionary = _resolver.duplicate_as_candidate(str(descriptor.get("source_kind", "")), str(descriptor.get("preset_id", "")))
 	if not bool(result.get("ok", false)):
@@ -449,34 +496,49 @@ func _save_evaluation() -> void:
 
 
 func _capture_arm(arm: String) -> void:
-	if not await _activate_and_settle(arm):
-		return
-	var image = _capture_image.call()
-	var result := _captures.capture_arm(image, _comparison.snapshot(), arm, _build_identity.call(), BuiltInStyleCatalogScript.CATALOG_SCHEMA_VERSION)
-	_set_status("Captured %s at %s." % [arm, result.get("directory", "")]) if bool(result.get("ok", false)) else _set_status(str(result.get("error", "Capture failed.")), true)
+	await _run_capture([arm], false)
 
 
 func _capture_pair() -> void:
-	if not _comparison.active():
-		_set_status("Start a comparison before capturing.", true)
+	await _run_capture(["A", "B"], true)
+
+
+func _run_capture(arms: Array, restore: bool) -> void:
+	if _capture_operation.busy():
+		_set_status("A capture is already in progress.", true)
 		return
-	var restore_arm := _comparison.shown_arm()
-	for arm in ["A", "B"]:
-		if not await _activate_and_settle(arm):
-			return
-		var result := _captures.capture_arm(_capture_image.call(), _comparison.snapshot(), arm, _build_identity.call(), BuiltInStyleCatalogScript.CATALOG_SCHEMA_VERSION)
-		if not bool(result.get("ok", false)):
-			_set_status(str(result.get("error", "Pair capture failed.")), true)
-			return
-	await _activate_and_settle(restore_arm)
-	_set_status("Captured blind-safe A/B pair with separate provenance metadata.")
+	_capture_ui_revision += 1
+	var revision := _capture_ui_revision
+	_set_capture_busy(true)
+	var build: Dictionary = _build_identity.call().duplicate(true)
+	var result: Dictionary = await _capture_operation.run(get_tree(), {
+		"snapshot": Callable(_comparison, "snapshot"),
+		"fingerprint": _current_fingerprint,
+		"activate": Callable(self, "_activate_arm"),
+		"readiness": _capture_readiness,
+		"image": _capture_image,
+		"store": func(image, session: Dictionary, arm: String) -> Dictionary:
+			return _captures.capture_arm(image, session, arm, build, BuiltInStyleCatalogScript.CATALOG_SCHEMA_VERSION),
+	}, arms, restore, int(ProjectSettings.get_setting("design_lab/capture/max_settle_frames", 0)))
+	# A cancelled operation may have been replaced while it was awaiting.
+	if revision != _capture_ui_revision or _capture_operation.busy() or not is_inside_tree() or not visible:
+		return
+	_set_capture_busy(false)
+	if bool(result.get("ok", false)):
+		_set_status("Captured %s with settled provenance." % "/".join(arms))
+	else:
+		_set_status("Captured %s. %s %s" % [str(result.get("captured_arms", [])), str(result.get("error", "")), str(result.get("restoration_error", ""))], true)
 
 
-func _activate_and_settle(arm: String) -> bool:
-	if not _activate_arm(arm):
-		return false
-	await RenderingServer.frame_post_draw
-	return true
+func _cancel_capture() -> void:
+	_capture_ui_revision += 1
+	_capture_operation.cancel()
+	_set_capture_busy(false)
+
+
+func _set_capture_busy(value: bool) -> void:
+	for button in _capture_buttons:
+		button.disabled = value
 
 
 func _export_nomination() -> void:
@@ -585,7 +647,9 @@ static func _labeled_control(text: String, control: Control) -> HBoxContainer:
 	var label := Label.new()
 	label.text = text
 	label.custom_minimum_size = Vector2(138, 0)
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row.add_child(label)
 	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	control.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(control)
 	return row

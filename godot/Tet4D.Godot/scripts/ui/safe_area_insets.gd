@@ -35,3 +35,23 @@ static func resolve(safe_area: Rect2i, window_size: Vector2i) -> Dictionary:
 
 static func current() -> Dictionary:
 	return resolve(DisplayServer.get_display_safe_area(), DisplayServer.window_get_size())
+
+
+# The display reports insets in window pixels; layout runs in canvas units,
+# which canvas_items stretch scales away from window pixels. A macOS notch is
+# 78 backing pixels but only ~24 units of a 1280-unit canvas at 4112 pixels,
+# so applying pixels directly left a ~54-unit dead band above the cockpit.
+static func to_canvas(insets: Dictionary, window_size: Vector2i, canvas_size: Vector2) -> Dictionary:
+	if window_size.x <= 0 or window_size.y <= 0 or canvas_size.x <= 0.0 or canvas_size.y <= 0.0:
+		return ZERO.duplicate()
+	var factor := canvas_size / Vector2(window_size)
+	return {
+		"left": int(ceilf(float(insets.get("left", 0)) * factor.x)),
+		"top": int(ceilf(float(insets.get("top", 0)) * factor.y)),
+		"right": int(ceilf(float(insets.get("right", 0)) * factor.x)),
+		"bottom": int(ceilf(float(insets.get("bottom", 0)) * factor.y)),
+	}
+
+
+static func current_in_canvas(canvas_size: Vector2) -> Dictionary:
+	return to_canvas(current(), DisplayServer.window_get_size(), canvas_size)

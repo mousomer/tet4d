@@ -1,0 +1,3436 @@
+{
+	"display_server": "macOS",
+	"failures": [],
+	"observations": [
+		{
+			"actual_logical_size": "(1512.0, 982.0)",
+			"backing_pixels": "(3024, 1964)",
+			"display_scale": 2.0,
+			"requested_logical_size": "(1512, 982)",
+			"usable_viewport": "[P: (0.0, 0.0), S: (1281.0, 832.0)]"
+		},
+		{
+			"actual_logical_size": "(1440.0, 900.0)",
+			"backing_pixels": "(2880, 1800)",
+			"display_scale": 2.0,
+			"requested_logical_size": "(1440, 900)",
+			"usable_viewport": "[P: (0.0, 0.0), S: (1280.0, 800.0)]"
+		},
+		{
+			"actual_logical_size": "(1280.0, 720.0)",
+			"backing_pixels": "(2560, 1440)",
+			"display_scale": 2.0,
+			"requested_logical_size": "(1280, 720)",
+			"usable_viewport": "[P: (0.0, 0.0), S: (1280.0, 720.0)]"
+		},
+		{
+			"actual_logical_size": "(1024.0, 640.0)",
+			"backing_pixels": "(2048, 1280)",
+			"display_scale": 2.0,
+			"requested_logical_size": "(1024, 640)",
+			"usable_viewport": "[P: (0.0, 0.0), S: (1024.0, 640.0)]"
+		},
+		{
+			"actual_logical_size": "(800.0, 500.0)",
+			"backing_pixels": "(1600, 1000)",
+			"display_scale": 2.0,
+			"requested_logical_size": "(800, 500)",
+			"usable_viewport": "[P: (0.0, 0.0), S: (800.0, 500.0)]"
+		},
+		{
+			"backing_pixels": "(2560, 1800)",
+			"display_scale": 2.0,
+			"screen_usable_rect": "[P: (0, 78), S: (4112, 2434)]",
+			"usable_viewport": "[P: (0.0, 0.0), S: (1280.0, 900.0)]",
+			"window_mode": 0
+		},
+		{
+			"backing_pixels": "(4112, 2580)",
+			"display_scale": 2.0,
+			"screen_usable_rect": "[P: (0, 78), S: (4112, 2580)]",
+			"usable_viewport": "[P: (0.0, 0.0), S: (1281.0, 804.0)]",
+			"window_mode": 3
+		},
+		{
+			"backing_pixels": "(2560, 1800)",
+			"display_scale": 2.0,
+			"screen_usable_rect": "[P: (0, 78), S: (4112, 2434)]",
+			"usable_viewport": "[P: (0.0, 0.0), S: (1280.0, 900.0)]",
+			"window_mode": 0
+		},
+		{
+			"case": "(1512, 982)/standard/main_menu",
+			"findings": 0,
+			"interactive_controls_checked": 11,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/advanced",
+			"findings": 0,
+			"interactive_controls_checked": 3,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/settings",
+			"findings": 0,
+			"interactive_controls_checked": 35,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/controls",
+			"findings": 0,
+			"interactive_controls_checked": 6,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/about",
+			"findings": 0,
+			"interactive_controls_checked": 6,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/browser",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/diagnostics",
+			"findings": 0,
+			"interactive_controls_checked": 7,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/setup/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 7,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/setup/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/setup/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/design-laboratory",
+			"findings": 0,
+			"interactive_controls_checked": 34,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/guide/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/cockpit+guide/live_2d",
+			"cockpit": {
+				"board_content_aspect": 0.514579759862779,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 535.0,
+				"deck_content_height": 523.0,
+				"deck_fit_scale": 1.0,
+				"deck_scroll": false,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1512, 982)/standard/cockpit/live_2d",
+			"cockpit": {
+				"board_content_aspect": 0.514579759862779,
+				"compacted": [],
+				"deck_box_height": 724.0,
+				"deck_content_height": 545.0,
+				"deck_fit_scale": 1.0,
+				"deck_scroll": false,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1512, 982)/standard/designer/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 73,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/helper/live_2d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/helper/live_2d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/helper/live_2d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/guide/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/cockpit+guide/live_3d",
+			"cockpit": {
+				"board_content_aspect": 0.685146439360969,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 535.0,
+				"deck_content_height": 529.76,
+				"deck_fit_scale": 0.86,
+				"deck_scroll": false,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1512, 982)/standard/cockpit/live_3d",
+			"cockpit": {
+				"board_content_aspect": 0.685146439360969,
+				"compacted": [],
+				"deck_box_height": 724.0,
+				"deck_content_height": 638.0,
+				"deck_fit_scale": 1.0,
+				"deck_scroll": false,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1512, 982)/standard/designer/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 78,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/helper/live_3d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/helper/live_3d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/helper/live_3d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/guide/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/cockpit+guide/live_4d",
+			"cockpit": {
+				"board_content_aspect": 0.0,
+				"compacted": [
+					"PieceControls",
+					"PieceState",
+					"ViewControls"
+				],
+				"deck_box_height": 166.0,
+				"deck_content_height": 165.54,
+				"deck_fit_scale": 0.89,
+				"deck_scroll": false,
+				"placement": "split",
+				"rail_width": 0.0,
+				"side_box_height": 365.0,
+				"side_content_height": 387.0,
+				"side_fit_scale": 0.6,
+				"side_scroll": true,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1512, 982)/standard/cockpit/live_4d",
+			"cockpit": {
+				"board_content_aspect": 0.0,
+				"compacted": [
+					"PieceState",
+					"ViewControls"
+				],
+				"deck_box_height": 193.0,
+				"deck_content_height": 193.0,
+				"deck_fit_scale": 1.0,
+				"deck_scroll": false,
+				"placement": "split",
+				"rail_width": 0.0,
+				"side_box_height": 527.0,
+				"side_content_height": 522.45,
+				"side_fit_scale": 0.81,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1512, 982)/standard/designer/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 81,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/helper/live_4d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/helper/live_4d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/helper/live_4d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/dialog/Delete Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (915.0, 104.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/dialog/Save Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (665.0, 104.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/dialog/Open a File",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (642.0, 362.0)]"
+		},
+		{
+			"case": "(1512, 982)/standard/dialog/Export Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (642.0, 362.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/main_menu",
+			"findings": 0,
+			"interactive_controls_checked": 11,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/advanced",
+			"findings": 0,
+			"interactive_controls_checked": 3,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/settings",
+			"findings": 0,
+			"interactive_controls_checked": 35,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/controls",
+			"findings": 0,
+			"interactive_controls_checked": 6,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/about",
+			"findings": 0,
+			"interactive_controls_checked": 6,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/browser",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/diagnostics",
+			"findings": 0,
+			"interactive_controls_checked": 7,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/setup/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 7,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/setup/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/setup/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/design-laboratory",
+			"findings": 0,
+			"interactive_controls_checked": 34,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/guide/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/cockpit+guide/live_2d",
+			"cockpit": {
+				"board_content_aspect": 0.514579759862779,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 316.0,
+				"deck_content_height": 313.8,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": false,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1512, 982)/extra_large/cockpit/live_2d",
+			"cockpit": {
+				"board_content_aspect": 0.514579759862779,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 490.0,
+				"deck_content_height": 486.39,
+				"deck_fit_scale": 0.93,
+				"deck_scroll": false,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1512, 982)/extra_large/designer/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 73,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/helper/live_2d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/helper/live_2d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/helper/live_2d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/guide/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/cockpit+guide/live_3d",
+			"cockpit": {
+				"board_content_aspect": 0.685146439360969,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 305.0,
+				"deck_content_height": 345.6,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": true,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1512, 982)/extra_large/cockpit/live_3d",
+			"cockpit": {
+				"board_content_aspect": 0.685146439360969,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 490.0,
+				"deck_content_height": 455.04,
+				"deck_fit_scale": 0.79,
+				"deck_scroll": false,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1512, 982)/extra_large/designer/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 78,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/helper/live_3d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/helper/live_3d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/helper/live_3d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/guide/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/cockpit+guide/live_4d",
+			"cockpit": {
+				"board_content_aspect": 0.0,
+				"compacted": [
+					"PieceControls",
+					"ViewControls",
+					"PieceState"
+				],
+				"deck_box_height": 137.0,
+				"deck_content_height": 208.8,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": true,
+				"placement": "below",
+				"rail_width": 0.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1512, 982)/extra_large/cockpit/live_4d",
+			"cockpit": {
+				"board_content_aspect": 0.0,
+				"compacted": [
+					"PieceControls",
+					"ViewControls",
+					"PieceState"
+				],
+				"deck_box_height": 216.0,
+				"deck_content_height": 215.76,
+				"deck_fit_scale": 0.62,
+				"deck_scroll": false,
+				"placement": "below",
+				"rail_width": 0.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1512, 982)/extra_large/designer/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 81,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/helper/live_4d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/helper/live_4d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/helper/live_4d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 834.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/dialog/Delete Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (915.0, 104.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/dialog/Save Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (665.0, 104.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/dialog/Open a File",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (642.0, 362.0)]"
+		},
+		{
+			"case": "(1512, 982)/extra_large/dialog/Export Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (642.0, 362.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/main_menu",
+			"findings": 0,
+			"interactive_controls_checked": 11,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/advanced",
+			"findings": 0,
+			"interactive_controls_checked": 3,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/settings",
+			"findings": 0,
+			"interactive_controls_checked": 35,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/controls",
+			"findings": 0,
+			"interactive_controls_checked": 6,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/about",
+			"findings": 0,
+			"interactive_controls_checked": 6,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/browser",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/diagnostics",
+			"findings": 0,
+			"interactive_controls_checked": 7,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/setup/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 7,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/setup/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/setup/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/design-laboratory",
+			"findings": 0,
+			"interactive_controls_checked": 34,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/guide/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/cockpit+guide/live_2d",
+			"cockpit": {
+				"board_content_aspect": 0.514579759862779,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 518.0,
+				"deck_content_height": 517.77,
+				"deck_fit_scale": 0.99,
+				"deck_scroll": false,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1440, 900)/standard/cockpit/live_2d",
+			"cockpit": {
+				"board_content_aspect": 0.514579759862779,
+				"compacted": [],
+				"deck_box_height": 692.0,
+				"deck_content_height": 545.0,
+				"deck_fit_scale": 1.0,
+				"deck_scroll": false,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1440, 900)/standard/designer/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 73,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/helper/live_2d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/helper/live_2d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/helper/live_2d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/guide/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/cockpit+guide/live_3d",
+			"cockpit": {
+				"board_content_aspect": 0.685146439360969,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 518.0,
+				"deck_content_height": 517.44,
+				"deck_fit_scale": 0.84,
+				"deck_scroll": false,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1440, 900)/standard/cockpit/live_3d",
+			"cockpit": {
+				"board_content_aspect": 0.685146439360969,
+				"compacted": [],
+				"deck_box_height": 692.0,
+				"deck_content_height": 638.0,
+				"deck_fit_scale": 1.0,
+				"deck_scroll": false,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1440, 900)/standard/designer/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 78,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/helper/live_3d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/helper/live_3d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/helper/live_3d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/guide/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/cockpit+guide/live_4d",
+			"cockpit": {
+				"board_content_aspect": 0.0,
+				"compacted": [
+					"PieceControls",
+					"PieceState",
+					"ViewControls"
+				],
+				"deck_box_height": 160.0,
+				"deck_content_height": 159.96,
+				"deck_fit_scale": 0.86,
+				"deck_scroll": false,
+				"placement": "split",
+				"rail_width": 0.0,
+				"side_box_height": 354.0,
+				"side_content_height": 387.0,
+				"side_fit_scale": 0.6,
+				"side_scroll": true,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1440, 900)/standard/cockpit/live_4d",
+			"cockpit": {
+				"board_content_aspect": 0.0,
+				"compacted": [
+					"PieceState",
+					"ViewControls"
+				],
+				"deck_box_height": 193.0,
+				"deck_content_height": 193.0,
+				"deck_fit_scale": 1.0,
+				"deck_scroll": false,
+				"placement": "split",
+				"rail_width": 0.0,
+				"side_box_height": 495.0,
+				"side_content_height": 490.2,
+				"side_fit_scale": 0.76,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1440, 900)/standard/designer/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 81,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/helper/live_4d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/helper/live_4d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/helper/live_4d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/dialog/Delete Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (915.0, 104.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/dialog/Save Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (665.0, 104.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/dialog/Open a File",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (642.0, 362.0)]"
+		},
+		{
+			"case": "(1440, 900)/standard/dialog/Export Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (642.0, 362.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/main_menu",
+			"findings": 0,
+			"interactive_controls_checked": 11,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/advanced",
+			"findings": 0,
+			"interactive_controls_checked": 3,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/settings",
+			"findings": 0,
+			"interactive_controls_checked": 35,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/controls",
+			"findings": 0,
+			"interactive_controls_checked": 6,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/about",
+			"findings": 0,
+			"interactive_controls_checked": 6,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/browser",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/diagnostics",
+			"findings": 0,
+			"interactive_controls_checked": 7,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/setup/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 7,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/setup/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/setup/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/design-laboratory",
+			"findings": 0,
+			"interactive_controls_checked": 34,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/guide/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/cockpit+guide/live_2d",
+			"cockpit": {
+				"board_content_aspect": 0.514579759862779,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 291.0,
+				"deck_content_height": 313.8,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": true,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1440, 900)/extra_large/cockpit/live_2d",
+			"cockpit": {
+				"board_content_aspect": 0.514579759862779,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 465.0,
+				"deck_content_height": 460.24,
+				"deck_fit_scale": 0.88,
+				"deck_scroll": false,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1440, 900)/extra_large/designer/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 73,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/helper/live_2d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/helper/live_2d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/helper/live_2d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/guide/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/cockpit+guide/live_3d",
+			"cockpit": {
+				"board_content_aspect": 0.685146439360969,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 280.0,
+				"deck_content_height": 345.6,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": true,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1440, 900)/extra_large/cockpit/live_3d",
+			"cockpit": {
+				"board_content_aspect": 0.685146439360969,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 465.0,
+				"deck_content_height": 449.28,
+				"deck_fit_scale": 0.78,
+				"deck_scroll": false,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1440, 900)/extra_large/designer/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 78,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/helper/live_3d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/helper/live_3d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/helper/live_3d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/guide/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/cockpit+guide/live_4d",
+			"cockpit": {
+				"board_content_aspect": 0.0,
+				"compacted": [
+					"PieceControls",
+					"ViewControls",
+					"PieceState"
+				],
+				"deck_box_height": 113.0,
+				"deck_content_height": 208.8,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": true,
+				"placement": "below",
+				"rail_width": 0.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1440, 900)/extra_large/cockpit/live_4d",
+			"cockpit": {
+				"board_content_aspect": 0.0,
+				"compacted": [
+					"PieceControls",
+					"ViewControls",
+					"PieceState"
+				],
+				"deck_box_height": 216.0,
+				"deck_content_height": 215.76,
+				"deck_fit_scale": 0.62,
+				"deck_scroll": false,
+				"placement": "below",
+				"rail_width": 0.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1440, 900)/extra_large/designer/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 81,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/helper/live_4d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/helper/live_4d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/helper/live_4d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/dialog/Delete Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (915.0, 104.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/dialog/Save Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (665.0, 104.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/dialog/Open a File",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (642.0, 362.0)]"
+		},
+		{
+			"case": "(1440, 900)/extra_large/dialog/Export Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (642.0, 362.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/main_menu",
+			"findings": 0,
+			"interactive_controls_checked": 11,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/advanced",
+			"findings": 0,
+			"interactive_controls_checked": 3,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/settings",
+			"findings": 0,
+			"interactive_controls_checked": 35,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/controls",
+			"findings": 0,
+			"interactive_controls_checked": 6,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/about",
+			"findings": 0,
+			"interactive_controls_checked": 6,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/browser",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/diagnostics",
+			"findings": 0,
+			"interactive_controls_checked": 7,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/setup/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 7,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/setup/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/setup/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/design-laboratory",
+			"findings": 0,
+			"interactive_controls_checked": 34,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/guide/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/cockpit+guide/live_2d",
+			"cockpit": {
+				"board_content_aspect": 0.514579759862779,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 438.0,
+				"deck_content_height": 434.09,
+				"deck_fit_scale": 0.83,
+				"deck_scroll": false,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1280, 720)/standard/cockpit/live_2d",
+			"cockpit": {
+				"board_content_aspect": 0.514579759862779,
+				"compacted": [],
+				"deck_box_height": 612.0,
+				"deck_content_height": 545.0,
+				"deck_fit_scale": 1.0,
+				"deck_scroll": false,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1280, 720)/standard/designer/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 73,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/helper/live_2d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/helper/live_2d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/helper/live_2d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/guide/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/cockpit+guide/live_3d",
+			"cockpit": {
+				"board_content_aspect": 0.685146439360969,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 438.0,
+				"deck_content_height": 437.76,
+				"deck_fit_scale": 0.76,
+				"deck_scroll": false,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1280, 720)/standard/cockpit/live_3d",
+			"cockpit": {
+				"board_content_aspect": 0.685146439360969,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 612.0,
+				"deck_content_height": 609.84,
+				"deck_fit_scale": 0.99,
+				"deck_scroll": false,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1280, 720)/standard/designer/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 78,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/helper/live_3d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/helper/live_3d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/helper/live_3d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/guide/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/cockpit+guide/live_4d",
+			"cockpit": {
+				"board_content_aspect": 0.0,
+				"compacted": [
+					"PieceControls",
+					"PieceState",
+					"ViewControls"
+				],
+				"deck_box_height": 144.0,
+				"deck_content_height": 143.22,
+				"deck_fit_scale": 0.77,
+				"deck_scroll": false,
+				"placement": "split",
+				"rail_width": 0.0,
+				"side_box_height": 290.0,
+				"side_content_height": 387.0,
+				"side_fit_scale": 0.6,
+				"side_scroll": true,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1280, 720)/standard/cockpit/live_4d",
+			"cockpit": {
+				"board_content_aspect": 0.0,
+				"compacted": [
+					"PieceState",
+					"ViewControls"
+				],
+				"deck_box_height": 193.0,
+				"deck_content_height": 193.0,
+				"deck_fit_scale": 1.0,
+				"deck_scroll": false,
+				"placement": "split",
+				"rail_width": 0.0,
+				"side_box_height": 415.0,
+				"side_content_height": 412.8,
+				"side_fit_scale": 0.64,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1280, 720)/standard/designer/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 81,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/helper/live_4d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/helper/live_4d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/helper/live_4d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/dialog/Delete Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (915.0, 104.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/dialog/Save Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (665.0, 104.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/dialog/Open a File",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (642.0, 362.0)]"
+		},
+		{
+			"case": "(1280, 720)/standard/dialog/Export Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (642.0, 362.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/main_menu",
+			"findings": 0,
+			"interactive_controls_checked": 11,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/advanced",
+			"findings": 0,
+			"interactive_controls_checked": 3,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/settings",
+			"findings": 0,
+			"interactive_controls_checked": 35,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/controls",
+			"findings": 0,
+			"interactive_controls_checked": 6,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/about",
+			"findings": 0,
+			"interactive_controls_checked": 6,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/browser",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/diagnostics",
+			"findings": 0,
+			"interactive_controls_checked": 7,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/setup/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 7,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/setup/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/setup/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/design-laboratory",
+			"findings": 0,
+			"interactive_controls_checked": 34,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/guide/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/cockpit+guide/live_2d",
+			"cockpit": {
+				"board_content_aspect": 0.514579759862779,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 240.0,
+				"deck_content_height": 313.8,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": true,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1280, 720)/extra_large/cockpit/live_2d",
+			"cockpit": {
+				"board_content_aspect": 0.514579759862779,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 403.0,
+				"deck_content_height": 402.71,
+				"deck_fit_scale": 0.77,
+				"deck_scroll": false,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1280, 720)/extra_large/designer/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 73,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/helper/live_2d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/helper/live_2d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/helper/live_2d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/guide/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/cockpit+guide/live_3d",
+			"cockpit": {
+				"board_content_aspect": 0.685146439360969,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 240.0,
+				"deck_content_height": 345.6,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": true,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1280, 720)/extra_large/cockpit/live_3d",
+			"cockpit": {
+				"board_content_aspect": 0.685146439360969,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 403.0,
+				"deck_content_height": 397.44,
+				"deck_fit_scale": 0.69,
+				"deck_scroll": false,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1280, 720)/extra_large/designer/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 78,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/helper/live_3d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/helper/live_3d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/helper/live_3d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/guide/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/cockpit+guide/live_4d",
+			"cockpit": {
+				"board_content_aspect": 0.0,
+				"compacted": [
+					"PieceControls",
+					"ViewControls",
+					"PieceState"
+				],
+				"deck_box_height": 102.0,
+				"deck_content_height": 208.8,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": true,
+				"placement": "below",
+				"rail_width": 0.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1280, 720)/extra_large/cockpit/live_4d",
+			"cockpit": {
+				"board_content_aspect": 0.0,
+				"compacted": [
+					"PieceControls",
+					"ViewControls",
+					"PieceState"
+				],
+				"deck_box_height": 200.0,
+				"deck_content_height": 208.8,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": true,
+				"placement": "below",
+				"rail_width": 0.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1280, 720)/extra_large/designer/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 81,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/helper/live_4d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/helper/live_4d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/helper/live_4d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 722.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/dialog/Delete Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (915.0, 104.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/dialog/Save Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (665.0, 104.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/dialog/Open a File",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (642.0, 362.0)]"
+		},
+		{
+			"case": "(1280, 720)/extra_large/dialog/Export Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (642.0, 362.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/main_menu",
+			"findings": 0,
+			"interactive_controls_checked": 11,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/advanced",
+			"findings": 0,
+			"interactive_controls_checked": 3,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/settings",
+			"findings": 0,
+			"interactive_controls_checked": 35,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/controls",
+			"findings": 0,
+			"interactive_controls_checked": 6,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/about",
+			"findings": 0,
+			"interactive_controls_checked": 6,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/browser",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/diagnostics",
+			"findings": 0,
+			"interactive_controls_checked": 7,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/setup/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 7,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/setup/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/setup/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/design-laboratory",
+			"findings": 0,
+			"interactive_controls_checked": 34,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/guide/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/cockpit+guide/live_2d",
+			"cockpit": {
+				"board_content_aspect": 0.514579759862779,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 316.0,
+				"deck_content_height": 313.8,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": false,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1024, 640)/standard/cockpit/live_2d",
+			"cockpit": {
+				"board_content_aspect": 0.514579759862779,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 490.0,
+				"deck_content_height": 486.39,
+				"deck_fit_scale": 0.93,
+				"deck_scroll": false,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1024, 640)/standard/designer/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 73,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/helper/live_2d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/helper/live_2d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/helper/live_2d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/guide/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/cockpit+guide/live_3d",
+			"cockpit": {
+				"board_content_aspect": 0.685146439360969,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 316.0,
+				"deck_content_height": 345.6,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": true,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1024, 640)/standard/cockpit/live_3d",
+			"cockpit": {
+				"board_content_aspect": 0.685146439360969,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 490.0,
+				"deck_content_height": 455.04,
+				"deck_fit_scale": 0.79,
+				"deck_scroll": false,
+				"placement": "side",
+				"rail_width": 462.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1024, 640)/standard/designer/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 78,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/helper/live_3d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/helper/live_3d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/helper/live_3d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/guide/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/cockpit+guide/live_4d",
+			"cockpit": {
+				"board_content_aspect": 0.0,
+				"compacted": [
+					"PieceControls",
+					"ViewControls",
+					"PieceState"
+				],
+				"deck_box_height": 137.0,
+				"deck_content_height": 208.8,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": true,
+				"placement": "below",
+				"rail_width": 0.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1024, 640)/standard/cockpit/live_4d",
+			"cockpit": {
+				"board_content_aspect": 0.0,
+				"compacted": [
+					"PieceControls",
+					"ViewControls",
+					"PieceState"
+				],
+				"deck_box_height": 227.0,
+				"deck_content_height": 226.2,
+				"deck_fit_scale": 0.65,
+				"deck_scroll": false,
+				"placement": "below",
+				"rail_width": 0.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1024, 640)/standard/designer/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 81,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/helper/live_4d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/helper/live_4d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/helper/live_4d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/dialog/Delete Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (915.0, 104.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/dialog/Save Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (665.0, 104.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/dialog/Open a File",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (642.0, 362.0)]"
+		},
+		{
+			"case": "(1024, 640)/standard/dialog/Export Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (642.0, 362.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/main_menu",
+			"findings": 0,
+			"interactive_controls_checked": 11,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/advanced",
+			"findings": 0,
+			"interactive_controls_checked": 3,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/settings",
+			"findings": 0,
+			"interactive_controls_checked": 35,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/controls",
+			"findings": 0,
+			"interactive_controls_checked": 6,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/about",
+			"findings": 0,
+			"interactive_controls_checked": 6,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/browser",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/diagnostics",
+			"findings": 0,
+			"interactive_controls_checked": 7,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/setup/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 7,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/setup/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/setup/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 802.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/design-laboratory",
+			"findings": 0,
+			"interactive_controls_checked": 34,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/guide/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/cockpit+guide/live_2d",
+			"cockpit": {
+				"board_content_aspect": 0.514579759862779,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 240.0,
+				"deck_content_height": 313.8,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": true,
+				"placement": "side",
+				"rail_width": 367.692321777344,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1024, 640)/extra_large/cockpit/live_2d",
+			"cockpit": {
+				"board_content_aspect": 0.514579759862779,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 342.0,
+				"deck_content_height": 339.95,
+				"deck_fit_scale": 0.65,
+				"deck_scroll": false,
+				"placement": "side",
+				"rail_width": 367.692321777344,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1024, 640)/extra_large/designer/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 73,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/helper/live_2d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/helper/live_2d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/helper/live_2d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/guide/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/cockpit+guide/live_3d",
+			"cockpit": {
+				"board_content_aspect": 0.685146439360969,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 240.0,
+				"deck_content_height": 345.6,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": true,
+				"placement": "side",
+				"rail_width": 367.692321777344,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1024, 640)/extra_large/cockpit/live_3d",
+			"cockpit": {
+				"board_content_aspect": 0.685146439360969,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 342.0,
+				"deck_content_height": 345.6,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": true,
+				"placement": "side",
+				"rail_width": 367.692321777344,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1024, 640)/extra_large/designer/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 78,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/helper/live_3d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/helper/live_3d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/helper/live_3d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/guide/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/cockpit+guide/live_4d",
+			"cockpit": {
+				"board_content_aspect": 0.0,
+				"compacted": [
+					"PieceControls",
+					"ViewControls",
+					"PieceState"
+				],
+				"deck_box_height": 90.0,
+				"deck_content_height": 297.6,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": true,
+				"placement": "below",
+				"rail_width": 0.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1024, 640)/extra_large/cockpit/live_4d",
+			"cockpit": {
+				"board_content_aspect": 0.0,
+				"compacted": [
+					"PieceControls",
+					"ViewControls",
+					"PieceState"
+				],
+				"deck_box_height": 170.0,
+				"deck_content_height": 297.6,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": true,
+				"placement": "below",
+				"rail_width": 0.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(1024, 640)/extra_large/designer/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 81,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/helper/live_4d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/helper/live_4d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/helper/live_4d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (1026.0, 642.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/dialog/Delete Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (915.0, 104.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/dialog/Save Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (665.0, 104.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/dialog/Open a File",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (642.0, 362.0)]"
+		},
+		{
+			"case": "(1024, 640)/extra_large/dialog/Export Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (642.0, 362.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/main_menu",
+			"findings": 0,
+			"interactive_controls_checked": 11,
+			"viewport": "[P: (-1.0, -1.0), S: (1069.0, 669.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/advanced",
+			"findings": 0,
+			"interactive_controls_checked": 3,
+			"viewport": "[P: (-1.0, -1.0), S: (1069.0, 669.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/settings",
+			"findings": 0,
+			"interactive_controls_checked": 35,
+			"viewport": "[P: (-1.0, -1.0), S: (1069.0, 669.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/controls",
+			"findings": 0,
+			"interactive_controls_checked": 6,
+			"viewport": "[P: (-1.0, -1.0), S: (1069.0, 669.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/about",
+			"findings": 0,
+			"interactive_controls_checked": 6,
+			"viewport": "[P: (-1.0, -1.0), S: (1069.0, 669.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/browser",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1069.0, 669.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/diagnostics",
+			"findings": 0,
+			"interactive_controls_checked": 7,
+			"viewport": "[P: (-1.0, -1.0), S: (1069.0, 669.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/setup/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 7,
+			"viewport": "[P: (-1.0, -1.0), S: (1069.0, 669.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/setup/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1069.0, 669.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/setup/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1069.0, 669.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/design-laboratory",
+			"findings": 0,
+			"interactive_controls_checked": 34,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/guide/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/cockpit+guide/live_2d",
+			"cockpit": {
+				"board_content_aspect": 0.514579759862779,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 240.0,
+				"deck_content_height": 313.8,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": true,
+				"placement": "side",
+				"rail_width": 380.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(800, 500)/standard/cockpit/live_2d",
+			"cockpit": {
+				"board_content_aspect": 0.514579759862779,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 350.0,
+				"deck_content_height": 345.18,
+				"deck_fit_scale": 0.66,
+				"deck_scroll": false,
+				"placement": "side",
+				"rail_width": 380.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(800, 500)/standard/designer/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 73,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/helper/live_2d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/helper/live_2d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/helper/live_2d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/guide/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/cockpit+guide/live_3d",
+			"cockpit": {
+				"board_content_aspect": 0.685146439360969,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 240.0,
+				"deck_content_height": 345.6,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": true,
+				"placement": "side",
+				"rail_width": 380.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(800, 500)/standard/cockpit/live_3d",
+			"cockpit": {
+				"board_content_aspect": 0.685146439360969,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 350.0,
+				"deck_content_height": 345.6,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": false,
+				"placement": "side",
+				"rail_width": 380.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(800, 500)/standard/designer/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 78,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/helper/live_3d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/helper/live_3d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/helper/live_3d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/guide/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/cockpit+guide/live_4d",
+			"cockpit": {
+				"board_content_aspect": 0.0,
+				"compacted": [
+					"PieceControls",
+					"ViewControls",
+					"PieceState"
+				],
+				"deck_box_height": 102.0,
+				"deck_content_height": 297.6,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": true,
+				"placement": "below",
+				"rail_width": 0.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(800, 500)/standard/cockpit/live_4d",
+			"cockpit": {
+				"board_content_aspect": 0.0,
+				"compacted": [
+					"PieceControls",
+					"ViewControls",
+					"PieceState"
+				],
+				"deck_box_height": 173.0,
+				"deck_content_height": 297.6,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": true,
+				"placement": "below",
+				"rail_width": 0.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(800, 500)/standard/designer/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 81,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/helper/live_4d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/helper/live_4d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/helper/live_4d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/dialog/Delete Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (786.0, 104.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/dialog/Save Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (665.0, 104.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/dialog/Open a File",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (642.0, 362.0)]"
+		},
+		{
+			"case": "(800, 500)/standard/dialog/Export Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (642.0, 362.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/main_menu",
+			"findings": 0,
+			"interactive_controls_checked": 11,
+			"viewport": "[P: (-1.0, -1.0), S: (1069.0, 669.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/advanced",
+			"findings": 0,
+			"interactive_controls_checked": 3,
+			"viewport": "[P: (-1.0, -1.0), S: (1069.0, 669.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/settings",
+			"findings": 0,
+			"interactive_controls_checked": 35,
+			"viewport": "[P: (-1.0, -1.0), S: (1069.0, 669.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/controls",
+			"findings": 0,
+			"interactive_controls_checked": 6,
+			"viewport": "[P: (-1.0, -1.0), S: (1069.0, 669.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/about",
+			"findings": 0,
+			"interactive_controls_checked": 6,
+			"viewport": "[P: (-1.0, -1.0), S: (1069.0, 669.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/browser",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1069.0, 669.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/diagnostics",
+			"findings": 0,
+			"interactive_controls_checked": 7,
+			"viewport": "[P: (-1.0, -1.0), S: (1069.0, 669.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/setup/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 7,
+			"viewport": "[P: (-1.0, -1.0), S: (1069.0, 669.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/setup/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1069.0, 669.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/setup/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1069.0, 669.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/design-laboratory",
+			"findings": 0,
+			"interactive_controls_checked": 34,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/guide/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/cockpit+guide/live_2d",
+			"cockpit": {
+				"board_content_aspect": 0.514579759862779,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 240.0,
+				"deck_content_height": 313.8,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": true,
+				"placement": "side",
+				"rail_width": 260.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(800, 500)/extra_large/cockpit/live_2d",
+			"cockpit": {
+				"board_content_aspect": 0.514579759862779,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 240.0,
+				"deck_content_height": 313.8,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": true,
+				"placement": "side",
+				"rail_width": 260.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(800, 500)/extra_large/designer/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 73,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/helper/live_2d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/helper/live_2d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/helper/live_2d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/guide/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/cockpit+guide/live_3d",
+			"cockpit": {
+				"board_content_aspect": 0.685146439360969,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 240.0,
+				"deck_content_height": 369.6,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": true,
+				"placement": "side",
+				"rail_width": 260.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(800, 500)/extra_large/cockpit/live_3d",
+			"cockpit": {
+				"board_content_aspect": 0.685146439360969,
+				"compacted": [
+					"PieceState",
+					"PieceControls"
+				],
+				"deck_box_height": 240.0,
+				"deck_content_height": 369.6,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": true,
+				"placement": "side",
+				"rail_width": 260.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(800, 500)/extra_large/designer/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 78,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/helper/live_3d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/helper/live_3d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/helper/live_3d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/guide/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/cockpit+guide/live_4d",
+			"cockpit": {
+				"board_content_aspect": 0.0,
+				"compacted": [
+					"PieceControls",
+					"ViewControls",
+					"PieceState"
+				],
+				"deck_box_height": 90.0,
+				"deck_content_height": 477.0,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": true,
+				"placement": "below",
+				"rail_width": 0.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(800, 500)/extra_large/cockpit/live_4d",
+			"cockpit": {
+				"board_content_aspect": 0.0,
+				"compacted": [
+					"PieceControls",
+					"ViewControls",
+					"PieceState"
+				],
+				"deck_box_height": 90.0,
+				"deck_content_height": 477.0,
+				"deck_fit_scale": 0.6,
+				"deck_scroll": true,
+				"placement": "below",
+				"rail_width": 0.0,
+				"side_box_height": 0.0,
+				"side_content_height": 0.0,
+				"side_fit_scale": 1.0,
+				"side_scroll": false,
+				"split_column_full_height": false
+			},
+			"findings": 0
+		},
+		{
+			"case": "(800, 500)/extra_large/designer/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 81,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/helper/live_4d/PieceControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/helper/live_4d/ViewControls",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/helper/live_4d/PieceState",
+			"findings": 0,
+			"interactive_controls_checked": 2,
+			"viewport": "[P: (-1.0, -1.0), S: (802.0, 502.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/dialog/Delete Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (786.0, 104.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/dialog/Save Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (665.0, 104.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/dialog/Open a File",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (642.0, 362.0)]"
+		},
+		{
+			"case": "(800, 500)/extra_large/dialog/Export Presentation Profile",
+			"findings": 0,
+			"interactive_controls_checked": 0,
+			"viewport": "[P: (-1.0, -1.0), S: (642.0, 362.0)]"
+		},
+		{
+			"case": "height-only 1280x900",
+			"findings": 0,
+			"interactive_controls_checked": 35,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "height-only 1280x500",
+			"findings": 0,
+			"interactive_controls_checked": 35,
+			"viewport": "[P: (-1.0, -1.0), S: (1709.0, 669.0)]"
+		},
+		{
+			"case": "height-only 1280x900",
+			"findings": 0,
+			"interactive_controls_checked": 35,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "actual-mode-0/settings",
+			"findings": 0,
+			"interactive_controls_checked": 35,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "actual-mode-0/controls",
+			"findings": 0,
+			"interactive_controls_checked": 6,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "actual-mode-0/main_menu",
+			"findings": 0,
+			"interactive_controls_checked": 11,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "actual-mode-0/setup/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 7,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "actual-mode-0/guide/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "actual-mode-0/designer/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 73,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "actual-mode-0/setup/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "actual-mode-0/guide/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "actual-mode-0/designer/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 78,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "actual-mode-0/setup/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "actual-mode-0/guide/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "actual-mode-0/designer/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 81,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "actual-mode-0/laboratory",
+			"findings": 0,
+			"interactive_controls_checked": 34,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "actual-mode-3/settings",
+			"findings": 0,
+			"interactive_controls_checked": 35,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 806.0)]"
+		},
+		{
+			"case": "actual-mode-3/controls",
+			"findings": 0,
+			"interactive_controls_checked": 6,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 806.0)]"
+		},
+		{
+			"case": "actual-mode-3/main_menu",
+			"findings": 0,
+			"interactive_controls_checked": 11,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 806.0)]"
+		},
+		{
+			"case": "actual-mode-3/setup/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 7,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 806.0)]"
+		},
+		{
+			"case": "actual-mode-3/guide/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 806.0)]"
+		},
+		{
+			"case": "actual-mode-3/designer/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 73,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 806.0)]"
+		},
+		{
+			"case": "actual-mode-3/setup/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 806.0)]"
+		},
+		{
+			"case": "actual-mode-3/guide/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 806.0)]"
+		},
+		{
+			"case": "actual-mode-3/designer/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 78,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 806.0)]"
+		},
+		{
+			"case": "actual-mode-3/setup/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 806.0)]"
+		},
+		{
+			"case": "actual-mode-3/guide/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 806.0)]"
+		},
+		{
+			"case": "actual-mode-3/designer/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 81,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 806.0)]"
+		},
+		{
+			"case": "actual-mode-3/laboratory",
+			"findings": 0,
+			"interactive_controls_checked": 34,
+			"viewport": "[P: (-1.0, -1.0), S: (1283.0, 806.0)]"
+		},
+		{
+			"case": "actual-mode-0/settings",
+			"findings": 0,
+			"interactive_controls_checked": 35,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "actual-mode-0/controls",
+			"findings": 0,
+			"interactive_controls_checked": 6,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "actual-mode-0/main_menu",
+			"findings": 0,
+			"interactive_controls_checked": 11,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "actual-mode-0/setup/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 7,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "actual-mode-0/guide/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "actual-mode-0/designer/live_2d",
+			"findings": 0,
+			"interactive_controls_checked": 73,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "actual-mode-0/setup/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "actual-mode-0/guide/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "actual-mode-0/designer/live_3d",
+			"findings": 0,
+			"interactive_controls_checked": 78,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "actual-mode-0/setup/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "actual-mode-0/guide/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 9,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "actual-mode-0/designer/live_4d",
+			"findings": 0,
+			"interactive_controls_checked": 81,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		},
+		{
+			"case": "actual-mode-0/laboratory",
+			"findings": 0,
+			"interactive_controls_checked": 34,
+			"viewport": "[P: (-1.0, -1.0), S: (1282.0, 902.0)]"
+		}
+	]
+}

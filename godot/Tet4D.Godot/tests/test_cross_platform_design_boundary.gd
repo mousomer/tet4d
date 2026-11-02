@@ -84,6 +84,12 @@ func _test_safe_area_insets() -> Array:
 		failures.append("a safe area larger than the window must be ignored")
 	if SafeAreaInsetsScript.resolve(Rect2i(0, 0, 0, 0), Vector2i(1600, 960)) != SafeAreaInsetsScript.ZERO:
 		failures.append("an empty safe area report must be ignored")
+	# Fullscreen notched MacBook: 78 backing pixels above a 4112x2580 window
+	# whose stretched canvas is 1281x804 units is ~24 units, not 78.
+	var notch := SafeAreaInsetsScript.resolve(Rect2i(0, 78, 4112, 2502), Vector2i(4112, 2580))
+	var canvas := SafeAreaInsetsScript.to_canvas(notch, Vector2i(4112, 2580), Vector2(1281, 804))
+	if canvas != {"left": 0, "top": 25, "right": 0, "bottom": 0}:
+		failures.append("window-pixel insets must convert to canvas units: %s" % str(canvas))
 	return failures
 
 

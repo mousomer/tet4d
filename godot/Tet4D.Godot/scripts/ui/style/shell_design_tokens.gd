@@ -22,6 +22,9 @@ const FONT_CHROME_TITLE := 24
 const MENU_MIN_WIDTH := 720
 const MENU_SIDE_MARGIN_SHARE := 0.1
 const MENU_COMMAND_MIN_HEIGHT := 60
+# Smallest scale the main menu list shrinks to before it scrolls. Its large
+# command titles stay legible at half size; the full list then fits 1280x720.
+const MENU_FIT_SCALE_FLOOR := 0.5
 const GUIDANCE_MIN_HEIGHT := 170
 
 const BORDER_STANDARD := 1
@@ -35,6 +38,9 @@ const RADIUS_EMPHASIS := 6
 
 const PANEL_PADDING := SPACE_4
 const COMPACT_PADDING := SPACE_3
+const PANEL_COMPACT_SIZE := Vector2(1024, 640)
+const DESIGNER_PREFERRED_WIDTH := 420.0
+const LABORATORY_PREFERRED_WIDTH := 460.0
 const CONTROL_PADDING := SPACE_2
 const CHROME_CONTROL_PADDING := SPACE_1
 const CHROME_ACTION_PADDING := 6

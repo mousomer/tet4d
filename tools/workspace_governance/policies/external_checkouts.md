@@ -29,3 +29,14 @@ exception to stronger rules, or verification of the producing workflow. Keep
 missing owners, unresolved Git roots and unavailable inputs blocked. A future
 maintenance task can establish direct bindings under its actual authorization
 and accepted authority; it must preserve the applicable stronger obligations.
+
+A vanished temporary external store can retain an explicit private lifecycle
+record instead of a false present-location claim. `external_policy.lifecycle`
+has exactly `state: retired_absent`, an aware ISO-8601 `recorded_at`, and a
+canonical relative private `evidence_ref`. Its historical resolved Git identity,
+owner, reason, preservation mode and release pin remain required. The auditor
+freshly observes absence with `lstat`; a reappeared file, directory or symlink,
+unreadable location, unknown lifecycle or missing identity rejects. The distinct
+`governed_absent` status proves observed absence and retained preservation policy
+only. It never proves installation or product acceptance and never removes
+unresolved Git identities or scan-coverage failures. Planning creates no writes.

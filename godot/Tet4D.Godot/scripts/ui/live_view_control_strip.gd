@@ -99,6 +99,10 @@ func configure(basis_snapshot: Dictionary = {}, control_frame: Dictionary = {}, 
 	_rebuild()
 
 
+func set_detached_layout(enabled: bool) -> void:
+	_groups_box.columns = 1 if enabled else 2
+
+
 func deterministic_snapshot() -> Dictionary:
 	var rows: Array = []
 	for group in _groups:

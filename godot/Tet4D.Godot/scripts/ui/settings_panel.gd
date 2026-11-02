@@ -9,6 +9,7 @@ const SettingsStoreScript = preload("res://scripts/ui/settings/settings_store.gd
 const SettingControlFactoryScript = preload("res://scripts/ui/settings/setting_control_factory.gd")
 const ShellStyleManagerScript = preload("res://scripts/ui/style/shell_style_manager.gd")
 const ShellControlStyleApplierScript = preload("res://scripts/ui/style/shell_control_style_applier.gd")
+const ResponsivePanelPolicyScript = preload("res://scripts/ui/responsive_panel_policy.gd")
 
 signal setting_changed(setting_id: String, value)
 signal playback_speed_changed(value: float)
@@ -59,9 +60,13 @@ func _ready() -> void:
 		_style_manager.set_theme(ReplayVisuals.normalize_display_mode(str(store.value("theme.name"))))
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
-	custom_minimum_size = Vector2(ReplayVisuals.RIGHT_PANEL_WIDTH, ReplayVisuals.SETTINGS_MIN_HEIGHT)
+	# The owning viewport allocates the panel; content minimums must not enlarge
+	# a Quick Settings rail or an enlarged-text settings screen beyond it.
+	custom_minimum_size = Vector2.ZERO
 	_build_panel()
 	apply_shell_style()
+	resized.connect(_queue_responsive_layout)
+	_queue_responsive_layout()
 
 
 func setting_value(setting_id: String):
@@ -156,6 +161,7 @@ func apply_shell_style() -> void:
 	if _style_manager == null:
 		return
 	_style_applier.apply_to_tree(self, _style_manager)
+	_queue_responsive_layout()
 
 
 func _build_panel() -> void:
@@ -166,9 +172,9 @@ func _build_panel() -> void:
 	_scroll.name = "SettingsScroll"
 	_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	ResponsivePanelPolicyScript.configure_scroll(_scroll)
 	add_child(_scroll)
+	_scroll.resized.connect(_queue_responsive_layout)
 	var content := VBoxContainer.new()
 	content.name = "SettingsContent"
 	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -233,7 +239,7 @@ func _setting_row(spec) -> Control:
 	row.name = "SettingRow__%s" % spec.id().replace(".", "__")
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	var row_content := HBoxContainer.new()
+	var row_content := BoxContainer.new()
 	row_content.name = "SettingRowContent"
 	row_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row_content.add_theme_constant_override("separation", ReplayVisuals.CONTROL_GAP)
@@ -255,8 +261,13 @@ func _setting_row(spec) -> Control:
 	description.theme_type_variation = "DimLabel"
 	text_box.add_child(description)
 	var control := _control_factory.build_control(spec, store.value(spec.id()), _on_control_value_changed)
+	if control is OptionButton:
+		(control as OptionButton).fit_to_longest_item = false
+		(control as OptionButton).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		ResponsivePanelPolicyScript.bind_popup((control as OptionButton).get_popup(), self)
 	control.custom_minimum_size = Vector2(96, 0)
 	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	control.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_controls_by_id[spec.id()] = control
 	_rows_by_id[spec.id()] = row
 	row_content.add_child(control)
@@ -354,6 +365,7 @@ func _reset_settings_button() -> Button:
 	var button := Button.new()
 	button.name = "ResetDisplaySettingsButton"
 	button.text = "Reset Display Settings"
+	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	button.tooltip_text = "Restore and save display, theme, and camera defaults"
 	button.focus_mode = Control.FOCUS_ALL
 	button.pressed.connect(reset_display_settings_to_defaults)
@@ -366,6 +378,7 @@ func _reset_accessibility_settings_button() -> Button:
 	var button := Button.new()
 	button.name = "ResetAccessibilitySettingsButton"
 	button.text = "Reset Accessibility Settings"
+	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	button.tooltip_text = "Restore and save High Contrast, Reduced Motion, and help-hint defaults"
 	button.focus_mode = Control.FOCUS_ALL
 	button.pressed.connect(reset_accessibility_settings_to_defaults)
@@ -417,6 +430,28 @@ func _apply_context_visibility() -> void:
 			header.visible = has_visible_row
 	if not _focus_controls.is_empty():
 		_configure_focus_order()
+	_queue_responsive_layout()
+
+
+func _queue_responsive_layout() -> void:
+	call_deferred("_apply_responsive_layout")
+
+
+func _apply_responsive_layout() -> void:
+	if _scroll == null or not is_inside_tree():
+		return
+	var content := _scroll.get_node("SettingsContent") as VBoxContainer
+	var available := _scroll.size
+	ResponsivePanelPolicyScript.compact_spacing(content, available)
+	for row in _rows_by_id.values():
+		var row_control := row as PanelContainer
+		var row_content := row_control.get_node("SettingRowContent") as BoxContainer
+		var panel_padding := row_control.get_theme_stylebox("panel").get_minimum_size().x
+		var content_width := maxf(0.0, available.x - _scroll.get_v_scroll_bar().size.x - panel_padding)
+		ResponsivePanelPolicyScript.reflow_row(row_content, content_width)
+	var focused := get_viewport().gui_get_focus_owner()
+	if focused != null and _scroll.is_ancestor_of(focused):
+		call_deferred("_ensure_focus_visible", focused)
 
 
 func _applicable_focus_controls() -> Array[Control]:

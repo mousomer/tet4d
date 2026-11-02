@@ -10,7 +10,7 @@ import re
 import subprocess
 import sys
 from datetime import UTC, datetime
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 from uuid import uuid4
 
@@ -1048,6 +1048,79 @@ def observe_governance(record: dict[str, Any], root: Path, row: dict[str, Any]) 
         )
 
 
+def _retired_external_observation(root: Path, policy: dict[str, Any]) -> dict[str, Any]:
+    lifecycle = policy["lifecycle"]
+    if not isinstance(lifecycle, dict) or set(lifecycle) != {
+        "state",
+        "recorded_at",
+        "evidence_ref",
+    }:
+        raise FleetError("Invalid external absence lifecycle")
+    reference = lifecycle["evidence_ref"]
+    head = policy.get("observed_git_head")
+    if (
+        lifecycle["state"] != "retired_absent"
+        or not isinstance(reference, str)
+        or not re.fullmatch(r"[A-Za-z0-9_./-]+", reference)
+        or PurePosixPath(reference).is_absolute()
+        or reference != PurePosixPath(reference).as_posix()
+        or any(part in {".", ".."} for part in reference.split("/"))
+        or policy.get("observed_root_validity") != "resolved"
+        or not isinstance(head, str)
+        or not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", head)
+    ):
+        raise FleetError("Invalid external absence identity or evidence reference")
+    try:
+        recorded = datetime.fromisoformat(lifecycle["recorded_at"])
+        if recorded.utcoffset() is None or recorded > datetime.now(UTC):
+            raise ValueError("invalid observation time")
+    except (TypeError, ValueError) as error:
+        raise FleetError("Invalid external absence observation time") from error
+    try:
+        root.lstat()
+    except FileNotFoundError:
+        return {
+            "location_exists": False,
+            "observed_at": datetime.now(UTC).isoformat(),
+            "policy_release_manifest_sha256": policy["release_manifest_sha256"],
+            "lifecycle": lifecycle,
+        }
+    raise FleetError("Retired external location reappeared; owner review required")
+
+
+def _observe_external(
+    root: Path, record: dict[str, Any], policy: dict[str, Any], identity: str
+) -> None:
+    if (
+        policy.get("mode") != "read-only"
+        or not policy.get("owner")
+        or not policy.get("reason")
+        or policy.get("release_manifest_sha256") != identity
+    ):
+        raise FleetError(
+            "External integration lacks location or declared read-only policy"
+        )
+    if "lifecycle" in policy:
+        record.update(
+            external_policy=policy,
+            status="governed_absent",
+            observation=_retired_external_observation(root, policy),
+        )
+        return
+    if not root.exists():
+        raise FleetError(
+            "External integration lacks location or declared read-only policy"
+        )
+    record.update(
+        external_policy=policy,
+        status="governed_read_only",
+        observation={
+            "location_exists": True,
+            "policy_release_manifest_sha256": identity,
+        },
+    )
+
+
 def audit_checkout(
     row: dict[str, Any],
     record: dict[str, Any],
@@ -1065,25 +1138,7 @@ def audit_checkout(
             "Protected repository classification cannot be directly adopted"
         )
     if row["integration_mode"] == "external":
-        policy = row.get("external_policy", {})
-        if (
-            not root.exists()
-            or policy.get("mode") != "read-only"
-            or not policy.get("owner")
-            or not policy.get("reason")
-            or policy.get("release_manifest_sha256") != identity
-        ):
-            raise FleetError(
-                "External integration lacks location or declared read-only policy"
-            )
-        record.update(
-            external_policy=policy,
-            status="governed_read_only",
-            observation={
-                "location_exists": True,
-                "policy_release_manifest_sha256": identity,
-            },
-        )
+        _observe_external(root, record, row.get("external_policy", {}), identity)
         return
     git, binding = installed_metadata(row, root, release, identity, payload)
     record.update(installed=True, git=git, binding_sha256=binding)

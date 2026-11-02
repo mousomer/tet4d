@@ -46,9 +46,11 @@ The following refinements make its visible consequences explicit:
    and translation. Fit then adds one modest framing margin to already complete
    required bounds; it does not compound an unscaled collection envelope with
    an excessive second safety factor.
-7. Fit remains framing-only and idempotent. It may change focus and zoom in
-   `V/P`; it changes no `B`, `L`, anchors, gameplay state, deterministic hash,
-   replay/trace identity, or persisted preference.
+7. Fit first completes any pending outer-camera orbit to its existing targets,
+   then fits focus and zoom in `V/P`. It chooses no new orientation target and
+   changes no `B`, `L`, anchors, gameplay state, deterministic hash, replay/trace
+   identity, or persisted preference. Repeating Fit at the settled pose is
+   idempotent; see `camera_gui_preset_semantics.md`, section 6.
 
 ## 1. Purpose and current audit result
 
@@ -140,6 +142,19 @@ relative X/Z translation and local rotation commands. `L` owns the ordinary
 Live-4D orientation interactions that change the visible X/Z frame: mouse
 left-drag orbit, keyboard yaw, and keyboard pitch. Only `Q(q)` combines with
 `B` for discrete controls.
+
+`tests/test_live_relative_translation.gd` protects this boundary in the actual
+Live scene: fixed specification tables supply expected native commands and
+active-cell deltas for signed exact B turns and all four cardinal L yaws.
+Movement and view actions enter through `_unhandled_input`; deterministic
+explicit stepping replaces elapsed-time gravity and repeat polling. A blocked
+move fails acceptance. Live 3D separately consumes the presented outer-camera
+yaw, including during interpolation. Absolute preference cases remain canonical.
+The mandatory canonical Godot gate requires this regression's completion marker;
+the required GitHub lane retains its execution log. Native GDExtension bindings
+and ND command/session providers also select this lane. The focused runner supports
+isolated A (3D yaw), B-basis, B-local and C (Absolute dispatch) mutations without
+editing the checkout. Native movement, gravity and replay owners are unchanged.
 
 `local_pitch` is allowed but visual-only for command resolution. It is a tilt
 around the already selected local horizontal axis; it does not reassign local
@@ -704,8 +719,8 @@ their existing preference owners.
 | applying a Live-4D view action | unchanged | receives the action yaw/pitch target | unchanged | outer mount/reflection preserved; fitted framing restored | unchanged |
 
 The active forward-looking lifecycle, including mode-specific 2D/3D/4D/replay
-semantics, one composite Reset View, framing-only Fit View, and action-based
-presets, is canonical in `camera_gui_preset_semantics.md`. No current view
+semantics, one composite Reset View, Fit View with pending-orbit completion,
+and action-based presets, is canonical in `camera_gui_preset_semantics.md`. No current view
 state is persisted. A future saved-view/bookmark feature would require an
 explicit versioned contract and recovery rules.
 

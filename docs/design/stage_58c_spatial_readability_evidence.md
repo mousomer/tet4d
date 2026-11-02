@@ -109,10 +109,24 @@ Border's ink in every style.
 | --- | --- | --- |
 | 3D default | 9.4 (blue) / 20.7 | 13.4 (blue) / 27.2 |
 | 3D Python Reference | 10.8 (blue) / 20.1 | 14.3 (blue) / 26.6 |
+| 3D Arcade Neon | 9.3 (blue) / 18.5 | 13.1 (blue) / 25.2 |
 | 3D Tron Grid Flow | 16.5 (blue) / 26.3 | 19.3 (blue) / 31.9 |
+| 3D Blueprint Technical | 10.4 (blue) / 22.1 | 14.0 (blue) / 28.3 |
+| 3D High Contrast | 9.8 (blue) / 18.4 | 13.6 (blue) / 25.1 |
+| 3D Tet4D Balanced | 9.7 (blue) / 19.0 | 13.6 (blue) / 25.7 |
 | 4D default | 1.8 (blue) / 16.0 | 15.9 (blue) / 35.2 |
 | 4D Python Reference | 9.2 (blue) / 20.4 | 22.0 (blue) / 39.0 |
+| 4D Arcade Neon | 6.2 (blue) / 17.9 | 19.9 (blue) / 37.0 |
 | 4D Tron Grid Flow | 11.2 (blue) / 23.1 | 22.8 (blue) / 40.3 |
+| 4D Blueprint Technical | 7.1 (blue) / 20.2 | 19.2 (blue) / 37.9 |
+| 4D High Contrast | 6.5 (blue) / 18.0 | 20.1 (blue) / 36.8 |
+| 4D Tet4D Balanced | 5.8 (blue) / 17.5 | 19.5 (blue) / 36.8 |
+
+The initial table covered three configurations. The subsequent review of the
+same `0e6822da` head expanded it to all seven; these remain historical Linux
+measurements. Blue misses the proposed 15 ΔL* margin in 6 of 7 3D configurations
+(13.1–14.3); Tron Grid Flow reaches 19.3. Other colours and all 4D configurations
+clear that proposal. Accepting the weaker 3D margin remains an owner decision.
 
 | Style (Border) | 3D depth slope, before mean (range) | after | 4D slice residual d0 / d1 / d2, after |
 | --- | --- | --- | --- |
@@ -130,11 +144,14 @@ orderings; slopes and slice spreads vary by up to 3 L* from pixel sampling,
 while the weights themselves are resolution-independent by construction and
 test.
 
-Cost in this CPU-rendered container: re-weighting all 560 settled cells of a
-dense `[5,10,4,7]` board takes about 9 ms, about 1.5% of that board's snapshot
-rebuild, and the slice lookup adds about 4 ms; orbit steps average 1.2-1.4 ms
-and reach 8-11 ms only when every weight changes at once. A 144-cell 3D board
-takes 0.3 ms per step. Metal was not profiled.
+The subsequent interleaved baseline/branch review at `0e6822da` measured total
+dense snapshot-rebuild overhead of about 15% for 144-cell 3D and 13% for
+560-cell 4D in headless CPU runs. Vulkan/lavapipe 3D was within noise; 4D rose
+6–8% (520.3–524.4 ms baseline versus 555.3–562.8 ms branch). Steady-state orbit
+frame time was unchanged within noise, while large view jumps added about
+5–20 ms headless. The earlier isolated re-weighting timing did not measure
+total incremental rebuild cost and does not justify a 1.5% overhead claim.
+Metal performance and perceptible move/drop latency remain unverified.
 
 ## Python reference comparison (58C.6)
 
@@ -160,7 +177,8 @@ side; scaffold following active slices without a rebuild; unchanged grid
 topology; and a 4D replay under a camera whose settled colours, weights and
 scaffold stay unchanged beside an active piece. Inverting either weight
 function, restoring opaque active faces, or letting replays recede by slice
-or depth fails it (5-23 findings each). Existing renderer tests now compare
+or depth fails it (4-22 findings each in the retained historical mutation run).
+The earlier count included the runner's summary line. Existing renderer tests now compare
 settled colours at their presentation weight and require visually opaque
 active faces on the alpha path.
 
@@ -181,22 +199,31 @@ Gates on `96aa5246`, the last code commit, in the Linux evidence container:
   `native_cpp_tooling`, because the image's clang-format 18.1.3 flags the
   untouched `native/tet4d_core/include/tet4d_core/board_extent_contract.hpp`
   (also on `eda7b4ec`). With that binary hidden, so the check skips as on
-  machines without clang-format, the full gate reports `verify: OK`.
+  machines without clang-format, the full gate reports `verify: OK`. That
+  diagnostic run is not a pass of the unmodified canonical gate.
 - The 58C, renderer and live-presentation regression scripts pass at every
   renderer commit.
 
 ## Manual evidence
 
-Agent inspection of the matrix contact sheets: inactive 4D slices read as
-context while staying legible; the framed active slice and its piece lead;
-rear 3D cells are slightly darker; Full lines no longer cross the active
-piece; None remains understandable through the enclosure. Owner play
-acceptance (58C.7) remains outstanding: dense 3D near-axis orbit, a piece in
-the middle of a populated seven-slice board, and every style under Full.
+Agent inspection of the matrix contact sheets found a stronger active-slice
+hierarchy, darker rear 3D cells and less Full lattice interference. It does not
+establish far-slice readability across styles. In the subsequent Linux review,
+Arcade Neon settled blue at slice distance 2 was about 3 L* above its background
+(ΔE at least 15), and High Contrast settled/background contrast at distance 2
+fell from 23.0 to 12.7 L*. Far-slice colour separation fell 29–45% across the
+reviewed styles. These qualifications replace the blanket legibility claim.
+
+Owner macOS/Metal acceptance (58C.7) remains outstanding: dense near-axis orbit,
+seven-slice occupancy, Arcade Neon and High Contrast, blue-piece contrast,
+Retina legibility, move/drop latency and replay appearance. Agent captures and
+headless material-state assertions do not supply that interactive acceptance.
 
 ## Remaining and deferred
 
-- Dark active hues keep the smallest margin (3D blue ΔL* 13-19).
+- 3D blue remains below the proposed 15 ΔL* margin in 6 of 7 configurations.
+- Far-slice Arcade Neon/High Contrast readability and dense rebuild latency
+  require owner acceptance; no accessibility exemption or new tuning is inferred.
 - Tron Grid Flow's background still shows through the board (style-owned).
 - Cell outlines are about 0.5 px at 3D and 0.2-0.3 px at 4D pitch at 1×, so
   they cannot carry Python's outline polarity.
