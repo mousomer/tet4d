@@ -144,8 +144,10 @@ changing topology transport semantics.
 1. Maintain X/Z/active-slice movement semantics and relative/absolute frame
    behavior, including the existing 4D `B + Q(L.local_yaw)` resolution.
 2. Add support for *deliberate* moves along canonical `−Y` and `+Y` while
-   Explorer is active. Y is still visibly labeled Y and is not reclassified
-   as a camera or slice axis.
+   Explorer is active. These actions continue to address canonical Y even if
+   Explorer-only view turns put Y into a different visible slot or slice
+   axis. Guidance must not incorrectly call them screen-up or screen-down
+   when Y is not visually vertical.
 3. The native command/pose authority, rather than GDScript, validates and
    applies deliberate Y moves. Reuse the existing command pipeline or extend
    that same pipeline; do not manufacture a separate Explorer movement engine.
@@ -211,10 +213,11 @@ must prevent inadvertent progression or piece replacement during practice.
 4. The inherited Python `explorer` keybinding group and `move_up/down`
    requirements remain authoritative for **Python**, not automatically for
    new Godot defaults.
-5. The actual Y−/Y+ shortcut assignments are **unselected** here. They
-   require owner-approved conflict analysis against existing Live 4D keys,
-   macOS shortcuts and discoverability before implementation. Do not
-   silently choose or overload keys.
+5. The proposed Y−/Y+ bindings are `Z/X`, respectively; this is the
+   **EX-D2 candidate**, not an approved or implemented default. These
+   keys are unused in Live 4D but are used in other dimensions, so
+   mode-scoped routing and cross-mode testing are mandatory. No separate
+   Explorer keymap is permitted.
 6. Any new action must appear in the same generated control/help presentation
    path as current controls, only when applicable.
 7. Effective labels must reflect currently resolved bindings; Explorer
@@ -222,6 +225,100 @@ must prevent inadvertent progression or piece replacement during practice.
 8. No key already used for Live 4D piece rotation, exact basis change or
    view/reset may change its meaning merely because Explorer is active,
    except a deliberate, documented future control decision.
+
+### 5.1 Candidate keyboard extension (requires owner acceptance)
+
+The following mapping is a **design proposal** for EX-D2 and EX-D7,
+not an authorized default or a runtime change. It minimizes new chords
+while preserving every Live 4D action, shared style, frame mapping
+and current effective-binding display logic.
+
+| Operation | Normal 4D | Proposed Explorer binding | Scope |
+| --- | --- | --- | --- |
+| Local left / right | A / D | A / D (unchanged) | Both |
+| Local forward / back | W / S | W / S (unchanged) | Both |
+| Current slice − / + | Q / E | Q / E (unchanged) | Both |
+| Canonical Y− / Y+ | No deliberate pair | **Z / X** | Explorer only |
+| Exact XZ view − / + | 1 / 2 | 1 / 2 (unchanged) | Both |
+| Exact XW view − / + | 3 / 4 | 3 / 4 (unchanged) | Both |
+| Exact ZW view − / + | 5 / 6 | 5 / 6 (unchanged) | Both |
+| Exact XY view − / + | Not supported | **Shift+1 / Shift+2** | Explorer only |
+| Exact YW view − / + | Not supported | **Shift+3 / Shift+4** | Explorer only |
+| Exact YZ view − / + | Not supported | **Shift+5 / Shift+6** | Explorer only |
+| Piece XY/XZ/YZ/XW/YW/ZW | R/T, F/G, V/B, Y/U, H/J, N/M | Unchanged | Both |
+| Camera local yaw/pitch | O/L, I/K; mouse | Unchanged | Both |
+| Reset View / Restart | 0 / Backspace | Unchanged | Both |
+| Pan / zoom / Fit | Existing camera gestures and keys | Unchanged | Both |
+| Soft Drop / Hard Drop / Hold | Shift / Space / C | No gameplay progress in Explorer; preserve normal Play | Mode policy |
+
+The shifted number pairs pair existing XZ with XY (shared X),
+XW with YW (shared W), and ZW with YZ (shared Z). Each remains a
+true signed quarter turn, not an unsigned exchange/reflection.
+
+`PageUp/PageDown` may be optional **secondary aliases** for
+Y−/Y+ after MacBook/Windows/Linux testing. They must be bound to
+the same centrally registered actions and must not be required
+hardware keys. Key labels should show canonical `Y− / Y+` rather
+than misleading `Up / Down` after arbitrary 4D view rotations.
+
+### 5.2 Input registration and event-ordering requirements
+
+The current `LiveInputContract.ACTION_SPECS` stores basic keycode
+lists; the existing `_ensure_input_map()` registration path
+installs `InputEventKey` by keycode and has no descriptor-level
+modifier registration. Supporting Shift+number therefore needs a
+**bounded extension to the same action/binding metadata and registrar**.
+Never hard-code a separate Explorer-only event lookup table.
+
+1. Add canonical semantic action IDs for Y−/Y+ and the six new exact
+   view turns. Assign `explorer_4d` applicability metadata while
+   leaving normal Live 4D actions, bindings and meanings unchanged.
+2. Express `Shift+digit` through exact modifier-aware input events,
+   including the key's physical/logical identity as used by the
+   existing cross-layout fallback. Avoid interpreting `Shift+1`
+   as both `Shift+1` and plain `1`; the explicit Explorer
+   modified action takes precedence and is consumed once.
+3. Resolve the chords through the shared input contract, basis
+   action descriptors and existing help labels. The visible
+   label must display `Shift+1`, not `!` or an unrelated symbol.
+   Do not add view action names to a second hard-coded list.
+4. In normal Play, `Shift` continues to control Soft Drop;
+   Explorer suppresses that effect and cannot trigger a drop,
+   lock or spawn when `Shift+number` is pressed. Pressing
+   `Shift` alone in Explorer is inert.
+5. `Z/X` move by a canonical Y step, using the shared native
+   move legality/dispatch path. Unlike the X/Z/slice intents,
+   these actions must not rotate with the relative translation
+   frame. Respect existing movement-repeat timing and rejection
+   semantics.
+6. Scope action dispatch by current mode, not merely the globally
+   registered Godot InputMap. Existing 2D use of `Z/X`,
+   normal 4D Soft Drop, and the Replay shortcuts must retain
+   their meanings.
+7. Verify key-down, key-up, rapid switching, held-repeat,
+   focus loss, menu/dialog focus, MacBook non-US keyboard
+   layouts, and shifted digit unicode/physical-key fallback.
+   Preserve `Esc`, `Tab`, `0`, `Backspace`, zoom and
+   all six piece-rotation pairs.
+8. Test pressing `1` versus `Shift+1` in both modes, with
+   identical camera/piece snapshots except for the intended
+   basis turn. Unmodified `1` must never trigger the new XY
+   turn; `Shift+1` must never dispatch both XY and XZ turns.
+   None of the new actions may run in normal Play.
+
+### 5.3 Visibility and acceptance
+
+Keep the same cockpit/help generation path. Under Explorer, the
+movement group adds `Z / X — Canonical Y− / Y+` and the view
+group shows all six plane pairs, grouped as normal `1–6`
+and extra `Shift+1–6`. Normal Play shows only the original
+three view pairs. If a permanent extra row causes clipping,
+apply the existing progressive-disclosure/control-help
+mechanism instead of inventing a new Explorer cockpit.
+
+**Approval boundary:** EX-D2/EX-D7 remain unresolved until the
+owner accepts these defaults and Godot real-key input tests
+establish exact, nonconflicting behavior on the target devices.
 
 ## 6. Camera, basis, slices, rendering and styles
 
@@ -514,12 +611,12 @@ The RDS intentionally does **not** invent missing owner decisions.
 | ID | Unresolved decision | Conservative implementation rule |
 | --- | --- | --- |
 | EX-D1 | Exact existing Live 4D restrictions to relax for translations and rotations, beyond Y± and disabled gravity | Inventory current rejections and bring named cases for approval; initially no other bypass |
-| EX-D2 | The shared conflict-free shortcut(s) for deliberate Y−/Y+ in Godot | Add no private keymap or overloaded shortcut; wire the approved centrally declared action(s) |
+| EX-D2 | The shared conflict-free shortcut(s) for deliberate Y−/Y+ in Godot | Proposed Z/X (optional PageUp/PageDown after hardware proof); preserve current Play keys; approval pending |
 | EX-D3 | Whether an explicit Hard Drop may perform a non-locking reposition, or is simply disabled in Explorer | Disable its gameplay effect; do not lock/spawn |
 | EX-D4 | Whether Hold or changing to another single piece is required in MVP | No new shape browser; preserve one active game piece and disable irrelevant progression |
 | EX-D5 | Whether the first Godot Explorer needs a fixed named compact board preset | Use validated current Live setup, retain Python `8×9×7×6` profile in its runtime |
 | EX-D6 | When neighbor/coordinate inspection becomes a mandatory acceptance gate | Keep as later additive work after working shared-mode manipulation |
-| EX-D7 | Conflict-free shared input bindings for Explorer-only XY/YZ/YW exact view turns | Do not reuse existing rotation/movement/view keys; use shared input authority after approval |
+| EX-D7 | Conflict-free shared input bindings for Explorer-only XY/YZ/YW exact view turns | Proposed Shift+1/2 XY, Shift+3/4 YW, Shift+5/6 YZ; requires modifier-aware shared registration and owner/hardware acceptance |
 
 A code agent must not resolve an unresolved product choice by inventing a
 new semantic owner, keymap, topology policy, graphical shell or gameplay
