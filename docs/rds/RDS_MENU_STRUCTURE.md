@@ -131,7 +131,9 @@ Main Menu
   setups, so every dimension stays a visible, selectable entry whatever the
   current setup is. Change Setup (`C`) opens the current mode's configuration
   without launching. The Main Menu is a single list of options grouped under
-  PLAY, DESIGN, LEARN and SYSTEM; it keeps its spacing and font sizes and
+  PLAY, DESIGN, LEARN and SYSTEM; primary commands show their title and key
+  on one line, retain descriptions in tooltips, and use compact vertical gaps
+  and 48-unit minimum rows. The list keeps its font sizes and
   scales as a whole to fit the window, scrolling only below the readability
   floor. Invalid drafts cannot launch by
   button or shortcut. See `docs/architecture/editable_board_setup_and_persistence.md`.

@@ -22,6 +22,7 @@ const FONT_CHROME_TITLE := 24
 const MENU_MIN_WIDTH := 720
 const MENU_SIDE_MARGIN_SHARE := 0.1
 const MENU_COMMAND_MIN_HEIGHT := 60
+const MENU_PRIMARY_COMMAND_MIN_HEIGHT := 48
 # Smallest scale the main menu list shrinks to before it scrolls. Its large
 # command titles stay legible at half size; the full list then fits 1280x720.
 const MENU_FIT_SCALE_FLOOR := 0.5

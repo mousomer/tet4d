@@ -3115,6 +3115,11 @@ func _build_main_menu_screen(screen: Control) -> void:
 	quit_button.pressed.connect(_emit_quit_requested)
 	layout.add_child(quit_button)
 	_main_menu_focus_order = [live_button, live_2d_button, live_3d_button, live_4d_button, change_setup_button, design_lab_button, controls_button, about_button, settings_button, advanced_button, quit_button]
+	# Keep the primary list readable without needing a tiny whole-menu scale.
+	# Every command retains its full description in the existing tooltip.
+	for command in _main_menu_focus_order:
+		command.text = command.text.get_slice("\n", 0)
+		command.custom_minimum_size.y = ShellDesignTokensScript.MENU_PRIMARY_COMMAND_MIN_HEIGHT
 	_configure_main_menu_focus()
 	_screen_focus_targets[SCREEN_MAIN_MENU] = live_button
 
@@ -3671,6 +3676,10 @@ func _fit_main_menu() -> void:
 		window_factor = menu_window_scale(Vector2(DisplayServer.window_get_size()) / maxf(DisplayServer.screen_get_scale(), 0.01))
 	var readable_floor := clampf(MENU_READABLE_BODY_POINTS / (ShellDesignTokensScript.FONT_BODY * _ui_scale_factor * window_factor), ShellDesignTokensScript.MENU_FIT_SCALE_FLOOR, 1.0)
 	var current: float = _main_menu_fit.fit_scale
+	# Preserve readable text by reducing vertical gaps before shrinking the list.
+	if ResponsivePanelPolicy.compact_vertical_gaps(content, true) > 0:
+		call_deferred("_fit_main_menu")
+		return
 	var natural := content.get_combined_minimum_size().y
 	var wanted := clampf(floorf(room.y / maxf(natural, 1.0) * 100.0) / 100.0, readable_floor, 1.0)
 	if current < readable_floor:
