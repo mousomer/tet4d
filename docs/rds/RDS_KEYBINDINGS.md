@@ -460,8 +460,9 @@ Implemented in code:
 10. `Main`,`Translation`,`Rotation`,`Camera`,`View/Overlay` (mode/capability gated).
 11. arrow-diagram key guides are available in Help UI for translation and rotation.
 
-### 4.4 Explorer-only movement contract
+### 4.4 Inherited Python/Pygame Explorer-only movement contract
 
 1. `move_up` and `move_down` are explorer-only traversal actions and are stored under the dedicated `explorer` keybinding group, not under normal gameplay translation.
 2. Normal Game controls must not expose or dispatch `move_up`.
-3. Explorer Mode help/control panels must show the bound `move_up` / `move_down` keys whenever exploration controls are active.
+3. Python/Pygame Explorer Mode help/control panels must show the bound `move_up` / `move_down` keys whenever exploration controls are active.
+4. The new Godot Live 4D Explorer reuses the *same* `LiveInputContract` actions, keybindings and generated help as Live 4D. Any Y± movement action is a centrally declared, owner-approved additive action, never an independent Explorer keymap. See `docs/rds/RDS_EXPLORER.md`.
