@@ -169,6 +169,10 @@ opacity, colour, scale, camera and depth tuning belong to later stages.
 
 ### Stage 58 3D/4D board readability
 
+- [ ] Human visual acceptance: repeated 4D hard drops at 1280×720 keep the
+  right helper column steady; restored preview-gap preservation has a
+  frame-by-frame regression test.
+
 - [x] Publication CI correction (2026-10-14): clear ready-PR handoff state and
   give the complete Godot replay/style suite a separate bounded 30-minute
   watchdog after hosted Linux reached test 78/84 at the old 15-minute limit.
@@ -183,9 +187,6 @@ opacity, colour, scale, camera and depth tuning belong to later stages.
 - [x] Live 4D legend deck: the whole measured legend shows unscrolled at 1280×720 and
   above; shorter windows or an open guide compact the deck, which then scrolls.
 - [ ] 58B follow-up: the narrowed Live 3D side rail scrolls at 1440×900.
-- [ ] Human visual acceptance: confirm repeated 4D hard drops at 1280×720 keep
-  the right helper column steady while NEXT/HOLD update; preview refreshes now
-  preserve cockpit-compacted gaps instead of restarting the scale search.
 
 - [x] 58A audit (2026-10-12): production shell renders of canonical 3D
   `[6,10,6]` and 4D `[5,10,4,4]`/`[5,10,4,7]` boards across fresh defaults and
