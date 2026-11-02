@@ -114,35 +114,31 @@ func local_slice_bounds() -> Dictionary:
 
 
 func oriented_slice_bounds(layer_index: int) -> Dictionary:
+	var corners := slice_corners(layer_index)
+	if corners.is_empty():
+		return {"ok": false}
+	var min_world: Vector3 = corners[0]
+	var max_world: Vector3 = corners[0]
+	for corner in corners:
+		min_world = min_world.min(corner)
+		max_world = max_world.max(corner)
+	return {"ok": true, "min": min_world, "max": max_world}
+
+
+# The eight corners of one slice's board box in render space.
+func slice_corners(layer_index: int) -> Array:
 	var local_bounds := local_slice_bounds()
 	if not bool(local_bounds.get("ok", false)):
-		return {"ok": false}
+		return []
 	var min_local: Vector3 = local_bounds.get("min", Vector3.ZERO)
 	var max_local: Vector3 = local_bounds.get("max", Vector3.ZERO)
 	var anchor := slice_anchor(layer_index)
-	var first := true
-	var min_world := Vector3.ZERO
-	var max_world := Vector3.ZERO
+	var corners: Array = []
 	for x in [min_local.x, max_local.x]:
 		for y in [min_local.y, max_local.y]:
 			for z in [min_local.z, max_local.z]:
-				var corner := oriented_local_point(Vector3(x, y, z)) + anchor
-				if first:
-					min_world = corner
-					max_world = corner
-					first = false
-				else:
-					min_world = Vector3(
-						minf(min_world.x, corner.x),
-						minf(min_world.y, corner.y),
-						minf(min_world.z, corner.z)
-					)
-					max_world = Vector3(
-						maxf(max_world.x, corner.x),
-						maxf(max_world.y, corner.y),
-						maxf(max_world.z, corner.z)
-					)
-	return {"ok": not first, "min": min_world, "max": max_world}
+				corners.append(oriented_local_point(Vector3(x, y, z)) + anchor)
+	return corners
 
 
 # The per-slice boxes that `_collection_bounds` unions into one AABB. Camera

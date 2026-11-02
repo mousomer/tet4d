@@ -58,6 +58,8 @@ No active handoff.
 
 Next: bounded Designer text-size review; replay toolbar assessment stays separate.
 Repair accepted; publication/master CI is tracked on PR #162. 58B scale stays frozen.
+Stage 58C.7 is owner-accepted with documented tradeoffs; see
+`docs/history/stage_58c_owner_acceptance_2026_11_02.md`. Stage 58D stays separate.
 The Stage 56H human playability checkpoint retains its task contract at
 `docs/tasks/live_4d_cockpit_convergence.md`; Stage 56I polish and the 190/200
 A/B decision remain separate. Governance distribution 1.4.0 / runtime 0.7.0 is active;

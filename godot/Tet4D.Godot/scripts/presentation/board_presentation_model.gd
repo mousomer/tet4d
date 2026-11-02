@@ -91,16 +91,25 @@ func active_layer_indices() -> Array:
 		return []
 	var result := []
 	for cell in active_cells():
-		var position: Array = cell.get("position", [])
-		if position.size() > 3:
-			var mapped: Dictionary = projection.mapper.presentation_coordinate(position, true)
-			if not bool(mapped.get("ok", false)):
-				continue
-			var layer := int(mapped.get("layer_index", -1))
-			if not result.has(layer):
-				result.append(layer)
+		var layer := layer_index(cell.get("position", []))
+		if layer >= 0 and not result.has(layer):
+			result.append(layer)
 	result.sort()
 	return result
+
+
+# Presentation layer of a board coordinate: 0 below 4D, -1 when unmapped.
+func layer_index(position: Array) -> int:
+	if dimension < 4:
+		return 0
+	if position.size() <= 3:
+		return -1
+	var mapped: Dictionary = projection.mapper.presentation_coordinate(position, true)
+	return int(mapped.get("layer_index", -1)) if bool(mapped.get("ok", false)) else -1
+
+
+func slice_corners(layer: int) -> Array:
+	return projection.slice_corners(layer)
 
 
 func probe_markers() -> Array:

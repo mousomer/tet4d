@@ -224,8 +224,8 @@ func run() -> Array:
 		_assert_cell_material(
 			failures,
 			live_4d_active_cell,
-			ReplayVisuals.live_4d_active_face_materials(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC, 6).get("top").albedo_color,
-			"live 4D active cells use restrained exterior face material"
+			ReplayVisuals.live_3d_active_face_materials(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC, 6).get("top").albedo_color,
+			"live 4D active cells share the live active exterior face material"
 		)
 		_assert_live_3d_exterior_block(failures, live_4d_active_cell, "live 4D active cell")
 		_assert_live_3d_exterior_block(failures, live_4d_locked_cell, "live 4D locked cell")
@@ -566,7 +566,10 @@ func _assert_cell_material(failures: Array, cell: Node3D, expected: Color, label
 	if material == null:
 		failures.append("%s: missing StandardMaterial3D" % label)
 		return
-	_assert_color(failures, material.albedo_color, expected, label)
+	# Stage 58C depth/slice weights scale a settled cell's colour; the material
+	# it was built from is the unweighted one.
+	var weight: float = cell.presentation_weight() if cell.has_method("presentation_weight") else 1.0
+	_assert_color(failures, material.albedo_color, Color(expected.r * weight, expected.g * weight, expected.b * weight, expected.a), label)
 
 
 func _assert_box_size(failures: Array, cell: Node3D, expected: float, label: String) -> void:
@@ -622,8 +625,10 @@ func _assert_live_3d_exterior_block(failures: Array, cell: Node3D, label: String
 				failures.append("%s face %d should use the configured translucent locked fill" % [label, index])
 			elif material.depth_draw_mode != BaseMaterial3D.DEPTH_DRAW_ALWAYS:
 				failures.append("%s face %d should write depth for camera-angle-stable structure" % [label, index])
-		elif material.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED or material.albedo_color.a < 0.99:
-			failures.append("%s face %d should be opaque" % [label, index])
+		elif material.albedo_color.a < 0.99:
+			failures.append("%s face %d should be visually opaque" % [label, index])
+		elif material.transparency != BaseMaterial3D.TRANSPARENCY_ALPHA or material.depth_draw_mode != BaseMaterial3D.DEPTH_DRAW_ALWAYS:
+			failures.append("%s face %d should composite over board scaffold on the depth-writing alpha path" % [label, index])
 	if label.contains("locked"):
 		var outline := cell.get_child(6) as MeshInstance3D
 		var outline_material := outline.material_override as StandardMaterial3D if outline != null else null
