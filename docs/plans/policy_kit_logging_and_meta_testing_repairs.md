@@ -11,9 +11,40 @@ verification suite, bounded and actionable diagnostics, release-pinned skills,
 and honest evidence of execution. Fix the existing P1a logging and publication
 contracts without claiming that all agent activity is already captured.
 
-## Current contract and verified findings
+## Authorized harness repair follow-up
 
-The active distribution is `workspace/policy-kit` 1.2.0, with portable runtime
+The owner's 2026-10-31 "fix all" request covers the assessment findings across
+the canonical kit, Tet4D's adoption and the private fleet. The semantic objective
+is compatible shared machinery with current, truthful acceptance evidence.
+The owner explicitly selected harness repairs and existing safe offline checks;
+new scientific, cloud and platform product acceptance contracts are outside
+this follow-up. Scoped offline evidence retains each existing owner's limits.
+
+Provider/consumer scope: the kit owns the Make parser, release/export controls
+and portable tests; Tet4D and harness-observatory retain their stronger source
+checks and product runners; Gifted-masking retains scientific authority and
+pre-existing work; the private registry owns reviewed execution/adoption facts.
+Protected stores, existing worktrees, data and historical releases/evidence must
+not receive installer repairs. P1b/P1c/P6 continuation, model downloads and
+unreviewed product execution retain their existing gates.
+
+Acceptance requires the parser's accepting/rejecting fixtures and consumer
+style checks, candidate and immutable kit gates, guarded native-verifier
+re-review and adoption, zero-write replanning, affected product verification,
+fresh approved baselines/evidence, and a final census/audit with every remaining
+gap identified. Repair discoverable scope/identity errors without inventing
+missing Git history, scientific semantics or product contracts. A nonzero audit
+is retained wherever the required evidence or owner decision remains absent.
+
+The reviewed local successor is distribution 1.4.0 / runtime 0.7.0. Its
+candidate and immutable gates verify the same declared components. Guarded
+receipts preserve all earlier releases, configuration, source preimages and
+historical evidence. Current execution outcomes are intentionally read from the
+private collector/audit rather than copied into this planning authority.
+
+## Original contract and verified findings
+
+The original distribution was `workspace/policy-kit` 1.2.0, with portable runtime
 0.5.0. Its release manifest digest is
 `adb3e15dcb733f491c493de424750d056cb3b3485042d4b9662118e36a1536df`.
 Keep this immutable release and its original receipts unchanged.

@@ -26,37 +26,37 @@
   "profile": "python",
   "release": {
     "name": "workspace/policy-kit",
-    "revision": "v0.6.1-private-execution-metadata-1",
-    "version": "1.3.1"
+    "revision": "v0.7-harness-repair-1",
+    "version": "1.4.0"
   },
-  "release_manifest_sha256": "0dbb35dc8fcccc60f32de726eb0131a24759a6c683a8a5a6ea6b4a2d6d405856",
+  "release_manifest_sha256": "f4500302c2cee58966055cfc906f146b51f841d3807c5a293870322b615a9373",
   "schema_version": 1,
   "skill_adapters": [
     {
       "name": "governance-context",
       "path": ".agents/skills/governance-context/SKILL.md",
-      "release_manifest_sha256": "0dbb35dc8fcccc60f32de726eb0131a24759a6c683a8a5a6ea6b4a2d6d405856",
+      "release_manifest_sha256": "f4500302c2cee58966055cfc906f146b51f841d3807c5a293870322b615a9373",
       "sha256": "013a4a955f5272545c9d000b0514fa10458dc1a31314ab4d3dfd1f6f2bfea9f9",
       "target": "tools/workspace_governance/skills/governance-context/SKILL.md"
     },
     {
       "name": "governance-context",
       "path": ".claude/skills/governance-context/SKILL.md",
-      "release_manifest_sha256": "0dbb35dc8fcccc60f32de726eb0131a24759a6c683a8a5a6ea6b4a2d6d405856",
+      "release_manifest_sha256": "f4500302c2cee58966055cfc906f146b51f841d3807c5a293870322b615a9373",
       "sha256": "013a4a955f5272545c9d000b0514fa10458dc1a31314ab4d3dfd1f6f2bfea9f9",
       "target": "tools/workspace_governance/skills/governance-context/SKILL.md"
     },
     {
       "name": "governance-maintenance",
       "path": ".agents/skills/governance-maintenance/SKILL.md",
-      "release_manifest_sha256": "0dbb35dc8fcccc60f32de726eb0131a24759a6c683a8a5a6ea6b4a2d6d405856",
+      "release_manifest_sha256": "f4500302c2cee58966055cfc906f146b51f841d3807c5a293870322b615a9373",
       "sha256": "fd416bb129ee2a2c758537a238adf09a0615694c951d4ced029fa5bab76af10b",
       "target": "tools/workspace_governance/skills/governance-maintenance/SKILL.md"
     },
     {
       "name": "governance-maintenance",
       "path": ".claude/skills/governance-maintenance/SKILL.md",
-      "release_manifest_sha256": "0dbb35dc8fcccc60f32de726eb0131a24759a6c683a8a5a6ea6b4a2d6d405856",
+      "release_manifest_sha256": "f4500302c2cee58966055cfc906f146b51f841d3807c5a293870322b615a9373",
       "sha256": "fd416bb129ee2a2c758537a238adf09a0615694c951d4ced029fa5bab76af10b",
       "target": "tools/workspace_governance/skills/governance-maintenance/SKILL.md"
     }
@@ -71,10 +71,10 @@
       "governance_runner": "scripts/verify-governance.sh",
       "integration": "native",
       "kind": "shell",
-      "native_sha256": "1b7a5b3ba4809bc29c6e33bc068c180e5371e07b004c55286302b5be94684c0d",
+      "native_sha256": "ed162affd7e3a911baae5f244f534e896d97f21c8356be23d48aa28935191827",
       "path": "scripts/verify.sh"
     },
-    "source": "config/governance/project.json existing legacy full command owner; all original verifier families retained",
+    "source": "Re-reviewed native invocation graph; original verifier families and failure diagnostics retained.",
     "timeout_seconds": 7200
   }
 }

@@ -105,6 +105,12 @@ Viewer-consistent translation requirement:
    Resolver output, repeated input, helper text, and orientation-gizmo labels
    and directions must consume the same effective mapping for the currently
    rendered outer-camera yaw.
+8. Mandatory Live integration acceptance sends movement action events through
+   the production scene's `_unhandled_input` and checks both the canonical
+   native command and every active-cell displacement against fixed specification
+   data. All four cardinal yaws, opposite pairs, framing, restart, reset,
+   re-entry, held repetition and intentional Absolute controls are required.
+   Mapping-unit or HUD-legend agreement alone cannot establish correctness.
 
 ## 6. Rendering and UX
 
@@ -180,9 +186,10 @@ Relevant tests:
 8. Random-cell set no longer causes premature game-over due to invalid spawn shapes.
 9. Terminal animation reuses the shared projected renderer rather than a separate one-off effect path, and the relic field remains compositionally stable instead of emptying the screen over time.
 10. Live 3D uses the shared Header / PrimaryBoardSurface / ControlDeck cockpit
-    grammar. Its deck contains only applicable 3D PIECE controls, legitimate
-    pointer/framing VIEW controls, and the existing NEXT/HOLD consumers; it
-    must not advertise W translation or 4D rotation/view planes.
+    grammar, with the deck as a side rail. The rail contains only applicable
+    3D PIECE controls and the existing NEXT/HOLD consumers, with no VIEW
+    module; Reset View is listed with the GAME keys and Fit View stays a header
+    action. It must not advertise W translation or 4D rotation/view planes.
 
 ## 10. Mode-aware topology split (2026-03-08)
 

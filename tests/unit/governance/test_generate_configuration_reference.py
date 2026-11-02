@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from uuid import uuid4
 
 import pytest
 
@@ -13,16 +12,10 @@ def _write_text(path: Path, content: str) -> None:
     path.write_text(content, encoding="utf-8")
 
 
-def _scratch_root() -> Path:
-    root = Path(".tmp_test_generate_configuration_reference") / uuid4().hex
-    root.mkdir(parents=True, exist_ok=False)
-    return root
-
-
 def test_render_configuration_reference_covers_config_tree(
-    monkeypatch,
+    monkeypatch, tmp_path: Path
 ) -> None:
-    scratch_root = _scratch_root()
+    scratch_root = tmp_path
     config_root = scratch_root / "config"
     docs_root = scratch_root / "docs"
     _write_text(
@@ -499,10 +492,8 @@ def test_render_user_settings_reference_fails_on_unknown_keybinding_group(
         config_doc.render_user_settings_reference()
 
 
-def test_check_generated_docs_detects_stale_output(
-    monkeypatch,
-) -> None:
-    scratch_root = _scratch_root()
+def test_check_generated_docs_detects_stale_output(monkeypatch, tmp_path: Path) -> None:
+    scratch_root = tmp_path
     docs_root = scratch_root / "docs"
     config_path = docs_root / "CONFIGURATION_REFERENCE.md"
     user_path = docs_root / "USER_SETTINGS_REFERENCE.md"

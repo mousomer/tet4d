@@ -20,6 +20,9 @@ copying it elsewhere. Use
 python tools/governance/scan_secrets.py
 ```
 
+Bare `exclude_dirs` names prune at any depth; `a/b` entries prune that exact path
+(nested `.claude/worktrees` gate themselves). A scanner timeout is a failure.
+
 ## String and path sanitation
 
 All external or user-controlled strings must use an approved shared sanitation
@@ -50,6 +53,8 @@ a documented reason and focused tests.
 
 ## Repository and publication hygiene
 
+- Advisory path exceptions follow the exact, counted source-line review contract
+  in `docs/architecture/sanitation_reference_review.md`; strict checks stay independent.
 - Preserve unrelated user changes; stage only intentional paths and review the
   staged diff before commit.
 - Repository ignore rules define local/generated material. A tracked path must
