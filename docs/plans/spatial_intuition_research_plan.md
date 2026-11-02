@@ -52,133 +52,89 @@ and do not become a participant-event backend by renaming them.
 
 ## 3. Priority slices and acceptance
 
-### E1 — Bounded practice Explorer: immediate execution contract
+### E1 — Explorer as a Live 4D rules-mode delta (immediate priority)
 
-**Owner priority decision: 2026-11-02.** Begin this work without waiting for
-the outstanding Stage 59, Designer/replay toolbar or cosmetic cockpit issues.
-Only an issue that demonstrably blocks an Explorer operation becomes an
-Explorer blocker. The first slice is not a redesign of the Play cockpit.
+**Product owner:** `docs/rds/RDS_EXPLORER.md`. This research plan owns
+execution order and evidence, **not** the Explorer gameplay semantics.
+The owner decision of 2026-11-02 explicitly rejects an independent
+Explorer workspace/engine, style system, movement system, camera, keymap
+or parallel rendering path.
 
-**Goal:** one playable, gravity-free 4D learning workspace in Godot, with no
-score, queue advance, lock, gravity timer, game-over or forced placement.
-The exercise is to manipulate and understand a piece, not to win a game.
+The existing Live 4D game is the implementation baseline. Explorer adds
+a mode-specific rules policy: automatic gravity off, deliberate free
+Y−/Y+ translation, and only explicitly approved additional exceptions
+to ordinary translation/rotation restrictions. It uses one production
+polycube at a time, shares the game's UI, styles, rotation and movement
+commands, input resolver, camera, exact signed basis, slices and geometry.
 
-#### Stage E1-A — Semantic and adapter vertical slice
+#### E1-A — Shared native gameplay policy
 
-Existing reusable repository surfaces (verify actual method contracts before
-implementation):
+- Inspect the existing `PlainNDSession`/gameplay transition owner and
+  distinguish gravity/tick/lock, translation legality, rotation legality,
+  view-derived command resolution and input routing.
+- Introduce the smallest session-scoped mode/policy at the existing
+  authoritative core owner. Explorer must not tick gravity or perform
+  time-triggered lock/spawn. Normal Live 4D remains unchanged.
+- Use the same native transformation/legality code paths for current
+  X/Z/slice moves and all six existing rotation planes; extend that
+  shared path for deliberate Y−/Y+ translations.
+- Respect bounded board extents and piece integrity. Record precise
+  candidates rejected in normal Play for owner approval under
+  RDS decision EX-D1 before implementing additional rotation/placement
+  bypasses. A broad collision, bounds or wall-kick bypass is not approved.
+- Keep shared setup validation and production piece data; no separate
+  practice object catalog, gameplay state engine or policy database.
+- Conformance: unchanged ordinary Play seed/input/hash/replay; long idle
+  Explorer leaves piece unchanged; Y± moves work when legal; invalid moves
+  are atomic; shared rotations produce identical results when legal.
 
-- `godot/Tet4D.Godot/scripts/native/tet4d_core_bridge.gd` delegates to
-  native `geometry_translate_blocks`, `geometry_rotate_blocks`,
-  `query_piece_pose_legal` and bounded/topology step queries. These are
-  candidates for exact transforms/legality; do not port their algorithms
-  to GDScript.
-- Python `src/tet4d/engine/runtime/topology_playground_sandbox.py` owns
-  reference Sandbox selection, translation, shape rotation and movement policy.
-  `explorer_runtime_nd.py` and topology contracts own inherited transport
-  behavior. For this phase, the profile is bounded only.
-- `SliceBasis4D`, `ControlFrameMapping`, `SliceLocalOrientation`,
-  `TraceCoordinateMapper`, the shared renderer and `CameraRig` already
-  establish distinct presentation/input owners in Live 4D. Reuse or adapt
-  their read-only consumption paths; do not invent a parallel 4D mapper.
-- `LiveInputContract` owns action descriptions, effective bindings and
-  rotation-plane inventory. Explorer may have a different no-pressure
-  *interaction layout*, but must reference these action descriptors rather
-  than hardcoding a second conflicting binding table.
+#### E1-B — Same Godot Live 4D shell, Explorer mode
 
-Implement a small dedicated Explorer state/adapter owner, not an Explorer
-branch inside the native live-game session's gravity loop. The adapter owns
-the current practice-piece pose, immutable initial scenario and practice
-reset; the native geometry/legality boundary evaluates every translation and
-rotation. No inherited piece-transform, collision, adjacency or topology
-rule is implemented independently in GDScript. If the existing pure API
-cannot support a required atomic transition, introduce a bounded native
-practice-query/session API with separate conformance evidence rather than
-silently appropriating the live gameplay session.
+- Add an Explorer entry within existing navigation, selecting the
+  session policy and rendering the existing Live 4D cockpit.
+- Reuse the same shipped styles, grid/opacity, cells, slice geometry,
+  `B + L + V/P` presentation state, `ControlFrameMapping`,
+  `LiveInputContract`, camera gestures, keybindings and generated help.
+- Introduce no Explorer-only keybinding table. New Y actions need
+  centrally defined, owner-approved conflict-free bindings (EX-D2).
+  Never repurpose a currently bound Live 4D rotation/view key silently.
+- Show mode/Gravity Off and hide or disable irrelevant progress
+  controls within the existing layout; never invoke lock/advance
+  from disabled gravity, Hard Drop or Hold semantics.
+- Reuse existing Restart, Reset View, Main Menu and ordinary Play
+  entry/exit lifecycle, with session-safe isolation.
+- Verify real keyboard input, relative/absolute mapping, basis turns,
+  1280×720 and 1440×900 board/help visibility, and that Explorer
+  switch-in/out never leaks mode rules into normal Play.
 
-**First acceptance fixture:** fixed bounded 4D board and one known nontrivial
-4D polycube. Exact shape and extents come from an explicit fixture/test
-contract, not an arbitrary hidden random game seed. All axes X/Y/Z/W permit
-positive and negative deliberate moves. All six plane families XY/XZ/YZ/
-XW/YW/ZW permit both quarter-turn directions. Out-of-bounds or overlapping
-moves are rejected without changing the practice pose. There is no gravity
-or lock on any number of frames.
+#### E1-C — Named policy exceptions and learning support
 
-#### Stage E1-B — First visible Godot practice workspace
+- Decide EX-D1 by demonstrating actual blocked Live 4D translation/
+  rotation cases, identifying exactly which predicate to relax while
+  preserving board/collision/shape invariants. Add only selected and
+  tested exceptions, still through the shared core.
+- Add optional coordinate/neighbor inspection using existing canonical
+  truth and renderer overlays; avoid a second Explorer scene.
+- A later 3D Explorer uses the same policy and current Live 3D
+  shell. Full topology editing, custom seams, challenge campaigns,
+  a study backend and independent participant identity are separate.
+- Gate `EXPLORER_LEARNING_READY`: novice users can move in Y/W,
+  rotate the object, reorient the 4D view independently, recover from
+  disorientation and recognize true 4D neighbors without assuming
+  projection proximity proves adjacency.
 
-- Provide a clearly named `Explore 4D` entry in the existing LEARN
-  navigation and a dedicated Explorer/practice mode. Preserve existing
-  Play 2D/3D/4D entry and the Python Topology Playground.
-- Render the practice piece with the existing 4D slice projection and board
-  visual grammar. Show the active canonical coordinate, object orientation,
-  current signed view basis, slice axis/index and camera orientation as
-  distinct, readable concepts.
-- Keep piece rotation, camera orbit/pan/zoom, exact view-basis quarter turns,
-  local slice yaw/pitch and slice navigation independent. A camera or basis
-  change must not alter native piece coordinates or its geometry hash.
-- Show the *effective* keys alongside their actions at the point of use.
-  Never require memorising undocumented keys. Explain rejected moves and
-  allow `Reset Piece`, `Reset View`, `Reset All` and repeat of the initial
-  fixture. Give a direct path to bounded ordinary Play that creates a new
-  validated game session; no implicit conversion of practice pose to game
-  state.
-- Make the workspace usable at 1280×720 and 1440×900 logical viewport sizes,
-  with fit-before-scroll controls and legible piece cells. Do not change
-  accepted Live board allocation or Designer geometry to accomplish this.
+#### Stage ordering and non-goals
 
-**E1-B gate:** a user can reach Explore 4D, move in W and Y as freely as X/Z,
-rotate in an XW/YW/ZW plane, rotate the view without moving the object,
-recover their orientation and return to Play without disturbing gameplay
-identity. Required tests assert the observable result, not merely a method
-call or scene load.
+Start E1-A immediately; E1-B may follow once its shared-mode native
+contract exists. Ordinary gameplay regressions and user-facing tests
+are mandatory. Designer/replay/Stage 59 polish is **not** a predecessor;
+only defects that actually block Explorer behavior may enter this
+implementation critical path.
 
-#### Stage E1-C — Adjacency and 3D comparison
-
-- Provide an explicit `Neighbors`/adjacency overlay. Select a cell and
-  distinguish its face-adjacent canonical neighbors from other nearby or
-  overlapping projected boxes. The overlay must disclose which canonical
-  coordinate differs and by one step on which axis; W neighbors must be
-  traceable across slices.
-- Use canonical bounded neighbor-query truth, not projected pixel distance,
-  ray overlap or a new GDScript graph rule. Neighbor markers are subordinate
-  to actual full-cell piece geometry and may be switched off.
-- Add a 3D practice configuration for comparison; keep analogous object
-  motion, camera-relative input, labeling, reset and adjacency behavior.
-  Neither mode silently adopts normal Play gravity or lock policy.
-
-#### Verification and acceptance
-
-1. **Geometry:** every supported rotation followed by its inverse returns
-   exactly to the prior pose; four same-direction quarter turns return to the
-   initial pose; translation and inverse agree except at a blocked boundary.
-2. **Semantic safety:** invalid moves are atomic failures; empty/bounded
-   topology behaves as specified by the reference fixtures; no Python
-   semantic authority is transferred by adding a Godot UI.
-3. **Presentation:** view/camera/slice transforms preserve practice piece
-   canonical identity; 3D/4D camera-relative movement matches the established
-   `test` family added by PR #158. Explorer navigation must not advance or
-   mutate an existing live game session.
-4. **Interaction:** test all six 4D rotation planes, negative/positive W and Y,
-   reset and rejected-move feedback, changing view basis then moving, and
-   neighbor behavior under a reversed signed slice axis.
-5. **Human evidence:** real Godot captures and hands-on novice tasks at
-   1280×720 and 1440×900, checking discoverability, label comprehension,
-   disorientation recovery and whether apparent proximity is mistaken for
-   topological adjacency.
-6. **Governance:** one semantic objective per PR (E1-A, E1-B, E1-C).
-   Select `product_planning`, `godot_product_shell`, `topology_and_explorer`
-   and `native_deterministic_core` only where the actual diff invokes them.
-   Apply the cross-layer scope matrix and parity/conformance requirements
-   when native and Godot change together; run the canonical full gate for
-   authority or broad shared changes.
-
-`EXPLORER_LEARNING_READY` is passed only after E1-A/B/C and representative
-human acceptance. E1-B is the first *visible* delivery and must not wait for
-the completed learning system, user accounts, research event schema or a
-comprehensive UI redesign. Non-bounded topology remains available in Python
-and supported by the model/architecture contract but is hidden or disabled
-in the initial Godot study UX. No full editor, custom gluing, seams, campaigns,
-new input devices, physics simulator or server backend in E1.
+The Python Topology Playground remains intact. Non-bounded topology
+is not a first-Explorer Godot selection. The existing topology
+transport, Sandbox/Play policy and Python authority remain unmodified
+unless a separately approved semantic transfer is justified.
 
 ### E2 — Professional UI and comprehension review
 
