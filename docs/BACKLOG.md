@@ -11,6 +11,7 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 ## Current Authority
 
 - Product programme: `docs/plans/professional_godot_game_programme.md`
+- Spatial-learning study plan: `docs/plans/spatial_intuition_research_plan.md`
 - Product behaviour: relevant `docs/rds/*`
 - Architecture: `docs/ARCHITECTURE_CONTRACT.md` and
   `docs/architecture/authority_map.md`
@@ -22,6 +23,48 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   facts)
 
 ## Active Work
+
+### Spatial-intuition research priorities (planning; not implemented)
+
+The programme now prioritizes a bounded Godot Explorer, professional user
+comprehension, and empirical testing of 4D competence over first-class topology
+and general simulation. Sequencing/gates:
+`docs/plans/professional_godot_game_programme.md`; measurement and data
+requirements: `docs/plans/spatial_intuition_research_plan.md`. Stage 54G's
+accepted `PROFESSIONAL_CORE_GAME_READY: YES` remains valid. This is a
+documentation/priority decision, not approval to deploy a study or backend.
+
+- [ ] P0: finish bounded confirmed user-facing corrections; preserve accepted
+  Stage 58B scale, layout locks and deterministic movement semantics. Keep
+  existing Designer/replay, Stage 58C/59 and camera-relative-motion issues in
+  their current owning workstreams instead of duplicating them here.
+- [ ] P1: scope a **Godot practice Explorer MVP**: free X/Y/Z/W manipulation,
+  independent object/camera/basis/slice controls, explicit orientation and
+  3D/4D neighbor cues, reset and bounded Play transition. Define novice
+  acceptance and regression coverage for both 3D and 4D.
+- [ ] P2: commission and execute a professional UI/comprehension review,
+  including contrast hierarchy, occlusion/depth, active/inactive slice
+  distinction, key discoverability, cockpit density and responsive text.
+  Implement only evidence-backed corrections through bounded reviews.
+- [ ] P3: specify pre/post and held-out transfer assessments, a feasible
+  comparison/control, retention, reproducible items and scoring before
+  designing participant events. Build the smallest assessment task slice.
+- [ ] P4: design pseudonymous participant identity, consent/withdrawal,
+  local event buffering, versioned server storage, idempotent ingestion, privacy,
+  export/deletion and independent session reconstruction. No provider is yet
+  selected and no server is claimed to exist.
+- [ ] P5: run a consent-compliant instrumentation/usability pilot and only
+  then a controlled learning study; report negative or inconclusive results.
+- [ ] P6+ / deferred: research Windows/Linux distribution if recruitment needs
+  it, then full challenges, first-class topology, full Godot Topology Lab,
+  Android tablets, physics integration, commercialization, macOS public
+  distribution and iPadOS, in programme order.
+
+P3 can overlap P1/P2; P4 implementation depends on a measurement contract.
+The initial Godot research UX keeps non-bounded topology unavailable while
+preserving the Python topology tools and canonical underlying semantics. Each
+feature requires its own approved stage, RDS/architecture changes where
+appropriate, and corresponding test and human evidence.
 
 ### Baseline sanitation reference review
 
@@ -417,7 +460,10 @@ named status exception.
 
 ### Platform priority and release control
 
-- Near term: Stage 56H, then continued product and design work (see Stage 56).
+- Near term: bounded Designer/cockpit and Stage 58C/59 corrections, followed
+  by the Godot practice Explorer, professional UI/comprehension review,
+  experimental measurement contract and participant-data design. An initial
+  research build is distinct from consumer release readiness.
 - Future release priority, once release work is justified: Windows, Linux, then
   Android tablets, in strategic order with overlap allowed; this starts no
   packaging, porting, monetization, or storefront work.
@@ -441,8 +487,12 @@ identifiers; they do not become supported Designer platforms or game packages.
 - Stage 54F-6 default style selection/polish must consume reviewed human Design
   Laboratory evidence. See
   `docs/plans/design_evaluation_laboratory_acceptance.md`.
-- Topology, Explorer, challenge, and simulation work must begin as a new
-  approved stage under the relevant plan and architecture owners.
+- The bounded Godot practice Explorer is the next proposed major product stage,
+  but it still requires explicit implementation authorization, an owning RDS
+  and architecture scope, and `EXPLORER_LEARNING_READY` evidence. Experimental
+  instruments and participant data require their own versioned designs and
+  privacy/reconstruction acceptance. First-class topology, the full laboratory,
+  challenge campaigns and simulation remain separate future stages.
 - Path-sensitive CI Slice C may map evidence to explicit lanes only after
   duplicate push/PR execution is measured and removed; retain a conservative
   full-gate fallback.
@@ -491,9 +541,11 @@ identifiers; they do not become supported Designer platforms or game packages.
 
 ### Product and presentation
 
-- First-class topology games, complete Godot Topology Lab/Explorer, the general
-  challenge/campaign runner, and unified gameplay-to-simulation flow remain in
-  `docs/plans/`.
+- First-class topology games, the **full** Godot Topology Lab/Explorer,
+  the general challenge/campaign runner, and unified gameplay-to-simulation
+  flow remain later stages in `docs/plans/`. The bounded practice Explorer
+  alone has moved to near-term priority; no general topology activation or
+  full editor port is implied.
 - Multi-piece next preview, configurable preview depth, ghost style/opacity,
   multiple/buffered Hold, gamepad, audio, and broad remapping require separate
   product slices.

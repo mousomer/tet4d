@@ -43,6 +43,16 @@ general planning redirection or repo-wide ownership notes.
 
 ## Domain-specific active files
 
+### `spatial_intuition_research_plan.md`
+- Role: `spec`
+- Status: `active`
+- Owns:
+  - proposed 4D spatial-learning assessment design and experimental comparisons
+  - participant event/data requirements, consent and privacy acceptance planning
+  - Explorer research readiness and experiment pilot acceptance criteria
+- Does **not** own programme stage order, durable product behaviour, topology
+  semantics, server implementation or new research-study authorization.
+
 ### `gameboard_visual_language_design.md`
 - Role: `authority`
 - Status: `active`
