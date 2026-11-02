@@ -34,6 +34,7 @@ Coverage:
 - `config/project/io_paths.json`
 - `config/project/policy/manifests/help_assets_manifest.json`
 - `config/project/policy/manifests/replay_manifest.json`
+- `config/project/policy/manifests/sanitation_references.json`
 - `config/project/policy/manifests/secret_scan.json`
 - `config/project/policy_pack.json`
 - `config/topology/designer_presets.json`
@@ -2072,6 +2073,16 @@ Parameters:
 - `suites[].seed_policy`: `"deterministic_fixed"` (`string`)
 - `suites[].test_file`: `"tests/unit/engine/test_gameplay_replay.py"` (`string`)
 - `version`: `1` (`int`)
+
+### `config/project/policy/manifests/sanitation_references.json`
+Top-level keys: `references`, `schema_version`
+Parameters:
+- `references[]`: array[`object`]
+- `references[].line_sha256[]`: array[`string`]; examples: `"a3a664a1ea803f1afb9f463cc79ed85f42ba59bdc32b111744342007fdb84058"`, `"e13e80828192149dca9dd71901581c1364792f35bbf96f5d79a378ba872c3d62"`, `"77b705f4a92ba0d9c7924cb2068373d26f450aebe330141b2412af925449d987"`
+- `references[].path`: varies (`string`); examples: `".governance/baseline/check_git_sanitation.sh"`, `"tools/workspace_governance/validators/core.py"`, `"scripts/check_git_sanitation_repo.sh"`
+- `references[].reason`: varies (`string`); examples: `"Scanner or bounded diagnostic must recognize the exact prohibited pa...`, `"Required relative link resolves to the canonical skill inside this r...`, `"Relative build/export or installed application resource path; not us...`
+- `references[].warning_class`: varies (`string`); examples: `"absolute-unix"`, `"absolute-windows"`, `"parent-traversal"`
+- `schema_version`: `1` (`int`)
 
 ### `config/project/policy/manifests/secret_scan.json`
 Top-level keys: `allowlist`, `exclude_dirs`, `exclude_globs`, `max_file_bytes`, `patterns`, `scan_roots`, `version`
