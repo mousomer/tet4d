@@ -11,19 +11,24 @@ const VERTICAL_MARGIN := 5
 const CONTENT_SEPARATION := 3
 
 
-static func apply_compact(
+static func initialize_compact(
 	panel: PanelContainer,
 	margin: MarginContainer,
 	content: VBoxContainer,
 	thumbnail,
 	dimension: int
 ) -> void:
-	panel.custom_minimum_size.y = PANEL_4D_MIN_HEIGHT if dimension == 4 else PANEL_MIN_HEIGHT
 	margin.add_theme_constant_override("margin_left", HORIZONTAL_MARGIN)
 	margin.add_theme_constant_override("margin_top", VERTICAL_MARGIN)
 	margin.add_theme_constant_override("margin_right", HORIZONTAL_MARGIN)
 	margin.add_theme_constant_override("margin_bottom", VERTICAL_MARGIN)
 	content.add_theme_constant_override("separation", CONTENT_SEPARATION)
+	apply_compact(panel, margin, content, thumbnail, dimension)
+
+
+# Refresh dimension-dependent geometry without undoing settled cockpit gaps.
+static func apply_compact(panel: PanelContainer, _margin: MarginContainer, _content: VBoxContainer, thumbnail, dimension: int) -> void:
+	panel.custom_minimum_size.y = PANEL_4D_MIN_HEIGHT if dimension == 4 else PANEL_MIN_HEIGHT
 	thumbnail.set_compact_cockpit(true)
 
 

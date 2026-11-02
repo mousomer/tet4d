@@ -169,6 +169,10 @@ opacity, colour, scale, camera and depth tuning belong to later stages.
 
 ### Stage 58 3D/4D board readability
 
+- [ ] Human visual acceptance: repeated 4D hard drops at 1280×720 keep the
+  right helper column steady; restored preview-gap preservation has a
+  frame-by-frame regression test.
+
 - [x] Publication CI correction (2026-10-14): clear ready-PR handoff state and
   give the complete Godot replay/style suite a separate bounded 30-minute
   watchdog after hosted Linux reached test 78/84 at the old 15-minute limit.

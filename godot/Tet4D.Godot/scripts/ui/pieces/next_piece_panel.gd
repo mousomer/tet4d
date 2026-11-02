@@ -56,7 +56,7 @@ func _init() -> void:
 	_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_content.add_child(_status_label)
-	PiecePreviewLayoutScript.apply_compact(self, _margin, _content, _thumbnail, 0)
+	PiecePreviewLayoutScript.initialize_compact(self, _margin, _content, _thumbnail, 0)
 
 
 func set_preview(payload: Dictionary) -> bool:
