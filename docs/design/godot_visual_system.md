@@ -186,11 +186,14 @@ The shared live cockpit has one width-driven responsive policy for 2D, 3D,
 and 4D. Breakpoints use apparent client size (window pixels divided by display
 and UI scale): `wide` begins at 1680 points, `standard` at 1180, `narrow` at
 800, and `small` below 800 down to the supported 680×520 live-shell floor.
-The policy retains one ordered `PIECE | VIEW | PIECE STATE` deck and keeps the
-primary board separate and HOLD/NEXT grouped. Measured module minimums may
-flow that order across at most three rows; a height-capped vertical scroller
-keeps every module reachable when the rows cannot all remain visible. Header
-actions use the same ordered flow behavior. None of this creates a
+The policy keeps the three semantic modules (PIECE, VIEW, PIECE STATE), the
+primary board separate and HOLD/NEXT grouped. A deck below the board orders
+them `PIECE STATE | PIECE | VIEW`, so NEXT/HOLD lead, as they do in the rail
+and the 4D split column. Measured module minimums may flow that order across
+at most three rows. Modules first fit their room, compacting gaps and then
+scaling uniformly, and a vertical scroller keeps every module reachable only
+when the rows cannot all remain visible at the scale floor. Header actions use
+the same ordered flow behavior. None of this creates a
 dimension-specific cockpit or changes gameplay, input, camera, or orientation
 ownership.
 
