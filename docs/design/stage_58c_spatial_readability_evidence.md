@@ -1,5 +1,9 @@
 # Stage 58C spatial readability evidence
 
+Fresh integration checks and Metal inspection are recorded in
+`docs/history/stage_58c_integration_review_2026_11_02.md`; the numerical tables
+below remain historical Linux measurements rather than retagged Metal results.
+
 ## Scope and baseline
 
 Goal: a player reads the 3D/4D board fast enough to think about the move rather
