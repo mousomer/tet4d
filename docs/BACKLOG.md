@@ -196,16 +196,15 @@ opacity, colour, scale, camera and depth tuning belong to later stages.
   changes: 3D 27.785 → 34.785 pt; default 4D 15.017 → 23.230 pt; seven-slice
   4D 7.672 → 13.793 pt. Full evidence and incremental attribution:
   `docs/design/stage_58b_readability_evidence.md`.
-- [x] 58C hierarchy (implemented 2026-10-15, owner play acceptance pending): on
+- [x] 58C hierarchy (implemented 2026-10-15, owner-accepted 2026-11-02): on
   live 3D/4D boards, active pieces share one material; settled cells recede with
   camera depth and, in 4D, with slice distance (slice scaffold too); board
   scaffold composites beneath the active piece; replays are unchanged. Evidence,
   measurements and rejected candidates:
   `docs/design/stage_58c_spatial_readability_evidence.md`.
-- [ ] 58C.7: owner play acceptance of 3D/4D readability across styles and grids.
-- [ ] 58C.7 tradeoffs: accept or reject 3D blue at 13.1–14.3 ΔL* against the
-  proposed 15 margin, far-slice Arcade Neon/High Contrast readability, and dense
-  rebuild overhead. Historical Linux measurements do not establish Metal latency.
+- [x] 58C.7: owner confirmed macOS/Metal review complete and accepted the
+  documented blue-piece, far-slice and dense-rebuild tradeoffs. Acceptance and
+  limits: `docs/history/stage_58c_owner_acceptance_2026_11_02.md`.
 - P2 (58C residual): dark active hues (blue, then red and purple) keep the
   smallest lightness margin over same-colour settled cells; a uniform active
   lift trades chroma for lightness and was not adopted.

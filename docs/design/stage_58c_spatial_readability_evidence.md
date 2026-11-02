@@ -126,7 +126,8 @@ The initial table covered three configurations. The subsequent review of the
 same `0e6822da` head expanded it to all seven; these remain historical Linux
 measurements. Blue misses the proposed 15 ΔL* margin in 6 of 7 3D configurations
 (13.1–14.3); Tron Grid Flow reaches 19.3. Other colours and all 4D configurations
-clear that proposal. Accepting the weaker 3D margin remains an owner decision.
+clear that proposal. The owner accepted the documented weaker 3D margin on
+2026-11-02; this does not turn the proposal into a met measurement threshold.
 
 | Style (Border) | 3D depth slope, before mean (range) | after | 4D slice residual d0 / d1 / d2, after |
 | --- | --- | --- | --- |
@@ -151,7 +152,8 @@ dense snapshot-rebuild overhead of about 15% for 144-cell 3D and 13% for
 frame time was unchanged within noise, while large view jumps added about
 5–20 ms headless. The earlier isolated re-weighting timing did not measure
 total incremental rebuild cost and does not justify a 1.5% overhead claim.
-Metal performance and perceptible move/drop latency remain unverified.
+These historical runs do not establish Metal timings. Owner-reported interactive
+performance acceptance is recorded separately on 2026-11-02.
 
 ## Python reference comparison (58C.6)
 
@@ -214,16 +216,16 @@ Arcade Neon settled blue at slice distance 2 was about 3 L* above its background
 fell from 23.0 to 12.7 L*. Far-slice colour separation fell 29–45% across the
 reviewed styles. These qualifications replace the blanket legibility claim.
 
-Owner macOS/Metal acceptance (58C.7) remains outstanding: dense near-axis orbit,
-seven-slice occupancy, Arcade Neon and High Contrast, blue-piece contrast,
-Retina legibility, move/drop latency and replay appearance. Agent captures and
-headless material-state assertions do not supply that interactive acceptance.
+The owner confirmed Stage 58C macOS/Metal review complete and accepted the
+documented visual/performance tradeoffs on 2026-11-02. The scope and limits are
+recorded in `docs/history/stage_58c_owner_acceptance_2026_11_02.md`. Agent
+captures and headless material-state assertions remain separate evidence.
 
 ## Remaining and deferred
 
 - 3D blue remains below the proposed 15 ΔL* margin in 6 of 7 configurations.
-- Far-slice Arcade Neon/High Contrast readability and dense rebuild latency
-  require owner acceptance; no accessibility exemption or new tuning is inferred.
+- Far-slice Arcade Neon/High Contrast readability and dense rebuild overhead are
+  accepted tradeoffs; no accessibility exemption or new tuning is inferred.
 - Tron Grid Flow's background still shows through the board (style-owned).
 - Cell outlines are about 0.5 px at 3D and 0.2-0.3 px at 4D pitch at 1×, so
   they cannot carry Python's outline polarity.
