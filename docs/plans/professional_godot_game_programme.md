@@ -5,7 +5,7 @@ Status: active
 Source of truth: this file for product priorities, phase sequencing, and
 completion gates  
 Supersedes: none  
-Last updated: 2026-11-01
+Last updated: 2026-11-02
 
 ## 1. Purpose
 
@@ -1378,10 +1378,12 @@ physics features.
 
 ## 8. Phase II — Explorer as Spatial Practice
 
-Status: next major capability
-Dependency: accepted bounded game, stable presentation/input contracts, and
-bounded correctness/readability follow-up; no prerequisite to deliver topology
-games or the full topology editor.
+Status: immediate implementation priority (owner decision, 2026-11-02)
+Dependency: accepted bounded game and existing presentation/input/semantic
+contracts. Unrelated Designer, replay and late Stage 58/59 polish do not block
+the first Explorer slice. A specific defect blocks only the Explorer operation
+that it demonstrably breaks; correct that defect as part of the affected slice.
+First-class topology games and the full topology editor are not prerequisites.
 
 The first Godot Explorer is a **practice tool**, not the entire Topology
 Playground migration. Its first acceptance gate is
@@ -1416,6 +1418,14 @@ orientation tasks. Verify with representative human sessions, not only automated
 interaction tests. The exact acceptance tasks belong to the scoped Explorer
 stage; automated tests also guard rotation invariants, camera-relative
 translation, projection labels, and gameplay/presentation isolation.
+
+Implement the first vertical slice as a bounded, gravity-free Godot practice
+workspace with one 4D object, native-evaluated translation and exact plane
+rotation, independent view/basis/slice controls, visible coordinates and reset.
+Then extend into 3D comparison, explicit adjacency cues and novice acceptance.
+The concrete execution and test contract is E1 in
+`docs/plans/spatial_intuition_research_plan.md`. Existing P0 polish is not a
+stage-entry gate.
 
 Do not expand this gate into a full topology port, a challenge campaign, new
 input devices or a new rendering engine.
@@ -1646,9 +1656,9 @@ The new priority order is:
 
 | Priority | Workstream | Dependency or acceptance boundary |
 | --- | --- | --- |
-| P0 | Bounded existing-game corrections | Designer sizing, confirmed cockpit/replay defects, camera-relative movement and active Stage 58C/59 readability; preserve accepted layouts |
-| P1 | Godot bounded spatial-practice Explorer | `EXPLORER_LEARNING_READY`; independent 4D rotations, basis, slices, coordinates and adjacency |
-| P2 | Professional UI review and verified fixes | Expert and novice comprehension checks, including 3D/4D depth and cockpit hierarchy |
+| P0 | Godot bounded spatial-practice Explorer | Immediate execution; first vertical slice, then `EXPLORER_LEARNING_READY`; independent 4D rotations, basis, slices, coordinates and adjacency |
+| P1 | Explorer-blocking correctness repairs only | Repair a confirmed camera-relative, labeling or layout defect when it obstructs Explorer behavior; retain dedicated regression evidence |
+| P2 | Remaining professional UI and game-polish review | Designer sizing, replay-toolbar, Stage 59 and non-blocking style/contrast work; do not gate Explorer on these items |
 | P3 | Study protocol and minimal assessment tasks | Baseline, held-out transfer, control/comparison and reproducible scoring before telemetry schema freezes |
 | P4 | Participant identity, persistence and telemetry | Consent-aware versioned backend/local recovery and data reconstructability |
 | P5 | Pilot and first controlled learning experiment | `RESEARCH_PLATFORM_READY` then `FIRST_EXPERIMENT_COMPLETE` |
@@ -1661,9 +1671,12 @@ The new priority order is:
 | P12 | Commercial professional product | Campaign, distribution, possible monetization |
 | P13 | Later platforms | Public macOS and iPadOS, deferred |
 
-P3 assessment design can overlap P1 and P2. P4 infrastructure design can begin
-after the data contract is established, but deployment must not be treated as
-a substitute for research readiness. P6 can be pulled forward if participant
+P0 Explorer implementation begins independently of remaining UI-polish work.
+P1 blockers must be demonstrated against the Explorer slice; P2 is deliberately
+non-blocking. P3 assessment design can overlap Explorer construction and UI
+review. P4 infrastructure design can begin after the data contract is
+established, but deployment must not be treated as a substitute for research
+readiness. P6 can be pulled forward if participant
 recruitment requires a validated Windows/Linux build. No priority label by
 itself authorizes implementation, changes an RDS, alters the release support
 matrix, or establishes a new semantic owner.
