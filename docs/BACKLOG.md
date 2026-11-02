@@ -34,18 +34,21 @@ requirements: `docs/plans/spatial_intuition_research_plan.md`. Stage 54G's
 accepted `PROFESSIONAL_CORE_GAME_READY: YES` remains valid. This is a
 documentation/priority decision, not approval to deploy a study or backend.
 
-- [ ] P0: finish bounded confirmed user-facing corrections; preserve accepted
-  Stage 58B scale, layout locks and deterministic movement semantics. Keep
-  existing Designer/replay, Stage 58C/59 and camera-relative-motion issues in
-  their current owning workstreams instead of duplicating them here.
-- [ ] P1: scope a **Godot practice Explorer MVP**: free X/Y/Z/W manipulation,
-  independent object/camera/basis/slice controls, explicit orientation and
-  3D/4D neighbor cues, reset and bounded Play transition. Define novice
-  acceptance and regression coverage for both 3D and 4D.
-- [ ] P2: commission and execute a professional UI/comprehension review,
-  including contrast hierarchy, occlusion/depth, active/inactive slice
-  distinction, key discoverability, cockpit density and responsive text.
-  Implement only evidence-backed corrections through bounded reviews.
+- [ ] P0 **START NOW — Godot practice Explorer MVP**: bounded, gravity-free
+  4D manipulation using existing native geometry/legality queries and Godot
+  presentation owners, then 3D comparison and explicit adjacency cues. Route
+  through the E1 execution contract in
+  `docs/plans/spatial_intuition_research_plan.md`; verify separate object,
+  camera, basis and slice operations, reset and bounded-Play transition.
+  `EXPLORER_LEARNING_READY` is a later human gate, not a precondition to start.
+- [ ] P1 **Only demonstrated Explorer blockers**: if a camera-relative
+  regression, clipped W indicator, unresponsive controls or viewport defect
+  prevents an Explorer acceptance task, fix it within a bounded, independently
+  tested corrective slice. Do not bulk-fix unrelated presentation concerns.
+- [ ] P2 **Non-blocking UI and existing-game polish**: Designer oversized text,
+  replay-toolbar fit, Live-3D rail scrolling, Stage 59 W labels outside
+  Explorer, remaining dark-color contrast and cockpit density. Keep original
+  owning workstreams and separate acceptance; do not gate Explorer.
 - [ ] P3: specify pre/post and held-out transfer assessments, a feasible
   comparison/control, retention, reproducible items and scoring before
   designing participant events. Build the smallest assessment task slice.
@@ -60,11 +63,14 @@ documentation/priority decision, not approval to deploy a study or backend.
   Android tablets, physics integration, commercialization, macOS public
   distribution and iPadOS, in programme order.
 
-P3 can overlap P1/P2; P4 implementation depends on a measurement contract.
-The initial Godot research UX keeps non-bounded topology unavailable while
-preserving the Python topology tools and canonical underlying semantics. Each
-feature requires its own approved stage, RDS/architecture changes where
-appropriate, and corresponding test and human evidence.
+Owner priority decision (2026-11-02): Explorer implementation precedes
+completion of the outstanding game/Designer polish list. P1 is a narrow
+exception for proven Explorer blockers, not a project-wide preflight gate.
+P3 assessment design can run in parallel with P0; P4 implementation depends
+on a measurement contract. The initial Godot research UX keeps non-bounded
+topology unavailable while preserving the Python topology tools and canonical
+underlying semantics. Each implementation slice still needs the owning RDS/
+architecture review and corresponding test and human evidence.
 
 ### Baseline sanitation reference review
 
@@ -474,10 +480,11 @@ named status exception.
 
 ### Platform priority and release control
 
-- Near term: bounded Designer/cockpit and Stage 58C/59 corrections, followed
-  by the Godot practice Explorer, professional UI/comprehension review,
-  experimental measurement contract and participant-data design. An initial
-  research build is distinct from consumer release readiness.
+- Near term: Godot practice Explorer first, correcting only confirmed
+  Explorer-blocking defects on that critical path. Remaining Designer/cockpit
+  and Stage 59 polish follows or runs independently; then professional
+  UI/comprehension review, experimental measurement contract and participant
+  data design. An initial research build is distinct from release readiness.
 - Future release priority, once release work is justified: Windows, Linux, then
   Android tablets, in strategic order with overlap allowed; this starts no
   packaging, porting, monetization, or storefront work.
