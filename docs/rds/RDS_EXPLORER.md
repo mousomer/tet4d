@@ -9,8 +9,7 @@ Source requirements: `docs/rds/RDS_4D_TETRIS.md`, `docs/rds/RDS_TETRIS_GENERAL.m
 ## 1. Purpose and explicit product decision
 
 Explorer lets the player understand 4D position, orientation, movement and
-rotation through direct, low-pressure experimentation with **one polycube at
-a time**. It is not a separate game, geometry editor, Topology Laboratory,
+rotation through direct, low-pressure experimentation with **one active 4D game piece at a time**. It is not a separate game, geometry editor, Topology Laboratory,
 rendering engine, input system, or application.
 
 **Owner-confirmed design decision:** Explorer is first and foremost an
@@ -61,7 +60,7 @@ or a documented parity/conformance boundary.
 ### 3.1 First delivery: Live 4D Explorer
 
 - Explorer is selected as a **mode** of the existing Live 4D experience.
-- Show one active 4D polycube using existing production shape data.
+- Show one active 4D game piece using existing production shape data.
 - The game board, 4D slices, styles, input-frame preferences, camera,
   renderer and cockpit are inherited.
 - Initial topology is bounded. No wrapping, inversion, custom seams or
@@ -87,9 +86,19 @@ or a documented parity/conformance boundary.
 
 ### 3.3 Object population
 
-There is one active polycube. Explorer does not implement multi-object
+There is one active game piece. Explorer does not implement multi-object
 selection, cell painting, arbitrary object editing or custom topology
 construction.
+
+**Terminology and existing production data:** a strict 4D polycube
+(polytesseract) is a face-connected union of unit 4D hypercubes.
+The default native `standard_4d_5` catalog has seven five-cell game pieces.
+`CROSS4`, `SKEW4_A`, `SKEW4_B` and `STAIR4` are face-connected.
+`TEE4` and `CORK4` each comprise two disconnected components;
+`FORK4` comprises three. These are existing production piece data.
+Explorer inherits the same game pieces as Play. This catalog discrepancy
+does not authorize changing piece definitions, gameplay traces or replay
+compatibility. Any future connectedness requirement is separate.
 
 If another production shape can be selected, that selection must reuse the
 existing piece data and an established session/setup entry. It may never
@@ -224,10 +233,14 @@ These systems are inherited **without a new mode-specific owner**.
 2. Canonical piece rotations alter piece geometry; exact view-basis turns
    do not. Camera pan/orbit/zoom and Fit do not change piece geometry,
    placement or deterministic piece identity.
-3. 4D view basis and local slice yaw/pitch retain existing semantics
-   (including fixed +Y in the visible vertical slot for basis turns).
-   Explorer's deliberate Y movement does **not** change that presentation
-   invariant.
+3. Normal Live 4D retains the fixed visible +Y basis slot and the
+   existing XZ/XW/ZW exact view turns. Explorer additionally permits
+   **XY/YZ/YW exact view-plane quarter turns**. These can move canonical
+   Y into a horizontal, depth or slicing slot. This needs an extension
+   of the **same** `SliceBasis4D`, coordinate mapper, signed dimension
+   derivation, `ControlFrameMapping` and UI indicators, not a new camera
+   or a UI-only shortcut. Explorer must not apply its expanded basis
+   admissibility to ordinary Play.
 4. Explorer inherits shipped styles, Designer-origin presentation profiles,
    palette roles, opacity hierarchy, grid modes and user settings. No
    Explorer style selector, theme catalog, material system or independent
@@ -239,6 +252,104 @@ These systems are inherited **without a new mode-specific owner**.
    ownership while respecting the no-gravity policy.
 7. Do not change accepted Stage 58B geometry or locked Live cockpit
    arrangements just to accommodate Explorer.
+
+### 6.1 Exact view axis-turn inventory
+
+A quarter-turn in a coordinate plane exchanges two **signed** axes.
+A literal unsigned swap may instead be a reflection; it is not a
+proper quarter-turn rotation.
+
+| View plane (both ±90°) | Normal Live 4D | Explorer |
+| --- | --- | --- |
+| XZ | Available: 1 / 2 | Reuse |
+| XW | Available: 3 / 4 | Reuse |
+| ZW | Available: 5 / 6 | Reuse |
+| XY | **Not exposed / not supported by fixed-Y basis** | Enable via shared basis extension |
+| YZ | **Not exposed / not supported by fixed-Y basis** | Enable via shared basis extension |
+| YW | **Not exposed / not supported by fixed-Y basis** | Enable via shared basis extension |
+
+Normal 4D's three exact view generators can reach 24 orientation-
+preserving signed bases with visible +Y fixed. All six generators
+can reach 192 proper signed orientations (4! permutations times
+2^4 sign choices, divided by two for positive determinant). The
+full signed-permutation set including reflections has 384 members.
+These are mathematical counts, **not** claims of current runtime
+capability. The new three view planes are unavailable until the
+existing mapper, slice layout, labels and command resolver can
+consume them safely.
+
+Continuous slice yaw/pitch, mouse orientation, camera framing,
+pan, zoom and Fit are already present in normal Live 4D. An
+independent general camera roll is not exposed in normal play
+and is not implicitly introduced by these exact view turns.
+
+### 6.2 Object-rotation and translation inventory
+
+| Object plane, ±90° | Normal Live 4D | Explorer |
+| --- | --- | --- |
+| XY | R / T | Reuse |
+| XZ | F / G | Reuse |
+| YZ | V / B | Reuse |
+| XW | Y / U | Reuse |
+| YW | H / J | Reuse |
+| ZW | N / M | Reuse |
+
+**All six object-rotation planes already exist in normal Play.**
+Any particular turn can be rejected by the authoritative
+placement/bounds/collision test. Explorer-only acceptance of
+such a rejected attempt requires the named EX-D1 exception.
+Do not mistake an unavailable view-plane rotation for an
+unavailable object-rotation plane.
+
+| Canonical translation | Normal Live 4D | Explorer |
+| --- | --- | --- |
+| −X, +X | Available | Same shared actions |
+| −Y | No deliberate upward command | Add centrally |
+| +Y | Gravity/Soft Drop/Hard Drop, not independent free-step command | Add deliberate step |
+| −Z, +Z | Available | Same shared actions |
+| −W, +W | Available | Same shared actions |
+
+Existing X/Z/W **intents** are remapped through signed view basis
+and relative yaw; this table names canonical axes, not fixed keys.
+The native session currently dispatches X/Z/W moves and all six
+rotation planes, but it does not dispatch \`move_y_neg/pos\`.
+Its current placement rule permits a spawning piece to be
+above the board's Y=0 top boundary. That existing spawn
+exception does not justify unbounded Explorer translations.
+
+### 6.3 Additional Y-involving view turns: acceptance contract
+
+1. Keep one \`SliceBasis4D\`, shared projection pipeline and
+   shared orientation state. Add Explorer-scoped admissible planes;
+   normal Play still restricts exact view turns to XZ/XW/ZW.
+2. The new Y-bearing view turns alter **presentation only**,
+   never piece geometry, canonical cells, native identity,
+   replay, collision or topology.
+3. Generalize canonical-to-visible coordinate mapping, its inverse
+   and visible board extents for all four signed basis slots. A
+   basis that slices on Y may not treat the second visible slot
+   as canonical Y or blindly use \`dims[Y]\`.
+4. Explorer's gravity is Off. Display canonical Y and the
+   current **screen-vertical axis** distinctly. A tilted/
+   Y-sliced view must never claim that canonical +Y remains
+   visibly downward when it is not.
+5. Extend \`ControlFrameMapping\` consistently for relative
+   movement, the added deliberate Y± actions, and all six
+   object rotations after Y-changing view turns. Keep the
+   absolute control frame a stable canonical escape path.
+6. Verify the mapper's bijection/inverse for asymmetric
+   dimensions and every new signed orientation. No disappearing,
+   duplicated or mislabeled cells, stale layers or unwanted
+   state changes are permitted.
+7. Verify six signed view-action pairs, inverse and four-turn
+   identity, compositions that place Y in the slice slot,
+   reset, Fit, normal Play refusal of the extra view turns,
+   and zero change to piece hash/replay identity on view-only
+   actions.
+8. Publish new view actions/keys only through the existing
+   \`LiveInputContract\` and help system. The actual bindings
+   for XY/YZ/YW are **EX-D7** (not yet selected); no private
+   Explorer keymap may be created.
 
 ## 7. Entry, session isolation and navigation
 
@@ -354,6 +465,10 @@ replays, saved settings and deterministic traces must remain unchanged.
   configuration/presentation change.
 - Existing 3D/4D camera-relative regressions from PR #158 are run on the
   shared path; Explorer test variants cover Y and W operations.
+- Extended Explorer-only exact view mapping tests cover XY/YZ/YW,
+  all 192 reachable proper signed 4D orientations, Y as slice axis,
+  basis-relative commands, inverse mapping and canonical hash isolation.
+  Normal Live 4D remains fixed +Y and unchanged.
 - At 1280×720 and 1440×900 logical points, the active piece and applicable
   controls are visible; no newly inserted overlay clips the board.
 - Real-user review demonstrates movement without gravitational pressure,
@@ -401,9 +516,10 @@ The RDS intentionally does **not** invent missing owner decisions.
 | EX-D1 | Exact existing Live 4D restrictions to relax for translations and rotations, beyond Y± and disabled gravity | Inventory current rejections and bring named cases for approval; initially no other bypass |
 | EX-D2 | The shared conflict-free shortcut(s) for deliberate Y−/Y+ in Godot | Add no private keymap or overloaded shortcut; wire the approved centrally declared action(s) |
 | EX-D3 | Whether an explicit Hard Drop may perform a non-locking reposition, or is simply disabled in Explorer | Disable its gameplay effect; do not lock/spawn |
-| EX-D4 | Whether Hold or changing to another single piece is required in MVP | No new shape browser; preserve one active polycube and disable irrelevant progression |
+| EX-D4 | Whether Hold or changing to another single piece is required in MVP | No new shape browser; preserve one active game piece and disable irrelevant progression |
 | EX-D5 | Whether the first Godot Explorer needs a fixed named compact board preset | Use validated current Live setup, retain Python `8×9×7×6` profile in its runtime |
 | EX-D6 | When neighbor/coordinate inspection becomes a mandatory acceptance gate | Keep as later additive work after working shared-mode manipulation |
+| EX-D7 | Conflict-free shared input bindings for Explorer-only XY/YZ/YW exact view turns | Do not reuse existing rotation/movement/view keys; use shared input authority after approval |
 
 A code agent must not resolve an unresolved product choice by inventing a
 new semantic owner, keymap, topology policy, graphical shell or gameplay
@@ -425,7 +541,9 @@ Deliver the **smallest vertical slice inside the existing Live 4D path**:
 5. Gate with deterministic native tests, Godot shared-path tests, camera-
    relative regression tests and real visible acceptance.
 
-Only then enumerate and implement the limited extra blocked-rotation or
-translation exceptions after EX-D1 is explicitly resolved. Additional
-adjacency comprehension and full `EXPLORER_LEARNING_READY` evidence follow
-as bounded, additive slices.
+The additional Y-bearing exact view turns require their own **shared-
+presentation-owner** extension and conformance gate; they cannot
+be implemented by new shortcuts alone. Only then enumerate and
+implement limited extra blocked-rotation or translation exceptions
+after EX-D1 is explicitly resolved. Adjacency comprehension and
+`EXPLORER_LEARNING_READY` follow as bounded additive slices.
