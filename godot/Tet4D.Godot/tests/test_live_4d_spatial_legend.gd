@@ -105,6 +105,7 @@ func run() -> Array:
 	# The row of the plane just used lights up.
 	if not hud._piece_control_strip.flash_plane("XW") or not hud._live_view_control_strip.flash_plane("ZW"):
 		failures.append("Live 4D must be able to flash the legend row of the plane just used")
+	failures.append_array(await _check_preview_refresh_fit(app, hud, tree))
 	root.queue_free()
 	await tree.process_frame
 	tree.root.size = original_size
@@ -128,3 +129,34 @@ func _legend_style(strip: Control) -> Array:
 			entry.append_array([control.get_theme_constant("h_separation"), control.get_theme_constant("v_separation")])
 		result.append(entry)
 	return result
+
+
+func _check_preview_refresh_fit(app, hud, tree: SceneTree) -> Array:
+	var failures: Array = []
+	var old_scale := tree.root.content_scale_size
+	var old_minimum := tree.root.min_size
+	tree.root.min_size = Vector2i.ZERO
+	tree.root.size = Vector2i(1280, 720)
+	tree.root.content_scale_size = tree.root.size
+	app._enter_live_4d_mode()
+	hud._set_onboarding_visible(false)
+	app.set_process(false)
+	for frame in range(120):
+		await tree.process_frame
+	var cockpit = hud._live_cockpit
+	var scale_before: float = cockpit.side_fit.fit_scale
+	if not cockpit.fit_settled() or scale_before >= 1.0:
+		failures.append("preview regression requires a settled scaled side column")
+	for drop in range(2):
+		app._live_4d_paused = false
+		var hash_before := str(app._live_bridge.live_4d_state_hash())
+		if not app._dispatch_live_4d_gameplay_command("hard_drop") or str(app._live_bridge.live_4d_state_hash()) == hash_before:
+			failures.append("preview regression must advance native gameplay")
+		for frame in range(24):
+			await tree.process_frame
+			if not is_equal_approx(cockpit.side_fit.fit_scale, scale_before):
+				failures.append("preview refresh must preserve scale on every frame")
+				break
+	tree.root.content_scale_size = old_scale
+	tree.root.min_size = old_minimum
+	return failures
