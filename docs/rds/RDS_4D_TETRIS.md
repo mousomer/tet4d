@@ -186,6 +186,8 @@ Rotation reliability requirements (4D `z-w`):
 1. 4D state is shown as a grid of projected 3D boards, one per layer of the
    current signed slice axis (canonical `W` at identity).
 2. HUD shows active basis metadata (axis/count), not manual slice indices.
+   NEXT/HOLD updates after a hard drop must preserve the helper column's
+   settled spacing and scale when its geometry and available room are unchanged.
 3. Grid can be toggled on/off for all layer boards.
 4. When grid is off, each layer board still renders a board shadow.
 5. Hyperlayer clear animation uses transient ghost cells across affected layers.
