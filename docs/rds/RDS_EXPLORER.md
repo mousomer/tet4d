@@ -4,7 +4,7 @@ Status: Proposed v0.1 (owner-confirmed product identity; detailed policy pending
 Date: 2026-11-02
 Target runtime: Godot 4.7.2 Live 4D; later dimension-compatible Live 3D
 Canonical owner: this file for the **Godot Explorer delta** from ordinary Live gameplay
-Source requirements: \`docs/rds/RDS_4D_TETRIS.md\`, \`docs/rds/RDS_TETRIS_GENERAL.md\`, and this file
+Source requirements: `docs/rds/RDS_4D_TETRIS.md`, `docs/rds/RDS_TETRIS_GENERAL.md`, and this file
 
 ## 1. Purpose and explicit product decision
 
@@ -38,15 +38,15 @@ requirement applies without change.
 | --- | --- | --- |
 | 4D piece shapes and rotations | Share standard Live 4D production geometry, piece definitions and native transformation rules | Native/established gameplay authority |
 | Board topology and legal placement | Start with bounded/no-seam topology and use existing authoritative placement/movement facilities | Existing gameplay/topology contract |
-| Rotation/translation frame | Same relative/absolute preference and effective view-to-command resolver | \`ControlFrameMapping\` and Live input contract |
-| Camera / exact view basis / local orientation | Same \`B + L + V/P\` presentation model and reset/fit semantics | Existing Godot 4D presentation authorities |
+| Rotation/translation frame | Same relative/absolute preference and effective view-to-command resolver | `ControlFrameMapping` and Live input contract |
+| Camera / exact view basis / local orientation | Same `B + L + V/P` presentation model and reset/fit semantics | Existing Godot 4D presentation authorities |
 | Slice decomposition and cell rendering | Same shared mapper, renderer, styles, themes, grid modes and geometry | Existing Godot render/presentation owners |
-| Input actions and displayed keys | Same semantic action IDs, registered bindings, resolved labels and public control guides | \`LiveInputContract\` and current shell settings |
+| Input actions and displayed keys | Same semantic action IDs, registered bindings, resolved labels and public control guides | `LiveInputContract` and current shell settings |
 | UI structure | Reuse Live 4D cockpit, with conditional labels/disabled functions only where necessary | Existing Godot product shell |
 | Restart/reset, lifecycle and navigation | Reuse the existing Live flow, with Explorer-specific semantics described below | Existing live session/shell owners |
 | Explorer changes | A **bounded mode-policy delta** on shared movement/tick/rotation machinery | Existing authoritative gameplay implementation |
 
-No forked Explorer renderer, copied \`trace_replay_app.gd\`, duplicate
+No forked Explorer renderer, copied `trace_replay_app.gd`, duplicate
 input-binding dictionary, separate gameplay rules engine, or independent
 Explorer projection/axis mapper. Extract reusable subcomponents from existing
 owners if needed; do not solve the task by duplicating their algorithms.
@@ -76,7 +76,7 @@ or a documented parity/conformance boundary.
 - Explorer must not introduce independent dimensions, a separate
   configuration database or a second production piece catalog.
 - **Compatibility distinction:** the legacy Python 4D exploration profile
-  \`8 × 9 × 7 × 6\` is retained for its existing runtime. This does not
+  `8 × 9 × 7 × 6` is retained for its existing runtime. This does not
   mandate that the new Godot alternate Live mode replace the currently
   validated Live setup with those dimensions.
 - The current selected/validated configuration is the default Godot
@@ -133,8 +133,8 @@ changing topology transport semantics.
 ### 4.3 Deliberate translation
 
 1. Maintain X/Z/active-slice movement semantics and relative/absolute frame
-   behavior, including the existing 4D \`B + Q(L.local_yaw)\` resolution.
-2. Add support for *deliberate* moves along canonical \`−Y\` and \`+Y\` while
+   behavior, including the existing 4D `B + Q(L.local_yaw)` resolution.
+2. Add support for *deliberate* moves along canonical `−Y` and `+Y` while
    Explorer is active. Y is still visibly labeled Y and is not reclassified
    as a camera or slice axis.
 3. The native command/pose authority, rather than GDScript, validates and
@@ -193,13 +193,13 @@ must prevent inadvertent progression or piece replacement during practice.
 1. Explorer uses the existing Live 4D key/action mapping for every shared
    operation. It has **no private keybinding profile or replacement keymap**.
 2. The six rotation pairs, X/Z/W translations, exact XZ/XW/ZW basis turns,
-   \`O/L\` yaw, \`I/K\` pitch, pointer gestures, Fit and Reset View must
+   `O/L` yaw, `I/K` pitch, pointer gestures, Fit and Reset View must
    continue to work as in Live 4D.
 3. New Y−/Y+ commands need an input path. Reuse an existing correctly
    scoped semantic action when available; otherwise extend the **shared**
-   \`LiveInputContract\` action metadata and corresponding central resolver.
+   `LiveInputContract` action metadata and corresponding central resolver.
    That addition is mode-gated, not a second independent Explorer key system.
-4. The inherited Python \`explorer\` keybinding group and \`move_up/down\`
+4. The inherited Python `explorer` keybinding group and `move_up/down`
    requirements remain authoritative for **Python**, not automatically for
    new Godot defaults.
 5. The actual Y−/Y+ shortcut assignments are **unselected** here. They
@@ -218,9 +218,9 @@ must prevent inadvertent progression or piece replacement during practice.
 
 These systems are inherited **without a new mode-specific owner**.
 
-1. Use the current exact \`SliceBasis4D\` signed-axis state, shared
-   \`SliceLocalOrientation\`, existing slice anchors/layout, \`CameraRig\`,
-   \`ControlFrameMapping\`, shared world-coordinate mapper and renderer.
+1. Use the current exact `SliceBasis4D` signed-axis state, shared
+   `SliceLocalOrientation`, existing slice anchors/layout, `CameraRig`,
+   `ControlFrameMapping`, shared world-coordinate mapper and renderer.
 2. Canonical piece rotations alter piece geometry; exact view-basis turns
    do not. Camera pan/orbit/zoom and Fit do not change piece geometry,
    placement or deterministic piece identity.
@@ -298,17 +298,17 @@ their semantics coincide.
 
 Minimum conceptual policy dimensions:
 
-- \`automatic_gravity\`: normal Play enabled; Explorer disabled.
-- \`manual_y_translation\`: normal Play unavailable; Explorer enabled.
-- \`rotation_exception_set\`: normal Play unchanged; Explorer contains only
+- `automatic_gravity`: normal Play enabled; Explorer disabled.
+- `manual_y_translation`: normal Play unavailable; Explorer enabled.
+- `rotation_exception_set`: normal Play unchanged; Explorer contains only
   specifically reviewed exception IDs; initially empty until documented.
-- \`automatic_lock_or_spawn\`: no time-triggered continuation in Explorer.
-- \`topology_profile\`: bounded for the first Godot Explorer.
+- `automatic_lock_or_spawn`: no time-triggered continuation in Explorer.
+- `topology_profile`: bounded for the first Godot Explorer.
 
 This table specifies required **behavior**, not a mandatory public JSON
 schema, GDScript class or separate storage format. The actual authority
 and serialization boundary must be reviewed against current native
-\`PlainNDSession\` and existing setup validation before implementation.
+`PlainNDSession` and existing setup validation before implementation.
 
 Do not add Explorer-only replay identity, serialization or snapshot fields
 without a scoped compatibility contract. Normal Play's existing hashes,
@@ -362,11 +362,11 @@ replays, saved settings and deterministic traces must remain unchanged.
 
 ### 10.4 Governance
 
-- Review the owning \`docs/rds/RDS_4D_TETRIS.md\`,
-  \`docs/rds/RDS_KEYBINDINGS.md\`,
-  \`docs/architecture/game_safe_4d_slice_basis.md\`,
-  \`docs/architecture/authority_map.md\` and
-  \`docs/architecture/topology_playground_current_authority.md\`.
+- Review the owning `docs/rds/RDS_4D_TETRIS.md`,
+  `docs/rds/RDS_KEYBINDINGS.md`,
+  `docs/architecture/game_safe_4d_slice_basis.md`,
+  `docs/architecture/authority_map.md` and
+  `docs/architecture/topology_playground_current_authority.md`.
 - Gameplay policy changes must be tested in the authoritative core and at
   the Godot consumer. Inherited Python semantics require oracle parity
   if touched; otherwise do not add artificial Python duplicates.
@@ -402,7 +402,7 @@ The RDS intentionally does **not** invent missing owner decisions.
 | EX-D2 | The shared conflict-free shortcut(s) for deliberate Y−/Y+ in Godot | Add no private keymap or overloaded shortcut; wire the approved centrally declared action(s) |
 | EX-D3 | Whether an explicit Hard Drop may perform a non-locking reposition, or is simply disabled in Explorer | Disable its gameplay effect; do not lock/spawn |
 | EX-D4 | Whether Hold or changing to another single piece is required in MVP | No new shape browser; preserve one active polycube and disable irrelevant progression |
-| EX-D5 | Whether the first Godot Explorer needs a fixed named compact board preset | Use validated current Live setup, retain Python \`8×9×7×6\` profile in its runtime |
+| EX-D5 | Whether the first Godot Explorer needs a fixed named compact board preset | Use validated current Live setup, retain Python `8×9×7×6` profile in its runtime |
 | EX-D6 | When neighbor/coordinate inspection becomes a mandatory acceptance gate | Keep as later additive work after working shared-mode manipulation |
 
 A code agent must not resolve an unresolved product choice by inventing a
@@ -427,5 +427,5 @@ Deliver the **smallest vertical slice inside the existing Live 4D path**:
 
 Only then enumerate and implement the limited extra blocked-rotation or
 translation exceptions after EX-D1 is explicitly resolved. Additional
-adjacency comprehension and full \`EXPLORER_LEARNING_READY\` evidence follow
+adjacency comprehension and full `EXPLORER_LEARNING_READY` evidence follow
 as bounded, additive slices.
