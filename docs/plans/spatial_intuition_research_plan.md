@@ -52,30 +52,133 @@ and do not become a participant-event backend by renaming them.
 
 ## 3. Priority slices and acceptance
 
-### E1 — Bounded practice Explorer
+### E1 — Bounded practice Explorer: immediate execution contract
 
-One Godot practice workspace with:
+**Owner priority decision: 2026-11-02.** Begin this work without waiting for
+the outstanding Stage 59, Designer/replay toolbar or cosmetic cockpit issues.
+Only an issue that demonstrably blocks an Explorer operation becomes an
+Explorer blocker. The first slice is not a redesign of the Play cockpit.
 
-- independent object pose, camera pose, exact 4D view/slice basis and slice
-  selection;
-- X/Y/Z/W translation, relevant 4D object-rotation planes, and no automatic
-  gravity during ordinary free practice;
-- clear active orientation, neighboring cells, coordinates, visible slice
-  identity and feedback explaining what each action changed;
-- reset, deterministic restart or retry, and safe transitions into bounded
-  normal Play;
-- reference/conformance checks at the Python/native/Godot boundaries and
-  regression tests for both 3D and 4D camera-relative motion.
+**Goal:** one playable, gravity-free 4D learning workspace in Godot, with no
+score, queue advance, lock, gravity timer, game-over or forced placement.
+The exercise is to manipulate and understand a piece, not to win a game.
 
-Do not build a second topology transport engine or a full topology editor.
-Non-bounded topology is supported at the model/contract boundary but not
-selectable in the initial Godot experiment UX. The established Python modes
-are not removed or globally disabled.
+#### Stage E1-A — Semantic and adapter vertical slice
 
-Gate `EXPLORER_LEARNING_READY`: real novice sessions demonstrate task
-discovery, deliberate rotation, recovery from disorientation, and the ability
-to identify whether the object, camera, slice or basis changed. Test
-projection-versus-adjacency misunderstandings explicitly.
+Existing reusable repository surfaces (verify actual method contracts before
+implementation):
+
+- `godot/Tet4D.Godot/scripts/native/tet4d_core_bridge.gd` delegates to
+  native `geometry_translate_blocks`, `geometry_rotate_blocks`,
+  `query_piece_pose_legal` and bounded/topology step queries. These are
+  candidates for exact transforms/legality; do not port their algorithms
+  to GDScript.
+- Python `src/tet4d/engine/runtime/topology_playground_sandbox.py` owns
+  reference Sandbox selection, translation, shape rotation and movement policy.
+  `explorer_runtime_nd.py` and topology contracts own inherited transport
+  behavior. For this phase, the profile is bounded only.
+- `SliceBasis4D`, `ControlFrameMapping`, `SliceLocalOrientation`,
+  `TraceCoordinateMapper`, the shared renderer and `CameraRig` already
+  establish distinct presentation/input owners in Live 4D. Reuse or adapt
+  their read-only consumption paths; do not invent a parallel 4D mapper.
+- `LiveInputContract` owns action descriptions, effective bindings and
+  rotation-plane inventory. Explorer may have a different no-pressure
+  *interaction layout*, but must reference these action descriptors rather
+  than hardcoding a second conflicting binding table.
+
+Implement a small dedicated Explorer state/adapter owner, not an Explorer
+branch inside the native live-game session's gravity loop. The adapter owns
+the current practice-piece pose, immutable initial scenario and practice
+reset; the native geometry/legality boundary evaluates every translation and
+rotation. No inherited piece-transform, collision, adjacency or topology
+rule is implemented independently in GDScript. If the existing pure API
+cannot support a required atomic transition, introduce a bounded native
+practice-query/session API with separate conformance evidence rather than
+silently appropriating the live gameplay session.
+
+**First acceptance fixture:** fixed bounded 4D board and one known nontrivial
+4D polycube. Exact shape and extents come from an explicit fixture/test
+contract, not an arbitrary hidden random game seed. All axes X/Y/Z/W permit
+positive and negative deliberate moves. All six plane families XY/XZ/YZ/
+XW/YW/ZW permit both quarter-turn directions. Out-of-bounds or overlapping
+moves are rejected without changing the practice pose. There is no gravity
+or lock on any number of frames.
+
+#### Stage E1-B — First visible Godot practice workspace
+
+- Provide a clearly named `Explore 4D` entry in the existing LEARN
+  navigation and a dedicated Explorer/practice mode. Preserve existing
+  Play 2D/3D/4D entry and the Python Topology Playground.
+- Render the practice piece with the existing 4D slice projection and board
+  visual grammar. Show the active canonical coordinate, object orientation,
+  current signed view basis, slice axis/index and camera orientation as
+  distinct, readable concepts.
+- Keep piece rotation, camera orbit/pan/zoom, exact view-basis quarter turns,
+  local slice yaw/pitch and slice navigation independent. A camera or basis
+  change must not alter native piece coordinates or its geometry hash.
+- Show the *effective* keys alongside their actions at the point of use.
+  Never require memorising undocumented keys. Explain rejected moves and
+  allow `Reset Piece`, `Reset View`, `Reset All` and repeat of the initial
+  fixture. Give a direct path to bounded ordinary Play that creates a new
+  validated game session; no implicit conversion of practice pose to game
+  state.
+- Make the workspace usable at 1280×720 and 1440×900 logical viewport sizes,
+  with fit-before-scroll controls and legible piece cells. Do not change
+  accepted Live board allocation or Designer geometry to accomplish this.
+
+**E1-B gate:** a user can reach Explore 4D, move in W and Y as freely as X/Z,
+rotate in an XW/YW/ZW plane, rotate the view without moving the object,
+recover their orientation and return to Play without disturbing gameplay
+identity. Required tests assert the observable result, not merely a method
+call or scene load.
+
+#### Stage E1-C — Adjacency and 3D comparison
+
+- Provide an explicit `Neighbors`/adjacency overlay. Select a cell and
+  distinguish its face-adjacent canonical neighbors from other nearby or
+  overlapping projected boxes. The overlay must disclose which canonical
+  coordinate differs and by one step on which axis; W neighbors must be
+  traceable across slices.
+- Use canonical bounded neighbor-query truth, not projected pixel distance,
+  ray overlap or a new GDScript graph rule. Neighbor markers are subordinate
+  to actual full-cell piece geometry and may be switched off.
+- Add a 3D practice configuration for comparison; keep analogous object
+  motion, camera-relative input, labeling, reset and adjacency behavior.
+  Neither mode silently adopts normal Play gravity or lock policy.
+
+#### Verification and acceptance
+
+1. **Geometry:** every supported rotation followed by its inverse returns
+   exactly to the prior pose; four same-direction quarter turns return to the
+   initial pose; translation and inverse agree except at a blocked boundary.
+2. **Semantic safety:** invalid moves are atomic failures; empty/bounded
+   topology behaves as specified by the reference fixtures; no Python
+   semantic authority is transferred by adding a Godot UI.
+3. **Presentation:** view/camera/slice transforms preserve practice piece
+   canonical identity; 3D/4D camera-relative movement matches the established
+   `test` family added by PR #158. Explorer navigation must not advance or
+   mutate an existing live game session.
+4. **Interaction:** test all six 4D rotation planes, negative/positive W and Y,
+   reset and rejected-move feedback, changing view basis then moving, and
+   neighbor behavior under a reversed signed slice axis.
+5. **Human evidence:** real Godot captures and hands-on novice tasks at
+   1280×720 and 1440×900, checking discoverability, label comprehension,
+   disorientation recovery and whether apparent proximity is mistaken for
+   topological adjacency.
+6. **Governance:** one semantic objective per PR (E1-A, E1-B, E1-C).
+   Select `product_planning`, `godot_product_shell`, `topology_and_explorer`
+   and `native_deterministic_core` only where the actual diff invokes them.
+   Apply the cross-layer scope matrix and parity/conformance requirements
+   when native and Godot change together; run the canonical full gate for
+   authority or broad shared changes.
+
+`EXPLORER_LEARNING_READY` is passed only after E1-A/B/C and representative
+human acceptance. E1-B is the first *visible* delivery and must not wait for
+the completed learning system, user accounts, research event schema or a
+comprehensive UI redesign. Non-bounded topology remains available in Python
+and supported by the model/architecture contract but is hidden or disabled
+in the initial Godot study UX. No full editor, custom gluing, seams, campaigns,
+new input devices, physics simulator or server backend in E1.
 
 ### E2 — Professional UI and comprehension review
 
