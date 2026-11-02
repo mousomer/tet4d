@@ -5,7 +5,7 @@ Status: active
 Source of truth: this file for product priorities, phase sequencing, and
 completion gates  
 Supersedes: none  
-Last updated: 2026-11-01
+Last updated: 2026-11-02
 
 ## 1. Purpose
 
@@ -1378,34 +1378,37 @@ physics features.
 
 ## 8. Phase II — Explorer as Spatial Practice
 
-Status: next major capability
-Dependency: accepted bounded game, stable presentation/input contracts, and
-bounded correctness/readability follow-up; no prerequisite to deliver topology
-games or the full topology editor.
+Status: immediate implementation priority (owner decision, 2026-11-02)
+Dependency: accepted bounded game and existing presentation/input/semantic
+contracts. Unrelated Designer, replay and late Stage 58/59 polish do not block
+the first Explorer slice. A specific defect blocks only the Explorer operation
+that it demonstrably breaks; correct that defect as part of the affected slice.
+First-class topology games and the full topology editor are not prerequisites.
 
-The first Godot Explorer is a **practice tool**, not the entire Topology
-Playground migration. Its first acceptance gate is
-`EXPLORER_LEARNING_READY`.
+The first Godot Explorer is a **mode/policy variation of Live 4D gameplay**,
+not a separate practice engine, application, renderer, style system, keymap,
+geometry system or cockpit. The normative product specification is
+`docs/rds/RDS_EXPLORER.md`; this programme owns only stage order and gates.
 
-### Scope of the first practice Explorer
+### Scope of the first Explorer
 
-- Use the inherited Python Explorer/Sandbox as a semantic reference where
-  semantics are inherited; avoid creating another movement/rotation authority.
-- Permit deliberate movement in both directions along X, Y, Z, and W without
-  time pressure; Y is not privileged by gravity unless explicitly enabled.
-- Provide precise object/piece rotations, including all relevant 4D rotation
-  planes, separately from camera orbit, view-basis rotations and slice navigation.
-- Support exact orientation reset, undo/retry or deterministic restart, coordinate
-  inspection, marked targets, and inspectable 3D/4D cell adjacency.
-- Convey which projected 3D boxes belong to neighboring 4D cells, without
-  implying that projection overlap or visible proximity proves adjacency.
-- Preserve the Editor / Sandbox / Play conceptual separation. The practice
-  Sandbox path may ship before the full Godot editor or topology laboratory.
-- Allow transition from practice into ordinary bounded Play without altering
-  authoritative gameplay or deterministic replay semantics.
-- Keep non-bounded topology present at the architecture/data-contract boundary
-  but hidden or disabled in the first Godot study UX. Do not disable or remove
-  the established Python topology tools or their semantics.
+- Inherit the current native 4D gameplay session and production piece geometry,
+  Godot Live 4D shell, 4D slicing, styles, camera, basis, rotation controls,
+  movement resolver, settings, and responsive cockpit.
+- Disable automatic gravity and time-triggered locking; allow deliberate
+  translation both ways along X/Y/Z/W without changing the existing X/Z/W
+  input conventions. Additional Y actions are defined centrally in the shared
+  Live input owner, not through a new Explorer keymap.
+- Use the same six piece-rotation planes and exact geometry. Permit only
+  explicitly selected and regression-tested exceptions to normal gameplay
+  legality; do not assume free movement erases bounds or collisions.
+- Preserve Reset View, ordinary restart and validated return to Live Play.
+- Add canonical adjacency/neighbor cues as a later shared-renderer overlay;
+  screen proximity does not establish 4D adjacency.
+- Keep the full Python Topology Playground separate and unchanged. The first
+  Godot mode uses bounded topology; custom topology editing, seams and full
+  Topology Lab migration remain deferred.
+- Do not wait for unrelated Designer, replay or late Stage 59 UI polish.
 
 ### Gate: EXPLORER_LEARNING_READY
 
@@ -1416,6 +1419,17 @@ orientation tasks. Verify with representative human sessions, not only automated
 interaction tests. The exact acceptance tasks belong to the scoped Explorer
 stage; automated tests also guard rotation invariants, camera-relative
 translation, projection labels, and gameplay/presentation isolation.
+
+Implement the first vertical slice **in the current Live 4D runtime**: add
+one session-scoped exploration policy, suppress gravity, support deliberate
+Y−/Y+ through the shared native command path and centrally approved shared
+input actions, and mark Explorer/Gravity Off in the existing cockpit.
+Then select any additional blocked-rotation/translation exceptions using
+observed fixtures, followed by 3D comparison, adjacency cues and novice
+acceptance. The normative rules are in `docs/rds/RDS_EXPLORER.md` and
+execution evidence is E1 in
+`docs/plans/spatial_intuition_research_plan.md`. Existing UI polish is not
+a stage-entry gate.
 
 Do not expand this gate into a full topology port, a challenge campaign, new
 input devices or a new rendering engine.
@@ -1646,9 +1660,9 @@ The new priority order is:
 
 | Priority | Workstream | Dependency or acceptance boundary |
 | --- | --- | --- |
-| P0 | Bounded existing-game corrections | Designer sizing, confirmed cockpit/replay defects, camera-relative movement and active Stage 58C/59 readability; preserve accepted layouts |
-| P1 | Godot bounded spatial-practice Explorer | `EXPLORER_LEARNING_READY`; independent 4D rotations, basis, slices, coordinates and adjacency |
-| P2 | Professional UI review and verified fixes | Expert and novice comprehension checks, including 3D/4D depth and cockpit hierarchy |
+| P0 | Godot bounded spatial-practice Explorer | Immediate execution; first vertical slice, then `EXPLORER_LEARNING_READY`; independent 4D rotations, basis, slices, coordinates and adjacency |
+| P1 | Explorer-blocking correctness repairs only | Repair a confirmed camera-relative, labeling or layout defect when it obstructs Explorer behavior; retain dedicated regression evidence |
+| P2 | Remaining professional UI and game-polish review | Designer sizing, replay-toolbar, Stage 59 and non-blocking style/contrast work; do not gate Explorer on these items |
 | P3 | Study protocol and minimal assessment tasks | Baseline, held-out transfer, control/comparison and reproducible scoring before telemetry schema freezes |
 | P4 | Participant identity, persistence and telemetry | Consent-aware versioned backend/local recovery and data reconstructability |
 | P5 | Pilot and first controlled learning experiment | `RESEARCH_PLATFORM_READY` then `FIRST_EXPERIMENT_COMPLETE` |
@@ -1661,9 +1675,12 @@ The new priority order is:
 | P12 | Commercial professional product | Campaign, distribution, possible monetization |
 | P13 | Later platforms | Public macOS and iPadOS, deferred |
 
-P3 assessment design can overlap P1 and P2. P4 infrastructure design can begin
-after the data contract is established, but deployment must not be treated as
-a substitute for research readiness. P6 can be pulled forward if participant
+P0 Explorer implementation begins independently of remaining UI-polish work.
+P1 blockers must be demonstrated against the Explorer slice; P2 is deliberately
+non-blocking. P3 assessment design can overlap Explorer construction and UI
+review. P4 infrastructure design can begin after the data contract is
+established, but deployment must not be treated as a substitute for research
+readiness. P6 can be pulled forward if participant
 recruitment requires a validated Windows/Linux build. No priority label by
 itself authorizes implementation, changes an RDS, alters the release support
 matrix, or establishes a new semantic owner.

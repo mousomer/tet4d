@@ -52,30 +52,95 @@ and do not become a participant-event backend by renaming them.
 
 ## 3. Priority slices and acceptance
 
-### E1 — Bounded practice Explorer
+### E1 — Explorer as a Live 4D rules-mode delta (immediate priority)
 
-One Godot practice workspace with:
+**Product owner:** `docs/rds/RDS_EXPLORER.md`. This research plan owns
+execution order and evidence, **not** the Explorer gameplay semantics.
+The owner decision of 2026-11-02 explicitly rejects an independent
+Explorer workspace/engine, style system, movement system, camera, keymap
+or parallel rendering path.
 
-- independent object pose, camera pose, exact 4D view/slice basis and slice
-  selection;
-- X/Y/Z/W translation, relevant 4D object-rotation planes, and no automatic
-  gravity during ordinary free practice;
-- clear active orientation, neighboring cells, coordinates, visible slice
-  identity and feedback explaining what each action changed;
-- reset, deterministic restart or retry, and safe transitions into bounded
-  normal Play;
-- reference/conformance checks at the Python/native/Godot boundaries and
-  regression tests for both 3D and 4D camera-relative motion.
+The existing Live 4D game is the implementation baseline. Explorer adds
+a mode-specific rules policy: automatic gravity off, deliberate free
+Y−/Y+ translation, and only explicitly approved additional exceptions
+to ordinary translation/rotation restrictions. It uses one active production
+4D game piece at a time, shares the game's UI, styles, rotation and movement
+commands, input resolver, camera, exact signed basis, slices and geometry.
 
-Do not build a second topology transport engine or a full topology editor.
-Non-bounded topology is supported at the model/contract boundary but not
-selectable in the initial Godot experiment UX. The established Python modes
-are not removed or globally disabled.
+#### E1-A — Shared native gameplay policy
 
-Gate `EXPLORER_LEARNING_READY`: real novice sessions demonstrate task
-discovery, deliberate rotation, recovery from disorientation, and the ability
-to identify whether the object, camera, slice or basis changed. Test
-projection-versus-adjacency misunderstandings explicitly.
+- Inspect the existing `PlainNDSession`/gameplay transition owner and
+  distinguish gravity/tick/lock, translation legality, rotation legality,
+  view-derived command resolution and input routing.
+- Introduce the smallest session-scoped mode/policy at the existing
+  authoritative core owner. Explorer must not tick gravity or perform
+  time-triggered lock/spawn. Normal Live 4D remains unchanged.
+- Use the same native transformation/legality code paths for current
+  X/Z/slice moves and all six existing rotation planes; extend that
+  shared path for deliberate Y−/Y+ translations.
+- Respect bounded board extents and piece integrity. Record precise
+  candidates rejected in normal Play for owner approval under
+  RDS decision EX-D1 before implementing additional rotation/placement
+  bypasses. A broad collision, bounds or wall-kick bypass is not approved.
+- Keep shared setup validation and production piece data; no separate
+  practice object catalog, gameplay state engine or policy database.
+- Conformance: unchanged ordinary Play seed/input/hash/replay; long idle
+  Explorer leaves piece unchanged; Y± moves work when legal; invalid moves
+  are atomic; shared rotations produce identical results when legal.
+
+#### E1-B — Same Godot Live 4D shell, Explorer mode
+
+- Add an Explorer entry within existing navigation, selecting the
+  session policy and rendering the existing Live 4D cockpit.
+- Reuse the same shipped styles, grid/opacity, cells, slice geometry,
+  `B + L + V/P` presentation state, `ControlFrameMapping`,
+  `LiveInputContract`, camera gestures, keybindings and generated help.
+- Explorer additionally enables the three currently unavailable Y-bearing
+  exact view planes (XY/YZ/YW) using an extension of the **shared** basis,
+  signed-coordinate mapper and input resolver. Normal Live 4D retains its
+  fixed +Y view contract. The RDS section 6.3 supplies the detailed
+  conformance requirements. This is a distinct presentation slice and not
+  a substitute for the initial gravity-free shared gameplay policy.
+- Introduce no Explorer-only keybinding table. New Y actions need
+  centrally defined, owner-approved conflict-free bindings (EX-D2).
+  Never repurpose a currently bound Live 4D rotation/view key silently.
+- Show mode/Gravity Off and hide or disable irrelevant progress
+  controls within the existing layout; never invoke lock/advance
+  from disabled gravity, Hard Drop or Hold semantics.
+- Reuse existing Restart, Reset View, Main Menu and ordinary Play
+  entry/exit lifecycle, with session-safe isolation.
+- Verify real keyboard input, relative/absolute mapping, basis turns,
+  1280×720 and 1440×900 board/help visibility, and that Explorer
+  switch-in/out never leaks mode rules into normal Play.
+
+#### E1-C — Named policy exceptions and learning support
+
+- Decide EX-D1 by demonstrating actual blocked Live 4D translation/
+  rotation cases, identifying exactly which predicate to relax while
+  preserving board/collision/shape invariants. Add only selected and
+  tested exceptions, still through the shared core.
+- Add optional coordinate/neighbor inspection using existing canonical
+  truth and renderer overlays; avoid a second Explorer scene.
+- A later 3D Explorer uses the same policy and current Live 3D
+  shell. Full topology editing, custom seams, challenge campaigns,
+  a study backend and independent participant identity are separate.
+- Gate `EXPLORER_LEARNING_READY`: novice users can move in Y/W,
+  rotate the object, reorient the 4D view independently, recover from
+  disorientation and recognize true 4D neighbors without assuming
+  projection proximity proves adjacency.
+
+#### Stage ordering and non-goals
+
+Start E1-A immediately; E1-B may follow once its shared-mode native
+contract exists. Ordinary gameplay regressions and user-facing tests
+are mandatory. Designer/replay/Stage 59 polish is **not** a predecessor;
+only defects that actually block Explorer behavior may enter this
+implementation critical path.
+
+The Python Topology Playground remains intact. Non-bounded topology
+is not a first-Explorer Godot selection. The existing topology
+transport, Sandbox/Play policy and Python authority remain unmodified
+unless a separately approved semantic transfer is justified.
 
 ### E2 — Professional UI and comprehension review
 
