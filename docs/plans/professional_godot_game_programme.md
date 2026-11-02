@@ -1385,29 +1385,30 @@ the first Explorer slice. A specific defect blocks only the Explorer operation
 that it demonstrably breaks; correct that defect as part of the affected slice.
 First-class topology games and the full topology editor are not prerequisites.
 
-The first Godot Explorer is a **practice tool**, not the entire Topology
-Playground migration. Its first acceptance gate is
-`EXPLORER_LEARNING_READY`.
+The first Godot Explorer is a **mode/policy variation of Live 4D gameplay**,
+not a separate practice engine, application, renderer, style system, keymap,
+geometry system or cockpit. The normative product specification is
+`docs/rds/RDS_EXPLORER.md`; this programme owns only stage order and gates.
 
-### Scope of the first practice Explorer
+### Scope of the first Explorer
 
-- Use the inherited Python Explorer/Sandbox as a semantic reference where
-  semantics are inherited; avoid creating another movement/rotation authority.
-- Permit deliberate movement in both directions along X, Y, Z, and W without
-  time pressure; Y is not privileged by gravity unless explicitly enabled.
-- Provide precise object/piece rotations, including all relevant 4D rotation
-  planes, separately from camera orbit, view-basis rotations and slice navigation.
-- Support exact orientation reset, undo/retry or deterministic restart, coordinate
-  inspection, marked targets, and inspectable 3D/4D cell adjacency.
-- Convey which projected 3D boxes belong to neighboring 4D cells, without
-  implying that projection overlap or visible proximity proves adjacency.
-- Preserve the Editor / Sandbox / Play conceptual separation. The practice
-  Sandbox path may ship before the full Godot editor or topology laboratory.
-- Allow transition from practice into ordinary bounded Play without altering
-  authoritative gameplay or deterministic replay semantics.
-- Keep non-bounded topology present at the architecture/data-contract boundary
-  but hidden or disabled in the first Godot study UX. Do not disable or remove
-  the established Python topology tools or their semantics.
+- Inherit the current native 4D gameplay session and production piece geometry,
+  Godot Live 4D shell, 4D slicing, styles, camera, basis, rotation controls,
+  movement resolver, settings, and responsive cockpit.
+- Disable automatic gravity and time-triggered locking; allow deliberate
+  translation both ways along X/Y/Z/W without changing the existing X/Z/W
+  input conventions. Additional Y actions are defined centrally in the shared
+  Live input owner, not through a new Explorer keymap.
+- Use the same six piece-rotation planes and exact geometry. Permit only
+  explicitly selected and regression-tested exceptions to normal gameplay
+  legality; do not assume free movement erases bounds or collisions.
+- Preserve Reset View, ordinary restart and validated return to Live Play.
+- Add canonical adjacency/neighbor cues as a later shared-renderer overlay;
+  screen proximity does not establish 4D adjacency.
+- Keep the full Python Topology Playground separate and unchanged. The first
+  Godot mode uses bounded topology; custom topology editing, seams and full
+  Topology Lab migration remain deferred.
+- Do not wait for unrelated Designer, replay or late Stage 59 UI polish.
 
 ### Gate: EXPLORER_LEARNING_READY
 
@@ -1419,13 +1420,16 @@ interaction tests. The exact acceptance tasks belong to the scoped Explorer
 stage; automated tests also guard rotation invariants, camera-relative
 translation, projection labels, and gameplay/presentation isolation.
 
-Implement the first vertical slice as a bounded, gravity-free Godot practice
-workspace with one 4D object, native-evaluated translation and exact plane
-rotation, independent view/basis/slice controls, visible coordinates and reset.
-Then extend into 3D comparison, explicit adjacency cues and novice acceptance.
-The concrete execution and test contract is E1 in
-`docs/plans/spatial_intuition_research_plan.md`. Existing P0 polish is not a
-stage-entry gate.
+Implement the first vertical slice **in the current Live 4D runtime**: add
+one session-scoped exploration policy, suppress gravity, support deliberate
+Y−/Y+ through the shared native command path and centrally approved shared
+input actions, and mark Explorer/Gravity Off in the existing cockpit.
+Then select any additional blocked-rotation/translation exceptions using
+observed fixtures, followed by 3D comparison, adjacency cues and novice
+acceptance. The normative rules are in `docs/rds/RDS_EXPLORER.md` and
+execution evidence is E1 in
+`docs/plans/spatial_intuition_research_plan.md`. Existing UI polish is not
+a stage-entry gate.
 
 Do not expand this gate into a full topology port, a challenge campaign, new
 input devices or a new rendering engine.
