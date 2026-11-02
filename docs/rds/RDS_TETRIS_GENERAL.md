@@ -13,6 +13,7 @@ Mode-specific requirements are defined in:
 1. `docs/rds/RDS_2D_TETRIS.md`
 2. `docs/rds/RDS_3D_TETRIS.md`
 3. `docs/rds/RDS_4D_TETRIS.md`
+4. `docs/rds/RDS_EXPLORER.md` (Godot Explorer-specific **delta** from ordinary Live 4D; not a separate game)
 
 Cross-cutting requirements are defined in:
 1. `docs/rds/RDS_KEYBINDINGS.md`
