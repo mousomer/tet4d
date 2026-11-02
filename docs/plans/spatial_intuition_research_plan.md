@@ -63,8 +63,8 @@ or parallel rendering path.
 The existing Live 4D game is the implementation baseline. Explorer adds
 a mode-specific rules policy: automatic gravity off, deliberate free
 Y−/Y+ translation, and only explicitly approved additional exceptions
-to ordinary translation/rotation restrictions. It uses one production
-polycube at a time, shares the game's UI, styles, rotation and movement
+to ordinary translation/rotation restrictions. It uses one active production
+4D game piece at a time, shares the game's UI, styles, rotation and movement
 commands, input resolver, camera, exact signed basis, slices and geometry.
 
 #### E1-A — Shared native gameplay policy
@@ -95,6 +95,12 @@ commands, input resolver, camera, exact signed basis, slices and geometry.
 - Reuse the same shipped styles, grid/opacity, cells, slice geometry,
   `B + L + V/P` presentation state, `ControlFrameMapping`,
   `LiveInputContract`, camera gestures, keybindings and generated help.
+- Explorer additionally enables the three currently unavailable Y-bearing
+  exact view planes (XY/YZ/YW) using an extension of the **shared** basis,
+  signed-coordinate mapper and input resolver. Normal Live 4D retains its
+  fixed +Y view contract. The RDS section 6.3 supplies the detailed
+  conformance requirements. This is a distinct presentation slice and not
+  a substitute for the initial gravity-free shared gameplay policy.
 - Introduce no Explorer-only keybinding table. New Y actions need
   centrally defined, owner-approved conflict-free bindings (EX-D2).
   Never repurpose a currently bound Live 4D rotation/view key silently.
