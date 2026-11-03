@@ -6,6 +6,7 @@
 - Preserve helper fit and panel state across camera, basis, and piece actions.
 - Add fullscreen shortcuts and improve menu sizing.
 - Compact Settings and Designer typography, spacing, dropdowns, and lists.
+- Verify Explorer Shift+number bindings with their declared modifier and keep them distinct from plain view keys.
 - Align all product export versions to 0.9.2 and Android version code 902; release through the complete registered CI/CD package matrix and checksum-validated publication workflow.
 
 ## 2026-08-31
