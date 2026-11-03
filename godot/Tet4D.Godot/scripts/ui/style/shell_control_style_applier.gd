@@ -67,6 +67,8 @@ func _apply_control(control: Control, style_manager) -> void:
 		_apply_slider(control as HSlider, style_manager)
 	elif control is LineEdit:
 		_apply_line_edit(control as LineEdit, style_manager)
+	elif control is ItemList and _is_shell_chrome(control):
+		control.add_theme_font_size_override("font_size", ShellDesignTokensScript.FONT_CHROME_BODY)
 
 
 func _apply_label(label: Label, style_manager) -> void:
@@ -142,6 +144,11 @@ func _apply_label(label: Label, style_manager) -> void:
 
 func _apply_button(button: Button, style_manager) -> void:
 	button.add_theme_font_size_override("font_size", _font_size(button, ShellDesignTokensScript.FONT_BODY))
+	if button is OptionButton and _is_shell_chrome(button):
+		var popup := (button as OptionButton).get_popup()
+		if popup.theme == null:
+			popup.theme = Theme.new()
+		popup.theme.set_font_size("font_size", "PopupMenu", _font_size(button, ShellDesignTokensScript.FONT_BODY))
 	button.add_theme_color_override("font_color", style_manager.get_color(ShellStyleRolesScript.TEXT_PRIMARY))
 	button.add_theme_color_override("font_hover_color", style_manager.get_color(ShellStyleRolesScript.TEXT_PRIMARY))
 	button.add_theme_color_override("font_pressed_color", style_manager.get_color(ShellStyleRolesScript.TEXT_INVERSE))
@@ -232,8 +239,8 @@ func _apply_line_edit(line_edit: LineEdit, style_manager) -> void:
 
 
 func _font_size(control: Control, readable_size: int) -> int:
-	# The session header retains its existing compact chrome. Menus, help pages,
-	# and passive guidance use the larger readable type scale independently.
+	# The session header and preference editors opt into compact chrome. Other
+	# menus, help pages and passive guidance keep their independent readable scale.
 	var ancestor: Node = control
 	while ancestor != null:
 		if bool(ancestor.get_meta("readable_guidance", false)):

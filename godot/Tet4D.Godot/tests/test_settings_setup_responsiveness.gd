@@ -43,8 +43,10 @@ func run() -> Array:
 				failures.append("settings row %s must stay in its viewport at width %s" % [setting_id, width])
 		var setting_row := settings._rows_by_id["display.window_mode"] as Control
 		var row_content := setting_row.get_node("SettingRowContent") as BoxContainer
-		if width <= 280.0 and not row_content.vertical:
+		if width <= 220.0 and not row_content.vertical:
 			failures.append("narrow settings must reflow label/control columns before scrolling")
+		if width == 280.0 and row_content.vertical:
+			failures.append("compact Settings should fit its window-mode row side by side at 280 units")
 	settings.size = Vector2(280, 300)
 	await _settle(tree)
 	var reset := settings.find_child("ResetAccessibilitySettingsButton", true, false) as Button

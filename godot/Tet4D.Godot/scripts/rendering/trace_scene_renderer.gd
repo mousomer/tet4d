@@ -304,6 +304,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 		var position := _presentation.render_active_world_position(cell.get("position", []))
 		var active_color_id := int(cell.get("color_id", 1))
 		var active_size := ReplayVisuals.LIVE_3D_ACTIVE_CELL_SCALE if _presentation.uses_live_exterior_cells else ReplayVisuals.LIVE_ACTIVE_CELL_SCALE
+		var show_origin_marker := active_index == 0 and not bool(snapshot.get("practice", false))
 		if _presentation.uses_live_exterior_cells:
 			node.setup_exterior_block(
 				position,
@@ -312,8 +313,8 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 				active_size,
 				active_size + ReplayVisuals.LIVE_3D_ACTIVE_CELL_BORDER_DELTA * _edge_weight(),
 				_live_3d_rotation_pulse(snapshot),
-				ReplayVisuals.live_3d_origin_marker_material(_display_mode) if active_index == 0 else null,
-				ReplayVisuals.LIVE_3D_ORIGIN_MARKER_SCALE if active_index == 0 else 0.0
+				ReplayVisuals.live_3d_origin_marker_material(_display_mode) if show_origin_marker else null,
+				ReplayVisuals.LIVE_3D_ORIGIN_MARKER_SCALE if show_origin_marker else 0.0
 			)
 		else:
 			node.setup(

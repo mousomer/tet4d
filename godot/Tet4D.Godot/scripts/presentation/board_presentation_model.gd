@@ -89,6 +89,16 @@ func ghost_cells() -> Array:
 func active_layer_indices() -> Array:
 	if dimension < 4:
 		return []
+	# Explorer slice inspection replaces object-following emphasis. A stale
+	# selection for another hidden axis maps to no layer rather than a wrong one.
+	var inspected: Dictionary = snapshot.get("inspected_slice", {})
+	if not inspected.is_empty():
+		if int(inspected.get("axis", -1)) != projection.mapper.slice_axis():
+			return []
+		for layer in range(projection.mapper.current_layer_count()):
+			if projection.mapper.semantic_slice_coordinate(layer) == int(inspected.get("coordinate", -1)):
+				return [layer]
+		return []
 	var result := []
 	for cell in active_cells():
 		var layer := layer_index(cell.get("position", []))

@@ -2,6 +2,8 @@ extends PanelContainer
 
 class_name LiveViewControlStrip
 
+signal requested(action: String)
+
 const LiveInputContractScript = preload("res://scripts/input/live_input_contract.gd")
 const PassiveControlComponentsScript = preload("res://scripts/ui/passive_control_components.gd")
 const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
@@ -15,6 +17,7 @@ const LAYOUT_GRID := "grid"
 const LAYOUT_WIDE := "wide"
 const WIDE_ROLES := ["view_exact", "view_orient"]
 
+var _practice := false
 var _mode := "live_4d"
 var _density := "normal"
 var _groups: Array = []
@@ -74,14 +77,14 @@ func _init() -> void:
 	content.add_child(_wide_box)
 
 
-func configure(basis_snapshot: Dictionary = {}, control_frame: Dictionary = {}, density: String = "normal", mode: String = "live_4d", authority = LiveInputContractScript, layout: String = LAYOUT_GRID) -> void:
-	var groups: Array = authority.view_control_groups(mode, basis_snapshot, control_frame)
+func configure(basis_snapshot: Dictionary = {}, control_frame: Dictionary = {}, density: String = "normal", mode: String = "live_4d", authority = LiveInputContractScript, layout: String = LAYOUT_GRID, practice: bool = false) -> void:
+	var groups: Array = authority.practice_view_control_groups(mode) if practice else authority.view_control_groups(mode, basis_snapshot, control_frame)
 	if layout == LAYOUT_WIDE:
 		groups = groups.filter(func(group): return str(group.get("cockpit_role", "")) in WIDE_ROLES)
 	var source := "LiveInputContract" if authority == LiveInputContractScript else "injected_fixture"
 	# Provenance is part of the cached identity: an injected fixture that happens
 	# to yield identical groups must not keep reporting contract provenance.
-	var next_signature := JSON.stringify([mode, density, source, layout, groups])
+	var next_signature := JSON.stringify([mode, density, source, layout, practice, groups])
 	if next_signature == _signature:
 		return
 	_layout = LAYOUT_WIDE if layout == LAYOUT_WIDE else LAYOUT_GRID
@@ -91,6 +94,8 @@ func configure(basis_snapshot: Dictionary = {}, control_frame: Dictionary = {}, 
 	var scroll := get_node("ViewHelpScroll") as ScrollContainer
 	# The wide layout must report its true height so the deck can size to it.
 	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED if _layout == LAYOUT_WIDE else ScrollContainer.SCROLL_MODE_AUTO
+	_practice = practice
+	set_meta("semantic_role", "interactive_view_guidance" if practice else "passive_view_guidance")
 	_mode = mode
 	_density = density
 	_groups = groups.duplicate(true)
@@ -103,6 +108,13 @@ func set_detached_layout(enabled: bool) -> void:
 	_groups_box.columns = 1 if enabled else 2
 
 
+func set_fit_to_content(enabled: bool) -> void:
+	# The practice rail fits/scrolls the complete module. Its inner scroll must
+	# report actual content height rather than collapsing to a zero-height box.
+	var scroll := get_node("ViewHelpScroll") as ScrollContainer
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED if enabled or _layout == LAYOUT_WIDE else ScrollContainer.SCROLL_MODE_AUTO
+
+
 func deterministic_snapshot() -> Dictionary:
 	var rows: Array = []
 	for group in _groups:
@@ -111,6 +123,7 @@ func deterministic_snapshot() -> Dictionary:
 			rows.append(_semantic_row(role, item))
 	return {
 		"source": _source,
+		"practice": _practice,
 		"mode": _mode,
 		"density": _density,
 		"roles": _groups.map(func(group): return str(group.get("cockpit_role", ""))),
@@ -142,6 +155,9 @@ func _rebuild() -> void:
 	_glyphs.clear()
 	_groups_box.visible = _layout == LAYOUT_GRID
 	_wide_box.visible = _layout == LAYOUT_WIDE
+	if _practice:
+		_rebuild_practice()
+		return
 	if _layout == LAYOUT_WIDE:
 		_rebuild_wide()
 		return
@@ -161,6 +177,51 @@ func _rebuild() -> void:
 				role == "view_pointer"
 			))
 		_groups_box.add_child(section)
+
+
+func _rebuild_practice() -> void:
+	for group in _groups:
+		var role := str(group.cockpit_role)
+		var section := PassiveControlComponentsScript.section("ROTATE VIEW · − / +" if role == "view_exact" else _section_title(role), role, _density)
+		section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		for item in group.items:
+			var metadata := _item_metadata(item)
+			if role == "view_pointer":
+				section.add_child(PassiveControlComponentsScript.row(str(item[1]), str(item[0]), role, _density, true))
+				continue
+			var row := HBoxContainer.new()
+			row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			var operation := Label.new()
+			operation.text = str(metadata.operation)
+			operation.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			row.add_child(operation)
+			if metadata.has("negative_command"):
+				for sign_name in ["negative", "positive"]:
+					_action_button(row, str(metadata[sign_name + "_binding"]), str(metadata[sign_name + "_command"]), str(metadata[sign_name + "_action"]), str(metadata.operation))
+			else:
+				_action_button(row, str(item[0]), str(metadata.command), str(metadata.action), str(metadata.operation))
+			section.add_child(row)
+		_groups_box.add_child(section)
+
+
+func _action_button(parent: Node, binding: String, command: String, action: String, operation: String) -> void:
+	var button := Button.new()
+	button.text = binding.replace("Shift+", "⇧")
+	var description := operation
+	if command.begins_with("basis_"):
+		description = "Rotate view %s %s90°" % [operation, "−" if command.ends_with("neg") else "+"]
+	elif command.begins_with("look_"):
+		var direction := command.get_slice("_", 2)
+		description += " " + direction
+		button.text += " " + str({"left": "←", "right": "→", "up": "↑", "down": "↓"}.get(direction, ""))
+	button.tooltip_text = "%s · %s" % [description, binding]
+	button.clip_text = true
+	button.focus_mode = Control.FOCUS_NONE
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.set_meta("practice_action", command)
+	button.set_meta("binding_action", action)
+	button.pressed.connect(func() -> void: requested.emit(command))
+	parent.add_child(button)
 
 
 func _rebuild_wide() -> void:
@@ -202,6 +263,7 @@ func _section_title(role: String) -> String:
 		"view_orient": "LOOK",
 		"view_framing": "FRAMING",
 		"view_pointer": "POINTER",
+		"view_slice": "SLICE",
 	}.get(role, role.to_upper()))
 
 

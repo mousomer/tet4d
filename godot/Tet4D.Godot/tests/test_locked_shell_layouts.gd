@@ -22,6 +22,7 @@ const MENU_ORDER := [
 	"CommandCard__Play_4D",
 	"CommandCard__Change_Setup",
 	"CommandCard__Design_Laboratory",
+	"CommandCard__Explorer",
 	"CommandCard__How_to_Play",
 	"CommandCard__About_Tet4D",
 	"CommandCard__Settings",

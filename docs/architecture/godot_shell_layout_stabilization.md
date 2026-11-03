@@ -95,6 +95,10 @@ It stores no scene nodes and schedules no work. `LiveCockpit` measures and
 applies those decisions through the existing fit containers and next-frame
 scheduler. Packing policy, floor 0.6, step 0.02 and settle limit 30 are retained.
 
+`ResponsivePanelPolicy.fit_content_key` excludes scrollbar visibility because
+it results from allocation and wrapping at the current scale. Its visibility
+cannot restart the search that produced it. Ordinary control visibility and
+font/theme metrics remain intrinsic inputs.
 `ResponsivePanelPolicy.fit_content_key` observes intrinsic content: existing
 control identity/visibility, text, font metrics, custom minimums, relevant theme
 and spacing inputs. Compacted gaps use their recorded relaxed values. Measured
@@ -136,6 +140,17 @@ controls into those inputs and applies the results. The previous second
 metrics flag, process-frame fit connection and deferred policy recheck path are
 removed. Godot's own container-sort notifications remain; detached Designer
 panel constraints belong to DesignerPanelSession under the Designer contract.
+
+## Compact preference editors
+
+Settings (global and Quick Settings) and the presentation Designer use the
+existing compact shell typography: 18-point controls, 16-point supporting
+labels and 24-point named titles, with compact panel/button padding and four-unit layout gaps.
+Lists and dropdown menus use the same compact control size. Rebuilt Designer
+controls and theme changes retain this scope; launcher/menu and gameplay
+guidance typography remain independent. User UI scale and high-contrast focus
+indicators still apply, with scrolling/reflow preserving every setting and
+fixed Close/Back actions.
 
 ## Responsive panel contract
 

@@ -62,6 +62,14 @@ Primary implementation and maintenance files:
 8. Favor a restrained Tron-1982-inspired presentation without reducing
    readability or keyboard-first clarity.
 
+The Godot Settings screens (including Quick Settings) and presentation Designer
+use a compact preference-editor density: 18-point controls, 16-point supporting
+text, compact padding and four-unit gaps. Designer lists and dropdown menus
+follow the smaller control typography. This is scoped to preference editors;
+launcher and gameplay helper text keep their existing scale. UI scaling,
+contrast, keyboard focus, scrolling and fixed Close/Back affordances remain
+available.
+
 ## 3. Research Basis (Best Practices)
 
 This design is based on:

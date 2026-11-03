@@ -17,7 +17,8 @@ phase-dependent work. It is not workflow authority, a CI diary, a completed
 stage archive, a task-contract ledger, or a future programme.
 ## Active Focus
 
-UI/cockpit repair accepted after owner review; Designer text-size follow-up remains. Acceptance: `docs/history/ui_cockpit_owner_acceptance_2026_10_31.md`. Plan: `docs/plans/ui_cockpit_orchestration_repair.md`.
+Bounded practice Explorer: unified VIEW helpers and compact Settings/Designer menus; novice tasks in
+`docs/plans/bounded_practice_explorer.md`; learning readiness awaits human review.
 
 Machine-readable handoff state. `status` is `active` only on a feature branch
 or draft PR and must name that branch; it is `none` on the default branch and

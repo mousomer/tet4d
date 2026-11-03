@@ -2,6 +2,7 @@ extends PanelContainer
 
 class_name PresentationDesigner
 
+const Tokens = preload("res://scripts/ui/style/shell_design_tokens.gd")
 const PresentationProfileScript = preload("res://scripts/presentation/presentation_profile.gd")
 const PresentationProfileLibraryScript = preload("res://scripts/presentation/presentation_profile_library.gd")
 const BuiltInStyleCatalogScript = preload("res://scripts/presentation/built_in_style_catalog.gd")
@@ -71,6 +72,7 @@ var _applicable_ids: Array = []
 
 
 func _ready() -> void:
+	set_meta("shell_chrome", true)
 	name = "PresentationDesigner"
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	set_meta("semantic_role", "interactive_button_panel")
@@ -605,14 +607,15 @@ func _build_surface() -> void:
 	_full_root = VBoxContainer.new()
 	_full_root.name = "DesignerFull"
 	_full_root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_full_root.add_theme_constant_override("separation", 7)
+	_full_root.add_theme_constant_override("separation", Tokens.SPACE_1)
 	_full_scroll.add_child(_full_root)
 
 	var header := HFlowContainer.new()
-	header.add_theme_constant_override("separation", 6)
+	header.add_theme_constant_override("separation", Tokens.SPACE_1)
 	_full_chrome.add_child(header)
 	_full_chrome.move_child(header, 0)
 	var title := Label.new()
+	title.name = "DesignerTitle"
 	title.text = "CURRENT DESIGN"
 	title.theme_type_variation = "AccentLabel"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -689,7 +692,7 @@ func _build_surface() -> void:
 
 	var built_in_header := HBoxContainer.new()
 	built_in_header.name = "DesignerBuiltInStylesHeader"
-	built_in_header.add_theme_constant_override("separation", 6)
+	built_in_header.add_theme_constant_override("separation", Tokens.SPACE_1)
 	_full_root.add_child(built_in_header)
 	_built_in_toggle_button = Button.new()
 	_built_in_toggle_button.name = "DesignerBuiltInStylesToggle"
@@ -707,7 +710,7 @@ func _build_surface() -> void:
 	_built_in_root = VBoxContainer.new()
 	_built_in_root.name = "DesignerBuiltInStyles"
 	_built_in_root.visible = false
-	_built_in_root.add_theme_constant_override("separation", 5)
+	_built_in_root.add_theme_constant_override("separation", Tokens.SPACE_1)
 	_full_root.add_child(_built_in_root)
 	_built_in_list = ItemList.new()
 	_built_in_list.name = "DesignerBuiltInStyleList"
@@ -724,7 +727,7 @@ func _build_surface() -> void:
 	_built_in_root.add_child(_built_in_description_label)
 	var built_in_actions := HFlowContainer.new()
 	built_in_actions.name = "DesignerBuiltInStyleActions"
-	built_in_actions.add_theme_constant_override("separation", 5)
+	built_in_actions.add_theme_constant_override("separation", Tokens.SPACE_1)
 	_built_in_root.add_child(built_in_actions)
 	for built_in_action in [
 		["Apply Style…", "Load the selected read-only style into detached current design without changing A", _apply_built_in_from_ui],
@@ -739,7 +742,7 @@ func _build_surface() -> void:
 
 	var library_header := HBoxContainer.new()
 	library_header.name = "DesignerProfileLibraryHeader"
-	library_header.add_theme_constant_override("separation", 6)
+	library_header.add_theme_constant_override("separation", Tokens.SPACE_1)
 	_full_root.add_child(library_header)
 	_library_toggle_button = Button.new()
 	_library_toggle_button.name = "DesignerProfileLibraryToggle"
@@ -757,10 +760,10 @@ func _build_surface() -> void:
 	_library_root = VBoxContainer.new()
 	_library_root.name = "DesignerProfileLibrary"
 	_library_root.visible = false
-	_library_root.add_theme_constant_override("separation", 5)
+	_library_root.add_theme_constant_override("separation", Tokens.SPACE_1)
 	_full_root.add_child(_library_root)
 	var name_row := HFlowContainer.new()
-	name_row.add_theme_constant_override("separation", 5)
+	name_row.add_theme_constant_override("separation", Tokens.SPACE_1)
 	_library_root.add_child(name_row)
 	_profile_name_input = LineEdit.new()
 	_profile_name_input.name = "DesignerProfileName"
@@ -811,7 +814,7 @@ func _build_surface() -> void:
 	_groups_box = VBoxContainer.new()
 	_groups_box.name = "DesignerGroups"
 	_groups_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_groups_box.add_theme_constant_override("separation", 8)
+	_groups_box.add_theme_constant_override("separation", Tokens.SPACE_1)
 	_full_root.add_child(_groups_box)
 
 	_status_label = Label.new()
@@ -821,7 +824,7 @@ func _build_surface() -> void:
 	_full_root.add_child(_status_label)
 
 	var reset_row := HFlowContainer.new()
-	reset_row.add_theme_constant_override("separation", 5)
+	reset_row.add_theme_constant_override("separation", Tokens.SPACE_1)
 	_full_root.add_child(reset_row)
 	var reset_b := Button.new()
 	reset_b.text = "Revert"
@@ -835,7 +838,7 @@ func _build_surface() -> void:
 	reset_row.add_child(factory_button)
 
 	var finish_row := HFlowContainer.new()
-	finish_row.add_theme_constant_override("separation", 5)
+	finish_row.add_theme_constant_override("separation", Tokens.SPACE_1)
 	_full_chrome.add_child(finish_row)
 	var keep_button := Button.new()
 	keep_button.text = "Keep & Hide"
@@ -844,7 +847,7 @@ func _build_surface() -> void:
 
 	_compact_root = VBoxContainer.new()
 	_compact_root.name = "DesignerCompact"
-	_compact_root.add_theme_constant_override("separation", 5)
+	_compact_root.add_theme_constant_override("separation", Tokens.SPACE_1)
 	add_child(_compact_root)
 	_compact_state_label = Label.new()
 	_compact_state_label.name = "DesignerCompactState"
@@ -1192,7 +1195,7 @@ func _build_owner_group(owner: String, specs: Array) -> void:
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_groups_box.add_child(panel)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 5)
+	box.add_theme_constant_override("separation", Tokens.SPACE_1)
 	panel.add_child(box)
 	var header := HBoxContainer.new()
 	box.add_child(header)
@@ -1240,7 +1243,7 @@ func _build_parameter_row(parent: VBoxContainer, spec) -> void:
 			entry["primary"] = checkbox
 		"int", "float":
 			var numeric_row := HBoxContainer.new()
-			numeric_row.add_theme_constant_override("separation", 6)
+			numeric_row.add_theme_constant_override("separation", Tokens.SPACE_1)
 			row.add_child(numeric_row)
 			var slider := HSlider.new()
 			slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL

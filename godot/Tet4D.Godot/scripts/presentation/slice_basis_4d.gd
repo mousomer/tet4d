@@ -20,12 +20,14 @@ const PLANE_XZ := "xz"
 const IDENTITY_SLOTS := [AXIS_X + 1, AXIS_Y + 1, AXIS_Z + 1, AXIS_W + 1]
 
 var _slots: Array = IDENTITY_SLOTS.duplicate()
+var _free_inspection := false
 
 
-func _init(slots: Array = []) -> void:
+func _init(slots: Array = [], free_inspection: bool = false) -> void:
+	_free_inspection = free_inspection
 	if slots.is_empty():
 		return
-	if not is_valid_slots(slots):
+	if not is_valid_slots(slots, _free_inspection):
 		push_error("Invalid 4D slice basis: %s" % str(slots))
 		return
 	_slots = slots.duplicate()
@@ -35,12 +37,18 @@ static func identity():
 	return new(IDENTITY_SLOTS)
 
 
+static func free_inspection():
+	return new(IDENTITY_SLOTS, true)
+
+
 static func from_slots(slots: Array):
 	return new(slots)
 
 
-static func is_valid_slots(slots: Array) -> bool:
-	if slots.size() != 4 or int(slots[1]) != AXIS_Y + 1:
+static func is_valid_slots(slots: Array, free_inspection: bool = false) -> bool:
+	if slots.size() != 4:
+		return false
+	if not free_inspection and slots[1] != AXIS_Y + 1:
 		return false
 	var seen := {}
 	for raw_axis in slots:
@@ -72,15 +80,15 @@ func is_identity() -> bool:
 func turned(plane: String, quarter_turn: int):
 	if quarter_turn not in [-1, 1]:
 		push_error("4D basis turns must be exact +/-90-degree turns")
-		return get_script().new(_slots)
+		return get_script().new(_slots, _free_inspection)
 	var axes := _plane_axes(plane)
-	if axes.is_empty():
+	if axes.is_empty() or (not _free_inspection and AXIS_Y in axes):
 		push_error("Unsupported 4D basis plane: %s" % plane)
-		return get_script().new(_slots)
+		return get_script().new(_slots, _free_inspection)
 	var result := []
 	for signed_axis in _slots:
 		result.append(_turn_signed_axis(int(signed_axis), int(axes[0]), int(axes[1]), quarter_turn))
-	return get_script().new(result)
+	return get_script().new(result, _free_inspection)
 
 
 func presentation_coordinate(
@@ -125,7 +133,7 @@ func visible_dimensions(canonical_dimensions: Array) -> Array:
 		return []
 	return [
 		int(canonical_dimensions[absi(int(_slots[0])) - 1]),
-		int(canonical_dimensions[AXIS_Y]),
+		int(canonical_dimensions[absi(int(_slots[1])) - 1]),
 		int(canonical_dimensions[absi(int(_slots[2])) - 1]),
 	]
 
@@ -147,16 +155,16 @@ func slice_axis_label() -> String:
 
 
 func indicator_snapshot() -> Dictionary:
+	var visible_axes := [signed_axis_label(int(_slots[0])), signed_axis_label(int(_slots[1])), signed_axis_label(int(_slots[2]))]
 	return {
 		"slots": slots(),
 		"key": key(),
-		"visible_axes": [signed_axis_label(int(_slots[0])), "+Y", signed_axis_label(int(_slots[2]))],
+		"visible_axes": visible_axes,
 		"slice_axis": signed_axis_label(int(_slots[3])),
-		"gravity_axis": "+Y",
-		"text": "View: %s · +Y · %s\nSlice: %s · Gravity: Y down" % [
-			signed_axis_label(int(_slots[0])),
-			signed_axis_label(int(_slots[2])),
-			signed_axis_label(int(_slots[3])),
+		"gravity_axis": "" if _free_inspection else "+Y",
+		"text": "View: %s\nSlice: %s%s" % [
+			" · ".join(visible_axes), signed_axis_label(int(_slots[3])),
+			" · Explorer" if _free_inspection else " · Gravity: Y down",
 		],
 	}
 
@@ -221,6 +229,12 @@ static func normalize_plane(plane: String) -> String:
 
 static func _plane_axes(plane: String) -> Array:
 	match normalize_plane(plane):
+		"xy":
+			return [AXIS_X, AXIS_Y]
+		"yz":
+			return [AXIS_Y, AXIS_Z]
+		"yw":
+			return [AXIS_Y, AXIS_W]
 		PLANE_XW:
 			return [AXIS_X, AXIS_W]
 		PLANE_ZW:

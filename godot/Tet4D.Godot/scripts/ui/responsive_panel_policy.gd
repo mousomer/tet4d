@@ -56,7 +56,10 @@ static func fit_content_key(root: Control) -> Array:
 	var targets: Array = [root]
 	targets.append_array(root.find_children("*", "Control", true, false))
 	for control in targets:
-		key.append([control.get_instance_id(), control.visible, control.custom_minimum_size])
+		# Scrollbar visibility is a result of allocation/wrapping at the current
+		# fit scale. Treating it as new intrinsic content restarts that same fit
+		# search whenever an overflow bar appears or disappears.
+		key.append([control.get_instance_id(), true if control is ScrollBar else control.visible, control.custom_minimum_size])
 		if control is Label or control is Button or control is RichTextLabel or control is LineEdit:
 			key.append([control.text, control.get_theme_font("font").get_instance_id(), control.get_theme_font_size("font_size")])
 		var names: Array = []

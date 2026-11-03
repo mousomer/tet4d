@@ -32,6 +32,7 @@ var _mode := ""
 var _density := "normal"
 var _groups: Array = []
 var _signature := ""
+var _render_signature := ""
 var _groups_box: Container
 var _title: Label
 var _scroll: ScrollContainer
@@ -43,6 +44,7 @@ var _glyphs: Array = []
 var _slice_keys_reversed := false
 var _detached_layout := false
 var _requested_layout := LAYOUT_DECK
+var _practice := false
 
 
 func _init() -> void:
@@ -83,25 +85,42 @@ func _init() -> void:
 	content.add_child(_groups_box)
 
 
-func configure(mode: String, basis_snapshot: Dictionary = {}, control_frame: Dictionary = {}, density: String = "normal", authority = LiveInputContractScript, layout: String = LAYOUT_DECK) -> void:
+func configure(mode: String, basis_snapshot: Dictionary = {}, control_frame: Dictionary = {}, density: String = "normal", authority = LiveInputContractScript, layout: String = LAYOUT_DECK, practice: bool = false) -> bool:
 	_requested_layout = layout
 	if _detached_layout and layout == LAYOUT_WIDE:
 		layout = LAYOUT_RAIL
 	var legend := layout in [LAYOUT_RAIL, LAYOUT_WIDE]
 	var groups: Array = authority.play_legend_groups(mode, basis_snapshot, control_frame) if legend else authority.piece_control_groups(mode, basis_snapshot, control_frame)
+	if practice:
+		groups = authority.practice_piece_control_groups(mode, basis_snapshot, control_frame)
 	var source := "LiveInputContract" if authority == LiveInputContractScript else "injected_fixture"
 	# Provenance is part of the cached identity: an injected fixture that happens
 	# to yield identical groups must not keep reporting contract provenance.
 	var next_signature := JSON.stringify([mode, density, source, layout, groups])
 	if next_signature == _signature:
-		return
+		return false
+	# Spatial legends draw canonical-axis changes through existing glyphs.
+	# Retain rows when only their non-rendered frame metadata changes.
+	var rendered_groups: Array = []
+	for group in groups:
+		var items: Array = []
+		for item in group.get("items", []):
+			items.append([item[0], _item_metadata(item).get("cockpit_direction", "") if str(group.get("cockpit_role", "")) == "translate" else item[1]])
+		rendered_groups.append([group.get("cockpit_role", ""), items])
+	var next_render_signature := JSON.stringify([mode, density, source, layout, practice, rendered_groups if legend and mode in ["live_3d", "live_4d"] else groups])
+	var needs_rebuild := next_render_signature != _render_signature
 	_mode = mode
+	_practice = practice
 	_density = density
 	_set_layout(layout)
 	_groups = groups.duplicate(true)
 	_source = source
 	_signature = next_signature
+	_render_signature = next_render_signature
+	if not needs_rebuild:
+		return false
 	_rebuild()
+	return true
 
 
 func set_detached_layout(enabled: bool) -> void:
@@ -111,6 +130,7 @@ func set_detached_layout(enabled: bool) -> void:
 	var layout := LAYOUT_RAIL if enabled and _requested_layout == LAYOUT_WIDE else _requested_layout
 	_set_layout(layout)
 	_signature = ""
+	_render_signature = ""
 	_rebuild()
 
 
@@ -225,8 +245,14 @@ func flash_plane(plane: String) -> bool:
 func set_screen_directions(directions: Dictionary) -> void:
 	_screen_directions = directions.duplicate()
 	if _is_spatial() and _slice_keys_reversed != _slice_positive_points_left():
-		_rebuild()
-		return
+		_slice_keys_reversed = _slice_positive_points_left()
+		# Swap the two displayed caps rather than rebuilding the whole legend.
+		for row in _groups_box.find_children("LegendSliceRow", "HBoxContainer", true, false):
+			var left := row.get_child(0) as Label
+			var right := row.get_child(2) as Label
+			var previous := left.text
+			left.text = right.text
+			right.text = previous
 	for glyph in _glyphs:
 		(glyph as ControlLegendGlyph).set_directions(_screen_directions)
 
@@ -356,6 +382,11 @@ func _build_spatial_legend(rows_by_role: Dictionary) -> void:
 	move_body.add_child(move_column)
 	if slice_labels.size() == 2:
 		move_column.add_child(_slice_row(slice_labels))
+	for semantic in rows_by_role.get("translate", []):
+		if str((semantic["semantic"] as Dictionary).get("cockpit_direction", "")) == "vertical":
+			var vertical: Dictionary = semantic.duplicate(true)
+			vertical["operation"] = "Up / Down"
+			move_column.add_child(_legend_row(vertical, cap_width * 2.0))
 	for semantic in rows_by_role.get("drop", []):
 		move_column.add_child(_legend_row(semantic, cap_width * 2.0))
 	_groups_box.add_child(move)
@@ -381,7 +412,7 @@ func _build_spatial_legend(rows_by_role: Dictionary) -> void:
 	_groups_box.add_child(rotate)
 
 	var game_rows: Array = rows_by_role.get("hold", []) + rows_by_role.get("session", [])
-	if _mode == "live_3d":
+	if _mode == "live_3d" and not _practice:
 		# The full VIEW module is hidden in the rail. Consume its existing Reset
 		# descriptor here so the key remains discoverable without another panel.
 		for group in LiveInputContractScript.view_control_groups(_mode):
@@ -391,7 +422,7 @@ func _build_spatial_legend(rows_by_role: Dictionary) -> void:
 					reset["operation"] = "Reset View"
 					game_rows.append(reset)
 	if not game_rows.is_empty():
-		var game := PassiveControlComponentsScript.section("GAME", "game", _density)
+		var game := PassiveControlComponentsScript.section("PRACTICE" if _practice else "GAME", "game", _density)
 		if _layout == LAYOUT_RAIL:
 			game.add_child(_compact_rows(game_rows))
 		else:

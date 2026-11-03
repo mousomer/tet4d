@@ -1378,7 +1378,7 @@ physics features.
 
 ## 8. Phase II — Explorer as Spatial Practice
 
-Status: next major capability
+Status: bounded practice MVP implemented; novice acceptance pending
 Dependency: accepted bounded game, stable presentation/input contracts, and
 bounded correctness/readability follow-up; no prerequisite to deliver topology
 games or the full topology editor.
@@ -1386,6 +1386,11 @@ games or the full topology editor.
 The first Godot Explorer is a **practice tool**, not the entire Topology
 Playground migration. Its first acceptance gate is
 `EXPLORER_LEARNING_READY`.
+
+The bounded implementation contract is
+`docs/architecture/bounded_practice_explorer.md`; local launch and remaining
+novice tasks are in `docs/plans/bounded_practice_explorer.md`. Automated
+conformance does not establish the human gate.
 
 ### Scope of the first practice Explorer
 

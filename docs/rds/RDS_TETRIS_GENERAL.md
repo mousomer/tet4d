@@ -943,6 +943,35 @@ Add optional geometry profiles where board adjacency is not strict cartesian gri
 10. Live-path regression coverage now pins the broader non-trivial `Y`-seam Play contract on the direct play-launch runtime: sphere-like and projective-style cases now check drop legality, sideways bottom-layer entry, and hard-drop parity on the real gameplay path rather than helper-only geometry probes.
 11. Current topology-playground migration authority lives in `docs/architecture/topology_playground_current_authority.md`; older topology-playground manifests and stage plans are historical background only.
 
+### Godot bounded spatial-practice Explorer
+
+The Main Menu exposes Explorer (`E`) as a bounded 3D/4D Sandbox distinct from
+ordinary Play. Practice permits deliberate translation in both directions on
+every active axis and all object rotation planes, without automatic gravity,
+drop, locking, hold or scoring. Existing native providers supply geometry,
+pose and adjacency results without transferring inherited reference authority.
+Object Retry restores the initial pose; Reset View preserves
+the object. The player-facing rail prioritizes View, with Piece selection and
+manipulation on a secondary page. Raw coordinates, cell/neighbor diagnostics,
+angle readouts are omitted; the lower helper deck keeps its Explorer rows. View offers
+all six exact XY/XZ/YZ/XW/YW/ZW planes in 4D, including Y-mixing turns, plus
+look, Fit/Reset and explicit slice inspection. These view turns change no
+object coordinates or native game state. Ordinary Play retains its +Y-fixed
+view basis. Entry and slice inspection draw no automatic dot.
+Vertical movement uses Z/X, with PageUp/PageDown aliases. Movement updates
+readouts in place and preserves side-panel controls, selected tab and scroll;
+it must not rerun ordinary Live HUD initialization or restyle the panel.
+Camera/basis turns and W-key order changes update helper metadata and labels
+in place. A piece selector and Replace piece (Space; P alias) use the configured native
+catalogue without advancing gameplay/RNG. Replacement becomes the Retry
+baseline while preserving view, target and pane state; invalid choices reject
+atomically.
+Projection overlap never proves adjacency. Play starts a fresh normal session
+from the frozen bounded setup. Non-bounded topology selection, the full editor
+and study collection remain deferred. Details:
+`docs/architecture/bounded_practice_explorer.md`. Human novice acceptance is
+separate from automated conformance evidence.
+
 ### 11.7 Test requirements (for future implementation)
 
 1. Golden parity tests: `cartesian` profile must match current gameplay results.
