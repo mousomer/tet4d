@@ -16,6 +16,8 @@ func run() -> Array:
 	if tree == null or scene == null:
 		return ["Live-4D legend acceptance requires the trace replay scene"]
 	var original_size := tree.root.size
+	var original_scale := tree.root.content_scale_size
+	var original_minimum := tree.root.min_size
 	tree.root.size = Vector2i(1600, 960)
 	var root := scene.instantiate() as Control
 	tree.root.add_child(root)
@@ -109,7 +111,49 @@ func run() -> Array:
 	root.queue_free()
 	await tree.process_frame
 	tree.root.size = original_size
+	tree.root.content_scale_size = original_scale
+	tree.root.min_size = original_minimum
 	return failures
+
+
+func _check_preview_refresh_fit(app, hud, tree: SceneTree) -> Array:
+	var failures: Array = []
+	tree.root.min_size = Vector2i.ZERO
+	tree.root.size = Vector2i(1280, 720)
+	tree.root.content_scale_size = tree.root.size
+	app._enter_live_4d_mode()
+	hud._set_onboarding_visible(false)
+	# Disable automatic gravity so only the commands below advance gameplay.
+	app.set_process(false)
+	for frame in range(120):
+		await tree.process_frame
+	var cockpit = hud._live_cockpit
+	var scale_before: float = cockpit.side_fit.fit_scale
+	if not cockpit.fit_settled() or scale_before >= 1.0:
+		failures.append("hard-drop regression must start with a settled scaled 4D side column")
+	var gaps_before: Array = _preview_gaps(hud)
+	for drop in range(2):
+		var hash_before := str(app._live_bridge.live_4d_state_hash())
+		app._live_4d_paused = false
+		if not app._dispatch_live_4d_gameplay_command("hard_drop") or str(app._live_bridge.live_4d_state_hash()) == hash_before:
+			failures.append("hard-drop regression must advance the native session")
+		if _preview_gaps(hud) != gaps_before:
+			failures.append("hard drop must preserve NEXT/HOLD's cockpit-compacted gaps")
+		# Check every intermediate frame: the old fit returned to the same scale
+		# eventually, hiding the visible full-size jump from a final-only check.
+		for frame in range(24):
+			await tree.process_frame
+			if not is_equal_approx(cockpit.side_fit.fit_scale, scale_before):
+				failures.append("hard drop %d must preserve side-column scale on frame %d" % [drop, frame])
+				break
+	return failures
+
+
+func _preview_gaps(hud) -> Array:
+	var gaps: Array = []
+	for panel in [hud._next_piece_panel, hud._hold_piece_panel]:
+		gaps.append([panel._margin.get_theme_constant("margin_top"), panel._margin.get_theme_constant("margin_bottom"), panel._content.get_theme_constant("separation")])
+	return gaps
 
 
 func _legend_style(strip: Control) -> Array:
@@ -129,34 +173,3 @@ func _legend_style(strip: Control) -> Array:
 			entry.append_array([control.get_theme_constant("h_separation"), control.get_theme_constant("v_separation")])
 		result.append(entry)
 	return result
-
-
-func _check_preview_refresh_fit(app, hud, tree: SceneTree) -> Array:
-	var failures: Array = []
-	var old_scale := tree.root.content_scale_size
-	var old_minimum := tree.root.min_size
-	tree.root.min_size = Vector2i.ZERO
-	tree.root.size = Vector2i(1280, 720)
-	tree.root.content_scale_size = tree.root.size
-	app._enter_live_4d_mode()
-	hud._set_onboarding_visible(false)
-	app.set_process(false)
-	for frame in range(120):
-		await tree.process_frame
-	var cockpit = hud._live_cockpit
-	var scale_before: float = cockpit.side_fit.fit_scale
-	if not cockpit.fit_settled() or scale_before >= 1.0:
-		failures.append("preview regression requires a settled scaled side column")
-	for drop in range(2):
-		app._live_4d_paused = false
-		var hash_before := str(app._live_bridge.live_4d_state_hash())
-		if not app._dispatch_live_4d_gameplay_command("hard_drop") or str(app._live_bridge.live_4d_state_hash()) == hash_before:
-			failures.append("preview regression must advance native gameplay")
-		for frame in range(24):
-			await tree.process_frame
-			if not is_equal_approx(cockpit.side_fit.fit_scale, scale_before):
-				failures.append("preview refresh must preserve scale on every frame")
-				break
-	tree.root.content_scale_size = old_scale
-	tree.root.min_size = old_minimum
-	return failures
