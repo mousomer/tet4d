@@ -128,6 +128,13 @@ or choose a spawn pose. Hold never mutates the Godot view/control frame.
 
 ## Native C++ / GDExtension status
 
+The bounded Godot practice Explorer composes the existing native geometry,
+bounded-pose and topology-step query providers under
+`bounded_practice_explorer.md`. Its detached pose, inspection and input adapter
+adds no inherited gameplay authority; camera, basis and renderer ownership is
+unchanged. `SliceBasis4D` also owns Explorer-only free inspection over all six
+view planes (including XY/YZ/YW); ordinary Play retains its +Y-fixed basis.
+
 Native code contains parity-backed implementations and query/session surfaces,
 including accepted plain bounded gameplay and deterministic geometry and
 legality/topology diagnostic slices. Stage 53B owns strict implementation of

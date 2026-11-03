@@ -73,6 +73,10 @@ var _control_frame_presentation_key := ""
 var _live_tick_accumulator := 0.0
 var _live_gravity_interval_seconds := DEFAULT_LIVE_GRAVITY_INTERVAL_SECONDS
 var _active_live_setup: Dictionary = {}
+var _practice
+var _practice_neighbors := false
+# Inspected canonical coordinate on the hidden axis; -1 follows the object.
+var _practice_slice := -1
 var _live_repeat_elapsed := {
 	"move_left": 0.0,
 	"move_right": 0.0,
@@ -175,6 +179,10 @@ func _process(delta: float) -> void:
 		_fit_view()
 	if _mode in [MODE_LIVE_3D, MODE_LIVE_4D]:
 		_publish_legend_screen_directions()
+	if _practice != null:
+		if _is_live_viewer_active() and not _live_mode_paused() and not _hud.live_interaction_owns_input():
+			_process_live_input_repeat(delta)
+		return
 	if _is_live_mode():
 		if not _live_mode_paused() and not _live_snapshot_game_over():
 			if _hud != null and _hud.onboarding_suspends_live_gameplay():
@@ -218,6 +226,9 @@ func _process(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if _hud != null and _hud.handle_window_mode_shortcut(event):
+		get_viewport().set_input_as_handled()
+		return
 	if event is InputEventKey:
 		_track_physical_fallback(event)
 	if _hud != null and _hud.handle_main_menu_shortcut(event):
@@ -235,7 +246,9 @@ func _input(event: InputEvent) -> void:
 		return
 	if _hud != null and _hud.live_interaction_owns_input():
 		return
-	if _mode == MODE_LIVE_4D and _handle_live_4d_camera_input(event):
+	if _handle_practice_view_input(event):
+		return
+	if _practice == null and _mode == MODE_LIVE_4D and _handle_live_4d_camera_input(event):
 		get_viewport().set_input_as_handled()
 		return
 	if _is_live_mode() and _event_is_camera_mouse_input(event) and _mouse_event_in_game_viewport(event):
@@ -243,8 +256,28 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 	if _is_live_mode() and _event_is_space_pressed_once(event):
-		_handle_live_space_hard_drop()
+		if _practice != null:
+			_practice_action("replace")
+		else:
+			_handle_live_space_hard_drop()
 		get_viewport().set_input_as_handled()
+
+
+func _handle_practice_view_input(event: InputEvent) -> bool:
+	if _practice == null:
+		return false
+	for group in LiveInputContractScript.practice_view_control_groups(_mode):
+		for item in group.items:
+			var metadata: Dictionary = item[2] if item.size() > 2 else {}
+			for prefix in ["negative_", "positive_", ""]:
+				var action := str(metadata.get(prefix + "action", ""))
+				# Shift+1…6 and the plain number pairs must never overlap, even
+				# when a Y-plane action has been rebound or cleared.
+				if not action.is_empty() and _event_action_pressed_once(event, [action], group.cockpit_role == "view_exact"):
+					_practice_action(str(metadata[prefix + "command"]))
+					get_viewport().set_input_as_handled()
+					return true
+	return false
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -253,6 +286,18 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _is_live_mode() and not _is_live_viewer_active():
 		if _event_action_pressed(event, ["quit", "replay_quit"]) or _event_is_escape(event):
 			_return_to_main_menu()
+		return
+	if _practice != null:
+		if _handle_practice_view_input(event):
+			return
+		if _event_action_pressed_once(event, ["explorer_replace_piece"]):
+			_practice_action("replace")
+			return
+		if _event_action_pressed_once(event, ["explorer_move_up", "explorer_move_down"]):
+			_practice_action("move_y_neg" if _event_action_pressed_once(event, ["explorer_move_up"]) else "move_y_pos")
+			get_viewport().set_input_as_handled()
+			return
+	if _practice != null and _event_action_pressed(event, ["live_pause", "live_3d_pause", "live_4d_pause"]):
 		return
 	if _mode == MODE_LIVE_2D:
 		if _handle_live_2d_input(event):
@@ -473,9 +518,9 @@ func _handle_live_4d_input(event: InputEvent) -> bool:
 	if event.is_action_pressed("mode_toggle_replay_live"):
 		_enter_replay_mode()
 		return true
-	if _handle_live_4d_camera_input(event):
+	if _practice == null and _handle_live_4d_camera_input(event):
 		return true
-	if _handle_live_4d_basis_input(event):
+	if _practice == null and _handle_live_4d_basis_input(event):
 		return true
 	if _event_action_pressed(event, ["live_pause", "live_4d_pause"]):
 		_toggle_live_4d_pause()
@@ -722,6 +767,7 @@ func _wire_hud() -> void:
 	_hud.new_random_game_requested.connect(_start_new_random_game)
 	_hud.replay_mode_requested.connect(_enter_replay_mode)
 	_hud.viewer_requested.connect(_return_to_viewer_from_navigation)
+	_hud.practice_requested.connect(_practice_action)
 	_hud.basis_turn_requested.connect(_apply_live_4d_basis_turn)
 	if _is_designer_product():
 		_hud.design_laboratory_requested.connect(_open_design_laboratory)
@@ -1067,7 +1113,7 @@ func _presentation_snapshot_for_render() -> Dictionary:
 
 
 func _refresh_ghost_cache() -> void:
-	if not _ghost_enabled or not _is_live_mode() or _current_snapshot.is_empty():
+	if _practice != null or not _ghost_enabled or not _is_live_mode() or _current_snapshot.is_empty():
 		_clear_ghost_cache()
 		return
 	var revision := "%s|%s" % [_mode, str(_current_snapshot.get("state_hash", ""))]
@@ -1190,6 +1236,9 @@ func _establish_canonical_view_and_fit(mode_name: String) -> void:
 
 func _reset_view() -> void:
 	_establish_canonical_view_and_fit(_mode)
+	if _practice != null:
+		_practice_slice = -1
+		_refresh_practice_snapshot()
 	_refresh_hud()
 
 
@@ -1362,7 +1411,125 @@ func _release_presentation_layout_guard_after_settle(revision: int) -> void:
 		_presentation_layout_guard_active = false
 
 
+func _clear_practice() -> void:
+	_practice = null
+	_practice_neighbors = false
+	_practice_slice = -1
+	if _hud != null:
+		_hud.set_practice_state(0)
+
+
+func _start_practice(dimension: int) -> void:
+	var mode_name := MODE_LIVE_3D if dimension == 3 else MODE_LIVE_4D
+	var setup: Dictionary = _hud.configured_live_setup(mode_name).duplicate(true)
+	_start_configured_live_game(setup)
+	var candidate = preload("res://scripts/presentation/practice_explorer.gd").new(_live_bridge)
+	if not candidate.begin(_current_snapshot):
+		push_error("Explorer could not initialize a bounded native piece pose")
+		return
+	_practice = candidate
+	if dimension == 4:
+		_live_4d_basis = SliceBasis4DScript.free_inspection()
+		_renderer.set_live_4d_basis(_live_4d_basis, false)
+	_clear_ghost_cache()
+	_reset_live_repeat_state()
+	_refresh_practice_snapshot()
+	_fit_view()
+
+
+func _practice_hidden_axis() -> int:
+	return absi(int(_live_4d_basis.slots()[3])) - 1 if _mode == MODE_LIVE_4D else 2
+
+
+func _practice_action(action: String) -> void:
+	if action in ["dimension_3", "dimension_4"]:
+		if _practice != null and _practice.dimension() == (3 if action == "dimension_3" else 4):
+			if not _is_live_viewer_active():
+				_return_to_viewer_from_navigation()
+			return
+		_start_practice(3 if action == "dimension_3" else 4)
+		return
+	if _practice == null:
+		return
+	match action:
+		"play":
+			_start_configured_live_game(_active_live_setup.duplicate(true))
+			return
+		"retry":
+			_practice.retry()
+		"replace":
+			_practice.replace_next_piece()
+		"cell":
+			_practice.select_next_cell()
+		"neighbors":
+			_practice_neighbors = not _practice_neighbors
+		"target":
+			_practice.place_target()
+		"view_reset":
+			_reset_view()
+		"view_fit":
+			_fit_view()
+		"look_yaw_left", "look_yaw_right", "look_pitch_up", "look_pitch_down":
+			var yaw := action.begins_with("look_yaw")
+			var positive := action.ends_with("left") or action.ends_with("up")
+			var step: float = (CameraRigScript.LIVE_4D_CAMERA_YAW_STEP_RAD if yaw else CameraRigScript.LIVE_4D_CAMERA_PITCH_STEP_RAD) * (1 if positive else -1)
+			if _practice.dimension() == 4:
+				if yaw:
+					_nudge_live_4d_local_yaw(step)
+				else:
+					_nudge_live_4d_local_pitch(step)
+			elif _camera_rig != null:
+				if yaw:
+					_camera_rig.nudge_yaw(step)
+				else:
+					_camera_rig.nudge_pitch(step)
+		"zoom_out", "zoom_in":
+			if _camera_rig != null:
+				_camera_rig.zoom(1.0 if action == "zoom_out" else -1.0)
+				_refresh_camera_status()
+		"slice_neg", "slice_pos":
+			if _practice.dimension() == 4:
+				var axis := _practice_hidden_axis()
+				var direction := -1 if action == "slice_neg" else 1
+				var start := _practice_slice
+				if start < 0:
+					# Leave the object's own slice span on the first step.
+					var coordinates: Array = _practice.cells.map(func(cell): return int(cell[axis]))
+					start = coordinates.min() if direction < 0 else coordinates.max()
+				_practice_slice = posmod(start + direction, int(_current_snapshot.board_shape[axis]))
+		_:
+			if action.begins_with("piece_"):
+				var piece_index := action.trim_prefix("piece_")
+				_practice.replace_piece(piece_index.to_int() if piece_index.is_valid_int() else -1)
+			elif action.begins_with("basis_"):
+				_apply_live_4d_basis_turn(action.get_slice("_", 1), -1 if action.ends_with("neg") else 1)
+			else:
+				_practice.command(action)
+	_refresh_practice_snapshot()
+
+
+func _refresh_practice_snapshot() -> void:
+	if _practice == null:
+		return
+	if _practice_slice >= 0:
+		_practice_slice = mini(_practice_slice, int(_current_snapshot.board_shape[_practice_hidden_axis()]) - 1)
+	_current_snapshot = _practice.snapshot(_practice_neighbors, _practice_hidden_axis(), _practice_slice)
+	_refresh_render()
+	_refresh_hud()
+
+
+func _refresh_practice_panel() -> void:
+	if _practice.dimension() == 4:
+		_hud.set_practice_view_basis(_live_4d_basis.indicator_snapshot())
+	_hud.set_practice_state(_practice.dimension(), _practice.feedback, _practice.piece_names(), _practice.selected_piece)
+
+
 func _refresh_hud() -> void:
+	if _practice != null:
+		# Practice has its own readouts. Re-entering ordinary Live HUD setup
+		# here restyles/reparents the side panel on every object command.
+		_refresh_camera_status()
+		return
 	_refresh_control_frame_presentation()
 	if _mode == MODE_LIVE_2D:
 		var game_over := _live_snapshot_game_over()
@@ -1425,6 +1592,8 @@ func _refresh_camera_status() -> void:
 	if _camera_rig != null and _camera_rig.has_method("view_status_text"):
 		_hud.set_camera_status(_camera_rig.view_status_text())
 	_refresh_control_frame_presentation()
+	if _practice != null:
+		_refresh_practice_panel()
 
 
 func _live_4d_basis_hud_snapshot() -> Dictionary:
@@ -1502,6 +1671,7 @@ func _bundle_case_count() -> int:
 
 
 func _start_configured_live_game(setup: Dictionary, preserve_current_view: bool = false) -> void:
+	_clear_practice()
 	_sync_control_frames_from_setup()
 	var mode_name := str(setup.get("mode", ""))
 	var configured := false
@@ -1545,6 +1715,9 @@ func _start_ordinary_live_mode(mode_name: String, preserve_current_view: bool = 
 
 
 func _start_new_random_game() -> void:
+	if _practice != null:
+		_practice_action("retry")
+		return
 	# Legacy internal name; the action now starts another game for either seed
 	# policy. Checked native configuration owns seed selection from frozen setup.
 	if _active_live_setup.is_empty():
@@ -1717,6 +1890,7 @@ func _change_live_setup(mode_name: String) -> void:
 
 
 func _enter_replay_mode() -> void:
+	_clear_practice()
 	_clear_retained_live_navigation_state()
 	if _mode == MODE_LIVE_4D:
 		_clear_live_4d_presentation_state(false)
@@ -1754,12 +1928,18 @@ func _live_2d_command(command: String) -> void:
 
 
 func _live_3d_command(command: String) -> void:
+	if _practice != null:
+		_practice_action(command)
+		return
 	var result := _live_bridge.live_3d_apply_command(command)
 	_update_live_drop_timing(command, result)
 	_refresh_live_3d_snapshot()
 
 
 func _live_4d_command(command: String) -> void:
+	if _practice != null:
+		_practice_action(command)
+		return
 	var result := _live_bridge.live_4d_apply_command(command)
 	_update_live_drop_timing(command, result)
 	_refresh_live_4d_snapshot()
@@ -1903,8 +2083,12 @@ func _apply_live_4d_basis_turn(plane: String, direction: int) -> void:
 		return
 	_flash_legend_plane(plane, true)
 	_live_4d_basis = _live_4d_basis.turned(plane, direction)
+	if _practice != null:
+		_practice_slice = -1
 	_renderer.set_live_4d_basis(_live_4d_basis, true)
 	_refresh_live_4d_presentation()
+	if _practice != null:
+		_refresh_practice_snapshot()
 	_refresh_hud()
 
 
@@ -1913,7 +2097,7 @@ func _apply_live_4d_basis_turn(plane: String, direction: int) -> void:
 func _reset_live_4d_basis_only() -> void:
 	if _mode != MODE_LIVE_4D:
 		return
-	_live_4d_basis = SliceBasis4DScript.identity()
+	_live_4d_basis = SliceBasis4DScript.free_inspection() if _practice != null else SliceBasis4DScript.identity()
 	if _renderer != null:
 		_renderer.set_live_4d_basis(_live_4d_basis, false)
 	_refresh_live_4d_presentation()
@@ -1923,7 +2107,7 @@ func _reset_live_4d_basis_only() -> void:
 # Restores the complete ephemeral Live-4D presentation state. Native gameplay,
 # the frozen setup, and persisted shell preferences are deliberately excluded.
 func _restore_live_4d_presentation_defaults() -> void:
-	_live_4d_basis = SliceBasis4DScript.identity()
+	_live_4d_basis = SliceBasis4DScript.free_inspection() if _practice != null else SliceBasis4DScript.identity()
 	_live_4d_local_orientation.set_normal_gameplay_angles(0.0, 0.0)
 	if _renderer != null:
 		_renderer.clear_presentation()
@@ -1956,6 +2140,9 @@ func _reset_live_2d() -> void:
 
 
 func _reset_live_3d() -> void:
+	if _practice != null:
+		_practice_action("retry")
+		return
 	_live_3d_last_rotation_label = "none"
 	_live_3d_last_rotation_status = "none"
 	_live_bridge.live_3d_reset()
@@ -1967,6 +2154,9 @@ func _reset_live_3d() -> void:
 
 
 func _reset_live_4d() -> void:
+	if _practice != null:
+		_practice_action("retry")
+		return
 	_live_4d_last_rotation_label = "none"
 	_live_4d_last_rotation_status = "none"
 	_live_bridge.live_4d_reset()
@@ -1996,6 +2186,9 @@ func _toggle_live_4d_pause() -> void:
 
 
 func _ensure_live_game_paused_for_focus_loss() -> void:
+	if _practice != null:
+		_reset_live_repeat_state()
+		return
 	# Window focus loss is a one-way lifecycle event, not an invocation of the
 	# player's toggle: a paused or game-over session must remain exactly so.
 	# `NOTIFICATION_WM_WINDOW_FOCUS_OUT` is the cross-platform notification for
@@ -2276,6 +2469,9 @@ func _refresh_live_2d_snapshot() -> void:
 
 
 func _refresh_live_3d_snapshot() -> void:
+	if _practice != null:
+		_refresh_practice_snapshot()
+		return
 	var parsed = JSON.parse_string(_live_bridge.live_3d_snapshot_json())
 	if typeof(parsed) != TYPE_DICTIONARY:
 		_current_snapshot = {
@@ -2311,6 +2507,9 @@ func _refresh_live_3d_snapshot() -> void:
 
 
 func _refresh_live_4d_snapshot() -> void:
+	if _practice != null:
+		_refresh_practice_snapshot()
+		return
 	var parsed = JSON.parse_string(_live_bridge.live_4d_snapshot_json())
 	if typeof(parsed) != TYPE_DICTIONARY:
 		_current_snapshot = {
@@ -2428,23 +2627,23 @@ func _live_snapshot_game_over_reason() -> String:
 	return ""
 
 
-func _event_action_pressed(event: InputEvent, action_names: Array) -> bool:
+func _event_action_pressed(event: InputEvent, action_names: Array, exact_match: bool = false) -> bool:
 	for action_name in action_names:
-		if event.is_action_pressed(str(action_name)):
+		if event.is_action_pressed(str(action_name), false, exact_match):
 			return true
 	var positional := PhysicalKeyFallbackScript.synthesize(event, _physical_fallback_bound)
 	if positional == null:
 		return false
 	for action_name in action_names:
-		if positional.is_action_pressed(str(action_name)):
+		if positional.is_action_pressed(str(action_name), false, exact_match):
 			return true
 	return false
 
 
-func _event_action_pressed_once(event: InputEvent, action_names: Array) -> bool:
+func _event_action_pressed_once(event: InputEvent, action_names: Array, exact_match: bool = false) -> bool:
 	if event is InputEventKey and (event as InputEventKey).echo:
 		return false
-	return _event_action_pressed(event, action_names)
+	return _event_action_pressed(event, action_names, exact_match)
 
 
 func _event_is_escape(event: InputEvent) -> bool:
@@ -2657,8 +2856,10 @@ func _ensure_input_map() -> void:
 		var spec: Dictionary = live_action_specs.get(action_name, {})
 		for forbidden_key in spec.get("forbidden_keys", []):
 			_remove_key_action(str(action_name), int(forbidden_key) as Key)
-		for keycode in spec.get("keys", []):
-			_ensure_key_action(str(action_name), int(keycode) as Key)
+		var default_events := LiveInputContractScript.binding_events(str(action_name))
+		InputMap.add_action(action_name)
+		for binding_event in default_events:
+			InputMap.action_add_event(action_name, binding_event)
 	_ensure_mouse_action("camera_orbit", LiveInputContractScript.CAMERA_ORBIT_BUTTON)
 	_ensure_mouse_action("camera_pan", LiveInputContractScript.CAMERA_PAN_BUTTON)
 	_ensure_mouse_action("camera_zoom", MOUSE_BUTTON_WHEEL_UP)

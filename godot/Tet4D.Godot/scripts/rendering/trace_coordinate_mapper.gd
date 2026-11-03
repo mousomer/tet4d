@@ -203,6 +203,11 @@ func slice_axis_label() -> String:
 	return _basis.slice_axis_label() if _board_shape.size() == 4 else "+W"
 
 
+# Canonical axis index the layers step along; -1 below 4D.
+func slice_axis() -> int:
+	return absi(int(_basis.slots()[3])) - 1 if _board_shape.size() == 4 else -1
+
+
 func semantic_slice_coordinate(layer_index: int) -> int:
 	return _basis.semantic_slice_coordinate(layer_index, _board_shape) if _board_shape.size() == 4 else layer_index
 

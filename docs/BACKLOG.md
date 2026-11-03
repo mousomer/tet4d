@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-11-02
+Updated: 2026-11-03
 Scope: active work, explicit deferrals, and near-term acceptance boundaries.
 
 Completed chronology is recoverable from Git, merged PRs, CI, and
@@ -24,7 +24,14 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ## Active Work
 
-### Spatial-intuition research priorities (planning; not implemented)
+- [x] Correct the aggregate input-map regression to validate declared Shift modifiers and reject plain-key aliases for Explorer view actions.
+- [ ] Publish 0.9.2 from the merged CI-verified SHA through `current_all` packaging, inspect the draft manifest/assets, and complete the separate publication workflow.
+
+- [x] Desktop visual acceptance (owner confirmed): Alt+Enter or F11 toggles fullscreen/windowed from menus
+  and 2D/3D/4D gameplay, restores window size, and persists the selected mode.
+  Large-window menus retain normal text size instead of magnifying up to 2×.
+
+### Spatial-intuition research priorities
 
 The programme now prioritizes a bounded Godot Explorer, professional user
 comprehension, and empirical testing of 4D competence over first-class topology
@@ -38,10 +45,34 @@ documentation/priority decision, not approval to deploy a study or backend.
   Stage 58B scale, layout locks and deterministic movement semantics. Keep
   existing Designer/replay, Stage 58C/59 and camera-relative-motion issues in
   their current owning workstreams instead of duplicating them here.
-- [ ] P1: scope a **Godot practice Explorer MVP**: free X/Y/Z/W manipulation,
-  independent object/camera/basis/slice controls, explicit orientation and
-  3D/4D neighbor cues, reset and bounded Play transition. Define novice
-  acceptance and regression coverage for both 3D and 4D.
+- [x] P1 scope: bounded **Godot practice Explorer MVP** and automated
+  3D/4D regression coverage. Contract:
+  `docs/architecture/bounded_practice_explorer.md`; implementation/QA plan:
+  `docs/plans/bounded_practice_explorer.md`. Main Menu → Explorer (`E`)
+  opens gravity-free Sandbox with native-query object movement/rotation,
+  independent camera/basis/slice inspection, a View-first player-facing rail,
+  exact Retry and a fresh bounded Play transition.
+  The lower helper deck keeps its Explorer rows; raw debug readouts are hidden; automatic entry/slice dots
+  are removed and targets are marked explicitly.
+  Z/X provide compact-keyboard Y movement; object commands update readouts
+  in place without restyling or reparenting the side panel.
+  Camera/basis/reset and W-key order updates retain helper-row instances.
+  Dimension changes retain Explorer tab/control instances.
+  View exposes all six exact 4D planes, including XY/YZ/YW; ordinary Play
+  retains its +Y-fixed view basis. VIEW unifies clickable helper keycaps and
+  keyboard dispatch, including Shift+1–6 Y-plane bindings, without a lower
+  duplicate. The lower object helper remains; Piece controls are secondary.
+  Rejected-action feedback uses a bounded scrolling slot so action text cannot restart HUD
+  fitting; frame-by-frame geometry/scale regressions cover both dimensions.
+  Native-catalog piece selection and Replace piece (Space; P alias) preserve view and game
+  queue; Retry restores the selected replacement.
+- [x] Compact Settings and presentation Designer preference menus: use the
+  scoped compact typography/padding, smaller Designer list and popup fonts,
+  and retain reflow, keyboard access and theme/rebuild behavior.
+
+- [ ] P1 acceptance: run the plan's novice tasks and supported-window visual
+  review; `EXPLORER_LEARNING_READY` remains pending. No learning-study or
+  participant-backend readiness is implied by the implementation.
 - [ ] P2: commission and execute a professional UI/comprehension review,
   including contrast hierarchy, occlusion/depth, active/inactive slice
   distinction, key discoverability, cockpit density and responsive text.

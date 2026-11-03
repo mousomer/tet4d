@@ -99,6 +99,7 @@ func run() -> Array:
 	instrument_button.free()
 	panel.queue_free()
 	await tree.process_frame
+	failures.append_array(await _check_compact_editors(tree, manager))
 	failures.append_array(_check_settings_registry())
 	failures.append_array(_check_replay_visual_roles())
 	return failures
@@ -243,4 +244,54 @@ func _check_replay_visual_roles() -> Array: # tet4d-semantic-boundary: allow tes
 		failures.append("event markers should use diagnostic.bounds")
 	if ReplayVisuals.color_for_role(ReplayVisuals.ROLE_ACCENT_SOFT, "tron") != manager.get_color(ShellStyleRolesScript.ACCENT_SOFT):
 		failures.append("soft accent should use config-owned accent.soft")
+	return failures
+
+
+func _check_compact_editors(tree: SceneTree, manager) -> Array:
+	var failures: Array = []
+	var applier = ShellControlStyleApplierScript.new()
+	var settings = SettingsPanelScript.new()
+	settings.set_style_manager(manager)
+	tree.root.add_child(settings)
+	settings.size = Vector2(420, 620)
+	for frame in 3:
+		await tree.process_frame
+	var dropdown: OptionButton = settings.generated_control("theme.name")
+	if dropdown.get_theme_font_size("font_size") != ShellDesignTokensScript.FONT_CHROME_BODY or dropdown.get_popup().theme.get_font_size("font_size", "PopupMenu") != ShellDesignTokensScript.FONT_CHROME_BODY:
+		failures.append("Settings controls and their popup menus must use compact typography")
+	var content: Control = settings._scroll.get_node("SettingsContent")
+	var compact_height := content.get_combined_minimum_size().y
+	settings.set_meta("shell_chrome", false)
+	settings.apply_shell_style()
+	for frame in 3:
+		await tree.process_frame
+	if content.get_combined_minimum_size().y <= compact_height:
+		failures.append("compact Settings must fit more rows than the large menu typography at the same width")
+	settings.set_meta("shell_chrome", true)
+	settings.set_display_mode("plain")
+	if dropdown.get_theme_font_size("font_size") != ShellDesignTokensScript.FONT_CHROME_BODY:
+		failures.append("theme changes must retain compact Settings sizing")
+	var designer = load("res://scripts/ui/presentation_designer.gd").new()
+	tree.root.add_child(designer)
+	designer.size = Vector2(420, 650)
+	designer.controls_rebuilt.connect(func(): applier.apply_to_tree(designer, manager))
+	designer.configure(settings.registry)
+	var profile = load("res://scripts/presentation/presentation_profile.gd").canonical_defaults()
+	designer.open_with_profile(profile, "live_4d")
+	for mode in ["live_4d", "live_3d"]:
+		designer.set_runtime_context(mode)
+		await tree.process_frame
+		var control: OptionButton = designer.control_for_setting("theme.name")
+		if control.get_theme_font_size("font_size") != ShellDesignTokensScript.FONT_CHROME_BODY or designer._built_in_list.get_theme_font_size("font_size") != ShellDesignTokensScript.FONT_CHROME_BODY:
+			failures.append("Designer controls/lists must retain small fonts after controls rebuild")
+		if designer._status_label.get_theme_font_size("font_size") != ShellDesignTokensScript.FONT_CHROME_SUPPORTING:
+			failures.append("Designer supporting text must use the compact supporting size")
+	var ordinary := Button.new()
+	applier.apply_to_tree(ordinary, manager)
+	if ordinary.get_theme_font_size("font_size") != ShellDesignTokensScript.FONT_BODY:
+		failures.append("compact editors must not shrink unrelated menu controls")
+	ordinary.free()
+	designer.queue_free()
+	settings.queue_free()
+	await tree.process_frame
 	return failures

@@ -1000,8 +1000,14 @@ func run() -> Array:
 		for required_key in spec.get("keys", []):
 			var expected_event := InputEventKey.new()
 			expected_event.keycode = int(required_key)
+			expected_event.shift_pressed = bool(spec.get("shift", false))
 			if not InputMap.action_has_event(str(action_name), expected_event):
 				failures.append("InputMap %s should consume the shared contract binding %s" % [action_name, str(required_key)])
+			if expected_event.shift_pressed:
+				var unmodified_event := InputEventKey.new()
+				unmodified_event.keycode = int(required_key)
+				if InputMap.action_has_event(str(action_name), unmodified_event):
+					failures.append("InputMap %s must keep its shifted binding distinct from the plain key" % action_name)
 	if app != null and app._hud != null:
 		app._hud._settings_store.set_value("display.ui_scale", "standard")
 	root.queue_free()

@@ -175,6 +175,7 @@ func run() -> Array:
 	if standard_fresh != Vector2i(1280, 720):
 		failures.append("a scale-one fresh profile should preserve the logical default as pixels")
 	await _assert_startup_does_not_remember_before_settings_apply(failures)
+	failures.append_array(await _check_window_shortcut())
 	_cleanup()
 	return failures
 
@@ -220,3 +221,55 @@ func _cleanup() -> void:
 	for path in [TEST_PATH, "%s.tmp" % TEST_PATH, GAME_SETUP_SENTINEL_PATH]:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+
+
+func _check_window_shortcut() -> Array:
+	var failures: Array = []
+	var tree := Engine.get_main_loop() as SceneTree
+	var scene = load("res://scenes/trace_replay.tscn").instantiate()
+	tree.root.add_child(scene)
+	await tree.process_frame
+	var hud = scene.get_node("ReplayHud")
+	var app = scene.get_node("App")
+	hud._settings_store._storage_path = TEST_PATH
+	hud._apply_window_mode("windowed")
+	for frame in range(60):
+		await tree.process_frame
+	hud._settings_store.set_value("display.window_mode", "windowed")
+	var event := InputEventKey.new()
+	event.keycode = KEY_F11
+	event.physical_keycode = KEY_F11
+	event.pressed = true
+	app._input(event)
+	if hud._settings_store.value("display.window_mode") != "fullscreen":
+		failures.append("F11 must enter fullscreen from the menu")
+	event.echo = true
+	if hud.handle_window_mode_shortcut(event) or hud._settings_store.value("display.window_mode") != "fullscreen":
+		failures.append("held F11 must not toggle repeatedly")
+	event.echo = false
+	event.pressed = false
+	if hud.handle_window_mode_shortcut(event):
+		failures.append("F11 release must not toggle")
+	event.keycode = KEY_ENTER
+	event.physical_keycode = KEY_ENTER
+	event.alt_pressed = true
+	app._enter_live_4d_mode()
+	var hash_before := str(app._live_bridge.live_4d_state_hash())
+	event.pressed = true
+	app._input(event)
+	if hud._settings_store.value("display.window_mode") != "windowed":
+		failures.append("Alt+Enter must leave fullscreen during live gameplay")
+	if str(app._live_bridge.live_4d_state_hash()) != hash_before:
+		failures.append("window mode shortcut must not mutate gameplay")
+	var reopened = StoreScript.new(_shortcut_registry(), TEST_PATH)
+	if reopened.value("display.window_mode") != "windowed":
+		failures.append("shortcut window mode must persist")
+	scene.queue_free()
+	await tree.process_frame
+	return failures
+
+
+func _shortcut_registry():
+	var registry = RegistryScript.new()
+	registry.load_from_path(RegistryScript.REGISTRY_PATH)
+	return registry

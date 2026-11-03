@@ -105,6 +105,9 @@ func _check_production_deck() -> Array:
 	await tree.process_frame
 	await tree.process_frame
 	var app = root.get_node("App")
+	# Measure helper side effects without unrelated wall-clock gravity. A
+	# dismissed onboarding guide must not change this test's native-state oracle.
+	app.set_process(false)
 	var hud = root.get_node("ReplayHud")
 	app._enter_live_4d_mode()
 	await tree.process_frame

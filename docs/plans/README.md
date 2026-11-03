@@ -53,6 +53,12 @@ general planning redirection or repo-wide ownership notes.
 - Does **not** own programme stage order, durable product behaviour, topology
   semantics, server implementation or new research-study authorization.
 
+### `bounded_practice_explorer.md`
+- Role: `spec`; status: `active`.
+- Owns bounded Godot Sandbox implementation scope and novice acceptance tasks.
+- Product/query composition contract: `docs/architecture/bounded_practice_explorer.md`.
+- Human `EXPLORER_LEARNING_READY` acceptance remains distinct from automated tests.
+
 ### `gameboard_visual_language_design.md`
 - Role: `authority`
 - Status: `active`

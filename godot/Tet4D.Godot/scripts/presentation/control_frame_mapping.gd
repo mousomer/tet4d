@@ -44,6 +44,7 @@ func _init(basis = null, yaw_radians: float = 0.0, requested_dimension: int = 4)
 	var slots := [1, 2, 3, 4]
 	if basis != null and basis.has_method("slots"):
 		slots = basis.slots()
+	vertical = _signed_axis(int(slots[1]))
 	var presentation_horizontal := _signed_axis(int(slots[0]))
 	var presentation_depth := _signed_axis(int(slots[2]))
 	slice = _signed_axis(int(slots[3])) if dimension >= 4 else {"axis": -1, "sign": 0}

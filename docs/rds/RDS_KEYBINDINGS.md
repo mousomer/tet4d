@@ -462,6 +462,21 @@ Implemented in code:
 
 ### 4.4 Explorer-only movement contract
 
+The bounded Godot practice Explorer registers `explorer_move_up` and
+`explorer_move_down` in `LiveInputContract` with Z (up) and X (down) defaults
+accessible on compact MacBook keyboards. PageUp/PageDown remain aliases.
+`explorer_replace_piece` uses Space (with P as an alias) to choose the next native catalogue piece in
+practice; Space is consumed before ordinary hard-drop dispatch. P retains its ordinary Pause behavior outside Explorer.
+The unified VIEW helper/control panel exposes all six 4D view planes. Its
+keycaps display current bindings and are clickable: Shift+1/2 selects XY−/+,
+Shift+3/4 selects YZ−/+, and Shift+5/6 selects YW−/+. Plain 1–6 retain
+XZ/XW/ZW. Explorer matches modifiers exactly, so one keypress invokes one
+plane. O/L yaw, I/K pitch, −/= zoom, 0 reset and [/] slice inspection share
+the same helper/action descriptors; double-click and the Fit keycap fit the
+view. These Explorer-only commands do not expand ordinary Play's Y-fixed
+view contract. Piece controls remain secondary. These Y actions are consumed only in practice; they do
+not become ordinary gameplay drop or traversal actions.
+
 1. `move_up` and `move_down` are explorer-only traversal actions and are stored under the dedicated `explorer` keybinding group, not under normal gameplay translation.
 2. Normal Game controls must not expose or dispatch `move_up`.
 3. Explorer Mode help/control panels must show the bound `move_up` / `move_down` keys whenever exploration controls are active.

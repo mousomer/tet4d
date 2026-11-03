@@ -2,6 +2,7 @@ extends PanelContainer
 
 class_name SettingsPanel
 
+const Tokens = preload("res://scripts/ui/style/shell_design_tokens.gd")
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 const SettingsRegistryScript = preload("res://scripts/ui/settings/settings_registry.gd")
 const SettingSpecScript = preload("res://scripts/ui/settings/setting_spec.gd")
@@ -51,6 +52,7 @@ var _presentation_context := "global_settings"
 
 
 func _ready() -> void:
+	set_meta("shell_chrome", true)
 	if registry.settings.is_empty():
 		registry.load_from_path(SettingsRegistryScript.REGISTRY_PATH)
 	if store == null:
@@ -178,7 +180,7 @@ func _build_panel() -> void:
 	var content := VBoxContainer.new()
 	content.name = "SettingsContent"
 	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	content.add_theme_constant_override("separation", ReplayVisuals.PANEL_GAP)
+	content.add_theme_constant_override("separation", Tokens.SPACE_1)
 	_scroll.add_child(content)
 	content.add_child(_panel_intro())
 	for category_data in registry.categories:
@@ -242,7 +244,7 @@ func _setting_row(spec) -> Control:
 	var row_content := BoxContainer.new()
 	row_content.name = "SettingRowContent"
 	row_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row_content.add_theme_constant_override("separation", ReplayVisuals.CONTROL_GAP)
+	row_content.add_theme_constant_override("separation", Tokens.SPACE_1)
 	row.add_child(row_content)
 	var text_box := VBoxContainer.new()
 	text_box.custom_minimum_size = Vector2(132, 0)
@@ -442,7 +444,7 @@ func _apply_responsive_layout() -> void:
 		return
 	var content := _scroll.get_node("SettingsContent") as VBoxContainer
 	var available := _scroll.size
-	ResponsivePanelPolicyScript.compact_spacing(content, available)
+	content.add_theme_constant_override("separation", Tokens.SPACE_1)
 	for row in _rows_by_id.values():
 		var row_control := row as PanelContainer
 		var row_content := row_control.get_node("SettingRowContent") as BoxContainer

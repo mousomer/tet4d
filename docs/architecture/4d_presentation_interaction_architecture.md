@@ -1,5 +1,12 @@
 # 4D Presentation and Interaction Architecture
 
+Explorer/free inspection is the explicit exception to the normal-game +Y-fixed
+basis below. Its contract is `bounded_practice_explorer.md`: all six exact
+planes are available, including XY/YZ/YW, using signed-permutation projection
+and inverse mapping owned by `SliceBasis4D`. This state is transient, has no
+gravity/gameplay authority and is cleared before ordinary Play.
+
+
 Role: accepted architecture contract
 Status: Stage 54E-1 complete — human accepted
 Scope: Live 4D Godot presentation and input adaptation only

@@ -69,6 +69,16 @@ func run() -> Array:
 	label.add_theme_font_size_override("font_size", 32)
 	if Policy.fit_content_key(panel) == edited:
 		failures.append("font metrics on existing controls must invalidate the fit")
+	var bar := VScrollBar.new()
+	panel.add_child(bar)
+	var with_bar := Policy.fit_content_key(panel)
+	bar.visible = false
+	if Policy.fit_content_key(panel) != with_bar:
+		failures.append("overflow scrollbar visibility is fit output, not new intrinsic content")
+	var before_hide := Policy.fit_content_key(panel)
+	label.visible = false
+	if Policy.fit_content_key(panel) == before_hide:
+		failures.append("ordinary content visibility must still invalidate fitting")
 	panel.free()
 	return failures
 

@@ -74,6 +74,7 @@ signal basis_turn_requested(plane: String, direction: int)
 signal design_restoration_requested(profile)
 signal presentation_profile_changed(profile)
 signal design_laboratory_requested()
+signal practice_requested(action: String)
 
 const SCREEN_MAIN_MENU := "main_menu"
 const SCREEN_BROWSER := "browser"
@@ -145,6 +146,8 @@ var _designer_button: Button
 var _design_menu_header: Control
 var _design_lab_button: Button
 var _main_menu_focus_order: Array[Control] = []
+var _practice_panel
+var _practice_active := false
 # The main menu's fit-to-window box and its last decision inputs.
 var _main_menu_fit
 var _main_menu_fit_room := Vector2.ZERO
@@ -351,6 +354,8 @@ func start_current_validated_setup(mode: String = "") -> bool:
 
 
 func set_control_frame_snapshot(snapshot: Dictionary) -> void:
+	if _control_frame_snapshot == snapshot:
+		return
 	_control_frame_snapshot = snapshot.duplicate(true)
 	_refresh_piece_control_strip()
 
@@ -796,8 +801,11 @@ func _configure_live_cockpit_mode(mode: String) -> void:
 			_hud_density,
 			mode,
 			LiveInputContractScript,
-			LiveViewControlStripScript.LAYOUT_WIDE if mode == GameSetupSpecScript.MODE_4D else LiveViewControlStripScript.LAYOUT_GRID
+			LiveViewControlStripScript.LAYOUT_WIDE if mode == GameSetupSpecScript.MODE_4D and not _practice_active else LiveViewControlStripScript.LAYOUT_GRID,
+			_practice_active
 		)
+		_live_view_control_strip.set_detached_layout(_practice_active)
+		_live_view_control_strip.set_fit_to_content(_practice_active)
 		_style_applier.apply_to_tree(_live_view_control_strip, _style_manager)
 	_update_camera_guidance(mode)
 	if _inspector_hint_panel != null:
@@ -807,18 +815,81 @@ func _configure_live_cockpit_mode(mode: String) -> void:
 	_set_live_inspector_density(true)
 
 
+func set_practice_view_basis(snapshot: Dictionary) -> void:
+	if _live_4d_basis_snapshot == snapshot:
+		return
+	_live_4d_basis_snapshot = snapshot.duplicate(true)
+	if _basis_indicator_label != null and _basis_indicator_label.text != str(snapshot.get("text", "")):
+		_basis_indicator_label.text = str(snapshot.get("text", ""))
+	_refresh_piece_control_strip()
+
+
+func set_practice_state(dimension: int, feedback: String = "", pieces: Array = [], selected_piece: int = -1) -> void:
+	var active := dimension in [3, 4]
+	if active and _practice_active and _practice_panel != null and _practice_panel.dimension() == dimension:
+		_practice_panel.update_state(feedback)
+		_practice_panel.update_piece_choices(pieces, selected_piece)
+		return
+	_practice_active = active
+	if active and _practice_panel == null:
+		_practice_panel = preload("res://scripts/ui/practice_explorer_panel.gd").new()
+		_practice_panel.name = "PracticeExplorerPanel"
+		_practice_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		_live_4d_state_module.add_child(_practice_panel)
+		_practice_panel.requested.connect(func(action: String) -> void: practice_requested.emit(action))
+	if _practice_panel != null:
+		_practice_panel.visible = active
+		if active:
+			_practice_panel.configure(dimension)
+			_practice_panel.update_state(feedback)
+			_practice_panel.update_piece_choices(pieces, selected_piece)
+			# Practice controls are created after the viewer's initial capture
+			# pass. Apply the same focus policy so clicks cannot steal move keys.
+			_set_focus_mode_recursive(_practice_panel, Control.FOCUS_NONE)
+			_style_applier.apply_to_tree(_practice_panel, _style_manager)
+	# The lower helper deck stays in Explorer: its piece half carries the
+	# practice-specific translation, rotation, Z/X and Retry rows.
+	_live_4d_piece_module.visible = true
+	if active:
+		_live_4d_view_module.visible = false
+		_refresh_piece_control_strip()
+		_live_view_control_strip.configure(_live_4d_basis_snapshot, _control_frame_snapshot, _hud_density, _active_live_mode, LiveInputContractScript, LiveViewControlStripScript.LAYOUT_GRID, true)
+		if _live_view_control_strip.get_parent() != _practice_panel.view_controls_host:
+			_live_view_control_strip.reparent(_practice_panel.view_controls_host, false)
+		_live_view_control_strip.set_detached_layout(true)
+		_live_view_control_strip.set_fit_to_content(true)
+		_style_applier.apply_to_tree(_piece_control_strip, _style_manager)
+		_style_applier.apply_to_tree(_live_view_control_strip, _style_manager)
+	else:
+		if _live_view_control_strip.get_parent() != _live_4d_view_module:
+			_live_view_control_strip.reparent(_live_4d_view_module, false)
+		_live_view_control_strip.set_detached_layout(false)
+		_live_view_control_strip.set_fit_to_content(false)
+	_piece_control_strip.visible = true
+	_piece_preview_row.visible = not active
+	_play_button.disabled = active
+	_change_setup_button.disabled = active
+	_new_random_game_button.visible = not active
+	_restart_game_button.text = "Retry Object" if active else "Restart Game"
+	if active:
+		_set_onboarding_visible(false)
+		_summary_label.text = "Explorer · %dD Sandbox · no gravity · Play starts a fresh game" % dimension
+		_top_state_badge_label.text = "PRACTICE"
+
+
 func _refresh_piece_control_strip() -> void:
 	if _piece_control_strip == null or _active_live_mode.is_empty():
 		return
-	_piece_control_strip.configure(
+	var rebuilt: bool = _piece_control_strip.configure(
 		_active_live_mode,
 		_live_4d_basis_snapshot if _active_live_mode == GameSetupSpecScript.MODE_4D else {},
 		_control_frame_snapshot,
 		_hud_density,
 		LiveInputContractScript,
-		_piece_legend_layout()
+		_piece_legend_layout(),
+		_practice_active
 	)
-	if is_inside_tree():
+	if rebuilt and is_inside_tree():
 		_style_applier.apply_to_tree(_piece_control_strip, _style_manager)
 
 
@@ -868,7 +939,8 @@ func _set_live_4d_deck_active(active: bool) -> void:
 	_apply_shell_minimums(active, side_rail or split)
 	if _live_4d_deck == null:
 		return
-	_live_4d_view_module.visible = not side_rail or not _live_cockpit.designer_panels().is_empty()
+	_live_4d_piece_module.visible = true
+	_live_4d_view_module.visible = not _practice_active and (not side_rail or not _live_cockpit.designer_panels().is_empty())
 	var placement := LiveCockpitScript.PLACEMENT_BELOW
 	if side_rail:
 		placement = LiveCockpitScript.PLACEMENT_SIDE
@@ -877,7 +949,9 @@ func _set_live_4d_deck_active(active: bool) -> void:
 	_live_cockpit.set_deck_placement(placement)
 	if active:
 		_piece_control_strip.reparent(_live_4d_piece_module, false)
-		_live_view_control_strip.reparent(_live_4d_view_module, false)
+		var view_host: Node = _practice_panel.view_controls_host if _practice_active and _practice_panel != null else _live_4d_view_module
+		if _live_view_control_strip.get_parent() != view_host:
+			_live_view_control_strip.reparent(view_host, false)
 		_piece_preview_row.reparent(_live_4d_state_module, false)
 		if _onboarding_panel != null and _onboarding_panel.get_parent() != _live_cockpit.header_slot:
 			_onboarding_panel.reparent(_live_cockpit.header_slot, false)
@@ -1192,6 +1266,8 @@ func handle_main_menu_shortcut(event: InputEvent) -> bool:
 	if not key_event.is_pressed() or key_event.echo or key_event.alt_pressed or key_event.ctrl_pressed or key_event.meta_pressed:
 		return false
 	match key_event.keycode:
+		KEY_E:
+			practice_requested.emit("dimension_4")
 		KEY_2:
 			start_current_validated_setup(GameSetupSpecScript.MODE_2D)
 		KEY_3:
@@ -2129,8 +2205,11 @@ func _apply_hud_density(density: String) -> void:
 			_hud_density,
 			_active_live_mode,
 			LiveInputContractScript,
-			LiveViewControlStripScript.LAYOUT_WIDE if _active_live_mode == GameSetupSpecScript.MODE_4D else LiveViewControlStripScript.LAYOUT_GRID
+			LiveViewControlStripScript.LAYOUT_WIDE if _active_live_mode == GameSetupSpecScript.MODE_4D and not _practice_active else LiveViewControlStripScript.LAYOUT_GRID,
+			_practice_active
 		)
+		_live_view_control_strip.set_detached_layout(_practice_active)
+		_live_view_control_strip.set_fit_to_content(_practice_active)
 		_style_applier.apply_to_tree(_live_view_control_strip, _style_manager)
 	_set_live_inspector_density(_bottom_panel != null and not _bottom_panel.visible)
 	_update_live_view_action_labels()
@@ -2177,6 +2256,21 @@ func _emit_camera_preferences() -> void:
 		_camera_invert_y,
 		_accessibility_policy.camera_interpolation_scale()
 	)
+
+
+# Global shell input precedes GUI focus and gameplay routing.
+func handle_window_mode_shortcut(event: InputEvent) -> bool:
+	if event.is_echo() or not event.is_action_pressed("shell_toggle_fullscreen") or _settings_store == null:
+		return false
+	var current := str(_settings_store.value("display.window_mode"))
+	var window := get_window()
+	if window != null and DisplayServer.get_name() != "headless":
+		current = ShellPresentationPreferencesScript.window_mode_value(window.mode)
+	var target := ShellPresentationPreferencesScript.WINDOWED if current == ShellPresentationPreferencesScript.FULLSCREEN else ShellPresentationPreferencesScript.FULLSCREEN
+	_apply_window_mode(target)
+	_settings_store.set_value("display.window_mode", target)
+	_sync_all_setting_controls()
+	return true
 
 
 func _apply_window_mode(mode: String) -> void:
@@ -2746,6 +2840,7 @@ func _build_layout() -> void:
 	_piece_control_strip.visible = false
 	_right_column.add_child(_piece_control_strip)
 	_live_view_control_strip = LiveViewControlStripScript.new()
+	_live_view_control_strip.requested.connect(func(action: String) -> void: practice_requested.emit(action))
 	_right_column.add_child(_live_view_control_strip)
 	_basis_panel = _build_basis_panel()
 	_basis_panel.visible = false
@@ -3013,9 +3108,9 @@ func _build_main_menu_screen(screen: Control) -> void:
 	_main_menu_scroll = panel.get_parent().get_parent().get_parent() as ScrollContainer
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", ShellDesignTokensScript.SPACE_6)
-	margin.add_theme_constant_override("margin_top", ShellDesignTokensScript.SPACE_6)
+	margin.add_theme_constant_override("margin_top", ShellDesignTokensScript.SPACE_2)
 	margin.add_theme_constant_override("margin_right", ShellDesignTokensScript.SPACE_6)
-	margin.add_theme_constant_override("margin_bottom", ShellDesignTokensScript.SPACE_6)
+	margin.add_theme_constant_override("margin_bottom", ShellDesignTokensScript.SPACE_2)
 	panel.add_child(margin)
 	var layout := VBoxContainer.new()
 	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -3075,6 +3170,9 @@ func _build_main_menu_screen(screen: Control) -> void:
 	_design_lab_button = design_lab_button
 	layout.add_child(design_lab_button)
 	layout.add_child(_menu_group_header("LEARN"))
+	var explorer_button := _make_command_card("Explorer", "Free 3D/4D spatial practice · no gravity · coordinates and neighbors", "E")
+	explorer_button.pressed.connect(func() -> void: practice_requested.emit("dimension_4"))
+	layout.add_child(explorer_button)
 	var controls_button := _make_command_card("How to Play", "Mode-specific piece, camera, session, and navigation controls", "H")
 	controls_button.pressed.connect(func() -> void:
 		show_screen(SCREEN_CONTROLS)
@@ -3099,7 +3197,12 @@ func _build_main_menu_screen(screen: Control) -> void:
 	var quit_button := _make_command_card("Quit", "Close the Godot product shell", "Esc")
 	quit_button.pressed.connect(_emit_quit_requested)
 	layout.add_child(quit_button)
-	_main_menu_focus_order = [live_button, live_2d_button, live_3d_button, live_4d_button, change_setup_button, design_lab_button, controls_button, about_button, settings_button, advanced_button, quit_button]
+	_main_menu_focus_order = [live_button, live_2d_button, live_3d_button, live_4d_button, change_setup_button, design_lab_button, explorer_button, controls_button, about_button, settings_button, advanced_button, quit_button]
+	# Keep the primary list readable without needing a tiny whole-menu scale.
+	# Every command retains its full description in the existing tooltip.
+	for command in _main_menu_focus_order:
+		command.text = command.text.get_slice("\n", 0)
+		command.custom_minimum_size.y = ShellDesignTokensScript.MENU_PRIMARY_COMMAND_MIN_HEIGHT
 	_configure_main_menu_focus()
 	_screen_focus_targets[SCREEN_MAIN_MENU] = live_button
 
@@ -3194,12 +3297,15 @@ func _build_browser_screen(screen: Control) -> void:
 
 func _build_settings_screen(screen: Control) -> void:
 	var layout := VBoxContainer.new()
+	layout.set_meta("shell_chrome", true)
 	_fill_parent(layout)
 	layout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	layout.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	layout.add_theme_constant_override("separation", ReplayVisuals.PANEL_GAP)
+	layout.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_1)
 	screen.add_child(layout)
-	layout.add_child(_screen_nav("Settings"))
+	var navigation := _screen_nav("Settings")
+	navigation.get_child(0).name = "SettingsScreenTitle"
+	layout.add_child(navigation)
 	_settings_screen_panel = SettingsPanelScript.new()
 	_settings_screen_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_settings_screen_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -3651,15 +3757,25 @@ func _fit_main_menu() -> void:
 	if not room.is_equal_approx(_main_menu_fit_room):
 		_main_menu_fit_room = room
 		_main_menu_overflow_scale = 2.0
+	var window_factor := 1.0
+	if DisplayServer.get_name() != "headless":
+		window_factor = menu_window_scale(Vector2(DisplayServer.window_get_size()) / maxf(DisplayServer.screen_get_scale(), 0.01))
+	var readable_floor := clampf(MENU_READABLE_BODY_POINTS / (ShellDesignTokensScript.FONT_BODY * _ui_scale_factor * window_factor), ShellDesignTokensScript.MENU_FIT_SCALE_FLOOR, 1.0)
 	var current: float = _main_menu_fit.fit_scale
+	# Preserve readable text by reducing vertical gaps before shrinking the list.
+	if ResponsivePanelPolicy.compact_vertical_gaps(content, true) > 0:
+		call_deferred("_fit_main_menu")
+		return
 	var natural := content.get_combined_minimum_size().y
-	var wanted := clampf(floorf(room.y / maxf(natural, 1.0) * 100.0) / 100.0, ShellDesignTokensScript.MENU_FIT_SCALE_FLOOR, 1.0)
-	if natural * current > room.y:
+	var wanted := clampf(floorf(room.y / maxf(natural, 1.0) * 100.0) / 100.0, readable_floor, 1.0)
+	if current < readable_floor:
+		wanted = readable_floor
+	elif natural * current > room.y:
 		_main_menu_overflow_scale = minf(_main_menu_overflow_scale, current)
 		wanted = minf(wanted, current - 0.01)
 	elif wanted <= current or wanted >= _main_menu_overflow_scale:
 		return
-	wanted = maxf(wanted, ShellDesignTokensScript.MENU_FIT_SCALE_FLOOR)
+	wanted = maxf(wanted, readable_floor)
 	if not is_equal_approx(wanted, current):
 		_main_menu_fit.fit_scale = wanted
 		call_deferred("_fit_main_menu")
@@ -3729,7 +3845,7 @@ func _sync_design_resolution() -> void:
 # so a shorter window shrinks menu text as surely as a narrower one. It is
 # recomputed from the reference on every resize, never from the prior scale.
 static func menu_window_scale(window_points: Vector2) -> float:
-	return ShellViewportLayout.window_scale(window_points, MENU_REFERENCE_SIZE, MIN_MENU_WINDOW_SCALE)
+	return ShellViewportLayout.window_scale(window_points, MENU_REFERENCE_SIZE, MIN_MENU_WINDOW_SCALE, 1.0)
 
 
 func _window_ui_scale(points: Vector2) -> float:

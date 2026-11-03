@@ -405,9 +405,10 @@ func set_live_4d_orientation_state(basis, local_orientation, control_frame: Dict
 	_orientation_local_render_basis = local_orientation.passive_render_basis()
 	_orientation_control_frame_snapshot = control_frame.duplicate(true)
 	_orientation_state_source = "live_4d_presentation"
+	var vertical_axis := str(_orientation_basis_snapshot.get("visible_axes", ["+X", "+Y", "+Z"])[1])
 	_orientation_basis_snapshot["visible_axes"] = [
 		str(control_frame.get("horizontal_axis", "+X")),
-		"+Y",
+		vertical_axis,
 		str(control_frame.get("depth_axis", "+Z")),
 	]
 	_orientation_basis_snapshot["slice_axis"] = str(control_frame.get("slice_axis", "+W"))
@@ -742,7 +743,10 @@ func _update_gizmo_axes() -> void:
 		depth_direction = _orientation_local_render_basis * _pre_local_direction(depth)
 		gravity_direction = _orientation_local_render_basis * Vector3.DOWN
 	_update_gizmo_axis("Horizontal", horizontal, _presented_direction(horizontal_direction))
-	_update_gizmo_axis("Gravity", str(_orientation_basis_snapshot.get("gravity_axis", "+Y")), _presented_direction(gravity_direction))
+	var vertical_label := str(_orientation_basis_snapshot.get("gravity_axis", "+Y"))
+	if vertical_label.is_empty():
+		vertical_label = str(visible_axes[1])
+	_update_gizmo_axis("Gravity", vertical_label, _presented_direction(gravity_direction))
 	_update_gizmo_axis("Depth", depth, _presented_direction(depth_direction))
 
 
@@ -754,7 +758,7 @@ func _pre_local_direction(signed_axis: String) -> Vector3:
 	if slots.size() == 4:
 		exact_visible_axes = [
 			_signed_slot_label(int(slots[0])),
-			"+Y",
+			_signed_slot_label(int(slots[1])),
 			_signed_slot_label(int(slots[2])),
 		]
 	var horizontal_axis := str(exact_visible_axes[0])

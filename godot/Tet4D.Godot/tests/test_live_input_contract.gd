@@ -27,6 +27,16 @@ func run() -> Array:
 			var same_mode := str(candidate_action).begins_with("live_3d_") if action_id.begins_with("live_3d_") else str(candidate_action).begins_with("live_4d_")
 			if same_mode and KEY_SHIFT in specs.get(candidate_action, {}).get("keys", []):
 				failures.append("%s must be the only %s action that claims Shift, found %s" % [action_id, "3D" if action_id.begins_with("live_3d_") else "4D", candidate_action])
+	var explorer_groups := LiveInputContractScript.practice_view_control_groups("live_4d")
+	var explorer_exact: Array = explorer_groups.filter(func(group): return group.cockpit_role == "view_exact")[0].items
+	if explorer_exact.size() != 6 or LiveInputContractScript.exact_camera_rotation_specs().size() != 3:
+		failures.append("Explorer must expose all six planes while ordinary Play retains three exact camera pairs")
+	for plane in ["xy", "yz", "yw"]:
+		for direction in ["neg", "pos"]:
+			var action := "explorer_view_%s_%s" % [plane, direction]
+			var defaults := LiveInputContractScript.binding_events(action)
+			if defaults.size() != 1 or not defaults[0].shift_pressed:
+				failures.append("%s must register and display a shifted Explorer-only binding" % action)
 	var camera_specs := LiveInputContractScript.camera_control_specs()
 	for control_id in ["camera_orbit", "camera_pan", "camera_zoom"]:
 		if not camera_specs.has(control_id) or not bool(camera_specs[control_id].get("public", false)):

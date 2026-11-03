@@ -11,6 +11,7 @@ func run() -> Array:
 	_test_above_board_active_mapping(failures)
 	_test_signed_order_and_movement(failures)
 	_test_public_xz_alias(failures)
+	_test_free_inspection(failures)
 	return failures
 
 
@@ -185,3 +186,48 @@ func _test_public_xz_alias(failures: Array) -> void:
 func _assert_slots(failures: Array, basis, expected: Array, label: String) -> void:
 	if basis.slots() != expected:
 		failures.append("%s: expected %s, got %s" % [label, expected, basis.slots()])
+
+
+func _test_free_inspection(failures: Array) -> void:
+	var identity = SliceBasis4DScript.free_inspection()
+	_assert_slots(failures, identity.turned("xy", 1), [2, -1, 3, 4], "Explorer XY+")
+	_assert_slots(failures, identity.turned("yz", 1), [1, 3, -2, 4], "Explorer YZ+")
+	_assert_slots(failures, identity.turned("yw", 1), [1, 4, 3, -2], "Explorer YW+")
+	var dimensions := [2, 3, 4, 5]
+	var seen := {}
+	var queue := [identity]
+	while not queue.is_empty():
+		var basis = queue.pop_front()
+		if seen.has(basis.key()):
+			continue
+		seen[basis.key()] = true
+		if not SliceBasis4DScript.is_valid_slots(basis.slots(), true):
+			failures.append("Explorer basis must remain a signed permutation")
+		var axes: Array = basis.indicator_snapshot().visible_axes
+		var visible_dimensions: Array = basis.visible_dimensions(dimensions)
+		for slot in range(3):
+			if axes[slot] != SliceBasis4DScript.signed_axis_label(int(basis.slots()[slot])) or visible_dimensions[slot] != dimensions[absi(int(basis.slots()[slot])) - 1]:
+				failures.append("Explorer visible labels/extents must follow every signed slot")
+		for x in dimensions[0]:
+			for y in dimensions[1]:
+				for z in dimensions[2]:
+					for w in dimensions[3]:
+						var cell := [x, y, z, w]
+						var projected: Dictionary = basis.presentation_coordinate(cell, dimensions)
+						if not projected.get("ok", false) or basis.canonical_coordinate(projected.layer_index, projected.visible_cell_3d, dimensions) != cell:
+							failures.append("Explorer projection must round-trip every bounded cell")
+		for plane in ["xy", "xz", "yz", "xw", "yw", "zw"]:
+			if not basis.turned(plane, 1).turned(plane, -1).equals(basis):
+				failures.append("Explorer %s turns must cancel" % plane)
+			var four = basis
+			for turn in 4:
+				four = four.turned(plane, 1)
+			if not four.equals(basis):
+				failures.append("Explorer four %s turns must restore the basis" % plane)
+			queue.append(basis.turned(plane, 1))
+	if seen.size() != 192:
+		failures.append("all six view planes must reach the 192 proper signed 4D bases")
+	if SliceBasis4DScript.is_valid_slots([1, 4, 3, 2]) or SliceBasis4DScript.is_valid_slots([1, -2, 3, 4]):
+		failures.append("ordinary Play must retain its +Y-fixed admission boundary")
+	if SliceBasis4DScript.is_valid_slots([1, 1, 3, 4], true) or SliceBasis4DScript.is_valid_slots([1, 2, 3, 5], true):
+		failures.append("free inspection must still reject duplicate/out-of-range slots")

@@ -9,10 +9,10 @@ func run() -> Array:
 	# width/1280 and height/720, floored at the 18/24 readable-body ratio.
 	for sample in [
 		[Vector2(1280, 720), 1.0],
-		[Vector2(1600, 900), 1.25],
-		[Vector2(1920, 1080), 1.5],
+		[Vector2(1600, 900), 1.0],
+		[Vector2(1920, 1080), 1.0],
 		[Vector2(1920, 720), 1.0],
-		[Vector2(3840, 2160), 2.0],
+		[Vector2(3840, 2160), 1.0],
 		# Width-only and height-only reductions from the reference.
 		[Vector2(1120, 720), 0.875],
 		[Vector2(1280, 600), 600.0 / 720.0],
@@ -25,7 +25,7 @@ func run() -> Array:
 		[Vector2(600, 400), 0.75],
 	]:
 		if not is_equal_approx(HudScript.menu_window_scale(sample[0]), sample[1]):
-			failures.append("menu scale must follow the tighter axis in both directions, floor at 18 px body text, and cap at 2x: %s gave %s, want %s" % [sample[0], HudScript.menu_window_scale(sample[0]), sample[1]])
+			failures.append("menu scale must follow the tighter axis in both directions, floor at 18 px body text, and cap at normal size: %s gave %s, want %s" % [sample[0], HudScript.menu_window_scale(sample[0]), sample[1]])
 	var reference_scale := HudScript.menu_window_scale(Vector2(1280, 720))
 	if HudScript.menu_window_scale(Vector2(1280, 560)) >= reference_scale:
 		failures.append("reducing only the window height must shrink menu text")
@@ -59,12 +59,12 @@ func run() -> Array:
 		var button_name := "CommandCard__Play" if screen == HudScript.SCREEN_MAIN_MENU else "CommandCard__Replay_Demos"
 		var command := hud.find_child(button_name, true, false) as Button
 		await _resize(tree, Vector2i(1280, 720))
-		var opening_text_scale := _rendered_scale(tree, command)
+		var opening_text_scale := _window_text_scale(tree, command, hud, screen)
 		await _resize(tree, Vector2i(1600, 900))
 		if DisplayServer.get_name() != "headless":
-			var growth := _rendered_scale(tree, command) / opening_text_scale
-			if absf(growth - 1.25) > 0.02:
-				failures.append("%s rendered text must grow 25%% on a same-aspect 1280x720 to 1600x900 resize, got %s" % [screen, growth])
+			var growth := _window_text_scale(tree, command, hud, screen) / opening_text_scale
+			if absf(growth - 1.0) > 0.02:
+				failures.append("%s rendered text must retain normal size on a same-aspect 1280x720 to 1600x900 resize, got %s" % [screen, growth])
 			# Headless pins the canvas to the window, so rendered typography is
 			# only observable with a real window. Each step compares the on-screen
 			# command font against the reference measurement, not against the
@@ -78,13 +78,13 @@ func run() -> Array:
 				[Vector2i(1280, 720), 1.0, "restored reference window"],
 			]:
 				await _resize(tree, step[0])
-				var ratio := _rendered_scale(tree, command) / opening_text_scale
+				var ratio := _window_text_scale(tree, command, hud, screen) / opening_text_scale
 				if absf(ratio - float(step[1])) > 0.02:
 					failures.append("%s %s must render menu text at %.3fx the reference, got %.3fx" % [screen, step[2], step[1], ratio])
-			var restored_scale := _rendered_scale(tree, command)
+			var restored_scale := _window_text_scale(tree, command, hud, screen)
 			hud._apply_responsive_layout()
 			await _settle(tree)
-			if not is_equal_approx(_rendered_scale(tree, command), restored_scale) or not is_equal_approx(restored_scale, opening_text_scale):
+			if not is_equal_approx(_window_text_scale(tree, command, hud, screen), restored_scale) or not is_equal_approx(restored_scale, opening_text_scale):
 				failures.append("%s repeated layout at the reference size must reproduce the opening typography" % screen)
 			await _resize(tree, Vector2i(720, 600))
 			var body_points := command.get_theme_font_size("font_size") * _rendered_scale(tree, command) / DisplayServer.screen_get_scale()
@@ -178,3 +178,10 @@ func _scroll_ancestor(node: Node) -> ScrollContainer:
 	while ancestor != null and not ancestor is ScrollContainer:
 		ancestor = ancestor.get_parent()
 	return ancestor as ScrollContainer
+
+
+# Window magnification and main-menu fit are separate operations. Check the
+# window policy independently; the body-points assertion above includes both.
+func _window_text_scale(tree: SceneTree, control: Control, hud, screen: String) -> float:
+	var fit: float = hud._main_menu_fit.fit_scale if screen == HudScript.SCREEN_MAIN_MENU else 1.0
+	return _rendered_scale(tree, control) / fit
