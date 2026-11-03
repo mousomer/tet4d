@@ -319,9 +319,17 @@ def test_tablet_build_steps_use_unambiguous_shell_blocks() -> None:
 def test_windows_release_binds_the_interpreter_in_the_declared_shell() -> None:
     workflow = RELEASE_WORKFLOW.read_text(encoding="utf-8")
     for job_id in ("package-python-windows", "package-designer-windows"):
-        block = re.split(r"\n  [a-z][a-z0-9-]*:\n", workflow.split(f"  {job_id}:\n", 1)[1], maxsplit=1)[0]
-        binding = block.split("- name: Bind the governed interpreter\n", 1)[1].split("\n      - ", 1)[0]
+        block = re.split(
+            r"\n  [a-z][a-z0-9-]*:\n",
+            workflow.split(f"  {job_id}:\n", 1)[1],
+            maxsplit=1,
+        )[0]
+        binding = block.split("- name: Bind the governed interpreter\n", 1)[1].split(
+            "\n      - ", 1
+        )[0]
         assert "shell: bash" in binding
         assert '>> "$GITHUB_ENV"' in binding
-    designer = workflow.split("- name: Build and validate Godot Windows release\n", 1)[1].split("\n      - ", 1)[0]
+    designer = workflow.split("- name: Build and validate Godot Windows release\n", 1)[
+        1
+    ].split("\n      - ", 1)[0]
     assert "PYTHON_BIN: ${{ steps.setup-python.outputs.python-path }}" in designer
