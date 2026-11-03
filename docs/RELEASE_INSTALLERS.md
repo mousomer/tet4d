@@ -59,6 +59,11 @@ artifacts/godot/macos/Tet4D-0.9.0-macos-universal.zip
 The versioned filename follows `pyproject.toml`; do not edit the export-preset
 version independently.
 
+Windows release jobs bind the setup-python interpreter using an explicit Bash
+step, and pass `PYTHON_BIN` to the initial native build as well as the package
+builder. They must not depend on PowerShell interpreting Bash environment-file
+syntax or on a runner-local governance overlay.
+
 ## Build the Windows Design Laboratory candidate
 
 Requirements are the exact pinned Godot 4.7.2 editor and matching export

@@ -25,6 +25,7 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 ## Active Work
 
 - [x] Correct the aggregate input-map regression to validate declared Shift modifiers and reject plain-key aliases for Explorer view actions.
+- [x] Repair Windows release interpreter binding: explicit Bash environment export and setup-python `PYTHON_BIN` for the initial native build, covered by the packaging contract test.
 - [ ] Publish 0.9.2 from the merged CI-verified SHA through `current_all` packaging, inspect the draft manifest/assets, and complete the separate publication workflow.
 
 - [x] Desktop visual acceptance (owner confirmed): Alt+Enter or F11 toggles fullscreen/windowed from menus
