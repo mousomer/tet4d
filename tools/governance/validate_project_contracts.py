@@ -155,6 +155,8 @@ def _is_approved_explorer_rds_replan(
         and "`docs/rds/RDS_EXPLORER_TOPOLOGIES.md`" in line
         and "native C++ is **candidate** deterministic owner" in line
         and "RDS supersedes conflicting Python Explorer expectations as product requirements." in line
+        # A second supersession claim on the same line is NOT covered.
+        and line.lower().count("supersedes") == 1
         and "**No transfer is recorded yet.**" in line
         and "T2 requires a completed **2D Explorer-only** native transfer" in line
         and "T4 requires its own 3D/4D transfer" in line

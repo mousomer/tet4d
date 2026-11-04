@@ -1134,6 +1134,17 @@ def test_replan_exception_is_authority_map_row_only(tmp_path: Path, monkeypatch)
     )
 
 
+def test_replan_cannot_hide_a_second_runtime_supersession(
+    tmp_path: Path, monkeypatch
+) -> None:
+    row = _approved_explorer_replan_row() + " Godot supersedes Python gameplay."
+    issues = _scan_one_authority_row(
+        tmp_path, monkeypatch,
+        rel="docs/architecture/authority_map.md", row=row,
+    )
+    assert any("non-Python supersession claim" in i.message for i in issues)
+
+
 def test_replan_does_not_waive_other_authority_guard_categories(
     tmp_path: Path, monkeypatch
 ) -> None:
