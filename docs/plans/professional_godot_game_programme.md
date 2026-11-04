@@ -1666,7 +1666,7 @@ The new priority order is:
 | --- | --- | --- |
 | P0 | Bounded existing-game corrections | Designer sizing, confirmed cockpit/replay defects, camera-relative movement and active Stage 58C/59 readability; preserve accepted layouts |
 | P1 | Accept existing bounded Godot Explorer baseline | `EXPLORER_LEARNING_READY`; maintain 3D/4D movement, basis, slices and view stability |
-| P1T | **Explorer topologies: 2D first, presets, visual builder, then 3D/4D and multi-domain spheres** | `RDS_EXPLORER_TOPOLOGIES.md` stages T1-T7; native transfer pending; no Python-oracle veto |
+| P1T | **Explorer topologies: T1 mathematical/catalog/transport contracts; T2 2D presets and scoped native authority transfer; then builder, 3D/4D and multi-domain spheres** | `RDS_EXPLORER_TOPOLOGIES.md` stages T1-T7; 2D transfer required to complete T2, dimensional transfer required in T4, multi-domain authority in T6; all remain pending, no Python-oracle veto |
 | P2 | Professional UI review and verified fixes | Expert and novice comprehension checks, including 3D/4D depth and cockpit hierarchy |
 | P3 | Study protocol and minimal assessment tasks | Baseline, held-out transfer, control/comparison and reproducible scoring before telemetry schema freezes |
 | P4 | Participant identity, persistence and telemetry | Consent-aware versioned backend/local recovery and data reconstructability |
