@@ -18,14 +18,6 @@ named owners, parity evidence or conformance evidence, compatibility rules,
 known exclusions, fallback path, establishment record, and authority map
 update defined by `docs/architecture/authority_transfer_protocol.md`.
 
-The owner-approved Explorer topology RDS replan permits **prospective product
-requirements** to differ from inherited Python Explorer expectations, not
-current runtime authority. The authority inversion checker has a narrow
-exception only for the explicitly approved, planned Explorer row in the
-authority map, retaining a candidate native owner and required T2/T4
-completion gates. This does not waive transfer evidence, unrelated inherited
-semantics, normal Play authority, or other non-Python claims.
-
 `CURRENT_STATE.md` is restart or staged-handoff context only.
 `docs/BACKLOG.md` owns open work and explicit deferrals. Completed execution
 evidence is historical and becomes context only when a current owner routes to
