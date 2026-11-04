@@ -130,6 +130,90 @@ A mathematical name is a correctness claim, not just a decorative label. Existin
 
 **Spherical construction target:** use the double of an n-ball, `S^n = B^n_+ union_(boundary) B^n_-`, represented by two n-cubic domains with corresponding complete boundary identifications. In 2D these are squares; in 3D cubes; in 4D tesseracts. Domain interiors are distinct. The structure must handle edges, corners and higher-codimension intersections consistently. The flat drawing is not a claim of a globally flat spherical metric.
 
+
+### 7.1 Stage T2 — mandatory 2D preset catalog
+
+**T2 is a working single-domain Godot Explorer deliverable, not a complete surface-classification engine.** Its five core presets must be selectable in the main Explorer and execute real native topology transport. An informational gallery card cannot satisfy a runtime preset requirement.
+
+| T2 entry | Existing Python preset candidate | Expected connected surface invariants | T2 status |
+| --- | --- | --- | --- |
+| Bounded rectangle / disk | `empty_2d` | Orientable; one boundary; Euler characteristic 1 | **Mandatory working** |
+| Cylinder / annulus | `cylinder_2d` | Orientable; two boundaries; Euler characteristic 0 | **Mandatory working** |
+| Torus `T²` | `torus_2d` | Orientable; closed; Euler characteristic 0 | **Mandatory working** |
+| Möbius strip | `mobius_2d` | Non-orientable; one boundary; Euler characteristic 0 | **Mandatory working** |
+| Klein bottle | `klein_2d` | Non-orientable; closed; Euler characteristic 0 | **Mandatory working** |
+| Projective plane `RP²` | `projective_2d` | Non-orientable; closed; Euler characteristic 1 | **Verification-gated; experimental if not proved** |
+| Sphere-like transport | legacy `sphere_2d` | Not certified as `S²` | **Experimental only; not a sphere** |
+
+To label the projective preset **Projective plane**, prove that the actual square edge pairings, corner equivalence and discrete transport implement the claimed quotient: include vertex/edge/face identifications, orientability, Euler characteristic, two-way seam/frame transport and injectivity tests. If not verified by T2 completion, retain the structurally valid mapping under **Projective-like transport (experimental)**. Do not silently change historical IDs or block experimental exploration merely because it may deform a piece.
+
+The current `sphere_2d` ID denotes the **old sphere-like heuristic**, not a verified sphere; retain that semantics for legacy imports. The genuine `S²` requires the two-domain ball-doubling construction of T6. Make that space discoverable as a *planned* catalog item, not an enabled T2 sphere preset.
+
+For each mandatory working preset, test every seam direction, local-frame transport and inverse, boundary/corner cases, one-cell crossing, multi-cell crossing, valid deformation, and an invalid partial or colliding move that must reject **atomically**. Test connectivity across identified edges separately from visual Euclidean adjacency.
+
+### 7.2 Full 2D surface-family catalog: planned, dependency-gated
+
+The broader catalog shall reflect the classification of **compact connected surfaces** by orientability, genus and boundary count. These are planned mathematical *space classes*, not claims that a corresponding native transport profile exists in T2.
+
+| Planned example/family | Surface class and Euler characteristic | Construction prerequisite |
+| --- | --- | --- |
+| Sphere `S²` | Orientable genus 0, closed; `χ=2` | Two-domain double of disk (T6) |
+| Pair of pants | Orientable genus 0, three boundaries; `χ=-1` | Multi-patch / holes after T6 |
+| Punctured torus | Orientable genus 1, one boundary; `χ=-1` | Verified boundary removal after T6 |
+| Double torus | Orientable genus 2, closed; `χ=-2` | Connected-sum construction after T6 |
+| Triple torus | Orientable genus 3, closed; `χ=-4` | Connected-sum construction after T6 |
+| Dyck's surface | Non-orientable genus 3, closed; `χ=-1` | Verified crosscap construction after T6 |
+| Orientable genus generator | Handles `g>=0`, boundaries `b>=0`; `χ=2-2g-b` | Canonical multi-patch genus/boundary generator |
+| Non-orientable genus generator | Crosscaps `k>=1`, boundaries `b>=0`; `χ=2-k-b` | Canonical multi-patch crosscap/boundary generator |
+
+The surface generator's parameter choice identifies a mathematical class; it does **not** by itself construct a valid cellular quotient or authorize simulated transport. Every generated cubical complex must separately pass native topology, corner-link, frame-inverse and one-to-one piece-transport validation. Unsupported generator parameters fail explicitly; the UI must not synthesize a plausible-looking, incorrectly labeled surface.
+
+### 7.3 Higher-dimensional full catalog roadmap
+
+Use the same registry architecture for **3D** planned examples: bounded 3-ball, solid torus, `T²×I`, `T³`, thickened Möbius strip, thickened Klein bottle, verified `RP³`, `S³`, `S²×I`, `S²×S¹`, selected lens spaces and the **ten closed flat 3-manifolds** (six orientable, four non-orientable).
+
+For **4D**, plan bounded `D⁴`, periodic `S¹×D³`/`T²×D²`/`T³×I`/`T⁴`, Möbius/Klein × `I²`, verified `RP⁴`, `S⁴`, `S³×S¹`, `S²×T²`, `S²×S²`, Klein × `T²` and `RP²×T²`. `CP²` is long-term research, not an assumed supported cubical construction.
+
+These named products require **validated construction operators** rather than independent hand-coded catalog rows: periodic axis wrap, tangent reversal, Cartesian product, doubling, antipodal quotient, boundary removal, connected sum, and generalized affine/group-action quotient. Not every platycosm or lens space fits the existing signed-permutation boundary model; third-/sixth-turn constructions require broader group actions and additional conformance. Do not advertise an unsupported mathematical label as executable.
+
+**Catalog identities must be distinct:** `space_class_id` (mathematical homeomorphism type), `construction_id` (recipe and parameters) and `profile_id` (actual normalized discrete transport). Two transport profiles can represent the same space class yet give different movement. Preserve old preset/profile IDs and their semantics, particularly legacy `sphere_2d`.
+
+### 7.4 Gallery, status and metadata contract for T2
+
+Stage T2 supplies a compact **Explorer-local selector** and grouped **read-only gallery**, not the T3 visual editor or save browser. Group entries by:
+- **Learn:** the five functioning core 2D spaces, projective status, and an accurate sphere/experimental explanation.
+- **Families:** periodic versus twisted constructions and the planned orientable/non-orientable genus model.
+- **Advanced:** existing valid experimental transports and explanatory mathematical status.
+- **Saved:** reserved for the later T3 saved-profile lifecycle; do not claim it is implemented in T2.
+
+Do not present a long 2D/3D/4D flat dropdown. Common **working** presets remain directly selectable in the main Explorer; an experimental preset is selectable only when structurally valid under the new transport invariant; a planned entry is informational **and not executable**.
+
+Every catalog entry must independently record:
+- dimension; stable ID; short mathematical name/description; family/group;
+- `space_class_id`, `construction_id`, `profile_id` where applicable;
+- schema version and exact seam/boundary correspondence;
+- **availability**: `implemented`, `experimental`, or `planned`;
+- **mathematical certification**: `verified`, `unverified`, or `heuristic`;
+- orientability, boundary count, Euler characteristic and other invariants **only where established**;
+- a versioned construction or conformance evidence reference for any verified claim.
+
+`unknown` is preferable to a guessed invariant. A mathematical-status label is not a rigid-Play safety gate. Color is not the sole carrier of status or seam correspondence.
+
+### 7.5 Stage T2 scope boundary and acceptance
+
+**Included:** existing Godot Explorer extended to 2D; native single-domain cellwise transport; the five functioning core 2D presets; a verification-gated projective candidate; optional accurately labeled sphere-like experiment; immediate preset choice/grouped gallery; seam highlights, tangent orientation, crossing traces and topology-aware neighbors; exact blocked-movement reasons. Reuse existing input, renderer, camera and piece sources.
+
+**Excluded:** the editable edge-pairing builder and save lifecycle (T3); 3D/4D active topology transport (T4); face/hyperface visual builder (T5); multi-domain spheres, holes, connected sums, genus generators, product operators and lens/platycosm realizations (T6 or subsequent dedicated stages). The catalog may describe them as planned, not enable them.
+
+T2 cannot pass unless:
+1. All **five required** 2D presets select and execute deterministic **native** transport; no decoration-only selections.
+2. Successful polycube moves preserve identities, count, injectivity and frame-aware inverse; invalid one-to-many, many-to-one and partial cases reject atomically, without changing the active state.
+3. At least one seam-spanning polycube genuinely deforms or appears disconnected while remaining a single identified piece; seam-aware adjacency is inspectable.
+4. Every working mathematical label has matching quotient/corner and frame-transport evidence; unverified projective and sphere-like mappings remain accurately labeled, not prohibited for non-rigidity.
+5. Native/Godot conformance and Python legacy-divergence expectations are explicit; old goldens are not silently rewritten.
+6. Camera-relative 3D/4D movement, existing 4D basis/slice, controls, cockpit stability and separate ordinary Play behavior still pass regressions.
+7. Human 2D Explorer review demonstrates discovery of the five core presets and predicted torus/Möbius edge crossings. T3's no-numeric-edit visual-construction test remains out of scope.
+
 ## 8. Topology model and canonical schema
 
 Reuse version-1 single-domain topology contracts when expressive enough. Extend with a separately versioned **multi-domain** schema, not incompatible, silently changed v1 meanings.
@@ -225,7 +309,7 @@ Run routed checks and the canonical full gate `CODEX_MODE=1 ./scripts/verify.sh`
 | Stage | Deliverable | Acceptance |
 | --- | --- | --- |
 | T1 | Normative contract, precedence reconciliation and bounded transfer plan | No ambiguous target authority; explicit old/new behavior differences; native conformance fixtures designed |
-| T2 | 2D Godot Explorer with v1-compatible native seams and presets | Invariant-preserving cellwise movement, real preset transport, atomic collision rejection |
+| T2 | **2D Explorer with fuller classified preset catalog** (see §§7.1–7.5) | Five functioning core 2D spaces, projective certification gate, separately labeled sphere-like experiment, grouped catalog with dependency-gated future examples, injective/invertible native transport, human 2D comprehension review; no T3 builder or T6 multi-domain features |
 | T3 | Visual 2D builder and profile persistence | Novice torus/Möbius/Klein construction without numeric permutation editing |
 | T4 | 3D/4D Explorer topology transport | Shared native semantics, signed frames, camera-relative and 4D basis regressions |
 | T5 | Visual 3D/4D face/hyperface builder | Full supported signed transformations through visual manipulation |
