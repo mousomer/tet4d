@@ -19,9 +19,9 @@ Players must be able to choose familiar presets directly inside Explorer; the bu
 
 ### 2.1 Product requirements versus implemented semantic ownership
 
-This RDS is authoritative for **forward Godot Explorer topology product behavior**, even where Python Explorer outputs, fixtures or legacy labels conflict. Duplicate destination occupancy must produce an atomic blocked result, **never** a successful \`cellwise_deformation\`. Do not weaken this rule to satisfy a historical golden.
+This RDS is authoritative for **forward Godot Explorer topology product behavior**, even where Python Explorer outputs, fixtures or legacy labels conflict. Duplicate destination occupancy must produce an atomic blocked result, **never** a successful `cellwise_deformation`. Do not weaken this rule to satisfy a historical golden.
 
-This RDS does **not** itself transfer runtime authority. The existing \`docs/architecture/authority_map.md\` must remain truthful until an evidence-backed transfer or establishment record reaches its terminal state. Existing ordinary Play, gravity, lock/drop, scoring, traces, replay, and inherited scopes outside an explicitly transferred boundary are unaffected.
+This RDS does **not** itself transfer runtime authority. The existing `docs/architecture/authority_map.md` must remain truthful until an evidence-backed transfer or establishment record reaches its terminal state. Existing ordinary Play, gravity, lock/drop, scoring, traces, replay, and inherited scopes outside an explicitly transferred boundary are unaffected.
 
 | Concern | Target owner | Boundary |
 | --- | --- | --- |
@@ -35,7 +35,7 @@ This RDS does **not** itself transfer runtime authority. The existing \`docs/arc
 ### 2.2 Split transfer and establishment timeline
 
 1. **Stage T1 prepares, but does not complete, authority transfer.** Define semantic owner boundaries, two-way transport and catalog contracts, the planned native APIs, deterministic fixture expectations, Python-oracle divergences, compatibility and fallback.
-2. **Stage T2 must complete the bounded 2D Explorer native transport transfer before T2 can be accepted.** Native behavior must conform to this RDS, including conservation, injectivity, local-frame inverse and atomic rejection. Update the authority map and record status \`transferred\` under \`docs/architecture/authority_transfer_protocol.md\` only after required conformance and compatibility evidence.
+2. **Stage T2 must complete the bounded 2D Explorer native transport transfer before T2 can be accepted.** Native behavior must conform to this RDS, including conservation, injectivity, local-frame inverse and atomic rejection. Update the authority map and record status `transferred` under `docs/architecture/authority_transfer_protocol.md` only after required conformance and compatibility evidence.
 3. **Stage T4 separately extends and transfers 3D/4D Explorer transport.** The 2D transfer does not implicitly change inherited 3D/4D or normal gameplay authority.
 4. **Stage T6 establishes or transfers multi-domain topology semantics** according to their exact predecessor/owner. Do not manufacture Python oracle behavior solely to perform a nominal transfer.
 5. **Stage T7 performs integrated acceptance and authority audit**; it is not the first occasion to complete prior required transfers.
@@ -46,7 +46,7 @@ Required transfer evidence includes current/candidate authority, exact observabl
 
 ### 2.3 Legacy compatibility and test discipline
 
-Version-1 single-domain profiles and existing Python golden traces retain historical readability and meaning. Test expectations must be marked conforming, explicitly superseded, legacy compatibility, or unrelated; replace conflicting Explorer tests with conformance assertions rather than deleting coverage. Do not reassign old \`sphere_2d\`, \`sphere_3d\` or \`sphere_4d\` IDs to mathematically certified spheres. Do not copy the legacy Pygame Editor/Sandbox/Play UI as a second Godot Explorer.
+Version-1 single-domain profiles and existing Python golden traces retain historical readability and meaning. Test expectations must be marked conforming, explicitly superseded, legacy compatibility, or unrelated; replace conflicting Explorer tests with conformance assertions rather than deleting coverage. Do not reassign old `sphere_2d`, `sphere_3d` or `sphere_4d` IDs to mathematically certified spheres. Do not copy the legacy Pygame Editor/Sandbox/Play UI as a second Godot Explorer.
 
 
 ## 3. Primary Explorer information architecture
@@ -141,11 +141,11 @@ Keep distinct: adjacency within a displayed domain, adjacency across the topolog
 
 The contract must distinguish:
 
-\`\`\`text
+```text
 space_class_id  (topological type, e.g. torus T²)
    construction_id  (gluing recipe, version and parameters)
       profile_id  (fully normalized discrete transport and board)
-\`\`\`
+```
 
 Two gluing recipes can represent the same mathematical space. Two board discretizations of the same recipe can produce different cell-transport profiles. A name, topology proof, or visually similar seam pattern is not by itself a verified movement model.
 
@@ -156,19 +156,19 @@ Define identities, normalization, compatibility aliases, cross-references and ow
 Define a **declarative schema**, independent of Godot gallery code, containing:
 
 - Stable preset ID, dimension, label, family, explanation and ordering.
-- \`space_class_id\`, recipe/version/parameters, \`construction_id\`, actual \`profile_id\` and relevant schema version where applicable.
-- **Availability**: \`implemented\` (active and conformant); \`experimental\` (active only if structurally valid and runtime one-to-one); \`planned\` (informational only).
-- **Mathematical certification**, independently: \`verified\`, \`unverified\`, \`heuristic\`.
-- Established invariants such as orientability, boundary-component count, Euler characteristic, with evidence and explicit \`unknown\` where undecided.
+- `space_class_id`, recipe/version/parameters, `construction_id`, actual `profile_id` and relevant schema version where applicable.
+- **Availability**: `implemented` (active and conformant); `experimental` (active only if structurally valid and runtime one-to-one); `planned` (informational only).
+- **Mathematical certification**, independently: `verified`, `unverified`, `heuristic`.
+- Established invariants such as orientability, boundary-component count, Euler characteristic, with evidence and explicit `unknown` where undecided.
 - Boundary-correspondence information, legacy aliases, diagram inputs, and traceable conformance/certification evidence.
 
-These categories must not collapse into an \`unsafe\` switch. Experimental does not mean rigidly playable; planned must not appear to work. T1 defines schema and a small representative fixture catalog, not every future space or UI card.
+These categories must not collapse into an `unsafe` switch. Experimental does not mean rigidly playable; planned must not appear to work. T1 defines schema and a small representative fixture catalog, not every future space or UI card.
 
 ### 7.3 Structural transport validity versus mathematical certification
 
 **Transport validation** establishes valid axes/ranks/extents, compatible tangent signed permutations, uniquely owned and reversible seam pairs, valid in-bounds destinations, deterministic local frames and strict canonicalization. It does **not** require every conceivable piece move to succeed; a many-to-one candidate collision is rejected at execution time without invalidating the underlying topology.
 
-**Mathematical certification** establishes what quotient space a construction represents. For a claimed 2D surface, evidence must address edge and vertex equivalence classes, Euler characteristic of the quotient cell complex, orientability, boundary components and the manifold/local-link condition. Validating one-cell seam bijections alone cannot prove \`RP²\`, \`S²\`, or an arbitrary manifold.
+**Mathematical certification** establishes what quotient space a construction represents. For a claimed 2D surface, evidence must address edge and vertex equivalence classes, Euler characteristic of the quotient cell complex, orientability, boundary components and the manifold/local-link condition. Validating one-cell seam bijections alone cannot prove `RP²`, `S²`, or an arbitrary manifold.
 
 T1 defines the independent certification fixture format and promotion rules, not a universal manifold classifier. If certification is missing, keep the topology exploratory with truthful metadata rather than fabricating mathematical facts.
 
@@ -176,7 +176,7 @@ T1 defines the independent certification fixture format and promotion rules, not
 
 T1 must specify the input, result/error, identity and state-transition contracts for:
 
-\`\`\`text
+```text
 validate_profile(profile, board)                -> normalized profile / errors
 query_boundary_pair(profile, boundary)          -> correspondence / none
 query_neighbor(profile, cell, direction)         -> target + frame / blocked
@@ -184,13 +184,13 @@ query_seam_preview(profile, cell, direction)     -> correspondence + orientation
 propose_piece_action(profile, piece, action)     -> candidate / blocked
 apply_validated_action(piece, candidate)         -> new state / atomic no-op
 query_topology_adjacency(profile, piece)         -> neighbor relationships
-\`\`\`
+```
 
 These are conceptual operations, not mandated names for C++ functions. Native owns all topology calculations. Godot receives a thin, checked result adapter; it must not independently compute validity or corresponding destination cells.
 
 A piece has persistent cell IDs and canonical occupied **cell-center** positions, with domain identity (implicit for v1), transported local frames and enough inverse-operation information to recover exact state. A quotient's identified boundary points are **not automatically the same occupied cell centers**. Projected visual overlap is not collision.
 
-For one selected movement, each cell has at most one destination; on success, destinations are injective, original cell IDs/count are preserved, and the defined frame-aware inverse restores state. All candidate cells are resolved/validated before an **atomic** commit. A blocked result preserves everything, including positions, frames, trace and history. The API distinguishes \`plain_translation\`, \`rigid_transform\`, valid \`cellwise_deformation\`, and \`blocked\` with stable reasons including \`ambiguous_destination\`, \`destination_collision\`, \`unconnected_boundary\`, \`inverse_mismatch\` and \`rotation_undefined\`.
+For one selected movement, each cell has at most one destination; on success, destinations are injective, original cell IDs/count are preserved, and the defined frame-aware inverse restores state. All candidate cells are resolved/validated before an **atomic** commit. A blocked result preserves everything, including positions, frames, trace and history. The API distinguishes `plain_translation`, `rigid_transform`, valid `cellwise_deformation`, and `blocked` with stable reasons including `ambiguous_destination`, `destination_collision`, `unconnected_boundary`, `inverse_mismatch` and `rotation_undefined`.
 
 These result names must live in a single versioned contract, not duplicated among GDScript and native adapters.
 
@@ -206,7 +206,7 @@ Define expected behavior for each **mandatory T2** candidate:
 | Möbius strip | Tangent reversal, correct transported frame and inverse |
 | Klein bottle | Periodic and orientation-reversing pairs interact consistently |
 
-Across the fixtures require single and multi-cell movement, a valid non-rigid/decomposed display, one-to-many ambiguity, many-to-one occupancy, partly blocked move, small/degenerate extents, boundary intersections, inverse operation with changed frame, and deterministic cell identity. Provide a mathematical certification **plan** for the existing projective candidate, including the square's quotient edge/vertex structure, orientability, boundary count and \`χ=1\`. Do not certify its name without evidence; do not treat old sphere-like transport as proof of a sphere.
+Across the fixtures require single and multi-cell movement, a valid non-rigid/decomposed display, one-to-many ambiguity, many-to-one occupancy, partly blocked move, small/degenerate extents, boundary intersections, inverse operation with changed frame, and deterministic cell identity. Provide a mathematical certification **plan** for the existing projective candidate, including the square's quotient edge/vertex structure, orientability, boundary count and `χ=1`. Do not certify its name without evidence; do not treat old sphere-like transport as proof of a sphere.
 
 Document intended Python-old versus new-RDS behavior, coverage disposition, native query/commit owner, compatibility fallback, comparison procedure and bounded transfer record requirements.
 
@@ -231,15 +231,15 @@ T2's **required** implemented presets, not merely future catalog names:
 
 | Space | Existing Python candidate ID | Expected mathematical data | T2 |
 | --- | --- | --- | --- |
-| Bounded rectangle / disk | \`empty_2d\` | Orientable; 1 boundary; \`χ=1\` | Working |
-| Cylinder / annulus | \`cylinder_2d\` | Orientable; 2 boundaries; \`χ=0\` | Working |
-| Torus \`T²\` | \`torus_2d\` | Orientable, closed; \`χ=0\` | Working |
-| Möbius strip | \`mobius_2d\` | Non-orientable; 1 boundary; \`χ=0\` | Working |
-| Klein bottle | \`klein_2d\` | Non-orientable, closed; \`χ=0\` | Working |
-| Projective plane \`RP²\` | \`projective_2d\` | Non-orientable, closed; \`χ=1\` | Verification-gated optional certification |
-| Sphere-like transport | legacy \`sphere_2d\` | **Not** a verified sphere | Optional experimental |
+| Bounded rectangle / disk | `empty_2d` | Orientable; 1 boundary; `χ=1` | Working |
+| Cylinder / annulus | `cylinder_2d` | Orientable; 2 boundaries; `χ=0` | Working |
+| Torus `T²` | `torus_2d` | Orientable, closed; `χ=0` | Working |
+| Möbius strip | `mobius_2d` | Non-orientable; 1 boundary; `χ=0` | Working |
+| Klein bottle | `klein_2d` | Non-orientable, closed; `χ=0` | Working |
+| Projective plane `RP²` | `projective_2d` | Non-orientable, closed; `χ=1` | Verification-gated optional certification |
+| Sphere-like transport | legacy `sphere_2d` | **Not** a verified sphere | Optional experimental |
 
-T2 must verify the five core mathematical constructions and their **actual discrete seam/frame behavior**, not infer correctness from labels. Projective \`RP²\` may be called that only after rigorous edge/vertex, manifold and Euler-characteristic certification of the current construction. Otherwise call it **Projective-like transport (experimental)**. The old \`sphere_2d\` ID continues to denote heuristic transport, not \`S²\`. A genuine sphere is *planned* in T6 and must not appear as selectable in T2.
+T2 must verify the five core mathematical constructions and their **actual discrete seam/frame behavior**, not infer correctness from labels. Projective `RP²` may be called that only after rigorous edge/vertex, manifold and Euler-characteristic certification of the current construction. Otherwise call it **Projective-like transport (experimental)**. The old `sphere_2d` ID continues to denote heuristic transport, not `S²`. A genuine sphere is *planned* in T6 and must not appear as selectable in T2.
 
 ### 8.2 Catalog navigation and semantics
 
@@ -250,7 +250,7 @@ A visible preset selector remains inside the **existing** Godot Explorer, with a
 - **Advanced:** conformant experimental profiles, proofs/unknown properties and seam information.
 - **Saved:** future T3 custom-topology persistence, not a working T2 feature.
 
-An entry has independent \`availability\` and \`certification\` states as defined in T1. \`planned\` is informational. \`experimental\` may run only when structurally valid and runtime one-to-one, regardless of rigidity. Unknown mathematics is displayed as unknown. Visible seam colors require redundant symbols/labels.
+An entry has independent `availability` and `certification` states as defined in T1. `planned` is informational. `experimental` may run only when structurally valid and runtime one-to-one, regardless of rigidity. Unknown mathematics is displayed as unknown. Visible seam colors require redundant symbols/labels.
 
 T2 adds 2D to the current Explorer, with native 2D transport, seam highlight/preview, optional cell identity/trace, topology-aware adjacency, blocked-movement explanation, and existing renderer/input/cockpit conventions. This is **not** a new topology game or Pygame editor port.
 
@@ -258,7 +258,7 @@ T2 adds 2D to the current Explorer, with native 2D transport, seam highlight/pre
 
 All five mandatory presets must execute native **whole-piece** cell transport, with functionality, injectivity, conservation, transported-frame inverse, atomic rejection, valid non-rigid deformation and correct seam-aware neighbors. Every crossing direction and relevant corner/degenerate board case requires deterministic tests.
 
-T2 must document old Python golden divergences; a duplicate destination must block even if Python historically called it deformation. Complete the **2D Explorer transport** transfer record with status \`transferred\` and an authority-map update after the conformance and compatibility gates. Until then T2 is incomplete, irrespective of visual quality.
+T2 must document old Python golden divergences; a duplicate destination must block even if Python historically called it deformation. Complete the **2D Explorer transport** transfer record with status `transferred` and an authority-map update after the conformance and compatibility gates. Until then T2 is incomplete, irrespective of visual quality.
 
 Retain bounded 3D/4D camera-relative, exact-basis/slice and ordinary Play isolation regressions. Human T2 review must show novice discovery of the five presets, prediction of torus/Möbius crossing and recognition of a single piece after visually separated cell movement.
 
@@ -270,30 +270,30 @@ Use classification by **orientability, genus/crosscaps and number of boundary co
 
 | Planned example | Class / invariant | Additional construction |
 | --- | --- | --- |
-| Genuine sphere \`S²\` | Orientable genus 0, closed; \`χ=2\` | Double of disk; T6 |
-| Pair of pants | Orientable genus 0, 3 boundaries; \`χ=-1\` | Multi-patch boundary construction |
-| Punctured torus | Orientable genus 1, 1 boundary; \`χ=-1\` | Verified boundary removal |
-| Double torus | Orientable genus 2, closed; \`χ=-2\` | Connected sum |
-| Triple torus | Orientable genus 3, closed; \`χ=-4\` | Generalized connected sum |
-| Dyck's surface | Non-orientable genus 3, closed; \`χ=-1\` | Crosscap construction |
-| Orientable surface generator | \`g>=0, b>=0; χ=2-2g-b\` | Verified handles/boundaries |
-| Non-orientable generator | \`k>=1, b>=0; χ=2-k-b\` | Verified crosscaps/boundaries |
+| Genuine sphere `S²` | Orientable genus 0, closed; `χ=2` | Double of disk; T6 |
+| Pair of pants | Orientable genus 0, 3 boundaries; `χ=-1` | Multi-patch boundary construction |
+| Punctured torus | Orientable genus 1, 1 boundary; `χ=-1` | Verified boundary removal |
+| Double torus | Orientable genus 2, closed; `χ=-2` | Connected sum |
+| Triple torus | Orientable genus 3, closed; `χ=-4` | Generalized connected sum |
+| Dyck's surface | Non-orientable genus 3, closed; `χ=-1` | Crosscap construction |
+| Orientable surface generator | `g>=0, b>=0; χ=2-2g-b` | Verified handles/boundaries |
+| Non-orientable generator | `k>=1, b>=0; χ=2-k-b` | Verified crosscaps/boundaries |
 
 A genus or boundary parameter describes a mathematical space class, **not** automatically a valid, usable discrete transport profile. Generators must produce a certified cubical construction and separately pass native transport/corner/inverse/conservation tests. Out-of-envelope configurations remain unavailable.
 
 ### 8.5 Planned 3D and 4D catalog families
 
-**3D:** bounded 3-ball, solid torus \`S¹×D²\`, thickened torus \`T²×I\`, \`T³\`, thickened Möbius/Klein, twisted and cross-axis faces, verified \`RP³\`, \`S³\`, \`S²×I\`, \`S²×S¹\`, selected lens spaces and eventually the **ten closed flat 3-manifolds** (six orientable, four non-orientable).
+**3D:** bounded 3-ball, solid torus `S¹×D²`, thickened torus `T²×I`, `T³`, thickened Möbius/Klein, twisted and cross-axis faces, verified `RP³`, `S³`, `S²×I`, `S²×S¹`, selected lens spaces and eventually the **ten closed flat 3-manifolds** (six orientable, four non-orientable).
 
-**4D:** bounded \`D⁴\`, partial wraps \`S¹×D³\`, \`T²×D²\`, \`T³×I\`, full \`T⁴\`, Möbius/Klein × \`I²\`, verified \`RP⁴\`, \`S⁴\`, \`S³×S¹\`, \`S²×T²\`, \`S²×S²\`, Klein × \`T²\` and \`RP²×T²\`. \`CP²\` is research-only.
+**4D:** bounded `D⁴`, partial wraps `S¹×D³`, `T²×D²`, `T³×I`, full `T⁴`, Möbius/Klein × `I²`, verified `RP⁴`, `S⁴`, `S³×S¹`, `S²×T²`, `S²×S²`, Klein × `T²` and `RP²×T²`. `CP²` is research-only.
 
 Prefer versioned and verified **construction operators** over many bespoke hard-coded rows: axis wrap, reversal, Cartesian product, ball-double, antipodal quotient, connected sum, boundary removal, and generalized affine/group action. Third- and sixth-turn flat 3-manifolds cannot be promised using only existing cubical signed-permutation seam maps. Later stages must identify extended mathematical/transport machinery rather than fake a named quotient.
 
 ### 8.6 Multi-domain sphere construction boundary (T6)
 
-Genuine \`S^n\` may be represented as the double of an n-ball: glue the entire boundaries of **two** n-cubic domains (square for n=2, cube for n=3, tesseract for n=4). Domain interiors remain separate. The flat cubical drawing is not a globally flat smooth metric on a sphere.
+Genuine `S^n` may be represented as the double of an n-ball: glue the entire boundaries of **two** n-cubic domains (square for n=2, cube for n=3, tesseract for n=4). Domain interiors remain separate. The flat cubical drawing is not a globally flat smooth metric on a sphere.
 
-T6 requires a separately versioned domain-aware schema, stable domain and boundary IDs, consistent higher-codimension intersections, canonical quotient identity and unambiguous crossing/inverse of both domain and local frames. The quotient's shared boundary points are not automatically merged cell-center occupancy. A piece may span domains; an ambiguous or colliding particular movement blocks atomically. v1 profiles and heuristic IDs remain compatible. The visual \`Add Domain\` editor is introduced alongside this capability, not simulated inside v1.
+T6 requires a separately versioned domain-aware schema, stable domain and boundary IDs, consistent higher-codimension intersections, canonical quotient identity and unambiguous crossing/inverse of both domain and local frames. The quotient's shared boundary points are not automatically merged cell-center occupancy. A piece may span domains; an ambiguous or colliding particular movement blocks atomically. v1 profiles and heuristic IDs remain compatible. The visual `Add Domain` editor is introduced alongside this capability, not simulated inside v1.
 
 
 ## 9. Main Explorer topology presentation
@@ -378,7 +378,7 @@ Save/load/duplicate/rename/delete/export/import custom topology definitions usin
 
 **T7:** integrated topology pedagogy and visual acceptance, regression and authority-record audit. T7 is **not** a substitute for mandatory earlier transfer milestones.
 
-Every conformance fixture names the normative contract, input profile/board, precise source cell IDs/locations/frames, command, expected destinations or failure, inverse, status and comparison mode. Do not waive an old golden silently. Require actual routed tests and the project full gate \`CODEX_MODE=1 ./scripts/verify.sh\` for implementation changes. A docs-only RDS commit proves no runtime or human acceptance.
+Every conformance fixture names the normative contract, input profile/board, precise source cell IDs/locations/frames, command, expected destinations or failure, inverse, status and comparison mode. Do not waive an old golden silently. Require actual routed tests and the project full gate `CODEX_MODE=1 ./scripts/verify.sh` for implementation changes. A docs-only RDS commit proves no runtime or human acceptance.
 
 ## 13. Revised implementation and authority gates
 
@@ -389,7 +389,7 @@ Every conformance fixture names the normative contract, input profile/board, pre
 | T3 | 2D visual edge builder and custom-profile save/load | Torus/Möbius/Klein visually constructed, stable draft/undo/apply and persistence. |
 | T4 | 3D/4D Explorer native topology transport | Shared signed-frame semantics, camera/basis non-regression and **separate completed 3D/4D transfer**. |
 | T5 | Visual 3D/4D topology builder | All supported 3D face and 4D hyperface signed tangent mappings visually editable and tested. |
-| T6 | Multi-domain and verified \`S²/S³/S⁴\` | Versioned domain schema, certified spherical doubles, cross-domain conformance, appropriate native authority establishment/transfer. |
+| T6 | Multi-domain and verified `S²/S³/S⁴` | Versioned domain schema, certified spherical doubles, cross-domain conformance, appropriate native authority establishment/transfer. |
 | T7 | Integrated learnability/quality and authority audit | User comprehension, visual stability, deterministic regressions and review of **already completed** scoped authority records. |
 | Later | Genus/crosscap/product generators, all ten 3D flat manifolds, lens and advanced 4D spaces | Independent operator contracts, proof, resource envelope, native implementation and human acceptance; not a T2/T7 blocker. |
 
