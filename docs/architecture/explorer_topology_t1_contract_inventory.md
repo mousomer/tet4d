@@ -35,20 +35,11 @@ Source paths below are repository-relative. Line anchors describe this baseline.
 
 ## 2. Repository, routing and document ownership
 
-**Verified in code/repository:** PR [#172](https://github.com/mousomer/tet4d/pull/172)
-was OPEN at initialization, based on `master`, with head branch
-`docs/explorer-topology-rds-v1` and the baseline SHA above. Task branch:
-`codex/t1-explorer-contract-inventory`, isolated from the shared RDS branch.
-The original checkout was on `codex/fullscreen-shortcut-menu-scale` at
-`84d5b707`, with unrelated dirty documentation and Godot/verification files;
-none were imported. The audit PR must target the RDS branch while #172 is open;
-after its merge, rebase/retarget deliberately rather than merge #172 here.
-
-`./gov check` passed in the task worktree. `./gov resolve --mode
-STRUCTURAL_CHANGE` and `./gov explain --task 'topology explorer
-native/tet4d_core/'` were inspected. The latter projects only
-`topology_and_explorer` + `native_deterministic_core`; the actual investigation
-composes all six manifest routes:
+**Verified in repository:** This inventory examines the RDS revision 2 and
+repository implementation at the baseline commit recorded above. The task was
+routed as a cross-layer `STRUCTURAL_CHANGE` / `staged_handoff` audit.
+Representative `./gov explain` output is not the complete route set; the
+inventory composes the following six applicable manifest routes:
 
 | Route in `config/governance/project.json` | Consumed authority / layer | Evidence boundary |
 | --- | --- | --- |
@@ -59,19 +50,11 @@ composes all six manifest routes:
 | `godot_product_shell` | `godot/AGENTS.md`, bounded Explorer, input/render consumers | Adapter and presentation integration |
 | `governance_and_tooling` | Change/verification governance, authority validator | Documentation, handoff and authority assertions |
 
-Modifiers: `staged_handoff`; cross-layer **inspection**, with documentation-only
-edits. No packaging/release or platform acceptance claim. `./gov doctor`
-identified the governed Python 3.14.8 environment with this worktree's source
-binding. Native baseline tests and focused Python tests support the inventory;
-Godot assertions were inspected, not claimed as newly implemented acceptance.
-The required full gate remains `CODEX_MODE=1 ./scripts/verify.sh`.
-
-The canonical policy-kit `scripts/sync_workspace_policy.sh plan` and
-`scripts/audit_workspace_policy.sh` both returned exit 2,
-`DISTRIBUTION_VALIDATION_FAILED`. No installer apply was attempted. Fleet
-location classification and adoption proof remain unavailable; local pack
-validation is not fleet acceptance. Worktrees/tool stores remain protected
-from installer writes. No adoption or deferred-policy activation is claimed.
+The audit inspected native and Godot behavior but changed documentation only;
+inspection is not a runtime, mathematical-certification or authority-transfer
+acceptance claim. Verification commands are in §9. Checkout state, CI results
+and environment-specific policy-kit outcomes belong in the PR description,
+not in this durable architecture reference.
 
 Owner search covered the existing topology architecture and plans. The RDS
 owns requirements, `canonical_topology_contract.md` owns v1 interchange,
@@ -188,11 +171,50 @@ small-board resource/availability rules and duplicate-neighbor presentation
 separately from construction certification. No parity/native test found covers
 all five named profiles, both directions and degenerate cases as one package.
 
+### Continuous quotient analysis of the legacy `sphere_2d` construction
+
+**Verified in code:** `presets.py::_sphere_like_pairs(2)` pairs X−
+with Y− and X+ with Y+; `_sphere_like_profile` uses the reversing tangent
+transform `_reverse_flip_transform(1)` for both pairs. This is a
+*continuous-boundary-quotient analysis*, not a certification of the discrete
+cell-center transport or of the preset's mathematical name.
+
+Label the square vertices A=(0,0), B=(L,0), C=(L,L), D=(0,L).
+Under the two reversed tangent identifications, the endpoint pairs are:
+
+- X− ↔ Y−: A ~ B and D ~ A.
+- X+ ↔ Y+: B ~ C and C ~ D.
+
+Thus all four corner vertices have one equivalence class. In the standard
+polygonal quotient cell count this gives `V=1, E=2, F=1` and
+`χ=V−E+F=0`. Both glued edge pairs agree with the oriented square's
+boundary traversal, so the candidate is non-orientable. **If the
+vertex-link/manifold checks pass**, the standard compact connected
+closed-surface classification identifies this quotient as a *Klein bottle*,
+not `S²`. The prior sphere-like label is therefore not supported by this
+continuous gluing calculation.
+
+Using tangent sign `+` on both adjacent-edge pairs instead yields three
+vertex classes and `χ=2`, consistent with the usual one-square
+sphere construction. This is an **investigation comparison only**:
+changing a legacy sign would change historical profile/transport semantics
+and is not authorized by this audit. The RDS's T6 two-domain ball-double
+remains the intended certified sphere delivery. A mathematical sphere need
+not in general require two domains; that is the project's chosen T6
+construction and versioning boundary.
+
+**Unresolved:** independently verify vertex links and orientation under the
+canonical continuous construction, and keep those proof objects distinct from
+discrete seam inverses, cell-center occupancy and polycube movement. Add
+certification fixtures in Session 2; neither preset-name metadata nor the
+4×4 collision witness proves a homeomorphism type.
+
 ## 6. Python divergences and transaction findings
 
-**Verified in code:** `transport_resolver.py:637` computes every `CellStepResult`
-before returning a `PieceStepResult`. Any blocked cell blocks the piece.
-At lines 662–669, duplicate destinations instead return
+**Verified in code:** `transport_resolver.py::ExplorerTransportResolver.resolve_piece_step`
+(baseline line 637) computes every `CellStepResult` before returning a
+`PieceStepResult`. Any blocked cell blocks the piece. The function's
+duplicate-destination branch (baseline lines 662–669) instead returns
 `CELLWISE_DEFORMATION` with the duplicate coordinate tuple. For example, an
 executed read-only probe of `sphere_profile_2d()`, board 4×4, cells
 `((0,3),(1,0))`, command X− returned
@@ -202,11 +224,12 @@ invalid particular movement, not evidence that all sphere-like moves fail.
 | Existing behavior / exact evidence | Required by RDS | Classification and proposed disposition |
 | --- | --- | --- |
 | Resolver duplicate-target branch above; `PieceStepResult.__post_init__` checks rank/kind/cell-step count, not destination uniqueness or moved/source count equality | `blocked`, `destination_collision`; preserve complete prior state | Intentionally superseded for new Explorer. No direct duplicate-target resolver regression was found in inspected tests; add one with explicit old/new comparison, rather than inventing a conflicting golden |
-| Sandbox `_move_sandbox_piece_explorer` rejects `len(set(moved_cells)) != len(moved_cells)`; placement validator also rejects duplicates | Same invariant at native proposal boundary, consistently reported | Valid safeguards unchanged; reuse their regression intent. Resolver success must not depend on a later UI consumer catching collapse |
+| Sandbox `_move_sandbox_piece_explorer` rejects `len(set(moved_cells)) != len(moved_cells)`; `piece_placement.py::validate_candidate_piece_placement` rejects duplicate locations | Same invariant at native proposal boundary, consistently reported | Valid safeguards unchanged; reuse their regression intent. Resolver success must not depend on a later UI consumer catching collapse |
+| 2D gameplay under `CELLWISE_FREE`: `explorer_runtime_2d.py::move_piece_via_explorer_glue_2d` passes the duplicate `moved_cells` to `_piece_from_exact_cells`, constructing a temporary `PieceShape2D` with coincident blocks; `game2d.py::_try_commit_candidate_piece` routes through `commit_piece_if_legal` to `piece_placement.py::validate_candidate_piece_placement`, which rejects duplicate occupancy | Return a blocked `destination_collision` **before** constructing a candidate shape or exposing successful transport; leave whole state unchanged | Legacy gameplay's later rejection is effective for commit but does not repair the resolver's success classification. T2 fixtures must check resolver, gameplay-consumer/compatibility, and native proposal boundaries separately |
 | `test_torus_chart_split_piece_step_stays_rigidly_coherent` expects deformation with `(0,0),(0,1)` → `(0,3),(0,0)` | Valid one-to-one apparent split allowed | Valid unchanged behavior; taxonomy/coherence terminology needs clarification, not a rigid-only filter |
 | `test_sandbox_forced_rigid_mode_blocks_cellwise_projective_cases_across_dimensions`; runtime `RIGID` policy rejects non-coherent deformation | Valid deformations remain permitted in forward Explorer | Legacy compatibility test; retain Pygame/Play expectation, add separate native RDS conformance |
 | `topology_playability_signal.py` keeps `validity=valid` even when `rigid_playability=blocked`, but scans deformation to choose rigid policy | Structural validity, catalog certification and per-command legality independent | Existing separation is useful. Do not use `unsafe`, gravity safety or rigid scan as catalog-wide Explorer rejection |
-| Python cell resolver returns identity+translation frames for interior movement; native `query.cpp:387` returns target with absent frames; current topology parity cases cover seam crossings and a blocked boundary, not successful interior frames | Full composed local-frame state must be well-defined for every successful action | Additional coverage/contract required; define absent-frame semantics without silently changing the legacy DTO |
+| Python cell resolver returns identity+translation frames for interior movement; native `query.cpp::resolve_topology_cell_step_query` (baseline line 387) returns target with absent frames; current topology parity cases cover seam crossings and a blocked boundary, not successful interior frames | Full composed local-frame state must be well-defined for every successful action | Additional coverage/contract required; define absent-frame semantics without silently changing the legacy DTO |
 | Python `frame_transform` uses normal sign −1; `piece_frame_transform` uses exit/entry sign relation; Möbius X crossing gives coordinate signs (−1,−1), piece signs (+1,−1) | Frame meaning and inverse defined explicitly | Additional coverage/contract required; choosing the coordinate map as a persistent physical frame would be unjustified |
 | `TestStage35TopologySemantics` permits Explorer Y seam but blocks Play drop; `play_move_intents.py` classifies those intents separately | Explorer isolated from gravity/drop/lock | Valid unchanged; do not route new Explorer through gameplay drop legality |
 
@@ -430,7 +453,10 @@ they are not questions requiring the owner to choose implementation guesses.
    correspondence to unchanged v1 digests/aliases; independent availability,
    certification and unknown invariants. Write edge/vertex equivalence and
    local-link/χ/orientability/boundary fixture specifications for the five core
-   constructions; investigate projective separately, keep sphere heuristic.
+   constructions. Investigate projective separately. Check §5's legacy
+   `sphere_2d` corner equivalences (`χ=0` with reversed tangent signs) and
+   vertex links against a `+`-sign sphere construction; keep the historical
+   sphere-like profile heuristic regardless of the proof outcome.
    Inputs: exact §5 definitions, canonical normalization/scalar limits, RDS §7.
    Do not certify by preset metadata or merge boundary vertices with occupancy.
 4. **Native request/state/result contract.** Decide immutable values versus
@@ -449,5 +475,4 @@ they are not questions requiring the owner to choose implementation guesses.
 Session 2 exits with reviewed semantic/catalog/API and fixture specifications,
 remaining mathematical unknowns explicit, and the candidate transfer complete
 enough to implement. It does not start T2, transfer 3D/4D, change gameplay,
-invent a surface generator or bypass the authority guard. Central fleet
-validation remains a separate unresolved environment/governance observation.
+invent a surface generator or bypass the authority guard.
