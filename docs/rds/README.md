@@ -37,6 +37,7 @@ Every active RDS file should begin with these fields:
 - `RDS_TETRIS_GENERAL.md`
 - `RDS_MENU_STRUCTURE.md`
 - `RDS_KEYBINDINGS.md`
+- `RDS_EXPLORER_TOPOLOGIES.md` — forward 2D/3D/4D Explorer topology and visual-builder behavior
 
 ### Feature/domain contracts
 
@@ -61,6 +62,9 @@ Current candidate for that decision:
 - `RDS_FILE_FETCH_LIBRARY.md`
 
 ## Ownership boundaries
+
+### `RDS_EXPLORER_TOPOLOGIES.md`
+Owns forward Godot Explorer topology behavior, cell transport invariants, presets and subordinate visual builder. It overrides conflicting inherited Python Explorer expectations as a product contract, but native semantic authority is pending formal transfer. Ordinary Play retains its own rules.
 
 ### `RDS_TETRIS_GENERAL.md`
 Owns shared gameplay, topology, transform, kick, and cross-mode technical or UX

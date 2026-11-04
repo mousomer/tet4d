@@ -206,12 +206,24 @@ the only permitted board shapes where the runtime supports a validated range.
 Topology is not simply an advanced feature after 4D. Two-dimensional bounded,
 strip, and Möbius games are independently meaningful.
 
-The professional bounded game is already accepted. The next priority is a
-bounded Godot spatial-practice Explorer and the evidence needed to test spatial
-learning. First-class non-bounded topological games remain a later programme;
-the Python topology playground and its canonical semantics are preserved.
+The professional bounded game is already accepted and the bounded Godot
+spatial-practice Explorer MVP exists. The forward Explorer now includes 2D and
+non-bounded topology presets plus a secondary visual topology builder under
+`docs/rds/RDS_EXPLORER_TOPOLOGIES.md`. This is a product requirement and
+planned native authority transfer, not a claim that non-bounded Godot transport
+or the transfer is implemented. First-class topological **games** remain later;
+historical Python tools and compatibility data persist during migration.
 
 ### 4.6 Exploration is a learning mode
+
+The forward Explorer topology programme is 2D-first for comprehension:
+select a preset in the existing Explorer, construct mappings visually in its
+secondary builder, and experience non-rigid cellwise transport subject to exact
+conservation/injectivity/inverse/atomicity guarantees. Python's inherited
+Explorer behavior cannot overrule this RDS; transferring native deterministic
+ownership requires the authority-transfer protocol. The builder does not
+replace the existing Explorer, and it does not inherit the frozen Python
+Topology Playground shell.
 
 The Explorer is not only an editor or diagnostic surface. It is a free-practice
 environment for movement, object rotation, camera rotation, re-slicing,
@@ -1540,13 +1552,14 @@ projection, slice navigation, camera and basis changes. Keep bounded play the
 default reference. Do not expose every editor possibility as an ordinary game
 preset.
 
-### 11.3 Full Godot Topology Laboratory
+### 11.3 Full Godot Topology Laboratory (additional, deferred)
 
-Migrate the mature Editor / Sandbox / Play workflows only under the current
-topology authority and trace/parity protocol, including explicit seam editing,
-probe traversal, diagnostics, topology profile persistence and
-`Play This Topology` semantics. Preserve the established Python reference and
-its non-bounded modes until their authority is intentionally transferred.
+The first-class **Explorer topology builder** is now near-term and owned by
+`docs/rds/RDS_EXPLORER_TOPOLOGIES.md`; it is not this deferred full laboratory.
+Any later complete Godot laboratory must integrate with the existing Explorer
+rather than copying the Python Editor/Sandbox/Play shell. Preserve legacy
+Python profile and trace compatibility during bounded transfer. Ordinary
+Play-specific legality and `Play This Topology` remain separately governed.
 
 ## 12. Phase VI — Unified Simulation and Professional Distribution
 
@@ -1652,21 +1665,25 @@ The new priority order is:
 | Priority | Workstream | Dependency or acceptance boundary |
 | --- | --- | --- |
 | P0 | Bounded existing-game corrections | Designer sizing, confirmed cockpit/replay defects, camera-relative movement and active Stage 58C/59 readability; preserve accepted layouts |
-| P1 | Godot bounded spatial-practice Explorer | `EXPLORER_LEARNING_READY`; independent 4D rotations, basis, slices, coordinates and adjacency |
+| P1 | Accept existing bounded Godot Explorer baseline | `EXPLORER_LEARNING_READY`; maintain 3D/4D movement, basis, slices and view stability |
+| P1T | **Explorer topologies: 2D first, presets, visual builder, then 3D/4D and multi-domain spheres** | `RDS_EXPLORER_TOPOLOGIES.md` stages T1-T7; native transfer pending; no Python-oracle veto |
 | P2 | Professional UI review and verified fixes | Expert and novice comprehension checks, including 3D/4D depth and cockpit hierarchy |
 | P3 | Study protocol and minimal assessment tasks | Baseline, held-out transfer, control/comparison and reproducible scoring before telemetry schema freezes |
 | P4 | Participant identity, persistence and telemetry | Consent-aware versioned backend/local recovery and data reconstructability |
 | P5 | Pilot and first controlled learning experiment | `RESEARCH_PLATFORM_READY` then `FIRST_EXPERIMENT_COMPLETE` |
 | P6 | Research distribution | Windows then Linux after a reproducible study build is needed; no implied support-matrix change |
 | P7 | Full challenge/tutorial curriculum | Expand after an assessment vertical slice and initial study results |
-| P8 | 2D then selected 3D/4D topology games | Reuse existing canonical topology transport and extent contract |
-| P9 | Complete Godot Topology Laboratory | Preserve Editor/Sandbox/Play semantics and Python-to-native parity |
+| P8 | 2D then selected 3D/4D topology **games** | Separate Play admission and drop/lock rules from Explorer's permissive cellwise transport |
+| P9 | Additional advanced topology laboratory capabilities | Extend the existing Explorer/builder; do not duplicate the legacy Python shell |
 | P10 | Broader product/platform features | Android tablets, gamepad, audio and advanced gameplay only when justified |
 | P11 | Unified physics/simulation | Versioned state conversion, explosion simulation foundation |
 | P12 | Commercial professional product | Campaign, distribution, possible monetization |
 | P13 | Later platforms | Public macOS and iPadOS, deferred |
 
-P3 assessment design can overlap P1 and P2. P4 infrastructure design can begin
+P1T is the newly approved product direction for Explorer topology; it may be
+staged alongside P2-P4 where dependencies permit but does not imply completed
+implementation or override separate research measurement requirements. P3
+assessment design can overlap P1 and P2. P4 infrastructure design can begin
 after the data contract is established, but deployment must not be treated as
 a substitute for research readiness. P6 can be pulled forward if participant
 recruitment requires a validated Windows/Linux build. No priority label by

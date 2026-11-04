@@ -54,6 +54,14 @@ and do not become a participant-event backend by renaming them.
 
 ### E1 — Bounded practice Explorer
 
+This E1 slice records the bounded learning-study baseline, not the complete
+forward Explorer. The new Godot topology product contract includes 2D and
+non-bounded presets plus a secondary visual builder:
+`docs/rds/RDS_EXPLORER_TOPOLOGIES.md`. That RDS supersedes E1's
+bounded-only **product** scope; E1's independent novice and scientific
+measurement gates remain in force. No topology change itself establishes study
+readiness or a participant backend.
+
 One Godot practice workspace with:
 
 - independent object pose, camera pose, exact 4D view/slice basis and slice

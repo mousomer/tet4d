@@ -134,6 +134,12 @@ Main Menu
   parity inspection, and non-live topology/endgame demonstrations, but routes
   through a secondary `Advanced / Diagnostics` screen rather than competing
   with Play as a top-level action.
+- Godot Main Menu -> Explorer remains the direct primary entry for 2D/3D/4D
+  topology exploration. Presets appear *inside* the existing Explorer, with
+  a secondary `Edit Topology` builder and `Return to Explorer` path; see
+  `RDS_EXPLORER_TOPOLOGIES.md`. This is the forward contract, not a claim
+  that the non-bounded Godot path is implemented. Do not route the new builder
+  through the legacy Python Topology Playground shell.
 - Godot Main Menu Play launches the current validated setup directly. Play
   2D/3D/4D and shortcuts `2`/`3`/`4` launch their mode-specific validated
   setups, so every dimension stays a visible, selectable entry whatever the

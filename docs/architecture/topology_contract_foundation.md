@@ -15,9 +15,12 @@ deterministically generates:
 
 Shared topology validity, canonicalization, identity, and transport acceptance
 values must originate from the versioned language-neutral topology contract.
-Python remains the topology semantic oracle. Generated C++ constants establish
-shared metadata and acceptance limits; they do not transfer topology authority
-or implement native transport.
+Python remains the **current inherited v1** topology semantic reference until
+a bounded transfer record is completed. The forward Explorer behavior contract
+is `docs/rds/RDS_EXPLORER_TOPOLOGIES.md`, which supersedes conflicting Python
+Explorer expectations. Generated C++ constants establish shared metadata and
+acceptance limits; they do not transfer topology authority or implement native
+transport.
 
 ## Contract values and fingerprint
 
