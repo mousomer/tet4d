@@ -44,7 +44,25 @@ Required transfer evidence includes current/candidate authority, exact observabl
 
 **If the T2 transfer cannot be completed, T2 remains incomplete:** do not ship the new 2D Explorer with an implicitly authoritative, conflicting Python fallback.
 
-### 2.3 Legacy compatibility and test discipline
+### 2.3 Explicit approval of the Explorer RDS replan
+
+The project owner explicitly permits this RDS to supersede conflicting
+historical Python **Explorer requirements** as a normative product decision.
+The authority-map's planned Explorer row is annotated with
+`**Approved Explorer RDS replan: requirements only.**` for the narrowly scoped CI guard exemption.
+
+This approval does not transfer native runtime authority, does not override
+ordinary Play, and does not authorize an unrecorded topology transfer. The
+validator must permit only the annotated **planned** Explorer row when it also
+retains the RDS link, native C++ **candidate** status, the explicit no-transfer
+statement and T2/T4 scoped authority-transfer gates. All other non-Python
+semantic-oracle and supersession claims remain guarded.
+
+T1 prepares contracts; T2 must complete a verified 2D Explorer-only transfer
+before acceptance; T4 transfers 3D/4D separately. Multi-domain authority
+follows its independent T6 establishment/transfer procedure.
+
+### 2.4 Legacy compatibility and test discipline
 
 Version-1 single-domain profiles and existing Python golden traces retain historical readability and meaning. Test expectations must be marked conforming, explicitly superseded, legacy compatibility, or unrelated; replace conflicting Explorer tests with conformance assertions rather than deleting coverage. Do not reassign old `sphere_2d`, `sphere_3d` or `sphere_4d` IDs to mathematically certified spheres. Do not copy the legacy Pygame Editor/Sandbox/Play UI as a second Godot Explorer.
 

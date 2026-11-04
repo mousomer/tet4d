@@ -1060,3 +1060,99 @@ def test_legacy_policy_manifest_redirect_rejects_non_object(
 
 def test_legacy_policy_manifest_redirect_is_part_of_manifest_validation() -> None:
     assert not any(issue.kind == "redirect" for issue in contracts.validate_manifest())
+
+
+def _approved_explorer_replan_row() -> str:
+    return (
+        "| **Planned** Godot Explorer topology contract (2D/3D/4D) | "
+        "`docs/rds/RDS_EXPLORER_TOPOLOGIES.md` is the new product requirement; "
+        "native C++ is **candidate** deterministic owner; Godot owns presentation | "
+        "RDS supersedes conflicting Python Explorer expectations as product requirements. "
+        "**Approved Explorer RDS replan: requirements only.** "
+        "**No transfer is recorded yet.** "
+        "T2 requires a completed **2D Explorer-only** native transfer; "
+        "T4 requires its own 3D/4D transfer. |"
+    )
+
+
+def _scan_one_authority_row(
+    tmp_path: Path, monkeypatch, *, rel: str, row: str
+) -> list[contracts.ValidationIssue]:
+    _write_text(tmp_path / rel, row + "\n")
+    monkeypatch.setattr(contracts, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(contracts, "_governance_scan_paths", lambda: [rel])
+    return contracts._validate_governance_authority_inversion()
+
+
+def test_explicitly_approved_explorer_rds_replan_passes_legacy_guard(
+    tmp_path: Path, monkeypatch
+) -> None:
+    row = _approved_explorer_replan_row()
+    assert contracts.AUTHORITY_INVERSION_PATTERNS[-1][0].search(row)
+    assert _scan_one_authority_row(
+        tmp_path, monkeypatch,
+        rel="docs/architecture/authority_map.md", row=row,
+    ) == []
+
+
+@pytest.mark.parametrize(
+    ("old", "new"),
+    [
+        ("**Approved Explorer RDS replan: requirements only.**", ""),
+        ("**No transfer is recorded yet.**", "Native transfer was completed."),
+        ("native C++ is **candidate** deterministic owner", "native C++ is authoritative"),
+        ("RDS supersedes conflicting Python Explorer expectations as product requirements.",
+         "Godot supersedes Python gameplay authority."),
+        ("T2 requires a completed **2D Explorer-only** native transfer",
+         "T2 does not require transfer"),
+        ("T4 requires its own 3D/4D transfer", "T4 transfers automatically"),
+    ],
+)
+def test_explorer_rds_replan_does_not_waive_unapproved_authority_claims(
+    tmp_path: Path, monkeypatch, old: str, new: str
+) -> None:
+    changed = _approved_explorer_replan_row().replace(old, new)
+    assert _scan_one_authority_row(
+        tmp_path, monkeypatch,
+        rel="docs/architecture/authority_map.md", row=changed,
+    )
+
+
+def test_replan_exception_is_authority_map_row_only(tmp_path: Path, monkeypatch) -> None:
+    row = _approved_explorer_replan_row()
+    assert _scan_one_authority_row(
+        tmp_path, monkeypatch,
+        rel="docs/architecture/other.md", row=row,
+    )
+    assert _scan_one_authority_row(
+        tmp_path, monkeypatch,
+        rel="docs/architecture/authority_map.md",
+        row=row.replace(
+            "**Planned** Godot Explorer topology contract",
+            "Unrecorded Godot gameplay transfer",
+        ),
+    )
+
+
+def test_replan_does_not_waive_other_authority_guard_categories(
+    tmp_path: Path, monkeypatch
+) -> None:
+    row = _approved_explorer_replan_row() + " C++ is the semantic oracle."
+    issues = _scan_one_authority_row(
+        tmp_path, monkeypatch,
+        rel="docs/architecture/authority_map.md", row=row,
+    )
+    assert any("non-Python semantic oracle claim" in i.message for i in issues)
+
+
+def test_real_planned_explorer_authority_row_carries_approval() -> None:
+    row = next(
+        line for line in (
+            contracts.PROJECT_ROOT / "docs/architecture/authority_map.md"
+        ).read_text(encoding="utf-8").splitlines()
+        if line.startswith("| **Planned** Godot Explorer topology contract")
+    )
+    assert contracts._is_approved_explorer_rds_replan(
+        "docs/architecture/authority_map.md", row,
+        "non-Python supersession claim",
+    )
