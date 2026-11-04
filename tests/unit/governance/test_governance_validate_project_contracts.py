@@ -1089,10 +1089,15 @@ def test_explicitly_approved_explorer_rds_replan_passes_legacy_guard(
 ) -> None:
     row = _approved_explorer_replan_row()
     assert contracts.AUTHORITY_INVERSION_PATTERNS[-1][0].search(row)
-    assert _scan_one_authority_row(
-        tmp_path, monkeypatch,
-        rel="docs/architecture/authority_map.md", row=row,
-    ) == []
+    assert (
+        _scan_one_authority_row(
+            tmp_path,
+            monkeypatch,
+            rel="docs/architecture/authority_map.md",
+            row=row,
+        )
+        == []
+    )
 
 
 @pytest.mark.parametrize(
@@ -1100,11 +1105,18 @@ def test_explicitly_approved_explorer_rds_replan_passes_legacy_guard(
     [
         ("**Approved Explorer RDS replan: requirements only.**", ""),
         ("**No transfer is recorded yet.**", "Native transfer was completed."),
-        ("native C++ is **candidate** deterministic owner", "native C++ is authoritative"),
-        ("RDS supersedes conflicting Python Explorer expectations as product requirements.",
-         "Godot supersedes Python gameplay authority."),
-        ("T2 requires a completed **2D Explorer-only** native transfer",
-         "T2 does not require transfer"),
+        (
+            "native C++ is **candidate** deterministic owner",
+            "native C++ is authoritative",
+        ),
+        (
+            "RDS supersedes conflicting Python Explorer expectations as product requirements.",
+            "Godot supersedes Python gameplay authority.",
+        ),
+        (
+            "T2 requires a completed **2D Explorer-only** native transfer",
+            "T2 does not require transfer",
+        ),
         ("T4 requires its own 3D/4D transfer", "T4 transfers automatically"),
     ],
 )
@@ -1113,19 +1125,26 @@ def test_explorer_rds_replan_does_not_waive_unapproved_authority_claims(
 ) -> None:
     changed = _approved_explorer_replan_row().replace(old, new)
     assert _scan_one_authority_row(
-        tmp_path, monkeypatch,
-        rel="docs/architecture/authority_map.md", row=changed,
+        tmp_path,
+        monkeypatch,
+        rel="docs/architecture/authority_map.md",
+        row=changed,
     )
 
 
-def test_replan_exception_is_authority_map_row_only(tmp_path: Path, monkeypatch) -> None:
+def test_replan_exception_is_authority_map_row_only(
+    tmp_path: Path, monkeypatch
+) -> None:
     row = _approved_explorer_replan_row()
     assert _scan_one_authority_row(
-        tmp_path, monkeypatch,
-        rel="docs/architecture/other.md", row=row,
+        tmp_path,
+        monkeypatch,
+        rel="docs/architecture/other.md",
+        row=row,
     )
     assert _scan_one_authority_row(
-        tmp_path, monkeypatch,
+        tmp_path,
+        monkeypatch,
         rel="docs/architecture/authority_map.md",
         row=row.replace(
             "**Planned** Godot Explorer topology contract",
@@ -1139,8 +1158,10 @@ def test_replan_cannot_hide_a_second_runtime_supersession(
 ) -> None:
     row = _approved_explorer_replan_row() + " Godot supersedes Python gameplay."
     issues = _scan_one_authority_row(
-        tmp_path, monkeypatch,
-        rel="docs/architecture/authority_map.md", row=row,
+        tmp_path,
+        monkeypatch,
+        rel="docs/architecture/authority_map.md",
+        row=row,
     )
     assert any("non-Python supersession claim" in i.message for i in issues)
 
@@ -1150,20 +1171,24 @@ def test_replan_does_not_waive_other_authority_guard_categories(
 ) -> None:
     row = _approved_explorer_replan_row() + " C++ is the semantic oracle."
     issues = _scan_one_authority_row(
-        tmp_path, monkeypatch,
-        rel="docs/architecture/authority_map.md", row=row,
+        tmp_path,
+        monkeypatch,
+        rel="docs/architecture/authority_map.md",
+        row=row,
     )
     assert any("non-Python semantic oracle claim" in i.message for i in issues)
 
 
 def test_real_planned_explorer_authority_row_carries_approval() -> None:
     row = next(
-        line for line in (
-            contracts.PROJECT_ROOT / "docs/architecture/authority_map.md"
-        ).read_text(encoding="utf-8").splitlines()
+        line
+        for line in (contracts.PROJECT_ROOT / "docs/architecture/authority_map.md")
+        .read_text(encoding="utf-8")
+        .splitlines()
         if line.startswith("| **Planned** Godot Explorer topology contract")
     )
     assert contracts._is_approved_explorer_rds_replan(
-        "docs/architecture/authority_map.md", row,
+        "docs/architecture/authority_map.md",
+        row,
         "non-Python supersession claim",
     )

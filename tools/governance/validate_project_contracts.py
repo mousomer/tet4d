@@ -144,9 +144,7 @@ AUTHORITY_INVERSION_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
 EXPLORER_RDS_APPROVAL_MARKER = "**Approved Explorer RDS replan: requirements only.**"
 
 
-def _is_approved_explorer_rds_replan(
-    rel: str, line: str, label: str
-) -> bool:
+def _is_approved_explorer_rds_replan(rel: str, line: str, label: str) -> bool:
     return (
         rel == "docs/architecture/authority_map.md"
         and label == "non-Python supersession claim"
@@ -154,7 +152,8 @@ def _is_approved_explorer_rds_replan(
         and EXPLORER_RDS_APPROVAL_MARKER in line
         and "`docs/rds/RDS_EXPLORER_TOPOLOGIES.md`" in line
         and "native C++ is **candidate** deterministic owner" in line
-        and "RDS supersedes conflicting Python Explorer expectations as product requirements." in line
+        and "RDS supersedes conflicting Python Explorer expectations as product requirements."
+        in line
         # A second supersession claim on the same line is NOT covered.
         and line.lower().count("supersedes") == 1
         and "**No transfer is recorded yet.**" in line

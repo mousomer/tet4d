@@ -119,7 +119,7 @@ Top 8 live Python hotspots by real LOC:
 1. `tests/unit/engine/test_topology_lab_menu.py`: `3804` real LOC
 2. `tests/unit/render/test_locked_cell_explosion.py`: `3782` real LOC
 3. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `3194` real LOC
-4. `tools/governance/validate_project_contracts.py`: `2755` real LOC
+4. `tools/governance/validate_project_contracts.py`: `2754` real LOC
 5. `src/tet4d/ui/pygame/front4d_render.py`: `2153` real LOC
 6. `tools/workspace_governance/validators/core.py`: `2104` real LOC
 7. `scripts/arch_metrics.py`: `1899` real LOC
