@@ -1169,7 +1169,7 @@ def test_replan_cannot_hide_a_second_runtime_supersession(
 def test_replan_does_not_waive_other_authority_guard_categories(
     tmp_path: Path, monkeypatch
 ) -> None:
-    row = _approved_explorer_replan_row() + " C++ is the semantic oracle."
+    row = _approved_explorer_replan_row() + " Godot is the semantic oracle."
     issues = _scan_one_authority_row(
         tmp_path,
         monkeypatch,
