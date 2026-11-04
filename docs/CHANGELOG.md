@@ -2,6 +2,8 @@
 
 ## 0.9.2 — 2026-11-03
 
+- Repair Windows release jobs to bind the approved Python interpreter in Bash and pass it explicitly to the native build.
+
 - Add the bounded practice Explorer with stable panels, piece replacement, and unified clickable VIEW helpers for all six 4D view planes.
 - Preserve helper fit and panel state across camera, basis, and piece actions.
 - Add fullscreen shortcuts and improve menu sizing.
