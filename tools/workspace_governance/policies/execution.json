@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "id": "synchronous-completion-v1",
+  "requirements": {
+    "local_completion": "await_exit",
+    "remote_completion": "blocking_watch_or_notification",
+    "yield_handling": "resume_same_invocation",
+    "agent_status_polling": "forbidden",
+    "parallel_completion": "await_all_preserve_failures",
+    "unknown_outcome": "never_success",
+    "recovery": "reconnect_same_identity_no_automatic_redispatch"
+  }
+}

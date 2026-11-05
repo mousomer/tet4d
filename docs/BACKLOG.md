@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-11-03
+Updated: 2026-11-04
 Scope: active work, explicit deferrals, and near-term acceptance boundaries.
 
 Completed chronology is recoverable from Git, merged PRs, CI, and
@@ -23,6 +23,8 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   facts)
 
 ## Active Work
+
+- [x] Adopt shared completion policy (distribution 1.5.0 / runtime 0.8.0): manifest binding, resolver provenance, canonical skills and regression protection; preserve fleet exclusions and deferred telemetry.
 
 - [x] Correct the aggregate input-map regression to validate declared Shift modifiers and reject plain-key aliases for Explorer view actions.
 - [x] Repair Windows release interpreter binding: explicit Bash environment export and setup-python `PYTHON_BIN` for the initial native build, covered by the packaging contract test.

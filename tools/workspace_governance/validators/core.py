@@ -1650,6 +1650,9 @@ def validate_pack(root: Path, workspace: dict[str, Any]) -> list[Diagnostic]:
         version = (
             (pack_root / manifest["version_file"]).read_text(encoding="utf-8").strip()
         )
+        from tools.workspace_governance.execution_policy import load_policy
+
+        load_policy(pack_root, manifest)
         actual, files = pack_hash(pack_root)
     except (OSError, ValueError, TypeError, KeyError) as exc:
         return [

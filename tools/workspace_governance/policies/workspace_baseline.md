@@ -36,3 +36,7 @@ review. Immutable release identity and consumer lock establish byte provenance;
 a mutable remote, version label or local re-blessed hash does not establish
 canonical adoption. Preserve deferred comparison/blocking and telemetry evidence
 gates. Any scan, adoption or product-verification gap stays explicit.
+
+## Execution completion
+
+All consumer work follows [Completion-based execution](execution.md). The pack manifest binds its machine contract; `execution.completion` supplies the resolved policy and provenance. Local verification waits for exit, remote CI uses one blocking watch or notification, and tool yields resume the same invocation. Agent-driven status and log-tail polling are prohibited.
