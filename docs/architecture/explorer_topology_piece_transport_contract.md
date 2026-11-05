@@ -785,14 +785,15 @@ map/record together, without changing legacy meanings.
 
 ## 17. Conformance fixture requirements
 
-**Normative future evidence:** Convert §§8/13 into manually reviewed, versioned
-fixtures only after semantic review. Suggested future owner
-`tests/fixtures/explorer_piece_transport_v1.json` is a **proposed new file**, not
-an existing artifact. Do not generate it from Python `resolve_piece_step`.
+**Normative evidence specifications:** The Session 3 package at
+`tests/fixtures/explorer_topology/transport_v1.json` carries §§8/13 as versioned
+expected outcomes for independent review. The catalog/certification contract owns
+its schema and reference expansion. These specifications are not runtime results
+and are not generated from Python `resolve_piece_step`.
 Extend `native/tet4d_core/tests/query_core_tests.cpp` and
 `topology_transport_tests.cpp`, the existing checked Godot boundary tests, and
 `tests/unit/migration/test_topology_transport_parity.py`'s explicit comparison
-modes. No piece harness or fixture is claimed to exist in this session.
+modes. A native whole-piece conformance harness remains unimplemented.
 
 Each fixture records canonical profile/board, version/object/H, every ID/center/
 frame, revision, selected action, exact per-cell witness, complete target or
@@ -821,33 +822,16 @@ in 2D to catch multiplication order, including noncommuting examples in §6.
 Parity outputs for unchanged low-level behavior remain distinct from new piece
 conformance. A passing historical test cannot certify the unimplemented engine.
 
-## 18. Open issues and Session 3 handoff
+## 18. Independent T1 review and acceptance
 
-**Unresolved outside this movement scope:** Catalog schema and
-`space_class_id -> construction_id -> profile_id` relationships, aliases,
-availability/certification promotion and the independent continuous quotient
-fixture format remain Session 3 work. No such choice is needed to execute an
-accepted request: it carries normalized `B` directly. Session 3 must preserve
-that distinction and the canonical v1 identity algorithm.
+The catalog, three identity levels, quotient proof specifications and fixture
+package are owned by `docs/architecture/explorer_topology_catalog_certification_contract.md`.
+The bounded T2 implementation/transfer preparation is
+`docs/architecture/explorer_topology_t2_transfer_preparation.md`.
 
-Session 3 inputs/outputs:
-
-1. Bind the five core recipes and historical aliases to exact normalized
-   transport profiles/boards, independently of display labels and certification.
-2. Define proof fixtures for edges, vertices, local links, orientation, boundary
-   components and Euler characteristic. Recheck sphere-like `chi=0` without
-   altering its pairings or asserting Klein certification before all checks.
-   Investigate projective-like construction without forcing its label's `chi=1`.
-3. Carry §§13/17's exact five-core transport and negative examples into the T1
-   conformance package; add certification cases separately. Record intentional
-   Python divergences and compatibility, not rewritten historical goldens.
-4. Complete the inventory §10 bounded 2D transfer preparation using this native
-   mapping, exact exclusions, comparison modes and rollback. T2 still needs
-   implemented native/adapter conformance, Godot integration and human review
-   before any terminal transfer record or map promotion. T4/T6 remain separate.
-
-There is no unresolved choice inside the supported movement/rotation rules:
-accepted operations have one candidate and a defined recorded inverse; all
-other operations reject deterministically. Semantic review, Session 3's broader
-T1 deliverables, T2 implementation and acceptance are still required. Stop at
-this design boundary; this document does not authorize T2 implementation.
+Independent adversarial review of both T1 contracts and their evidence, finding
+reconciliation and explicit T1 acceptance remain required. Mathematical status
+promotion is separate from native runtime availability. No movement semantics
+are changed by the Session 3 references. T2 still requires implemented native
+and checked-adapter conformance, Godot integration and human review before any
+terminal transfer record or map promotion. T4/T6 remain separate.

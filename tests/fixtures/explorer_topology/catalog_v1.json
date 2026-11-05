@@ -1,0 +1,1121 @@
+{
+  "contract": "explorer-topology-catalog/1",
+  "schema_version": 1,
+  "space_classes": [
+    {
+      "id": "surface.disk",
+      "dimension": 2,
+      "compact": true,
+      "connected": true,
+      "orientable": true,
+      "genus": 0,
+      "boundary_components": 1,
+      "euler_characteristic": 1
+    },
+    {
+      "id": "surface.annulus",
+      "dimension": 2,
+      "compact": true,
+      "connected": true,
+      "orientable": true,
+      "genus": 0,
+      "boundary_components": 2,
+      "euler_characteristic": 0
+    },
+    {
+      "id": "surface.torus",
+      "dimension": 2,
+      "compact": true,
+      "connected": true,
+      "orientable": true,
+      "genus": 1,
+      "boundary_components": 0,
+      "euler_characteristic": 0
+    },
+    {
+      "id": "surface.mobius",
+      "dimension": 2,
+      "compact": true,
+      "connected": true,
+      "orientable": false,
+      "genus": 1,
+      "boundary_components": 1,
+      "euler_characteristic": 0
+    },
+    {
+      "id": "surface.klein",
+      "dimension": 2,
+      "compact": true,
+      "connected": true,
+      "orientable": false,
+      "genus": 2,
+      "boundary_components": 0,
+      "euler_characteristic": 0
+    },
+    {
+      "id": "surface.projective",
+      "dimension": 2,
+      "compact": true,
+      "connected": true,
+      "orientable": false,
+      "genus": 1,
+      "boundary_components": 0,
+      "euler_characteristic": 1
+    },
+    {
+      "id": "surface.sphere",
+      "dimension": 2,
+      "compact": true,
+      "connected": true,
+      "orientable": true,
+      "genus": 0,
+      "boundary_components": 0,
+      "euler_characteristic": 2
+    }
+  ],
+  "entries": [
+    {
+      "id": "empty_2d",
+      "label": "Disk / bounded rectangle",
+      "dimension": 2,
+      "family": "core",
+      "order": 0,
+      "description": "Continuous quotient derives disk; independent certification review and native piece runtime are pending.",
+      "space_class_id": "surface.disk",
+      "association": "proposed",
+      "construction_id": "square-quotient-v1:sha256:d6dbd2be698b082f6e2de0e240b863256614041d65cb6bcfdf2d80c0fb990d3b",
+      "recipe": {
+        "schema": "tet4d.square_quotient",
+        "schema_version": 1,
+        "dimension": 2,
+        "domain": "unit_square",
+        "operator_version": 1,
+        "parameters": {},
+        "gluings": []
+      },
+      "profile_id": "topology-v1:sha256:f95129409a65bf9b811f40ba98d2e0663f7475b11db98b9df70800e99cd3111f",
+      "profile": {
+        "schema": "tet4d.topology_contract",
+        "schema_version": 1,
+        "dimension": 2,
+        "board_dimensions": [
+          4,
+          4
+        ],
+        "gluings": []
+      },
+      "availability": "planned",
+      "selectable": false,
+      "certification": "unverified",
+      "invariants": {
+        "evidence_state": "derived_pending_review",
+        "orientable": true,
+        "boundary_components": 1,
+        "euler_characteristic": 1,
+        "compact": true,
+        "connected": true,
+        "computed_space_class_id": "surface.disk"
+      },
+      "unknown_invariants": [],
+      "diagram": {
+        "kind": "unit_square_edges",
+        "construction_id": "square-quotient-v1:sha256:d6dbd2be698b082f6e2de0e240b863256614041d65cb6bcfdf2d80c0fb990d3b",
+        "seam_ids": []
+      },
+      "aliases": [],
+      "evidence": [
+        {
+          "path": "tests/fixtures/explorer_topology/quotients_v1.json",
+          "record_id": "proof-empty_2d",
+          "record_sha256": "376416570e12377b877a83155b52453b3938ea2f6bac5dcd73aefcde8f1662a6",
+          "kind": "mathematical_derivation",
+          "review_state": "pending"
+        }
+      ],
+      "runtime_evidence": []
+    },
+    {
+      "id": "cylinder_2d",
+      "label": "Cylinder / annulus",
+      "dimension": 2,
+      "family": "core",
+      "order": 1,
+      "description": "Continuous quotient derives annulus; independent certification review and native piece runtime are pending.",
+      "space_class_id": "surface.annulus",
+      "association": "proposed",
+      "construction_id": "square-quotient-v1:sha256:ac75e2db6c0a9c1b770ae049f832474d8710199ffbbd53f1ad096b921abb6eb4",
+      "recipe": {
+        "schema": "tet4d.square_quotient",
+        "schema_version": 1,
+        "dimension": 2,
+        "domain": "unit_square",
+        "operator_version": 1,
+        "parameters": {},
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {
+              "axis": "x",
+              "side": "-"
+            },
+            "target": {
+              "axis": "x",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                1
+              ]
+            }
+          }
+        ]
+      },
+      "profile_id": "topology-v1:sha256:34d7bdb1a8c918342eaeaa56d772418c78746002e4880399a92189869cf725f9",
+      "profile": {
+        "schema": "tet4d.topology_contract",
+        "schema_version": 1,
+        "dimension": 2,
+        "board_dimensions": [
+          4,
+          4
+        ],
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {
+              "axis": "x",
+              "side": "-"
+            },
+            "target": {
+              "axis": "x",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                1
+              ]
+            }
+          }
+        ]
+      },
+      "availability": "planned",
+      "selectable": false,
+      "certification": "unverified",
+      "invariants": {
+        "evidence_state": "derived_pending_review",
+        "orientable": true,
+        "boundary_components": 2,
+        "euler_characteristic": 0,
+        "compact": true,
+        "connected": true,
+        "computed_space_class_id": "surface.annulus"
+      },
+      "unknown_invariants": [],
+      "diagram": {
+        "kind": "unit_square_edges",
+        "construction_id": "square-quotient-v1:sha256:ac75e2db6c0a9c1b770ae049f832474d8710199ffbbd53f1ad096b921abb6eb4",
+        "seam_ids": [
+          "seam_000"
+        ]
+      },
+      "aliases": [],
+      "evidence": [
+        {
+          "path": "tests/fixtures/explorer_topology/quotients_v1.json",
+          "record_id": "proof-cylinder_2d",
+          "record_sha256": "851bba439948a3ddabc53cc3826234b8343c327d8c501dcfed0da898f643b56b",
+          "kind": "mathematical_derivation",
+          "review_state": "pending"
+        }
+      ],
+      "runtime_evidence": []
+    },
+    {
+      "id": "torus_2d",
+      "label": "Torus",
+      "dimension": 2,
+      "family": "core",
+      "order": 2,
+      "description": "Continuous quotient derives torus; independent certification review and native piece runtime are pending.",
+      "space_class_id": "surface.torus",
+      "association": "proposed",
+      "construction_id": "square-quotient-v1:sha256:8b97a9c31a18d0479a776942c68120c6b70a93c72a6ed1327755969840a3cf91",
+      "recipe": {
+        "schema": "tet4d.square_quotient",
+        "schema_version": 1,
+        "dimension": 2,
+        "domain": "unit_square",
+        "operator_version": 1,
+        "parameters": {},
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {
+              "axis": "x",
+              "side": "-"
+            },
+            "target": {
+              "axis": "x",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                1
+              ]
+            }
+          },
+          {
+            "id": "seam_001",
+            "source": {
+              "axis": "y",
+              "side": "-"
+            },
+            "target": {
+              "axis": "y",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                1
+              ]
+            }
+          }
+        ]
+      },
+      "profile_id": "topology-v1:sha256:5145638ce45ff3840461f0add98210434e32c17758e712686ca36f706c3e7db9",
+      "profile": {
+        "schema": "tet4d.topology_contract",
+        "schema_version": 1,
+        "dimension": 2,
+        "board_dimensions": [
+          4,
+          4
+        ],
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {
+              "axis": "x",
+              "side": "-"
+            },
+            "target": {
+              "axis": "x",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                1
+              ]
+            }
+          },
+          {
+            "id": "seam_001",
+            "source": {
+              "axis": "y",
+              "side": "-"
+            },
+            "target": {
+              "axis": "y",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                1
+              ]
+            }
+          }
+        ]
+      },
+      "availability": "planned",
+      "selectable": false,
+      "certification": "unverified",
+      "invariants": {
+        "evidence_state": "derived_pending_review",
+        "orientable": true,
+        "boundary_components": 0,
+        "euler_characteristic": 0,
+        "compact": true,
+        "connected": true,
+        "computed_space_class_id": "surface.torus"
+      },
+      "unknown_invariants": [],
+      "diagram": {
+        "kind": "unit_square_edges",
+        "construction_id": "square-quotient-v1:sha256:8b97a9c31a18d0479a776942c68120c6b70a93c72a6ed1327755969840a3cf91",
+        "seam_ids": [
+          "seam_000",
+          "seam_001"
+        ]
+      },
+      "aliases": [],
+      "evidence": [
+        {
+          "path": "tests/fixtures/explorer_topology/quotients_v1.json",
+          "record_id": "proof-torus_2d",
+          "record_sha256": "54b8de92ccbd5f664ac393446c7a9aa5b80cd9318be510b30f04fda0d4614cc1",
+          "kind": "mathematical_derivation",
+          "review_state": "pending"
+        }
+      ],
+      "runtime_evidence": []
+    },
+    {
+      "id": "mobius_2d",
+      "label": "Möbius strip",
+      "dimension": 2,
+      "family": "core",
+      "order": 3,
+      "description": "Continuous quotient derives mobius; independent certification review and native piece runtime are pending.",
+      "space_class_id": "surface.mobius",
+      "association": "proposed",
+      "construction_id": "square-quotient-v1:sha256:28083cf67127bb6de6aff1e644f2012164ff2fa696bdc4d626479337ca7a4ed5",
+      "recipe": {
+        "schema": "tet4d.square_quotient",
+        "schema_version": 1,
+        "dimension": 2,
+        "domain": "unit_square",
+        "operator_version": 1,
+        "parameters": {},
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {
+              "axis": "x",
+              "side": "-"
+            },
+            "target": {
+              "axis": "x",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                -1
+              ]
+            }
+          }
+        ]
+      },
+      "profile_id": "topology-v1:sha256:1bc563a1fb929f3aee1b688f0a80a8ef0861c7ecf945d3f1b5b8f3fd512b2334",
+      "profile": {
+        "schema": "tet4d.topology_contract",
+        "schema_version": 1,
+        "dimension": 2,
+        "board_dimensions": [
+          4,
+          4
+        ],
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {
+              "axis": "x",
+              "side": "-"
+            },
+            "target": {
+              "axis": "x",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                -1
+              ]
+            }
+          }
+        ]
+      },
+      "availability": "planned",
+      "selectable": false,
+      "certification": "unverified",
+      "invariants": {
+        "evidence_state": "derived_pending_review",
+        "orientable": false,
+        "boundary_components": 1,
+        "euler_characteristic": 0,
+        "compact": true,
+        "connected": true,
+        "computed_space_class_id": "surface.mobius"
+      },
+      "unknown_invariants": [],
+      "diagram": {
+        "kind": "unit_square_edges",
+        "construction_id": "square-quotient-v1:sha256:28083cf67127bb6de6aff1e644f2012164ff2fa696bdc4d626479337ca7a4ed5",
+        "seam_ids": [
+          "seam_000"
+        ]
+      },
+      "aliases": [],
+      "evidence": [
+        {
+          "path": "tests/fixtures/explorer_topology/quotients_v1.json",
+          "record_id": "proof-mobius_2d",
+          "record_sha256": "8cffd1ead1fb0afcf8be9565681c857c44cbbeabbd4dc6f138753d46fb3ea818",
+          "kind": "mathematical_derivation",
+          "review_state": "pending"
+        }
+      ],
+      "runtime_evidence": []
+    },
+    {
+      "id": "klein_2d",
+      "label": "Klein bottle",
+      "dimension": 2,
+      "family": "core",
+      "order": 4,
+      "description": "Continuous quotient derives klein; independent certification review and native piece runtime are pending.",
+      "space_class_id": "surface.klein",
+      "association": "proposed",
+      "construction_id": "square-quotient-v1:sha256:7b8437c8ecc525e0a55dcd1f254a5c441a96623729c18d2bc11991b07e1b6711",
+      "recipe": {
+        "schema": "tet4d.square_quotient",
+        "schema_version": 1,
+        "dimension": 2,
+        "domain": "unit_square",
+        "operator_version": 1,
+        "parameters": {},
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {
+              "axis": "x",
+              "side": "-"
+            },
+            "target": {
+              "axis": "x",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                1
+              ]
+            }
+          },
+          {
+            "id": "seam_001",
+            "source": {
+              "axis": "y",
+              "side": "-"
+            },
+            "target": {
+              "axis": "y",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                -1
+              ]
+            }
+          }
+        ]
+      },
+      "profile_id": "topology-v1:sha256:3162e782103c22f432f6b5ab4266392e38a62bcf41770cfbd9b651a2991ddee0",
+      "profile": {
+        "schema": "tet4d.topology_contract",
+        "schema_version": 1,
+        "dimension": 2,
+        "board_dimensions": [
+          4,
+          4
+        ],
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {
+              "axis": "x",
+              "side": "-"
+            },
+            "target": {
+              "axis": "x",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                1
+              ]
+            }
+          },
+          {
+            "id": "seam_001",
+            "source": {
+              "axis": "y",
+              "side": "-"
+            },
+            "target": {
+              "axis": "y",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                -1
+              ]
+            }
+          }
+        ]
+      },
+      "availability": "planned",
+      "selectable": false,
+      "certification": "unverified",
+      "invariants": {
+        "evidence_state": "derived_pending_review",
+        "orientable": false,
+        "boundary_components": 0,
+        "euler_characteristic": 0,
+        "compact": true,
+        "connected": true,
+        "computed_space_class_id": "surface.klein"
+      },
+      "unknown_invariants": [],
+      "diagram": {
+        "kind": "unit_square_edges",
+        "construction_id": "square-quotient-v1:sha256:7b8437c8ecc525e0a55dcd1f254a5c441a96623729c18d2bc11991b07e1b6711",
+        "seam_ids": [
+          "seam_000",
+          "seam_001"
+        ]
+      },
+      "aliases": [],
+      "evidence": [
+        {
+          "path": "tests/fixtures/explorer_topology/quotients_v1.json",
+          "record_id": "proof-klein_2d",
+          "record_sha256": "4a71f671dfb3cca29f00dc07de942f1777e2ab80453b6cc648ad0db885e6972b",
+          "kind": "mathematical_derivation",
+          "review_state": "pending"
+        }
+      ],
+      "runtime_evidence": []
+    },
+    {
+      "id": "projective_2d",
+      "label": "Projective-like transport (experimental design)",
+      "dimension": 2,
+      "family": "legacy",
+      "order": 5,
+      "description": "Continuous quotient derives projective; independent certification review and native piece runtime are pending.",
+      "space_class_id": "surface.projective",
+      "association": "proposed",
+      "construction_id": "square-quotient-v1:sha256:37b9ff9b4592b6613deb031424edd3672d48ff91112bf4a17f96a5ff6d125ab8",
+      "recipe": {
+        "schema": "tet4d.square_quotient",
+        "schema_version": 1,
+        "dimension": 2,
+        "domain": "unit_square",
+        "operator_version": 1,
+        "parameters": {},
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {
+              "axis": "x",
+              "side": "-"
+            },
+            "target": {
+              "axis": "x",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                -1
+              ]
+            }
+          },
+          {
+            "id": "seam_001",
+            "source": {
+              "axis": "y",
+              "side": "-"
+            },
+            "target": {
+              "axis": "y",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                -1
+              ]
+            }
+          }
+        ]
+      },
+      "profile_id": "topology-v1:sha256:09877c81dfb16d22eb7f3f1633a9d9037eff3bd9cd38443fc89b27c020927a05",
+      "profile": {
+        "schema": "tet4d.topology_contract",
+        "schema_version": 1,
+        "dimension": 2,
+        "board_dimensions": [
+          4,
+          4
+        ],
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {
+              "axis": "x",
+              "side": "-"
+            },
+            "target": {
+              "axis": "x",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                -1
+              ]
+            }
+          },
+          {
+            "id": "seam_001",
+            "source": {
+              "axis": "y",
+              "side": "-"
+            },
+            "target": {
+              "axis": "y",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                -1
+              ]
+            }
+          }
+        ]
+      },
+      "availability": "planned",
+      "selectable": false,
+      "certification": "unverified",
+      "invariants": {
+        "evidence_state": "derived_pending_review",
+        "orientable": false,
+        "boundary_components": 0,
+        "euler_characteristic": 1,
+        "compact": true,
+        "connected": true,
+        "computed_space_class_id": "surface.projective"
+      },
+      "unknown_invariants": [],
+      "diagram": {
+        "kind": "unit_square_edges",
+        "construction_id": "square-quotient-v1:sha256:37b9ff9b4592b6613deb031424edd3672d48ff91112bf4a17f96a5ff6d125ab8",
+        "seam_ids": [
+          "seam_000",
+          "seam_001"
+        ]
+      },
+      "aliases": [],
+      "evidence": [
+        {
+          "path": "tests/fixtures/explorer_topology/quotients_v1.json",
+          "record_id": "proof-projective_2d",
+          "record_sha256": "bdd701ccba71a87a15990f51c3a445c421b3bea0dfe0db0cbbc9ed64d5f58681",
+          "kind": "mathematical_derivation",
+          "review_state": "pending"
+        }
+      ],
+      "runtime_evidence": []
+    },
+    {
+      "id": "sphere_2d",
+      "label": "Sphere-like transport (heuristic)",
+      "dimension": 2,
+      "family": "legacy",
+      "order": 6,
+      "description": "Continuous quotient derives klein; independent certification review and native piece runtime are pending.",
+      "space_class_id": "unknown",
+      "association": "unresolved",
+      "construction_id": "square-quotient-v1:sha256:1ec820451dbb28ad2ac5c156c214f1f99f228df56069087f9849350f16562dea",
+      "recipe": {
+        "schema": "tet4d.square_quotient",
+        "schema_version": 1,
+        "dimension": 2,
+        "domain": "unit_square",
+        "operator_version": 1,
+        "parameters": {},
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {
+              "axis": "x",
+              "side": "-"
+            },
+            "target": {
+              "axis": "y",
+              "side": "-"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                -1
+              ]
+            }
+          },
+          {
+            "id": "seam_001",
+            "source": {
+              "axis": "x",
+              "side": "+"
+            },
+            "target": {
+              "axis": "y",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                -1
+              ]
+            }
+          }
+        ]
+      },
+      "profile_id": "topology-v1:sha256:f65790f6b517db5cd46e7bb1ffea1bf49ad56c7c7b6068e450ff6484df0a9cb6",
+      "profile": {
+        "schema": "tet4d.topology_contract",
+        "schema_version": 1,
+        "dimension": 2,
+        "board_dimensions": [
+          4,
+          4
+        ],
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {
+              "axis": "x",
+              "side": "-"
+            },
+            "target": {
+              "axis": "y",
+              "side": "-"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                -1
+              ]
+            }
+          },
+          {
+            "id": "seam_001",
+            "source": {
+              "axis": "x",
+              "side": "+"
+            },
+            "target": {
+              "axis": "y",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                -1
+              ]
+            }
+          }
+        ]
+      },
+      "availability": "planned",
+      "selectable": false,
+      "certification": "heuristic",
+      "invariants": {
+        "evidence_state": "derived_pending_review",
+        "orientable": false,
+        "boundary_components": 0,
+        "euler_characteristic": 0,
+        "compact": true,
+        "connected": true,
+        "computed_space_class_id": "surface.klein"
+      },
+      "unknown_invariants": [],
+      "diagram": {
+        "kind": "unit_square_edges",
+        "construction_id": "square-quotient-v1:sha256:1ec820451dbb28ad2ac5c156c214f1f99f228df56069087f9849350f16562dea",
+        "seam_ids": [
+          "seam_000",
+          "seam_001"
+        ]
+      },
+      "aliases": [],
+      "evidence": [
+        {
+          "path": "tests/fixtures/explorer_topology/quotients_v1.json",
+          "record_id": "proof-sphere_2d",
+          "record_sha256": "40ec64d7ee4fdcd49a78da8dc6007b79bc2a5872047e467a273af0bca3392116",
+          "kind": "mathematical_derivation",
+          "review_state": "pending"
+        }
+      ],
+      "runtime_evidence": []
+    }
+  ],
+  "identity_examples": [
+    {
+      "id": "torus_4x4",
+      "profile": {
+        "schema": "tet4d.topology_contract",
+        "schema_version": 1,
+        "dimension": 2,
+        "board_dimensions": [
+          4,
+          4
+        ],
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {
+              "axis": "x",
+              "side": "-"
+            },
+            "target": {
+              "axis": "x",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                1
+              ]
+            }
+          },
+          {
+            "id": "seam_001",
+            "source": {
+              "axis": "y",
+              "side": "-"
+            },
+            "target": {
+              "axis": "y",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                1
+              ]
+            }
+          }
+        ]
+      },
+      "profile_id": "topology-v1:sha256:5145638ce45ff3840461f0add98210434e32c17758e712686ca36f706c3e7db9",
+      "construction_id": "square-quotient-v1:sha256:8b97a9c31a18d0479a776942c68120c6b70a93c72a6ed1327755969840a3cf91"
+    },
+    {
+      "id": "torus_4x5",
+      "profile": {
+        "schema": "tet4d.topology_contract",
+        "schema_version": 1,
+        "dimension": 2,
+        "board_dimensions": [
+          4,
+          5
+        ],
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {
+              "axis": "x",
+              "side": "-"
+            },
+            "target": {
+              "axis": "x",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                1
+              ]
+            }
+          },
+          {
+            "id": "seam_001",
+            "source": {
+              "axis": "y",
+              "side": "-"
+            },
+            "target": {
+              "axis": "y",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                1
+              ]
+            }
+          }
+        ]
+      },
+      "profile_id": "topology-v1:sha256:69a259c7041b722939313e692faadc2853415347b2f1ead5cf451554fb79c707",
+      "construction_id": "square-quotient-v1:sha256:8b97a9c31a18d0479a776942c68120c6b70a93c72a6ed1327755969840a3cf91"
+    },
+    {
+      "id": "cylinder_x",
+      "profile": {
+        "schema": "tet4d.topology_contract",
+        "schema_version": 1,
+        "dimension": 2,
+        "board_dimensions": [
+          4,
+          4
+        ],
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {
+              "axis": "x",
+              "side": "-"
+            },
+            "target": {
+              "axis": "x",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                1
+              ]
+            }
+          }
+        ]
+      },
+      "profile_id": "topology-v1:sha256:34d7bdb1a8c918342eaeaa56d772418c78746002e4880399a92189869cf725f9",
+      "construction_id": "square-quotient-v1:sha256:ac75e2db6c0a9c1b770ae049f832474d8710199ffbbd53f1ad096b921abb6eb4"
+    },
+    {
+      "id": "cylinder_y",
+      "profile": {
+        "schema": "tet4d.topology_contract",
+        "schema_version": 1,
+        "dimension": 2,
+        "board_dimensions": [
+          4,
+          4
+        ],
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {
+              "axis": "y",
+              "side": "-"
+            },
+            "target": {
+              "axis": "y",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                1
+              ]
+            }
+          }
+        ]
+      },
+      "profile_id": "topology-v1:sha256:2976f8eaafd9aba891e7f86e1d2cd4a1be1e25fbb18014397ab501bbc234c6d5",
+      "construction_id": "square-quotient-v1:sha256:6ea36f484964057044d7d2833a93bcb54eeb83a254d109c4c199f5fd3332d4f5"
+    },
+    {
+      "id": "mobius_reversed",
+      "profile": {
+        "schema": "tet4d.topology_contract",
+        "schema_version": 1,
+        "dimension": 2,
+        "board_dimensions": [
+          4,
+          4
+        ],
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {
+              "axis": "x",
+              "side": "-"
+            },
+            "target": {
+              "axis": "x",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                -1
+              ]
+            }
+          }
+        ]
+      },
+      "profile_id": "topology-v1:sha256:1bc563a1fb929f3aee1b688f0a80a8ef0861c7ecf945d3f1b5b8f3fd512b2334",
+      "construction_id": "square-quotient-v1:sha256:28083cf67127bb6de6aff1e644f2012164ff2fa696bdc4d626479337ca7a4ed5"
+    }
+  ]
+}
