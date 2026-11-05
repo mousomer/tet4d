@@ -192,6 +192,11 @@ T1 defines the independent certification fixture format and promotion rules, not
 
 ### 7.4 Native API, atomicity and inspectability contracts
 
+The subordinate T1 piece-state/frame/action/inverse and candidate lifecycle design is
+`docs/architecture/explorer_topology_piece_transport_contract.md`. It specifies
+exact transport examples and bounded rotation support without implementing or
+transferring runtime authority. Catalog and certification remain separate T1 work.
+
 T1 must specify the input, result/error, identity and state-transition contracts for:
 
 ```text
