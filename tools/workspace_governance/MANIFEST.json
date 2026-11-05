@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "name": "workspace-governance",
-  "version": "0.7.0",
-  "revision": "v0.7-harness-repair-1",
+  "version": "0.8.0",
+  "revision": "v0.8-synchronous-completion-1",
   "version_file": "VERSION",
   "lock_algorithm": "sha256-path-and-content-v1",
   "pack_hash_excludes": [
@@ -165,6 +165,18 @@
     {
       "path": "validators/core.py",
       "role": "executable_machinery"
+    },
+    {
+      "path": "execution_policy.py",
+      "role": "executable_machinery"
+    },
+    {
+      "path": "policies/execution.json",
+      "role": "governance_treatment"
+    },
+    {
+      "path": "policies/execution.md",
+      "role": "governance_treatment"
     }
   ],
   "bootstrap_roots": [
@@ -231,9 +243,14 @@
     "obligation_comparators": "validation-only",
     "write_compatibility": "validation-only",
     "field_usage": "validation-only",
-    "runtime": "consumed"
+    "runtime": "consumed",
+    "execution_policy": "consumed"
   },
   "runtime": {
     "python_requires": ">=3.11"
+  },
+  "execution_policy": {
+    "id": "synchronous-completion-v1",
+    "path": "policies/execution.json"
   }
 }

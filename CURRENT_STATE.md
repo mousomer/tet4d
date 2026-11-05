@@ -1,14 +1,9 @@
 # CURRENT_STATE (Restart Handoff)
 
-Harness repair consumes distribution 1.4.0 / runtime 0.7.0. Candidate and
-immutable kit gates, source/skill integrity, guarded direct adoption and manual
-owner migrations are retained in durable private receipts. Tet4D's current
-native verifier and committed project rules are preserved in the reviewed
-binding. The owner selected harness repairs and existing offline checks;
-the private fleet audit owns fresh scoped outcomes and remaining gaps.
-Protected data, historical releases/evidence, product authority and deferred
-telemetry gates remain intact. The plan is
-`docs/plans/policy_kit_logging_and_meta_testing_repairs.md`.
+Tet4D uses distribution 1.5.0 / runtime 0.8.0. Run `./gov explain
+execution.completion` to inspect the shared synchronous-execution requirements
+and their source. The architecture contract is
+`docs/architecture/workspace_governance_v0_1.md`.
 The Stage 56H unified baseline is committed at `0cb30958`.
 ## Purpose
 

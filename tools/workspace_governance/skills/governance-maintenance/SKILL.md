@@ -75,3 +75,7 @@ Assess context cost with observed injected metadata, loaded skill bodies,
 resolver output and bounded/full/repeated reads alongside task outcomes. Preserve
 exposure gaps and unknown attribution; a smaller file or a passing gate does not
 prove savings. Keep project analysis separate from generic capture/reconstruction.
+
+## Completion-based execution
+
+Resolve `execution.completion` and follow the shared [execution policy](../../policies/execution.md). Run tests and scripts synchronously; use one blocking watch or completion notification for remote CI. Resume the same handle when a tool yields. Do not poll status or log tails alongside an active wait, start duplicate watchers, or redispatch an unknown execution. Await all independent children and preserve their failures. Inspect results and failure logs after completion. Missing completion is unknown, never success.

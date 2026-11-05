@@ -59,6 +59,28 @@ can select, are both `BROKEN_REFERENCE`: a declared fact nothing can reach is
 unowned rather than merely unused, and its `consumed` classification cannot be
 demonstrated.
 
+## Completion-based execution
+
+Distribution 1.5.0 / runtime 0.8.0 binds the shared completion policy through
+`tools/workspace_governance/MANIFEST.json`. `gov explain execution.completion`
+returns its requirements, source and content hash. Missing or weakened bindings
+fail pack validation. The canonical policy is
+`tools/workspace_governance/policies/execution.md`; the two shared governance
+skills reference that same owner.
+
+Tests and scripts wait for exit. Remote CI uses one blocking watch or completion
+notification for the exact run and commit. Tool yields resume the same invocation;
+agent-driven status/log polling, duplicate watches and automatic redispatch of
+unknown work are prohibited. Internal process checks and a blocking watch's
+internal service requests remain implementation details of the waiting tool.
+All parallel children must finish and retain their failure outcomes.
+
+The contract is distributed independently of optional Harness Observatory.
+Validation proves binding/integrity; synthetic trace tests prove checker behavior.
+Neither proves unobserved agent compliance or enables deferred telemetry.
+Guarded fleet receipts retain preimages; read-only and blocked entries remain
+outside installer scope. Consumer product acceptance requires the full verifier.
+
 ## Environment contract
 
 The Python constraint and dependencies are owned by `pyproject.toml`. The one

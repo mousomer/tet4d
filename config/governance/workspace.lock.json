@@ -1,5 +1,5 @@
 {
-  "content_sha256": "743b308a0c99a2d6a0c3cd98aa22788934eccdfaa4b5156b90bd695e247a24dc",
+  "content_sha256": "8625e240efd4546bcd2949a0c781f832b58f51015a73503771d38e70bc280537",
   "files": [
     ".ruff.toml",
     "MANIFEST.json",
@@ -11,10 +11,13 @@
     "cli/gov.py",
     "dependency_compatibility.py",
     "diagnostics.py",
+    "execution_policy.py",
     "field-usage.json",
     "fleet.py",
     "fleet_execution.py",
     "fleet_support.py",
+    "policies/execution.json",
+    "policies/execution.md",
     "policies/external_checkouts.md",
     "policies/ownership.md",
     "policies/workspace_baseline.md",
@@ -38,7 +41,7 @@
   "lock_algorithm": "sha256-path-and-content-v1",
   "pack_name": "workspace-governance",
   "pack_path": "tools/workspace_governance",
-  "revision": "v0.7-harness-repair-1",
+  "revision": "v0.8-synchronous-completion-1",
   "schema_version": 1,
-  "version": "0.7.0"
+  "version": "0.8.0"
 }

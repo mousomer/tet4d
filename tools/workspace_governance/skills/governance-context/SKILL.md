@@ -66,3 +66,7 @@ Report routes, affected layers, evidence, omissions, exact results and remaining
 acceptance. Distinguish implementation, automated verification, inspection,
 human acceptance and publication. Do not claim absent observations or failed
 checks as evidence. Retain explicit unknowns when reconstructing past work.
+
+## Completion-based execution
+
+Resolve `execution.completion` and follow the shared [execution policy](../../policies/execution.md). Run tests and scripts synchronously; use one blocking watch or completion notification for remote CI. Resume the same handle when a tool yields. Do not poll status or log tails alongside an active wait, start duplicate watchers, or redispatch an unknown execution. Await all independent children and preserve their failures. Inspect results and failure logs after completion. Missing completion is unknown, never success.
