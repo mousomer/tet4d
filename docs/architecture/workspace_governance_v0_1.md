@@ -61,19 +61,25 @@ demonstrated.
 
 ## Completion-based execution
 
-Distribution 1.5.0 / runtime 0.8.0 binds the shared completion policy through
-`tools/workspace_governance/MANIFEST.json`. `gov explain execution.completion`
-returns its requirements, source and content hash. Missing or weakened bindings
-fail pack validation. The canonical policy is
+Distribution 1.6.0 / runtime 0.9.0 binds the shared completion policy
+`synchronous-completion-v2` through `tools/workspace_governance/MANIFEST.json`.
+`gov explain execution.completion` returns its requirements, source and content
+hash. Missing or weakened bindings fail pack validation. The canonical policy is
 `tools/workspace_governance/policies/execution.md`; the two shared governance
 skills reference that same owner.
 
-Tests and scripts wait for exit. Remote CI uses one blocking watch or completion
-notification for the exact run and commit. Tool yields resume the same invocation;
-agent-driven status/log polling, duplicate watches and automatic redispatch of
-unknown work are prohibited. Internal process checks and a blocking watch's
-internal service requests remain implementation details of the waiting tool.
-All parallel children must finish and retain their failure outcomes.
+Agents never poll external or asynchronous state: watch and interval modes
+(`gh pr checks --watch`, `gh run watch`), sleep/requery loops and repeated status
+requests are prohibited, and v1's blocking-watch allowance is withdrawn. Tests and
+scripts wait for exit; remote state is observed once (`./gov ci-status N`) and
+only when the declared gate requires it, and `PENDING_EXTERNAL` ends that
+observation until a notification, relevant event or new user instruction.
+
+The pack-managed PreToolUse guard (`tools/workspace_governance/hooks/`) is bound
+in `.claude/settings.json` and `.codex/hooks.json` and blocks prohibited
+invocations before execution; `gov check` fails when either binding is missing or
+altered. Codex runs project hooks only after the owner trusts them (`/hooks`).
+Runtime coverage limits are listed in the kit's execution-completion design.
 
 The contract is distributed independently of optional Harness Observatory.
 Validation proves binding/integrity; synthetic trace tests prove checker behavior.

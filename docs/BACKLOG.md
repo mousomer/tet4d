@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-11-04
+Updated: 2026-11-06
 Scope: active work, explicit deferrals, and near-term acceptance boundaries.
 
 Completed chronology is recoverable from Git, merged PRs, CI, and
@@ -24,6 +24,9 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   facts)
 
 ## Active Work
+
+- [x] Adopt no-autonomous-polling completion policy (distribution 1.6.0 / runtime 0.9.0): `synchronous-completion-v2`, pack-managed Claude/Codex PreToolUse guard, `gov ci-status`, local vs remote evidence separation.
+- [ ] Owner: trust the Codex project hook (`/hooks`) so Codex enforces the guard; untrusted hooks are skipped.
 
 - [x] Adopt shared completion policy (distribution 1.5.0 / runtime 0.8.0): manifest binding, resolver provenance, canonical skills and regression protection; preserve fleet exclusions and deferred telemetry.
 

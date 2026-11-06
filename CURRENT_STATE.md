@@ -1,7 +1,7 @@
 # CURRENT_STATE (Restart Handoff)
 
-Tet4D uses distribution 1.5.0 / runtime 0.8.0. Run `./gov explain
-execution.completion` to inspect the shared synchronous-execution requirements
+Tet4D uses distribution 1.6.0 / runtime 0.9.0. Run `./gov explain
+execution.completion` to inspect the shared no-polling completion requirements
 and their source. The architecture contract is
 `docs/architecture/workspace_governance_v0_1.md`.
 The Stage 56H unified baseline is committed at `0cb30958`.

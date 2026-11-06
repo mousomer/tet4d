@@ -1,14 +1,16 @@
 {
-  "content_sha256": "8625e240efd4546bcd2949a0c781f832b58f51015a73503771d38e70bc280537",
+  "content_sha256": "0496e24ed607bdab503aec82d80eb7d59f4012c979cd89804405008c0df3a825",
   "files": [
     ".ruff.toml",
     "MANIFEST.json",
     "VERSION",
     "__init__.py",
     "baseline.py",
+    "ci_status.py",
     "cli/__init__.py",
     "cli/bootstrap.py",
     "cli/gov.py",
+    "command_policy.py",
     "dependency_compatibility.py",
     "diagnostics.py",
     "execution_policy.py",
@@ -16,6 +18,10 @@
     "fleet.py",
     "fleet_execution.py",
     "fleet_support.py",
+    "hook_adapters.py",
+    "hooks/codex_no_polling.rules",
+    "hooks/no_polling.py",
+    "hooks/no_polling.sh",
     "policies/execution.json",
     "policies/execution.md",
     "policies/external_checkouts.md",
@@ -41,7 +47,7 @@
   "lock_algorithm": "sha256-path-and-content-v1",
   "pack_name": "workspace-governance",
   "pack_path": "tools/workspace_governance",
-  "revision": "v0.8-synchronous-completion-1",
+  "revision": "v0.9-no-autonomous-polling-1",
   "schema_version": 1,
-  "version": "0.8.0"
+  "version": "0.9.0"
 }

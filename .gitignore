@@ -81,6 +81,7 @@ assets/help/rotation_keys.gif
 .policy/
 .claude/*
 !.claude/skills/
+!.claude/settings.json
 .workspace_policy_version.json
 config/project/policy_manifest.json
 context-*.instructions.md
