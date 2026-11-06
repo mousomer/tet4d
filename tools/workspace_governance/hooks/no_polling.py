@@ -16,9 +16,26 @@ import json
 import os
 import re
 import shlex
+import signal
 import sys
 import tempfile
 from pathlib import Path
+
+PROMPT_MODE = "prompt" in sys.argv[2:]
+ALARM_SECONDS = 18
+
+
+def _deadline(*_):
+    # Independent of the launcher's watchdog: a hang becomes a block, never a pass.
+    sys.stderr.write(
+        "NO_AUTONOMOUS_POLLING (GUARD_FAILURE): classifier deadline exceeded; "
+        "the call is blocked.\n"
+    )
+    os._exit(0 if PROMPT_MODE else 2)
+
+
+signal.signal(signal.SIGALRM, _deadline)
+signal.alarm(ALARM_SECONDS)
 
 ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT) not in sys.path:
@@ -32,6 +49,7 @@ MCP_STATUS_TOKENS = {"status", "statuses", "checks", "ci", "rollup"}
 MCP_STATUS_PHRASES = ("check_run", "check_suite", "workflow_run", "get_run")
 MAX_SCRIPT = 65536
 STATE_DIR = "workspace-governance-no-polling"
+MAX_STATE_CHANGE_RESETS = 2
 
 
 class GuardError(Exception):
@@ -171,6 +189,15 @@ def _save_state(path: Path, state: dict) -> None:
     os.replace(temporary, path)
 
 
+def _turn(payload: dict) -> str | None:
+    """Turn identity: Codex ``turn_id``; Claude Code >= 2.1.3xx ``prompt_id``.
+
+    Subagents share the parent's session and turn, so a read delegated to a
+    subagent counts as the same observer repeating it."""
+    value = payload.get("turn_id") or payload.get("prompt_id")
+    return str(value) if value else None
+
+
 def _session(payload: dict) -> str:
     return str(payload.get("session_id") or "cwd:" + str(payload.get("cwd") or ""))
 
@@ -194,14 +221,14 @@ class _Locked:
 
 def new_epoch(runtime: str, payload: dict) -> None:
     path = _state_path(runtime, _session(payload))
-    token = str(payload.get("turn_id") or os.urandom(8).hex())
+    token = str(_turn(payload) or os.urandom(8).hex())
     with _Locked(path):
         _save_state(path, {"epoch": token, "seen": []})
 
 
 def repeated(runtime: str, payload: dict, decision) -> str | None:
     """Record observations; return a repeated target within the same epoch."""
-    if not decision.observations:
+    if not decision.observations and not decision.state_change:
         return None
     path = _state_path(runtime, _session(payload))
     with _Locked(path):
@@ -214,12 +241,20 @@ def _record(path: Path, payload: dict, decision) -> str | None:
     except (GuardError, ValueError, OSError):
         _save_state(path, {"epoch": "reset", "seen": []})
         raise GuardError("observation state was unreadable and has been reset")
-    epoch = str(payload.get("turn_id") or state.get("epoch") or "initial")
-    seen = state["seen"] if state.get("epoch") == epoch else []
+    epoch = str(_turn(payload) or state.get("epoch") or "initial")
+    same = state.get("epoch") == epoch
+    seen = state["seen"] if same else []
+    resets = int(state.get("resets", 0)) if same else 0
+    if decision.state_change and resets < MAX_STATE_CHANGE_RESETS:
+        # The agent's own push/merge/rerun changes remote state: one new read.
+        seen, resets = [], resets + 1
     for target in decision.observations:
         if target in seen:
             return target
-    _save_state(path, {"epoch": epoch, "seen": seen + list(decision.observations)})
+    _save_state(
+        path,
+        {"epoch": epoch, "seen": seen + list(decision.observations), "resets": resets},
+    )
     return None
 
 

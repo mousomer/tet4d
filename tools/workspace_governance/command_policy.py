@@ -104,6 +104,7 @@ class Decision:
     reason: str = ""
     observations: tuple[str, ...] = ()
     limits: tuple[str, ...] = ()
+    state_change: bool = False
 
     def as_dict(self) -> dict:
         return {
@@ -114,6 +115,7 @@ class Decision:
             "reason": self.reason,
             "observations": list(self.observations),
             "limits": list(self.limits),
+            "state_change": self.state_change,
         }
 
 
@@ -492,6 +494,7 @@ class Facts:
     remote: bool = False
     wait: bool = False
     undetermined: list[str] = field(default_factory=list)
+    state_change: bool = False
 
     def merge(self, other: Facts) -> None:
         self.deny = self.deny or other.deny
@@ -499,6 +502,7 @@ class Facts:
         self.remote = self.remote or other.remote or bool(other.observations)
         self.wait = self.wait or other.wait
         self.undetermined += other.undetermined
+        self.state_change = self.state_change or other.state_change
 
 
 WRAPPER_SKIP = {
@@ -762,6 +766,9 @@ class Evaluator:
 
     def _git(self, argv: list[str], command: Command, depth: int) -> Facts:
         positional = [a for a in argv[1:] if not a.startswith("-")]
+        if positional[:1] == ["push"]:
+            # Publishing commits changes remote CI state; it authorizes a new read.
+            return Facts(state_change=True)
         return Facts(remote=bool(positional) and positional[0] in GIT_REMOTE)
 
     def _inline(self, argv: list[str], command: Command, depth: int) -> Facts:
@@ -952,9 +959,9 @@ def _gh_builtin(path: list[str], rest: list[str], flags) -> Facts:
     if target:
         return Facts(observations=[target])
     if len(key) > 1 and key[1] in GH_MUTATING:
-        return Facts()
+        return Facts(state_change=key[0] in {"pr", "run", "workflow", "release"})
     if key == ("api",) and _api_mutation(flags):
-        return Facts()
+        return Facts(state_change=True)
     return Facts(remote=True)
 
 
@@ -1034,6 +1041,7 @@ def evaluate(
             decision.reason,
             decision.observations,
             decision.limits + tuple(evaluator.limits[:5]),
+            decision.state_change,
         )
     return decision
 
@@ -1057,4 +1065,4 @@ def _decide(tool: str, facts: Facts) -> Decision:
             f"{facts.undetermined[0]}; cannot prove this is not polling. {ALTERNATIVE}",
             observations,
         )
-    return Decision(ALLOW, observations=observations)
+    return Decision(ALLOW, observations=observations, state_change=facts.state_change)

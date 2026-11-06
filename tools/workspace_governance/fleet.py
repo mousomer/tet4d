@@ -185,6 +185,8 @@ def pending_operations(
         section_owned = operation["path"] in {
             "AGENTS.md",
             "CLAUDE.md",
+            hook_adapters.CLAUDE_PATH,
+            hook_adapters.CODEX_PATH,
             row["verification"]["runner"]["path"],
         }
         if (

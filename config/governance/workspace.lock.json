@@ -1,5 +1,5 @@
 {
-  "content_sha256": "0496e24ed607bdab503aec82d80eb7d59f4012c979cd89804405008c0df3a825",
+  "content_sha256": "c4a9214d984a044e6a945d875ab295120ee023f892806443edfe47b7136f594a",
   "files": [
     ".ruff.toml",
     "MANIFEST.json",
@@ -47,7 +47,7 @@
   "lock_algorithm": "sha256-path-and-content-v1",
   "pack_name": "workspace-governance",
   "pack_path": "tools/workspace_governance",
-  "revision": "v0.9-no-autonomous-polling-1",
+  "revision": "v0.9-no-autonomous-polling-2",
   "schema_version": 1,
-  "version": "0.9.0"
+  "version": "0.9.1"
 }

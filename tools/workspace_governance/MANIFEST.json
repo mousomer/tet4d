@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "name": "workspace-governance",
-  "version": "0.9.0",
-  "revision": "v0.9-no-autonomous-polling-1",
+  "version": "0.9.1",
+  "revision": "v0.9-no-autonomous-polling-2",
   "version_file": "VERSION",
   "lock_algorithm": "sha256-path-and-content-v1",
   "pack_hash_excludes": [

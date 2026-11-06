@@ -1023,28 +1023,28 @@
     {
       "name": "governance-context",
       "path": ".agents/skills/governance-context/SKILL.md",
-      "release_manifest_sha256": "671f477b4742ee0e12360c8702e8a03f94d9c8d14dee9ea97574e214239acbdb",
+      "release_manifest_sha256": "08d4fd3e9e952dac587d0c42e8b5328e7e2e1bbea83332e7db23fd0c9f1de393",
       "sha256": "f1c6a3b347f9f94bc32e8d82f3ac018141d4a084489e9fb2dbd2094631a55ecc",
       "target": "tools/workspace_governance/skills/governance-context/SKILL.md"
     },
     {
       "name": "governance-context",
       "path": ".claude/skills/governance-context/SKILL.md",
-      "release_manifest_sha256": "671f477b4742ee0e12360c8702e8a03f94d9c8d14dee9ea97574e214239acbdb",
+      "release_manifest_sha256": "08d4fd3e9e952dac587d0c42e8b5328e7e2e1bbea83332e7db23fd0c9f1de393",
       "sha256": "f1c6a3b347f9f94bc32e8d82f3ac018141d4a084489e9fb2dbd2094631a55ecc",
       "target": "tools/workspace_governance/skills/governance-context/SKILL.md"
     },
     {
       "name": "governance-maintenance",
       "path": ".agents/skills/governance-maintenance/SKILL.md",
-      "release_manifest_sha256": "671f477b4742ee0e12360c8702e8a03f94d9c8d14dee9ea97574e214239acbdb",
+      "release_manifest_sha256": "08d4fd3e9e952dac587d0c42e8b5328e7e2e1bbea83332e7db23fd0c9f1de393",
       "sha256": "e7bdc0a09bc90bcd6ef2b2a9b6add03a68bb429208d86dd3dab03e7374a4e03e",
       "target": "tools/workspace_governance/skills/governance-maintenance/SKILL.md"
     },
     {
       "name": "governance-maintenance",
       "path": ".claude/skills/governance-maintenance/SKILL.md",
-      "release_manifest_sha256": "671f477b4742ee0e12360c8702e8a03f94d9c8d14dee9ea97574e214239acbdb",
+      "release_manifest_sha256": "08d4fd3e9e952dac587d0c42e8b5328e7e2e1bbea83332e7db23fd0c9f1de393",
       "sha256": "e7bdc0a09bc90bcd6ef2b2a9b6add03a68bb429208d86dd3dab03e7374a4e03e",
       "target": "tools/workspace_governance/skills/governance-maintenance/SKILL.md"
     }

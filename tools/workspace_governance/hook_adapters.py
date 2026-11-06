@@ -23,10 +23,14 @@ CODEX_ROOT = (
 )
 
 
-def _entry(matcher: str | None, command: str) -> dict[str, Any]:
-    group: dict[str, Any] = {
-        "hooks": [{"type": "command", "command": command, "timeout": 30}]
-    }
+def _entry(
+    matcher: str | None, command: str, *, block_on_failure: bool = False
+) -> dict[str, Any]:
+    handler: dict[str, Any] = {"type": "command", "command": command, "timeout": 30}
+    if block_on_failure:
+        # Claude Code >= 2.1.295 blocks the call on hook timeout/crash/bad output.
+        handler["onFailure"] = "block"
+    group: dict[str, Any] = {"hooks": [handler]}
     if matcher is not None:
         group = {"matcher": matcher, **group}
     return group
@@ -35,7 +39,9 @@ def _entry(matcher: str | None, command: str) -> dict[str, Any]:
 def claude_entries() -> dict[str, dict[str, Any]]:
     return {
         "PreToolUse": _entry(
-            "Bash|Monitor|mcp__.*", f"{CLAUDE_GUARD} claude || exit 2"
+            "Bash|Monitor|mcp__.*",
+            f"{CLAUDE_GUARD} claude || exit 2",
+            block_on_failure=True,
         ),
         "UserPromptSubmit": _entry(None, f"{CLAUDE_GUARD} claude prompt || exit 0"),
     }

@@ -123,6 +123,8 @@ class _Review:
                 )
                 return None
             return "polling_executed"
+        if decision.state_change:
+            self.epoch += 1
         for key in decision.observations:
             if (self.epoch, key) in self.seen:
                 return "repeated_status_query"
