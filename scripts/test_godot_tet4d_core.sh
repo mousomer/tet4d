@@ -12,6 +12,7 @@ TEST_TRACE_METADATA_BIN="$BUILD_DIR/trace_metadata_identity_digest_tests"
 TEST_TOPOLOGY_CONTRACT_BIN="$BUILD_DIR/topology_contract_foundation_tests"
 TEST_TOPOLOGY_TRANSPORT_BIN="$BUILD_DIR/topology_transport_tests"
 TEST_BOARD_EXTENT_BIN="$BUILD_DIR/board_extent_contract_tests"
+TEST_EXPLORER_PIECE_BIN="$BUILD_DIR/explorer_piece_tests"
 
 if [[ -n "${CXX:-}" ]]; then
   CXX_BIN="$CXX"
@@ -25,6 +26,26 @@ else
 fi
 
 mkdir -p "$BUILD_DIR"
+eval "$("$ROOT_DIR/gov" env)"
+"$PYTHON_BIN" "$ROOT_DIR/tools/migration/export_explorer_piece_fixtures.py" \
+  "$ROOT_DIR/tests/fixtures/explorer_topology/transport_v1.json" \
+  "$BUILD_DIR/explorer_piece_fixtures.hpp"
+"$CXX_BIN" -std=c++17 -O1 -Wall -Wextra -Werror -pthread \
+  -I"$CORE_DIR/include" -I"$BUILD_DIR" \
+  "$CORE_DIR/src/core/core_api.cpp" \
+  "$CORE_DIR/src/core/geometry.cpp" \
+  "$CORE_DIR/src/core/plain_nd.cpp" \
+  "$CORE_DIR/src/core/query.cpp" \
+  "$CORE_DIR/src/core/topology_transport.cpp" \
+  "$CORE_DIR/src/core/explorer_piece_state.cpp" \
+  "$CORE_DIR/src/core/explorer_piece_transport.cpp" \
+  "$CORE_DIR/src/core/explorer_piece_runtime.cpp" \
+  "$CORE_DIR/tests/explorer_piece_tests.cpp" \
+  -o "$TEST_EXPLORER_PIECE_BIN"
+if [[ "${1:-}" == "--explorer-piece-conformance" ]]; then
+  "$TEST_EXPLORER_PIECE_BIN"
+  exit 0
+fi
 "$CXX_BIN" -std=c++17 -Wall -Wextra -Werror \
   -I"$CORE_DIR/include" \
   "$CORE_DIR/src/core/core_api.cpp" \
@@ -142,4 +163,5 @@ else
   "$TEST_TOPOLOGY_CONTRACT_BIN"
   "$TEST_TOPOLOGY_TRANSPORT_BIN"
 	"$TEST_BOARD_EXTENT_BIN"
+  "$TEST_EXPLORER_PIECE_BIN"
 fi

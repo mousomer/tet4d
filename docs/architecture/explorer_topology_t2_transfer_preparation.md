@@ -7,6 +7,11 @@ Owners: `docs/architecture/authority_transfer_protocol.md`,
 
 ## 1. Candidate boundary
 
+T2A's bounded/torus native candidate implementation and executable preservation
+harness are described in [native T2A transport](explorer_topology_t2a_native_transport.md).
+This is a partial provider slice; the complete T2 transfer conditions below
+remain required. No Godot integration or runtime authority promotion is implied.
+
 Subsystem: **single-domain 2D Explorer deterministic topology transport and queries**.
 Current authority is inherited Python topology/canonical contracts, with the
 approved Explorer RDS governing intentional forward requirement changes.
@@ -87,12 +92,13 @@ the verified source-checkout mode; otherwise use the binding emitted by `gov env
 skips due to absent binaries are not evidence. The full gate discovers the new
 specification tests through pytest; no governance family or waiver is added.
 
-**Proposed T2 implementation and commands (do not exist yet):** extend
+**Complete T2 implementation and commands (partially implemented by T2A):** extend
 `native/tet4d_core/tests/query_core_tests.cpp` and `topology_transport_tests.cpp`
 to consume the reviewed fixture format. Add an explicit `--explorer-piece-conformance`
 mode to their existing test/export family and route it through
-`scripts/test_godot_tet4d_core.sh`; that mode must not be claimed passed until
-implemented. Its output compares full expanded semantic states, per-ID witnesses,
+`scripts/test_godot_tet4d_core.sh`; T2A implements this mode in the separate
+`explorer_piece_tests.cpp` suite for bounded/torus translations. The remaining
+T2 surfaces still require implementation. Its output compares full expanded semantic states, per-ID witnesses,
 frames, reasons, descriptor recovery, revisions and retained-state assertions.
 Use `preserved_unchanged`, `historical_comparison_only`,
 `superseded_forward_explorer`, `missing_new_conformance`, `outside_t2_scope`

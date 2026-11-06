@@ -17,7 +17,7 @@ phase-dependent work. It is not workflow authority, a CI diary, a completed
 stage archive, a task-contract ledger, or a future programme.
 ## Active Focus
 
-Explorer T1: the owner accepted PR #176's pivot fix and authorized dependency-order integration of #172–#176. Remaining Correction 4B catalog/schema/evidence P2 findings are explicitly deferred and nonblocking; no new review cycle or schema refactor is required for this merge. See `docs/BACKLOG.md` and `docs/architecture/explorer_topology_t2_transfer_preparation.md`. Native implementation, runtime conformance and authority transfer remain unstarted.
+Explorer T2A implements the native bounded/torus translation candidate and permanent preservation suite described in `docs/architecture/explorer_topology_t2a_native_transport.md`. T1 PRs #172–#176 are the accepted baseline; remaining Correction 4B P2 findings stay deferred. T2B Godot integration, T2C rotations/twisted profiles and complete T2 acceptance remain separate. Runtime authority has not transferred. See `docs/BACKLOG.md` and `docs/architecture/explorer_topology_t2_transfer_preparation.md`.
 Bounded MVP novice acceptance remains pending in `docs/plans/bounded_practice_explorer.md`; unified VIEW helpers and compact Settings/Designer menus remain the baseline.
 
 Machine-readable handoff state. `status` is `active` only on a feature branch
