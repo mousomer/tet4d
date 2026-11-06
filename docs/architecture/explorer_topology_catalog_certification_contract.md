@@ -2,7 +2,7 @@
 
 Role: normative T1 catalog, evidence and fixture design
 Version: `explorer-topology-catalog/1`
-Status: technical design; independent review and T1 reconciliation pending
+Status: technical design; reviewed stack integration authorized with nonblocking P2 deferrals
 Product owner: `docs/rds/RDS_EXPLORER_TOPOLOGIES.md`
 
 ## 1. Ownership and limits
@@ -333,7 +333,10 @@ package are labeled proposed and are not tests claimed to exist.
 | Conflicting profile versions / stale evidence | Exact version, digest, construction/profile and record-reference checks |
 | T6 reinterprets v1 | Closed single-square recipe schema and distinct future prefix required |
 
-Technical design delivery is not T1 acceptance. Independent adversarial review
-of Sessions 2 and 3, reconciliation of any findings, and explicit T1 acceptance
-are next. No production UI/native transport, authority transfer, historical
-rebaseline or premature mathematical status promotion is authorized here.
+The owner authorized integration of the independently reviewed T1 stack after
+accepting PR #176's pivot fix. Remaining P2 catalog/schema/evidence findings
+are explicitly deferred as nonblocking in `docs/BACKLOG.md`; no new schema
+refactor or review cycle is required for this integration. This disposition
+does not promote mathematical certification or runtime availability. Production
+UI/native transport, authority transfer and historical rebaselining remain
+outside this design change.

@@ -17,7 +17,7 @@ phase-dependent work. It is not workflow authority, a CI diary, a completed
 stage archive, a task-contract ledger, or a future programme.
 ## Active Focus
 
-Explorer T1 Correction 4A supplies stable-ID pivot and periodic-classification design evidence. Next: independent correction review, deferred Correction 4B catalog/schema/evidence findings and explicit T1 acceptance; see `docs/architecture/explorer_topology_t2_transfer_preparation.md`. Native implementation and runtime authority transfer remain unstarted.
+Explorer T1: the owner accepted PR #176's pivot fix and authorized dependency-order integration of #172–#176. Remaining Correction 4B catalog/schema/evidence P2 findings are explicitly deferred and nonblocking; no new review cycle or schema refactor is required for this merge. See `docs/BACKLOG.md` and `docs/architecture/explorer_topology_t2_transfer_preparation.md`. Native implementation, runtime conformance and authority transfer remain unstarted.
 Bounded MVP novice acceptance remains pending in `docs/plans/bounded_practice_explorer.md`; unified VIEW helpers and compact Settings/Designer menus remain the baseline.
 
 Machine-readable handoff state. `status` is `active` only on a feature branch

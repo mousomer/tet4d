@@ -910,9 +910,11 @@ package are owned by `docs/architecture/explorer_topology_catalog_certification_
 The bounded T2 implementation/transfer preparation is
 `docs/architecture/explorer_topology_t2_transfer_preparation.md`.
 
-Independent adversarial review of both T1 contracts and their evidence, finding
-reconciliation and explicit T1 acceptance remain required. Mathematical status
-promotion is separate from native runtime availability. No movement semantics
+Independent adversarial review of both T1 contracts is complete. The owner
+accepted PR #176's pivot correction and authorized stack integration with the
+remaining P2 findings deferred as nonblocking; `docs/BACKLOG.md` owns that
+disposition. No additional review cycle is required for this integration.
+Mathematical status promotion is separate from native runtime availability. No movement semantics
 are changed by the Session 3 references. T2 still requires implemented native
 and checked-adapter conformance, Godot integration and human review before any
 terminal transfer record or map promotion. T4/T6 remain separate.
