@@ -1,7 +1,7 @@
 """Transcribe reviewed JSON expectations into native test data; no movement solver.
 
 The generated header is a build artifact, never an update to the approved fixture.
-E3 uses a cylinder: retain its admission rejection and explicitly label its torus companion.
+E3 executes its original cylinder profile and an explicitly labeled torus companion.
 """
 
 from __future__ import annotations
@@ -69,7 +69,17 @@ def export(source: Path, output: Path) -> None:
         "std::vector<FixtureCase> reviewed_cases() {",
         "std::vector<FixtureCase> result;",
     ]
-    selected = {"E1", "bounded_interior", "E2", "E3", "E8_proposal", "E9", "torus_self"}
+    selected = {
+        "E1",
+        "bounded_interior",
+        "cylinder_wall",
+        "cylinder_wrap",
+        "E2",
+        "E3",
+        "E8_proposal",
+        "E9",
+        "torus_self",
+    }
     for case in data["cases"]:
         if case["id"] not in selected:
             continue
@@ -120,10 +130,8 @@ def export(source: Path, output: Path) -> None:
                 )
         if case["id"] == "E3":
             lines += [
-                "f.unsupported_profile = true;",
                 "result.push_back(f);",
                 'f.id = "E3_torus_companion";',
-                "f.unsupported_profile = false;",
                 f"f.source.profile = {profile(profiles['torus_2d'])};",
                 "f.target.profile = f.source.profile;",
                 'for (auto& w : f.witnesses) if (w.seam) w.seam = "seam_001";',

@@ -7,7 +7,7 @@ Owners: `docs/architecture/authority_transfer_protocol.md`,
 
 ## 1. Candidate boundary
 
-T2A's bounded/torus native candidate implementation and executable preservation
+T2A's bounded/cylinder/torus native candidate implementation and executable preservation
 harness are described in [native T2A transport](explorer_topology_t2a_native_transport.md).
 This is a partial provider slice; the complete T2 transfer conditions below
 remain required. No Godot integration or runtime authority promotion is implied.
@@ -97,7 +97,7 @@ specification tests through pytest; no governance family or waiver is added.
 to consume the reviewed fixture format. Add an explicit `--explorer-piece-conformance`
 mode to their existing test/export family and route it through
 `scripts/test_godot_tet4d_core.sh`; T2A implements this mode in the separate
-`explorer_piece_tests.cpp` suite for bounded/torus translations. The remaining
+`explorer_piece_tests.cpp` suite for bounded/cylinder/torus translations. The remaining
 T2 surfaces still require implementation. Its output compares full expanded semantic states, per-ID witnesses,
 frames, reasons, descriptor recovery, revisions and retained-state assertions.
 Use `preserved_unchanged`, `historical_comparison_only`,

@@ -73,6 +73,5 @@ struct FixtureCase {
     ExplorerPiece target;
     std::string inverse_version;
     std::vector<PieceWitness> witnesses;
-    bool unsupported_profile = false;
 };
 } // namespace explorer_test

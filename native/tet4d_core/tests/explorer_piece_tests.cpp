@@ -70,13 +70,10 @@ void fixture_cases() {
         auto result = propose_piece_translation(before.piece, before.revision, f.action);
         require(before == runtime.snapshot(), "fixture proposal pure");
         assert_deterministic_proposal(f.source, f.action);
-        if (f.unsupported_profile || !f.failure.empty()) {
+        if (!f.failure.empty()) {
             ++rejected_translations;
             require(!result.candidate, "blocked has no applicable candidate");
-            require(f.unsupported_profile
-                        ? result.failure == PieceFailure::unsupported_representation
-                        : piece_failure_name(result.failure) == f.failure,
-                    "reviewed failure reason");
+            require(piece_failure_name(result.failure) == f.failure, "reviewed failure reason");
             assert_atomic_noop(before, runtime.snapshot());
             continue;
         }
@@ -119,7 +116,8 @@ void negative_cases() {
          PieceFailure::invalid_profile},
         {[](auto& p) { p.profile.seams[0].source.axis = std::numeric_limits<std::int64_t>::max(); },
          PieceFailure::invalid_profile},
-        {[](auto& p) { p.profile.seams.pop_back(); }, PieceFailure::unsupported_representation},
+        {[](auto& p) { p.profile.seams = {{"cross_axis", {0, "-"}, {1, "-"}, {{0}, {1}}, true}}; },
+         PieceFailure::unsupported_representation},
         {[](auto& p) { p.profile.seams[0].transform.signs = {-1}; },
          PieceFailure::unsupported_representation},
         {[](auto& p) { p.cells[1].id = 0; }, PieceFailure::invalid_piece_state},
@@ -281,8 +279,14 @@ void fixed_seed_sequences() {
         {{1, 1}, {1, 3}, {2, 2}, {2, 3}, {4, 4}, {4, 5}, {8, 8}}};
     for (std::size_t shape = 0; shape < shapes.size(); ++shape)
         for (auto board : boards)
-            for (bool torus : {false, true}) {
-                auto initial = make_piece(shapes[shape], board[0], board[1], torus);
+            for (int wrapped_axes : {0, 1, 2, 3}) {
+                auto initial = make_piece(shapes[shape], board[0], board[1], wrapped_axes != 0);
+                if (wrapped_axes == 1)
+                    initial.profile.seams.pop_back();
+                if (wrapped_axes == 2) {
+                    initial.profile.seams.erase(initial.profile.seams.begin());
+                    initial.profile.seams.front().id = "seam_000";
+                }
                 ExplorerPiece checked;
                 if (validate_explorer_piece(initial, checked) != PieceFailure::none)
                     continue;
@@ -292,11 +296,11 @@ void fixed_seed_sequences() {
                             cell.frame = {orientation & 4 ? std::vector<int>{1, 0}
                                                           : std::vector<int>{0, 1},
                                           {orientation & 1 ? -1 : 1, orientation & 2 ? -1 : 1}};
-                        context = "seed=" + std::to_string(seed) +
-                                  " shape=" + std::to_string(shape) +
-                                  " board=" + std::to_string(board[0]) + "x" +
-                                  std::to_string(board[1]) + " torus=" + std::to_string(torus) +
-                                  " frame=" + std::to_string(orientation) + " actions=";
+                        context =
+                            "seed=" + std::to_string(seed) + " shape=" + std::to_string(shape) +
+                            " board=" + std::to_string(board[0]) + "x" + std::to_string(board[1]) +
+                            " wrapped_axes=" + std::to_string(wrapped_axes) +
+                            " frame=" + std::to_string(orientation) + " actions=";
                         ++states;
                         ++sequences;
                         std::mt19937 random(seed);
@@ -314,7 +318,7 @@ void fixed_seed_sequences() {
                                 propose_piece_translation(before.piece, before.revision, action);
                             require(before == runtime.snapshot(), "sequence proposal pure");
                             if (!result.candidate) {
-                                require(!torus &&
+                                require((wrapped_axes & (1 << action.axis)) == 0 &&
                                             result.failure == PieceFailure::unconnected_boundary,
                                         "valid translation rejects only at bounded wall");
                                 ++rejected_translations;
@@ -401,12 +405,12 @@ int main() {
     negative_cases();
     serialized_commit_and_boundaries();
     fixed_seed_sequences();
-    std::cout
-        << "explorer_piece_conformance: "
-           "{\"shapes\":9,\"boards\":7,\"topologies\":2,\"frames\":8,\"seeds\":[172,176,20261106],"
-        << "\"initial_states\":" << states << ",\"successful_translations\":" << translations
-        << ",\"rejected_translations\":" << rejected_translations
-        << ",\"inverse_recoveries\":" << inverses << ",\"sequences\":" << sequences
-        << ",\"atomic_rejections\":" << atomic_rejections << ",\"fixture_sha256\":\""
-        << FIXTURE_SHA256 << "\"}\n";
+    std::cout << "explorer_piece_conformance: "
+                 "{\"shapes\":9,\"boards\":7,\"topologies\":3,\"profile_variants\":4,\"frames\":8,"
+                 "\"seeds\":[172,176,20261106],"
+              << "\"initial_states\":" << states << ",\"successful_translations\":" << translations
+              << ",\"rejected_translations\":" << rejected_translations
+              << ",\"inverse_recoveries\":" << inverses << ",\"sequences\":" << sequences
+              << ",\"atomic_rejections\":" << atomic_rejections << ",\"fixture_sha256\":\""
+              << FIXTURE_SHA256 << "\"}\n";
 }

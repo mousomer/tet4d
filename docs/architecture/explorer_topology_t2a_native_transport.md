@@ -6,7 +6,7 @@ and `docs/rds/RDS_EXPLORER_TOPOLOGIES.md`.
 
 ## Scope and acceptance
 
-This provider slice implements rank-2 bounded and torus unit translations,
+This provider slice implements rank-2 bounded, cylinder and torus unit translations,
 recorded per-cell inverses, complete indexed state admission, revision-bound
 atomic application and Retry. Acceptance requires native preservation,
 deterministic fixed-seed sequences, reviewed fixture conformance, unchanged
@@ -27,7 +27,7 @@ terminal transfer records are unchanged.
 - `explorer_piece_runtime.cpp`: serialized `apply`, `retry` and value snapshots.
 
 The existing `decode_topology_transport_profile` validates profile structure and
-scalar limits. The admitted bounded/torus subset normalizes disabled rows,
+scalar limits. The admitted bounded/cylinder/torus subset normalizes disabled rows,
 labels, seam direction and ordering to the existing canonical v1 payload
 meaning; it does not replace the canonical schema or identity algorithm.
 `topology_query_profile_from_transport` and `resolve_topology_cell_step_query`
@@ -77,14 +77,16 @@ inverse versions and E8 lifecycle values. It computes no movement results and
 never changes fixture expectations. Native output records the fixture SHA-256.
 E1, bounded interior, E2, E8, E9 and torus self-step execute directly.
 
-E3's approved profile is `wrap_y`, a cylinder outside T2A's two-topology scope.
-Its exact profile is tested as unsupported. An explicitly labeled
-`E3_torus_companion` preserves its source cells, action and reviewed destination,
-frames/reverse steps while substituting the 4×4 torus profile and canonical seam
-ID. This is not a claim that the original cylinder fixture passes translation.
+The owner expanded T2A to include cylinders with either X or Y wrapping. The
+original E3 Y-only wrapping fixture, cylinder wall and cylinder wrap cases execute
+directly. A separately labeled `E3_torus_companion` also checks the same reviewed
+chart-split correspondence on the torus. Expected fixture data stays unchanged.
+Cylinder acceptance requires both directions on the wrapped axis, blocking on
+the unwrapped axis, exact inverses, extent-one behavior, periodic classification,
+and the same conservation/atomicity sequence checks as bounded and torus boards.
 
 Fixed seeds 172, 176 and 20261106 exercise nine shapes against seven board sizes,
-both topologies and all eight 2D signed frames. Only shapes whose initial
+all four profile variants (bounded, X-cylinder, Y-cylinder, torus) and all eight 2D signed frames. Only shapes whose initial
 occupancy fits are admitted. Each sequence attempts 32 actions, checks every
 accepted transition, and reverses every accepted action with its descriptor.
 Failures print the seed, shape index, board, topology, frame and action prefix.

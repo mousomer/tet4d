@@ -105,7 +105,8 @@ struct PieceProposal {
 };
 
 // No borrowed state escapes. Pure operations validate all input and return no candidate on failure.
-// Only bounded and torus rank-2 profiles execute in T2A. Allocation/limit failures are explicit.
+// Bounded, cylinder and torus rank-2 profiles execute in T2A. Allocation/limit failures are
+// explicit.
 PieceFailure validate_explorer_piece(const ExplorerPiece& piece, ExplorerPiece& canonical);
 bool valid_piece_frame(const PieceFrame& frame);
 PieceFrame compose_piece_frames(const PieceFrame& left, const PieceFrame& right);

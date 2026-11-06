@@ -66,7 +66,7 @@ PieceFailure canonical_profile(const TopologyTransportProfile& source,
         return PieceFailure::invalid_profile;
     result = *decoded.value;
     result.seams.clear();
-    // T2A admits precisely bounded/torus. This is admission and canonical v1 normalization,
+    // T2A admits bounded/cylinder/torus. This is admission and canonical v1 normalization,
     // never a transport solver. Pure-wrap inverse tangents are the same identity transform.
     std::array<bool, 2> wrapped{false, false};
     for (const auto& seam : decoded.value->seams) {
@@ -78,12 +78,13 @@ PieceFailure canonical_profile(const TopologyTransportProfile& source,
             return PieceFailure::unsupported_representation;
         wrapped[static_cast<std::size_t>(seam.source.axis)] = true;
     }
-    if (wrapped[0] != wrapped[1])
-        return PieceFailure::unsupported_representation;
-    if (wrapped[0]) {
-        for (std::int64_t axis = 0; axis < 2; ++axis)
-            result.seams.push_back(
-                {axis == 0 ? "seam_000" : "seam_001", {axis, "-"}, {axis, "+"}, {{0}, {1}}, true});
+    for (std::int64_t axis = 0; axis < 2; ++axis) {
+        if (wrapped[static_cast<std::size_t>(axis)])
+            result.seams.push_back({result.seams.empty() ? "seam_000" : "seam_001",
+                                    {axis, "-"},
+                                    {axis, "+"},
+                                    {{0}, {1}},
+                                    true});
     }
     return PieceFailure::none;
 }

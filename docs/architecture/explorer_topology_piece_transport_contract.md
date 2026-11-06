@@ -864,7 +864,7 @@ and are not generated from Python `resolve_piece_step`.
 Extend `native/tet4d_core/tests/query_core_tests.cpp` and
 `topology_transport_tests.cpp`, the existing checked Godot boundary tests, and
 `tests/unit/migration/test_topology_transport_parity.py`'s explicit comparison
-modes. The bounded/torus translation subset now has a native whole-piece
+modes. The bounded/cylinder/torus translation subset now has a native whole-piece
 conformance harness in `native/tet4d_core/tests/explorer_piece_tests.cpp`; see
 [T2A implementation boundaries](explorer_topology_t2a_native_transport.md).
 
