@@ -16,7 +16,8 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 - Architecture: `docs/ARCHITECTURE_CONTRACT.md` and
   `docs/architecture/authority_map.md`
 - Authority transfer: `docs/architecture/authority_transfer_protocol.md`
-- Topology/Explorer: `docs/architecture/topology_playground_current_authority.md`
+- Forward Explorer topologies: `docs/rds/RDS_EXPLORER_TOPOLOGIES.md`
+- Legacy Python Topology Playground: `docs/architecture/topology_playground_current_authority.md`
 - Human governance: `AGENTS.md` and the six owners under `docs/governance/`
 - Machine governance: `config/governance/project.json` (routes, execution
   profiles and scenarios) and `config/project/policy_pack.json` (unmigrated
@@ -34,9 +35,10 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ### Spatial-intuition research priorities
 
-The programme now prioritizes a bounded Godot Explorer, professional user
-comprehension, and empirical testing of 4D competence over first-class topology
-and general simulation. Sequencing/gates:
+The bounded Godot Explorer MVP is implemented; the new forward Explorer
+topology contract now includes 2D, directly accessible non-bounded presets and
+a secondary visual boundary builder. First-class topological **games** and
+general simulation remain separate later work. Sequencing/gates:
 `docs/plans/professional_godot_game_programme.md`; measurement and data
 requirements: `docs/plans/spatial_intuition_research_plan.md`. Stage 54G's
 accepted `PROFESSIONAL_CORE_GAME_READY: YES` remains valid. This is a
@@ -74,6 +76,7 @@ documentation/priority decision, not approval to deploy a study or backend.
 - [ ] P1 acceptance: run the plan's novice tasks and supported-window visual
   review; `EXPLORER_LEARNING_READY` remains pending. No learning-study or
   participant-backend readiness is implied by the implementation.
+- [ ] P1T — Explorer Topologies RDS (`docs/rds/RDS_EXPLORER_TOPOLOGIES.md`): **T1** establishes the mathematical space/construction/profile catalog identities, structural-vs-mathematical certification, native piece-transport/query contracts, five 2D core fixture specifications and bounded transfer plan. **T2** delivers a working 2D Explorer with bounded/cylinder/torus/Möbius/Klein presets and completes the documented **2D Explorer native authority transfer**; projective and sphere-like claims remain verification-gated. **T3** visual 2D builder; **T4** 3D/4D native transport and separate transfer; **T5** higher-dimensional builder; **T6** versioned multi-domain spheres and appropriate authority establishment/transfer; **T7** integrated novice/quality acceptance. No implementation or transfer is implied by these documentation commits. Python golden conflicts must be classified, not silently enforced or deleted.
 - [ ] P2: commission and execute a professional UI/comprehension review,
   including contrast hierarchy, occlusion/depth, active/inactive slice
   distinction, key discoverability, cockpit density and responsive text.
@@ -88,13 +91,16 @@ documentation/priority decision, not approval to deploy a study or backend.
 - [ ] P5: run a consent-compliant instrumentation/usability pilot and only
   then a controlled learning study; report negative or inconclusive results.
 - [ ] P6+ / deferred: research Windows/Linux distribution if recruitment needs
-  it, then full challenges, first-class topology, full Godot Topology Lab,
+  it, then full challenges, first-class topology **games**, additional advanced lab capabilities,
   Android tablets, physics integration, commercialization, macOS public
   distribution and iPadOS, in programme order.
 
 P3 can overlap P1/P2; P4 implementation depends on a measurement contract.
-The initial Godot research UX keeps non-bounded topology unavailable while
-preserving the Python topology tools and canonical underlying semantics. Each
+The already-built bounded MVP still keeps non-bounded topology unavailable;
+this is current implementation status, not the forward requirement. The new
+RDS requires non-bounded Explorer profiles and native conformance independent
+of conflicting Python Explorer goldens. Historical Python artifacts remain
+available for compatibility until formal transfer. Each
 feature requires its own approved stage, RDS/architecture changes where
 appropriate, and corresponding test and human evidence.
 
