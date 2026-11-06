@@ -234,9 +234,30 @@ unlabeled coordinate-set fit. Put `U_i=F'_i F_i^-1` and `t_i=c'_i-U_i c_i`.
 | Condition, in order | Classification |
 | --- | --- |
 | Any validation/resolution/inverse failure | `blocked` |
-| All `U_i=I` and all `t_i` equal | `plain_translation` (including zero displacement) |
-| All `U_i=U` and all `t_i=t`, for one nonidentity signed permutation `U` | `rigid_transform` |
+| All `U_i=I` and all `t_i` equivalent below | `plain_translation` (including zero displacement) |
+| All `U_i=U` and all `t_i` equivalent below, for one nonidentity signed permutation `U` | `rigid_transform` |
 | Otherwise | `cellwise_deformation` |
+
+On each axis `j` with a valid opposite-face, same-axis, tangent-identity
+wrapping pair in canonical `B`, compare `t_(i,j)` modulo `L_j`; on every
+other axis require exact equality. Equivalently compare the tuple of Euclidean
+residues on those individually eligible axes and exact components elsewhere.
+This is an equivalence relation, including `L_j=1`, independent of cell order,
+authored seam order/direction/labels and camera. Reversed and cross-axis seams
+do not supply periods; their comparison remains chart-relative. In particular,
+Klein's identity X pair supplies an X period, but its reversed Y pair does not.
+
+Keep actual per-cell transport, this affine-witness coherence, and rectangular
+chart separation distinct. A chart split alone is not deformation. The label
+certifies a common affine action on the selected canonical source representatives
+up to the permitted target periods; it does **not** prove a global isometry or
+automorphism of the quotient. A quarter-turn on a rectangular torus need not
+preserve its period lattice. Even a supported material-development rotation
+need not meet this stricter canonical-source witness criterion on unequal
+periods; classification never changes its coordinates, frames or validity.
+Movement validation (including injection and inverse) precedes classification.
+These individually eligible classification axes do not broaden §9's global
+all-seam condition for rotation development.
 
 This test needs no search over rigid motions and is invariant under row
 reordering. Even one-cell orientation changes are visible to classification.
@@ -366,21 +387,26 @@ as an invented embedding. Rotation does not depend on previous move labels.
 2. If **every** active seam is an opposite-face, same-axis, tangent-identity
    wrap, define `pi(u)` by Euclidean modulo on wrapped axes and identity on
    unwrapped axes. Otherwise define `pi` as identity on the in-bounds chart
-   only. This latter rule permits local rotations on Möbius/Klein/legacy
-   profiles; it never attempts a rotation across a reversed/cross-axis seam.
+   only. This is a **global all-seam condition**, including seams untouched by
+   the requested rotation. Twisted/cross-axis profiles permit only coherent
+   in-chart rotations, even across an otherwise untwisted axis. A mathematically
+   possible rotation outside this subset returns `rotation_undefined`; this is
+   a v1 feature boundary, not a claim that the space forbids that rotation.
 3. Require `pi(u_i)=c_i` for every ID. If not, or frames differ, return
    `rotation_undefined`. No alternative path, shortest lift or alternate anchor
    is tried. Original geometry removes small-board shortest-path ties.
 4. Compute the existing Euclidean pivot on the developed cells for the selected
    ordered plane `(a,b)`. With axis minima/maxima, if both spans have the same
    parity use their bounding midpoint. Otherwise choose the cell nearest the
-   centroid **in that plane**, ties broken by full-coordinate lexicographic
-   order. Compare integer squared distances of `n*u_i-sum(u)` to avoid floating
-   ties. Store midpoint coordinates doubled as exact integers. This specifies
-   the native pivot rule with explicitly canonicalized input order, without
-   per-ID array-order ties. The existing helper uses first-in-array on ties;
-   the new contract supplies lexicographic input order at each new request.
-   It does not redefine historical unsorted-call outputs.
+   centroid **in that plane**, ties broken by the **lowest persistent
+   constituent-cell ID**. Compare integer squared distances of
+   `n*u_i-sum(u)` in that plane to avoid floating ties. Store midpoint
+   coordinates doubled as exact integers. IDs are those in immutable `H`,
+   never temporary array indices or native sorted-output positions. Screen
+   position, camera, row order and previous turns cannot select a different
+   tied constituent. The midpoint case is unchanged. This Explorer-specific
+   rule is separate from native `python_rotation_pivot`'s inherited
+   first-in-array tie-break; do not change that helper for ordinary gameplay.
 5. The sign `+1` is the existing native positive quarter turn:
    `(z_a,z_b)->(z_b,-z_a)`; sign `-1` is its inverse. Put `Q` for this signed
    permutation. Compute `v_i=Q(u_i-p)+p` in the plane (other axes unchanged),
@@ -401,13 +427,44 @@ The inverse descriptor reconstructs the **same** `u,p,Q,v` from its source.
 After exact target matching, lift each target to its recorded/derived `v_i`,
 apply `Q^-1(v_i-p)+p=u_i`, project to `c_i`, and restore orientation with
 `Q^-1 F'_i=F_i`. Reusing the forward pivot is mandatory; do not recompute a
-new pivot from wrapped target coordinates or promise that an opposite rotation
-key always undoes the action. Projection may be many-to-one on the whole cover,
+new pivot from wrapped target coordinates for recorded undo. Independently
+requested opposite rotations recompute §9 from their own source; their
+supported-sequence guarantees below are separate from recorded inversion.
+Projection may be many-to-one on the whole cover,
 but ID correspondence, endpoint equality and the source-derived lift make this
 particular operation invertible. Candidate injection is checked independently.
 
+### Pivot stability and independent rotation identities
+
+For a coherent developed piece, rigid `Q` takes its centroid to the rotated
+centroid and preserves each squared planar distance:
+`||Q(u_i-mean(u))||² = ||u_i-mean(u)||²`. Thus the nearest-centroid ID set
+is unchanged. Its lowest persistent ID is the same constituent, fixed by a
+rotation about that cell. Equal-span-parity remains equal after axis exchange;
+the bounding midpoint rotates to itself. These arguments also hold after a
+uniform translation of the development and pivot.
+
+For pure wraps, after a successful rotation the next anchor-derived development
+is `v_i+k`, where `k=pi(v_h)-v_h` is one common period vector (zero on
+unwrapped axes). The next pivot is `p+k`. Consequently the next lifted turn
+is the corresponding unshifted turn plus `k`, whose projection agrees.
+This uses translation equivariance of the pivot, not preservation of the whole
+period lattice by `Q`. On twisted profiles the supported development stays
+in-chart and `k=0`. These are statements about §9's coherent material
+embedding, not arbitrary quotient states, mixed frames or arbitrary lifts.
+
+Whenever every requested operation is supported and accepted, four +1 turns,
+four −1 turns, +1 then −1, and −1 then +1 restore **all** of `P`: persistent
+IDs, canonical locations, accumulated frames (`Q^4=I`, `Q^-1 Q=I`), immutable
+geometry, profile and object identity. Revision increases per commit; it is
+not rewound. An intermediate undefined projection or projected collision is
+reported separately as blocked, never counted as a successful identity test.
+For an accepted turn the independently requested opposite has the coherent
+reverse development and recovers the source; recorded undo remains the exact
+source-bound operation mechanism and is tested separately.
+
 **Implementation mapping:** Keep `rotate_blocks_nd` for existing callers;
-extend its internal pivot/per-coordinate operation or expose shared helpers so
+reuse its per-coordinate algebra or expose shared helpers so
 the new indexed path retains IDs. `rotate_blocks_nd_around_pivot` supplies the
 same algebra with a fixed pivot; do not zip sorted outputs with incoming IDs.
 The explicit pivot is transient inverse data derived from `D.source`, never a
@@ -583,16 +640,19 @@ Reverse crossing gives `(0,1), (0,2)` and `I,I`, exact `P`.
 
 ### E3 — torus chart split
 
-Y-wrap-only 4×4, matching
+Y-wrap-only 4×4, with the same coordinates as
 `test_torus_chart_split_piece_step_stays_rigidly_coherent` in
 `tests/unit/engine/test_explorer_transport_resolver.py`;
 `H=[(0,0),(0,1)]`; `0:(0,0)/I,1:(0,1)/I`; Y−.
 Cell 0 crosses to `(0,3)`, `T=I,b=(0,3)`;
 cell 1 is interior to `(0,0)`, `T=I,b=(0,-1)`.
-Complete output `0:(0,3)/I,1:(0,0)/I`; `cellwise_deformation`, no block.
+Complete output `0:(0,3)/I,1:(0,0)/I`; `plain_translation`, no block:
+`(0,3)` and `(0,-1)` are equivalent modulo the Y period 4.
 `D(P,Y−)` derives Y+ for both: 0 crosses back and 1 moves interior,
 recovering exact `P`. The same calculation holds on the full torus; original
 adjacency and seam adjacency survive despite rectangular visual separation.
+The historical Python result still says `cellwise_deformation`; preserve that
+comparison independently of this corrected forward classification.
 
 ### E4 — Möbius reversal
 
@@ -638,16 +698,25 @@ Each uses plane `(x,y)`, frames shown below, and `D(P,rotation)` on success.
 | Case, profile/board and `H` | Source and action | Development, pivot and per-ID resolution | Complete output and classification |
 | --- | --- | --- | --- |
 | Ordinary bounded 4×4; `H=[(0,0),(0,1),(1,0)]` | `0:(1,1)/I,1:(1,2)/I,2:(2,1)/I`; +1 | `u=c`; midpoint `p=(1.5,1.5)`; `Q` sends IDs to `(1,2),(2,2),(1,1)` | `0:(1,2)/Q,1:(2,2)/Q,2:(1,1)/Q`; `rigid_transform` |
-| Torus seam split 4×4; `H=[(0,0),(0,1)]` | `0:(0,3)/I,1:(0,0)/I`; +1 | `u_0=(0,3),u_1=(0,4)`; nearest-centroid tie gives `p=(0,3)`; `v_0=(0,3),v_1=(1,3)` | `0:(0,3)/Q,1:(1,3)/Q`; `cellwise_deformation` in canonical chart |
-| Möbius after E4; same board/H | `0:(3,2)/M,1:(3,1)/M`; −1 | `u=c`; tie gives `p=(3,1)`; `Q^-1` gives `(2,1),(3,1)`; both stay in chart | `0:(2,1)/(Q^-1 M),1:(3,1)/(Q^-1 M)` with `Q^-1 M=[[0,1],[1,0]]`; `rigid_transform` |
+| Torus seam split 4×4; `H=[(0,0),(0,1)]` | `0:(0,3)/I,1:(0,0)/I`; +1 | `u_0=(0,3),u_1=(0,4)`; nearest-centroid tie selects ID 0, `p=(0,3)`; `v_0=(0,3),v_1=(1,3)` | `0:(0,3)/Q,1:(1,3)/Q`; `rigid_transform`; affine offsets `(-3,3)` and `(1,3)` agree modulo 4 |
+| Möbius after E4; same board/H | `0:(3,2)/M,1:(3,1)/M`; +1 | `u=c`; tie selects ID 0, `p=(3,2)`; targets `(3,2),(2,2)` stay in chart | `0:(3,2)/J,1:(2,2)/J`, `J=QM=[[0,-1],[-1,0]]`; `rigid_transform` |
+| Möbius after E4, opposite request from the same source | `0:(3,2)/M,1:(3,1)/M`; −1 | Same pivot; lifted targets `(3,2),(4,2)` leave chart | `blocked/rotation_undefined`; no candidate/inverse; entire envelope unchanged |
 | Mixed Möbius 4×4; `H=[(0,0),(1,0)]` | `0:(3,2)/M,1:(0,1)/I`; +1 | Source comes from `(0,1)/I,(1,1)/I` moving X−; unequal frames fail before choosing a pivot | `blocked/rotation_undefined`; complete source unchanged; no inverse |
 
 For the three successes, inverse uses the source-derived `v,p` and the
 opposite `Q`, **not** a new wrapped-bounds pivot. Bounded recovery is
 `(1,1)/I,(1,2)/I,(2,1)/I`; torus recovery projects `(0,3),(0,4)` to
 `(0,3)/I,(0,0)/I`; Möbius recovery is `(3,2)/M,(3,1)/M`. All exact `P` fields
-are restored. On that Möbius source, +1 instead needs `(4,1)` and blocks
-`rotation_undefined`; this limits the command, not the topology's availability.
+are restored. From the successful Möbius target, an independently requested
+−1 also restores the original source; −1 from the original source is the
+separate blocked case above. This limits the command, not topology availability.
+
+Rotation collision companion: torus 2×3, `H=[(0,0),(0,1),(0,2)]`, source
+`0:(0,0)/I,1:(0,1)/I,2:(0,2)/I`, +1. Midpoint `p=(0,1)` gives lifted targets
+`(-1,1),(0,1),(1,1)` and projected targets `(1,1),(0,1),(1,1)` with `Q` frames.
+IDs 0 and 2 collide: `blocked/destination_collision`, no candidate/inverse,
+unchanged revision/undo/trace and complete semantic state. Coherent frames
+and invertible Euclidean rotation cannot bypass canonical occupancy validation.
 
 ### E8 — stale and mismatched candidates
 
@@ -681,7 +750,7 @@ Klein 4×4, same object/H/source as E5. Apply X+, Y+, X−, Y+ in order:
 | P0 | `(3,2)/I` | `(3,3)/I` | Initial |
 | P1 | `(0,2)/I` | `(0,3)/I` | `I,I`; none; `plain_translation` |
 | P2 | `(0,3)/I` | `(3,0)/K` | `I,K`; none; `cellwise_deformation` |
-| P3 | `(3,3)/I` | `(2,0)/K` | `I,I`; none; `cellwise_deformation` (wrap/interior offsets differ) |
+| P3 | `(3,3)/I` | `(2,0)/K` | `I,I`; none; `plain_translation` (X offsets 3 and −1 agree modulo 4) |
 | P4 | `(0,0)/K` | `(2,1)/K` | `K,I`; none; `cellwise_deformation` |
 
 Descriptors are `D1=(P0,X+)`, `D2=(P1,Y+)`, `D3=(P2,X−)`, `D4=(P3,Y+)`.
@@ -722,10 +791,12 @@ atomicity, independently of the mathematical proofs.
 | Stale state/profile/ABA candidate | E8 exact source plus monotonic revision; no reuse after Retry |
 | Blocked action changes trace | Propose is pure, reject is whole-envelope no-op; include failure after trace-preparation allocation |
 | Equivalent profiles yield different outcomes | Normalize `B`, canonical seam IDs/directed boundaries; exclude authored labels/order, compare normalized witnesses |
-| Cell order changes classification/pivot | ID-ordered construction; `U_i,t_i` equality; lexicographic coordinate pivot tie-break |
+| Cell order changes classification/pivot | Persistent-ID pivot tie-break; `U_i` equality and §7 periodic `t_i` equivalence |
 | Godot view changes semantic result | No presentation fields in request; identical semantic request must compare exactly |
 | Tampered inverse snapshot or witness | Recompute forward, exact endpoint match, then inverse; malformed values reject |
-| Rotation maps two lifts onto one site | Unique projected occupancy required despite invertible `Q` |
+| Rotation maps two lifts onto one site | E7 torus 2×3 I3 collision; unique projected occupancy before classification |
+| Fresh pivot causes drift hidden by recorded undo | Vertical domino `(3,3),(3,4)` on bounded 8×8: old coordinate ties end at `(3,1),(3,2)` after four +1; stable ID 0 restores exact source |
+| Finite affine coherence mistaken for global quotient symmetry | §7 does not certify period-lattice preservation or catalog isometry |
 
 This is an adversarial design review, not evidence that unimplemented native
 piece conformance tests have passed. The required executable cases follow.
@@ -804,7 +875,7 @@ malformed inputs, unknown versions and source-rest tampering.
 
 | Family | Required deterministic cases |
 | --- | --- |
-| Bounded | E1/E7; every wall and partial-cell failure; undeformed native pivot parity |
+| Bounded | E1/E7; every wall and partial-cell failure; unchanged midpoint algebra and Explorer stable-ID pivot |
 | Cylinder | E1 companion wrap and bounded-Y; both X directions, both bounded directions |
 | Torus | E2/E3/E7/E9; all directions, corners, extent 1/2, repeated inverse and seam-adjacent distinct occupancy |
 | Möbius | E4/E7; both seam directions, mixed interior/seam, center-row holonomy, 1×1 frame self-step |
@@ -813,6 +884,16 @@ malformed inputs, unknown versions and source-rest tampering.
 | Lifecycle | E8; Retry, replacement, profile rebind, ABA, tampered candidate, inverse after changed frame, revision exhaustion and allocation failure |
 | Determinism | Reordered cell arrays and equivalent seam order/direction/labels; repeat same input; camera/slice changes leave native result unchanged |
 | Strict boundary | Boolean/float/string integers, bad dimension/domain/ID/permutation/sign, duplicate source occupancy, malformed descriptor, unsupported rank |
+
+For each core profile, test four positive turns, four negative turns, and both
+independently requested opposite-turn pairs on several shapes, positions and
+orientations. Compare complete semantic state, not revision or coordinate sets.
+Include dominoes, I3/I4, L3/L4, S4/T4, midpoint and deliberate centroid ties,
+reordered rows, seam-straddling tori, coherent in-chart Möbius rotations,
+boundary blocks and narrow/extent-one projected collisions. Report successful
+sequences and blocked/unsupported sequences separately. Compute these design
+checks with the focused contract-evidence helper and fixed reviewed fixtures;
+they do not execute native commits or certify future runtime conformance.
 
 For each core seam, enumerate all boundary coordinates on small boards
 (1×1, 1×2, 2×1, 2×2, 4×4) and both directions; verify reverse center and frame,
@@ -829,9 +910,11 @@ package are owned by `docs/architecture/explorer_topology_catalog_certification_
 The bounded T2 implementation/transfer preparation is
 `docs/architecture/explorer_topology_t2_transfer_preparation.md`.
 
-Independent adversarial review of both T1 contracts and their evidence, finding
-reconciliation and explicit T1 acceptance remain required. Mathematical status
-promotion is separate from native runtime availability. No movement semantics
+Independent adversarial review of both T1 contracts is complete. The owner
+accepted PR #176's pivot correction and authorized stack integration with the
+remaining P2 findings deferred as nonblocking; `docs/BACKLOG.md` owns that
+disposition. No additional review cycle is required for this integration.
+Mathematical status promotion is separate from native runtime availability. No movement semantics
 are changed by the Session 3 references. T2 still requires implemented native
 and checked-adapter conformance, Godot integration and human review before any
 terminal transfer record or map promotion. T4/T6 remain separate.
