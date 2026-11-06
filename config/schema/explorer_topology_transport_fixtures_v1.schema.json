@@ -1,0 +1,1347 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tet4d.local/schema/explorer_topology_transport_fixtures_v1.schema.json",
+  "title": "Tet4D Explorer topology transport_fixtures v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "schema_version",
+    "normative_contract",
+    "normative_version",
+    "profiles",
+    "states",
+    "cases",
+    "negative_cases",
+    "sequences",
+    "lifecycle",
+    "enumeration"
+  ],
+  "properties": {
+    "contract": {
+      "type": "string",
+      "const": "explorer-transport-fixtures/1"
+    },
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "normative_contract": {
+      "type": "string",
+      "minLength": 1
+    },
+    "normative_version": {
+      "type": "string",
+      "const": "explorer-piece-transport/1"
+    },
+    "profiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "catalog_id",
+          "construction_id",
+          "profile_id",
+          "payload"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "catalog_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "construction_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "profile_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "schema",
+              "schema_version",
+              "dimension",
+              "board_dimensions",
+              "gluings"
+            ],
+            "properties": {
+              "schema": {
+                "type": "string",
+                "const": "tet4d.topology_contract"
+              },
+              "schema_version": {
+                "type": "integer",
+                "const": 1
+              },
+              "dimension": {
+                "type": "integer",
+                "const": 2
+              },
+              "board_dimensions": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 1000000
+                },
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "gluings": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "source",
+                    "target",
+                    "transform"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "source": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "axis",
+                        "side"
+                      ],
+                      "properties": {
+                        "axis": {
+                          "enum": [
+                            "x",
+                            "y"
+                          ]
+                        },
+                        "side": {
+                          "enum": [
+                            "-",
+                            "+"
+                          ]
+                        }
+                      }
+                    },
+                    "target": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "axis",
+                        "side"
+                      ],
+                      "properties": {
+                        "axis": {
+                          "enum": [
+                            "x",
+                            "y"
+                          ]
+                        },
+                        "side": {
+                          "enum": [
+                            "-",
+                            "+"
+                          ]
+                        }
+                      }
+                    },
+                    "transform": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "permutation",
+                        "signs"
+                      ],
+                      "properties": {
+                        "permutation": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "const": 0
+                          },
+                          "minItems": 1,
+                          "maxItems": 1
+                        },
+                        "signs": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "enum": [
+                              -1,
+                              1
+                            ]
+                          },
+                          "minItems": 1,
+                          "maxItems": 1
+                        }
+                      }
+                    }
+                  }
+                },
+                "minItems": 0,
+                "maxItems": 2
+              }
+            }
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "states": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "profile_ref",
+          "version",
+          "object_key",
+          "rest_cells",
+          "cells",
+          "revision",
+          "initial_state_ref",
+          "undo",
+          "trace"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "profile_ref": {
+            "type": "string",
+            "minLength": 1
+          },
+          "version": {
+            "type": "string",
+            "const": "explorer-piece-transport/1"
+          },
+          "object_key": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "namespace",
+              "ordinal"
+            ],
+            "properties": {
+              "namespace": {
+                "type": "string",
+                "minLength": 1
+              },
+              "ordinal": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "rest_cells": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "coordinate"
+              ],
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "coordinate": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+                }
+              }
+            },
+            "minItems": 1
+          },
+          "cells": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "domain",
+                "coordinate",
+                "frame"
+              ],
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "domain": {
+                  "type": "integer",
+                  "const": 0
+                },
+                "coordinate": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+                },
+                "frame": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "permutation",
+                    "signs"
+                  ],
+                  "properties": {
+                    "permutation": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "minItems": 2,
+                      "maxItems": 2
+                    },
+                    "signs": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "enum": [
+                          -1,
+                          1
+                        ]
+                      },
+                      "minItems": 2,
+                      "maxItems": 2
+                    }
+                  }
+                }
+              }
+            },
+            "minItems": 1
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "initial_state_ref": {
+            "type": "string",
+            "minLength": 1
+          },
+          "undo": {
+            "type": "array",
+            "items": {},
+            "minItems": 0,
+            "maxItems": 0
+          },
+          "trace": {
+            "type": "array",
+            "items": {},
+            "minItems": 0,
+            "maxItems": 0
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "example",
+          "source_state_ref",
+          "action",
+          "per_cell",
+          "classification",
+          "blocked_reason",
+          "candidate",
+          "inverse",
+          "atomic",
+          "legacy_comparison",
+          "native_result",
+          "godot_result",
+          "expectation_basis",
+          "native_owner",
+          "godot_owner",
+          "rotation_evidence"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "example": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_state_ref": {
+            "type": "string",
+            "minLength": 1
+          },
+          "action": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "translate",
+                  "rotate"
+                ]
+              },
+              "axis": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "delta": {
+                "type": "integer",
+                "enum": [
+                  -1,
+                  1
+                ]
+              },
+              "axis_a": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "axis_b": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "quarter_turn": {
+                "type": "integer",
+                "enum": [
+                  -1,
+                  1
+                ]
+              }
+            }
+          },
+          "per_cell": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "resolution_status",
+                "target",
+                "frame",
+                "transport",
+                "crossing",
+                "reverse_step"
+              ],
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "resolution_status": {
+                  "enum": [
+                    "resolved",
+                    "blocked",
+                    "not_evaluated"
+                  ]
+                },
+                "target": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  },
+                  "minItems": 0,
+                  "maxItems": 2
+                },
+                "frame": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "permutation",
+                    "signs"
+                  ],
+                  "properties": {
+                    "permutation": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "minItems": 0,
+                      "maxItems": 2
+                    },
+                    "signs": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "enum": [
+                          -1,
+                          1
+                        ]
+                      },
+                      "minItems": 0,
+                      "maxItems": 2
+                    }
+                  }
+                },
+                "transport": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "permutation",
+                    "signs"
+                  ],
+                  "properties": {
+                    "permutation": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "minItems": 0,
+                      "maxItems": 2
+                    },
+                    "signs": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "enum": [
+                          -1,
+                          1
+                        ]
+                      },
+                      "minItems": 0,
+                      "maxItems": 2
+                    }
+                  }
+                },
+                "crossing": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 0,
+                  "maxItems": 2
+                },
+                "reverse_step": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  },
+                  "minItems": 0,
+                  "maxItems": 2
+                }
+              }
+            },
+            "minItems": 0
+          },
+          "classification": {
+            "enum": [
+              "plain_translation",
+              "rigid_transform",
+              "cellwise_deformation",
+              "blocked"
+            ]
+          },
+          "blocked_reason": {
+            "type": "string",
+            "enum": [
+              "",
+              "invalid_profile",
+              "invalid_piece_state",
+              "invalid_action",
+              "unsupported_representation",
+              "unconnected_boundary",
+              "ambiguous_destination",
+              "destination_collision",
+              "invalid_transport",
+              "inverse_mismatch",
+              "rotation_undefined",
+              "stale_candidate",
+              "candidate_mismatch",
+              "resource_limit"
+            ]
+          },
+          "candidate": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "present",
+              "cells",
+              "inherit"
+            ],
+            "properties": {
+              "present": {
+                "type": "boolean"
+              },
+              "cells": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "domain",
+                    "coordinate",
+                    "frame"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "domain": {
+                      "type": "integer",
+                      "const": 0
+                    },
+                    "coordinate": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer"
+                      },
+                      "minItems": 2,
+                      "maxItems": 2
+                    },
+                    "frame": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "permutation",
+                        "signs"
+                      ],
+                      "properties": {
+                        "permutation": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "minItems": 2,
+                          "maxItems": 2
+                        },
+                        "signs": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "enum": [
+                              -1,
+                              1
+                            ]
+                          },
+                          "minItems": 2,
+                          "maxItems": 2
+                        }
+                      }
+                    }
+                  }
+                },
+                "minItems": 0
+              },
+              "inherit": {
+                "type": "string",
+                "const": "source_semantic_fields"
+              }
+            }
+          },
+          "inverse": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "present",
+              "version",
+              "source_ref",
+              "forward_action",
+              "expected_recovery",
+              "revision_delta"
+            ],
+            "properties": {
+              "present": {
+                "type": "boolean"
+              },
+              "version": {
+                "type": "string"
+              },
+              "source_ref": {
+                "type": "string"
+              },
+              "forward_action": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [],
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "translate",
+                      "rotate"
+                    ]
+                  },
+                  "axis": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "delta": {
+                    "type": "integer",
+                    "enum": [
+                      -1,
+                      1
+                    ]
+                  },
+                  "axis_a": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "axis_b": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "quarter_turn": {
+                    "type": "integer",
+                    "enum": [
+                      -1,
+                      1
+                    ]
+                  }
+                }
+              },
+              "expected_recovery": {
+                "enum": [
+                  "exact_source_semantic_state",
+                  "none"
+                ]
+              },
+              "revision_delta": {
+                "type": "integer",
+                "enum": [
+                  0,
+                  2
+                ]
+              }
+            }
+          },
+          "atomic": {
+            "enum": [
+              "single_envelope_swap",
+              "entire_envelope_unchanged"
+            ]
+          },
+          "legacy_comparison": {
+            "enum": [
+              "preserved_unchanged",
+              "historical_comparison_only",
+              "superseded_forward_explorer",
+              "missing_new_conformance",
+              "outside_t2_scope"
+            ]
+          },
+          "native_result": {
+            "type": "string",
+            "const": "not_run"
+          },
+          "godot_result": {
+            "type": "string",
+            "const": "not_run"
+          },
+          "expectation_basis": {
+            "type": "string",
+            "const": "session2_contract"
+          },
+          "native_owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "godot_owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rotation_evidence": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [],
+            "properties": {
+              "developed": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+                },
+                "minItems": 0
+              },
+              "pivot_doubled": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "rotated_lift": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+                },
+                "minItems": 0
+              }
+            }
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "negative_cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "base_case",
+          "phase",
+          "mutation_target",
+          "path",
+          "value",
+          "expected_reason",
+          "expected_error_path",
+          "synchronize_current_revision",
+          "atomic",
+          "native_result",
+          "godot_result",
+          "legacy_comparison"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "base_case": {
+            "type": "string",
+            "minLength": 1
+          },
+          "phase": {
+            "enum": [
+              "decode",
+              "propose",
+              "apply",
+              "inverse"
+            ]
+          },
+          "mutation_target": {
+            "enum": [
+              "request",
+              "candidate",
+              "current",
+              "descriptor",
+              "provider"
+            ]
+          },
+          "path": {
+            "type": "array",
+            "items": {},
+            "minItems": 0
+          },
+          "value": {},
+          "expected_reason": {
+            "type": "string",
+            "enum": [
+              "invalid_profile",
+              "invalid_piece_state",
+              "invalid_action",
+              "unsupported_representation",
+              "unconnected_boundary",
+              "ambiguous_destination",
+              "destination_collision",
+              "invalid_transport",
+              "inverse_mismatch",
+              "rotation_undefined",
+              "stale_candidate",
+              "candidate_mismatch",
+              "resource_limit"
+            ]
+          },
+          "expected_error_path": {
+            "type": "string"
+          },
+          "synchronize_current_revision": {
+            "type": "boolean"
+          },
+          "atomic": {
+            "type": "string",
+            "const": "entire_current_envelope_unchanged"
+          },
+          "native_result": {
+            "type": "string",
+            "const": "not_run"
+          },
+          "godot_result": {
+            "type": "string",
+            "const": "not_run"
+          },
+          "legacy_comparison": {
+            "type": "string",
+            "const": "missing_new_conformance"
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "sequences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "initial_state_ref",
+          "steps",
+          "inverse_order",
+          "expected_final_cells",
+          "expected_recovery",
+          "revision_delta"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "initial_state_ref": {
+            "type": "string",
+            "minLength": 1
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "inverse_order": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "expected_final_cells": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "domain",
+                "coordinate",
+                "frame"
+              ],
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "domain": {
+                  "type": "integer",
+                  "const": 0
+                },
+                "coordinate": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+                },
+                "frame": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "permutation",
+                    "signs"
+                  ],
+                  "properties": {
+                    "permutation": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "minItems": 2,
+                      "maxItems": 2
+                    },
+                    "signs": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "enum": [
+                          -1,
+                          1
+                        ]
+                      },
+                      "minItems": 2,
+                      "maxItems": 2
+                    }
+                  }
+                }
+              }
+            },
+            "minItems": 0
+          },
+          "expected_recovery": {
+            "type": "string",
+            "const": "exact_initial_semantic_state"
+          },
+          "revision_delta": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "lifecycle": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "prepare_case",
+          "intervening_action",
+          "expected_current_cells",
+          "expected_revision",
+          "apply_reason",
+          "after_intervening_inverse_revision",
+          "apply_again_reason",
+          "atomic"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "const": "E8"
+          },
+          "prepare_case": {
+            "type": "string",
+            "minLength": 1
+          },
+          "intervening_action": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "translate",
+                  "rotate"
+                ]
+              },
+              "axis": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "delta": {
+                "type": "integer",
+                "enum": [
+                  -1,
+                  1
+                ]
+              },
+              "axis_a": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "axis_b": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "quarter_turn": {
+                "type": "integer",
+                "enum": [
+                  -1,
+                  1
+                ]
+              }
+            }
+          },
+          "expected_current_cells": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "domain",
+                "coordinate",
+                "frame"
+              ],
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "domain": {
+                  "type": "integer",
+                  "const": 0
+                },
+                "coordinate": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+                },
+                "frame": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "permutation",
+                    "signs"
+                  ],
+                  "properties": {
+                    "permutation": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "minItems": 2,
+                      "maxItems": 2
+                    },
+                    "signs": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "enum": [
+                          -1,
+                          1
+                        ]
+                      },
+                      "minItems": 2,
+                      "maxItems": 2
+                    }
+                  }
+                }
+              }
+            },
+            "minItems": 0
+          },
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "apply_reason": {
+            "type": "string",
+            "const": "stale_candidate"
+          },
+          "after_intervening_inverse_revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "apply_again_reason": {
+            "type": "string",
+            "const": "stale_candidate"
+          },
+          "atomic": {
+            "type": "string",
+            "const": "entire_current_envelope_unchanged"
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "enumeration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "catalog_ids",
+        "boards",
+        "cells",
+        "directions",
+        "frames",
+        "interior_rule",
+        "seam_rules",
+        "other_exit",
+        "neighbor_rule",
+        "legacy_cross_axis_boards",
+        "native_result",
+        "godot_result"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "catalog_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 5,
+          "maxItems": 5
+        },
+        "boards": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "minItems": 1
+        },
+        "cells": {
+          "type": "string",
+          "const": "all canonical cells"
+        },
+        "directions": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "frames": {
+          "type": "string",
+          "const": "all 8 signed permutations"
+        },
+        "interior_rule": {
+          "type": "string",
+          "minLength": 1
+        },
+        "seam_rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "catalog_id",
+              "axis",
+              "target",
+              "frame"
+            ],
+            "properties": {
+              "catalog_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "axis": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "target": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "frame": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "permutation",
+                  "signs"
+                ],
+                "properties": {
+                  "permutation": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  },
+                  "signs": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "enum": [
+                        -1,
+                        1
+                      ]
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                }
+              }
+            }
+          },
+          "minItems": 0
+        },
+        "other_exit": {
+          "type": "string",
+          "const": "blocked/unconnected_boundary"
+        },
+        "neighbor_rule": {
+          "type": "string",
+          "minLength": 1
+        },
+        "legacy_cross_axis_boards": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "minItems": 0
+        },
+        "native_result": {
+          "type": "string",
+          "const": "not_run"
+        },
+        "godot_result": {
+          "type": "string",
+          "const": "not_run"
+        }
+      }
+    }
+  }
+}

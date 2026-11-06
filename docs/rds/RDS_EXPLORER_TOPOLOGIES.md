@@ -171,6 +171,12 @@ Define identities, normalization, compatibility aliases, cross-references and ow
 
 ### 7.2 Versioned catalog-data contract
 
+The subordinate design is `docs/architecture/explorer_topology_catalog_certification_contract.md`;
+its versioned catalog, quotient evidence and transport specifications live under
+`tests/fixtures/explorer_topology/`. The bounded nonterminal transfer package is
+`docs/architecture/explorer_topology_t2_transfer_preparation.md`. Independent
+review and explicit T1 acceptance remain required.
+
 Define a **declarative schema**, independent of Godot gallery code, containing:
 
 - Stable preset ID, dimension, label, family, explanation and ordering.
@@ -195,7 +201,8 @@ T1 defines the independent certification fixture format and promotion rules, not
 The subordinate T1 piece-state/frame/action/inverse and candidate lifecycle design is
 `docs/architecture/explorer_topology_piece_transport_contract.md`. It specifies
 exact transport examples and bounded rotation support without implementing or
-transferring runtime authority. Catalog and certification remain separate T1 work.
+transferring runtime authority. Catalog and certification have their separate
+T1 design owner named in §7.2.
 
 T1 must specify the input, result/error, identity and state-transition contracts for:
 

@@ -1,0 +1,423 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tet4d.local/schema/explorer_topology_quotients_v1.schema.json",
+  "title": "Tet4D Explorer topology quotients v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "schema_version",
+    "domain",
+    "comparison_constructions",
+    "cases"
+  ],
+  "properties": {
+    "contract": {
+      "type": "string",
+      "const": "square-quotient-evidence/1"
+    },
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "domain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "vertices",
+        "edges",
+        "face_word"
+      ],
+      "properties": {
+        "vertices": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "endpoints"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "endpoints": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "face_word": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 4,
+          "maxItems": 4
+        }
+      }
+    },
+    "comparison_constructions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "recipe",
+          "construction_id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "recipe": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "schema",
+              "schema_version",
+              "dimension",
+              "domain",
+              "operator_version",
+              "parameters",
+              "gluings"
+            ],
+            "properties": {
+              "schema": {
+                "type": "string",
+                "const": "tet4d.square_quotient"
+              },
+              "schema_version": {
+                "type": "integer",
+                "const": 1
+              },
+              "dimension": {
+                "type": "integer",
+                "const": 2
+              },
+              "domain": {
+                "type": "string",
+                "const": "unit_square"
+              },
+              "operator_version": {
+                "type": "integer",
+                "const": 1
+              },
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [],
+                "properties": {}
+              },
+              "gluings": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "source",
+                    "target",
+                    "transform"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "source": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "axis",
+                        "side"
+                      ],
+                      "properties": {
+                        "axis": {
+                          "enum": [
+                            "x",
+                            "y"
+                          ]
+                        },
+                        "side": {
+                          "enum": [
+                            "-",
+                            "+"
+                          ]
+                        }
+                      }
+                    },
+                    "target": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "axis",
+                        "side"
+                      ],
+                      "properties": {
+                        "axis": {
+                          "enum": [
+                            "x",
+                            "y"
+                          ]
+                        },
+                        "side": {
+                          "enum": [
+                            "-",
+                            "+"
+                          ]
+                        }
+                      }
+                    },
+                    "transform": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "permutation",
+                        "signs"
+                      ],
+                      "properties": {
+                        "permutation": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "const": 0
+                          },
+                          "minItems": 1,
+                          "maxItems": 1
+                        },
+                        "signs": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "enum": [
+                              -1,
+                              1
+                            ]
+                          },
+                          "minItems": 1,
+                          "maxItems": 1
+                        }
+                      }
+                    }
+                  }
+                },
+                "minItems": 0,
+                "maxItems": 2
+              }
+            }
+          },
+          "construction_id": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "minItems": 0
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "construction_id",
+          "expected",
+          "derived_space_class_id",
+          "assertions_status",
+          "review",
+          "derivation",
+          "limitations"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "construction_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "face_count",
+              "edge_classes",
+              "vertex_classes",
+              "vertex_links",
+              "boundary_cycles",
+              "orientable",
+              "euler_characteristic",
+              "compact",
+              "connected"
+            ],
+            "properties": {
+              "face_count": {
+                "type": "integer",
+                "const": 1
+              },
+              "edge_classes": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                },
+                "minItems": 1
+              },
+              "vertex_classes": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                },
+                "minItems": 1
+              },
+              "vertex_links": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "corners",
+                    "kind",
+                    "degrees"
+                  ],
+                  "properties": {
+                    "corners": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "minItems": 1
+                    },
+                    "kind": {
+                      "enum": [
+                        "circle",
+                        "interval"
+                      ]
+                    },
+                    "degrees": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "enum": [
+                          1,
+                          2
+                        ]
+                      },
+                      "minItems": 1
+                    }
+                  }
+                },
+                "minItems": 0
+              },
+              "boundary_cycles": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                },
+                "minItems": 0
+              },
+              "orientable": {
+                "type": "boolean"
+              },
+              "euler_characteristic": {
+                "type": "integer"
+              },
+              "compact": {
+                "type": "boolean"
+              },
+              "connected": {
+                "type": "boolean"
+              }
+            }
+          },
+          "derived_space_class_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "assertions_status": {
+            "enum": [
+              "derived_pending_review",
+              "independently_reviewed"
+            ]
+          },
+          "review": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "status",
+              "reviewer",
+              "reference"
+            ],
+            "properties": {
+              "status": {
+                "enum": [
+                  "pending",
+                  "accepted"
+                ]
+              },
+              "reviewer": {
+                "type": "string"
+              },
+              "reference": {
+                "type": "string"
+              }
+            }
+          },
+          "derivation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 0
+          }
+        }
+      },
+      "minItems": 1
+    }
+  }
+}
