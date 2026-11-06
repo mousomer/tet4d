@@ -63,4 +63,8 @@ def build_checkout(root: Path) -> Path:
         target = root / adapter["path"]
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
+    # ...and its pack-managed no-polling hook bindings (checked by gov check).
+    for name in (".claude/settings.json", ".codex/hooks.json"):
+        (root / name).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(ROOT / name, root / name)
     return root
