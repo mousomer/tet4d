@@ -493,6 +493,61 @@
           }
         ]
       }
+    },
+    {
+      "id": "torus_2x3",
+      "catalog_id": "torus_2d",
+      "construction_id": "square-quotient-v1:sha256:8b97a9c31a18d0479a776942c68120c6b70a93c72a6ed1327755969840a3cf91",
+      "profile_id": "topology-v1:sha256:b1a750eb7958e981ad40d063c53634e5b26ff8956980b7bfa2b5ed15007b7d50",
+      "payload": {
+        "schema": "tet4d.topology_contract",
+        "schema_version": 1,
+        "dimension": 2,
+        "board_dimensions": [
+          2,
+          3
+        ],
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {
+              "axis": "x",
+              "side": "-"
+            },
+            "target": {
+              "axis": "x",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                1
+              ]
+            }
+          },
+          {
+            "id": "seam_001",
+            "source": {
+              "axis": "y",
+              "side": "-"
+            },
+            "target": {
+              "axis": "y",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                1
+              ]
+            }
+          }
+        ]
+      }
     }
   ],
   "states": [
@@ -1852,6 +1907,98 @@
       "initial_state_ref": "mobius_singleton",
       "undo": [],
       "trace": []
+    },
+    {
+      "id": "rotate_collision",
+      "profile_ref": "torus_2x3",
+      "version": "explorer-piece-transport/1",
+      "object_key": {
+        "namespace": "00000000000000000000000000000001",
+        "ordinal": 22
+      },
+      "rest_cells": [
+        {
+          "id": 0,
+          "coordinate": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": 1,
+          "coordinate": [
+            0,
+            1
+          ]
+        },
+        {
+          "id": 2,
+          "coordinate": [
+            0,
+            2
+          ]
+        }
+      ],
+      "cells": [
+        {
+          "id": 0,
+          "domain": 0,
+          "coordinate": [
+            0,
+            0
+          ],
+          "frame": {
+            "permutation": [
+              0,
+              1
+            ],
+            "signs": [
+              1,
+              1
+            ]
+          }
+        },
+        {
+          "id": 1,
+          "domain": 0,
+          "coordinate": [
+            0,
+            1
+          ],
+          "frame": {
+            "permutation": [
+              0,
+              1
+            ],
+            "signs": [
+              1,
+              1
+            ]
+          }
+        },
+        {
+          "id": 2,
+          "domain": 0,
+          "coordinate": [
+            0,
+            2
+          ],
+          "frame": {
+            "permutation": [
+              0,
+              1
+            ],
+            "signs": [
+              1,
+              1
+            ]
+          }
+        }
+      ],
+      "revision": 7,
+      "initial_state_ref": "rotate_collision",
+      "undo": [],
+      "trace": []
     }
   ],
   "cases": [
@@ -2523,7 +2670,7 @@
           "resolution_status": "resolved"
         }
       ],
-      "classification": "cellwise_deformation",
+      "classification": "plain_translation",
       "blocked_reason": "",
       "candidate": {
         "present": true,
@@ -2580,7 +2727,7 @@
         "revision_delta": 2
       },
       "atomic": "single_envelope_swap",
-      "legacy_comparison": "preserved_unchanged",
+      "legacy_comparison": "historical_comparison_only",
       "native_result": "not_run",
       "godot_result": "not_run",
       "expectation_basis": "session2_contract",
@@ -3109,7 +3256,7 @@
           "resolution_status": "resolved"
         }
       ],
-      "classification": "cellwise_deformation",
+      "classification": "plain_translation",
       "blocked_reason": "",
       "candidate": {
         "present": true,
@@ -3859,7 +4006,7 @@
           "resolution_status": "resolved"
         }
       ],
-      "classification": "cellwise_deformation",
+      "classification": "rigid_transform",
       "blocked_reason": "",
       "candidate": {
         "present": true,
@@ -3958,14 +4105,14 @@
         "kind": "rotate",
         "axis_a": 0,
         "axis_b": 1,
-        "quarter_turn": -1
+        "quarter_turn": 1
       },
       "per_cell": [
         {
           "id": 0,
           "target": [
-            2,
-            1
+            3,
+            2
           ],
           "frame": {
             "permutation": [
@@ -3973,8 +4120,8 @@
               0
             ],
             "signs": [
-              1,
-              1
+              -1,
+              -1
             ]
           },
           "transport": {
@@ -3983,8 +4130,8 @@
               0
             ],
             "signs": [
-              1,
-              -1
+              -1,
+              1
             ]
           },
           "crossing": [],
@@ -3994,8 +4141,8 @@
         {
           "id": 1,
           "target": [
-            3,
-            1
+            2,
+            2
           ],
           "frame": {
             "permutation": [
@@ -4003,8 +4150,8 @@
               0
             ],
             "signs": [
-              1,
-              1
+              -1,
+              -1
             ]
           },
           "transport": {
@@ -4013,8 +4160,8 @@
               0
             ],
             "signs": [
-              1,
-              -1
+              -1,
+              1
             ]
           },
           "crossing": [],
@@ -4031,8 +4178,8 @@
             "id": 0,
             "domain": 0,
             "coordinate": [
-              2,
-              1
+              3,
+              2
             ],
             "frame": {
               "permutation": [
@@ -4040,8 +4187,8 @@
                 0
               ],
               "signs": [
-                1,
-                1
+                -1,
+                -1
               ]
             }
           },
@@ -4049,8 +4196,8 @@
             "id": 1,
             "domain": 0,
             "coordinate": [
-              3,
-              1
+              2,
+              2
             ],
             "frame": {
               "permutation": [
@@ -4058,8 +4205,8 @@
                 0
               ],
               "signs": [
-                1,
-                1
+                -1,
+                -1
               ]
             }
           }
@@ -4074,7 +4221,7 @@
           "kind": "rotate",
           "axis_a": 0,
           "axis_b": 1,
-          "quarter_turn": -1
+          "quarter_turn": 1
         },
         "expected_recovery": "exact_source_semantic_state",
         "revision_delta": 2
@@ -4099,16 +4246,16 @@
         ],
         "pivot_doubled": [
           6,
-          2
+          4
         ],
         "rotated_lift": [
           [
-            2,
-            1
+            3,
+            2
           ],
           [
-            3,
-            1
+            2,
+            2
           ]
         ]
       }
@@ -4187,7 +4334,7 @@
         "kind": "rotate",
         "axis_a": 0,
         "axis_b": 1,
-        "quarter_turn": 1
+        "quarter_turn": -1
       },
       "per_cell": [
         {
@@ -4243,7 +4390,32 @@
       "expectation_basis": "session2_contract",
       "native_owner": "native/tet4d_core/tests/query_core_tests.cpp",
       "godot_owner": "godot/Tet4D.Godot/tests/test_topology_transport_boundary.gd",
-      "rotation_evidence": {}
+      "rotation_evidence": {
+        "developed": [
+          [
+            3,
+            2
+          ],
+          [
+            3,
+            1
+          ]
+        ],
+        "pivot_doubled": [
+          6,
+          4
+        ],
+        "rotated_lift": [
+          [
+            3,
+            2
+          ],
+          [
+            4,
+            2
+          ]
+        ]
+      }
     },
     {
       "id": "E8_proposal",
@@ -4671,6 +4843,165 @@
       "native_owner": "native/tet4d_core/tests/query_core_tests.cpp",
       "godot_owner": "godot/Tet4D.Godot/tests/test_topology_transport_boundary.gd",
       "rotation_evidence": {}
+    },
+    {
+      "id": "E7_rotation_collision",
+      "example": "E7",
+      "source_state_ref": "rotate_collision",
+      "action": {
+        "kind": "rotate",
+        "axis_a": 0,
+        "axis_b": 1,
+        "quarter_turn": 1
+      },
+      "per_cell": [
+        {
+          "id": 0,
+          "target": [
+            1,
+            1
+          ],
+          "frame": {
+            "permutation": [
+              1,
+              0
+            ],
+            "signs": [
+              -1,
+              1
+            ]
+          },
+          "transport": {
+            "permutation": [
+              1,
+              0
+            ],
+            "signs": [
+              -1,
+              1
+            ]
+          },
+          "crossing": [],
+          "reverse_step": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "id": 1,
+          "target": [
+            0,
+            1
+          ],
+          "frame": {
+            "permutation": [
+              1,
+              0
+            ],
+            "signs": [
+              -1,
+              1
+            ]
+          },
+          "transport": {
+            "permutation": [
+              1,
+              0
+            ],
+            "signs": [
+              -1,
+              1
+            ]
+          },
+          "crossing": [],
+          "reverse_step": [],
+          "resolution_status": "resolved"
+        },
+        {
+          "id": 2,
+          "target": [
+            1,
+            1
+          ],
+          "frame": {
+            "permutation": [
+              1,
+              0
+            ],
+            "signs": [
+              -1,
+              1
+            ]
+          },
+          "transport": {
+            "permutation": [
+              1,
+              0
+            ],
+            "signs": [
+              -1,
+              1
+            ]
+          },
+          "crossing": [],
+          "reverse_step": [],
+          "resolution_status": "resolved"
+        }
+      ],
+      "classification": "blocked",
+      "blocked_reason": "destination_collision",
+      "candidate": {
+        "present": false,
+        "cells": [],
+        "inherit": "source_semantic_fields"
+      },
+      "inverse": {
+        "present": false,
+        "version": "",
+        "source_ref": "",
+        "forward_action": {},
+        "expected_recovery": "none",
+        "revision_delta": 0
+      },
+      "atomic": "entire_envelope_unchanged",
+      "legacy_comparison": "missing_new_conformance",
+      "native_result": "not_run",
+      "godot_result": "not_run",
+      "expectation_basis": "session2_contract",
+      "native_owner": "native/tet4d_core/tests/query_core_tests.cpp",
+      "godot_owner": "godot/Tet4D.Godot/tests/test_topology_transport_boundary.gd",
+      "rotation_evidence": {
+        "developed": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "pivot_doubled": [
+          0,
+          2
+        ],
+        "rotated_lift": [
+          [
+            -1,
+            1
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ]
+      }
     }
   ],
   "negative_cases": [

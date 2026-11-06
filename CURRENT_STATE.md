@@ -17,7 +17,7 @@ phase-dependent work. It is not workflow authority, a CI diary, a completed
 stage archive, a task-contract ledger, or a future programme.
 ## Active Focus
 
-Explorer T1 next requires independent adversarial review of the piece-transport and catalog/certification contracts, fixture reconciliation and explicit T1 acceptance; see `docs/architecture/explorer_topology_t2_transfer_preparation.md`. Native implementation and runtime authority transfer remain unstarted.
+Explorer T1 Correction 4A supplies stable-ID pivot and periodic-classification design evidence. Next: independent correction review, deferred Correction 4B catalog/schema/evidence findings and explicit T1 acceptance; see `docs/architecture/explorer_topology_t2_transfer_preparation.md`. Native implementation and runtime authority transfer remain unstarted.
 Bounded MVP novice acceptance remains pending in `docs/plans/bounded_practice_explorer.md`; unified VIEW helpers and compact Settings/Designer menus remain the baseline.
 
 Machine-readable handoff state. `status` is `active` only on a feature branch
@@ -101,7 +101,7 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 28` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 6.01` (`low`)
+- `tech_debt.score = 6.02` (`low`)
 
 Dominant remaining pressure:
 

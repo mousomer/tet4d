@@ -34,7 +34,10 @@ implementation: `resolve_topology_cell_step_query`, `topology_neighbor_query`,
 seam inversion/frame helpers and `piece_pose_legal_query`. Extend the existing
 `topology_transport.cpp` decoder and `topology_transport_variant.cpp` adapter,
 with checked `tet4d_core_api.cpp` entry/result conversion. Reuse geometry/pivot
-helpers with stable IDs. Do not implement a second resolver or certify a
+helpers with stable IDs and the Explorer-specific lowest-ID centroid tie-break
+(piece contract §9), preserving ordinary native pivot behavior. Carry the
+four-turn/fresh-opposite identities, quotient-aware classification (§7), and
+2×3 torus rotation-collision witness into native conformance. Do not implement a second resolver or certify a
 mathematical class inside transport. `practice_explorer.gd` and the current
 bridge/control-frame mapping remain consumers, not validity owners.
 

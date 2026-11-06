@@ -303,8 +303,16 @@ contract's per-cell rule and are recorded in the fixture, not guessed by a runne
 Evidence fields separately mark `specified`, historical Python comparison,
 independent mathematical calculation, native `not_run` and Godot `not_run`.
 The local checker validates fixtures, IDs, frames, correspondence, collision
-expectations, sequence references and identity digests; it does not execute the
-new movement/commit contract. Future runner names/commands in the transfer
+expectations, sequence references and identity digests. The focused
+`tools/migration/explorer_rotation_contract_evidence.py` checks exact stable-ID
+pivot/development, quarter-turn projection and collision witnesses and §7's
+periodic affine classification. Tests independently exercise fresh opposite
+requests and four-turn identities; reviewed fixture outputs are not generated
+by this helper. These are T1 mathematical checks, not a production piece engine
+or execution of the native movement/commit contract. E3, E7 torus and E10's
+third step use periodic coherence; E7 Möbius uses the ID-0 pivot and separately
+blocks the negative request. E7's 2×3 torus I3 rejects projected collision
+before classification. Runtime result fields remain `not_run`. Future runner names/commands in the transfer
 package are labeled proposed and are not tests claimed to exist.
 
 ## 7. Adversarial containment and review gate

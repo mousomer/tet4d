@@ -12,6 +12,10 @@ from tet4d.engine.topology_explorer.canonical_contract import (
     topology_contract_identity,
 )
 from tet4d.generated.topology_contract_v1 import MAXIMUM_AXIS_LENGTH
+from tools.migration.explorer_rotation_contract_evidence import (
+    check_rotation_fixture,
+    classify_correspondence,
+)
 from tools.migration.square_quotient_evidence import EDGES, analyze_square
 from tools.workspace_governance.validators.core import (
     _schema_issues,
@@ -482,6 +486,20 @@ def _check_case(case: dict, state: dict, profile: dict, root: Path) -> None:
             not case["candidate"]["cells"] and not case["inverse"]["forward_action"],
             "blocked result applies a candidate",
         )
+        require(
+            case["inverse"]
+            == {
+                "present": False,
+                "version": "",
+                "source_ref": "",
+                "forward_action": {},
+                "expected_recovery": "none",
+                "revision_delta": 0,
+            },
+            "blocked result retains inverse data",
+        )
+        if case["action"]["kind"] == "rotate":
+            check_rotation_fixture(case, state, profile["payload"])
         return
     require(
         all(row["resolution_status"] == "resolved" for row in case["per_cell"]),
@@ -519,6 +537,13 @@ def _check_case(case: dict, state: dict, profile: dict, root: Path) -> None:
             ],
         }
         require(composed == target["frame"], "frame composition witness mismatch")
+    if case["action"]["kind"] == "rotate":
+        check_rotation_fixture(case, state, profile["payload"])
+    require(
+        classify_correspondence(state["cells"], rows, profile["payload"])
+        == case["classification"],
+        "affine classification witness mismatch",
+    )
     inv = case["inverse"]
     require(
         inv["version"] == "explorer-piece-inverse/1"
