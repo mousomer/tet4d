@@ -17,7 +17,7 @@ phase-dependent work. It is not workflow authority, a CI diary, a completed
 stage archive, a task-contract ledger, or a future programme.
 ## Active Focus
 
-Explorer T1 Session 2 resumes from `docs/architecture/explorer_topology_t1_contract_inventory.md`; no runtime authority has transferred.
+Explorer T1 Session 3 consumes `docs/architecture/explorer_topology_piece_transport_contract.md` §§13/17/18 for piece semantics and conformance, plus the Session 1 inventory for code ownership. Catalog identities/certification and T1 acceptance remain open; no runtime authority has transferred.
 Bounded MVP novice acceptance remains pending in `docs/plans/bounded_practice_explorer.md`; unified VIEW helpers and compact Settings/Designer menus remain the baseline.
 
 Machine-readable handoff state. `status` is `active` only on a feature branch
