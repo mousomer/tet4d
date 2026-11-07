@@ -59,6 +59,34 @@ can select, are both `BROKEN_REFERENCE`: a declared fact nothing can reach is
 unowned rather than merely unused, and its `consumed` classification cannot be
 demonstrated.
 
+## Completion-based execution
+
+Distribution 1.6.2 / runtime 0.9.2 binds the shared completion policy
+`synchronous-completion-v2` through `tools/workspace_governance/MANIFEST.json`.
+`gov explain execution.completion` returns its requirements, source and content
+hash. Missing or weakened bindings fail pack validation. The canonical policy is
+`tools/workspace_governance/policies/execution.md`; the two shared governance
+skills reference that same owner.
+
+Agents never poll external or asynchronous state: watch and interval modes
+(`gh pr checks --watch`, `gh run watch`), sleep/requery loops and repeated status
+requests are prohibited, and v1's blocking-watch allowance is withdrawn. Tests and
+scripts wait for exit; remote state is observed once (`./gov ci-status N`) and
+only when the declared gate requires it, and `PENDING_EXTERNAL` ends that
+observation until a notification, relevant event or new user instruction.
+
+The pack-managed PreToolUse guard (`tools/workspace_governance/hooks/`) is bound
+in `.claude/settings.json` and `.codex/hooks.json` and blocks prohibited
+invocations before execution; `gov check` fails when either binding is missing or
+altered. Codex runs project hooks only after the owner trusts them (`/hooks`).
+Runtime coverage limits are listed in the kit's execution-completion design.
+
+The contract is distributed independently of optional Harness Observatory.
+Validation proves binding/integrity; synthetic trace tests prove checker behavior.
+Neither proves unobserved agent compliance or enables deferred telemetry.
+Guarded fleet receipts retain preimages; read-only and blocked entries remain
+outside installer scope. Consumer product acceptance requires the full verifier.
+
 ## Environment contract
 
 The Python constraint and dependencies are owned by `pyproject.toml`. The one

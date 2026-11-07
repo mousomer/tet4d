@@ -68,6 +68,7 @@ SUPPORTED_COMMANDS = {
     "sync",
     "env",
     "telemetry",
+    "ci-status",
 }
 PYTHON_APPLICATION_FIELDS = {
     "python_requires",
@@ -1650,6 +1651,9 @@ def validate_pack(root: Path, workspace: dict[str, Any]) -> list[Diagnostic]:
         version = (
             (pack_root / manifest["version_file"]).read_text(encoding="utf-8").strip()
         )
+        from tools.workspace_governance.execution_policy import load_policy
+
+        load_policy(pack_root, manifest)
         actual, files = pack_hash(pack_root)
     except (OSError, ValueError, TypeError, KeyError) as exc:
         return [
@@ -1733,7 +1737,24 @@ def validate_pack(root: Path, workspace: dict[str, Any]) -> list[Diagnostic]:
                 "align the manifest with implemented capabilities",
             )
         ]
-    return []
+    return _hook_adapter_issues(root)
+
+
+def _hook_adapter_issues(root: Path) -> list[Diagnostic]:
+    """The no-polling PreToolUse guard must be bound for every agent runtime."""
+    from tools.workspace_governance import hook_adapters
+
+    return [
+        _diag(
+            "PACK_DRIFT",
+            "execution.enforcement",
+            "shared_pack",
+            [hook_adapters.CLAUDE_PATH, hook_adapters.CODEX_PATH, hook_adapters.GUARD],
+            problem,
+            "reinstall the pack-managed hook adapters through the fleet installer",
+        )
+        for problem in hook_adapters.check(root)
+    ]
 
 
 def _python_specifier(root: Path, project: dict[str, Any]) -> tuple[str, str]:

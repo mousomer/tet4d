@@ -798,3 +798,27 @@ def test_reported_packaging_overlap_keeps_packaging_and_godot() -> None:
         "packaging_and_release",
         "godot_product_shell",
     }
+
+
+def test_shared_completion_policy_is_resolved_with_pack_provenance() -> None:
+    from tools.workspace_governance.execution_policy import POLICY_ID, REQUIRED
+
+    resolved = GovernanceResolver.for_root(ROOT).resolve()
+    completion = resolved["entries"]["execution.completion"]
+    assert completion["owner"] == "shared_pack"
+    assert completion["source"] == "tools/workspace_governance/policies/execution.json"
+    assert completion["value"]["id"] == POLICY_ID
+    assert completion["value"]["requirements"] == REQUIRED
+    assert len(completion["value"]["sha256"]) == 64
+
+
+def test_relocking_cannot_waive_shared_completion_policy(checkout: Path) -> None:
+    from tools.workspace_governance.cli.gov import _sync
+
+    policy = checkout / "tools/workspace_governance/policies/execution.json"
+    payload = json.loads(policy.read_text())
+    payload["requirements"]["autonomous_polling"] = "allowed"
+    policy.write_text(json.dumps(payload))
+    resolver = GovernanceResolver.for_root(checkout)
+    _sync(checkout, resolver)
+    assert "PACK_DRIFT" in codes(resolver.check())

@@ -26,38 +26,38 @@
   "profile": "python",
   "release": {
     "name": "workspace/policy-kit",
-    "revision": "v0.7-harness-repair-1",
-    "version": "1.4.0"
+    "revision": "v0.9-no-autonomous-polling-3",
+    "version": "1.6.2"
   },
-  "release_manifest_sha256": "f4500302c2cee58966055cfc906f146b51f841d3807c5a293870322b615a9373",
+  "release_manifest_sha256": "1899de856edd23996220ae2153634e2862c2cfe8c16b740f502f5b50e78543fb",
   "schema_version": 1,
   "skill_adapters": [
     {
       "name": "governance-context",
       "path": ".agents/skills/governance-context/SKILL.md",
-      "release_manifest_sha256": "f4500302c2cee58966055cfc906f146b51f841d3807c5a293870322b615a9373",
-      "sha256": "013a4a955f5272545c9d000b0514fa10458dc1a31314ab4d3dfd1f6f2bfea9f9",
+      "release_manifest_sha256": "1899de856edd23996220ae2153634e2862c2cfe8c16b740f502f5b50e78543fb",
+      "sha256": "f1c6a3b347f9f94bc32e8d82f3ac018141d4a084489e9fb2dbd2094631a55ecc",
       "target": "tools/workspace_governance/skills/governance-context/SKILL.md"
     },
     {
       "name": "governance-context",
       "path": ".claude/skills/governance-context/SKILL.md",
-      "release_manifest_sha256": "f4500302c2cee58966055cfc906f146b51f841d3807c5a293870322b615a9373",
-      "sha256": "013a4a955f5272545c9d000b0514fa10458dc1a31314ab4d3dfd1f6f2bfea9f9",
+      "release_manifest_sha256": "1899de856edd23996220ae2153634e2862c2cfe8c16b740f502f5b50e78543fb",
+      "sha256": "f1c6a3b347f9f94bc32e8d82f3ac018141d4a084489e9fb2dbd2094631a55ecc",
       "target": "tools/workspace_governance/skills/governance-context/SKILL.md"
     },
     {
       "name": "governance-maintenance",
       "path": ".agents/skills/governance-maintenance/SKILL.md",
-      "release_manifest_sha256": "f4500302c2cee58966055cfc906f146b51f841d3807c5a293870322b615a9373",
-      "sha256": "fd416bb129ee2a2c758537a238adf09a0615694c951d4ced029fa5bab76af10b",
+      "release_manifest_sha256": "1899de856edd23996220ae2153634e2862c2cfe8c16b740f502f5b50e78543fb",
+      "sha256": "e7bdc0a09bc90bcd6ef2b2a9b6add03a68bb429208d86dd3dab03e7374a4e03e",
       "target": "tools/workspace_governance/skills/governance-maintenance/SKILL.md"
     },
     {
       "name": "governance-maintenance",
       "path": ".claude/skills/governance-maintenance/SKILL.md",
-      "release_manifest_sha256": "f4500302c2cee58966055cfc906f146b51f841d3807c5a293870322b615a9373",
-      "sha256": "fd416bb129ee2a2c758537a238adf09a0615694c951d4ced029fa5bab76af10b",
+      "release_manifest_sha256": "1899de856edd23996220ae2153634e2862c2cfe8c16b740f502f5b50e78543fb",
+      "sha256": "e7bdc0a09bc90bcd6ef2b2a9b6add03a68bb429208d86dd3dab03e7374a4e03e",
       "target": "tools/workspace_governance/skills/governance-maintenance/SKILL.md"
     }
   ],

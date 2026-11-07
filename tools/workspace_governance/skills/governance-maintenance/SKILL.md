@@ -75,3 +75,7 @@ Assess context cost with observed injected metadata, loaded skill bodies,
 resolver output and bounded/full/repeated reads alongside task outcomes. Preserve
 exposure gaps and unknown attribution; a smaller file or a passing gate does not
 prove savings. Keep project analysis separate from generic capture/reconstruction.
+
+## Completion-based execution
+
+Resolve `execution.completion` and follow the shared [execution policy](../../policies/execution.md). Never poll external or asynchronous state: no watch or interval modes (`gh pr checks --watch`, `gh run watch`, `watch`), no sleep or retry loops, no repeated status requests. Wait for remote CI only when the declared gate requires it. Make one synchronous status observation (`./gov ci-status N` or one `gh ... --json` read); if it is pending, report `PENDING_EXTERNAL` and stop until a host notification, relevant event or new user instruction. Run local tests and scripts to exit and resume the same handle when a tool yields. Await all independent children and preserve their failures. Pending, unknown and failed results are never verification.

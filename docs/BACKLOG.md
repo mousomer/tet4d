@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-11-03
+Updated: 2026-11-06
 Scope: active work, explicit deferrals, and near-term acceptance boundaries.
 
 Completed chronology is recoverable from Git, merged PRs, CI, and
@@ -9,6 +9,9 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 `docs/history/backlog_archive_2026-07-30.md`.
 
 ## Current Authority
+
+- CI repair: observe settled Designer geometry and retry interrupted macOS
+  asset transfers; full Godot and macOS packaging evidence remain merge gates.
 
 - Product programme: `docs/plans/professional_godot_game_programme.md`
 - Spatial-learning study plan: `docs/plans/spatial_intuition_research_plan.md`
@@ -24,6 +27,11 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   facts)
 
 ## Active Work
+
+- [x] Adopt no-autonomous-polling completion policy (distribution 1.6.2 / runtime 0.9.2): `synchronous-completion-v2`, pack-managed Claude/Codex PreToolUse guard, `gov ci-status`, local vs remote evidence separation.
+- [ ] Owner: trust the Codex project hook (`/hooks`) so Codex enforces the guard; untrusted hooks are skipped.
+
+- [x] Adopt shared completion policy (distribution 1.5.0 / runtime 0.8.0): manifest binding, resolver provenance, canonical skills and regression protection; preserve fleet exclusions and deferred telemetry.
 
 - [x] Correct the aggregate input-map regression to validate declared Shift modifiers and reject plain-key aliases for Explorer view actions.
 - [x] Repair Windows release interpreter binding: explicit Bash environment export and setup-python `PYTHON_BIN` for the initial native build, covered by the packaging contract test.

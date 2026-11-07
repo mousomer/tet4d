@@ -1,0 +1,27 @@
+{
+  "schema_version": 2,
+  "id": "synchronous-completion-v2",
+  "supersedes": "synchronous-completion-v1",
+  "scope": "all_work_types_projects_roles_and_execution_modes",
+  "requirements": {
+    "local_completion": "await_exit",
+    "remote_completion": "single_observation_or_notification",
+    "autonomous_polling": "forbidden",
+    "tool_watch_modes": "forbidden",
+    "synthetic_waiting": "forbidden",
+    "remote_wait": "only_when_declared_gate_requires",
+    "pending_external": "terminal_for_current_observation",
+    "reobservation": "requires_notification_event_or_user_instruction",
+    "non_success_states": "never_verification",
+    "yield_handling": "resume_same_local_invocation",
+    "parallel_completion": "await_all_preserve_failures",
+    "unknown_outcome": "never_success",
+    "recovery": "reconnect_same_identity_no_automatic_redispatch",
+    "undetermined_remote_invocation": "deny",
+    "enforcement": "pretooluse_shared_command_policy"
+  },
+  "codes": {
+    "violation": "NO_AUTONOMOUS_POLLING",
+    "pending": "PENDING_EXTERNAL"
+  }
+}
