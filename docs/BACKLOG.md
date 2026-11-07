@@ -10,6 +10,9 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ## Current Authority
 
+- CI repair: observe settled Designer geometry and retry interrupted macOS
+  asset transfers; full Godot and macOS packaging evidence remain merge gates.
+
 - Product programme: `docs/plans/professional_godot_game_programme.md`
 - Spatial-learning study plan: `docs/plans/spatial_intuition_research_plan.md`
 - Product behaviour: relevant `docs/rds/*`
