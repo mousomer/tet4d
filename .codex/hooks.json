@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh -c 'r=$(git rev-parse --show-toplevel 2>/dev/null) || { echo \"NO_AUTONOMOUS_POLLING (GUARD_FAILURE): checkout root unavailable\" >&2; exit 2; }; \"$r/tools/workspace_governance/hooks/no_polling.sh\" codex || exit 2'",
+            "command": "sh -c 'r=$(git rev-parse --show-toplevel 2>/dev/null) || { echo \"NO_AUTONOMOUS_POLLING (GUARD_FAILURE): checkout root unavailable\" >&2; exit 2; }; g=\"$r/tools/workspace_governance/hooks/no_polling.sh\"; [ -x \"$g\" ] || { c=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null) && g=\"${c%/.git}/tools/workspace_governance/hooks/no_polling.sh\"; }; \"$g\" codex || exit 2'",
             "timeout": 30
           }
         ]
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh -c 'r=$(git rev-parse --show-toplevel 2>/dev/null) || { echo \"NO_AUTONOMOUS_POLLING (GUARD_FAILURE): checkout root unavailable\" >&2; exit 0; }; \"$r/tools/workspace_governance/hooks/no_polling.sh\" codex prompt || exit 0'",
+            "command": "sh -c 'r=$(git rev-parse --show-toplevel 2>/dev/null) || { echo \"NO_AUTONOMOUS_POLLING (GUARD_FAILURE): checkout root unavailable\" >&2; exit 0; }; g=\"$r/tools/workspace_governance/hooks/no_polling.sh\"; [ -x \"$g\" ] || { c=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null) && g=\"${c%/.git}/tools/workspace_governance/hooks/no_polling.sh\"; }; \"$g\" codex prompt || exit 0'",
             "timeout": 30
           }
         ]

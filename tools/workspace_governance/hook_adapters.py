@@ -18,8 +18,17 @@ CLAUDE_PATH = ".claude/settings.json"
 CODEX_PATH = ".codex/hooks.json"
 CLAUDE_GUARD = f'"$CLAUDE_PROJECT_DIR"/{GUARD}'
 CODEX_ROOT = (
-    'r=$(git rev-parse --show-toplevel 2>/dev/null) || { echo "NO_AUTONOMOUS_POLLING '
-    '(GUARD_FAILURE): checkout root unavailable" >&2; exit %s; }; '
+    (
+        'r=$(git rev-parse --show-toplevel 2>/dev/null) || { echo "NO_AUTONOMOUS_POLLING '
+        '(GUARD_FAILURE): checkout root unavailable" >&2; exit %s; }; '
+        # Codex 0.153 reads a linked worktree's .codex/ from the main checkout, so a
+        # worktree on an older commit may lack the guard: fall back to the main one.
+        f'g="$r/{GUARD}"; [ -x "$g" ] || {{ '
+        "c=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null) "
+        f'&& g="${{c%/.git}}/{GUARD}"; }}; '
+    )
+    .replace("%", "%%")
+    .replace("exit %%s", "exit %s")
 )
 
 
@@ -48,8 +57,8 @@ def claude_entries() -> dict[str, dict[str, Any]]:
 
 
 def codex_entries() -> dict[str, dict[str, Any]]:
-    tool = CODEX_ROOT % 2 + f'"$r/{GUARD}" codex || exit 2'
-    prompt = CODEX_ROOT % 0 + f'"$r/{GUARD}" codex prompt || exit 0'
+    tool = CODEX_ROOT % 2 + '"$g" codex || exit 2'
+    prompt = CODEX_ROOT % 0 + '"$g" codex prompt || exit 0'
     return {
         "PreToolUse": _entry("Bash|mcp__.*", f"sh -c '{_squote(tool)}'"),
         "UserPromptSubmit": _entry(None, f"sh -c '{_squote(prompt)}'"),

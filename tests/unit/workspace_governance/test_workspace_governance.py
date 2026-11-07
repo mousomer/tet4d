@@ -817,7 +817,7 @@ def test_relocking_cannot_waive_shared_completion_policy(checkout: Path) -> None
 
     policy = checkout / "tools/workspace_governance/policies/execution.json"
     payload = json.loads(policy.read_text())
-    payload["requirements"]["agent_status_polling"] = "allowed"
+    payload["requirements"]["autonomous_polling"] = "allowed"
     policy.write_text(json.dumps(payload))
     resolver = GovernanceResolver.for_root(checkout)
     _sync(checkout, resolver)

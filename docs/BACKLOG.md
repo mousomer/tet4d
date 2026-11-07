@@ -25,7 +25,7 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ## Active Work
 
-- [x] Adopt no-autonomous-polling completion policy (distribution 1.6.1 / runtime 0.9.1): `synchronous-completion-v2`, pack-managed Claude/Codex PreToolUse guard, `gov ci-status`, local vs remote evidence separation.
+- [x] Adopt no-autonomous-polling completion policy (distribution 1.6.2 / runtime 0.9.2): `synchronous-completion-v2`, pack-managed Claude/Codex PreToolUse guard, `gov ci-status`, local vs remote evidence separation.
 - [ ] Owner: trust the Codex project hook (`/hooks`) so Codex enforces the guard; untrusted hooks are skipped.
 
 - [x] Adopt shared completion policy (distribution 1.5.0 / runtime 0.8.0): manifest binding, resolver provenance, canonical skills and regression protection; preserve fleet exclusions and deferred telemetry.

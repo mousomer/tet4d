@@ -34,9 +34,6 @@ def _deadline(*_):
     os._exit(0 if PROMPT_MODE else 2)
 
 
-signal.signal(signal.SIGALRM, _deadline)
-signal.alarm(ALARM_SECONDS)
-
 ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -288,6 +285,9 @@ def main(argv: list[str]) -> int:
 
 
 if __name__ == "__main__":
+    # Armed only when run as the hook, never on import (tests import helpers).
+    signal.signal(signal.SIGALRM, _deadline)
+    signal.alarm(ALARM_SECONDS)
     try:
         sys.exit(main(sys.argv))
     except Exception as exc:  # noqa: BLE001 - every guard failure must block

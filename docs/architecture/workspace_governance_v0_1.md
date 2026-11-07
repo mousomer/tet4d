@@ -61,7 +61,7 @@ demonstrated.
 
 ## Completion-based execution
 
-Distribution 1.6.1 / runtime 0.9.1 binds the shared completion policy
+Distribution 1.6.2 / runtime 0.9.2 binds the shared completion policy
 `synchronous-completion-v2` through `tools/workspace_governance/MANIFEST.json`.
 `gov explain execution.completion` returns its requirements, source and content
 hash. Missing or weakened bindings fail pack validation. The canonical policy is

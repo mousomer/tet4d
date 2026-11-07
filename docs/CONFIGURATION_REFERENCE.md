@@ -308,7 +308,7 @@ Parameters:
 - `skill_adapters[]`: array[`object`]
 - `skill_adapters[].name`: varies (`string`); examples: `"governance-context"`, `"governance-maintenance"`
 - `skill_adapters[].path`: varies (`string`); examples: `".agents/skills/governance-context/SKILL.md"`, `".claude/skills/governance-context/SKILL.md"`, `".agents/skills/governance-maintenance/SKILL.md"`
-- `skill_adapters[].release_manifest_sha256`: varies (`string`); examples: `"08d4fd3e9e952dac587d0c42e8b5328e7e2e1bbea83332e7db23fd0c9f1de393"`
+- `skill_adapters[].release_manifest_sha256`: varies (`string`); examples: `"1899de856edd23996220ae2153634e2862c2cfe8c16b740f502f5b50e78543fb"`
 - `skill_adapters[].sha256`: varies (`string`); examples: `"f1c6a3b347f9f94bc32e8d82f3ac018141d4a084489e9fb2dbd2094631a55ecc"`, `"e7bdc0a09bc90bcd6ef2b2a9b6add03a68bb429208d86dd3dab03e7374a4e03e"`
 - `skill_adapters[].target`: varies (`string`); examples: `"tools/workspace_governance/skills/governance-context/SKILL.md"`, `"tools/workspace_governance/skills/governance-maintenance/SKILL.md"`
 - `verification.canonical.authority_ref`: `"legacy-policy-pack"` (`string`)
@@ -321,14 +321,14 @@ Parameters:
 ### `config/governance/workspace.lock.json`
 Top-level keys: `content_sha256`, `files`, `lock_algorithm`, `pack_name`, `pack_path`, `revision`, `schema_version`, `version`
 Parameters:
-- `content_sha256`: `"c4a9214d984a044e6a945d875ab295120ee023f892806443edfe47b7136f594a"` (`string`)
+- `content_sha256`: `"6ce1b9aa45203a43dc0f43a283c66a6775c1f89561db4e1ab5b5d272beb91a6d"` (`string`)
 - `files[]`: array[`string`]; examples: `".ruff.toml"`, `"MANIFEST.json"`, `"VERSION"`
 - `lock_algorithm`: `"sha256-path-and-content-v1"` (`string`)
 - `pack_name`: `"workspace-governance"` (`string`)
 - `pack_path`: `"tools/workspace_governance"` (`string`)
-- `revision`: `"v0.9-no-autonomous-polling-2"` (`string`)
+- `revision`: `"v0.9-no-autonomous-polling-3"` (`string`)
 - `schema_version`: `1` (`int`)
-- `version`: `"0.9.1"` (`string`)
+- `version`: `"0.9.2"` (`string`)
 
 ### `config/help/action_map.json`
 Top-level keys: `action_topics`, `default_topic`, `version`
