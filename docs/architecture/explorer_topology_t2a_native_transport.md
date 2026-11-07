@@ -16,6 +16,11 @@ terminal transfer records are unchanged.
 
 ## Production ownership
 
+The extension build enables C++ exceptions through godot-cpp's supported
+`disable_exceptions=false` option on every target. The core catches allocation
+and length failures as `resource_limit` before publishing a replacement envelope;
+these failures must not unwind through the Godot adapter boundary.
+
 `native/tet4d_core/include/tet4d_core/explorer_piece.hpp` declares value-owned
 `ExplorerPiece`, `PieceInverse`, `PieceCandidate`, `PieceEnvelope` and
 `ExplorerPieceRuntime`. The implementation responsibilities are:

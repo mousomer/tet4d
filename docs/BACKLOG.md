@@ -10,6 +10,9 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ## Current Authority
 
+- T2A CI repair: enable extension exception support to preserve allocation-failure
+  handling; native, parity and platform evidence must pass before merge.
+
 - Product programme: `docs/plans/professional_godot_game_programme.md`
 - Spatial-learning study plan: `docs/plans/spatial_intuition_research_plan.md`
 - Product behaviour: relevant `docs/rds/*`
