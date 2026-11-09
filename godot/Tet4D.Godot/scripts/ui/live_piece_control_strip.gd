@@ -207,6 +207,7 @@ func _rebuild() -> void:
 		_groups_box.remove_child(child)
 		child.queue_free()
 	_glyphs.clear()
+	_resort_host.call_deferred()
 	if _layout in [LAYOUT_RAIL, LAYOUT_WIDE]:
 		_rebuild_rail()
 		rebuilt.emit()
@@ -234,6 +235,17 @@ func _rebuild() -> void:
 		_groups_box.add_child(section)
 
 	rebuilt.emit()
+
+
+# New rows measure at the default theme until the host styles them, so a rail
+# or wide legend (no inner scroll) briefly reports a far taller minimum and
+# grows to it. Styling restores the last reported minimum within the same
+# frame, so no minimum_size_changed fires and the host would never re-sort,
+# leaving the strip overhanging its module. Re-sort after the transient.
+func _resort_host() -> void:
+	var host := get_parent() as Container
+	if host != null:
+		host.queue_sort()
 
 
 # Measured on-screen directions from the app: movement intents and local
