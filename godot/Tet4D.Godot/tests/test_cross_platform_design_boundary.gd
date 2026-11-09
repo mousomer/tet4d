@@ -90,6 +90,32 @@ func _test_safe_area_insets() -> Array:
 	var canvas := SafeAreaInsetsScript.to_canvas(notch, Vector2i(4112, 2580), Vector2(1281, 804))
 	if canvas != {"left": 0, "top": 25, "right": 0, "bottom": 0}:
 		failures.append("window-pixel insets must convert to canvas units: %s" % str(canvas))
+	failures.append_array(_test_safe_area_on_offset_displays())
+	return failures
+
+
+# Safe areas arrive in desktop coordinates. Only the display at the desktop
+# origin shares the window's origin; every other arrangement must be measured
+# relative to the window, or the fullscreen cockpit is pushed off-screen.
+func _test_safe_area_on_offset_displays() -> Array:
+	var failures: Array = []
+	# Observed 2026-11-09: fullscreen on a MacBook arranged below an external
+	# monitor. Safe area and window coincide at y=2952, so nothing is inset.
+	var below := SafeAreaInsetsScript.resolve(Rect2i(0, 2952, 3456, 2168), Vector2i(3456, 2168), Vector2i(0, 2952))
+	if below != SafeAreaInsetsScript.ZERO:
+		failures.append("a fullscreen window on a lower display must not read its desktop offset as an inset: %s" % str(below))
+	# A display left of the desktop origin has negative coordinates.
+	var left := SafeAreaInsetsScript.resolve(Rect2i(-3456, 0, 3456, 2168), Vector2i(3456, 2168), Vector2i(-3456, 0))
+	if left != SafeAreaInsetsScript.ZERO:
+		failures.append("a fullscreen window on a display left of the origin must have no insets: %s" % str(left))
+	# A real notch on an offset display keeps its 78-pixel inset.
+	var notch := SafeAreaInsetsScript.resolve(Rect2i(0, 2964, 4112, 2502), Vector2i(4112, 2580), Vector2i(0, 2886))
+	if notch != {"left": 0, "top": 78, "right": 0, "bottom": 0}:
+		failures.append("a notch on an offset display should still inset the window: %s" % str(notch))
+	# A safe area reported for a different display than the window is ignored.
+	var elsewhere := SafeAreaInsetsScript.resolve(Rect2i(0, 0, 3456, 2168), Vector2i(3456, 2168), Vector2i(0, 2952))
+	if elsewhere != SafeAreaInsetsScript.ZERO:
+		failures.append("a safe area outside the window must be ignored: %s" % str(elsewhere))
 	return failures
 
 
