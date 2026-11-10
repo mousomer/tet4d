@@ -27,7 +27,8 @@ func run() -> Array:
 	entry.keycode = KEY_E
 	entry.pressed = true
 	app._input(entry)
-	_check(app._practice != null and app._mode == "live_4d", "main-menu E enters 4D Explorer")
+	_check(app._practice != null and app._practice.dimension() == 2 and app._mode == "live_2d", "main-menu E enters the 2D topology Explorer")
+	await _menu_entry_route(app, hud, tree)
 	await _application_2d(app, hud, tree)
 	for dimension in [3, 4]:
 		var previous_panel = hud._practice_panel
@@ -583,6 +584,43 @@ func _check_unified_view_controls(tree: SceneTree, app, hud, dimension: int) -> 
 	app._practice_action("view_reset")
 	for frame in 90:
 		await tree.process_frame
+
+
+func _menu_entry_route(app, hud, tree) -> void:
+	# Leave the Explorer first: the Main Menu retains a live Explorer session,
+	# so only a cleared one proves the card itself opens 2D.
+	app._practice_action("play")
+	_check(app._practice == null, "Play clears the Explorer before the card route")
+	app._return_to_main_menu()
+	await tree.process_frame
+	var card := hud._main_menu_screen.find_child("CommandCard__Explorer", true, false) as Button
+	_check(card != null, "Main Menu lists the Explorer card")
+	if card == null:
+		return
+	card.pressed.emit()
+	await tree.process_frame
+	await tree.process_frame
+	_check(app._practice != null and app._practice.dimension() == 2 and app._mode == "live_2d", "Main Menu Explorer card opens the 2D topology Explorer")
+	_check(hud._practice_panel != null and hud._practice_panel._topology.is_visible_in_tree(), "Main Menu Explorer entry shows the topology selector")
+	for dimension in [3, 4, 2]:
+		var buttons: Array = hud._practice_panel.find_children("*", "Button", true, false).filter(func(button): return button.get_meta("practice_action", "") == "dimension_%d" % dimension)
+		_check(buttons.size() == 1, "Explorer panel offers one %dD button" % dimension)
+		if buttons.size() != 1:
+			return
+		buttons[0].pressed.emit()
+		await tree.process_frame
+		await tree.process_frame
+		_check(app._practice != null and app._practice.dimension() == dimension, "Explorer panel %dD button switches the Explorer to %dD" % [dimension, dimension])
+	app._practice_action("dimension_3")
+	var retained = app._practice
+	app._return_to_main_menu()
+	await tree.process_frame
+	card.pressed.emit()
+	await tree.process_frame
+	_check(app._practice == retained and app._practice.dimension() == 3 and app._is_live_viewer_active(), "Main Menu Explorer card resumes a retained 3D Explorer instead of resetting to 2D")
+	app._practice_action("dimension_2")
+	await tree.process_frame
+	await tree.process_frame
 
 
 func _application_2d(app, hud, tree) -> void:

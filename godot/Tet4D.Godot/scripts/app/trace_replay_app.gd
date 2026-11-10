@@ -1461,6 +1461,11 @@ func _practice_hidden_axis() -> int:
 
 
 func _practice_action(action: String) -> void:
+	if action == "explorer":
+		# Main Menu entry: resume a retained Explorer in its own dimension;
+		# otherwise start at 2D, where topology exploration begins.
+		_practice_action("dimension_%d" % (_practice.dimension() if _practice != null else 2))
+		return
 	if action in ["dimension_2", "dimension_3", "dimension_4"]:
 		if _practice != null and _practice.dimension() == int(action.get_slice("_", 1)):
 			if not _is_live_viewer_active():

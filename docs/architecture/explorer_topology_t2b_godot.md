@@ -55,3 +55,12 @@ Verification of the integrated fullscreen correction: focused safe-area checks
 passed; `scripts/verify_godot_4_7.sh` passed all 98 scripts and 59 shared topology
 parity cases on Godot 4.7.2. This does not substitute for the remaining human
 interaction checks above.
+
+## Main Menu entry (2026-11-10)
+
+The Main Menu Explorer card and its `E` shortcut emit one `explorer` action
+(`ReplayHud.EXPLORER_ENTRY_ACTION`). The app resumes a retained Explorer in its
+own dimension; with none retained (Play and replay clear it) it opens the 2D
+topology Explorer, and the panel's 3D/4D buttons step up from there. The locked
+Main Menu card list is unchanged. `test_practice_explorer.gd` presses the real
+card and panel buttons and fails if the entry is pointed back at 4D.

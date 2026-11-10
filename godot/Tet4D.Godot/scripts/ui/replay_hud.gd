@@ -75,6 +75,9 @@ signal design_restoration_requested(profile)
 signal presentation_profile_changed(profile)
 signal design_laboratory_requested()
 signal practice_requested(action: String)
+# Main Menu Explorer entry. The app resumes a retained Explorer, otherwise
+# starts at 2D; the panel's 3D/4D buttons step up from there.
+const EXPLORER_ENTRY_ACTION := "explorer"
 
 const SCREEN_MAIN_MENU := "main_menu"
 const SCREEN_BROWSER := "browser"
@@ -1267,7 +1270,7 @@ func handle_main_menu_shortcut(event: InputEvent) -> bool:
 		return false
 	match key_event.keycode:
 		KEY_E:
-			practice_requested.emit("dimension_4")
+			practice_requested.emit(EXPLORER_ENTRY_ACTION)
 		KEY_2:
 			start_current_validated_setup(GameSetupSpecScript.MODE_2D)
 		KEY_3:
@@ -3171,7 +3174,7 @@ func _build_main_menu_screen(screen: Control) -> void:
 	layout.add_child(design_lab_button)
 	layout.add_child(_menu_group_header("LEARN"))
 	var explorer_button := _make_command_card("Explorer", "Free 2D/3D/4D practice · no gravity · topology exploration", "E")
-	explorer_button.pressed.connect(func() -> void: practice_requested.emit("dimension_4"))
+	explorer_button.pressed.connect(func() -> void: practice_requested.emit(EXPLORER_ENTRY_ACTION))
 	layout.add_child(explorer_button)
 	var controls_button := _make_command_card("How to Play", "Mode-specific piece, camera, session, and navigation controls", "H")
 	controls_button.pressed.connect(func() -> void:
