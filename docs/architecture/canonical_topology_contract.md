@@ -4,11 +4,18 @@ Status: active contract
 
 Schema: `tet4d.topology_contract` version `1`
 
-Semantic authority: Python
+Semantic authority (implemented v1 inherited contract): Python, pending bounded native transfer for Explorer
+Forward Godot Explorer product requirements: `docs/rds/RDS_EXPLORER_TOPOLOGIES.md`
 
 Shared scalar authority: `contracts/topology_contract_v1.json`
 
 ## Scope and ownership
+
+This document specifies the **existing v1 single-domain interchange**; it is
+not a universal forward-product veto. The Explorer topologies RDS requires
+injective, reversible, atomic piece transport (duplicate destinations block)
+and future versioned multi-domain support. Retain v1 compatibility while new
+native semantic ownership is transferred with conformance evidence.
 
 The contract is the deterministic interchange form for the modern Python
 `ExplorerTopologyProfile` plus the board dimensions against which its boundary

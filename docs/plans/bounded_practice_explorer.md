@@ -1,5 +1,11 @@
 # Bounded Godot practice Explorer
 
+This plan records the **bounded 3D/4D MVP implementation and its pending novice
+acceptance**. It is not the forward topology roadmap. The normative 2D/3D/4D
+preset/builder and movement contract is `docs/rds/RDS_EXPLORER_TOPOLOGIES.md`;
+see its stages T1-T7. Retain these bounded regression requirements without
+imposing a bounded-only restriction on the new Explorer.
+
 Role: spec
 Status: active
 Source of truth: this file for bounded implementation scope and novice acceptance tasks

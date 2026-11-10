@@ -25,6 +25,12 @@ Before adding a helper, search the repo for an existing implementation.
 
 ## Candidate areas to index
 
+Native Explorer preservation assertions live in
+`native/tet4d_core/tests/explorer_piece_assertions.hpp`, owned by the native
+Explorer conformance suite. Reuse its conservation, exact semantic recovery,
+atomic no-op, frame, occupancy and deterministic-proposal assertions for T2C;
+keep fixture expectations independent of production results.
+
 - configuration loading and validation
 - topology transition helpers
 - trace/replay readers and writers

@@ -12,8 +12,8 @@ phase-dependent work. It is not workflow authority, a CI diary, a completed
 stage archive, a task-contract ledger, or a future programme.
 ## Active Focus
 
-Bounded practice Explorer: unified VIEW helpers and compact Settings/Designer menus; novice tasks in
-`docs/plans/bounded_practice_explorer.md`; learning readiness awaits human review.
+Explorer T2A implements the native bounded/cylinder/torus translation candidate and permanent preservation suite described in `docs/architecture/explorer_topology_t2a_native_transport.md`. T1 PRs #172–#176 are the accepted baseline; remaining Correction 4B P2 findings stay deferred. T2B Godot integration, T2C rotations/twisted profiles and complete T2 acceptance remain separate. Runtime authority has not transferred. See `docs/BACKLOG.md` and `docs/architecture/explorer_topology_t2_transfer_preparation.md`.
+Bounded MVP novice acceptance remains pending in `docs/plans/bounded_practice_explorer.md`; unified VIEW helpers and compact Settings/Designer menus remain the baseline.
 
 Machine-readable handoff state. `status` is `active` only on a feature branch
 or draft PR and must name that branch; it is `none` on the default branch and
@@ -96,11 +96,11 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 28` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 6.00` (`low`)
+- `tech_debt.score = 6.02` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 3.10`
+1. `delivery_size_pressure = 3.11`
 2. `code_balance = 1.91`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -114,7 +114,7 @@ Top 8 live Python hotspots by real LOC:
 1. `tests/unit/engine/test_topology_lab_menu.py`: `3804` real LOC
 2. `tests/unit/render/test_locked_cell_explosion.py`: `3782` real LOC
 3. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `3194` real LOC
-4. `tools/governance/validate_project_contracts.py`: `2736` real LOC
+4. `tools/governance/validate_project_contracts.py`: `2754` real LOC
 5. `src/tet4d/ui/pygame/front4d_render.py`: `2153` real LOC
 6. `tools/workspace_governance/validators/core.py`: `2106` real LOC
 7. `scripts/arch_metrics.py`: `1899` real LOC

@@ -1,0 +1,794 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tet4d.local/schema/explorer_topology_catalog_v1.schema.json",
+  "title": "Tet4D Explorer topology catalog v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "schema_version",
+    "space_classes",
+    "entries",
+    "identity_examples"
+  ],
+  "properties": {
+    "contract": {
+      "type": "string",
+      "const": "explorer-topology-catalog/1"
+    },
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "space_classes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "dimension",
+          "compact",
+          "connected",
+          "orientable",
+          "genus",
+          "boundary_components",
+          "euler_characteristic"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "dimension": {
+            "type": "integer",
+            "const": 2
+          },
+          "compact": {
+            "type": "boolean",
+            "const": true
+          },
+          "connected": {
+            "type": "boolean",
+            "const": true
+          },
+          "orientable": {
+            "type": "boolean"
+          },
+          "genus": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "boundary_components": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "euler_characteristic": {
+            "type": "integer"
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "dimension",
+          "family",
+          "order",
+          "description",
+          "space_class_id",
+          "association",
+          "construction_id",
+          "recipe",
+          "profile_id",
+          "profile",
+          "availability",
+          "selectable",
+          "certification",
+          "invariants",
+          "unknown_invariants",
+          "diagram",
+          "aliases",
+          "evidence",
+          "runtime_evidence"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "dimension": {
+            "type": "integer",
+            "const": 2
+          },
+          "family": {
+            "enum": [
+              "core",
+              "legacy"
+            ]
+          },
+          "order": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "space_class_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "association": {
+            "enum": [
+              "proposed",
+              "proved",
+              "unresolved"
+            ]
+          },
+          "construction_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "recipe": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "schema",
+              "schema_version",
+              "dimension",
+              "domain",
+              "operator_version",
+              "parameters",
+              "gluings"
+            ],
+            "properties": {
+              "schema": {
+                "type": "string",
+                "const": "tet4d.square_quotient"
+              },
+              "schema_version": {
+                "type": "integer",
+                "const": 1
+              },
+              "dimension": {
+                "type": "integer",
+                "const": 2
+              },
+              "domain": {
+                "type": "string",
+                "const": "unit_square"
+              },
+              "operator_version": {
+                "type": "integer",
+                "const": 1
+              },
+              "parameters": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [],
+                "properties": {}
+              },
+              "gluings": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "source",
+                    "target",
+                    "transform"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "source": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "axis",
+                        "side"
+                      ],
+                      "properties": {
+                        "axis": {
+                          "enum": [
+                            "x",
+                            "y"
+                          ]
+                        },
+                        "side": {
+                          "enum": [
+                            "-",
+                            "+"
+                          ]
+                        }
+                      }
+                    },
+                    "target": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "axis",
+                        "side"
+                      ],
+                      "properties": {
+                        "axis": {
+                          "enum": [
+                            "x",
+                            "y"
+                          ]
+                        },
+                        "side": {
+                          "enum": [
+                            "-",
+                            "+"
+                          ]
+                        }
+                      }
+                    },
+                    "transform": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "permutation",
+                        "signs"
+                      ],
+                      "properties": {
+                        "permutation": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "const": 0
+                          },
+                          "minItems": 1,
+                          "maxItems": 1
+                        },
+                        "signs": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "enum": [
+                              -1,
+                              1
+                            ]
+                          },
+                          "minItems": 1,
+                          "maxItems": 1
+                        }
+                      }
+                    }
+                  }
+                },
+                "minItems": 0,
+                "maxItems": 2
+              }
+            }
+          },
+          "profile_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "profile": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "schema",
+              "schema_version",
+              "dimension",
+              "board_dimensions",
+              "gluings"
+            ],
+            "properties": {
+              "schema": {
+                "type": "string",
+                "const": "tet4d.topology_contract"
+              },
+              "schema_version": {
+                "type": "integer",
+                "const": 1
+              },
+              "dimension": {
+                "type": "integer",
+                "const": 2
+              },
+              "board_dimensions": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 1000000
+                },
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "gluings": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "source",
+                    "target",
+                    "transform"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "source": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "axis",
+                        "side"
+                      ],
+                      "properties": {
+                        "axis": {
+                          "enum": [
+                            "x",
+                            "y"
+                          ]
+                        },
+                        "side": {
+                          "enum": [
+                            "-",
+                            "+"
+                          ]
+                        }
+                      }
+                    },
+                    "target": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "axis",
+                        "side"
+                      ],
+                      "properties": {
+                        "axis": {
+                          "enum": [
+                            "x",
+                            "y"
+                          ]
+                        },
+                        "side": {
+                          "enum": [
+                            "-",
+                            "+"
+                          ]
+                        }
+                      }
+                    },
+                    "transform": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "permutation",
+                        "signs"
+                      ],
+                      "properties": {
+                        "permutation": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "const": 0
+                          },
+                          "minItems": 1,
+                          "maxItems": 1
+                        },
+                        "signs": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "enum": [
+                              -1,
+                              1
+                            ]
+                          },
+                          "minItems": 1,
+                          "maxItems": 1
+                        }
+                      }
+                    }
+                  }
+                },
+                "minItems": 0,
+                "maxItems": 2
+              }
+            }
+          },
+          "availability": {
+            "enum": [
+              "planned",
+              "experimental",
+              "implemented"
+            ]
+          },
+          "selectable": {
+            "type": "boolean"
+          },
+          "certification": {
+            "enum": [
+              "unverified",
+              "heuristic",
+              "verified"
+            ]
+          },
+          "invariants": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "evidence_state",
+              "orientable",
+              "boundary_components",
+              "euler_characteristic",
+              "compact",
+              "connected",
+              "computed_space_class_id"
+            ],
+            "properties": {
+              "evidence_state": {
+                "enum": [
+                  "derived_pending_review",
+                  "independently_reviewed"
+                ]
+              },
+              "orientable": {
+                "type": "boolean"
+              },
+              "boundary_components": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "euler_characteristic": {
+                "type": "integer"
+              },
+              "compact": {
+                "type": "boolean"
+              },
+              "connected": {
+                "type": "boolean"
+              },
+              "computed_space_class_id": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "unknown_invariants": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 0
+          },
+          "diagram": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "construction_id",
+              "seam_ids"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "unit_square_edges"
+              },
+              "construction_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "seam_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 0
+              }
+            }
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 0
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "record_id",
+                "record_sha256",
+                "kind",
+                "review_state"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "record_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "record_sha256": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "kind": {
+                  "enum": [
+                    "mathematical_derivation"
+                  ]
+                },
+                "review_state": {
+                  "enum": [
+                    "pending",
+                    "accepted"
+                  ]
+                }
+              }
+            },
+            "minItems": 1
+          },
+          "runtime_evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "profile_id",
+                "contract_version",
+                "source_commit",
+                "command",
+                "outcome",
+                "kind",
+                "reviewer",
+                "review_reference",
+                "artifact_path",
+                "artifact_sha256",
+                "fixture_sha256"
+              ],
+              "properties": {
+                "profile_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "contract_version": {
+                  "type": "string",
+                  "const": "explorer-piece-transport/1"
+                },
+                "source_commit": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "command": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "outcome": {
+                  "enum": [
+                    "passed",
+                    "failed",
+                    "not_run"
+                  ]
+                },
+                "kind": {
+                  "enum": [
+                    "native_conformance",
+                    "godot_adapter",
+                    "authority_transfer",
+                    "product_acceptance"
+                  ]
+                },
+                "reviewer": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "review_reference": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "artifact_path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "artifact_sha256": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "fixture_sha256": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "minItems": 0
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "identity_examples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "profile",
+          "profile_id",
+          "construction_id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "profile": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "schema",
+              "schema_version",
+              "dimension",
+              "board_dimensions",
+              "gluings"
+            ],
+            "properties": {
+              "schema": {
+                "type": "string",
+                "const": "tet4d.topology_contract"
+              },
+              "schema_version": {
+                "type": "integer",
+                "const": 1
+              },
+              "dimension": {
+                "type": "integer",
+                "const": 2
+              },
+              "board_dimensions": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 1000000
+                },
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "gluings": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "source",
+                    "target",
+                    "transform"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "source": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "axis",
+                        "side"
+                      ],
+                      "properties": {
+                        "axis": {
+                          "enum": [
+                            "x",
+                            "y"
+                          ]
+                        },
+                        "side": {
+                          "enum": [
+                            "-",
+                            "+"
+                          ]
+                        }
+                      }
+                    },
+                    "target": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "axis",
+                        "side"
+                      ],
+                      "properties": {
+                        "axis": {
+                          "enum": [
+                            "x",
+                            "y"
+                          ]
+                        },
+                        "side": {
+                          "enum": [
+                            "-",
+                            "+"
+                          ]
+                        }
+                      }
+                    },
+                    "transform": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "permutation",
+                        "signs"
+                      ],
+                      "properties": {
+                        "permutation": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "const": 0
+                          },
+                          "minItems": 1,
+                          "maxItems": 1
+                        },
+                        "signs": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "enum": [
+                              -1,
+                              1
+                            ]
+                          },
+                          "minItems": 1,
+                          "maxItems": 1
+                        }
+                      }
+                    }
+                  }
+                },
+                "minItems": 0,
+                "maxItems": 2
+              }
+            }
+          },
+          "profile_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "construction_id": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "minItems": 1
+    }
+  }
+}

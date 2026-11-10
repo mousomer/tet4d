@@ -1,5 +1,12 @@
 # Bounded practice Explorer contract
 
+Scope: **implemented bounded 3D/4D MVP only**. This remains the frozen baseline
+for existing acceptance and regressions, not the forward limit of Explorer.
+`docs/rds/RDS_EXPLORER_TOPOLOGIES.md` supersedes its 3D/4D-only,
+bounded-only and Python-Explorer-oracle language for future 2D/3D/4D topology
+product behavior. Native authority transfer is pending; historical MVP facts
+below are not a claim that the new capability is present.
+
 The Phase II Godot practice Sandbox composes existing authority. Native
 `geometry_normalize_blocks`, `geometry_translate_blocks`,
 `geometry_rotate_blocks`, `query_piece_pose_legal` and bounded

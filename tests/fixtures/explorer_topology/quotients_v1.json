@@ -1,0 +1,786 @@
+{
+  "contract": "square-quotient-evidence/1",
+  "schema_version": 1,
+  "domain": {
+    "vertices": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "edges": [
+      {
+        "id": "x-",
+        "endpoints": [
+          "A",
+          "D"
+        ]
+      },
+      {
+        "id": "x+",
+        "endpoints": [
+          "B",
+          "C"
+        ]
+      },
+      {
+        "id": "y-",
+        "endpoints": [
+          "A",
+          "B"
+        ]
+      },
+      {
+        "id": "y+",
+        "endpoints": [
+          "D",
+          "C"
+        ]
+      }
+    ],
+    "face_word": [
+      "y-+",
+      "x++",
+      "y+-",
+      "x--"
+    ]
+  },
+  "comparison_constructions": [
+    {
+      "id": "cylinder_y",
+      "recipe": {
+        "schema": "tet4d.square_quotient",
+        "schema_version": 1,
+        "dimension": 2,
+        "domain": "unit_square",
+        "operator_version": 1,
+        "parameters": {},
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {
+              "axis": "y",
+              "side": "-"
+            },
+            "target": {
+              "axis": "y",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                1
+              ]
+            }
+          }
+        ]
+      },
+      "construction_id": "square-quotient-v1:sha256:6ea36f484964057044d7d2833a93bcb54eeb83a254d109c4c199f5fd3332d4f5"
+    },
+    {
+      "id": "sphere_adjacent_positive",
+      "recipe": {
+        "schema": "tet4d.square_quotient",
+        "schema_version": 1,
+        "dimension": 2,
+        "domain": "unit_square",
+        "operator_version": 1,
+        "parameters": {},
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {
+              "axis": "x",
+              "side": "-"
+            },
+            "target": {
+              "axis": "y",
+              "side": "-"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                1
+              ]
+            }
+          },
+          {
+            "id": "seam_001",
+            "source": {
+              "axis": "x",
+              "side": "+"
+            },
+            "target": {
+              "axis": "y",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                1
+              ]
+            }
+          }
+        ]
+      },
+      "construction_id": "square-quotient-v1:sha256:eeb733c14b5852a00972a0cad80ef77a355148c1205e808494302992425c7c87"
+    }
+  ],
+  "cases": [
+    {
+      "id": "proof-empty_2d",
+      "construction_id": "square-quotient-v1:sha256:d6dbd2be698b082f6e2de0e240b863256614041d65cb6bcfdf2d80c0fb990d3b",
+      "expected": {
+        "face_count": 1,
+        "edge_classes": [
+          [
+            "x+"
+          ],
+          [
+            "x-"
+          ],
+          [
+            "y+"
+          ],
+          [
+            "y-"
+          ]
+        ],
+        "vertex_classes": [
+          [
+            "A"
+          ],
+          [
+            "B"
+          ],
+          [
+            "C"
+          ],
+          [
+            "D"
+          ]
+        ],
+        "vertex_links": [
+          {
+            "corners": [
+              "A"
+            ],
+            "kind": "interval",
+            "degrees": [
+              1,
+              1
+            ]
+          },
+          {
+            "corners": [
+              "B"
+            ],
+            "kind": "interval",
+            "degrees": [
+              1,
+              1
+            ]
+          },
+          {
+            "corners": [
+              "C"
+            ],
+            "kind": "interval",
+            "degrees": [
+              1,
+              1
+            ]
+          },
+          {
+            "corners": [
+              "D"
+            ],
+            "kind": "interval",
+            "degrees": [
+              1,
+              1
+            ]
+          }
+        ],
+        "boundary_cycles": [
+          [
+            "x+",
+            "y+",
+            "x-",
+            "y-"
+          ]
+        ],
+        "orientable": true,
+        "euler_characteristic": 1,
+        "compact": true,
+        "connected": true
+      },
+      "derived_space_class_id": "surface.disk",
+      "assertions_status": "derived_pending_review",
+      "review": {
+        "status": "pending",
+        "reviewer": "",
+        "reference": ""
+      },
+      "derivation": "docs/architecture/explorer_topology_catalog_certification_contract.md#5-seven-presets-and-the-comparison-construction",
+      "limitations": [
+        "Independent recipe mapping and proof review pending; no runtime conformance implied."
+      ]
+    },
+    {
+      "id": "proof-cylinder_2d",
+      "construction_id": "square-quotient-v1:sha256:ac75e2db6c0a9c1b770ae049f832474d8710199ffbbd53f1ad096b921abb6eb4",
+      "expected": {
+        "face_count": 1,
+        "edge_classes": [
+          [
+            "x+",
+            "x-"
+          ],
+          [
+            "y+"
+          ],
+          [
+            "y-"
+          ]
+        ],
+        "vertex_classes": [
+          [
+            "A",
+            "B"
+          ],
+          [
+            "C",
+            "D"
+          ]
+        ],
+        "vertex_links": [
+          {
+            "corners": [
+              "A",
+              "B"
+            ],
+            "kind": "interval",
+            "degrees": [
+              1,
+              1,
+              2
+            ]
+          },
+          {
+            "corners": [
+              "C",
+              "D"
+            ],
+            "kind": "interval",
+            "degrees": [
+              1,
+              1,
+              2
+            ]
+          }
+        ],
+        "boundary_cycles": [
+          [
+            "y+"
+          ],
+          [
+            "y-"
+          ]
+        ],
+        "orientable": true,
+        "euler_characteristic": 0,
+        "compact": true,
+        "connected": true
+      },
+      "derived_space_class_id": "surface.annulus",
+      "assertions_status": "derived_pending_review",
+      "review": {
+        "status": "pending",
+        "reviewer": "",
+        "reference": ""
+      },
+      "derivation": "docs/architecture/explorer_topology_catalog_certification_contract.md#5-seven-presets-and-the-comparison-construction",
+      "limitations": [
+        "Independent recipe mapping and proof review pending; no runtime conformance implied."
+      ]
+    },
+    {
+      "id": "proof-torus_2d",
+      "construction_id": "square-quotient-v1:sha256:8b97a9c31a18d0479a776942c68120c6b70a93c72a6ed1327755969840a3cf91",
+      "expected": {
+        "face_count": 1,
+        "edge_classes": [
+          [
+            "x+",
+            "x-"
+          ],
+          [
+            "y+",
+            "y-"
+          ]
+        ],
+        "vertex_classes": [
+          [
+            "A",
+            "B",
+            "C",
+            "D"
+          ]
+        ],
+        "vertex_links": [
+          {
+            "corners": [
+              "A",
+              "B",
+              "C",
+              "D"
+            ],
+            "kind": "circle",
+            "degrees": [
+              2,
+              2,
+              2,
+              2
+            ]
+          }
+        ],
+        "boundary_cycles": [],
+        "orientable": true,
+        "euler_characteristic": 0,
+        "compact": true,
+        "connected": true
+      },
+      "derived_space_class_id": "surface.torus",
+      "assertions_status": "derived_pending_review",
+      "review": {
+        "status": "pending",
+        "reviewer": "",
+        "reference": ""
+      },
+      "derivation": "docs/architecture/explorer_topology_catalog_certification_contract.md#5-seven-presets-and-the-comparison-construction",
+      "limitations": [
+        "Independent recipe mapping and proof review pending; no runtime conformance implied."
+      ]
+    },
+    {
+      "id": "proof-mobius_2d",
+      "construction_id": "square-quotient-v1:sha256:28083cf67127bb6de6aff1e644f2012164ff2fa696bdc4d626479337ca7a4ed5",
+      "expected": {
+        "face_count": 1,
+        "edge_classes": [
+          [
+            "x+",
+            "x-"
+          ],
+          [
+            "y+"
+          ],
+          [
+            "y-"
+          ]
+        ],
+        "vertex_classes": [
+          [
+            "A",
+            "C"
+          ],
+          [
+            "B",
+            "D"
+          ]
+        ],
+        "vertex_links": [
+          {
+            "corners": [
+              "A",
+              "C"
+            ],
+            "kind": "interval",
+            "degrees": [
+              1,
+              1,
+              2
+            ]
+          },
+          {
+            "corners": [
+              "B",
+              "D"
+            ],
+            "kind": "interval",
+            "degrees": [
+              1,
+              1,
+              2
+            ]
+          }
+        ],
+        "boundary_cycles": [
+          [
+            "y+",
+            "y-"
+          ]
+        ],
+        "orientable": false,
+        "euler_characteristic": 0,
+        "compact": true,
+        "connected": true
+      },
+      "derived_space_class_id": "surface.mobius",
+      "assertions_status": "derived_pending_review",
+      "review": {
+        "status": "pending",
+        "reviewer": "",
+        "reference": ""
+      },
+      "derivation": "docs/architecture/explorer_topology_catalog_certification_contract.md#5-seven-presets-and-the-comparison-construction",
+      "limitations": [
+        "Independent recipe mapping and proof review pending; no runtime conformance implied."
+      ]
+    },
+    {
+      "id": "proof-klein_2d",
+      "construction_id": "square-quotient-v1:sha256:7b8437c8ecc525e0a55dcd1f254a5c441a96623729c18d2bc11991b07e1b6711",
+      "expected": {
+        "face_count": 1,
+        "edge_classes": [
+          [
+            "x+",
+            "x-"
+          ],
+          [
+            "y+",
+            "y-"
+          ]
+        ],
+        "vertex_classes": [
+          [
+            "A",
+            "B",
+            "C",
+            "D"
+          ]
+        ],
+        "vertex_links": [
+          {
+            "corners": [
+              "A",
+              "B",
+              "C",
+              "D"
+            ],
+            "kind": "circle",
+            "degrees": [
+              2,
+              2,
+              2,
+              2
+            ]
+          }
+        ],
+        "boundary_cycles": [],
+        "orientable": false,
+        "euler_characteristic": 0,
+        "compact": true,
+        "connected": true
+      },
+      "derived_space_class_id": "surface.klein",
+      "assertions_status": "derived_pending_review",
+      "review": {
+        "status": "pending",
+        "reviewer": "",
+        "reference": ""
+      },
+      "derivation": "docs/architecture/explorer_topology_catalog_certification_contract.md#5-seven-presets-and-the-comparison-construction",
+      "limitations": [
+        "Independent recipe mapping and proof review pending; no runtime conformance implied."
+      ]
+    },
+    {
+      "id": "proof-projective_2d",
+      "construction_id": "square-quotient-v1:sha256:37b9ff9b4592b6613deb031424edd3672d48ff91112bf4a17f96a5ff6d125ab8",
+      "expected": {
+        "face_count": 1,
+        "edge_classes": [
+          [
+            "x+",
+            "x-"
+          ],
+          [
+            "y+",
+            "y-"
+          ]
+        ],
+        "vertex_classes": [
+          [
+            "A",
+            "C"
+          ],
+          [
+            "B",
+            "D"
+          ]
+        ],
+        "vertex_links": [
+          {
+            "corners": [
+              "A",
+              "C"
+            ],
+            "kind": "circle",
+            "degrees": [
+              2,
+              2
+            ]
+          },
+          {
+            "corners": [
+              "B",
+              "D"
+            ],
+            "kind": "circle",
+            "degrees": [
+              2,
+              2
+            ]
+          }
+        ],
+        "boundary_cycles": [],
+        "orientable": false,
+        "euler_characteristic": 1,
+        "compact": true,
+        "connected": true
+      },
+      "derived_space_class_id": "surface.projective",
+      "assertions_status": "derived_pending_review",
+      "review": {
+        "status": "pending",
+        "reviewer": "",
+        "reference": ""
+      },
+      "derivation": "docs/architecture/explorer_topology_catalog_certification_contract.md#5-seven-presets-and-the-comparison-construction",
+      "limitations": [
+        "Independent recipe mapping and proof review pending; no runtime conformance implied."
+      ]
+    },
+    {
+      "id": "proof-sphere_2d",
+      "construction_id": "square-quotient-v1:sha256:1ec820451dbb28ad2ac5c156c214f1f99f228df56069087f9849350f16562dea",
+      "expected": {
+        "face_count": 1,
+        "edge_classes": [
+          [
+            "x+",
+            "y+"
+          ],
+          [
+            "x-",
+            "y-"
+          ]
+        ],
+        "vertex_classes": [
+          [
+            "A",
+            "B",
+            "C",
+            "D"
+          ]
+        ],
+        "vertex_links": [
+          {
+            "corners": [
+              "A",
+              "B",
+              "C",
+              "D"
+            ],
+            "kind": "circle",
+            "degrees": [
+              2,
+              2,
+              2,
+              2
+            ]
+          }
+        ],
+        "boundary_cycles": [],
+        "orientable": false,
+        "euler_characteristic": 0,
+        "compact": true,
+        "connected": true
+      },
+      "derived_space_class_id": "surface.klein",
+      "assertions_status": "derived_pending_review",
+      "review": {
+        "status": "pending",
+        "reviewer": "",
+        "reference": ""
+      },
+      "derivation": "docs/architecture/explorer_topology_catalog_certification_contract.md#5-seven-presets-and-the-comparison-construction",
+      "limitations": [
+        "Independent recipe mapping and proof review pending; no runtime conformance implied."
+      ]
+    },
+    {
+      "id": "proof-cylinder_y",
+      "construction_id": "square-quotient-v1:sha256:6ea36f484964057044d7d2833a93bcb54eeb83a254d109c4c199f5fd3332d4f5",
+      "expected": {
+        "face_count": 1,
+        "edge_classes": [
+          [
+            "x+"
+          ],
+          [
+            "x-"
+          ],
+          [
+            "y+",
+            "y-"
+          ]
+        ],
+        "vertex_classes": [
+          [
+            "A",
+            "D"
+          ],
+          [
+            "B",
+            "C"
+          ]
+        ],
+        "vertex_links": [
+          {
+            "corners": [
+              "A",
+              "D"
+            ],
+            "kind": "interval",
+            "degrees": [
+              1,
+              1,
+              2
+            ]
+          },
+          {
+            "corners": [
+              "B",
+              "C"
+            ],
+            "kind": "interval",
+            "degrees": [
+              1,
+              1,
+              2
+            ]
+          }
+        ],
+        "boundary_cycles": [
+          [
+            "x+"
+          ],
+          [
+            "x-"
+          ]
+        ],
+        "orientable": true,
+        "euler_characteristic": 0,
+        "compact": true,
+        "connected": true
+      },
+      "derived_space_class_id": "surface.annulus",
+      "assertions_status": "derived_pending_review",
+      "review": {
+        "status": "pending",
+        "reviewer": "",
+        "reference": ""
+      },
+      "derivation": "docs/architecture/explorer_topology_catalog_certification_contract.md#5-seven-presets-and-the-comparison-construction",
+      "limitations": [
+        "Independent recipe mapping and proof review pending; no runtime conformance implied."
+      ]
+    },
+    {
+      "id": "proof-sphere_adjacent_positive",
+      "construction_id": "square-quotient-v1:sha256:eeb733c14b5852a00972a0cad80ef77a355148c1205e808494302992425c7c87",
+      "expected": {
+        "face_count": 1,
+        "edge_classes": [
+          [
+            "x+",
+            "y+"
+          ],
+          [
+            "x-",
+            "y-"
+          ]
+        ],
+        "vertex_classes": [
+          [
+            "A"
+          ],
+          [
+            "B",
+            "D"
+          ],
+          [
+            "C"
+          ]
+        ],
+        "vertex_links": [
+          {
+            "corners": [
+              "A"
+            ],
+            "kind": "circle",
+            "degrees": [
+              2
+            ]
+          },
+          {
+            "corners": [
+              "B",
+              "D"
+            ],
+            "kind": "circle",
+            "degrees": [
+              2,
+              2
+            ]
+          },
+          {
+            "corners": [
+              "C"
+            ],
+            "kind": "circle",
+            "degrees": [
+              2
+            ]
+          }
+        ],
+        "boundary_cycles": [],
+        "orientable": true,
+        "euler_characteristic": 2,
+        "compact": true,
+        "connected": true
+      },
+      "derived_space_class_id": "surface.sphere",
+      "assertions_status": "derived_pending_review",
+      "review": {
+        "status": "pending",
+        "reviewer": "",
+        "reference": ""
+      },
+      "derivation": "docs/architecture/explorer_topology_catalog_certification_contract.md#5-seven-presets-and-the-comparison-construction",
+      "limitations": [
+        "Independent recipe mapping and proof review pending; no runtime conformance implied."
+      ]
+    }
+  ]
+}

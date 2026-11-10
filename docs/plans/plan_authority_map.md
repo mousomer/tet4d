@@ -21,7 +21,9 @@ planning redirection notes.
 | Planning-document ownership and precedence | `plan_authority_map.md` |
 | Professional Godot product priorities, programme sequencing, and phase gates | `professional_godot_game_programme.md` |
 | Proposed spatial-intuition study design, assessment instrument, research data/consent requirements (not product stage ordering) | `spatial_intuition_research_plan.md` |
-| Bounded practice Explorer implementation scope and novice acceptance tasks | `bounded_practice_explorer.md` |
+| Bounded practice Explorer **MVP baseline** and its novice acceptance tasks | `bounded_practice_explorer.md` |
+| Forward Godot 2D/3D/4D Explorer topology semantics, presets, transport and secondary builder | `docs/rds/RDS_EXPLORER_TOPOLOGIES.md` (product requirements); `professional_godot_game_programme.md` (stage order) |
+| Explorer T1 implementation inventory, contract gaps and Session 2 inputs (audit only) | `docs/architecture/explorer_topology_t1_contract_inventory.md` |
 | Repo-wide structural cleanup sequencing | `cleanup_master_plan.md` |
 | Live 3D and future Live 4D gameboard visual language | `gameboard_visual_language_design.md` |
 | Stage 22f manual Live 3D acceptance run record | `godot_live_3d_manual_acceptance.md` |

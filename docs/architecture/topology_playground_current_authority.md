@@ -8,6 +8,15 @@ Last updated: 2026-09-02
 
 ## Purpose
 
+Scope boundary: this file owns the **existing Python/Pygame Topology
+Playground** (Editor/Sandbox/Play shell) and its inherited semantics/legacy
+compatibility. It no longer sets forward Godot Explorer topology product
+behavior. That RDS is `docs/rds/RDS_EXPLORER_TOPOLOGIES.md`; it requires a
+primary 2D/3D/4D Godot Explorer and *secondary* builder, and explicitly
+supersedes conflicting Python Explorer-oracle behavior. Formal native transfer
+is pending, so historical Python trace and Play contracts remain meaningful
+for untouched legacy/Play scopes.
+
 Use this file first for topology-playground architecture, precedence,
 ownership, accepted invariants, current phase boundaries, and explicit
 non-goals.
@@ -227,13 +236,16 @@ settled Play drop-policy contract.
 
 The current migration boundary is now explicit:
 
-- topology semantics are frozen and are migration-blocking authority
+- inherited Python topology semantics remain frozen for compatibility and
+  still-inherited Play/Pygame scopes; the forward Explorer RDS supplies new
+  normative cellwise conformance (including duplicate-destination rejection)
 - Pygame shell polish is not migration-blocking
 - Stage 2 topology/gameplay golden trace export exists under
   `tools/migration/` with checked-in traces in `migration/golden_traces/`
-- those traces are the Python-authoritative migration oracle for topology
-  transport, Sandbox/Play distinction, Y-axis drop policy, gameplay state, and
-  `Play This Topology` launch parity
+- those traces remain versioned Python-authoritative evidence for inherited
+  semantics, Sandbox/Play distinction, Y-axis drop policy, gameplay state and
+  `Play This Topology` compatibility, **not** a veto of changed Explorer
+  transport requirements explicitly specified in the new RDS
 - Unity/Godot or other engine migration work must replay exported traces
   before implementing independent transport or drop/lock logic
 - endgame trace export is intentionally deferred beyond Stage 2

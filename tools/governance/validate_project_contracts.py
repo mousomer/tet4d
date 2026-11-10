@@ -137,6 +137,31 @@ AUTHORITY_INVERSION_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
         "non-Python supersession claim",
     ),
 )
+# Owner-approved 2026-11-04 Explorer RDS replan. This narrowly permits a
+# normative product requirement to differ from inherited Python Explorer
+# expectations; it does NOT authorize runtime semantic ownership before a
+# completed authority-transfer record.
+EXPLORER_RDS_APPROVAL_MARKER = "**Approved Explorer RDS replan: requirements only.**"
+
+
+def _is_approved_explorer_rds_replan(rel: str, line: str, label: str) -> bool:
+    return (
+        rel == "docs/architecture/authority_map.md"
+        and label == "non-Python supersession claim"
+        and line.startswith("| **Planned** Godot Explorer topology contract")
+        and EXPLORER_RDS_APPROVAL_MARKER in line
+        and "`docs/rds/RDS_EXPLORER_TOPOLOGIES.md`" in line
+        and "native C++ is **candidate** deterministic owner" in line
+        and "RDS supersedes conflicting Python Explorer expectations as product requirements."
+        in line
+        # A second supersession claim on the same line is NOT covered.
+        and line.lower().count("supersedes") == 1
+        and "**No transfer is recorded yet.**" in line
+        and "T2 requires a completed **2D Explorer-only** native transfer" in line
+        and "T4 requires its own 3D/4D transfer" in line
+    )
+
+
 PARITY_DANGEROUS_PHRASES: tuple[tuple[str, str], ...] = (
     ("c++ is the semantic oracle", "C++ semantic oracle claim"),
     ("godot is the semantic oracle", "Godot semantic oracle claim"),
@@ -2565,6 +2590,8 @@ def _validate_governance_authority_inversion() -> list[ValidationIssue]:
         for lineno, line in enumerate(text.splitlines(), start=1):
             for pattern, label in AUTHORITY_INVERSION_PATTERNS:
                 if pattern.search(line):
+                    if _is_approved_explorer_rds_replan(rel, line, label):
+                        continue
                     issues.append(
                         ValidationIssue(
                             "authority",
