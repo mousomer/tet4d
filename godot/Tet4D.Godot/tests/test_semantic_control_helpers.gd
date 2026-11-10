@@ -3,6 +3,8 @@ extends RefCounted
 const LiveInputContractScript = preload("res://scripts/input/live_input_contract.gd")
 const LivePieceControlStripScript = preload("res://scripts/ui/live_piece_control_strip.gd")
 const LiveViewControlStripScript = preload("res://scripts/ui/live_view_control_strip.gd")
+const StyleManagerScript = preload("res://scripts/ui/style/shell_style_manager.gd")
+const StyleApplierScript = preload("res://scripts/ui/style/shell_control_style_applier.gd")
 
 
 class InjectedAuthority:
@@ -22,6 +24,34 @@ func run() -> Array:
 	failures.append_array(_check_semantic_rows_and_density())
 	failures.append_array(_check_binding_authority_injection())
 	failures.append_array(await _check_production_deck())
+	failures.append_array(await _check_styled_rebuild_stays_in_host())
+	return failures
+
+
+# The HUD styles a rebuilt legend synchronously. Unstyled rows briefly report
+# a taller minimum than the styled legend, and the strip grows to it; the host
+# must still re-sort it back inside its own rect within one frame.
+func _check_styled_rebuild_stays_in_host() -> Array:
+	var failures: Array = []
+	var tree := Engine.get_main_loop() as SceneTree
+	var style_manager = StyleManagerScript.new()
+	var style_applier = StyleApplierScript.new()
+	var host := VBoxContainer.new()
+	var strip = LivePieceControlStripScript.new()
+	strip.rebuilt.connect(func() -> void: style_applier.apply_to_tree(strip, style_manager))
+	host.add_child(strip)
+	tree.root.add_child(host)
+	strip.configure("live_2d", {}, {}, "standard", LiveInputContractScript, LivePieceControlStripScript.LAYOUT_RAIL)
+	await tree.process_frame
+	host.size = Vector2(540.0, strip.get_combined_minimum_size().y)
+	await tree.process_frame
+	for density in ["detailed", "standard"]:
+		strip.configure("live_2d", {}, {}, density, LiveInputContractScript, LivePieceControlStripScript.LAYOUT_RAIL)
+		await tree.process_frame
+		if not host.get_global_rect().grow(0.5).encloses(strip.get_global_rect()):
+			failures.append("a styled %s rebuild must leave the PIECE legend inside its host, got %s in %s" % [density, strip.get_global_rect(), host.get_global_rect()])
+	host.queue_free()
+	await tree.process_frame
 	return failures
 
 
