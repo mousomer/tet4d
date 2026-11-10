@@ -660,3 +660,16 @@ branch or draft PR alone is not completion.
 
 - [x] Designer current-design migration: one editable current design, complete Save/Save As/Load/Revert, base-style provenance, shared frozen A/B preview, external toggle and explicit adoption; existing panel handlers and grid renderer coverage retained.
 - [ ] Human interaction acceptance of CURRENT DESIGN, saved geometry restoration and immediate A/B comparison.
+
+### T2B — playable 2D Explorer integration
+
+- [x] Incorporate PR #179 safe-area correction and offset-monitor regressions.
+- Owner observation (2026-11-10): cylinder and torus work; remaining detailed
+  scenarios and fullscreen acceptance are still open.
+
+- Integrate T2A native sessions into the existing Godot Explorer for bounded,
+  Cylinder X/Y and torus; verify strict boundary, exact recovery and Play isolation.
+- Human acceptance: walls, cylinder crossings, torus split rendering/Retry and
+  returning to Play. Keep visual acceptance separate from headless evidence.
+- T2C retains twisted seams and topology rotations; T2D retains advanced seam
+  inspection. Terminal authority transfer remains outside T2B.

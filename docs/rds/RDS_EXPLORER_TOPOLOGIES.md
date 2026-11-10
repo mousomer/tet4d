@@ -85,6 +85,14 @@ The Explorer retains gravity-free practice, single-piece initial object model, n
 
 2D is a full Explorer dimension and the recommended topology-learning starting point, not an optional debug mode. Reuse the live 2D board/piece renderer, piece catalogue and action routing. Support ±X/±Y translation, XY rotation, selectable four edges, crossing preview, seam highlights, path trace, and topology-aware adjacency. Topology selection and building in 2D must precede higher-dimensional builder acceptance.
 
+T2B is the first playable subset: bounded rectangle, Cylinder X, Cylinder Y
+and torus translations through the native T2A runtime. Changing topology
+explicitly resets the selected piece to its canonical placement and clears
+inverse history while preserving the view. Rotations and twisted seams remain
+T2C; detailed seam inspection remains T2D. This incremental integration does
+not complete the terminal T2 authority transfer. See
+`docs/architecture/explorer_topology_t2b_godot.md` for its checked interface.
+
 ### 4.2 3D
 
 Retain the 3D renderer, camera, camera-relative movement and XY/XZ/YZ piece rotations. Add six selectable square boundary faces, face identifications, tangent-axis correspondence and transport, as well as topology-aware neighbors and seam visualization.

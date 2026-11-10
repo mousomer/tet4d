@@ -425,6 +425,7 @@ Dictionary configure_checked(
 } // namespace
 
 void Tet4DCoreApi::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("explorer_2d", "request"), &Tet4DCoreApi::explorer_2d);
 	ClassDB::bind_method(D_METHOD("get_core_version"), &Tet4DCoreApi::get_core_version);
 	ClassDB::bind_method(D_METHOD("get_core_status"), &Tet4DCoreApi::get_core_status);
 	ClassDB::bind_method(D_METHOD("echo_text", "text"), &Tet4DCoreApi::echo_text);

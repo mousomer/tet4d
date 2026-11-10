@@ -3,6 +3,7 @@ extends RefCounted
 # Detached native-query results. This adapter never implements geometry or
 # topology rules and never advances the configured gameplay session.
 const AXES := "xyzw"
+var topology_2d
 var _bridge
 var _template: Dictionary = {}
 var _initial: Array = []
@@ -25,6 +26,14 @@ func begin(snapshot: Dictionary) -> bool:
 	# JSON snapshots carry numbers as floats; the native typed boundary requires
 	# integer lattice coordinates. Conversion supplies no geometry semantics.
 	var shape: Array = snapshot.get("board_shape", []).map(func(value): return int(value))
+	if shape.size() == 2:
+		topology_2d = preload("res://scripts/presentation/explorer_2d_adapter.gd").new(_bridge)
+		if not topology_2d.begin(snapshot.get("board_shape", [])):
+			return false
+		_template = snapshot.duplicate(true)
+		_template["board_shape"] = shape
+		_sync_2d()
+		return true
 	if shape.size() not in [3, 4]:
 		return false
 	var source: Array = []
@@ -61,12 +70,36 @@ func _centered_cells(source: Array, shape: Array) -> Array:
 	return _bridge.geometry_translate_blocks(_bridge.geometry_normalize_blocks(source), center)
 
 
+func _sync_2d() -> void:
+	var native: Dictionary = topology_2d.current
+	cells = native.piece.cells.map(func(cell): return cell.coordinate.duplicate())
+	revision = native.revision
+	selected_piece = native.selected_piece
+	_template["current_piece"] = native.piece_name
+	_template["current_piece_color_id"] = native.color_id
+	feedback = topology_2d.feedback
+
+
+func select_topology(index: int) -> bool:
+	if topology_2d == null:
+		return false
+	var accepted: bool = topology_2d.select_topology(index)
+	_sync_2d()
+	return accepted
+
+
 func piece_names() -> Array:
+	if topology_2d != null:
+		return topology_2d.current.piece_names
 	return _catalog.map(func(piece): return str(piece.get("piece_name", "")))
 
 
 # tet4d-semantic-boundary: allow adapter-routing
 func replace_piece(index: int) -> bool:
+	if topology_2d != null:
+		var accepted: bool = topology_2d.replace_piece(index)
+		_sync_2d()
+		return accepted
 	if index < 0 or index >= _catalog.size():
 		feedback = "Piece choice unavailable. Object unchanged."
 		return false
@@ -88,6 +121,8 @@ func replace_piece(index: int) -> bool:
 
 
 func replace_next_piece() -> bool:
+	if topology_2d != null:
+		return replace_piece(posmod(selected_piece + 1, piece_names().size()))
 	return replace_piece(posmod(selected_piece + 1, _catalog.size())) if not _catalog.is_empty() else replace_piece(-1)
 
 
@@ -97,6 +132,10 @@ func dimension() -> int:
 
 # tet4d-semantic-boundary: allow adapter-routing
 func command(command_name: String) -> bool:
+	if topology_2d != null:
+		var accepted: bool = topology_2d.command(command_name)
+		_sync_2d()
+		return accepted
 	var parts := command_name.split("_")
 	if parts.size() != 3 or parts[2] not in ["neg", "pos"]:
 		feedback = "Practice has no gravity, drop, lock or hold. Use deliberate moves."
@@ -131,6 +170,10 @@ func command(command_name: String) -> bool:
 
 
 func retry() -> void:
+	if topology_2d != null:
+		topology_2d.retry()
+		_sync_2d()
+		return
 	cells = _initial.duplicate(true)
 	selected_cell = 0
 	revision += 1
@@ -143,6 +186,8 @@ func select_next_cell() -> void:
 
 # tet4d-semantic-boundary: allow adapter-routing
 func place_target() -> bool:
+	if topology_2d != null:
+		return false
 	# A target is the anchor cell of a native-legal translated pose, so the pose
 	# query alone decides reachability. Each axis seeks up to a third of its
 	# extent; successive targets flip direction so both signs, Y included, get
@@ -177,6 +222,8 @@ func place_target() -> bool:
 
 # tet4d-semantic-boundary: allow adapter-routing
 func neighbors() -> Array:
+	if topology_2d != null:
+		return []
 	var result: Array = []
 	for axis in dimension():
 		for direction in [-1, 1]:
@@ -201,6 +248,10 @@ func snapshot(show_neighbors: bool, hidden_axis: int, inspected_slice: int) -> D
 	result["probe_markers"] = []
 	for coord in cells:
 		result.active_cells.append({"position": coord.duplicate(), "color_id": _template.get("current_piece_color_id", 1)})
+	if topology_2d != null:
+		for index in result.active_cells.size():
+			result.active_cells[index]["cell_id"] = topology_2d.current.piece.cells[index].id
+			result.active_cells[index]["frame"] = topology_2d.current.piece.cells[index].frame.duplicate(true)
 	if not target.is_empty():
 		result.probe_markers.append({"position": target.duplicate(), "kind": "probe_after", "presentation_role": "lesson_target"})
 	if show_neighbors:

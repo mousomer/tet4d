@@ -238,6 +238,11 @@ static func play_legend_groups(mode: String, basis_snapshot: Dictionary = {}, co
 
 
 static func practice_piece_control_groups(mode: String, basis_snapshot: Dictionary = {}, control_frame: Dictionary = {}) -> Array:
+	if mode == "live_2d":
+		return [
+			{"group": "Move", "cockpit_role": "translate", "items": [[_pair("live_move_left", "live_move_right"), "X− / X+"], [_pair("explorer_move_up", "explorer_move_down"), "Y− / Y+"]]},
+			{"group": "Practice", "cockpit_role": "session", "items": [[_display_key("explorer_replace_piece"), "Replace piece"], [_display_key("live_reset"), "Retry object"]]}
+		]
 	var groups: Array = []
 	for source in piece_control_groups(mode, basis_snapshot, control_frame):
 		if source.get("cockpit_role", "") not in ["translate", "rotate"]:

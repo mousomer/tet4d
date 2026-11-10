@@ -17,7 +17,7 @@ phase-dependent work. It is not workflow authority, a CI diary, a completed
 stage archive, a task-contract ledger, or a future programme.
 ## Active Focus
 
-Explorer T2A implements the native bounded/cylinder/torus translation candidate and permanent preservation suite described in `docs/architecture/explorer_topology_t2a_native_transport.md`. T1 PRs #172–#176 are the accepted baseline; remaining Correction 4B P2 findings stay deferred. T2B Godot integration, T2C rotations/twisted profiles and complete T2 acceptance remain separate. Runtime authority has not transferred. See `docs/BACKLOG.md` and `docs/architecture/explorer_topology_t2_transfer_preparation.md`.
+Explorer T2A implements the native bounded/cylinder/torus translation candidate and permanent preservation suite described in `docs/architecture/explorer_topology_t2a_native_transport.md`. T1 PRs #172–#176 are the accepted baseline; remaining Correction 4B P2 findings stay deferred. T2B Godot integration is in progress on `codex/t2b-godot-2d-topology-explorer`; its interface and acceptance are recorded in `docs/architecture/explorer_topology_t2b_godot.md`. T2C rotations/twisted profiles and complete T2 acceptance remain separate. Runtime authority has not transferred. See `docs/BACKLOG.md` and `docs/architecture/explorer_topology_t2_transfer_preparation.md`. T2B now includes the PR #179 fullscreen safe-area correction. On 2026-11-10 the owner reported cylinder and torus working; detailed scenario and fullscreen acceptance remain open.
 Bounded MVP novice acceptance remains pending in `docs/plans/bounded_practice_explorer.md`; unified VIEW helpers and compact Settings/Designer menus remain the baseline.
 
 Machine-readable handoff state. `status` is `active` only on a feature branch

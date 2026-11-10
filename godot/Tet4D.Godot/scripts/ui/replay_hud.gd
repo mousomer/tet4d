@@ -825,7 +825,7 @@ func set_practice_view_basis(snapshot: Dictionary) -> void:
 
 
 func set_practice_state(dimension: int, feedback: String = "", pieces: Array = [], selected_piece: int = -1) -> void:
-	var active := dimension in [3, 4]
+	var active := dimension in [2, 3, 4]
 	if active and _practice_active and _practice_panel != null and _practice_panel.dimension() == dimension:
 		_practice_panel.update_state(feedback)
 		_practice_panel.update_piece_choices(pieces, selected_piece)
@@ -3170,7 +3170,7 @@ func _build_main_menu_screen(screen: Control) -> void:
 	_design_lab_button = design_lab_button
 	layout.add_child(design_lab_button)
 	layout.add_child(_menu_group_header("LEARN"))
-	var explorer_button := _make_command_card("Explorer", "Free 3D/4D spatial practice · no gravity · coordinates and neighbors", "E")
+	var explorer_button := _make_command_card("Explorer", "Free 2D/3D/4D practice · no gravity · topology exploration", "E")
 	explorer_button.pressed.connect(func() -> void: practice_requested.emit("dimension_4"))
 	layout.add_child(explorer_button)
 	var controls_button := _make_command_card("How to Play", "Mode-specific piece, camera, session, and navigation controls", "H")
