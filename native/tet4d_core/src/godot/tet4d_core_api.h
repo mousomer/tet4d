@@ -1,6 +1,7 @@
 #pragma once
 
 #include "tet4d_core/plain_2d_session.hpp"
+#include "tet4d_core/explorer_piece.hpp"
 #include "tet4d_core/plain_nd_session.hpp"
 
 #include <godot_cpp/classes/ref_counted.hpp>
@@ -19,6 +20,10 @@ protected:
 	static void _bind_methods();
 
 public:
+	// Owned Explorer runtime, independent of Play. Strict request dictionaries;
+	// snapshots are copies. begin/close invalidate the previous session. No throws
+	// cross this boundary; rejected operations preserve the complete envelope.
+	Dictionary explorer_2d(const Variant &request);
 	String get_core_version() const;
 	String get_core_status() const;
 	String echo_text(const String &text) const;
@@ -89,6 +94,9 @@ public:
 	String live_4d_state_hash() const;
 
 private:
+	std::unique_ptr<tet4d::core::ExplorerPieceRuntime> explorer_runtime_;
+	std::int64_t explorer_ordinal_ = 0;
+	int explorer_catalog_index_ = 0;
 	mutable tet4d::core::Plain2DSession live_2d_session_;
 	mutable tet4d::core::PlainNDSession live_3d_session_{3};
 	mutable tet4d::core::PlainNDSession live_4d_session_{4};

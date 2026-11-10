@@ -13,6 +13,12 @@ func is_available() -> bool:
 	return ClassDB.class_exists(CORE_CLASS)
 
 
+func explorer_2d(request) -> Dictionary:
+	if not is_available() or not _api().has_method("explorer_2d"):
+		return {"ok": false, "error": {"code": "missing_provider"}}
+	return _api().explorer_2d(request)
+
+
 func get_core_version() -> String:
 	return _api().get_core_version()
 

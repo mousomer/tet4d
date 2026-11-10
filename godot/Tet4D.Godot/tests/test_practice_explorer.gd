@@ -27,7 +27,9 @@ func run() -> Array:
 	entry.keycode = KEY_E
 	entry.pressed = true
 	app._input(entry)
-	_check(app._practice != null and app._mode == "live_4d", "main-menu E enters 4D Explorer")
+	_check(app._practice != null and app._practice.dimension() == 2 and app._mode == "live_2d", "main-menu E enters the 2D topology Explorer")
+	await _menu_entry_route(app, hud, tree)
+	await _application_2d(app, hud, tree)
 	for dimension in [3, 4]:
 		var previous_panel = hud._practice_panel
 		previous_panel._tabs.current_tab = 0
@@ -582,3 +584,82 @@ func _check_unified_view_controls(tree: SceneTree, app, hud, dimension: int) -> 
 	app._practice_action("view_reset")
 	for frame in 90:
 		await tree.process_frame
+
+
+func _menu_entry_route(app, hud, tree) -> void:
+	# Leave the Explorer first: the Main Menu retains a live Explorer session,
+	# so only a cleared one proves the card itself opens 2D.
+	app._practice_action("play")
+	_check(app._practice == null, "Play clears the Explorer before the card route")
+	app._return_to_main_menu()
+	await tree.process_frame
+	var card := hud._main_menu_screen.find_child("CommandCard__Explorer", true, false) as Button
+	_check(card != null, "Main Menu lists the Explorer card")
+	if card == null:
+		return
+	card.pressed.emit()
+	await tree.process_frame
+	await tree.process_frame
+	_check(app._practice != null and app._practice.dimension() == 2 and app._mode == "live_2d", "Main Menu Explorer card opens the 2D topology Explorer")
+	_check(hud._practice_panel != null and hud._practice_panel._topology.is_visible_in_tree(), "Main Menu Explorer entry shows the topology selector")
+	for dimension in [3, 4, 2]:
+		var buttons: Array = hud._practice_panel.find_children("*", "Button", true, false).filter(func(button): return button.get_meta("practice_action", "") == "dimension_%d" % dimension)
+		_check(buttons.size() == 1, "Explorer panel offers one %dD button" % dimension)
+		if buttons.size() != 1:
+			return
+		buttons[0].pressed.emit()
+		await tree.process_frame
+		await tree.process_frame
+		_check(app._practice != null and app._practice.dimension() == dimension, "Explorer panel %dD button switches the Explorer to %dD" % [dimension, dimension])
+	app._practice_action("dimension_3")
+	var retained = app._practice
+	app._return_to_main_menu()
+	await tree.process_frame
+	card.pressed.emit()
+	await tree.process_frame
+	_check(app._practice == retained and app._practice.dimension() == 3 and app._is_live_viewer_active(), "Main Menu Explorer card resumes a retained 3D Explorer instead of resetting to 2D")
+	app._practice_action("dimension_2")
+	await tree.process_frame
+	await tree.process_frame
+
+
+func _application_2d(app, hud, tree) -> void:
+	var play_before: String = app._live_bridge.live_2d_state_hash()
+	app._practice_action("dimension_2")
+	await tree.process_frame
+	await tree.process_frame
+	_check(app._practice != null and app._practice.dimension() == 2, "2D entry")
+	if app._practice == null or app._practice.dimension() != 2:
+		return
+	_check(hud._practice_panel._topology.is_visible_in_tree(), "2D topology selector visible")
+	_check(app._live_bridge.live_2d_state_hash() == play_before, "2D entry leaves Play untouched")
+	var initial: Dictionary = app._practice.topology_2d.current.duplicate(true)
+	app._process(120.0)
+	_check(app._practice.topology_2d.current == initial, "2D no automatic gravity")
+	for topology in 4:
+		app._practice_action("topology_%d" % topology)
+		for command in ["move_x_neg", "move_x_pos", "move_y_neg", "move_y_pos"]:
+			for step in 23:
+				app._practice_action(command)
+				var native: Dictionary = app._live_bridge.explorer_2d({"op": "snapshot"})
+				var drawn: Array = app._current_snapshot.active_cells
+				_check(drawn.size() == native.piece.cells.size(), "2D rendered count")
+				for index in drawn.size():
+					_check(drawn[index].position == native.piece.cells[index].coordinate and drawn[index].cell_id == native.piece.cells[index].id and drawn[index].frame == native.piece.cells[index].frame, "2D rendered canonical ID/coordinate/frame")
+		app._practice_action("retry")
+		_check(app._practice.topology_2d.current.piece == app._practice.topology_2d.current.initial_piece, "2D UI Retry exact")
+	var before_view: Dictionary = app._live_bridge.explorer_2d({"op": "snapshot"})
+	app._practice_action("view_fit")
+	app._practice_action("view_reset")
+	_check(app._live_bridge.explorer_2d({"op": "snapshot"}) == before_view, "2D view independent")
+	for command in ["rotate_cw", "rotate_ccw", "soft_drop", "hard_drop", "hold", "rotate_xy_pos"]:
+		app._live_2d_command(command)
+	_check(app._live_bridge.explorer_2d({"op": "snapshot"}) == before_view, "2D unsupported controls do not attempt transport")
+	_check(app._live_bridge.live_2d_state_hash() == play_before, "2D app Play isolation")
+	app._practice_action("play")
+	_check(app._practice == null and app._mode == "live_2d", "2D return to Play")
+	var play_start: String = app._live_bridge.live_2d_state_hash()
+	app._live_2d_command("soft_drop")
+	_check(app._live_bridge.live_2d_state_hash() != play_start, "2D ordinary gameplay restored")
+	app._start_practice(4)
+	await tree.process_frame

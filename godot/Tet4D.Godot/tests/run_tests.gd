@@ -71,6 +71,7 @@ const TEST_SCRIPTS := [
 	"res://tests/test_tet4d_core_extension.gd",
 	"res://tests/test_topology_contract_document.gd",
 	"res://tests/test_topology_transport_boundary.gd",
+	"res://tests/test_explorer_2d_transport.gd",
 	"res://tests/test_live_loop_parity_acceptance.gd",
 	"res://tests/test_demo_entry_flow.gd",
 	"res://tests/test_guided_onboarding.gd",

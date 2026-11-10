@@ -1,6 +1,10 @@
 extends VBoxContainer
 
 signal requested(action: String)
+var _topology: OptionButton
+var _topology_note: Label
+var _dimension_controls: Array[Control] = []
+var _rotation_title: Label
 var _feedback: Label
 var _tabs: TabContainer
 var _dimension := 0
@@ -23,9 +27,18 @@ func configure(dimension: int) -> void:
 	add_child(_title)
 	var modes := HBoxContainer.new()
 	add_child(modes)
+	_button(modes, "2D", "dimension_2")
 	_button(modes, "3D", "dimension_3")
 	_button(modes, "4D", "dimension_4")
 	_button(modes, "Play", "play")
+	_topology = OptionButton.new()
+	_topology.name = "TopologySelector"
+	for label in ["Bounded · walls", "Cylinder X · X wraps", "Cylinder Y · Y wraps", "Torus · X/Y wrap"]:
+		_topology.add_item(label)
+	_topology.item_selected.connect(func(index: int) -> void: requested.emit("topology_%d" % index))
+	add_child(_topology)
+	_topology_note = _label("Changing topology resets the piece. View is preserved.")
+	add_child(_topology_note)
 	_tabs = TabContainer.new()
 	# The outer cockpit fits measured minimums. A ScrollContainer's zero
 	# minimum would otherwise collapse both pages to invisible contents.
@@ -51,7 +64,8 @@ func configure(dimension: int) -> void:
 	for axis in "xyzw":
 		_button(moves, "−" + axis.to_upper(), "move_%s_neg" % axis)
 		_button(moves, "+" + axis.to_upper(), "move_%s_pos" % axis)
-	object_page.add_child(_label("Rotate object · quarter turns"))
+	_rotation_title = _label("Rotate object · quarter turns")
+	object_page.add_child(_rotation_title)
 	var rotations := GridContainer.new()
 	rotations.columns = 2
 	object_page.add_child(rotations)
@@ -65,12 +79,18 @@ func configure(dimension: int) -> void:
 
 func _update_dimension_controls() -> void:
 	_title.text = "Explorer · %dD" % _dimension
+	_topology.visible = _dimension == 2
+	_topology_note.visible = _dimension == 2
+	_rotation_title.visible = _dimension != 2
+	for control in _dimension_controls:
+		var action: String = control.get_meta("practice_action")
+		control.visible = _dimension != 2 or (action.begins_with("move_") and action.get_slice("_", 1) in ["x", "y"])
 	for control in _four_dimensional_controls:
 		control.visible = _dimension == 4
 
 
 func update_state(feedback: String) -> void:
-	var message := feedback if feedback.begins_with("Object unchanged:") or "unavailable" in feedback or "does not fit" in feedback else ""
+	var message := feedback if _dimension == 2 or feedback.begins_with("Object unchanged:") or "unavailable" in feedback or "does not fit" in feedback else ""
 	if _feedback.text != message:
 		_feedback.text = message
 
@@ -133,6 +153,8 @@ func _button(parent: Node, text: String, action: String) -> void:
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.pressed.connect(func() -> void: requested.emit(action))
 	parent.add_child(button)
+	if action.begins_with("move_") or action.begins_with("rotate_") or action == "target":
+		_dimension_controls.append(button)
 	if action.begins_with("slice_") or (action.begins_with("move_") or action.begins_with("rotate_")) and "w" in action:
 		_four_dimensional_controls.append(button)
 

@@ -1412,6 +1412,8 @@ func _release_presentation_layout_guard_after_settle(revision: int) -> void:
 
 
 func _clear_practice() -> void:
+	if _practice != null and _practice.dimension() == 2:
+		_live_bridge.explorer_2d({"op": "close"})
 	_practice = null
 	_practice_neighbors = false
 	_practice_slice = -1
@@ -1420,6 +1422,23 @@ func _clear_practice() -> void:
 
 
 func _start_practice(dimension: int) -> void:
+	if dimension == 2:
+		var setup_2d: Dictionary = _hud.configured_live_setup(MODE_LIVE_2D).duplicate(true)
+		var candidate_2d = preload("res://scripts/presentation/practice_explorer.gd").new(_live_bridge)
+		if not candidate_2d.begin({"board_shape": setup_2d.get("board_shape", [10, 20]), "dimension": 2, "trace_type": "live_2d", "piece_set_id": "classic"}):
+			push_error("Native 2D Explorer unavailable")
+			return
+		_practice = candidate_2d
+		_practice_neighbors = false
+		_practice_slice = -1
+		_active_live_setup = setup_2d
+		_prepare_live_mode_entry(MODE_LIVE_2D)
+		_hud.set_live_2d_mode(false, false, "", "", _live_gravity_interval_seconds)
+		_clear_ghost_cache()
+		_refresh_practice_snapshot()
+		_establish_canonical_view_and_fit(MODE_LIVE_2D)
+		_hud.show_replay_viewer()
+		return
 	var mode_name := MODE_LIVE_3D if dimension == 3 else MODE_LIVE_4D
 	var setup: Dictionary = _hud.configured_live_setup(mode_name).duplicate(true)
 	_start_configured_live_game(setup)
@@ -1442,12 +1461,17 @@ func _practice_hidden_axis() -> int:
 
 
 func _practice_action(action: String) -> void:
-	if action in ["dimension_3", "dimension_4"]:
-		if _practice != null and _practice.dimension() == (3 if action == "dimension_3" else 4):
+	if action == "explorer":
+		# Main Menu entry: resume a retained Explorer in its own dimension;
+		# otherwise start at 2D, where topology exploration begins.
+		_practice_action("dimension_%d" % (_practice.dimension() if _practice != null else 2))
+		return
+	if action in ["dimension_2", "dimension_3", "dimension_4"]:
+		if _practice != null and _practice.dimension() == int(action.get_slice("_", 1)):
 			if not _is_live_viewer_active():
 				_return_to_viewer_from_navigation()
 			return
-		_start_practice(3 if action == "dimension_3" else 4)
+		_start_practice(int(action.get_slice("_", 1)))
 		return
 	if _practice == null:
 		return
@@ -1498,7 +1522,9 @@ func _practice_action(action: String) -> void:
 					start = coordinates.min() if direction < 0 else coordinates.max()
 				_practice_slice = posmod(start + direction, int(_current_snapshot.board_shape[axis]))
 		_:
-			if action.begins_with("piece_"):
+			if action.begins_with("topology_"):
+				_practice.select_topology(action.get_slice("_", 1).to_int())
+			elif action.begins_with("piece_"):
 				var piece_index := action.trim_prefix("piece_")
 				_practice.replace_piece(piece_index.to_int() if piece_index.is_valid_int() else -1)
 			elif action.begins_with("basis_"):
@@ -1522,6 +1548,8 @@ func _refresh_practice_panel() -> void:
 	if _practice.dimension() == 4:
 		_hud.set_practice_view_basis(_live_4d_basis.indicator_snapshot())
 	_hud.set_practice_state(_practice.dimension(), _practice.feedback, _practice.piece_names(), _practice.selected_piece)
+	if _practice.dimension() == 2:
+		_hud._practice_panel._topology.select(_practice.topology_2d.topology)
 
 
 func _refresh_hud() -> void:
@@ -1922,6 +1950,9 @@ func _clear_live_ui_focus() -> void:
 
 
 func _live_2d_command(command: String) -> void:
+	if _practice != null:
+		_practice_action(command)
+		return
 	var result := _live_bridge.live_2d_apply_command(command)
 	_update_live_drop_timing(command, result)
 	_refresh_live_2d_snapshot()
@@ -1982,6 +2013,9 @@ func _control_frame_mapping(dimension: int):
 
 
 func _dispatch_live_2d_control_intent(intent: String) -> bool:
+	if _practice != null:
+		_practice_action("move_x_neg" if intent == "move_left" else "move_x_pos")
+		return true
 	return _dispatch_live_gameplay_command(_control_frame_mapping(2).translation_command(intent, _translation_frame))
 
 
@@ -2131,6 +2165,9 @@ func _clear_live_4d_presentation_state(end_session: bool) -> void:
 
 
 func _reset_live_2d() -> void:
+	if _practice != null:
+		_practice_action("retry")
+		return
 	_live_bridge.live_2d_reset()
 	_live_2d_session_started = true
 	_live_tick_accumulator = 0.0
@@ -2435,6 +2472,9 @@ func _live_mode_paused() -> bool:
 
 
 func _refresh_live_2d_snapshot() -> void:
+	if _practice != null:
+		_refresh_practice_snapshot()
+		return
 	var parsed = JSON.parse_string(_live_bridge.live_2d_snapshot_json())
 	if typeof(parsed) != TYPE_DICTIONARY:
 		_current_snapshot = {
