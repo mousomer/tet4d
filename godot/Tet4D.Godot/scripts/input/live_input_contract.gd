@@ -130,6 +130,12 @@ static func practice_view_control_groups(mode: String) -> Array:
 				if spec.plane == plane:
 					rotations.append(_practice_view_pair(plane, spec.negative_action, spec.positive_action, "basis_%s_neg" % plane.to_lower(), "basis_%s_pos" % plane.to_lower()))
 		groups.append({"cockpit_role": "view_exact", "items": rotations})
+	if mode == "live_2d":
+		return [{"cockpit_role": "view_framing", "items": [
+			_practice_view_pair("Zoom", "live_4d_camera_zoom_out", "live_4d_camera_zoom_in", "zoom_out", "zoom_in"),
+			["F", "Fit", {"operation": "Fit", "command": "view_fit", "action": "replay_fit_view"}],
+			[_display_key("reset"), "Reset", {"operation": "Reset", "command": "view_reset", "action": "reset"}],
+		]}]
 	groups.append({"cockpit_role": "view_orient", "items": [
 		_practice_view_pair("Yaw", "live_4d_camera_yaw_left", "live_4d_camera_yaw_right", "look_yaw_left", "look_yaw_right"),
 		_practice_view_pair("Pitch", "live_4d_camera_pitch_up", "live_4d_camera_pitch_down", "look_pitch_up", "look_pitch_down"),
@@ -237,8 +243,26 @@ static func play_legend_groups(mode: String, basis_snapshot: Dictionary = {}, co
 	return piece_control_groups(mode, basis_snapshot, control_frame)
 
 
+static func practice_2d_action_specs() -> Array:
+	return [
+		["live_3d_move_x_neg", "move_x_neg"], ["live_3d_move_x_pos", "move_x_pos"],
+		["live_3d_move_z_neg", "move_y_neg"], ["live_3d_move_z_pos", "move_y_pos"],
+		["live_3d_rotate_xy_neg", "rotate_xy_neg"], ["live_3d_rotate_xy_pos", "rotate_xy_pos"],
+		["live_3d_reset", "retry"],
+	]
+
+
 static func practice_piece_control_groups(mode: String, basis_snapshot: Dictionary = {}, control_frame: Dictionary = {}) -> Array:
 	var groups: Array = []
+	if mode == "live_2d":
+		return [
+			{"cockpit_role": "translate", "items": [
+				[_pair("live_3d_move_x_neg", "live_3d_move_x_pos"), "X− / X+", {"cockpit_direction": "horizontal", "signed_axis": "+X"}],
+				[_pair("live_3d_move_z_neg", "live_3d_move_z_pos"), "Y− / Y+", {"cockpit_direction": "vertical", "signed_axis": "+Y"}],
+			]},
+			{"cockpit_role": "rotate", "items": [[_pair("live_3d_rotate_xy_neg", "live_3d_rotate_xy_pos", " / "), "XY", {"operation": "XY"}]]},
+			{"cockpit_role": "session", "items": [[_display_key("explorer_replace_piece"), "Replace piece"], [_display_key("live_3d_reset"), "Retry object"]]},
+		]
 	for source in piece_control_groups(mode, basis_snapshot, control_frame):
 		if source.get("cockpit_role", "") not in ["translate", "rotate"]:
 			continue
@@ -246,7 +270,7 @@ static func practice_piece_control_groups(mode: String, basis_snapshot: Dictiona
 		if group.cockpit_role == "translate":
 			group.items.append([_pair("explorer_move_up", "explorer_move_down"), "Y− / Y+", {"cockpit_direction": "vertical", "signed_axis": "+Y"}])
 		groups.append(group)
-	groups.append({"group": "Practice", "cockpit_role": "session", "items": [[_display_key("explorer_replace_piece"), "Replace piece"], [_display_key("live_3d_reset" if mode == "live_3d" else "live_4d_reset"), "Retry object"]]})
+	groups.append({"group": "Practice", "cockpit_role": "session", "items": [[_display_key("explorer_replace_piece"), "Replace piece"], [_display_key("live_reset" if mode == "live_2d" else ("live_3d_reset" if mode == "live_3d" else "live_4d_reset")), "Retry object"]]})
 	return groups
 
 

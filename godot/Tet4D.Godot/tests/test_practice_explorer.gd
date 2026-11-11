@@ -10,6 +10,7 @@ var completed := false
 func run() -> Array:
 	var bridge = Bridge.new()
 	_check(bridge.is_available(), "native provider available")
+	_check_native_candidate_adapter()
 	for dimension in [3, 4]:
 		_model_contract(bridge, dimension)
 	var tree := Engine.get_main_loop() as SceneTree
@@ -28,6 +29,7 @@ func run() -> Array:
 	entry.pressed = true
 	app._input(entry)
 	_check(app._practice != null and app._mode == "live_4d", "main-menu E enters 4D Explorer")
+	await _check_2d_access(tree, app, hud)
 	for dimension in [3, 4]:
 		var previous_panel = hud._practice_panel
 		previous_panel._tabs.current_tab = 0
@@ -582,3 +584,172 @@ func _check_unified_view_controls(tree: SceneTree, app, hud, dimension: int) -> 
 	app._practice_action("view_reset")
 	for frame in 90:
 		await tree.process_frame
+
+
+func _check_2d_access(tree: SceneTree, app, hud) -> void:
+	var panel = hud._practice_panel
+	var buttons: Array = panel.find_children("*", "Button", true, false)
+	var two_d: Array = buttons.filter(func(button): return button.get_meta("practice_action", "") == "dimension_2")
+	_check(two_d.size() == 1, "Explorer visibly offers 2D")
+	if two_d.size() != 1:
+		return
+	two_d[0].pressed.emit()
+	await tree.process_frame
+	await tree.process_frame
+	_check(app._practice != null and app._practice.dimension() == 2 and app._mode == "live_2d", "2D button opens real flat practice")
+	if app._practice == null or app._practice.dimension() != 2:
+		return
+	var model = app._practice
+	var initial: Array = model.cells.duplicate(true)
+	var native_before: String = app._live_bridge.live_2d_snapshot_json()
+	_check(panel == hud._practice_panel and panel.is_visible_in_tree(), "2D retains visible Explorer panel")
+	_check(model.piece_names().size() == 7, "2D exposes seven native classic pieces")
+	for button in buttons:
+		var action: String = button.get_meta("practice_action", "")
+		if action.begins_with("move_") or action.begins_with("rotate_"):
+			var axes := action.get_slice("_", 1)
+			_check(button.visible == (not "z" in axes and not "w" in axes), "2D shows only XY piece controls: " + action)
+	app._process(120.0)
+	_check(model.cells == initial, "2D practice has no automatic gravity")
+	for command in ["move_left", "move_right", "rotate_cw", "rotate_ccw"]:
+		app._live_2d_command(command)
+	_check(model.cells == initial, "2D movement and rotation inverse pairs restore pose")
+	var key := InputEventKey.new()
+	key.pressed = true
+	key.keycode = KEY_LEFT
+	app._unhandled_input(key)
+	_check(model.cells != initial, "2D keyboard moves detached practice piece")
+	app._reset_live_2d()
+	_check(model.cells == initial, "2D restart retries practice object")
+	for pair in [[KEY_W, KEY_S], [KEY_UP, KEY_DOWN]]:
+		key.keycode = pair[0]
+		app._unhandled_input(key)
+		_check(model.cells != initial, "2D 3D-subset binding moves vertically")
+		key.keycode = pair[1]
+		app._unhandled_input(key)
+		_check(model.cells == initial, "2D inverse vertical binding restores object")
+	for unused in [KEY_PAGEUP, KEY_PAGEDOWN, KEY_Z, KEY_X]:
+		key.keycode = unused
+		app._unhandled_input(key)
+		_check(model.cells == initial, "2D excludes old vertical/rotation aliases: " + OS.get_keycode_string(unused))
+	var oracle = Practice.new(app._live_bridge)
+	_check(oracle.begin(app._current_snapshot), "2D native-query comparison initializes")
+	oracle.command("rotate_xy_neg")
+	key.keycode = KEY_R
+	app._unhandled_input(key)
+	_check(model.cells == oracle.cells, "2D R reuses 3D XY rotation")
+	key.keycode = KEY_BACKSPACE
+	app._unhandled_input(key)
+	_check(model.cells == initial, "2D Backspace reuses 3D Retry")
+	app._reset_live_2d()
+	Input.action_press("live_3d_move_z_neg")
+	app._process_live_input_repeat(0.0)
+	app._process_live_input_repeat(1.0)
+	_check(model.cells != initial, "2D held W repeats Y movement through shared 3D action")
+	Input.action_press("live_3d_move_z_pos")
+	var held_pose: Array = model.cells.duplicate(true)
+	app._process_live_input_repeat(1.0)
+	_check(model.cells == held_pose, "2D opposite held directions cancel")
+	Input.action_release("live_3d_move_z_neg")
+	Input.action_release("live_3d_move_z_pos")
+	app._reset_live_2d()
+	for turn in 4:
+		_check(model.command("rotate_xy_pos"), "2D XY quarter-turn accepted")
+	_check(model.cells == initial, "2D four XY turns restore exact pose")
+	for axis in ["x", "y"]:
+		for attempt in int(app._current_snapshot.board_shape[0]) + int(app._current_snapshot.board_shape[1]):
+			model.command("move_%s_neg" % axis)
+		var wall: Array = model.cells.duplicate(true)
+		_check(not model.command("move_%s_neg" % axis) and model.cells == wall, "2D wall rejection is atomic: " + axis)
+		model.retry()
+	_check(not model.command("move_z_pos") and not model.command("rotate_xz_pos"), "2D rejects spatial commands")
+	_check(model.place_target() and not model.cells.has(model.target), "2D marks a native-legal target away from the object")
+
+	for command in ["hard_drop", "soft_drop", "hold", "tick"]:
+		app._live_2d_command(command)
+	_check(model.cells == initial, "2D rejects gameplay-only commands")
+	await _check_2d_stability_and_topologies(tree, app, hud)
+	app._practice_action("replace")
+	_check(model.selected_piece >= 0, "2D replacement uses native catalogue")
+	app._practice_action("view_reset")
+	app._practice_action("view_fit")
+	_check(app._live_bridge.live_2d_snapshot_json() == native_before, "2D actions preserve complete native gameplay session")
+	app._return_to_main_menu()
+	app._practice_action("dimension_2")
+	_check(app._practice == model and app._is_live_viewer_active(), "2D menu return retains practice")
+	app._practice_action("play")
+	_check(app._practice == null and app._mode == "live_2d" and not panel.visible, "2D Play restores ordinary game")
+	app._practice_action("dimension_4")
+	await tree.process_frame
+
+
+func _check_2d_stability_and_topologies(tree: SceneTree, app, hud) -> void:
+	var model = app._practice
+	var panel = hud._practice_panel
+	for window_size in [Vector2i(1280, 800), Vector2i(1280, 720)]:
+		tree.root.size = window_size
+		panel._tabs.current_tab = 1
+		for frame in 180:
+			await tree.process_frame
+			if frame > 30 and hud._live_cockpit.fit_settled():
+				break
+		var nodes: Array = panel.find_children("*", "", true, false).map(func(node): return node.get_instance_id())
+		var helpers: Array = hud._piece_control_strip.find_children("*", "", true, false).map(func(node): return node.get_instance_id())
+		var before := _layout_snapshot(hud)
+		for action in ["move_x_neg", "move_y_neg", "move_x_pos", "move_y_pos", "rotate_xy_neg", "rotate_xy_pos", "retry"]:
+			app._practice_action(action)
+			var stable := true
+			for frame in 24:
+				await tree.process_frame
+				stable = _same_layout(before, _layout_snapshot(hud)) and stable
+			_check(stable, "2D " + action + " preserves panel rectangles and fit on every frame")
+			_check(nodes == panel.find_children("*", "", true, false).map(func(node): return node.get_instance_id()), "2D piece movement preserves every panel node")
+			_check(helpers == hud._piece_control_strip.find_children("*", "", true, false).map(func(node): return node.get_instance_id()), "2D piece movement preserves every helper node")
+	panel._tabs.current_tab = 0
+	_check(panel._topologies.is_visible_in_tree(), "2D topology access is visible on primary View page")
+	_check(panel._topologies.is_item_disabled(4) and panel._topologies.is_item_disabled(5), "twisted profiles remain explicitly unavailable")
+	for preset in ["cylinder_x", "cylinder_y", "torus"]:
+		app._practice_action("retry")
+		var index := 1 if preset == "cylinder_x" else (2 if preset == "cylinder_y" else 3)
+		panel._topologies.item_selected.emit(index)
+		_check(model.topology == preset and panel._topologies.selected == index, "topology selector applies real native " + preset)
+		var initial: Array = model.cells.duplicate(true)
+		var shape: Array = app._current_snapshot.board_shape
+		for axis in ([0, 1] if preset == "torus" else [0 if preset == "cylinder_x" else 1]):
+			for step in int(shape[axis]):
+				_check(model.command("move_%s_pos" % "xy"[axis]), "native seam movement accepted")
+			_check(model.cells == initial, preset + " complete wrap restores all indexed cells")
+			model.command("move_%s_neg" % "xy"[axis])
+			model.command("move_%s_pos" % "xy"[axis])
+			_check(model.cells == initial, preset + " seam inverse restores exact cells")
+		if preset != "torus":
+			var wall_axis := "y" if preset == "cylinder_x" else "x"
+			for step in int(shape[0]) + int(shape[1]):
+				model.command("move_%s_neg" % wall_axis)
+			var wall: Array = model.cells.duplicate(true)
+			_check(not model.command("move_%s_neg" % wall_axis) and model.cells == wall, "cylinder unwrapped wall rejects atomically")
+		_check(not model.command("rotate_xy_pos"), "non-bounded rotations cannot fall through to bounded geometry")
+		app._practice_action("retry")
+		_check(model.cells == initial, "native topology Retry restores exact baseline")
+		app._practice_action("topology_bounded")
+		_check(model.topology == "bounded", "return to bounded preserves compatible piece")
+	var old: Array = model.cells.duplicate(true)
+	app._practice_action("topology_mobius")
+	_check(model.topology == "bounded" and model.cells == old and panel._topologies.selected == 0, "unsupported topology leaves selector and piece unchanged")
+	app._practice_action("retry")
+
+
+func _check_native_candidate_adapter() -> void:
+	var bridge = Bridge.new()
+	var original := [[1, 1], [2, 1]]
+	var admitted: Dictionary = bridge.explorer_begin([4, 4], original, original, "torus")
+	_check(admitted.get("ok", false) and admitted.get("cell_ids", []) == [0, 1], "native adapter admits stable indexed cells")
+	for turn in 4:
+		var result: Dictionary = bridge.explorer_move(0, 1)
+		_check(result.get("ok", false) and result.get("cell_ids", []) == [0, 1] and result.cells.size() == 2, "native adapter conserves identities across seam")
+	var invalid: Dictionary = bridge.explorer_begin([4, 4], original, [[1, 1], [1, 1]], "torus")
+	_check(not invalid.get("ok", true), "native adapter rejects duplicate occupancy")
+	_check(not bridge.explorer_begin([4, 4], original, original, "mobius").get("ok", true), "native adapter rejects unsupported preset")
+	_check(not bridge.explorer_move(2, 1).get("ok", true) and not bridge.explorer_move(0, 0).get("ok", true), "native adapter rejects invalid axes and directions")
+	var retried: Dictionary = bridge.explorer_retry()
+	_check(retried.get("ok", false) and retried.cells == original, "invalid adapter requests preserve prior runtime and Retry")

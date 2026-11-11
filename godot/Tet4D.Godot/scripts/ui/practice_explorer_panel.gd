@@ -4,11 +4,14 @@ signal requested(action: String)
 var _feedback: Label
 var _tabs: TabContainer
 var _dimension := 0
+var _topology_signature := ""
+var _topologies: OptionButton
+var _topology_host: VBoxContainer
 var _pieces: OptionButton
 var _piece_names: Array = []
 var view_controls_host: VBoxContainer
 var _title: Label
-var _four_dimensional_controls: Array[Control] = []
+var _dimensional_controls: Array[Control] = []
 
 
 func configure(dimension: int) -> void:
@@ -23,6 +26,7 @@ func configure(dimension: int) -> void:
 	add_child(_title)
 	var modes := HBoxContainer.new()
 	add_child(modes)
+	_button(modes, "2D", "dimension_2")
 	_button(modes, "3D", "dimension_3")
 	_button(modes, "4D", "dimension_4")
 	_button(modes, "Play", "play")
@@ -33,6 +37,20 @@ func configure(dimension: int) -> void:
 	_tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_child(_tabs)
 	view_controls_host = _page("View")
+	_topology_host = VBoxContainer.new()
+	view_controls_host.add_child(_topology_host)
+	_topology_host.add_child(_label("Topology"))
+	_topologies = OptionButton.new()
+	_topologies.name = "ExplorerTopologySelector"
+	_topologies.fit_to_longest_item = false
+	_topologies.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for record in [["Bounded", "bounded"], ["Cylinder · wrap X", "cylinder_x"], ["Cylinder · wrap Y", "cylinder_y"], ["Torus", "torus"], ["Möbius · unavailable", "mobius"], ["Klein · unavailable", "klein"]]:
+		_topologies.add_item(record[0])
+		_topologies.set_item_metadata(_topologies.item_count - 1, record[1])
+		_topologies.set_item_disabled(_topologies.item_count - 1, record[1] in ["mobius", "klein"])
+	_topologies.item_selected.connect(func(index): requested.emit("topology_" + str(_topologies.get_item_metadata(index))))
+	_topology_host.add_child(_topologies)
+	_topologies.tooltip_text = "Native candidate: bounded, cylinders and torus translations. Twisted seams and non-bounded rotations are not yet available."
 	var object_page := _page("Piece")
 	_pieces = OptionButton.new()
 	_pieces.name = "PracticePieceSelector"
@@ -65,8 +83,23 @@ func configure(dimension: int) -> void:
 
 func _update_dimension_controls() -> void:
 	_title.text = "Explorer · %dD" % _dimension
-	for control in _four_dimensional_controls:
-		control.visible = _dimension == 4
+	_topology_host.visible = _dimension == 2
+	for control in _dimensional_controls:
+		control.visible = _dimension >= int(control.get_meta("minimum_dimension"))
+
+
+func update_topology(topology: String) -> void:
+	var signature := "%d|%s" % [_dimension, topology]
+	if signature == _topology_signature:
+		return
+	_topology_signature = signature
+	for index in _topologies.item_count:
+		if str(_topologies.get_item_metadata(index)) == topology:
+			if _topologies.selected != index:
+				_topologies.select(index)
+	for control in _dimensional_controls:
+		if str(control.get_meta("practice_action", "")).begins_with("rotate_"):
+			control.disabled = _dimension == 2 and topology != "bounded"
 
 
 func update_state(feedback: String) -> void:
@@ -133,8 +166,10 @@ func _button(parent: Node, text: String, action: String) -> void:
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.pressed.connect(func() -> void: requested.emit(action))
 	parent.add_child(button)
-	if action.begins_with("slice_") or (action.begins_with("move_") or action.begins_with("rotate_")) and "w" in action:
-		_four_dimensional_controls.append(button)
+	if action.begins_with("move_") or action.begins_with("rotate_"):
+		var axes := action.get_slice("_", 1)
+		button.set_meta("minimum_dimension", 4 if "w" in axes else (3 if "z" in axes else 2))
+		_dimensional_controls.append(button)
 
 
 func _label(text: String) -> Label:

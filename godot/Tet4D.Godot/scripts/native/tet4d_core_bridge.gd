@@ -74,6 +74,10 @@ func validate_live_board_setup(setup: Dictionary) -> Dictionary:
 	return _api().validate_live_board_setup(setup)
 
 
+func live_2d_production_piece_catalog() -> Array:
+	return _api().get_live_2d_production_piece_catalog()
+
+
 func live_nd_production_piece_catalog() -> Array:
 	return _api().get_live_nd_production_piece_catalog()
 
@@ -285,3 +289,15 @@ func _ensure_extension_loaded() -> void:
 	var error := GDExtensionManager.load_extension(EXTENSION_PATH)
 	if error != OK and error != ERR_ALREADY_EXISTS:
 		push_error("Failed to load Stage 8 GDExtension at %s: %s" % [EXTENSION_PATH, error])
+
+
+func explorer_begin(dims: Array, original: Array, cells: Array, preset: String) -> Dictionary:
+	return _api().explorer_begin(dims, original, cells, preset)
+
+
+func explorer_move(axis: int, direction: int) -> Dictionary:
+	return _api().explorer_move(axis, direction)
+
+
+func explorer_retry() -> Dictionary:
+	return _api().explorer_retry()

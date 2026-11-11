@@ -17,6 +17,9 @@
 #include <godot_cpp/variant/char_string.hpp>
 #include <godot_cpp/variant/variant.hpp>
 
+#include <algorithm>
+#include <limits>
+#include <new>
 #include <string>
 #include <limits>
 #include <optional>
@@ -440,6 +443,10 @@ void Tet4DCoreApi::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("topology_transport_resolve_cell_step", "profile", "query"), &Tet4DCoreApi::topology_transport_resolve_cell_step);
 	ClassDB::bind_method(D_METHOD("get_board_extent_contract"), &Tet4DCoreApi::get_board_extent_contract);
 	ClassDB::bind_method(D_METHOD("validate_live_board_setup", "setup"), &Tet4DCoreApi::validate_live_board_setup);
+	ClassDB::bind_method(D_METHOD("explorer_begin", "dims", "original", "cells", "preset"), &Tet4DCoreApi::explorer_begin);
+	ClassDB::bind_method(D_METHOD("explorer_move", "axis", "direction"), &Tet4DCoreApi::explorer_move);
+	ClassDB::bind_method(D_METHOD("explorer_retry"), &Tet4DCoreApi::explorer_retry);
+	ClassDB::bind_method(D_METHOD("get_live_2d_production_piece_catalog"), &Tet4DCoreApi::get_live_2d_production_piece_catalog);
 	ClassDB::bind_method(D_METHOD("get_live_nd_production_piece_catalog"), &Tet4DCoreApi::get_live_nd_production_piece_catalog);
 	ClassDB::bind_method(D_METHOD("run_builtin_plain_2d_smoke_case"), &Tet4DCoreApi::run_builtin_plain_2d_smoke_case);
 	ClassDB::bind_method(D_METHOD("list_plain_2d_parity_cases"), &Tet4DCoreApi::list_plain_2d_parity_cases);
@@ -679,6 +686,126 @@ Dictionary Tet4DCoreApi::validate_live_board_setup(const Variant &setup) const {
 		return configuration_error_dictionary("$", "The live setup contains an unsupported Variant value.");
 	}
 	return board_extent_result_dictionary(tet4d::core::validate_live_board_setup_transport(*transported.value));
+}
+
+
+namespace {
+Dictionary explorer_result(tet4d::core::PieceFailure failure, const tet4d::core::PieceEnvelope *state = nullptr) {
+	Dictionary result;
+	result["ok"] = failure == tet4d::core::PieceFailure::none;
+	result["reason"] = tet4d::core::piece_failure_name(failure);
+	if (state != nullptr) {
+		Array cells;
+		Array initial;
+		Array ids;
+		for (const auto &cell : state->piece.cells) {
+			Array coordinate;
+			for (int value : cell.coordinate.values) coordinate.push_back(value);
+			cells.push_back(coordinate);
+			ids.push_back(cell.id);
+		}
+		for (const auto &cell : state->initial_piece.cells) {
+			Array coordinate;
+			for (int value : cell.coordinate.values) coordinate.push_back(value);
+			initial.push_back(coordinate);
+		}
+		result["cells"] = cells;
+		result["initial_cells"] = initial;
+		result["cell_ids"] = ids;
+		result["revision"] = state->revision;
+	}
+	return result;
+}
+}
+
+Dictionary Tet4DCoreApi::explorer_begin(const Array &dims, const Array &original, const Array &cells, const String &preset) {
+	using namespace tet4d::core;
+	try {
+		if (dims.size() != 2 || original.is_empty() || original.size() != cells.size() ||
+				original.size() > static_cast<int64_t>(EXPLORER_MAX_CELLS))
+			return explorer_result(PieceFailure::invalid_piece_state);
+		bool valid = false;
+		const auto shape = coord_from_array(dims, valid);
+		if (!valid) return explorer_result(PieceFailure::invalid_profile);
+		const auto rest = blocks_from_array(original, valid);
+		if (!valid) return explorer_result(PieceFailure::invalid_piece_state);
+		const auto current = blocks_from_array(cells, valid);
+		if (!valid) return explorer_result(PieceFailure::invalid_piece_state);
+		for (const auto &coord : rest) {
+			if (coord.dimension() != 2) return explorer_result(PieceFailure::invalid_piece_state);
+			for (int axis = 0; axis < 2; ++axis)
+				if (coord.values[axis] < 0 || coord.values[axis] >= shape.values[axis])
+					return explorer_result(PieceFailure::invalid_piece_state);
+		}
+		for (const auto &coord : current) if (coord.dimension() != 2) return explorer_result(PieceFailure::invalid_piece_state);
+		if (preset != "bounded" && preset != "cylinder_x" && preset != "cylinder_y" && preset != "torus")
+			return explorer_result(PieceFailure::unsupported_representation);
+		ExplorerPiece piece;
+		// Identity is scoped to this detached, non-persistent single-object bridge.
+		piece.object_namespace = "00000000000000000000000000000001";
+		piece.object_ordinal = 1;
+		piece.profile = {1, 2, {shape.values[0], shape.values[1]}, {}};
+		for (int axis = 0; axis < 2; ++axis) {
+			if (preset == "torus" || (axis == 0 && preset == "cylinder_x") || (axis == 1 && preset == "cylinder_y"))
+				piece.profile.seams.push_back({"seam_" + std::to_string(axis), {axis, "-"}, {axis, "+"}, {{0}, {1}}, true});
+		}
+		CoordND mins = rest.front();
+		for (const auto &coord : rest) for (int axis = 0; axis < 2; ++axis)
+			mins.values[axis] = std::min(mins.values[axis], coord.values[axis]);
+		std::vector<std::size_t> order;
+		for (std::size_t i = 0; i < rest.size(); ++i) order.push_back(i);
+		std::sort(order.begin(), order.end(), [&](auto a, auto b) { return rest[a] < rest[b]; });
+		ExplorerPiece initial = piece;
+		for (std::size_t id = 0; id < order.size(); ++id) {
+			const auto index = order[id];
+			CoordND normalized = rest[index];
+			for (int axis = 0; axis < 2; ++axis) normalized.values[axis] -= mins.values[axis];
+			piece.rest_cells.push_back({static_cast<int64_t>(id), normalized});
+			piece.cells.push_back({static_cast<int64_t>(id), 0, current[index], {}});
+			initial.rest_cells.push_back({static_cast<int64_t>(id), normalized});
+			initial.cells.push_back({static_cast<int64_t>(id), 0, rest[index], {}});
+		}
+		ExplorerPiece canonical, canonical_initial;
+		auto status = validate_explorer_piece(piece, canonical);
+		if (status != PieceFailure::none) return explorer_result(status);
+		status = validate_explorer_piece(initial, canonical_initial);
+		if (status != PieceFailure::none) return explorer_result(status);
+		PieceEnvelope envelope{0, canonical, canonical_initial, {}};
+		auto candidate = std::make_unique<ExplorerPieceRuntime>(envelope);
+		auto result = explorer_result(PieceFailure::none, &envelope);
+		explorer_runtime_.swap(candidate);
+		return result;
+	} catch (const std::bad_alloc &) {
+		return explorer_result(PieceFailure::resource_limit);
+	}
+}
+
+Dictionary Tet4DCoreApi::explorer_move(int64_t axis, int64_t direction) {
+	using namespace tet4d::core;
+	if (!explorer_runtime_ || axis < 0 || axis > 1 || (direction != -1 && direction != 1))
+		return explorer_result(PieceFailure::invalid_action);
+	const auto source = explorer_runtime_->snapshot();
+	const auto proposal = propose_piece_translation(source.piece, source.revision, {static_cast<int>(axis), static_cast<int>(direction)});
+	if (!proposal.candidate) return explorer_result(proposal.failure);
+	const auto status = explorer_runtime_->apply(*proposal.candidate);
+	const auto state = explorer_runtime_->snapshot();
+	return explorer_result(status, &state);
+}
+
+Dictionary Tet4DCoreApi::explorer_retry() {
+	using namespace tet4d::core;
+	if (!explorer_runtime_) return explorer_result(PieceFailure::invalid_piece_state);
+	const auto status = explorer_runtime_->retry();
+	const auto state = explorer_runtime_->snapshot();
+	return explorer_result(status, &state);
+}
+
+Array Tet4DCoreApi::get_live_2d_production_piece_catalog() const {
+	Array result;
+	for (const tet4d::core::PieceShape2D &piece : tet4d::core::plain_piece_catalog_2d("classic")) {
+		result.push_back(piece_preview_dictionary(piece, "classic"));
+	}
+	return result;
 }
 
 Array Tet4DCoreApi::get_live_nd_production_piece_catalog() const {

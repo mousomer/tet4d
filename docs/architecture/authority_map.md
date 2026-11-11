@@ -129,6 +129,12 @@ or choose a spawn pose. Hold never mutates the Godot view/control frame.
 
 ## Native C++ / GDExtension status
 
+The 2D Explorer exposes the T2A candidate bounded/cylinder/torus translation
+provider through a private single-object native runtime. Godot owns selection
+and presentation only; unsupported twisted seams and non-bounded rotations
+remain unavailable. This integration does not transfer runtime authority or
+complete T2 acceptance.
+
 The bounded Godot practice Explorer composes the existing native geometry,
 bounded-pose and topology-step query providers under
 `bounded_practice_explorer.md`. Its detached pose, inspection and input adapter

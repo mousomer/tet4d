@@ -10,7 +10,10 @@ This provider slice implements rank-2 bounded, cylinder and torus unit translati
 recorded per-cell inverses, complete indexed state admission, revision-bound
 atomic application and Retry. Acceptance requires native preservation,
 deterministic fixed-seed sequences, reviewed fixture conformance, unchanged
-legacy parity and the repository verifier. Godot integration is T2B; rotations,
+legacy parity and the repository verifier. The narrow Godot candidate adapter now exposes profile selection, translation
+and Retry for this admitted subset through value-owned `explorer_begin`,
+`explorer_move` and `explorer_retry` calls. This does not expose a general
+persisted piece DTO or complete T2 acceptance. Rotations,
 twisted seams and remaining profiles are separate work. The authority map and
 terminal transfer records are unchanged.
 
@@ -65,8 +68,10 @@ Resource admission is capped at 4,096 cells and 4,096 retained descriptors, with
 at most 64 authored seam rows before canonicalization. These are implementation
 limits, not mathematical invalidity. Arithmetic uses the existing v1 axis/volume
 envelope and signed 64-bit affine displacements. Invalid typed DTOs fail before
-indexing or narrowing. No piece JSON/Variant boundary is exposed in this slice;
-strict external serialization and Godot adapters remain later T2 work.
+indexing or narrowing. The initial T2A slice exposed no piece JSON/Variant boundary. Its subsequent
+Godot adapter takes typed dimension/pose arrays and a closed preset ID, returns
+owned cell/ID/revision snapshots, and keeps the runtime envelope private.
+Strict versioned external serialization remains later T2 work.
 
 ## Permanent native evidence
 

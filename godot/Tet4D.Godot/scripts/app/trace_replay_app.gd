@@ -293,8 +293,18 @@ func _unhandled_input(event: InputEvent) -> void:
 		if _event_action_pressed_once(event, ["explorer_replace_piece"]):
 			_practice_action("replace")
 			return
-		if _event_action_pressed_once(event, ["explorer_move_up", "explorer_move_down"]):
-			_practice_action("move_y_neg" if _event_action_pressed_once(event, ["explorer_move_up"]) else "move_y_pos")
+		if _mode == MODE_LIVE_2D:
+			for spec in LiveInputContractScript.practice_2d_action_specs():
+				if _event_action_pressed_once(event, [spec[0]]):
+					_practice_action(spec[1])
+					get_viewport().set_input_as_handled()
+					return
+			if _event_action_pressed(event, _live_gameplay_action_names()):
+				return
+		var up_action := "explorer_move_up"
+		var down_action := "explorer_move_down"
+		if _mode != MODE_LIVE_2D and _event_action_pressed_once(event, [up_action, down_action]):
+			_practice_action("move_y_neg" if _event_action_pressed_once(event, [up_action]) else "move_y_pos")
 			get_viewport().set_input_as_handled()
 			return
 	if _practice != null and _event_action_pressed(event, ["live_pause", "live_3d_pause", "live_4d_pause"]):
@@ -1420,7 +1430,7 @@ func _clear_practice() -> void:
 
 
 func _start_practice(dimension: int) -> void:
-	var mode_name := MODE_LIVE_3D if dimension == 3 else MODE_LIVE_4D
+	var mode_name: String = {2: MODE_LIVE_2D, 3: MODE_LIVE_3D, 4: MODE_LIVE_4D}[dimension]
 	var setup: Dictionary = _hud.configured_live_setup(mode_name).duplicate(true)
 	_start_configured_live_game(setup)
 	var candidate = preload("res://scripts/presentation/practice_explorer.gd").new(_live_bridge)
@@ -1442,14 +1452,19 @@ func _practice_hidden_axis() -> int:
 
 
 func _practice_action(action: String) -> void:
-	if action in ["dimension_3", "dimension_4"]:
-		if _practice != null and _practice.dimension() == (3 if action == "dimension_3" else 4):
+	if action in ["dimension_2", "dimension_3", "dimension_4"]:
+		var dimension := int(action.get_slice("_", 1))
+		if _practice != null and _practice.dimension() == dimension:
 			if not _is_live_viewer_active():
 				_return_to_viewer_from_navigation()
 			return
-		_start_practice(3 if action == "dimension_3" else 4)
+		_start_practice(dimension)
 		return
 	if _practice == null:
+		return
+	if action.begins_with("topology_"):
+		_practice.select_topology(action.trim_prefix("topology_"))
+		_refresh_practice_snapshot()
 		return
 	match action:
 		"play":
@@ -1515,13 +1530,13 @@ func _refresh_practice_snapshot() -> void:
 		_practice_slice = mini(_practice_slice, int(_current_snapshot.board_shape[_practice_hidden_axis()]) - 1)
 	_current_snapshot = _practice.snapshot(_practice_neighbors, _practice_hidden_axis(), _practice_slice)
 	_refresh_render()
-	_refresh_hud()
+	_refresh_practice_panel()
 
 
 func _refresh_practice_panel() -> void:
 	if _practice.dimension() == 4:
 		_hud.set_practice_view_basis(_live_4d_basis.indicator_snapshot())
-	_hud.set_practice_state(_practice.dimension(), _practice.feedback, _practice.piece_names(), _practice.selected_piece)
+	_hud.set_practice_state(_practice.dimension(), _practice.feedback, _practice.piece_names(), _practice.selected_piece, _practice.topology)
 
 
 func _refresh_hud() -> void:
@@ -1922,6 +1937,10 @@ func _clear_live_ui_focus() -> void:
 
 
 func _live_2d_command(command: String) -> void:
+	if _practice != null:
+		var practice_command: String = {"move_left": "move_x_neg", "move_right": "move_x_pos", "rotate_cw": "rotate_xy_pos", "rotate_ccw": "rotate_xy_neg"}.get(command, command)
+		_practice_action(practice_command)
+		return
 	var result := _live_bridge.live_2d_apply_command(command)
 	_update_live_drop_timing(command, result)
 	_refresh_live_2d_snapshot()
@@ -2131,6 +2150,9 @@ func _clear_live_4d_presentation_state(end_session: bool) -> void:
 
 
 func _reset_live_2d() -> void:
+	if _practice != null:
+		_practice_action("retry")
+		return
 	_live_bridge.live_2d_reset()
 	_live_2d_session_started = true
 	_live_tick_accumulator = 0.0
@@ -2208,6 +2230,16 @@ func _ensure_live_game_paused_for_focus_loss() -> void:
 
 
 func _process_live_input_repeat(delta: float) -> void:
+	if _practice != null and _mode == MODE_LIVE_2D:
+		var specs: Array = LiveInputContractScript.practice_2d_action_specs()
+		for pair_start in [0, 2]:
+			var negative_held := _any_action_pressed([specs[pair_start][0]])
+			var positive_held := _any_action_pressed([specs[pair_start + 1][0]])
+			for offset in 2:
+				var spec: Array = specs[pair_start + offset]
+				var timer_key: String = str(spec[0]).trim_prefix("live_3d_")
+				_process_live_repeat_action(timer_key, (negative_held if offset == 0 else positive_held) and not (negative_held and positive_held), spec[1], LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS, LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS, delta)
+		return
 	if _mode == MODE_LIVE_4D:
 		_process_live_4d_input_repeat(delta)
 		return

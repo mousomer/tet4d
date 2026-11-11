@@ -1,6 +1,27 @@
 # Bounded practice Explorer contract
 
-Scope: **implemented bounded 3D/4D MVP only**. This remains the frozen baseline
+Scope: **bounded 2D/3D/4D practice**. 2D exposes the existing native
+geometry/pose queries and classic catalogue through the live flat renderer.
+This dimension-access repair does not activate the T2 topology runtime or
+complete its separate native transport transfer. Bounded 2D uses the same
+inherited geometry authority as the existing bounded practice adapter.
+2D reuses 3D binding actions: A/D or Left/Right move X, W/S or Up/Down
+move Y, R/T rotate XY and Backspace retries. PageUp/PageDown are not 2D
+movement controls. Ordinary piece actions update only practice readouts and
+render inputs, without camera-status/control-help initialization.
+
+The primary rail exposes native bounded/cylinder-X/cylinder-Y/torus profiles
+in 2D. Non-bounded movement is owned by the candidate T2A native piece runtime,
+including indexed cell identity, atomic rejection and Retry. Switching profiles
+preserves compatible cells and view; incompatible switches reject atomically.
+Möbius/Klein and non-bounded rotations are visibly unavailable pending T2C.
+This adapter integration does not claim complete T2 acceptance or terminal
+authority transfer; the existing candidate designation remains explicit.
+
+2D offers X/Y movement, XY rotation, replacement, Retry, target and flat
+Reset/Fit/zoom; Z/W, orbit, exact basis and slice controls are absent.
+
+Historical scope: **implemented bounded 3D/4D MVP only**. This remains the frozen baseline
 for existing acceptance and regressions, not the forward limit of Explorer.
 `docs/rds/RDS_EXPLORER_TOPOLOGIES.md` supersedes its 3D/4D-only,
 bounded-only and Python-Explorer-oracle language for future 2D/3D/4D topology
@@ -21,7 +42,7 @@ No authority transfer or new deterministic rule is introduced.
 
 The initial object is the configured native session's selected piece, centred
 with native normalization/translation and checked by the native bounded-pose
-query. Both supported dimensions are 3D and 4D. Only bounded topology is
+query. Supported dimensions are 2D, 3D and 4D. Only bounded topology is
 selectable. Model-level topology APIs and Python tools remain available.
 
 Practice has no automatic tick, gravity, hold, drop, lock, score or queue

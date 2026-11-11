@@ -14,6 +14,7 @@ var revision := 0
 var _catalog: Array = []
 var selected_piece := -1
 var _target_count := 0
+var topology := "bounded"
 
 
 func _init(bridge) -> void:
@@ -25,7 +26,7 @@ func begin(snapshot: Dictionary) -> bool:
 	# JSON snapshots carry numbers as floats; the native typed boundary requires
 	# integer lattice coordinates. Conversion supplies no geometry semantics.
 	var shape: Array = snapshot.get("board_shape", []).map(func(value): return int(value))
-	if shape.size() not in [3, 4]:
+	if shape.size() not in [2, 3, 4]:
 		return false
 	var source: Array = []
 	for cell in snapshot.get("active_cells", []):
@@ -44,7 +45,9 @@ func begin(snapshot: Dictionary) -> bool:
 	_target_count = 0
 	feedback = "Object ready · no gravity."
 	revision = 0
-	_catalog = _bridge.live_nd_production_piece_catalog().filter(func(piece): return int(piece.get("dimension", 0)) == shape.size() and str(piece.get("piece_set_id", "")) == str(snapshot.get("piece_set_id", "")))
+	var catalog: Array = _bridge.live_2d_production_piece_catalog() if shape.size() == 2 else _bridge.live_nd_production_piece_catalog()
+	_catalog = catalog.filter(func(piece): return int(piece.get("dimension", 0)) == shape.size() and str(piece.get("piece_set_id", "")) == str(snapshot.get("piece_set_id", "")))
+	topology = "bounded"
 	selected_piece = -1
 	for index in _catalog.size():
 		if str(_catalog[index].get("piece_name", "")) == str(snapshot.get("current_piece", "")):
@@ -76,6 +79,12 @@ func replace_piece(index: int) -> bool:
 	if candidate.is_empty() or not result.get("legal", false):
 		feedback = "This piece does not fit the board. Object unchanged."
 		return false
+	if topology != "bounded":
+		var admitted: Dictionary = _bridge.explorer_begin(_template.board_shape, candidate, candidate, topology)
+		if not admitted.get("ok", false):
+			feedback = "Object unchanged: " + str(admitted.get("reason", "unavailable"))
+			return false
+		candidate = admitted.cells
 	cells = candidate.duplicate(true)
 	_initial = candidate.duplicate(true)
 	selected_cell = 0
@@ -91,6 +100,27 @@ func replace_next_piece() -> bool:
 	return replace_piece(posmod(selected_piece + 1, _catalog.size())) if not _catalog.is_empty() else replace_piece(-1)
 
 
+# Native candidate owns all non-bounded piece transport. Incompatible profile
+# changes are rejected before changing the selector, cells or Retry baseline.
+# tet4d-semantic-boundary: allow adapter-routing
+func select_topology(preset: String) -> bool:
+	if dimension() != 2 or preset not in ["bounded", "cylinder_x", "cylinder_y", "torus"]:
+		feedback = "Object unchanged: topology unavailable."
+		return false
+	if preset == topology:
+		return true
+	var result: Dictionary = _bridge.explorer_begin(_template.board_shape, _initial, cells, preset)
+	if not result.get("ok", false):
+		feedback = "Object unchanged: incompatible topology; Retry object first."
+		return false
+	topology = preset
+	cells = result.cells.duplicate(true)
+	_initial = result.initial_cells.duplicate(true)
+	revision += 1
+	feedback = "Topology selected."
+	return true
+
+
 func dimension() -> int:
 	return _template.get("board_shape", []).size()
 
@@ -102,6 +132,18 @@ func command(command_name: String) -> bool:
 		feedback = "Practice has no gravity, drop, lock or hold. Use deliberate moves."
 		return false
 	var direction := -1 if parts[2] == "neg" else 1
+	if topology != "bounded":
+		if parts[0] != "move" or parts[1] not in ["x", "y"]:
+			feedback = "Object unchanged: rotations unavailable on this topology."
+			return false
+		var transported: Dictionary = _bridge.explorer_move(AXES.find(parts[1]), direction)
+		if not transported.get("ok", false):
+			feedback = "Object unchanged: %s." % str(transported.get("reason", "blocked")).replace("_", " ")
+			return false
+		cells = transported.cells.duplicate(true)
+		revision += 1
+		feedback = "Moved."
+		return true
 	var candidate: Array = []
 	if parts[0] == "move" and parts[1].length() == 1:
 		var axis := AXES.find(parts[1])
@@ -131,7 +173,14 @@ func command(command_name: String) -> bool:
 
 
 func retry() -> void:
-	cells = _initial.duplicate(true)
+	if topology != "bounded":
+		var result: Dictionary = _bridge.explorer_retry()
+		if not result.get("ok", false):
+			feedback = "Object unchanged: Retry unavailable."
+			return
+		cells = result.cells.duplicate(true)
+	else:
+		cells = _initial.duplicate(true)
 	selected_cell = 0
 	revision += 1
 	feedback = "Object restored exactly. View unchanged."
@@ -180,7 +229,7 @@ func neighbors() -> Array:
 	var result: Array = []
 	for axis in dimension():
 		for direction in [-1, 1]:
-			var step: Dictionary = _bridge.query_topology_axis_wrap_cell_step(_template.board_shape, [], cells[selected_cell], axis, direction)
+			var step: Dictionary = _bridge.query_topology_axis_wrap_cell_step(_template.board_shape, ([0, 1] if topology == "torus" else ([0] if topology == "cylinder_x" else ([1] if topology == "cylinder_y" else []))), cells[selected_cell], axis, direction)
 			result.append({"label": "%s%s" % ["+" if direction > 0 else "−", AXES[axis].to_upper()], "target": step.get("target")})
 	return result
 
@@ -211,4 +260,5 @@ func snapshot(show_neighbors: bool, hidden_axis: int, inspected_slice: int) -> D
 	if dimension() == 4 and inspected_slice >= 0:
 		result["inspected_slice"] = {"axis": hidden_axis, "coordinate": inspected_slice}
 	result["practice"] = true
+	result["explorer_topology"] = topology
 	return result
