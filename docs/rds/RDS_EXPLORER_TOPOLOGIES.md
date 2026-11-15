@@ -5,7 +5,8 @@ Status: active
 Scope: Godot Explorer topology behavior, 2D/3D/4D presets, custom topology building, deterministic cell transport, validation, and acceptance
 Canonical owner: this file for forward Explorer topology product semantics
 Last verified: 2026-11-04
-Revision: 2 — T1/T2 dependency and bounded authority-transfer redesign
+Revision: 3 — square S²/RP² Explorer extension and mandatory directional seam annotations
+Product amendment: 2026-11-15 (requirements only; no runtime implementation or authority transfer)
 
 ## 1. Purpose and product decisions
 
@@ -84,6 +85,8 @@ The Explorer retains gravity-free practice, single-piece initial object model, n
 ### 4.1 2D first-class Explorer
 
 2D is a full Explorer dimension and the recommended topology-learning starting point, not an optional debug mode. Reuse the live 2D board/piece renderer, piece catalogue and action routing. Support ±X/±Y translation, XY rotation, selectable four edges, crossing preview, seam highlights, path trace, and topology-aware adjacency. Topology selection and building in 2D must precede higher-dimensional builder acceptance.
+
+**Square-only 2D named surfaces:** Selecting the certified single-square `S²` or `RP²` preset must force a board of shape `N × N`, with square rendered cells and a visually square board. Its UI exposes one coupled extent `N`, not independently editable X and Y. The default may be `10 × 10`; allowed values obey existing Explorer resource/extent constraints. Switching from a rectangular preset must apply an explicit valid square setup before transport; a mismatched saved setup must be rejected or deliberately migrated, never silently treated as a different topology. On leaving these presets, independent extents become available again. This restriction applies to these two 2D presets only, not arbitrary custom profiles, 3D/4D Explorer or ordinary Play.
 
 ### 4.2 3D
 
@@ -266,16 +269,17 @@ T2's **required** implemented presets, not merely future catalog names:
 | Torus `T²` | `torus_2d` | Orientable, closed; `χ=0` | Working |
 | Möbius strip | `mobius_2d` | Non-orientable; 1 boundary; `χ=0` | Working |
 | Klein bottle | `klein_2d` | Non-orientable, closed; `χ=0` | Working |
-| Projective plane `RP²` | `projective_2d` | Non-orientable, closed; `χ=1` | Verification-gated optional certification |
-| Sphere-like transport | legacy `sphere_2d` | **Not** a verified sphere | Optional experimental |
+| Projective plane `RP²` | `projective_2d` | Non-orientable, closed; `χ=1` | Required square-surface extension T2S after T2 |
+| Genuine sphere `S²` | **New** `sphere_square_2d` construction/profile; not legacy `sphere_2d` | Orientable, closed; `χ=2` | Required square-surface extension T2S after T2 |
+| Sphere-like transport | legacy `sphere_2d` | **Not** a verified sphere; legacy quotient classifies as Klein | Historical/experimental only |
 
-T2 must verify the five core mathematical constructions and their **actual discrete seam/frame behavior**, not infer correctness from labels. Projective `RP²` may be called that only after rigorous edge/vertex, manifold and Euler-characteristic certification of the current construction. Otherwise call it **Projective-like transport (experimental)**. The old `sphere_2d` ID continues to denote heuristic transport, not `S²`. A genuine sphere is *planned* in T6 and must not appear as selectable in T2.
+T2 must verify the five core mathematical constructions and their **actual discrete seam/frame behavior**, not infer correctness from labels. T2S then makes `RP²` and a genuine single-square `S²` available by the separate acceptance requirements in §8.3.1. Neither preset may claim a certified mathematical name without quotient evidence; an unverified candidate must retain an explicitly experimental name/status. The old `sphere_2d` ID continues to denote its historical heuristic transport, never `S²`. The two-domain spherical double in T6 is an optional additional construction and is not a prerequisite for 2D `S²`.
 
 ### 8.2 Catalog navigation and semantics
 
 A visible preset selector remains inside the **existing** Godot Explorer, with a compact grouped, read-only gallery. Main working presets are directly selectable without opening a secondary editor.
 
-- **Learn:** five core surfaces and accurate projective/sphere-like explanations.
+- **Learn:** five core surfaces; once T2S is accepted, include certified square `S²` and `RP²` with accurate seam illustrations. The legacy sphere-like transport is not labelled `S²`.
 - **Families:** periodic, twisted and planned surface-class families.
 - **Advanced:** conformant experimental profiles, proofs/unknown properties and seam information.
 - **Saved:** future T3 custom-topology persistence, not a working T2 feature.
@@ -292,7 +296,42 @@ T2 must document old Python golden divergences; a duplicate destination must blo
 
 Retain bounded 3D/4D camera-relative, exact-basis/slice and ordinary Play isolation regressions. Human T2 review must show novice discovery of the five presets, prediction of torus/Möbius crossing and recognition of a single piece after visually separated cell movement.
 
-**Not T2:** edge-pairing builder or saved profiles (T3), 3D/4D topology runtime (T4), face/hyperface builder (T5), multi-domain spheres or surface/product construction generators (T6 or later).
+**Not T2:** edge-pairing builder or saved profiles (T3), 3D/4D topology runtime (T4), face/hyperface builder (T5), multi-domain spheres or surface/product construction generators (T6 or later). The T2S extension is scoped separately from the mandatory five-preset T2 authority-transfer gate.
+
+#### 8.3.1 Square S² and RP² Explorer extension (T2S)
+
+**Scope and sequencing:** After the native 2D Explorer transport contract and its bounded T2 authority transfer, deliver two selectable single-domain square-board presets. T2S may be independently staged alongside later builder work. It does not invoke T6 multi-domain semantics or redefine ordinary gameplay. Both use the existing native query/transport implementation, Godot 2D Explorer, piece IDs and frames.
+
+**Exact topological construction, using the catalog's signed tangent-parameter convention:**
+
+| Preset | Square-boundary identifications | Oriented polygon word | Class |
+| --- | --- | --- | --- |
+| New `sphere_square_2d` | `X− ↔ Y−` with tangent sign `+`; `X+ ↔ Y+` with tangent sign `+` | `a b b⁻¹ a⁻¹` | `S²`: orientable, no boundary, `χ=2` |
+| `projective_2d` | `X− ↔ X+` with tangent sign `−`; `Y− ↔ Y+` with tangent sign `−` | `a b a b` (up to naming/orientation) | `RP²`: non-orientable, no boundary, `χ=1` |
+
+Boundary coordinates are defined on a square with lower-left `A`, lower-right `B`, upper-right `C`, upper-left `D`. The precise **visible directed arrows** are:
+
+- `S²`: pair `a` marks bottom `A→B` and left `A→D`; pair `b` marks right `B→C` and top `D→C`. Both are **adjacent-side** gluings with matched increasing edge parameter. Do not use the old adjacent-negative-sign `sphere_2d` recipe, whose quotient is a Klein bottle.
+- `RP²`: pair `a` marks left `A→D` and right `C→B`; pair `b` marks bottom `A→B` and top `C→D`. Both are **opposite-side** gluings with reversed edge parameter.
+
+The arrows are the oriented *edge-parameter correspondence*, not an instruction to move along the visible arrow, nor a guarantee of a globally Euclidean piece orientation. On both presets, a seam and its inverse must agree with the exact native normalized profile. The catalog must retain distinct `space_class_id`, `construction_id` and `profile_id`; changing `N` changes the concrete discrete profile, not the continuous surface class or gluing recipe.
+
+**Board admission and presentation:**
+
+1. Selecting either preset enforces `board_dimensions = [N,N]`, with a single `N` control, valid extents, atomic configuration and no rectangular fallback. Initial `N=10` is a proposed UI default, not an override of native admissibility.
+2. Preserve square cell aspect ratio through resizing, fullscreen and panel reflow. Letterboxing is preferable to stretching. Switching presets must not silently truncate or move an incompatible piece; use the established explicit recovery path.
+3. The main Explorer board displays all four boundary edges with **persistent matched pair labels, consistent pair colours and arrowheads** showing actual gluing direction. Labels/arrows remain independently readable, including without colour. Source/destination highlighting and crossing ghost are supplemental; the basic labels/arrows do not disappear behind an optional diagnostics toggle.
+4. Godot reads edge pairs and directed correspondence from the native/catalog authority; no separate hardcoded UI seam map. The same annotation mechanism is reusable for other identified-edge 2D profiles and the secondary Builder.
+5. Preserve exploration of geometrically awkward or apparently broken polycubes. Do not repair, conceal, or disallow a certified topology because its square chart fails to preserve Euclidean geometry.
+
+**Movement safety only:** For one requested action, each piece cell must have one uniquely defined in-bounds destination; all destinations must be distinct and unblocked. Commit atomically only when cell identities/count and the specified inverse transport can be preserved. Non-rigid deformation, apparent disconnection and local frame changes are permitted. Block only malformed/undefined/ambiguous transport, collisions or other existing operational invariants. A blocked action is not grounds to reject the topology itself.
+
+**Focused T2S acceptance:**
+
+- Independently check the two polygon gluings, quotient vertex/link structure, orientability, absence of boundary and `χ=2` / `χ=1`. Test that the new sphere is **not** the legacy Klein construction.
+- Check exact edge-pair membership, directed endpoints, inverse crossing and corner resolution on representative square sizes (including both odd/even `N`). One-to-many and many-to-one candidate moves must be atomic blocks.
+- Confirm the single `N` control, forced square setup, square cells and persistent accurate seam annotations in normal/narrow/fullscreen presentations.
+- Keep T2S implementation evidence distinct from the RDS edit itself. Do not expand this gate into continuous-curvature repair, exhaustive rigid-piece recovery, visual embedding correction or a broad topology overhaul.
 
 ### 8.4 Planned complete 2D compact-surface families
 
@@ -300,7 +339,7 @@ Use classification by **orientability, genus/crosscaps and number of boundary co
 
 | Planned example | Class / invariant | Additional construction |
 | --- | --- | --- |
-| Genuine sphere `S²` | Orientable genus 0, closed; `χ=2` | Double of disk; T6 |
+| Additional `S²` presentation | Orientable genus 0, closed; `χ=2` | Optional two-domain disk double; T6. The single-square `S²` belongs to T2S. |
 | Pair of pants | Orientable genus 0, 3 boundaries; `χ=-1` | Multi-patch boundary construction |
 | Punctured torus | Orientable genus 1, 1 boundary; `χ=-1` | Verified boundary removal |
 | Double torus | Orientable genus 2, closed; `χ=-2` | Connected sum |
@@ -321,15 +360,15 @@ Prefer versioned and verified **construction operators** over many bespoke hard-
 
 ### 8.6 Multi-domain sphere construction boundary (T6)
 
-Genuine `S^n` may be represented as the double of an n-ball: glue the entire boundaries of **two** n-cubic domains (square for n=2, cube for n=3, tesseract for n=4). Domain interiors remain separate. The flat cubical drawing is not a globally flat smooth metric on a sphere.
+As an **additional** representation, `S^n` may be represented as the double of an n-ball: glue the entire boundaries of **two** n-cubic domains (square for n=2, cube for n=3, tesseract for n=4). Domain interiors remain separate. This optional 2D double does not gate the genuine single-square `S²` preset delivered by T2S. Neither flat cubical drawing is a globally flat smooth metric on a sphere.
 
 T6 requires a separately versioned domain-aware schema, stable domain and boundary IDs, consistent higher-codimension intersections, canonical quotient identity and unambiguous crossing/inverse of both domain and local frames. The quotient's shared boundary points are not automatically merged cell-center occupancy. A piece may span domains; an ambiguous or colliding particular movement blocks atomically. v1 profiles and heuristic IDs remain compatible. The visual `Add Domain` editor is introduced alongside this capability, not simulated inside v1.
 
 
 ## 9. Main Explorer topology presentation
 
-Reuse the Godot renderer, colors/style registry, piece display, camera and control helper. Add subordinate, optional visual layers:
-- matched boundary highlight with redundant color **and** symbol/label;
+Reuse the Godot renderer, colors/style registry, piece display, camera and control helper. For **all identified 2D boundary edges**, the ordinary board presentation must show stable matching pair labels, pair colours and directed correspondence arrows derived from the normalized topology; this layer is **mandatory and visible by default** for square `S²`/`RP²`, including while no piece is near a seam. Preserve legibility under normal style changes and do not rely on colour alone. Additional, optional interaction/diagnostic layers include:
+- matched boundary hover/crossing highlight with redundant color **and** symbol/label;
 - destination ghost/crossing preview with source and target correspondence;
 - path trace, visibly marking crossings and domain changes;
 - per-cell identity tracing;
@@ -362,7 +401,7 @@ Selecting/previewing is **not** a committed mutation. Incomplete drafts remain e
 
 ### 10.3 2D boundary editor
 
-Expose four edges ±X/±Y around the actual rectangular domain. Click-to-pair; show endpoint correspondence and arrows. The two tangent mappings (preserve/reverse) are represented directly. Novice construction of cylinder, torus, Möbius strip and Klein bottle requires no numeric transform entry.
+Expose four edges ±X/±Y around the actual rectangular domain, with the square `N×N` shape enforced when editing/inspecting the named `S²` or `RP²` presets. Click-to-pair; show endpoint correspondence, matching labels and **directed** arrows using the same authoritative presentation as main Explorer. The two tangent mappings (preserve/reverse) are represented directly. Novice construction of cylinder, torus, Möbius strip and Klein bottle requires no numeric transform entry. Editing a built-in creates a separate custom draft; do not silently mutate the certified preset's recipe or reassign the legacy sphere ID.
 
 ### 10.4 3D face editor
 
@@ -388,7 +427,7 @@ Existing Explorer movement, rotation, view, camera/slice, piece selector, retry,
 
 Panels and text resize for readability, then scroll below the readability floor. Test 1280x720, 1280x800, narrow windows and fullscreen. Normal movement/preview must not rebuild control nodes or change selected tab, control state, scrollbar position, board allocation or camera.
 
-Keep four separate state owners: canonical topology, deterministic piece/cell transport, presentation view, and uncommitted builder draft. Switching topology preserves view and valid piece state; incompatible poses require explicit recovery rather than silent reset. Retry/Undo restore exact cell identities, locations and local frames. Explorer does not mutate native gameplay RNG, score, queue, lock, gravity or hashes; Play starts under its separate admissibility contract.
+Keep four separate state owners: canonical topology, deterministic piece/cell transport, presentation view, and uncommitted builder draft. Switching topology preserves view and valid piece state; incompatible poses require explicit recovery rather than silent reset. When `S²`/`RP²` is selected, the current board and any saved/replayed state must satisfy the single-extent square rule; avoid silent truncation, stretching or data loss. Retry/Undo restore exact cell identities, locations and local frames. Explorer does not mutate native gameplay RNG, score, queue, lock, gravity or hashes; Play starts under its separate admissibility contract.
 
 Save/load/duplicate/rename/delete/export/import custom topology definitions using versioned canonical data. Preserve v1 readability and historical traces. Do not store transient camera state inside the semantic topology identity.
 
@@ -397,6 +436,8 @@ Save/load/duplicate/rename/delete/export/import custom topology definitions usin
 **T1:** schema/catalog and ID correspondence checks; transport-versus-certification contract reviews; five 2D positive and negative fixture **specifications**; complete bounded authority-transfer design including Python divergences and rollback. T1 does not claim implementation tests passed or an authority transfer.
 
 **T2:** native deterministic tests for all five real presets (normal, seam, corner, degenerate, inverse-frame, multi-cell deformation, one-to-many, many-to-one, partial-block), native/Godot contract parity, preset gallery and UX, historical compatibility distinctions, human 2D comprehension review, regression of 3D/4D camera-relative controls, 4D basis/slices, responsive panels and normal Play, **and terminal 2D authority-transfer record**.
+
+**T2S:** single-square `S²` and `RP²` construction certification, exact directed pairings and corner resolution, square-only extent admission and rendered aspect ratio, persistent labelled-arrow seam visualisation, basic native action injectivity/inverse/atomic rejection, legacy sphere/Klein non-aliasing, and manual 2D Explorer crossing inspection. Do not test or promise repaired Euclidean geometry.
 
 **T3:** 2D visual pairing, orientation preview, draft Apply/Cancel, Undo/Redo, persistence/import compatibility and novice builder tests.
 
@@ -416,26 +457,27 @@ Every conformance fixture names the normative contract, input profile/board, pre
 | --- | --- | --- |
 | **T1** | **Semantic/catalog foundation and native 2D transfer preparation** | Three identities, versioned catalog and status metadata, mathematical certification, piece transport/query API, five 2D conformance fixture specifications, legacy-difference and compatibility/rollback plan. No transfer yet. |
 | **T2** | **2D Explorer, five working core presets, grouped catalog** | Native one-to-one piece transport and seam queries, mathematical-name honesty, Godot integration, human 2D review, **2D Explorer native authority transfer completed and recorded**. |
+| **T2S** | **Square `S²` and `RP²` presets with directed labelled seams** | Distinct certified quotient constructions; enforced `N×N` board; native reversible/injective cell transport; persistent edge pair labels/arrows; focused visual and operational safety acceptance; no geometry repair. |
 | T3 | 2D visual edge builder and custom-profile save/load | Torus/Möbius/Klein visually constructed, stable draft/undo/apply and persistence. |
 | T4 | 3D/4D Explorer native topology transport | Shared signed-frame semantics, camera/basis non-regression and **separate completed 3D/4D transfer**. |
 | T5 | Visual 3D/4D topology builder | All supported 3D face and 4D hyperface signed tangent mappings visually editable and tested. |
-| T6 | Multi-domain and verified `S²/S³/S⁴` | Versioned domain schema, certified spherical doubles, cross-domain conformance, appropriate native authority establishment/transfer. |
+| T6 | Optional multi-domain `S²` double and verified `S³/S⁴` | Versioned domain schema, certified spherical doubles, cross-domain conformance, appropriate native authority establishment/transfer; not a prerequisite for single-square `S²`. |
 | T7 | Integrated learnability/quality and authority audit | User comprehension, visual stability, deterministic regressions and review of **already completed** scoped authority records. |
 | Later | Genus/crosscap/product generators, all ten 3D flat manifolds, lens and advanced 4D spaces | Independent operator contracts, proof, resource envelope, native implementation and human acceptance; not a T2/T7 blocker. |
 
-**Dependency order:** T1 specifies reusable semantics and evidence; T2 *implements* and transfers 2D; T3 consumes 2D; T4 extends/transfers 3D/4D; T5 consumes those dimensions; T6 extends to domains; T7 integrates. No general Python-oracle veto and no premature global native transfer.
+**Dependency order:** T1 specifies reusable semantics and evidence; T2 *implements* and transfers 2D; T2S adds the two certified single-square surfaces using that transport authority (it may be scheduled alongside subsequent editor work); T3 consumes 2D; T4 extends/transfers 3D/4D; T5 consumes those dimensions; T6 optionally extends to multiple domains; T7 integrates. No general Python-oracle veto and no premature global native transfer.
 
 A stage may not claim a later stage's deliverable. First-class topological **games**, ordinary Play policies and an entire Python Topology Playground port remain separate work.
 
 
 ## 14. Explicit non-goals
 
-No universal rigid playability requirement, automatic gravity/drop/lock behavior for custom topologies, continuous differential geometry, smooth embedded sphere rendering, arbitrary continuous seam rotations, certification of all custom manifolds, separate Godot topology engine, Python oracle reinvention, backend/login, research telemetry, release-matrix expansion, or unrelated UI redesign.
+No universal rigid playability requirement, automatic gravity/drop/lock behavior for custom topologies, continuous differential geometry, smooth embedded sphere rendering, repair or suppression of topologically valid but geometrically problematic piece motion, arbitrary continuous seam rotations, certification of all custom manifolds, separate Godot topology engine, Python oracle reinvention, backend/login, research telemetry, release-matrix expansion, or unrelated UI redesign.
 
 ## 15. Final acceptance
 
 T1 contract preparation, T2 bounded native transfer, T4 dimensional transfer and T6 multi-domain authority must each be accepted at their own gate. T7 cannot defer them.
 
-Explorer is complete only when: 2D/3D/4D all select and traverse supported topologies; presets are immediate; builder is secondary and visual at each dimension; successful moves preserve one-to-one cell identity and are reversible; both split/merge cases are blocked; deformation/disconnection are permitted; domain-aware sphere constructions are correctly represented; full native and Godot gates, human learnability checks, compatibility migration and formal authority transfer are completed.
+Explorer is complete only when: 2D/3D/4D all select and traverse supported topologies; presets are immediate; the certified `S²` and `RP²` 2D presets enforce a square board and show labelled, correctly directed glued edges; builder is secondary and visual at each dimension; successful moves preserve one-to-one cell identity and are reversible; both split/merge cases are blocked; deformation/disconnection are permitted; any supported domain-aware sphere construction is correctly represented; full native and Godot gates, human learnability checks, compatibility migration and formal authority transfer are completed.
 
 **Final invariant: Geometry may deform. Constituent cells may not split, merge, disappear, or multiply.**
