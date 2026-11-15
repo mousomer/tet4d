@@ -137,6 +137,9 @@ checks are tracked on PR #162; acceptance does not assert historical PNG parity.
   is unchanged by orchestration work. No scale/framing retuning in this batch.
 - [ ] Main-menu intrinsic-content fit invalidation remains an unconfirmed
   review concern; establish a normal-user trigger before promoting a defect.
+- [x] Board chrome cleanup (owner decision, 2026-11-15): removed the 2D
+  `SPAWN ENTRY ↘` label and the gray centre ball of the 3D/4D orientation
+  gizmo. The active-piece origin cube is kept by owner decision.
 
 ### P1 fullscreen panels, live helpers and menu responsiveness
 

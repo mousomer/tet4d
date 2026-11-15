@@ -121,6 +121,9 @@ The gameplay spawn rule is unchanged. A subdued `SPAWN ENTRY` cue now sits
 outside the upper-left board boundary and points toward the entry edge without
 fabricating hidden cells or colliding with the active piece.
 
+Superseded 2026-11-15: the owner removed the `SPAWN ENTRY` cue; this record
+is historical acceptance evidence.
+
 ## Real-Window Matrix
 
 | Surface | Evidence | Result |

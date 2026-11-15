@@ -797,7 +797,7 @@ stable layer assignment, slice-local bases, exact `B`, Fit bounds, Reset View,
 resize behavior, and non-persistence remain unchanged. Whole-collection Fit
 absorbs the larger envelope rather than rendering slices on top of one another.
 
-### Slice labels and 2D spawn entry
+### Slice labels and 2D spawn
 
 W labels remain semantic-axis labels derived from slice identity, never screen
 order. They use a stable camera-aware edge, sit outside the board volume, and
@@ -806,10 +806,11 @@ labels do not grow into primary gameplay content. Spacing must reserve enough
 room for adjacent rows and columns so labels do not collide with frames or
 neighbouring slices.
 
-Native above-board spawn cells remain valid gameplay state. Live 2D marks the
-open top boundary as a spawn entry with a small non-cell label/guide outside
-the playable rectangle. It does not clamp active cells, change the native
-spawn, extend board dimensions, or fabricate hidden grid cells.
+Native above-board spawn cells remain valid gameplay state. The board draws no
+spawn cue: the former `SPAWN ENTRY ↘` label was removed on 2026-11-15 by owner
+decision as non-gameplay chrome. Presentation still never clamps active cells,
+changes the native spawn, extends board dimensions, or fabricates hidden grid
+cells.
 
 ### Setup and Settings reachability
 
