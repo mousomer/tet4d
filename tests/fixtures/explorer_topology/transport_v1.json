@@ -548,6 +548,116 @@
           }
         ]
       }
+    },
+    {
+      "id": "sphere_adjacent_positive_8x8",
+      "catalog_id": "sphere_adjacent_positive",
+      "construction_id": "square-quotient-v1:sha256:eeb733c14b5852a00972a0cad80ef77a355148c1205e808494302992425c7c87",
+      "profile_id": "topology-v1:sha256:3e9faa085b9e14fda0aac05fa49d5c66a12d635fc6314661055017dbbe0e6456",
+      "payload": {
+        "schema": "tet4d.topology_contract",
+        "schema_version": 1,
+        "dimension": 2,
+        "board_dimensions": [
+          8,
+          8
+        ],
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {
+              "axis": "x",
+              "side": "-"
+            },
+            "target": {
+              "axis": "y",
+              "side": "-"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                1
+              ]
+            }
+          },
+          {
+            "id": "seam_001",
+            "source": {
+              "axis": "x",
+              "side": "+"
+            },
+            "target": {
+              "axis": "y",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                1
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "projective_2d_8x8",
+      "catalog_id": "projective_2d",
+      "construction_id": "square-quotient-v1:sha256:37b9ff9b4592b6613deb031424edd3672d48ff91112bf4a17f96a5ff6d125ab8",
+      "profile_id": "topology-v1:sha256:c3a8c9c38c57b2c39628d2c5bc72aee36f1832d2d1a5a23c08cb690471c0ada4",
+      "payload": {
+        "schema": "tet4d.topology_contract",
+        "schema_version": 1,
+        "dimension": 2,
+        "board_dimensions": [
+          8,
+          8
+        ],
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {
+              "axis": "x",
+              "side": "-"
+            },
+            "target": {
+              "axis": "x",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                -1
+              ]
+            }
+          },
+          {
+            "id": "seam_001",
+            "source": {
+              "axis": "y",
+              "side": "-"
+            },
+            "target": {
+              "axis": "y",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                -1
+              ]
+            }
+          }
+        ]
+      }
     }
   ],
   "states": [
@@ -1268,7 +1378,7 @@
           "id": 1,
           "domain": 0,
           "coordinate": [
-            2,
+            0,
             0
           ],
           "frame": {
@@ -3225,7 +3335,7 @@
         {
           "id": 1,
           "target": [
-            2,
+            0,
             0
           ],
           "frame": {
@@ -3248,15 +3358,18 @@
               1
             ]
           },
-          "crossing": [],
+          "crossing": [
+            "x+",
+            "x-"
+          ],
           "reverse_step": [
             0,
-            1
+            -1
           ],
           "resolution_status": "resolved"
         }
       ],
-      "classification": "plain_translation",
+      "classification": "cellwise_deformation",
       "blocked_reason": "",
       "candidate": {
         "present": true,
@@ -3283,7 +3396,7 @@
             "id": 1,
             "domain": 0,
             "coordinate": [
-              2,
+              0,
               0
             ],
             "frame": {
@@ -3313,7 +3426,7 @@
         "revision_delta": 2
       },
       "atomic": "single_envelope_swap",
-      "legacy_comparison": "missing_new_conformance",
+      "legacy_comparison": "superseded_forward_explorer",
       "native_result": "not_run",
       "godot_result": "not_run",
       "expectation_basis": "session2_contract",
@@ -3370,7 +3483,7 @@
         {
           "id": 1,
           "target": [
-            2,
+            0,
             1
           ],
           "frame": {
@@ -3428,7 +3541,7 @@
             "id": 1,
             "domain": 0,
             "coordinate": [
-              2,
+              0,
               1
             ],
             "frame": {
@@ -3458,7 +3571,7 @@
         "revision_delta": 2
       },
       "atomic": "single_envelope_swap",
-      "legacy_comparison": "missing_new_conformance",
+      "legacy_comparison": "superseded_forward_explorer",
       "native_result": "not_run",
       "godot_result": "not_run",
       "expectation_basis": "session2_contract",
@@ -4273,58 +4386,155 @@
       "per_cell": [
         {
           "id": 0,
-          "resolution_status": "not_evaluated",
-          "target": [],
+          "target": [
+            3,
+            2
+          ],
           "frame": {
-            "permutation": [],
-            "signs": []
+            "permutation": [
+              1,
+              0
+            ],
+            "signs": [
+              -1,
+              -1
+            ]
           },
           "transport": {
-            "permutation": [],
-            "signs": []
+            "permutation": [
+              1,
+              0
+            ],
+            "signs": [
+              -1,
+              1
+            ]
           },
           "crossing": [],
-          "reverse_step": []
+          "reverse_step": [],
+          "resolution_status": "resolved"
         },
         {
           "id": 1,
-          "resolution_status": "not_evaluated",
-          "target": [],
+          "target": [
+            3,
+            1
+          ],
           "frame": {
-            "permutation": [],
-            "signs": []
+            "permutation": [
+              1,
+              0
+            ],
+            "signs": [
+              -1,
+              -1
+            ]
           },
           "transport": {
-            "permutation": [],
-            "signs": []
+            "permutation": [
+              1,
+              0
+            ],
+            "signs": [
+              -1,
+              -1
+            ]
           },
           "crossing": [],
-          "reverse_step": []
+          "reverse_step": [],
+          "resolution_status": "resolved"
         }
       ],
-      "classification": "blocked",
-      "blocked_reason": "rotation_undefined",
+      "classification": "cellwise_deformation",
+      "blocked_reason": "",
       "candidate": {
-        "present": false,
-        "cells": [],
+        "present": true,
+        "cells": [
+          {
+            "id": 0,
+            "domain": 0,
+            "coordinate": [
+              3,
+              2
+            ],
+            "frame": {
+              "permutation": [
+                1,
+                0
+              ],
+              "signs": [
+                -1,
+                -1
+              ]
+            }
+          },
+          {
+            "id": 1,
+            "domain": 0,
+            "coordinate": [
+              3,
+              1
+            ],
+            "frame": {
+              "permutation": [
+                1,
+                0
+              ],
+              "signs": [
+                -1,
+                -1
+              ]
+            }
+          }
+        ],
         "inherit": "source_semantic_fields"
       },
       "inverse": {
-        "present": false,
-        "version": "",
-        "source_ref": "",
-        "forward_action": {},
-        "expected_recovery": "none",
-        "revision_delta": 0
+        "present": true,
+        "version": "explorer-piece-inverse/1",
+        "source_ref": "rotate_mixed",
+        "forward_action": {
+          "kind": "rotate",
+          "axis_a": 0,
+          "axis_b": 1,
+          "quarter_turn": 1
+        },
+        "expected_recovery": "exact_source_semantic_state",
+        "revision_delta": 2
       },
-      "atomic": "entire_envelope_unchanged",
+      "atomic": "single_envelope_swap",
       "legacy_comparison": "missing_new_conformance",
       "native_result": "not_run",
       "godot_result": "not_run",
       "expectation_basis": "session2_contract",
       "native_owner": "native/tet4d_core/tests/query_core_tests.cpp",
       "godot_owner": "godot/Tet4D.Godot/tests/test_topology_transport_boundary.gd",
-      "rotation_evidence": {}
+      "rotation_evidence": {
+        "developed": [
+          [
+            3,
+            2
+          ],
+          [
+            4,
+            2
+          ]
+        ],
+        "pivot_doubled": [
+          6,
+          4
+        ],
+        "rotated_lift": [
+          [
+            3,
+            2
+          ],
+          [
+            3,
+            1
+          ]
+        ]
+      }
     },
     {
       "id": "rotation_crossing_undefined",
@@ -4339,51 +4549,123 @@
       "per_cell": [
         {
           "id": 0,
-          "resolution_status": "not_evaluated",
-          "target": [],
+          "target": [
+            3,
+            2
+          ],
           "frame": {
-            "permutation": [],
-            "signs": []
+            "permutation": [
+              1,
+              0
+            ],
+            "signs": [
+              1,
+              1
+            ]
           },
           "transport": {
-            "permutation": [],
-            "signs": []
+            "permutation": [
+              1,
+              0
+            ],
+            "signs": [
+              1,
+              -1
+            ]
           },
           "crossing": [],
-          "reverse_step": []
+          "reverse_step": [],
+          "resolution_status": "resolved"
         },
         {
           "id": 1,
-          "resolution_status": "not_evaluated",
-          "target": [],
+          "target": [
+            0,
+            1
+          ],
           "frame": {
-            "permutation": [],
-            "signs": []
+            "permutation": [
+              1,
+              0
+            ],
+            "signs": [
+              -1,
+              1
+            ]
           },
           "transport": {
-            "permutation": [],
-            "signs": []
+            "permutation": [
+              1,
+              0
+            ],
+            "signs": [
+              -1,
+              -1
+            ]
           },
           "crossing": [],
-          "reverse_step": []
+          "reverse_step": [],
+          "resolution_status": "resolved"
         }
       ],
-      "classification": "blocked",
-      "blocked_reason": "rotation_undefined",
+      "classification": "cellwise_deformation",
+      "blocked_reason": "",
       "candidate": {
-        "present": false,
-        "cells": [],
+        "present": true,
+        "cells": [
+          {
+            "id": 0,
+            "domain": 0,
+            "coordinate": [
+              3,
+              2
+            ],
+            "frame": {
+              "permutation": [
+                1,
+                0
+              ],
+              "signs": [
+                1,
+                1
+              ]
+            }
+          },
+          {
+            "id": 1,
+            "domain": 0,
+            "coordinate": [
+              0,
+              1
+            ],
+            "frame": {
+              "permutation": [
+                1,
+                0
+              ],
+              "signs": [
+                -1,
+                1
+              ]
+            }
+          }
+        ],
         "inherit": "source_semantic_fields"
       },
       "inverse": {
-        "present": false,
-        "version": "",
-        "source_ref": "",
-        "forward_action": {},
-        "expected_recovery": "none",
-        "revision_delta": 0
+        "present": true,
+        "version": "explorer-piece-inverse/1",
+        "source_ref": "rotate_mobius",
+        "forward_action": {
+          "kind": "rotate",
+          "axis_a": 0,
+          "axis_b": 1,
+          "quarter_turn": -1
+        },
+        "expected_recovery": "exact_source_semantic_state",
+        "revision_delta": 2
       },
-      "atomic": "entire_envelope_unchanged",
+      "atomic": "single_envelope_swap",
       "legacy_comparison": "missing_new_conformance",
       "native_result": "not_run",
       "godot_result": "not_run",
@@ -5554,7 +5836,7 @@
           "id": 1,
           "domain": 0,
           "coordinate": [
-            2,
+            0,
             1
           ],
           "frame": {
@@ -5793,5 +6075,95 @@
     ],
     "native_result": "not_run",
     "godot_result": "not_run"
-  }
+  },
+  "cellwise_reference_sequences": [
+    {
+      "id": "sphere_up_twice",
+      "profile_ref": "sphere_adjacent_positive_8x8",
+      "action": {
+        "axis": 1,
+        "delta": -1
+      },
+      "source": [
+        2,
+        0
+      ],
+      "targets": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "frames": [
+        {
+          "permutation": [
+            1,
+            0
+          ],
+          "signs": [
+            1,
+            -1
+          ]
+        },
+        {
+          "permutation": [
+            1,
+            0
+          ],
+          "signs": [
+            1,
+            -1
+          ]
+        }
+      ]
+    },
+    {
+      "id": "projective_up_twice",
+      "profile_ref": "projective_2d_8x8",
+      "action": {
+        "axis": 1,
+        "delta": -1
+      },
+      "source": [
+        2,
+        0
+      ],
+      "targets": [
+        [
+          5,
+          7
+        ],
+        [
+          5,
+          6
+        ]
+      ],
+      "frames": [
+        {
+          "permutation": [
+            0,
+            1
+          ],
+          "signs": [
+            -1,
+            1
+          ]
+        },
+        {
+          "permutation": [
+            0,
+            1
+          ],
+          "signs": [
+            -1,
+            1
+          ]
+        }
+      ]
+    }
+  ]
 }

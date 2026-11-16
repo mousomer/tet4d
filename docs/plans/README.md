@@ -53,6 +53,11 @@ general planning redirection or repo-wide ownership notes.
 - Does **not** own programme stage order, durable product behaviour, topology
   semantics, server implementation or new research-study authorization.
 
+### `typography_cleanup.md`
+- Role: `spec`; status: `active`.
+- Owns typography cleanup sequencing and its effective-typography lock.
+- Visible changes (glyph coverage, rule reconciliation) remain owner decisions.
+
 ### `bounded_practice_explorer.md`
 - Role: `spec`; status: `active`.
 - Owns bounded Godot Sandbox implementation scope and novice acceptance tasks.

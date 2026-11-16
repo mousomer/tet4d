@@ -75,6 +75,8 @@ var _live_gravity_interval_seconds := DEFAULT_LIVE_GRAVITY_INTERVAL_SECONDS
 var _active_live_setup: Dictionary = {}
 var _practice
 var _practice_neighbors := false
+var _explorer_repeat_state: Dictionary = {}
+var _explorer_window_focused := true
 # Inspected canonical coordinate on the hidden axis; -1 follows the object.
 var _practice_slice := -1
 var _live_repeat_elapsed := {
@@ -180,8 +182,7 @@ func _process(delta: float) -> void:
 	if _mode in [MODE_LIVE_3D, MODE_LIVE_4D]:
 		_publish_legend_screen_directions()
 	if _practice != null:
-		if _is_live_viewer_active() and not _live_mode_paused() and not _hud.live_interaction_owns_input():
-			_process_live_input_repeat(delta)
+		_process_explorer_input_repeat(delta)
 		return
 	if _is_live_mode():
 		if not _live_mode_paused() and not _live_snapshot_game_over():
@@ -245,8 +246,9 @@ func _input(event: InputEvent) -> void:
 		# compact overlay from also orbiting, panning, zooming, or hard-dropping.
 		return
 	if _hud != null and _hud.live_interaction_owns_input():
+		_explorer_repeat_state.clear()
 		return
-	if _handle_practice_view_input(event):
+	if _claim_explorer_movement_input(event):
 		return
 	if _practice == null and _mode == MODE_LIVE_4D and _handle_live_4d_camera_input(event):
 		get_viewport().set_input_as_handled()
@@ -257,57 +259,110 @@ func _input(event: InputEvent) -> void:
 		return
 	if _is_live_mode() and _event_is_space_pressed_once(event):
 		if _practice != null:
-			_practice_action("replace")
+			if _explorer_window_focused and _event_action_pressed_once(event, ["explorer_replace_piece"]):
+				_practice_action("replace")
 		else:
 			_handle_live_space_hard_drop()
 		get_viewport().set_input_as_handled()
 
 
-func _handle_practice_view_input(event: InputEvent) -> bool:
-	if _practice == null:
+# Reserve movement before GUI focus navigation, including releases and OS echo.
+# Fresh presses still use the same descriptor-driven dispatcher and held timers.
+func _claim_explorer_movement_input(event: InputEvent) -> bool:
+	if _practice == null or not _explorer_window_focused or not event is InputEventKey:
 		return false
-	for group in LiveInputContractScript.practice_view_control_groups(_mode):
-		for item in group.items:
-			var metadata: Dictionary = item[2] if item.size() > 2 else {}
-			for prefix in ["negative_", "positive_", ""]:
-				var action := str(metadata.get(prefix + "action", ""))
-				# Shift+1…6 and the plain number pairs must never overlap, even
-				# when a Y-plane action has been rebound or cleared.
-				if not action.is_empty() and _event_action_pressed_once(event, [action], group.cockpit_role == "view_exact"):
-					_practice_action(str(metadata[prefix + "command"]))
-					get_viewport().set_input_as_handled()
-					return true
+	var matching := event.duplicate() as InputEventKey
+	matching.pressed = true
+	matching.echo = false
+	for spec in LiveInputContractScript.explorer_profile(_practice.dimension()).input_actions:
+		if spec.kind == "move" and _event_action_pressed(matching, [spec.action], spec.get("exact", false)):
+			_handle_explorer_input(event)
+			get_viewport().set_input_as_handled()
+			return true
 	return false
+
+
+# One descriptor-driven dispatcher; movement and Space reserve pre-GUI ownership.
+# Remaining actions reach it through unhandled input.
+func _handle_explorer_input(event: InputEvent) -> bool:
+	if not _explorer_window_focused or not _is_live_viewer_active() or _hud.live_interaction_owns_input():
+		_explorer_repeat_state.clear()
+		return false
+	var profile: Dictionary = LiveInputContractScript.explorer_profile(_practice.dimension())
+	for spec in profile.input_actions:
+		if not _event_action_pressed_once(event, [spec.action], spec.get("exact", false)):
+			continue
+		if spec.get("repeat", false):
+			_explorer_repeat_state[spec.get("repeat_action", spec.action)] = {"started": false, "elapsed": 0.0, "next": LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS}
+		_dispatch_explorer_intent(spec)
+		get_viewport().set_input_as_handled()
+		return true
+	if _event_action_pressed_once(event, ["mode_toggle_replay_live"]):
+		if _mode == MODE_LIVE_4D: _enter_replay_mode()
+		else: _start_ordinary_live_mode(MODE_LIVE_3D if _mode == MODE_LIVE_2D else MODE_LIVE_4D)
+		return true
+	if _event_is_escape(event):
+		_return_to_main_menu()
+		return true
+	if _mode != MODE_LIVE_4D and _event_action_pressed_once(event, ["replay_toggle_help"]):
+		_hud.toggle_help()
+		return true
+	return false
+
+
+func _dispatch_explorer_intent(spec: Dictionary) -> void:
+	var command: String = spec.command
+	if spec.get("relative", false):
+		var mapping = _control_frame_mapping(_practice.dimension())
+		if spec.kind == "rotate":
+			_flash_legend_plane(command.get_slice("_", 1), false)
+			command = mapping.rotation_command(command, _rotation_frame)
+		else:
+			command = mapping.translation_command(command, _translation_frame)
+	_practice_action(command)
+
+
+func _process_explorer_input_repeat(delta: float) -> void:
+	if not _explorer_window_focused or not _is_live_viewer_active() or _hud.live_interaction_owns_input():
+		_explorer_repeat_state.clear()
+		return
+	if _explorer_repeat_state.is_empty(): return
+	var profile: Dictionary = LiveInputContractScript.explorer_profile(_practice.dimension())
+	for axis in profile.axes:
+		if not axis.repeat: continue
+		var aliases: Array = axis.get("alias_actions", [])
+		var negative := _any_action_pressed([axis.negative_action] + aliases.slice(0, 1))
+		var positive := _any_action_pressed([axis.positive_action] + aliases.slice(1, 2))
+		for prefix in ["negative_", "positive_"]:
+			var action: String = axis[prefix + "action"]
+			var held: bool = negative if prefix == "negative_" else positive
+			if not held:
+				_explorer_repeat_state.erase(action)
+				continue
+			if not _explorer_repeat_state.has(action): continue # A fresh handled press arms repeats.
+			var state: Dictionary = _explorer_repeat_state[action]
+			if negative and positive or not state.started:
+				state.started = not (negative and positive)
+				state.elapsed = 0.0
+				state.next = LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS
+				continue
+			state.elapsed += delta
+			if state.elapsed < state.next: continue
+			state.elapsed = 0.0
+			state.next = LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS
+			_dispatch_explorer_intent({"command": axis[prefix + "command"], "kind": "move", "relative": axis.relative})
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _hud != null and _hud.live_interaction_owns_input():
+		_explorer_repeat_state.clear()
 		return
 	if _is_live_mode() and not _is_live_viewer_active():
 		if _event_action_pressed(event, ["quit", "replay_quit"]) or _event_is_escape(event):
 			_return_to_main_menu()
 		return
 	if _practice != null:
-		if _handle_practice_view_input(event):
-			return
-		if _event_action_pressed_once(event, ["explorer_replace_piece"]):
-			_practice_action("replace")
-			return
-		if _mode == MODE_LIVE_2D:
-			for spec in LiveInputContractScript.practice_2d_action_specs():
-				if _event_action_pressed_once(event, [spec[0]]):
-					_practice_action(spec[1])
-					get_viewport().set_input_as_handled()
-					return
-			if _event_action_pressed(event, _live_gameplay_action_names()):
-				return
-		var up_action := "explorer_move_up"
-		var down_action := "explorer_move_down"
-		if _mode != MODE_LIVE_2D and _event_action_pressed_once(event, [up_action, down_action]):
-			_practice_action("move_y_neg" if _event_action_pressed_once(event, [up_action]) else "move_y_pos")
-			get_viewport().set_input_as_handled()
-			return
-	if _practice != null and _event_action_pressed(event, ["live_pause", "live_3d_pause", "live_4d_pause"]):
+		_handle_explorer_input(event)
 		return
 	if _mode == MODE_LIVE_2D:
 		if _handle_live_2d_input(event):
@@ -910,7 +965,10 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
 		_handle_system_back_request()
 	elif what == NOTIFICATION_WM_WINDOW_FOCUS_OUT:
+		_explorer_window_focused = false
 		_ensure_live_game_paused_for_focus_loss()
+	elif what == NOTIFICATION_WM_WINDOW_FOCUS_IN:
+		_explorer_window_focused = true
 
 
 func _handle_system_back_request() -> bool:
@@ -1463,8 +1521,15 @@ func _practice_action(action: String) -> void:
 	if _practice == null:
 		return
 	if action.begins_with("topology_"):
-		_practice.select_topology(action.trim_prefix("topology_"))
+		var previous_shape: Array = _current_snapshot.board_shape.duplicate()
+		var mode_spec: Dictionary = BoardExtentContractV1.mode_spec(MODE_LIVE_2D)
+		_practice.select_topology(action.trim_prefix("topology_"), mode_spec.get("axis_minima", []), mode_spec.get("axis_maxima", []))
 		_refresh_practice_snapshot()
+		if _current_snapshot.board_shape != previous_shape:
+			_fit_view()
+		return
+	if action.begins_with("board_"):
+		_resize_practice_board(action)
 		return
 	match action:
 		"play":
@@ -1474,10 +1539,6 @@ func _practice_action(action: String) -> void:
 			_practice.retry()
 		"replace":
 			_practice.replace_next_piece()
-		"cell":
-			_practice.select_next_cell()
-		"neighbors":
-			_practice_neighbors = not _practice_neighbors
 		"target":
 			_practice.place_target()
 		"view_reset":
@@ -1523,6 +1584,29 @@ func _practice_action(action: String) -> void:
 	_refresh_practice_snapshot()
 
 
+# board_<axis>_<neg|pos>: one cell smaller/larger along that axis, within the
+# Live board contract. The Explorer restarts its piece on the new board; the
+# configured Play setup is untouched.
+func _resize_practice_board(action: String) -> void:
+	var parts := action.split("_")
+	var axis := "xyzw".find(parts[1]) if parts.size() == 3 else -1
+	var shape: Array = _practice.board_shape()
+	if axis < 0 or axis >= shape.size():
+		return
+	var mode_name: String = {2: MODE_LIVE_2D, 3: MODE_LIVE_3D, 4: MODE_LIVE_4D}[_practice.dimension()]
+	var spec: Dictionary = BoardExtentContractV1.mode_spec(mode_name)
+	var resized := shape.duplicate()
+	resized[axis] = clampi(int(shape[axis]) + (1 if parts[2] == "pos" else -1), int(spec.axis_minima[axis]), int(spec.axis_maxima[axis]))
+	if _practice.square_surface():
+		var side := clampi(int(shape[0]) + (1 if parts[2] == "pos" else -1), maxi(int(spec.axis_minima[0]), int(spec.axis_minima[1])), mini(int(spec.axis_maxima[0]), int(spec.axis_maxima[1])))
+		resized = [side, side]
+	if resized != shape:
+		_practice.resize_board(resized)
+	_practice_slice = -1
+	_refresh_practice_snapshot()
+	_fit_view()
+
+
 func _refresh_practice_snapshot() -> void:
 	if _practice == null:
 		return
@@ -1536,7 +1620,13 @@ func _refresh_practice_snapshot() -> void:
 func _refresh_practice_panel() -> void:
 	if _practice.dimension() == 4:
 		_hud.set_practice_view_basis(_live_4d_basis.indicator_snapshot())
-	_hud.set_practice_state(_practice.dimension(), _practice.feedback, _practice.piece_names(), _practice.selected_piece, _practice.topology)
+	var mode_name: String = {2: MODE_LIVE_2D, 3: MODE_LIVE_3D, 4: MODE_LIVE_4D}[_practice.dimension()]
+	var spec: Dictionary = BoardExtentContractV1.mode_spec(mode_name)
+	_hud.set_practice_state(_practice.dimension(), _practice.feedback, _practice.piece_names(), _practice.selected_piece, _practice.topology, _practice.board_shape(), spec.get("axis_minima", []), spec.get("axis_maxima", []))
+	if _practice.dimension() == 2:
+		# 2D has no camera: its legend compass is the screen itself.
+		_published_legend_directions = {}
+		_hud.set_legend_screen_directions(EXPLORER_2D_LEGEND_DIRECTIONS)
 
 
 func _refresh_hud() -> void:
@@ -1937,28 +2027,18 @@ func _clear_live_ui_focus() -> void:
 
 
 func _live_2d_command(command: String) -> void:
-	if _practice != null:
-		var practice_command: String = {"move_left": "move_x_neg", "move_right": "move_x_pos", "rotate_cw": "rotate_xy_pos", "rotate_ccw": "rotate_xy_neg"}.get(command, command)
-		_practice_action(practice_command)
-		return
 	var result := _live_bridge.live_2d_apply_command(command)
 	_update_live_drop_timing(command, result)
 	_refresh_live_2d_snapshot()
 
 
 func _live_3d_command(command: String) -> void:
-	if _practice != null:
-		_practice_action(command)
-		return
 	var result := _live_bridge.live_3d_apply_command(command)
 	_update_live_drop_timing(command, result)
 	_refresh_live_3d_snapshot()
 
 
 func _live_4d_command(command: String) -> void:
-	if _practice != null:
-		_practice_action(command)
-		return
 	var result := _live_bridge.live_4d_apply_command(command)
 	_update_live_drop_timing(command, result)
 	_refresh_live_4d_snapshot()
@@ -2008,6 +2088,13 @@ func _dispatch_live_2d_control_intent(intent: String) -> bool:
 # screen. Axis names cannot carry that: under view-relative controls the same
 # key keeps its on-screen effect while its board axis changes with the view,
 # so the old labels changed (X -> Z) exactly when nothing changed for the hand.
+const EXPLORER_2D_LEGEND_DIRECTIONS := {
+	"move_x_neg": Vector2(-1, 0), "move_x_pos": Vector2(1, 0),
+	"move_y_neg": Vector2(0, -1), "move_y_pos": Vector2(0, 1),
+	"x": Vector2(1, 0), "y": Vector2(0, -1),
+}
+
+
 func _publish_legend_screen_directions() -> void:
 	if _hud == null or not _hud.has_method("set_legend_screen_directions"):
 		return
@@ -2150,9 +2237,6 @@ func _clear_live_4d_presentation_state(end_session: bool) -> void:
 
 
 func _reset_live_2d() -> void:
-	if _practice != null:
-		_practice_action("retry")
-		return
 	_live_bridge.live_2d_reset()
 	_live_2d_session_started = true
 	_live_tick_accumulator = 0.0
@@ -2162,9 +2246,6 @@ func _reset_live_2d() -> void:
 
 
 func _reset_live_3d() -> void:
-	if _practice != null:
-		_practice_action("retry")
-		return
 	_live_3d_last_rotation_label = "none"
 	_live_3d_last_rotation_status = "none"
 	_live_bridge.live_3d_reset()
@@ -2176,9 +2257,6 @@ func _reset_live_3d() -> void:
 
 
 func _reset_live_4d() -> void:
-	if _practice != null:
-		_practice_action("retry")
-		return
 	_live_4d_last_rotation_label = "none"
 	_live_4d_last_rotation_status = "none"
 	_live_bridge.live_4d_reset()
@@ -2230,16 +2308,6 @@ func _ensure_live_game_paused_for_focus_loss() -> void:
 
 
 func _process_live_input_repeat(delta: float) -> void:
-	if _practice != null and _mode == MODE_LIVE_2D:
-		var specs: Array = LiveInputContractScript.practice_2d_action_specs()
-		for pair_start in [0, 2]:
-			var negative_held := _any_action_pressed([specs[pair_start][0]])
-			var positive_held := _any_action_pressed([specs[pair_start + 1][0]])
-			for offset in 2:
-				var spec: Array = specs[pair_start + offset]
-				var timer_key: String = str(spec[0]).trim_prefix("live_3d_")
-				_process_live_repeat_action(timer_key, (negative_held if offset == 0 else positive_held) and not (negative_held and positive_held), spec[1], LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS, LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS, delta)
-		return
 	if _mode == MODE_LIVE_4D:
 		_process_live_4d_input_repeat(delta)
 		return
@@ -2449,6 +2517,7 @@ func _process_live_repeat_action(
 
 
 func _reset_live_repeat_state() -> void:
+	_explorer_repeat_state.clear()
 	_physical_fallback_held.clear()
 	for key in _live_repeat_held.keys():
 		_reset_live_repeat_action(str(key))
@@ -2748,6 +2817,8 @@ func _track_physical_fallback(event: InputEvent) -> void:
 
 
 func _live_repeat_action_names() -> Array:
+	if _practice != null:
+		return LiveInputContractScript.explorer_profile(_practice.dimension()).input_actions.filter(func(spec): return spec.get("repeat", false)).map(func(spec): return spec.action)
 	return _live_gameplay_action_names() + _live_3d_gameplay_action_names() + _live_4d_gameplay_action_names()
 
 

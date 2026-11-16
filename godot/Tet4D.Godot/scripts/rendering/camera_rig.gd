@@ -674,15 +674,6 @@ func _build_orientation_gizmo() -> void:
 	_orientation_gizmo.visible = false
 	add_child(_orientation_gizmo)
 
-	var center := MeshInstance3D.new()
-	center.name = "AxisOrigin"
-	var sphere := SphereMesh.new()
-	sphere.radius = 0.13
-	sphere.height = 0.26
-	center.mesh = sphere
-	center.material_override = _gizmo_material(Color("d8dde3"))
-	_orientation_gizmo.add_child(center)
-
 	_add_gizmo_axis("Horizontal", "+X", Vector3.RIGHT, ReplayVisuals.axis_color("+X"))
 	_add_gizmo_axis("Gravity", "+Y", Vector3.DOWN, ReplayVisuals.axis_color("+Y"))
 	_add_gizmo_axis("Depth", "+Z", Vector3.BACK, ReplayVisuals.axis_color("+Z"))

@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <limits>
 #include <new>
+#include <stdexcept>
 #include <string>
 #include <limits>
 #include <optional>
@@ -446,6 +447,9 @@ void Tet4DCoreApi::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("explorer_begin", "dims", "original", "cells", "preset"), &Tet4DCoreApi::explorer_begin);
 	ClassDB::bind_method(D_METHOD("explorer_move", "axis", "direction"), &Tet4DCoreApi::explorer_move);
 	ClassDB::bind_method(D_METHOD("explorer_retry"), &Tet4DCoreApi::explorer_retry);
+	ClassDB::bind_method(D_METHOD("explorer_rotate", "direction"), &Tet4DCoreApi::explorer_rotate);
+	ClassDB::bind_method(D_METHOD("explorer_undo"), &Tet4DCoreApi::explorer_undo);
+	ClassDB::bind_method(D_METHOD("explorer_neighbors", "cell_id"), &Tet4DCoreApi::explorer_neighbors);
 	ClassDB::bind_method(D_METHOD("get_live_2d_production_piece_catalog"), &Tet4DCoreApi::get_live_2d_production_piece_catalog);
 	ClassDB::bind_method(D_METHOD("get_live_nd_production_piece_catalog"), &Tet4DCoreApi::get_live_nd_production_piece_catalog);
 	ClassDB::bind_method(D_METHOD("run_builtin_plain_2d_smoke_case"), &Tet4DCoreApi::run_builtin_plain_2d_smoke_case);
@@ -697,25 +701,83 @@ Dictionary explorer_result(tet4d::core::PieceFailure failure, const tet4d::core:
 	if (state != nullptr) {
 		Array cells;
 		Array initial;
-		Array ids;
+		Array ids, domains, frames, display;
+		const bool sphere = state->piece.version == tet4d::core::EXPLORER_DOMAIN_VERSION;
 		for (const auto &cell : state->piece.cells) {
 			Array coordinate;
 			for (int value : cell.coordinate.values) coordinate.push_back(value);
 			cells.push_back(coordinate);
 			ids.push_back(cell.id);
+			domains.push_back(cell.domain);
+			Dictionary frame;
+			Array permutation, signs;
+			for (int value : cell.frame.permutation) permutation.push_back(value);
+			for (int value : cell.frame.signs) signs.push_back(value);
+			frame["permutation"] = permutation;
+			frame["signs"] = signs;
+			frames.push_back(frame);
+			Array drawn = coordinate.duplicate();
+			if (sphere) drawn[0] = cell.coordinate.values[0] + cell.domain * (state->piece.profile.dimensions[0] + 1);
+			display.push_back(drawn);
 		}
 		for (const auto &cell : state->initial_piece.cells) {
 			Array coordinate;
 			for (int value : cell.coordinate.values) coordinate.push_back(value);
 			initial.push_back(coordinate);
 		}
+		Array seams;
+		for (const auto &seam : state->piece.profile.seams) {
+			if (!seam.enabled) continue;
+			Dictionary item;
+			item["id"] = to_godot_string(seam.id);
+			item["source_axis"] = seam.source.axis;
+			item["source_side"] = seam.source.side == "-" ? -1 : 1;
+			item["target_axis"] = seam.target.axis;
+			item["target_side"] = seam.target.side == "-" ? -1 : 1;
+			item["tangent_sign"] = seam.transform.signs.front();
+			seams.push_back(item);
+		}
+		result["seams"] = seams;
 		result["cells"] = cells;
 		result["initial_cells"] = initial;
 		result["cell_ids"] = ids;
+		result["domains"] = domains;
+		result["frames"] = frames;
+		result["display_cells"] = display;
+		Array display_shape;
+		display_shape.push_back(sphere ? 2 * state->piece.profile.dimensions[0] + 1 : state->piece.profile.dimensions[0]);
+		display_shape.push_back(state->piece.profile.dimensions[1]);
+		result["display_shape"] = display_shape;
+		Array origins;
+		for (int domain = 0; domain < (sphere ? 2 : 1); ++domain) {
+			Array origin; origin.push_back(domain * (state->piece.profile.dimensions[0] + 1)); origin.push_back(0); origins.push_back(origin);
+		}
+		result["chart_origins"] = origins;
+		result["version"] = to_godot_string(state->piece.version);
+		result["pristine"] = state->piece == state->initial_piece;
 		result["revision"] = state->revision;
 	}
 	return result;
 }
+// Materialize all result/undo allocations before the runtime's no-throw publication.
+Dictionary commit_explorer_candidate(tet4d::core::ExplorerPieceRuntime& runtime,
+                                     const tet4d::core::PieceProposal& proposal) {
+	using namespace tet4d::core;
+	if (!proposal.candidate) return explorer_result(proposal.failure);
+	const auto& candidate = *proposal.candidate;
+	auto next = runtime.snapshot();
+	next.piece = candidate.target;
+	++next.revision;
+	if (candidate.is_inverse) {
+		if (!next.undo.empty() && next.undo.back() == candidate.inverse) next.undo.pop_back();
+	} else next.undo.push_back(candidate.inverse);
+	auto result = explorer_result(PieceFailure::none, &next);
+	result["classification"] = candidate.classification == PieceClassification::plain_translation ? "plain_translation"
+		: candidate.classification == PieceClassification::rigid_transform ? "rigid_transform" : "cellwise_deformation";
+	const auto status = runtime.apply(candidate);
+	return status == PieceFailure::none ? result : explorer_result(status);
+}
+
 }
 
 Dictionary Tet4DCoreApi::explorer_begin(const Array &dims, const Array &original, const Array &cells, const String &preset) {
@@ -727,6 +789,8 @@ Dictionary Tet4DCoreApi::explorer_begin(const Array &dims, const Array &original
 		bool valid = false;
 		const auto shape = coord_from_array(dims, valid);
 		if (!valid) return explorer_result(PieceFailure::invalid_profile);
+		if ((preset == "projective" || preset == "sphere_adjacent_positive") && shape.values[0] != shape.values[1])
+			return explorer_result(PieceFailure::invalid_profile);
 		const auto rest = blocks_from_array(original, valid);
 		if (!valid) return explorer_result(PieceFailure::invalid_piece_state);
 		const auto current = blocks_from_array(cells, valid);
@@ -738,16 +802,26 @@ Dictionary Tet4DCoreApi::explorer_begin(const Array &dims, const Array &original
 					return explorer_result(PieceFailure::invalid_piece_state);
 		}
 		for (const auto &coord : current) if (coord.dimension() != 2) return explorer_result(PieceFailure::invalid_piece_state);
-		if (preset != "bounded" && preset != "cylinder_x" && preset != "cylinder_y" && preset != "torus")
+		if (preset != "bounded" && preset != "cylinder_x" && preset != "cylinder_y" && preset != "torus" &&
+			preset != "mobius" && preset != "klein" && preset != "projective" && preset != "sphere_adjacent_positive" && preset != "sphere_double_2d")
 			return explorer_result(PieceFailure::unsupported_representation);
 		ExplorerPiece piece;
 		// Identity is scoped to this detached, non-persistent single-object bridge.
 		piece.object_namespace = "00000000000000000000000000000001";
 		piece.object_ordinal = 1;
 		piece.profile = {1, 2, {shape.values[0], shape.values[1]}, {}};
+		if (preset == "sphere_double_2d") piece.version = EXPLORER_DOMAIN_VERSION;
+		if (preset == "sphere_adjacent_positive") {
+			piece.profile.seams = {
+				{"seam_000", {0, "-"}, {1, "-"}, {{0}, {1}}, true},
+				{"seam_001", {0, "+"}, {1, "+"}, {{0}, {1}}, true}};
+		}
 		for (int axis = 0; axis < 2; ++axis) {
-			if (preset == "torus" || (axis == 0 && preset == "cylinder_x") || (axis == 1 && preset == "cylinder_y"))
-				piece.profile.seams.push_back({"seam_" + std::to_string(axis), {axis, "-"}, {axis, "+"}, {{0}, {1}}, true});
+			if (preset == "torus" || preset == "klein" || preset == "projective" ||
+				(axis == 0 && (preset == "cylinder_x" || preset == "mobius")) || (axis == 1 && preset == "cylinder_y")) {
+				const int tangent = (preset == "projective" || preset == "mobius" || (preset == "klein" && axis == 1)) ? -1 : 1;
+				piece.profile.seams.push_back({"seam_" + std::to_string(axis), {axis, "-"}, {axis, "+"}, {{0}, {tangent}}, true});
+			}
 		}
 		CoordND mins = rest.front();
 		for (const auto &coord : rest) for (int axis = 0; axis < 2; ++axis)
@@ -777,27 +851,115 @@ Dictionary Tet4DCoreApi::explorer_begin(const Array &dims, const Array &original
 		return result;
 	} catch (const std::bad_alloc &) {
 		return explorer_result(PieceFailure::resource_limit);
+	} catch (const std::length_error &) {
+		return explorer_result(PieceFailure::resource_limit);
 	}
 }
 
 Dictionary Tet4DCoreApi::explorer_move(int64_t axis, int64_t direction) {
+	try {
 	using namespace tet4d::core;
 	if (!explorer_runtime_ || axis < 0 || axis > 1 || (direction != -1 && direction != 1))
 		return explorer_result(PieceFailure::invalid_action);
 	const auto source = explorer_runtime_->snapshot();
 	const auto proposal = propose_piece_translation(source.piece, source.revision, {static_cast<int>(axis), static_cast<int>(direction)});
-	if (!proposal.candidate) return explorer_result(proposal.failure);
-	const auto status = explorer_runtime_->apply(*proposal.candidate);
-	const auto state = explorer_runtime_->snapshot();
-	return explorer_result(status, &state);
+	return commit_explorer_candidate(*explorer_runtime_, proposal);
+
+	} catch (const std::bad_alloc &) {
+		return explorer_result(tet4d::core::PieceFailure::resource_limit);
+	} catch (const std::length_error &) {
+		return explorer_result(tet4d::core::PieceFailure::resource_limit);
+	}
 }
 
 Dictionary Tet4DCoreApi::explorer_retry() {
+	try {
 	using namespace tet4d::core;
 	if (!explorer_runtime_) return explorer_result(PieceFailure::invalid_piece_state);
+	auto next = explorer_runtime_->snapshot();
+	if (next.revision == std::numeric_limits<int64_t>::max()) return explorer_result(PieceFailure::resource_limit);
+	next.piece = next.initial_piece;
+	next.undo.clear();
+	++next.revision;
+	auto result = explorer_result(PieceFailure::none, &next);
 	const auto status = explorer_runtime_->retry();
+	return status == PieceFailure::none ? result : explorer_result(status);
+
+	} catch (const std::bad_alloc &) {
+		return explorer_result(tet4d::core::PieceFailure::resource_limit);
+	} catch (const std::length_error &) {
+		return explorer_result(tet4d::core::PieceFailure::resource_limit);
+	}
+}
+
+Dictionary Tet4DCoreApi::explorer_rotate(int64_t direction) {
+	try {
+	using namespace tet4d::core;
+	if (!explorer_runtime_ || (direction != -1 && direction != 1)) return explorer_result(PieceFailure::invalid_action);
+	const auto before = explorer_runtime_->snapshot();
+	const auto proposal = propose_piece_rotation(before.piece, before.revision, static_cast<int>(direction));
+	return commit_explorer_candidate(*explorer_runtime_, proposal);
+
+	} catch (const std::bad_alloc &) {
+		return explorer_result(tet4d::core::PieceFailure::resource_limit);
+	} catch (const std::length_error &) {
+		return explorer_result(tet4d::core::PieceFailure::resource_limit);
+	}
+}
+
+Dictionary Tet4DCoreApi::explorer_undo() {
+	try {
+	using namespace tet4d::core;
+	if (!explorer_runtime_) return explorer_result(PieceFailure::invalid_piece_state);
+	const auto before = explorer_runtime_->snapshot();
+	if (before.undo.empty()) return explorer_result(PieceFailure::invalid_action);
+	const auto proposal = propose_piece_inverse(before.piece, before.revision, before.undo.back());
+	return commit_explorer_candidate(*explorer_runtime_, proposal);
+
+	} catch (const std::bad_alloc &) {
+		return explorer_result(tet4d::core::PieceFailure::resource_limit);
+	} catch (const std::length_error &) {
+		return explorer_result(tet4d::core::PieceFailure::resource_limit);
+	}
+}
+
+Dictionary Tet4DCoreApi::explorer_neighbors(int64_t cell_id) {
+	try {
+	using namespace tet4d::core;
+	if (!explorer_runtime_) return explorer_result(PieceFailure::invalid_piece_state);
 	const auto state = explorer_runtime_->snapshot();
-	return explorer_result(status, &state);
+	if (cell_id < 0 || static_cast<std::size_t>(cell_id) >= state.piece.cells.size())
+		return explorer_result(PieceFailure::invalid_action);
+	Dictionary result;
+	result["ok"] = true;
+	Array neighbors;
+	for (int axis = 0; axis < 2; ++axis) for (int direction : {-1, 1}) {
+		const auto proposal = propose_piece_neighbor(state.piece, cell_id, {axis, direction});
+		Dictionary row;
+		row["axis"] = axis;
+		row["direction"] = direction;
+		row["reason"] = piece_failure_name(proposal.failure);
+		if (proposal.candidate) {
+			const auto& cell = proposal.candidate->target.cells.front();
+			Array coordinate;
+			for (int value : cell.coordinate.values) coordinate.push_back(value);
+			row["target"] = coordinate;
+			row["domain"] = cell.domain;
+			Array display = coordinate.duplicate();
+			if (state.piece.version == EXPLORER_DOMAIN_VERSION)
+				display[0] = cell.coordinate.values[0] + cell.domain * (state.piece.profile.dimensions[0] + 1);
+			row["display_target"] = display;
+		}
+		neighbors.push_back(row);
+	}
+	result["neighbors"] = neighbors;
+	return result;
+
+	} catch (const std::bad_alloc &) {
+		return explorer_result(tet4d::core::PieceFailure::resource_limit);
+	} catch (const std::length_error &) {
+		return explorer_result(tet4d::core::PieceFailure::resource_limit);
+	}
 }
 
 Array Tet4DCoreApi::get_live_2d_production_piece_catalog() const {

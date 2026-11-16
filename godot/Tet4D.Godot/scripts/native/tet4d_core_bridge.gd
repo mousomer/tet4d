@@ -301,3 +301,15 @@ func explorer_move(axis: int, direction: int) -> Dictionary:
 
 func explorer_retry() -> Dictionary:
 	return _api().explorer_retry()
+
+
+func explorer_rotate(direction: int) -> Dictionary:
+	return _api().explorer_rotate(direction)
+
+
+func explorer_undo() -> Dictionary:
+	return _api().explorer_undo()
+
+
+func explorer_neighbors(cell_id: int) -> Dictionary:
+	return _api().explorer_neighbors(cell_id)

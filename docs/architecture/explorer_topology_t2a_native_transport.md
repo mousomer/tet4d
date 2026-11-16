@@ -14,7 +14,10 @@ legacy parity and the repository verifier. The narrow Godot candidate adapter no
 and Retry for this admitted subset through value-owned `explorer_begin`,
 `explorer_move` and `explorer_retry` calls. This does not expose a general
 persisted piece DTO or complete T2 acceptance. Rotations,
-twisted seams and remaining profiles are separate work. The authority map and
+twisted seams and remaining profiles were separate T2A work. The successor
+2D surface candidate is specified in `explorer_surface_runtime.md`; it adds
+Möbius/Klein/projective seams, coherent rotations, Undo and the versioned
+spherical double without claiming complete T2 or T6 acceptance. The authority map and
 terminal transfer records are unchanged.
 
 ## Production ownership
@@ -113,3 +116,14 @@ resolver and native parity tests, `git diff --check`, `./gov check`, and
 the PR bind measured results to the checked tree; expected fixtures retain their
 T1 `not_run` metadata. Product authority, Godot integration, other platforms and
 human UI acceptance are not established by this provider suite.
+
+
+## Superseding free-cellwise amendment (2026-11-15)
+
+The historical bounded/cylinder/torus scope and reverse-step validation above
+are superseded for expanded 2D Explorer by RDS §2.5 and the revised piece
+contract §§6–8. Native admits every structurally valid decoded rank-2 profile,
+preserving seams, and supplies the same board-axis step to each cell. Frames
+accumulate without remapping subsequent input. Forward acceptance never checks
+whole-piece inverse recovery or rigidity. Source-snapshot Undo retains identity,
+frames, coordinates and provenance/revision checks; gameplay remains separate.

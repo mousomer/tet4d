@@ -64,12 +64,6 @@ def _local_colour_literal_issues(grid: str, camera: str) -> list[str]:
         for line_number, line in enumerate(text.splitlines(), 1):
             if "Color(" not in line:
                 continue
-            if (
-                path == CAMERA
-                and "AxisOrigin" not in line
-                and 'Color("d8dde3")' in line
-            ):
-                continue
             if path == GRID:
                 issues.append(
                     f"{path.relative_to(ROOT)}:{line_number}: local colour literal in governed grid consumer"

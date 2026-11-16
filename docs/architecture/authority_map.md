@@ -28,6 +28,7 @@ Do not implement a new capability in Python solely to manufacture an oracle.
 | Inherited gameplay legality, piece transformations, gravity, drop/lock, clear, and scoring not explicitly transferred | Python reference implementation | Native live implementations remain parity-backed/provisional except where a future transfer record says otherwise. |
 | Existing inherited topology semantics and Play/Sandbox policy **not yet transferred** | Python topology implementation and canonical topology contracts | This describes current implemented ownership, including historical Play policy; it is not a product-veto over the forward Explorer RDS. Native transport/query implementation does not by itself transfer topology semantics. |
 | **Planned** Godot Explorer topology contract (2D/3D/4D, cellwise injective transport, visual builder) | `docs/rds/RDS_EXPLORER_TOPOLOGIES.md` is the new product requirement; native C++ is **candidate** deterministic owner; Godot owns presentation | RDS supersedes conflicting Python Explorer expectations as product requirements. **Approved Explorer RDS replan: requirements only.** **No transfer is recorded yet.** T1 prepares scope/contracts; T2 requires a completed **2D Explorer-only** native transfer; T4 requires its own 3D/4D transfer; T6 handles domain-aware semantics separately. Update this row only with conformance, compatibility evidence and a terminal authority record. Ordinary gameplay remains separately owned. |
+| Closed 2D disk-double Explorer mechanics (`AE-0056`) | Native C++ Explorer piece runtime under `explorer_surface_runtime.md` | New `explorer-piece-domains/2` domain-aware steps, frame transport, recorded inverses, coherent in-chart rotations and atomic lifecycle for `sphere_double_2d`. Godot owns chart presentation. This does not transfer inherited single-domain topology, promote mathematical certification, or complete general multi-domain T6/S³/S⁴. |
 | Existing replay, trace, and compatibility semantics | Python/reference contracts and versioned fixtures | Transfer may occur by bounded subsystem. |
 | Existing locked-cell explosion semantics | Python headless model and golden traces | New physics beyond this model may establish separate native authority. |
 | Accepted native bounded live-session execution | Native C++ implementation | Runtime implementation ownership is not automatically semantic authority; review and transfer bounded subsystems explicitly. |
@@ -129,11 +130,17 @@ or choose a spawn pose. Hold never mutates the Godot view/control frame.
 
 ## Native C++ / GDExtension status
 
-The 2D Explorer exposes the T2A candidate bounded/cylinder/torus translation
-provider through a private single-object native runtime. Godot owns selection
-and presentation only; unsupported twisted seams and non-bounded rotations
-remain unavailable. This integration does not transfer runtime authority or
-complete T2 acceptance.
+The 2D Explorer exposes native candidate single-domain transport, including
+bounded, periodic, twisted and positive adjacent-edge Sphere profiles. Godot
+owns selection, presentation and controls; it does not compute topology truth.
+The current RDS §2.5 free-cellwise amendment and
+`explorer_topology_piece_transport_contract.md` govern
+`explorer-piece-transport/1`: every cell receives the same canonical board-axis
+step, frames accumulate as metadata, duplicate destinations reject atomically,
+and recorded Undo restores the exact semantic source snapshot. The retired
+probe/coincident-occupancy description is superseded. This does not transfer
+inherited topology authority or complete T2 acceptance. AE-0056 remains limited
+to the retained disk-double compatibility path.
 
 The bounded Godot practice Explorer composes the existing native geometry,
 bounded-pose and topology-step query providers under

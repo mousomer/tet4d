@@ -185,11 +185,25 @@ All other rows of the measured key table stay as they are.
 ### Dispatch
 
 One `_handle_explorer_input(event)` in `_unhandled_input`, driven by the
-descriptor and called before any Live handler; Space keeps its early `_input`
-claim only so a focused button cannot take it. `_live_*_command` and
+descriptor and called before any Live handler. Movement bindings and Space
+reserve early `_input` ownership so focused controls cannot take them. Movement
+presses, releases and OS echo are consumed before GUI navigation; fresh presses
+use the same dispatcher and held-repeat lifecycle. Modal input ownership wins. `_live_*_command` and
 `_reset_live_*` lose their practice interceptions.
 
 ## Phases
+
+Current execution status (2026-11-15, later): Phase 4 items 2–3 (Space tab in
+every dimension, re-baselined lock) and Phase 5 items 1, 2 and 4 (Z/X Y keys,
+PageUp/PageDown retired, Fit on 9, key docs) are implemented in the working
+tree, together with one helper legend structure for 2D/3D/4D and a Space-tab
+board size control. Phase 3 (structure owner extraction) and Phase 5 item 3
+(3D view turns) remain open. Earlier status: Phases 0–2 are implemented and verified in this delivery. Phase 2 has independent Explorer action
+IDs, unified dispatch and held-key lifecycle coverage. Phase 3 structure
+ownership and Phases 4–6 visible changes/documentation/acceptance remain open.
+The measured state above is the pre-refactor baseline, not a claim that the
+accepted key and tab changes have landed. Human `EXPLORER_LEARNING_READY`
+acceptance remains pending independently of these refactors.
 
 Each phase lands as its own PR. Phases 0–3 are refactors: the key→command
 matrix, tab/scroll state and every rectangle must stay identical. Node
@@ -200,6 +214,15 @@ Phases 4–5 change what the player sees, as the owner decided on
 2026-11-11 (Q1–Q5 below).
 
 ### Phase 0 — Lock
+
+Implementation: the lock uses a test-only app subclass to observe the production
+`_practice_action` seam without executing commands. It records shifted/plain
+keys (including unbound candidates), panel signals, helper rows/action IDs,
+default InputMap bindings and visible relative node identities at 1280×800.
+Factory setup and display inputs are pinned; the original InputMap and window
+state are restored. Write mode always fails, and normal runs compare the
+checked-in fixture with fresh observations and exercise negative mutations.
+This test establishes the captured behavior; later-phase status is tracked above.
 
 1. `tests/test_explorer_cockpit_lock.gd`: for 2D, 3D and 4D, record every
    default key (with and without Shift) → `_practice_action` command, every
@@ -220,6 +243,12 @@ Phases 4–5 change what the player sees, as the owner decided on
 
 ### Phase 1 — Descriptor (pure refactor)
 
+Implementation: `LiveInputContract.explorer_profile` supplies the detached
+inventory to panel construction/visibility, helpers and the existing 2D
+dispatch/repeat path. Legacy keys and allocation are preserved. Unexposed
+inspection commands are removed from player dispatch; native/model query
+coverage is retained. Phase 0 fixtures are not regenerated.
+
 1. Add the Explorer descriptor; derive `practice_view_control_groups`,
    `practice_piece_control_groups` and `practice_2d_action_specs` from it,
    then delete the latter two.
@@ -234,6 +263,20 @@ Phases 4–5 change what the player sees, as the owner decided on
 Exit: Phase 0 matrix unchanged.
 
 ### Phase 2 — Dispatch (pure refactor)
+
+Implemented contract: Explorer owns separate move/rotate/retry/view action IDs,
+one `_handle_explorer_input` path in `_unhandled_input`, and its own held-movement
+timers. `_input` reserves only Explorer Replace's early capture, alongside the
+existing pointer/shell handling. Relative keyboard intents use the same
+control-frame mapping; canonical panel buttons keep their direct commands.
+For this refactor, 2D's W/S/arrow Y pair has temporary `explorer_2d_move_y_*`
+IDs; 3D/4D Y retains Z/X/PageUp/PageDown and its existing one-shot behavior.
+Phase 5 owns changing those defaults and repeat capabilities. Legacy action
+registrations may remain unread for the frozen lock's compatibility projection.
+An explicit test-only ID projection preserves the Phase 0 fixture; separate
+tests prove new defaults and Live/Explorer rebinding isolation. Focus loss,
+navigation and modal input ownership disarm held Explorer movement until a fresh
+press, preventing a stale held key from moving an object on return.
 
 1. Introduce Explorer action IDs with defaults equal to today's keys (K4).
    No saved-profile migration exists or is needed: Godot persists no
@@ -343,6 +386,18 @@ and phase-specific test migrations. It supersedes the former Q2 alias text.
   later profiles as visibly unavailable; nothing implies 3D/4D transport
   exists.
 
+## Surface implementation interaction (2026-11-14)
+
+The separately authorized `docs/architecture/explorer_surface_runtime.md` slice
+adds selectable 2D surfaces, profile notes and surface-only Undo. Its intentional
+lock delta is limited to topology options, hidden surface-control identities
+and their typography inventory. Default key→command routes, Live rectangles
+and the remaining unification Phases 3–6 remain open.
+The Phase 0 fixture was re-baselined on 2026-11-15 for this delta only: the
+four 2D topology-selector entries. RDS §2.5 additionally replaces only the
+normal Sphere label and command with `Sphere` /
+`topology_sphere_adjacent_positive`; keys, helpers and nodes retain the lock.
+
 ## Non-goals
 
 - Live 2D/3D/4D cockpit allocation, Main Menu and their lock test.
@@ -362,3 +417,29 @@ git diff --check origin/master...HEAD
 
 Run Godot tests with an isolated HOME. A test runner "passed" line is not
 enough on its own; check for script errors in the log.
+
+## Phase 2 owner review (pending)
+
+Use the existing local game launch, enter Explorer and repeat in 2D/3D/4D:
+move, hold/release opposite movement keys, rotate, Retry, replace with Space/P,
+change view and return from Main Menu. Focus another app while holding a move;
+return and confirm the object waits for a fresh press. Check that Space does
+not also activate a focused GUI button. Runtime rebinding remains a test seam;
+this phase adds no user-facing binding editor or saved profiles. Phase 5 key
+changes, the Space tab, 3D view turns and novice learning acceptance stay open.
+
+
+## Arrow-focus correction (2026-11-15)
+
+Movement was reaching only `_unhandled_input`, allowing the internal TabBar
+and focused controls to consume arrow navigation first. Pre-GUI ownership now
+reserves descriptor movement bindings, including releases and echo; fresh presses
+reuse `_handle_explorer_input`. Other commands retain their dispatch path and
+modal/window-focus guards retain precedence. This supersedes Phase 2's
+Space-only early-capture description. Real `Input.parse_input_event` regressions
+focus the actual Explorer TabBar in every dimension and assert exactly one
+piece move, unchanged tab selection, no echo command and modal suspension.
+
+Arrow-focus verification: isolated-HOME `tests/run_practice_explorer.gd`, focused
+cockpit-lock/Live-menu/navigation regressions, and
+`CODEX_MODE=1 ./scripts/verify.sh` passed. No binding or lock baseline changed.

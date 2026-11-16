@@ -67,9 +67,10 @@ void fixture_cases() {
         ++states;
         ExplorerPieceRuntime runtime({f.revision, f.source, f.source, {}});
         const auto before = runtime.snapshot();
-        auto result = propose_piece_translation(before.piece, before.revision, f.action);
+        auto result = f.rotation ? propose_piece_rotation(before.piece, before.revision, f.action.delta)
+                                 : propose_piece_translation(before.piece, before.revision, f.action);
         require(before == runtime.snapshot(), "fixture proposal pure");
-        assert_deterministic_proposal(f.source, f.action);
+        if (!f.rotation) assert_deterministic_proposal(f.source, f.action);
         if (!f.failure.empty()) {
             ++rejected_translations;
             require(!result.candidate, "blocked has no applicable candidate");
@@ -82,7 +83,7 @@ void fixture_cases() {
         require(candidate.target == f.target && candidate.witnesses == f.witnesses,
                 "reviewed full target/witnesses");
         require(candidate.classification == f.classification, "reviewed classification");
-        require(candidate.inverse == PieceInverse{f.inverse_version, f.source, f.action},
+        require(candidate.inverse == PieceInverse{f.inverse_version, f.source, f.action, f.rotation},
                 "reviewed inverse descriptor");
         commit(runtime, candidate);
         undo(runtime, candidate.inverse);
@@ -116,10 +117,8 @@ void negative_cases() {
          PieceFailure::invalid_profile},
         {[](auto& p) { p.profile.seams[0].source.axis = std::numeric_limits<std::int64_t>::max(); },
          PieceFailure::invalid_profile},
-        {[](auto& p) { p.profile.seams = {{"cross_axis", {0, "-"}, {1, "-"}, {{0}, {1}}, true}}; },
-         PieceFailure::unsupported_representation},
-        {[](auto& p) { p.profile.seams[0].transform.signs = {-1}; },
-         PieceFailure::unsupported_representation},
+        {[](auto& p) { p.profile.seams[0].transform.signs = {0}; },
+         PieceFailure::invalid_profile},
         {[](auto& p) { p.cells[1].id = 0; }, PieceFailure::invalid_piece_state},
         {[](auto& p) { p.cells[1].coordinate = p.cells[0].coordinate; },
          PieceFailure::invalid_piece_state},
@@ -249,16 +248,12 @@ void negative_cases() {
     full_history.undo.resize(EXPLORER_MAX_UNDO, valid.inverse);
     ExplorerPieceRuntime full(full_history);
     reject_apply(full, valid, PieceFailure::resource_limit);
-    // Equivalent authored labels, order and seam directions normalize before witnesses bind.
-    auto equivalent = base;
-    std::reverse(equivalent.profile.seams.begin(), equivalent.profile.seams.end());
-    for (auto& seam : equivalent.profile.seams) {
-        seam.id = "label_" + std::to_string(seam.source.axis);
-        std::swap(seam.source, seam.target);
-    }
-    require(propose_piece_translation(equivalent, 0, {0, -1}).candidate ==
-                propose_piece_translation(base, 0, {0, -1}).candidate,
-            "canonical profile invariance");
+    // Structurally valid decoded profiles retain their boundary/transform identity.
+    auto authored = base;
+    authored.profile.seams = {{"cross_axis", {1, "-"}, {0, "+"}, {{0}, {-1}}, true}};
+    ExplorerPiece admitted;
+    require(validate_explorer_piece(authored, admitted) == PieceFailure::none && admitted == authored,
+            "cross-axis reversed custom profile is preserved, never rebuilt as wraps");
     // Noncommuting frame composition protects the future twisted-seam extension architecture.
     require(compose_piece_frames({{0, 1}, {1, -1}}, {{1, 0}, {-1, 1}}) ==
                 PieceFrame{{1, 0}, {1, 1}},
@@ -398,11 +393,13 @@ void serialized_commit_and_boundaries() {
     require(recovered.candidate.has_value(), "recorded inverse is independent of old revision");
     assert_exact_semantic_recovery(initial, recovered.candidate->target);
 }
+#include "explorer_surface_tests.hpp"
 } // namespace
 
 int main() {
     fixture_cases();
     negative_cases();
+    surface_cases();
     serialized_commit_and_boundaries();
     fixed_seed_sequences();
     std::cout << "explorer_piece_conformance: "
