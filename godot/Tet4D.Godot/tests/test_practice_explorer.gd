@@ -683,6 +683,8 @@ func _check_2d_access(tree: SceneTree, app, hud) -> void:
 			model.command("move_%s_neg" % axis)
 		var wall: Array = model.cells.duplicate(true)
 		_check(not model.command("move_%s_neg" % axis) and model.cells == wall, "2D wall rejection is atomic: " + axis)
+		_check(model.replace_piece(model.selected_piece), "2D replacement succeeds after wall rejection")
+		_check(model.feedback.begins_with("Replaced piece:") and not "blocked" in model.feedback, "2D replacement clears stale wall rejection")
 		model.retry()
 	_check(not model.command("move_z_pos") and not model.command("rotate_xz_pos"), "2D rejects spatial commands")
 	_check(model.place_target() and not model.cells.has(model.target), "2D marks a native-legal target away from the object")
