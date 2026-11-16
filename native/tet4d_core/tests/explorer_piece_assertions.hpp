@@ -21,10 +21,11 @@ inline void assert_valid_local_frames(const ExplorerPiece& piece) {
         require(valid_piece_frame(cell.frame), "valid frame");
 }
 inline void assert_unique_occupancy(const ExplorerPiece& piece) {
-    std::set<CoordND> coordinates;
+    std::set<std::pair<int, CoordND>> coordinates;
     for (const auto& cell : piece.cells) {
-        require(coordinates.insert(cell.coordinate).second, "unique destination");
-        require(cell.domain == 0 && cell.coordinate.dimension() == piece.profile.rank,
+        require(coordinates.insert({cell.domain, cell.coordinate}).second, "unique destination");
+        require(cell.domain >= 0 && cell.domain < (piece.version == EXPLORER_DOMAIN_VERSION ? 2 : 1) &&
+                    cell.coordinate.dimension() == piece.profile.rank,
                 "domain/rank");
         for (std::size_t j = 0; j < cell.coordinate.values.size(); ++j)
             require(cell.coordinate.values[j] >= 0 &&
@@ -63,6 +64,13 @@ inline void assert_deterministic_proposal(const ExplorerPiece& source, MoveStepQ
     require(first.failure == second.failure && first.candidate == second.candidate,
             "row-order-independent complete candidate/witness");
 }
+struct CellwiseSequenceFixture {
+    std::string id;
+    TopologyTransportProfile profile;
+    CoordND source;
+    std::vector<CoordND> targets;
+    std::vector<PieceFrame> frames;
+};
 struct FixtureCase {
     std::string id;
     ExplorerPiece source;
@@ -73,5 +81,6 @@ struct FixtureCase {
     ExplorerPiece target;
     std::string inverse_version;
     std::vector<PieceWitness> witnesses;
+    bool rotation = false;
 };
 } // namespace explorer_test

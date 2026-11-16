@@ -763,7 +763,7 @@
     },
     {
       "id": "sphere_2d",
-      "label": "Sphere-like transport (heuristic)",
+      "label": "Legacy sphere-like transport (heuristic)",
       "dimension": 2,
       "family": "legacy",
       "order": 6,
@@ -896,6 +896,147 @@
           "path": "tests/fixtures/explorer_topology/quotients_v1.json",
           "record_id": "proof-sphere_2d",
           "record_sha256": "40ec64d7ee4fdcd49a78da8dc6007b79bc2a5872047e467a273af0bca3392116",
+          "kind": "mathematical_derivation",
+          "review_state": "pending"
+        }
+      ],
+      "runtime_evidence": []
+    },
+    {
+      "id": "sphere_adjacent_positive",
+      "label": "Sphere",
+      "dimension": 2,
+      "family": "surface",
+      "order": 7,
+      "description": "Single-square sphere: positive adjacent-edge identifications. Quotient evidence is independent of probe geometry; independent review remains pending.",
+      "space_class_id": "surface.sphere",
+      "association": "proposed",
+      "construction_id": "square-quotient-v1:sha256:eeb733c14b5852a00972a0cad80ef77a355148c1205e808494302992425c7c87",
+      "recipe": {
+        "schema": "tet4d.square_quotient",
+        "schema_version": 1,
+        "dimension": 2,
+        "domain": "unit_square",
+        "operator_version": 1,
+        "parameters": {},
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {
+              "axis": "x",
+              "side": "-"
+            },
+            "target": {
+              "axis": "y",
+              "side": "-"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                1
+              ]
+            }
+          },
+          {
+            "id": "seam_001",
+            "source": {
+              "axis": "x",
+              "side": "+"
+            },
+            "target": {
+              "axis": "y",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                1
+              ]
+            }
+          }
+        ]
+      },
+      "profile_id": "topology-v1:sha256:badd98f7e5253df2e7437e7d4f2d45e31be7df61d4c15f252955fa1d9236032f",
+      "profile": {
+        "schema": "tet4d.topology_contract",
+        "schema_version": 1,
+        "dimension": 2,
+        "board_dimensions": [
+          4,
+          4
+        ],
+        "gluings": [
+          {
+            "id": "seam_000",
+            "source": {
+              "axis": "x",
+              "side": "-"
+            },
+            "target": {
+              "axis": "y",
+              "side": "-"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                1
+              ]
+            }
+          },
+          {
+            "id": "seam_001",
+            "source": {
+              "axis": "x",
+              "side": "+"
+            },
+            "target": {
+              "axis": "y",
+              "side": "+"
+            },
+            "transform": {
+              "permutation": [
+                0
+              ],
+              "signs": [
+                1
+              ]
+            }
+          }
+        ]
+      },
+      "availability": "planned",
+      "selectable": false,
+      "certification": "unverified",
+      "invariants": {
+        "evidence_state": "derived_pending_review",
+        "orientable": true,
+        "boundary_components": 0,
+        "euler_characteristic": 2,
+        "compact": true,
+        "connected": true,
+        "computed_space_class_id": "surface.sphere"
+      },
+      "unknown_invariants": [],
+      "diagram": {
+        "kind": "unit_square_edges",
+        "construction_id": "square-quotient-v1:sha256:eeb733c14b5852a00972a0cad80ef77a355148c1205e808494302992425c7c87",
+        "seam_ids": [
+          "seam_000",
+          "seam_001"
+        ]
+      },
+      "aliases": [],
+      "evidence": [
+        {
+          "path": "tests/fixtures/explorer_topology/quotients_v1.json",
+          "record_id": "proof-sphere_adjacent_positive",
+          "record_sha256": "8036a781c1576e90afd228f410e428dedca9ee527e4f5517a0c678202c0ca310",
           "kind": "mathematical_derivation",
           "review_state": "pending"
         }

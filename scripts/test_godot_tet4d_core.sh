@@ -40,6 +40,7 @@ eval "$("$ROOT_DIR/gov" env)"
   "$CORE_DIR/src/core/explorer_piece_state.cpp" \
   "$CORE_DIR/src/core/explorer_piece_transport.cpp" \
   "$CORE_DIR/src/core/explorer_piece_runtime.cpp" \
+  "$CORE_DIR/src/core/explorer_piece_rotation.cpp" \
   "$CORE_DIR/tests/explorer_piece_tests.cpp" \
   -o "$TEST_EXPLORER_PIECE_BIN"
 if [[ "${1:-}" == "--explorer-piece-conformance" ]]; then

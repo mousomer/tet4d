@@ -5,6 +5,21 @@ Version: `explorer-topology-catalog/1`
 Status: technical design; reviewed stack integration authorized with nonblocking P2 deferrals
 Product owner: `docs/rds/RDS_EXPLORER_TOPOLOGIES.md`
 
+## Scoped topology-first precedence
+
+RDS_EXPLORER_TOPOLOGIES.md §2.5 supersedes conflicting requirements below for
+2D Klein bottle, RP² and the normal Sphere selection. Quotient correctness and
+Godot bidirectional seam agreement determine topology acceptance. Piece
+injectivity, rigid coherence, preserved occupancy, physical piece inverses and
+atomic rejection for geometric overlap cannot gate their availability or
+traversal. Atomic state publication and explicit technical representation
+failures remain required. Other presets, gameplay and 3D/4D retain their rules.
+`sphere_adjacent_positive` uses the existing positive adjacent-edge recipe for
+S²; `sphere_2d` remains legacy sphere-like transport with unchanged identity.
+The existing quotient checker owns mathematical evidence; the new probe-state
+mode is implemented in native C++, with Godot selecting and displaying it.
+
+
 ## 1. Ownership and limits
 
 This contract completes the catalog/evidence side of T1. The
@@ -17,7 +32,7 @@ names the future native boundary; the authority map and active records do not
 change. Normative means required design, not implemented runtime behavior.
 
 The sole proposed catalog source is
-`tests/fixtures/explorer_topology/catalog_v1.json`. Its seven records are
+`tests/fixtures/explorer_topology/catalog_v1.json`. Its historical seven records are
 representative contract data, not an activated runtime catalog. A later reviewed
 integration may relocate this owner; it must not create independently maintained
 Python, C++ and Godot copies. Legacy Python presets remain historical code.
@@ -92,6 +107,13 @@ Möbius recipe/profile; X-wrap and Y-wrap cylinders have the same proposed class
 but different construction and profile IDs. Both cylinder recipes are real
 `axis_wrap_profile` instances. The sphere-like recipe and standard Klein recipe
 also have distinct IDs despite their derived common class (§5).
+
+The eighth entry, `sphere_adjacent_positive`, binds the already recorded positive
+adjacent-edge sphere witness. Family `surface` distinguishes it from the frozen
+five-core piece-fixture enumeration and historical entries. Sample availability
+remains `planned` because these specification records have no accepted runtime
+review artifacts; this is not the live Godot selector. Runtime selection follows
+RDS §2.5. No mathematical review status is fabricated by exposing a preset.
 
 ## 3. Catalog status and evidence rules
 
@@ -225,7 +247,7 @@ cycles; all await independent review, so none promotes catalog certification.
 | Klein: X−X+ +, Y−Y+ − | {X−,X+}; {Y−,Y+} | ABCD | 0 | no / 0 | One four-arc circle; Klein bottle |
 | Projective: X−X+ −, Y−Y+ − | {X−,X+}; {Y−,Y+} | AC; BD | 1 | no / 0 | Two two-arc circles; RP² |
 | Legacy sphere-like: X−Y− −, X+Y+ − | {X−,Y−}; {X+,Y+} | ABCD | 0 | no / 0 | One four-arc circle; Klein bottle, not S² |
-| Comparison only: X−Y− +, X+Y+ + | {X−,Y−}; {X+,Y+} | A; BD; C | 2 | yes / 0 | Two one-arc circles and one two-arc circle; sphere |
+| Sphere: X−Y− +, X+Y+ + | {X−,Y−}; {X+,Y+} | A; BD; C | 2 | yes / 0 | Two one-arc circles and one two-arc circle; sphere |
 
 Projective endpoint derivation: X reversal identifies A~C and D~B; Y reversal
 identifies A~C and B~D, adding no further vertex union. Each resulting link is
@@ -240,9 +262,8 @@ orientation, obstructing orientability. Thus this exact continuous quotient
 satisfies the Klein-bottle classification conditions; the **catalog remains
 heuristic pending independent review**, and the ID/transport remain unchanged.
 Positive adjacent pairings instead leave A and C separate, identify only B~D,
-and have orientable circle links and chi=2. This is investigation evidence only.
-T6's two-domain ball-double sphere is Tet4D's chosen delivery architecture, not
-a theorem that a sphere requires two domains.
+and have orientable circle links and chi=2. This recipe supplies the normal 2D Sphere selection under RDS §2.5.
+T6 remains a separate multi-domain capability.
 
 The square's connectedness and compactness are immediate; edge interiors have
 disk or half-disk neighborhoods. The remaining substantive checks are the
@@ -329,7 +350,7 @@ package are labeled proposed and are not tests claimed to exist.
 | Projective name dictates result | Explicit AC/BD, link and chi=1 witness; independent review pending |
 | Collision invalidates whole profile | E6 is movement rejection; profile remains structurally admitted |
 | Experimental bypasses invariants | Same native conformance gate as implemented for all piece invariants |
-| Planned looks usable or verified looks implemented | selectable/status checks; all seven samples nonselectable |
+| Planned looks usable or verified looks implemented | selectable/status checks; all eight specification samples nonselectable |
 | Conflicting profile versions / stale evidence | Exact version, digest, construction/profile and record-reference checks |
 | T6 reinterprets v1 | Closed single-square recipe schema and distinct future prefix required |
 
@@ -340,3 +361,16 @@ refactor or review cycle is required for this integration. This disposition
 does not promote mathematical certification or runtime availability. Production
 UI/native transport, authority transfer and historical rebaselining remain
 outside this design change.
+
+
+## Free-cellwise movement amendment (2026-11-15)
+
+The separately registered positive adjacent-edge `sphere_adjacent_positive`
+construction is the normal Sphere selection (closed, orientable, χ=2).
+Historical `sphere_2d` keeps its negative-adjacent construction/profile identity
+and Klein quotient (closed, non-orientable, χ=0). `projective_2d` retains its
+opposite reversed pairs (closed, non-orientable, χ=1). Existing identity vectors
+and quotient fixtures remain authoritative; do not alias the constructions.
+Both named S²/RP² selections require square boards. Traversal acceptance follows
+RDS §2.5's free-cellwise amendment; geometric coherence and physical inverse
+recovery cannot gate mathematical certification or valid translation.

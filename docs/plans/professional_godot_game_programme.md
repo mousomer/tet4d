@@ -5,7 +5,7 @@ Status: active
 Source of truth: this file for product priorities, phase sequencing, and
 completion gates  
 Supersedes: none  
-Last updated: 2026-11-01
+Last updated: 2026-11-14
 
 ## 1. Purpose
 
@@ -279,8 +279,9 @@ review rather than reopening Stage 54A.
 
 ## 6. Phase I — Professional Core Game
 
-Status: active  
-Priority: highest
+Status: complete — `PROFESSIONAL_CORE_GAME_READY: YES` at Stage 54G.
+Current priority: bounded follow-up corrections under P0; Explorer and research
+sequencing follows section 15.
 
 #### Programme-planning lenses
 
@@ -1666,7 +1667,7 @@ The new priority order is:
 | --- | --- | --- |
 | P0 | Bounded existing-game corrections | Designer sizing, confirmed cockpit/replay defects, camera-relative movement and active Stage 58C/59 readability; preserve accepted layouts |
 | P1 | Accept existing bounded Godot Explorer baseline | `EXPLORER_LEARNING_READY`; maintain 3D/4D movement, basis, slices and view stability |
-| P1T | **Explorer topologies: T1 mathematical/catalog/transport contracts; T2 2D presets and scoped native authority transfer; then builder, 3D/4D and multi-domain spheres** | `RDS_EXPLORER_TOPOLOGIES.md` stages T1-T7; 2D transfer required to complete T2, dimensional transfer required in T4, multi-domain authority in T6; all remain pending, no Python-oracle veto |
+| P1T | **Explorer topologies: T1 mathematical/catalog/transport contracts; T2 2D presets and scoped native authority transfer; T2S square S²/RP² with directed seams; then builders and higher-dimensional transport** | `RDS_EXPLORER_TOPOLOGIES.md` stages T1-T7 including T2S; latest cellwise §2.5 governs preset availability/movement, independently of formal T2 transfer; dimensional transfer is required in T4, optional multi-domain authority in T6; transfers remain pending, no Python-oracle veto. Current implementation status is tracked in `docs/BACKLOG.md`. |
 | P2 | Professional UI review and verified fixes | Expert and novice comprehension checks, including 3D/4D depth and cockpit hierarchy |
 | P3 | Study protocol and minimal assessment tasks | Baseline, held-out transfer, control/comparison and reproducible scoring before telemetry schema freezes |
 | P4 | Participant identity, persistence and telemetry | Consent-aware versioned backend/local recovery and data reconstructability |

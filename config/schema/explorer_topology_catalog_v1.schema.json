@@ -114,7 +114,8 @@
           "family": {
             "enum": [
               "core",
-              "legacy"
+              "legacy",
+              "surface"
             ]
           },
           "order": {

@@ -49,7 +49,9 @@ PieceFailure ExplorerPieceRuntime::apply(const PieceCandidate& candidate) {
         auto recomputed =
             candidate.is_inverse
                 ? propose_piece_inverse(current, state_->revision, candidate.inverse)
-                : propose_piece_translation(current, state_->revision, candidate.action);
+                : (candidate.rotation
+                       ? propose_piece_rotation(current, state_->revision, candidate.action.delta)
+                       : propose_piece_translation(current, state_->revision, candidate.action));
         if (!recomputed.candidate)
             return recomputed.failure == PieceFailure::resource_limit
                        ? recomputed.failure

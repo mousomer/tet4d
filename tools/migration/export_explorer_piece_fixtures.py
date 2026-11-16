@@ -20,6 +20,14 @@ def frame(value: dict) -> str:
     return "{" + array(value["permutation"]) + "," + array(value["signs"]) + "}"
 
 
+def recorded_step(row: dict) -> str:
+    """Each cell's own step, read back from its reviewed witness: reverse = -T(step)."""
+    transport = row["transport"]
+    axis, delta = row["reverse_step"]
+    source = transport["permutation"].index(axis)
+    return array([source, -delta * transport["signs"][source]])
+
+
 def cells(rows: list[dict]) -> str:
     return (
         "{"
@@ -79,6 +87,16 @@ def export(source: Path, output: Path) -> None:
         "E8_proposal",
         "E9",
         "torus_self",
+        "E4",
+        "E5_first",
+        "E5_second",
+        "mobius_self",
+        "E7_bounded",
+        "E7_torus",
+        "E7_mobius",
+        "E7_undefined",
+        "rotation_crossing_undefined",
+        "E7_rotation_collision",
     }
     for case in data["cases"]:
         if case["id"] not in selected:
@@ -93,7 +111,12 @@ def export(source: Path, output: Path) -> None:
             )
             + "}"
         )
-        action = array([case["action"]["axis"], case["action"]["delta"]])
+        rotation = case["action"]["kind"] == "rotate"
+        action = (
+            array([0, case["action"]["quarter_turn"]])
+            if rotation
+            else array([case["action"]["axis"], case["action"]["delta"]])
+        )
         lines += [
             "{",
             "FixtureCase f;",
@@ -101,6 +124,7 @@ def export(source: Path, output: Path) -> None:
             f"f.source = {{{json.dumps(state['version'])},{json.dumps(state['object_key']['namespace'])},{state['object_key']['ordinal']},{profile(topology)},{rest},{cells(state['cells'])}}};",
             f"f.revision = {state['revision']};",
             f"f.action = {action};",
+            f"f.rotation = {str(rotation).lower()};",
             f"f.failure = {json.dumps(case['blocked_reason'])};",
             f"f.classification = PieceClassification::{case['classification']};",
             "f.target = f.source;",
@@ -112,7 +136,11 @@ def export(source: Path, output: Path) -> None:
                 f"f.target.cells = {cells(case['candidate']['cells'])};",
                 f"f.inverse_version = {json.dumps(case['inverse']['version'])};",
             ]
-            for row, source_cell in zip(case["per_cell"], state["cells"], strict=True):
+            for row, source_cell in zip(
+                [] if rotation else case["per_cell"],
+                [] if rotation else state["cells"],
+                strict=True,
+            ):
                 seam = "std::nullopt"
                 if row["crossing"]:
                     pair = set(row["crossing"])
@@ -125,7 +153,7 @@ def export(source: Path, output: Path) -> None:
                     seam = json.dumps(seam_id)
                 lines.append(
                     "f.witnesses.push_back({"
-                    + f"{row['id']},{{{array(source_cell['coordinate'])}}},{{{array(row['target'])}}},{frame(row['transport'])},{action},{array(row['reverse_step'])},{seam}"
+                    + f"{row['id']},{{{array(source_cell['coordinate'])}}},{{{array(row['target'])}}},{frame(row['transport'])},{recorded_step(row)},{array(row['reverse_step'])},{seam}"
                     + "});"
                 )
         if case["id"] == "E3":
@@ -145,6 +173,28 @@ def export(source: Path, output: Path) -> None:
         f"constexpr std::int64_t E8_REVISION = {lifecycle['expected_revision']};",
         f"constexpr std::int64_t E8_ABA_REVISION = {lifecycle['after_intervening_inverse_revision']};",
     ]
+    # Literal owner-provided trajectories, independent of any movement solver.
+    lines += [
+        "std::vector<CellwiseSequenceFixture> reviewed_cellwise_sequences() {",
+        "return {",
+    ]
+    for row in data.get("cellwise_reference_sequences", []):
+        targets = "{" + ",".join("{" + array(c) + "}" for c in row["targets"]) + "}"
+        frames = "{" + ",".join(frame(f) for f in row["frames"]) + "}"
+        lines.append(
+            "{"
+            + ",".join(
+                [
+                    json.dumps(row["id"]),
+                    profile(profiles[row["profile_ref"]]),
+                    "{" + array(row["source"]) + "}",
+                    targets,
+                    frames,
+                ]
+            )
+            + "},"
+        )
+    lines += ["};", "}"]
     output.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 

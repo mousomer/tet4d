@@ -47,6 +47,9 @@ var _basis_fit_scale := 1.0
 var _basis_fit_position := Vector3.ZERO
 var _settled_weight_view := Vector3.ZERO
 
+var _annotation_root: Node3D
+var _seam_annotations: Node3D
+var _surface_charts: Node3D
 var _grid: GridRenderer
 var _grid_root: Node3D
 var _cell_root: Node3D
@@ -56,6 +59,7 @@ var _marker_root: Node3D
 
 func _ready() -> void:
 	_grid_root = _ensure_child("GridRoot")
+	_annotation_root = _ensure_child("AnnotationRoot")
 	_cell_root = _ensure_child("CellRoot")
 	_particle_root = _ensure_child("ParticleRoot")
 	_marker_root = _ensure_child("MarkerRoot")
@@ -169,6 +173,8 @@ func reset_live_4d_fit_envelope() -> void:
 # lifecycle seam immediately after this teardown.
 func clear_presentation() -> void:
 	_clear_root(_grid_root)
+	_clear_root(_annotation_root)
+	_seam_annotations = null
 	_grid = null
 	_clear_root(_cell_root)
 	_clear_root(_particle_root)
@@ -220,22 +226,26 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 	if not is_instance_valid(_grid):
 		_grid = GridRendererScript.new()
 		_grid_root.add_child(_grid)
-	_grid.rebuild(
-		_presentation.dimension,
-		_presentation.projection,
-		_display_mode,
-		_presentation.is_live,
-		_show_w_labels,
-		_presentation.active_layer_indices(),
-		_board_detail,
-		_high_contrast,
-		_grid_mode,
-		_grid_opacity,
-		_boundary_opacity,
-		float(_presentation_profile.value("board.enclosure_opacity")),
-		float(_presentation_profile.value("board.back_scaffold_opacity")),
-		float(_presentation_profile.value("board.cell_volume_opacity"))
-	)
+	_grid.visible = not snapshot.has("explorer_charts")
+	if snapshot.has("explorer_charts"):
+		if not is_instance_valid(_surface_charts):
+			_surface_charts = preload("res://scripts/rendering/explorer_surface_charts.gd").new()
+			_grid_root.add_child(_surface_charts)
+		_surface_charts.visible = true
+		_surface_charts.rebuild(snapshot, _presentation, _rebuild_chart_grid, _display_mode)
+	else:
+		if is_instance_valid(_surface_charts): _surface_charts.visible = false
+		_rebuild_chart_grid(_grid, _presentation)
+
+	if not is_instance_valid(_seam_annotations):
+		_seam_annotations = preload("res://scripts/rendering/explorer_seam_annotations.gd").new()
+		_annotation_root.add_child(_seam_annotations)
+	_seam_annotations.rebuild(snapshot, _presentation, _display_mode)
+	if _seam_annotations.visible and _last_bounds.get("ok", false):
+		var padding := Vector3.ONE * ReplayVisuals.SEAM_FIT_PADDING
+		_last_bounds = _last_bounds.duplicate(true)
+		_last_bounds["min"] -= padding
+		_last_bounds["max"] += padding
 
 	var locked_material := ReplayVisuals.locked_cell_material(_display_mode, _locked_cell_opacity)
 	var probe_before_material := ReplayVisuals.probe_before_material(_display_mode)
@@ -589,3 +599,22 @@ func _clear_root(root: Node) -> void:
 		# only the authoritative locked/Ghost/active node sets immediately.
 		root.remove_child(child)
 		child.queue_free()
+
+
+func _rebuild_chart_grid(grid, model) -> void:
+	grid.rebuild(
+		model.dimension,
+		model.projection,
+		_display_mode,
+		model.is_live,
+		_show_w_labels,
+		model.active_layer_indices(),
+		_board_detail,
+		_high_contrast,
+		_grid_mode,
+		_grid_opacity,
+		_boundary_opacity,
+		float(_presentation_profile.value("board.enclosure_opacity")),
+		float(_presentation_profile.value("board.back_scaffold_opacity")),
+		float(_presentation_profile.value("board.cell_volume_opacity"))
+	)
