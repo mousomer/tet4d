@@ -1,6 +1,35 @@
 # Bounded practice Explorer contract
 
-Scope: **implemented bounded 3D/4D MVP only**. This remains the frozen baseline
+Scope: **bounded 2D/3D/4D practice**. 2D exposes the existing native
+geometry/pose queries and classic catalogue through the live flat renderer.
+This dimension-access repair does not activate the T2 topology runtime or
+complete its separate native transport transfer. Bounded 2D uses the same
+inherited geometry authority as the existing bounded practice adapter.
+2D reuses 3D binding actions: A/D or Left/Right move X, W/S, Up/Down or the
+shared Z/X pair move Y, R/T rotate XY and Backspace retries. PageUp/PageDown
+are retired from Explorer in every dimension; 9 fits the view. Ordinary piece actions update only practice readouts and
+render inputs, without camera-status/control-help initialization.
+
+The panel's Space tab (View | Piece | Space in every dimension) holds the
+topology selector and board size. 2D exposes every native profile; 3D/4D list
+Bounded with later profiles visibly unavailable. Board size steps within the
+Live board contract and restarts the piece at the centre without changing the
+Play setup; Sphere squares a rectangular board. The lower helper uses the same
+legend structure in every dimension (movement compass, Up/Down, rotation
+glyphs, PRACTICE). Non-bounded movement is owned by the candidate T2A native piece runtime,
+including indexed cell identity, atomic rejection and Retry. Switching profiles
+preserves compatible cells and view. Seam-framed/domain poses recover the Retry
+baseline as part of the requested switch, with visible feedback; failed native
+admission preserves the source atomically.
+The successor surface slice exposes Möbius/Klein, experimental projective and
+the positive adjacent-edge Sphere, with native rotations and snapshot Undo.
+This adapter integration does not claim complete T2 acceptance or terminal
+authority transfer; the existing candidate designation remains explicit.
+
+2D offers X/Y movement, XY rotation, replacement, Retry, target and flat
+Reset/Fit/zoom; Z/W, orbit, exact basis and slice controls are absent.
+
+Historical scope: **implemented bounded 3D/4D MVP only**. This remains the frozen baseline
 for existing acceptance and regressions, not the forward limit of Explorer.
 `docs/rds/RDS_EXPLORER_TOPOLOGIES.md` supersedes its 3D/4D-only,
 bounded-only and Python-Explorer-oracle language for future 2D/3D/4D topology
@@ -21,7 +50,7 @@ No authority transfer or new deterministic rule is introduced.
 
 The initial object is the configured native session's selected piece, centred
 with native normalization/translation and checked by the native bounded-pose
-query. Both supported dimensions are 3D and 4D. Only bounded topology is
+query. Supported dimensions are 2D, 3D and 4D. Only bounded topology is
 selectable. Model-level topology APIs and Python tools remain available.
 
 Practice has no automatic tick, gravity, hold, drop, lock, score or queue
@@ -41,8 +70,8 @@ Reset View restores the free inspection identity; Play creates a fresh Y-fixed
 session. No object coordinates or native game state change on a view turn.
 Existing dynamic control-frame mappings apply to keyboard object
 intents; explicitly labelled canonical-axis buttons bypass relative mapping.
-Z/X provide deliberate canonical Y up/down movement on compact keyboards;
-PageUp/PageDown remain aliases. All relevant object
+Z/X provide deliberate canonical Y up/down movement in every dimension;
+PageUp/PageDown are retired. All relevant object
 rotation planes remain available. Slice emphasis (active-slice frame, selected
 label and receding neighbours) follows the object as in Play until Slice −/+
 selects a coordinate along the current basis's hidden canonical axis; the first
@@ -109,3 +138,36 @@ game/replay clears practice state and restores ordinary HUD/control behavior.
 Conformance and bootstrap evidence live in `test_practice_explorer.gd`.
 Real novice acceptance is specified in `docs/plans/bounded_practice_explorer.md`;
 `EXPLORER_LEARNING_READY` cannot pass on automated evidence alone.
+
+Explorer presentation/input inventory is owned by
+`LiveInputContract.explorer_profile(dimension, basis, control_frame)`. It
+returns detached axis, rotation, session, topology, capability and helper
+descriptors. Panels retain their controls and toggle them from that inventory;
+helpers and the existing 2D input routes consume the same profile. This
+refactor preserves bindings, allocation and native authority. Player dispatch
+no longer exposes cell/neighbor diagnostic commands; model/native inspection
+queries remain available. Unified dispatch and Explorer-owned action IDs are
+reserved for Phase 2 of `docs/plans/explorer_cockpit_unification.md`.
+
+## Surface runtime extension
+
+Explorer keyboard dispatch is dimension-parameterised and consumes only its
+Explorer action descriptor. It runs before Live handlers in `_unhandled_input`;
+Replace alone claims keyboard input early to prevent a focused GUI button from
+also activating on Space. Pointer and shell shortcuts retain their existing
+owners. Explorer has independent held-key timers, disarmed by focus loss,
+navigation or modal ownership. Keyboard X/Z/W and rotations retain existing
+relative control-frame mapping; canonical panel commands bypass that mapping.
+This changes action ownership, not defaults, native sessions, geometry or view
+basis. The Phase 2 compatibility boundary is recorded in
+`docs/plans/explorer_cockpit_unification.md`.
+
+The owner-authorized 2D surface candidate follows `explorer_surface_runtime.md`.
+It reuses the native piece runtime for Möbius, Klein and experimental projective
+seams. The normal Sphere uses the positive adjacent-edge single-square profile;
+the separately versioned spherical double is compatibility-only. RDS §2.5
+probe semantics permit coincident destinations and different cell transforms
+for Klein/RP²/S². Undo restores a validated source snapshot; physical whole-piece
+inverse recovery is not a traversal gate. Coherent rotation remains a bounded
+runtime capability; undefined development is a technical limitation. Targets remain bounded-only until a domain-aware target contract
+is accepted. Bounded learning readiness and formal topology transfer remain open.

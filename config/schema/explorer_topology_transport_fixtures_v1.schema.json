@@ -1342,6 +1342,111 @@
           "const": "not_run"
         }
       }
+    },
+    "cellwise_reference_sequences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "profile_ref",
+          "action",
+          "source",
+          "targets",
+          "frames"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "profile_ref": {
+            "type": "string",
+            "minLength": 1
+          },
+          "action": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "axis",
+              "delta"
+            ],
+            "properties": {
+              "axis": {
+                "enum": [
+                  0,
+                  1
+                ]
+              },
+              "delta": {
+                "enum": [
+                  -1,
+                  1
+                ]
+              }
+            }
+          },
+          "source": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "targets": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "frames": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "permutation",
+                "signs"
+              ],
+              "properties": {
+                "permutation": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "items": {
+                    "enum": [
+                      0,
+                      1
+                    ]
+                  }
+                },
+                "signs": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "items": {
+                    "enum": [
+                      -1,
+                      1
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

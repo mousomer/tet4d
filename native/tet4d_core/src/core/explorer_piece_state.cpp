@@ -65,34 +65,15 @@ PieceFailure canonical_profile(const TopologyTransportProfile& source,
     if (!decoded.ok())
         return PieceFailure::invalid_profile;
     result = *decoded.value;
-    result.seams.clear();
-    // T2A admits bounded/cylinder/torus. This is admission and canonical v1 normalization,
-    // never a transport solver. Pure-wrap inverse tangents are the same identity transform.
-    std::array<bool, 2> wrapped{false, false};
-    for (const auto& seam : decoded.value->seams) {
-        if (!seam.enabled)
-            continue;
-        if (seam.source.axis != seam.target.axis || seam.source.side == seam.target.side ||
-            seam.transform.permutation != std::vector<std::int64_t>{0} ||
-            seam.transform.signs != std::vector<std::int64_t>{1})
-            return PieceFailure::unsupported_representation;
-        wrapped[static_cast<std::size_t>(seam.source.axis)] = true;
-    }
-    for (std::int64_t axis = 0; axis < 2; ++axis) {
-        if (wrapped[static_cast<std::size_t>(axis)])
-            result.seams.push_back({result.seams.empty() ? "seam_000" : "seam_001",
-                                    {axis, "-"},
-                                    {axis, "+"},
-                                    {{0}, {1}},
-                                    true});
-    }
+    // The shared decoder validates ownership, tangent extents and transforms.
+    // Preserve its complete profile; the piece layer adds no gluing restrictions.
     return PieceFailure::none;
 }
 template <typename T> void sort_ids(std::vector<T>& rows) {
     std::sort(rows.begin(), rows.end(), [](const T& a, const T& b) { return a.id < b.id; });
 }
 PieceFailure validate(const ExplorerPiece& source, ExplorerPiece& result) {
-    if (source.version != EXPLORER_PIECE_VERSION)
+    if (source.version != EXPLORER_PIECE_VERSION && source.version != EXPLORER_DOMAIN_VERSION)
         return PieceFailure::unsupported_representation;
     if (source.cells.size() > EXPLORER_MAX_CELLS || source.rest_cells.size() > EXPLORER_MAX_CELLS)
         return PieceFailure::resource_limit;
@@ -100,27 +81,31 @@ PieceFailure validate(const ExplorerPiece& source, ExplorerPiece& result) {
     const auto status = canonical_profile(source.profile, profile);
     if (status != PieceFailure::none)
         return status;
+    const int domains = source.version == EXPLORER_DOMAIN_VERSION ? 2 : 1;
+    if (domains == 2 && !profile.seams.empty())
+        return PieceFailure::invalid_profile;
     if (source.object_namespace.size() != 32 || source.object_ordinal < 0 ||
         source.object_namespace.find_first_not_of("0123456789abcdef") != std::string::npos ||
         source.cells.empty() || source.cells.size() != source.rest_cells.size() ||
         source.cells.size() >
-            static_cast<std::uint64_t>(profile.dimensions[0] * profile.dimensions[1]))
+            static_cast<std::uint64_t>(profile.dimensions[0] * profile.dimensions[1] * domains))
         return PieceFailure::invalid_piece_state;
     ExplorerPiece canonical = source;
     canonical.profile = std::move(profile);
     sort_ids(canonical.cells);
     sort_ids(canonical.rest_cells);
-    std::set<CoordND> rest, occupied;
+    std::set<CoordND> rest;
+    std::set<std::pair<int, CoordND>> occupied;
     std::array<int, 2> mins{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()};
     for (std::size_t i = 0; i < canonical.cells.size(); ++i) {
         const auto& cell = canonical.cells[i];
         const auto& original = canonical.rest_cells[i];
-        if (cell.domain != 0)
+        if (cell.domain < 0 || cell.domain >= domains)
             return PieceFailure::unsupported_representation;
         if (cell.id != static_cast<std::int64_t>(i) || original.id != cell.id ||
             cell.coordinate.dimension() != 2 || original.coordinate.dimension() != 2 ||
             !valid_piece_frame(cell.frame) || !rest.insert(original.coordinate).second ||
-            !occupied.insert(cell.coordinate).second)
+            !occupied.insert({cell.domain, cell.coordinate}).second)
             return PieceFailure::invalid_piece_state;
         if (i > 0 && !(canonical.rest_cells[i - 1].coordinate < original.coordinate))
             return PieceFailure::invalid_piece_state;
@@ -156,6 +141,8 @@ PieceFailure validate(const ExplorerPiece& source, ExplorerPiece& result) {
 
 const char* piece_failure_name(PieceFailure failure) {
     switch (failure) {
+    case PieceFailure::rotation_undefined:
+        return "rotation_undefined";
     case PieceFailure::none:
         return "";
     case PieceFailure::unsupported_representation:
@@ -230,20 +217,22 @@ bool ExplorerPiece::operator==(const ExplorerPiece& other) const {
 }
 bool PieceInverse::operator==(const PieceInverse& other) const {
     return version == other.version && source == other.source &&
-           forward.axis == other.forward.axis && forward.delta == other.forward.delta;
+           forward.axis == other.forward.axis && forward.delta == other.forward.delta &&
+           rotation == other.rotation;
 }
 bool PieceWitness::operator==(const PieceWitness& other) const {
     return std::tie(id, source, target, transport, step.axis, step.delta, reverse.axis,
-                    reverse.delta, seam) ==
+                    reverse.delta, seam, source_domain, target_domain) ==
            std::tie(other.id, other.source, other.target, other.transport, other.step.axis,
-                    other.step.delta, other.reverse.axis, other.reverse.delta, other.seam);
+                    other.step.delta, other.reverse.axis, other.reverse.delta, other.seam,
+                    other.source_domain, other.target_domain);
 }
 bool PieceCandidate::operator==(const PieceCandidate& other) const {
     return std::tie(version, source_revision, source, target, action.axis, action.delta, inverse,
-                    is_inverse, classification, witnesses) ==
+                    is_inverse, classification, witnesses, rotation) ==
            std::tie(other.version, other.source_revision, other.source, other.target,
                     other.action.axis, other.action.delta, other.inverse, other.is_inverse,
-                    other.classification, other.witnesses);
+                    other.classification, other.witnesses, other.rotation);
 }
 bool PieceEnvelope::operator==(const PieceEnvelope& other) const {
     return std::tie(revision, piece, initial_piece, undo) ==

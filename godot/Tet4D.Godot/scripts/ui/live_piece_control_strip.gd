@@ -19,7 +19,7 @@ const LAYOUT_WIDE := "wide"
 # (x sideways, y up, z depth, w the slice row), so a turn is named by what it
 # mixes, and its glyph lights those directions. The letters stay as a tag.
 const ROTATION_WORDS := {"XY": "Spin", "XZ": "Turn", "YZ": "Tip", "XW": "Side↔W", "YW": "Up↔W", "ZW": "Depth↔W"}
-const MOVE_INTENTS := {"horizontal": ["move_x_neg", "move_x_pos"], "depth": ["move_z_neg", "move_z_pos"], "slice": ["move_w_neg", "move_w_pos"]}
+const MOVE_INTENTS := {"horizontal": ["move_x_neg", "move_x_pos"], "depth": ["move_z_neg", "move_z_pos"], "screen_vertical": ["move_y_neg", "move_y_pos"], "slice": ["move_w_neg", "move_w_pos"]}
 # Rail sections follow what the player is trying to do, not one header per
 # contract role: a single-row HOLD section would spend a header on one key.
 const RAIL_SECTIONS := [
@@ -92,7 +92,7 @@ func configure(mode: String, basis_snapshot: Dictionary = {}, control_frame: Dic
 	var legend := layout in [LAYOUT_RAIL, LAYOUT_WIDE]
 	var groups: Array = authority.play_legend_groups(mode, basis_snapshot, control_frame) if legend else authority.piece_control_groups(mode, basis_snapshot, control_frame)
 	if practice:
-		groups = authority.practice_piece_control_groups(mode, basis_snapshot, control_frame)
+		groups = authority.explorer_profile(int(mode.trim_prefix("live_").trim_suffix("d")), basis_snapshot, control_frame).piece_groups
 	var source := "LiveInputContract" if authority == LiveInputContractScript else "injected_fixture"
 	# Provenance is part of the cached identity: an injected fixture that happens
 	# to yield identical groups must not keep reporting contract provenance.
@@ -269,8 +269,10 @@ func set_screen_directions(directions: Dictionary) -> void:
 		(glyph as ControlLegendGlyph).set_directions(_screen_directions)
 
 
+# Explorer uses one legend structure in every dimension; ordinary Live 2D Play
+# keeps its locked text rail.
 func _is_spatial() -> bool:
-	return _layout in [LAYOUT_RAIL, LAYOUT_WIDE] and _mode in ["live_3d", "live_4d"]
+	return _layout in [LAYOUT_RAIL, LAYOUT_WIDE] and (_mode in ["live_3d", "live_4d"] or _practice)
 
 
 func _slice_positive_points_left() -> bool:

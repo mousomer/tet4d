@@ -341,15 +341,16 @@ func run() -> Array:
 		if app._live_4d_presentation_root != null and app._live_4d_presentation_root.is_ancestor_of(app._hud):
 			failures.append("Live 4D presentation reflection must not inherit from HUD")
 		var orientation_gizmo := app._camera_rig.get_node_or_null("OrientationGizmo") as Node3D
-		if orientation_gizmo == null or not orientation_gizmo.visible or orientation_gizmo.get_child_count() < 10:
-			failures.append("Live 4D should show a compact basis-driven ball-and-arrow orientation marker")
+		if orientation_gizmo == null or not orientation_gizmo.visible or orientation_gizmo.get_child_count() < 9:
+			failures.append("Live 4D should show a compact basis-driven arrow orientation marker")
+		elif orientation_gizmo.get_node_or_null("AxisOrigin") != null:
+			failures.append("orientation marker must not draw a centre ball")
 		elif orientation_gizmo.get_node_or_null("HorizontalArrow") == null or orientation_gizmo.get_node_or_null("GravityArrow") == null or orientation_gizmo.get_node_or_null("DepthArrow") == null:
 			failures.append("orientation marker should expose horizontal, gravity, and depth arrowheads")
 		else:
-			var gizmo_origin := orientation_gizmo.get_node_or_null("AxisOrigin") as MeshInstance3D
 			var gizmo_horizontal := orientation_gizmo.get_node_or_null("HorizontalArrow") as MeshInstance3D
-			if gizmo_origin != null and gizmo_horizontal != null:
-				var gizmo_origin_screen: Vector2 = app._camera_rig.project_world_point(gizmo_origin.global_position)
+			if gizmo_horizontal != null:
+				var gizmo_origin_screen: Vector2 = app._camera_rig.project_world_point(orientation_gizmo.global_position)
 				var gizmo_horizontal_screen: Vector2 = app._camera_rig.project_world_point(gizmo_horizontal.global_position)
 				if gizmo_horizontal_screen.x - gizmo_origin_screen.x <= SCREEN_RIGHT_TOLERANCE_PX:
 					failures.append("orientation gizmo horizontal arrow should agree with reflected board screen-right")

@@ -5,6 +5,23 @@ Status: design for review and native implementation; no runtime authority transf
 Version: `explorer-piece-transport/1` (prose contract, no generated schema)
 Product authority: `docs/rds/RDS_EXPLORER_TOPOLOGIES.md`
 
+## Scoped topology-first precedence
+
+RDS_EXPLORER_TOPOLOGIES.md §2.5 supersedes conflicting requirements below for
+2D Klein bottle, RP² and the normal Sphere selection. Quotient correctness and
+Godot bidirectional seam agreement determine topology acceptance. Its
+2026-11-15 move rule applies to every 2D Explorer profile: an action is refused
+only when non-injective (`destination_collision`) or blocked
+(`unconnected_boundary`). §§6–10 below are revised to match: cells step in their
+own frames, turns walk across seams, and Undo restores the recorded source.
+Atomic state publication and explicit technical representation failures remain
+required. Gameplay and 3D/4D retain their rules.
+`sphere_adjacent_positive` uses the existing positive adjacent-edge recipe for
+S²; `sphere_2d` remains legacy sphere-like transport with unchanged identity.
+The existing quotient checker owns mathematical evidence; native C++ implements
+the move rule, with Godot selecting and displaying it.
+
+
 ## 1. Scope and normative relationships
 
 **Normative:** This document answers the RDS §§5–7 whole-piece transport
@@ -198,15 +215,20 @@ With `Q=[[0,1],[-1,0]]` and old `F=Q`, `M Q=[[0,1],[1,0]]`, whereas
 `Q M=[[0,-1],[-1,0]]`; the former alone sends each transported material basis
 vector to its correct destination.
 
-**Design decision:** A translation command is one canonical board vector
-`a=delta e_axis`, `delta=±1`, used unchanged for every cell. It is not `F_i a`
-and not an anchor-frame direction. Previous deformation affects current
-centers and accumulated frames, but never secretly remaps the next key.
-Rotations name an ordered canonical-axis plane and sign (§9).
-Godot's existing `ControlFrameMapping.translation_command` / `rotation_command`
-resolves camera-relative intent **before** this request. Canonical panel
-buttons already supply semantic axes. Native receives no view, camera, slice,
-projection or key-code data. Material/anchor-local input is outside version 1.
+**Controlling amendment (2026-11-15):** Translation is one canonical board
+vector `a=delta e_axis`, `delta=±1`, supplied unchanged to every cell. A cell's
+accumulated frame does not remap this input: no `F_i a`, reference-cell frame,
+rigid-body development or inverse test belongs to translation admission.
+Godot resolves any camera-relative intent once before the native request;
+2D arrows and canonical panel buttons supply board axes directly. Frames
+accumulate as orientation metadata `F'_i=T_i F_i`. Rotations retain §9's
+separately specified action; this amendment changes translation only.
+
+Any structurally valid rank-2 canonical profile supported by the existing
+transport decoder and cell-step resolver is admitted. Cross-axis and reversed
+tangent seams, boundary identities and canonical transformations are preserved;
+do not regenerate torus-style wraps. Named Sphere/RP² board admission is square;
+this does not restrict general structurally valid custom profiles.
 
 A closed coordinate path with changed `F_i` is a valid, distinct semantic
 orientation (holonomy), even for an undecorated visually symmetric cell.
@@ -216,14 +238,14 @@ state. Its four recorded inverses restore `I`.
 
 ## 7. Translation and result semantics
 
-Given validated `P` and `a`, resolve every cell in ID order using the existing
-single-cell rule: an in-bounds unit step is interior; otherwise inspect only
+Given validated `P` and `a`, resolve the same step `a` for every cell (§6) in ID
+order using the existing single-cell rule: an in-bounds unit step is interior; otherwise inspect only
 its exited face and apply the uniquely owned directed seam. Never recursively
 step inward from the destination boundary or resolve other corner faces.
 
 For each cell obtain `(c'_i,T_i,b_i)` and set `F'_i=T_i F_i`. Build the entire
 candidate privately. Validate unchanged object/profile/rest data and ID set,
-bounds, unique destination locations, and §8 inverse recovery before returning
+bounds and unique destination locations before returning
 a successful candidate. There is no gravity, locked-cell board or other-piece
 occupancy in this single-piece Explorer contract. Such context requires a
 separate extension, not a hidden dependency on a live Play session.
@@ -233,7 +255,7 @@ unlabeled coordinate-set fit. Put `U_i=F'_i F_i^-1` and `t_i=c'_i-U_i c_i`.
 
 | Condition, in order | Classification |
 | --- | --- |
-| Any validation/resolution/inverse failure | `blocked` |
+| Any validation/resolution failure | `blocked` |
 | All `U_i=I` and all `t_i` equivalent below | `plain_translation` (including zero displacement) |
 | All `U_i=U` and all `t_i` equivalent below, for one nonidentity signed permutation `U` | `rigid_transform` |
 | Otherwise | `cellwise_deformation` |
@@ -255,7 +277,7 @@ automorphism of the quotient. A quarter-turn on a rectangular torus need not
 preserve its period lattice. Even a supported material-development rotation
 need not meet this stricter canonical-source witness criterion on unequal
 periods; classification never changes its coordinates, frames or validity.
-Movement validation (including injection and inverse) precedes classification.
+Movement validation (including injection, but no inverse recovery) precedes classification.
 These individually eligible classification axes do not broaden §9's global
 all-seam condition for rotation development.
 
@@ -269,7 +291,7 @@ Failure precedence is deterministic: checked decoding/version/rank errors;
 profile structural validation; source-piece validation; action validation;
 rotation development (if requested); per-cell resolution in ID order;
 destination collisions (lexicographically first location, ascending IDs);
-frame and inverse verification. Within a decoding record use the field order
+frame validation; Undo provenance verification only for an Undo request. Within a decoding record use the field order
 in §§3/12, array index order, and report unknown keys lexicographically. Return
 the first failing stage, with all per-cell diagnostics in ID order if retained.
 
@@ -281,8 +303,8 @@ the first failing stage, with all per-cell diagnostics in ID order if retained.
 | `ambiguous_destination` | More than one prescribed destination; conforming v1 cannot produce this, malformed boundary ownership fails profile validation first |
 | `destination_collision` | At least two distinct IDs have the same proposed canonical location |
 | `invalid_transport` | In-bounds/frame/transport contract broken after structural validation |
-| `inverse_mismatch` | Reconstructed inverse fails exact cell, frame or endpoint recovery |
-| `rotation_undefined` | §9 cannot establish its unique supported development/projection |
+| `inverse_mismatch` | An undo descriptor's recomputed forward target is not the current state (provenance only) |
+| `rotation_undefined` | Reserved; a conforming rotation never returns it (§9 pivots are always lattice-exact) |
 | `stale_candidate` / `candidate_mismatch` | §11 source binding changed / candidate differs from native recomputation |
 | `resource_limit` | Checked arithmetic/resource/revision capacity exceeded; no partial result applied |
 
@@ -291,18 +313,12 @@ existing low-level transport decoder's broad error codes. No failed result
 contains an applicable destination or inverse descriptor. Tentative rows may
 be diagnostics explicitly marked non-applicable.
 
-## 8. Whole-piece inverse
+## 8. Snapshot-based semantic Undo
 
-A global opposite key is not the inverse definition. For a forward translation,
-the inverse step for cell `i` is
-
-`r_i=-T_i a`.
-
-Interior gives `-a`. A crossing gives the outward direction of its **target**
-face, hence the paired inverse seam. Re-query that step from `c'_i`, require
-`c''_i=c_i`, `T_reverse=T_i^-1`, and `T_reverse F'_i=F_i`. Verify the whole
-recovered state, not merely its unlabeled occupancy. This is a simultaneous
-per-ID inverse operation, not a sequence of ordinary whole-piece keys.
+Forward movement never re-queries a reverse step or requires whole-piece
+recovery. `r_i=-T_i a` may remain diagnostic crossing metadata; it is not the
+next user command and does not gate translation. A global opposite key need
+not recover the piece. Preserve the exact source snapshot for recorded Undo.
 
 **Design decision: snapshot-based, reconstructible descriptor.**
 
@@ -321,12 +337,11 @@ ability to undo that operation; it does not disable subsequent translations.
 Inverse execution:
 
 1. Validate `D`, re-propose its forward action from its source, and require a
-   successful forward result. This recomputation checks local reversibility
-   directly; it must not recursively invoke the public inverse/proposal API.
+   successful forward result. This recomputation checks descriptor provenance, not physical reversibility; it must not recursively invoke the public inverse/proposal API.
 2. Require current `P` to equal that computed target exactly. A different
    profile, instance, original geometry, center or frame yields `inverse_mismatch`.
-3. Reconstruct every reverse result as above (or §9), compare to `D.source`,
-   then create an ordinary revision-bound atomic candidate targeting that source.
+3. Target `D.source` exactly (no backward stepping), then create an ordinary
+   revision-bound atomic candidate targeting that source.
 4. Commit under §11. An inverse candidate's classification is computed by §7;
    its reversal plan is the original forward action from the recovered source
    (redo), not a recursively nested inverse descriptor.
@@ -376,6 +391,17 @@ recovers both. Every crossed seam is bijective, and this operation is reversible
 with `D`; no new sphere certification follows from that fact.
 
 ## 9. Rotation and development rules
+
+**Revised 2026-11-15 (supersedes steps 1–3 and 6 below):** develop from the
+rotation reference cell `r` of this section, `u_i=c_r+F_r(q_i-q_r)`, without comparing other cells'
+current sites. Compute `p`, `Q` and `v_i` as in steps 4–5. Each cell reaches its
+site by walking the surface from `c_r`: `v_i-c_r` along axis 0, then axis 1, each
+unit step in `F_r`'s chart directions carried by the transports crossed (`C_i`).
+Set `F'_i=C_i Q F_r`. Only `unconnected_boundary` (an open edge on the walk) or
+`destination_collision` refuses a turn; classification is §7's. Because `r` sits
+at the pivot, an accepted turn and its opposite recover the source on flat
+profiles; at a cone point the walk is path-dependent and may block or differ.
+The original text follows for history.
 
 **Design decision:** Support exact quarter-turn rotations in a coherent
 material development. Two deliberately bounded development modes suffice for
@@ -482,7 +508,8 @@ Ordered successive commands may disagree when reversed in order. That is
 allowed; do not sort them or assert flat/path-independent development. On a
 4×4 Klein profile from `(3,3),I`, X+ then Y+ yields `(3,0),K`, whereas Y+ then
 X+ yields `(1,0),K`. Both paths have their own reverse descriptors. Corners after
-a frame change still use the selected **board** axis, not an implicit local one.
+a frame change still apply the same canonical board-axis command to every
+cell (§6, free-cellwise amendment).
 
 Positive extent 1 and 2 are structurally legal. On extent 1 a wrapped step may
 return the same coordinate with a changed frame; all direction labels remain.
@@ -495,8 +522,7 @@ first. Pure-wrap rotations use `H` rather than shortest-neighbor guesses.
 
 Transport invalidity and continuous corner ambiguity are separate. Multiple
 seams owning the same face fail `invalid_profile` before a move; tangent extent
-mismatch fails likewise. Arbitrary corner-path rotation on twisted/cross-axis
-profiles is outside §9 and blocks `rotation_undefined`. Multi-domain and
+mismatch fails likewise. Turns on twisted/cross-axis profiles walk across seams per revised §9. Multi-domain and
 higher-codimension path lifting are deferred to T6 or a separate version.
 
 ## 11. Candidate/commit lifecycle and Retry
@@ -522,7 +548,7 @@ contains reason/error and diagnostics only. No mutable references are exposed.
 
 | Stage | Validation | Mutation |
 | --- | --- | --- |
-| Propose | Strict decode; canonical profile/state/action; resolve all cells; bounds, IDs, injection, frame/inverse and classification | None, including trace |
+| Propose | Strict decode; canonical profile/state/action; resolve all cells; bounds, IDs, injection, frame validity and classification | None, including trace |
 | Apply | Require namespace/revision and exact source `P` match current; re-run native proposal; compare complete candidate to recomputed result | None until every check succeeds |
 | Commit | Verify revision capacity; prepare complete new envelope, undo/trace updates and result; publish it as one replacement | One atomic swap of owned state |
 | Reject | Stale binding gives `stale_candidate`; tampered result/witness gives `candidate_mismatch` | Exact no-op on the entire envelope |
@@ -700,8 +726,8 @@ Each uses plane `(x,y)`, frames shown below, and `D(P,rotation)` on success.
 | Ordinary bounded 4×4; `H=[(0,0),(0,1),(1,0)]` | `0:(1,1)/I,1:(1,2)/I,2:(2,1)/I`; +1 | `u=c`; midpoint `p=(1.5,1.5)`; `Q` sends IDs to `(1,2),(2,2),(1,1)` | `0:(1,2)/Q,1:(2,2)/Q,2:(1,1)/Q`; `rigid_transform` |
 | Torus seam split 4×4; `H=[(0,0),(0,1)]` | `0:(0,3)/I,1:(0,0)/I`; +1 | `u_0=(0,3),u_1=(0,4)`; nearest-centroid tie selects ID 0, `p=(0,3)`; `v_0=(0,3),v_1=(1,3)` | `0:(0,3)/Q,1:(1,3)/Q`; `rigid_transform`; affine offsets `(-3,3)` and `(1,3)` agree modulo 4 |
 | Möbius after E4; same board/H | `0:(3,2)/M,1:(3,1)/M`; +1 | `u=c`; tie selects ID 0, `p=(3,2)`; targets `(3,2),(2,2)` stay in chart | `0:(3,2)/J,1:(2,2)/J`, `J=QM=[[0,-1],[-1,0]]`; `rigid_transform` |
-| Möbius after E4, opposite request from the same source | `0:(3,2)/M,1:(3,1)/M`; −1 | Same pivot; lifted targets `(3,2),(4,2)` leave chart | `blocked/rotation_undefined`; no candidate/inverse; entire envelope unchanged |
-| Mixed Möbius 4×4; `H=[(0,0),(1,0)]` | `0:(3,2)/M,1:(0,1)/I`; +1 | Source comes from `(0,1)/I,(1,1)/I` moving X−; unequal frames fail before choosing a pivot | `blocked/rotation_undefined`; complete source unchanged; no inverse |
+| Möbius after E4, opposite request from the same source | `0:(3,2)/M,1:(3,1)/M`; −1 | Same pivot; lifted `(4,2)` is reached by walking X+ across the flipped seam (`C_1=M`) | `0:(3,2)/Q^-1 M`, `1:(0,1)/M Q^-1 M` (permutation `[1,0]`, signs `[1,1]` and `[-1,1]`); `cellwise_deformation` (revised 2026-11-15; was `rotation_undefined`) |
+| Mixed Möbius 4×4; `H=[(0,0),(1,0)]` | `0:(3,2)/M,1:(0,1)/I`; +1 | Source comes from `(0,1)/I,(1,1)/I` moving X−; developed from reference ID 0: `u=(3,2),(4,2)`, `v=(3,2),(3,1)` | `0:(3,2)/QM,1:(3,1)/QM`; `cellwise_deformation` (revised 2026-11-15; was `rotation_undefined`) |
 
 For the three successes, inverse uses the source-derived `v,p` and the
 opposite `Q`, **not** a new wrapped-bounds pivot. Bounded recovery is
@@ -709,7 +735,8 @@ opposite `Q`, **not** a new wrapped-bounds pivot. Bounded recovery is
 `(0,3)/I,(0,0)/I`; Möbius recovery is `(3,2)/M,(3,1)/M`. All exact `P` fields
 are restored. From the successful Möbius target, an independently requested
 −1 also restores the original source; −1 from the original source is the
-separate blocked case above. This limits the command, not topology availability.
+separate case above, which now succeeds across the seam (fixture
+`rotation_crossing_undefined` keeps its historical ID).
 
 Rotation collision companion: torus 2×3, `H=[(0,0),(0,1),(0,2)]`, source
 `0:(0,0)/I,1:(0,1)/I,2:(0,2)/I`, +1. Midpoint `p=(0,1)` gives lifted targets
@@ -750,8 +777,12 @@ Klein 4×4, same object/H/source as E5. Apply X+, Y+, X−, Y+ in order:
 | P0 | `(3,2)/I` | `(3,3)/I` | Initial |
 | P1 | `(0,2)/I` | `(0,3)/I` | `I,I`; none; `plain_translation` |
 | P2 | `(0,3)/I` | `(3,0)/K` | `I,K`; none; `cellwise_deformation` |
-| P3 | `(3,3)/I` | `(2,0)/K` | `I,I`; none; `plain_translation` (X offsets 3 and −1 agree modulo 4) |
-| P4 | `(0,0)/K` | `(2,1)/K` | `K,I`; none; `cellwise_deformation` |
+| P3 | `(3,3)/I` | `(0,0)/K` | `I,I`; cell 1 steps `K(−e_x)=+e_x` across X+; none; `cellwise_deformation` (chart offsets differ; the domino stays joined across Y) |
+| P4 | `(0,0)/K` | `(0,1)/K` | `K,I`; none; `cellwise_deformation` |
+
+Revised 2026-11-15 (per-cell material steps, §6). The old P3/P4 `(2,0)`,
+`(2,1)` tore the domino apart across the Y seam. Undo below restores recorded
+sources exactly; the per-step reverse narration is historical.
 
 Descriptors are `D1=(P0,X+)`, `D2=(P1,Y+)`, `D3=(P2,X−)`, `D4=(P3,Y+)`.
 D4: Y− for both, cell 0 crosses with `K`, cell 1 is interior → P3.
@@ -920,3 +951,22 @@ Mathematical status promotion is separate from native runtime availability. No m
 are changed by the Session 3 references. T2 still requires implemented native
 and checked-adapter conformance, Godot integration and human review before any
 terminal transfer record or map promotion. T4/T6 remain separate.
+
+
+### Cellwise amendment reference trajectories
+
+Engine coordinates on 8×8, Up=Y−: S² `(2,0)→(0,2)→(0,1)` and RP²
+`(2,0)→(5,7)→(5,6)`. The second step is the same canonical action regardless
+of seam-induced orientation. Multi-cell members follow these rules independently.
+The earlier material/reference-frame translation and rigidity-preservation
+expectations are `superseded_forward_explorer`; rotation-only and legacy
+historical fixtures retain their explicitly scoped meaning.
+
+
+Compatibility note: this amendment retains the existing v1 board-axis action
+representation and source-snapshot Undo descriptor. It replaces the unaccepted
+material-frame translation interpretation, not the topology decoder or legacy
+profile identity. Superseded E10 material-remapped expectations are retained with
+explicit dispositions. The new owner reference sequences are additive fixture
+metadata; old fixture envelopes remain readable. No persisted material-frame
+session reader, implicit migration or new topology engine is introduced.
