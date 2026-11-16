@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-11-06
+Updated: 2026-11-16
 Scope: active work, explicit deferrals, and near-term acceptance boundaries.
 
 Completed chronology is recoverable from Git, merged PRs, CI, and
@@ -12,6 +12,9 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 - CI repair: observe settled Designer geometry and retry interrupted macOS
   asset transfers; full Godot and macOS packaging evidence remain merge gates.
+- T2A CI repair: enable extension exception support to preserve allocation-failure
+  handling; native, parity and platform evidence must pass before merge.
+
 
 - Product programme: `docs/plans/professional_godot_game_programme.md`
 - Spatial-learning study plan: `docs/plans/spatial_intuition_research_plan.md`
@@ -32,14 +35,40 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 - [ ] Owner: trust the Codex project hook (`/hooks`) so Codex enforces the guard; untrusted hooks are skipped.
 
 - [x] Adopt shared completion policy (distribution 1.5.0 / runtime 0.8.0): manifest binding, resolver provenance, canonical skills and regression protection; preserve fleet exclusions and deferred telemetry.
+- Explorer Linux CI: reconnect binding signatures to the existing shared label
+  formatter; require remote Godot acceptance before merging PR #184.
+
+- Explorer debug reconnection: compact 2D editors through existing shell chrome,
+  publish actual-dimension camera projections to shared helper glyphs, and omit
+  the duplicate 2D Up/Down row. Verify existing Explorer and typography locks.
+
+- Explorer PR #184 CI repair: reacquire helper-deck controls after dimension
+  transitions in the 2D access regression; full Godot/parity acceptance is
+  required before merge.
+
 
 - [x] Correct the aggregate input-map regression to validate declared Shift modifiers and reject plain-key aliases for Explorer view actions.
 - [x] Repair Windows release interpreter binding: explicit Bash environment export and setup-python `PYTHON_BIN` for the initial native build, covered by the packaging contract test.
-- [ ] Publish 0.9.2 from the merged CI-verified SHA through `current_all` packaging, inspect the draft manifest/assets, and complete the separate publication workflow.
+- [x] Publish 0.9.2: [GitHub release](https://github.com/mousomer/tet4d/releases/tag/v0.9.2) is published (2026-11-04 00:38 UTC), targeting `84d5b70781b09470e2082c5742453b4d1c89ac40`, with seven package assets and the release manifest. Publication metadata and asset inventory rechecked on 2026-11-14; this check does not repeat historical byte validation or real-platform acceptance.
 
 - [x] Desktop visual acceptance (owner confirmed): Alt+Enter or F11 toggles fullscreen/windowed from menus
   and 2D/3D/4D gameplay, restores window size, and persists the selected mode.
   Large-window menus retain normal text size instead of magnifying up to 2×.
+
+### Topology-first 2D surface fix
+
+- [x] Implement RDS §2.5: normal Sphere selects `sphere_adjacent_positive` (single
+  square, positive adjacent pairings); retain historical `sphere_2d` bytes and
+  disk-double compatibility. Klein and RP² use their prescribed opposite pairs.
+  Remove probe piece-integrity traversal gates. Acceptance is existing quotient
+  witnesses and Godot bidirectional seams only; both pass. Human review remains separate.
+  No geometry repair, new renderer, multi-domain expansion or 3D/4D change.
+- [x] 2026-11-15 move rule (RDS §2.5 amendment): cells step in their own frames
+  so straddling pieces stay rigid; turns walk across seams; only overlap and
+  open edges refuse an action. Probe mode, round-trip inverse checks and
+  `rotation_undefined` refusals are removed.
+- [ ] 2D Explorer board resize (critical for Sphere, which needs a square board).
+- [ ] 2D Explorer control legend on the shared 3D/4D structure and glyphs.
 
 ### Spatial-intuition research priorities
 
@@ -84,12 +113,15 @@ documentation/priority decision, not approval to deploy a study or backend.
 - [ ] P1 acceptance: run the plan's novice tasks and supported-window visual
   review; `EXPLORER_LEARNING_READY` remains pending. No learning-study or
   participant-backend readiness is implied by the implementation.
-- [ ] P1T — Explorer Topologies RDS (`docs/rds/RDS_EXPLORER_TOPOLOGIES.md`): **T1** establishes the mathematical space/construction/profile catalog identities, structural-vs-mathematical certification, native piece-transport/query contracts, five 2D core fixture specifications and bounded transfer plan. **T2** delivers a working 2D Explorer with bounded/cylinder/torus/Möbius/Klein presets and completes the documented **2D Explorer native authority transfer**; projective and sphere-like claims remain verification-gated. **T3** visual 2D builder; **T4** 3D/4D native transport and separate transfer; **T5** higher-dimensional builder; **T6** versioned multi-domain spheres and appropriate authority establishment/transfer; **T7** integrated novice/quality acceptance. No implementation or transfer is implied by these documentation commits. Python golden conflicts must be classified, not silently enforced or deleted.
+- [ ] P1T — Explorer Topologies RDS (`docs/rds/RDS_EXPLORER_TOPOLOGIES.md`): **T1** establishes catalog identities, certification and transport contracts; **T2** covers five working 2D presets and formal scoped transfer; **T2S** covers square S²/RP² with persistent directed seams, native cellwise/injective/atomic movement and snapshot Undo. Latest §2.5 governs current availability and movement; formal transfer remains open. **T3** 2D builder; **T4/T5** higher-dimensional transport/builders; **T6** optional multi-domain spheres; **T7** integrated human acceptance. Legacy `sphere_2d` keeps its historical Klein identity; normal Sphere is `sphere_adjacent_positive`.
 - [x] P1T / T1 Session 2 design: `docs/architecture/explorer_topology_piece_transport_contract.md` specifies stable cell IDs, signed local frames, global-axis translation, recorded inverse operations, restricted coherent rotation, atomic revision-bound application, native reuse and exact conformance examples. Documentation only; review disposition and remaining runtime gates are recorded below.
 - [x] P1T / T1 Session 3 design: `docs/architecture/explorer_topology_catalog_certification_contract.md` owns identities, catalog/status schema and independent quotient evidence; `tests/fixtures/explorer_topology/` owns the representative data and transport specifications; `docs/architecture/explorer_topology_t2_transfer_preparation.md` owns the nonterminal bounded transfer package. No runtime or certification promotion.
 - [x] P1T / T1 Correction 4A: owner accepted PR #176's stable-ID pivot correction and authorized integration of #172 → #173 → #174 → #175 → #176 on 2026-11-06. Independent adversarial review findings are reconciled for this merge: P1 resolved; remaining P2 issues explicitly deferred as nonblocking. No new schema refactor or review cycle is required for this integration. T1 mathematical regression evidence only; runtime conformance remains unrun.
 - [ ] P1T / T1 Correction 4B — deferred, nonblocking P2: legacy sphere-like catalog label/status, reachable L-tromino collision evidence, enumeration evidence claims and bounded schema/data duplication findings from PR #175 review. Owner accepted these deferrals for stack integration; no profile-meaning or historical-golden changes implied.
-- [ ] P1T / T2 implementation acceptance: native implementation, runtime conformance, mathematical certification promotion, Godot/human acceptance and terminal scoped transfer remain open. The accepted T1 integration does not satisfy these later gates. Preserve historical Python comparisons.
+- [ ] Explorer cockpit unification: Phases 0–2 are implemented and verified in this Explorer delivery (behavior lock, shared descriptor, Explorer-owned actions, unified dispatch and independent held-key lifecycle). Focused key/rebinding/repeat/GUI/Play-isolation evidence passes against the reviewed baseline fixture. Follow `docs/plans/explorer_cockpit_unification.md` for Phase 3 cockpit extraction, Phase 4 Space tab and Phase 5 keys/3D basis; those phases and human acceptance remain open.
+- [x] 2D Explorer interaction follow-up: shared 3D-subset X/Y bindings and R/T rotation; piece-only refresh; primary topology selector with candidate native cylinder/torus translation and the then-unavailable twisted seams/non-bounded rotation. The successor surface slice implements those capabilities; terminal transfer remains open.
+- [x] Bounded Explorer dimension access: expose 2D alongside 3D/4D using the existing flat renderer, native classic catalogue and bounded geometry queries; retain gravity-free input and Retry/Play isolation. T2 topology presets and authority transfer remain separate open work.
+- [ ] P1T / T2 implementation acceptance: T2A/T2B translation remains the baseline. The owner-authorized 2D surface slice (`docs/architecture/explorer_surface_runtime.md`) adds native Möbius/Klein and experimental projective transport, coherent rotations, recorded Undo, native neighbors and the compatibility two-chart S² preset. RDS §2.5 brings the single-square positive adjacent-edge Sphere into normal selection and removes rigidity/physical-inverse traversal gates while retaining destination injectivity. Full T2B/T2C acceptance, external state serialization, mathematical certification review, human acceptance and terminal scoped transfer remain open. AE-0056 establishes only the new closed disk-double mechanics; inherited transfer remains open. General multi-domain T6 and S³/S⁴ remain separate. Historical Python comparisons and legacy sphere IDs are preserved.
 - [ ] P2: commission and execute a professional UI/comprehension review,
   including contrast hierarchy, occlusion/depth, active/inactive slice
   distinction, key discoverability, cockpit density and responsive text.
@@ -109,8 +141,9 @@ documentation/priority decision, not approval to deploy a study or backend.
   distribution and iPadOS, in programme order.
 
 P3 can overlap P1/P2; P4 implementation depends on a measurement contract.
-The already-built bounded MVP still keeps non-bounded topology unavailable;
-this is current implementation status, not the forward requirement. The new
+The bounded MVP remains the learning-acceptance baseline. The integrated T2B
+candidate additionally exposes native 2D cylinder/torus translation. Its surface
+successor adds twisted seams, coherent rotations and S²; terminal transfer remains open. The forward
 RDS requires non-bounded Explorer profiles and native conformance independent
 of conflicting Python Explorer goldens. Historical Python artifacts remain
 available for compatibility until formal transfer. Each
@@ -525,8 +558,9 @@ named status exception.
 
 ### Platform priority and release control
 
-- Near term: bounded Designer/cockpit and Stage 58C/59 corrections, followed
-  by the Godot practice Explorer, professional UI/comprehension review,
+- Near term: bounded Designer/cockpit and residual Stage 58C/59 corrections,
+  Explorer cockpit unification and novice acceptance of the implemented Godot
+  practice Explorer, followed by professional UI/comprehension review,
   experimental measurement contract and participant-data design. An initial
   research build is distinct from consumer release readiness.
 - Future release priority, once release work is justified: Windows, Linux, then
@@ -552,12 +586,15 @@ identifiers; they do not become supported Designer platforms or game packages.
 - Stage 54F-6 default style selection/polish must consume reviewed human Design
   Laboratory evidence. See
   `docs/plans/design_evaluation_laboratory_acceptance.md`.
-- The bounded Godot practice Explorer is the next proposed major product stage,
-  but it still requires explicit implementation authorization, an owning RDS
-  and architecture scope, and `EXPLORER_LEARNING_READY` evidence. Experimental
+- The bounded Godot practice Explorer MVP is implemented under
+  `docs/architecture/bounded_practice_explorer.md`; novice and supported-window
+  acceptance must establish `EXPLORER_LEARNING_READY`. Cockpit unification
+  follows `docs/plans/explorer_cockpit_unification.md`. Forward Explorer
+  topologies follow T1–T7 in `docs/rds/RDS_EXPLORER_TOPOLOGIES.md`; T2
+  acceptance and scoped native authority transfer remain open. Experimental
   instruments and participant data require their own versioned designs and
-  privacy/reconstruction acceptance. First-class topology, the full laboratory,
-  challenge campaigns and simulation remain separate future stages.
+  privacy/reconstruction acceptance. First-class topology games, the full
+  laboratory, challenge campaigns and simulation remain separate future stages.
 - Path-sensitive CI Slice C may map evidence to explicit lanes only after
   duplicate push/PR execution is measured and removed; retain a conservative
   full-gate fallback.
@@ -665,3 +702,46 @@ branch or draft PR alone is not completion.
 
 - [x] Designer current-design migration: one editable current design, complete Save/Save As/Load/Revert, base-style provenance, shared frozen A/B preview, external toggle and explicit adoption; existing panel handlers and grid renderer coverage retained.
 - [ ] Human interaction acceptance of CURRENT DESIGN, saved geometry restoration and immediate A/B comparison.
+
+
+### Explorer square-surface review repairs (2026-11-15)
+
+- [x] Couple Sphere/RP² board size as N, reject rectangular native admission,
+  preserve selected space on resize, and restore independent extents on exit.
+- [x] Draw persistent native-derived seam pair letters, colours and arrows;
+  reserve Fit space and retain nodes through normal commands.
+- [x] Use generic chart typography compatible with the separate chrome cleanup;
+  correct the contradictory coincident-occupancy acceptance sentence.
+- [ ] Owner checks directed seam legibility in normal/narrow/fullscreen Explorer.
+
+- [x] Explorer arrow-focus repair (2026-11-15): movement bindings claim input
+  before GUI navigation; real event regressions cover focused tabs in 2D/3D/4D,
+  OS echo, exactly-once movement and modal ownership.
+
+
+### Current 2D Explorer movement authority (2026-11-15)
+
+RDS §2.5 — Correct Topology, Free Cellwise Traversal — supersedes material-frame
+translation and rigidity-preservation expectations. Every cell independently
+receives the same board-axis action; enforce defined/injective/atomic results.
+- [x] Apply expanded profile admission, explicit S²/RP² 8×8 trajectories,
+  deforming multi-cell traversal and exact snapshot Undo conformance.
+- [x] Run focused native/Godot, quotient, gameplay-isolation and full gates.
+
+
+### Combined RDS and chrome integration (2026-11-15)
+
+- [x] Reconcile remote RDS replan `49220832` with latest cellwise §2.5 authority;
+  retain T2S square/seam requirements, stable identities and optional T6 scope.
+- [x] Integrate Claude removal `235921d9`: remove spawn-entry label and gizmo
+  centre ball; retain the active-piece origin cube and generic board typography.
+- [x] Regenerate/review typography baseline: exactly two Live 2D spawn-label
+  removals. Focused checks and pinned Godot gate passed; fresh post-migration
+  full-verifier evidence is recorded in the typography integration note.
+- [ ] T2S human square/aspect/seam comprehension and formal T2 transfer remain open.
+
+### Explorer topology selection recovery (2026-11-16)
+
+- [x] Remove the post-Möbius seam selection dead end: select the destination
+  atomically using compatible cells or the stored Retry baseline, display recovery,
+  and preserve rejected requests. Cover dropdown events and repeated switches.

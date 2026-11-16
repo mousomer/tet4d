@@ -1,7 +1,8 @@
 """Exact 2D T1 rotation/classification evidence; no runtime or commit engine.
 
-Inputs are already structurally validated fixture states/profiles. This bounded
-calculation has no translation resolver, history, import, or application API.
+Inputs are already structurally validated fixture states/profiles. The only
+movement here is a unit cell step across opposite-edge seams, used to walk a
+turned cell to its site; there is no history, import, or application API.
 Reviewed expected fixture values remain independent, literal data.
 """
 
@@ -102,35 +103,54 @@ def turn_lift(developed: dict[int, tuple], pivot: tuple, sign: int) -> dict:
     return result
 
 
-def rotation_evidence(state: dict, profile: dict, action: dict) -> dict:
-    """Recompute only §9's development, pivot, projection and frame witnesses.
+def reference_id(rest: dict[int, tuple]) -> int:
+    """The control-frame cell: nearest the material pivot, lowest ID on ties."""
+    pivot = pivot_doubled(rest)
+    return min(
+        rest,
+        key=lambda i: (sum((2 * rest[i][j] - pivot[j]) ** 2 for j in range(2)), i),
+    )
 
-    Blocked results expose diagnostics, never an applicable candidate. No input
-    object is mutated, including revision/undo/trace. No runtime claim follows.
+
+def surface_step(profile: dict, site: tuple, axis: int, delta: int):
+    """One unit cell step across an opposite-edge seam: (site, transport) or None."""
+    dims = profile["board_dimensions"]
+    moved = list(site)
+    moved[axis] += delta
+    if 0 <= moved[axis] < dims[axis]:
+        return tuple(moved), IDENTITY
+    for gluing in profile["gluings"]:
+        if gluing["source"]["axis"] != gluing["target"]["axis"]:
+            raise ValueError("rotation oracle covers opposite-edge seams only")
+        if "xy".index(gluing["source"]["axis"]) != axis:
+            continue
+        moved[axis] = 0 if delta > 0 else dims[axis] - 1
+        signs = [1, 1]
+        if gluing["transform"]["signs"] == [-1]:
+            tangent = 1 - axis
+            moved[tangent] = dims[tangent] - 1 - moved[tangent]
+            signs[tangent] = -1
+        return tuple(moved), {"permutation": [0, 1], "signs": signs}
+    return None
+
+
+def rotation_evidence(state: dict, profile: dict, action: dict) -> dict:
+    """Recompute §9's development, pivot, surface walk and frame witnesses.
+
+    The piece is developed in the reference cell's frame and every turned cell
+    walks the surface from that cell (axis 0, then axis 1), so a turn may cross
+    seams. Only an open edge or two cells on one site refuse it. Blocked results
+    expose diagnostics, never an applicable candidate. No input is mutated.
     """
     cells = {c["id"]: c for c in state["cells"]}
     rest = {c["id"]: c["coordinate"] for c in state["rest_cells"]}
-    h = min(cells)
-    frame = cells[h]["frame"]
-    empty = {"reason": "rotation_undefined", "cells": [], "evidence": {}}
-    if any(c["frame"] != frame for c in cells.values()):
-        return empty
-    wrapped = identity_wrap_axes(profile)
-    # Global all-seam restriction: one twisted seam disables ALL wrap projection.
-    if len(wrapped) != len(profile["gluings"]):
-        wrapped = set()
-    dims = profile["board_dimensions"]
-
-    def project(coord):
-        values = tuple(v % dims[j] if j in wrapped else v for j, v in enumerate(coord))
-        return values if all(0 <= v < n for v, n in zip(values, dims)) else None
-
+    h = reference_id({i: tuple(c) for i, c in rest.items()})
+    anchor = cells[h]
+    frame = anchor["frame"]
     developed = {}
     for i in sorted(cells):
         offset = apply_frame(frame, [rest[i][j] - rest[h][j] for j in range(2)])
-        developed[i] = tuple(cells[h]["coordinate"][j] + offset[j] for j in range(2))
-        if project(developed[i]) != tuple(cells[i]["coordinate"]):
-            return empty
+        developed[i] = tuple(anchor["coordinate"][j] + offset[j] for j in range(2))
     sign = action["quarter_turn"] * (1 if action["axis_a"] == 0 else -1)
     pivot = pivot_doubled(developed)
     lifted = turn_lift(developed, pivot, sign)
@@ -139,23 +159,41 @@ def rotation_evidence(state: dict, profile: dict, action: dict) -> dict:
         "pivot_doubled": list(pivot),
         "rotated_lift": [list(c) for c in lifted.values()],
     }
-    targets = {i: project(c) for i, c in lifted.items()}
-    if any(c is None for c in targets.values()):
-        return dict(empty, evidence=evidence)
     q = {"permutation": [1, 0], "signs": [-sign, sign]}
-    rows = [
-        dict(cells[i], coordinate=list(targets[i]), frame=compose(q, frame))
-        for i in sorted(cells)
-    ]
-    if len(set(targets.values())) != len(cells):
-        return {
-            "reason": "destination_collision",
-            "cells": [],
-            "evidence": evidence,
-            "tentative": rows,
-            "transport": q,
-        }
-    return {"reason": "", "cells": rows, "evidence": evidence, "transport": q}
+    turned = compose(q, frame)
+    rows, transports, occupied = [], [], set()
+    for i in sorted(cells):
+        site, carried = tuple(anchor["coordinate"]), IDENTITY
+        for axis in range(2):
+            distance = lifted[i][axis] - anchor["coordinate"][axis]
+            unit = [0, 0]
+            unit[axis] = 1 if distance > 0 else -1
+            for _ in range(abs(distance)):
+                direction = apply_frame(carried, unit)
+                step_axis = 0 if direction[0] else 1
+                moved = surface_step(profile, site, step_axis, direction[step_axis])
+                if moved is None:
+                    return {
+                        "reason": "unconnected_boundary",
+                        "cells": [],
+                        "evidence": evidence,
+                    }
+                site, transport = moved
+                carried = compose(transport, carried)
+        target_frame = compose(carried, turned)
+        rows.append(dict(cells[i], coordinate=list(site), frame=target_frame))
+        transports.append(compose(target_frame, inverse(cells[i]["frame"])))
+        # Like native, the first ID to land on an occupied site ends the turn.
+        if (cells[i]["domain"], site) in occupied:
+            return {
+                "reason": "destination_collision",
+                "cells": [],
+                "evidence": evidence,
+                "tentative": rows,
+                "transports": transports,
+            }
+        occupied.add((cells[i]["domain"], site))
+    return {"reason": "", "cells": rows, "evidence": evidence, "transports": transports}
 
 
 def check_rotation_fixture(case: dict, state: dict, profile: dict) -> None:
@@ -167,11 +205,13 @@ def check_rotation_fixture(case: dict, state: dict, profile: dict) -> None:
         if actual["evidence"] != case["rotation_evidence"]:
             raise ValueError("rotation development/pivot witness mismatch")
         rows = actual.get("tentative", actual["cells"])
-        for row, witness in zip(rows, case["per_cell"], strict=True):
+        for row, transport, witness in zip(
+            rows, actual["transports"], case["per_cell"], strict=True
+        ):
             if (
                 row["coordinate"] != witness["target"]
                 or row["frame"] != witness["frame"]
-                or actual["transport"] != witness["transport"]
+                or transport != witness["transport"]
             ):
                 raise ValueError("rotation projected witness mismatch")
     elif case["rotation_evidence"] and case["rotation_evidence"] != actual["evidence"]:

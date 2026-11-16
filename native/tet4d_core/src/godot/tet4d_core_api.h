@@ -1,5 +1,6 @@
 #pragma once
 
+#include "tet4d_core/explorer_piece.hpp"
 #include "tet4d_core/plain_2d_session.hpp"
 #include "tet4d_core/plain_nd_session.hpp"
 
@@ -19,6 +20,22 @@ protected:
 	static void _bind_methods();
 
 public:
+	// Detached, single-object candidate Explorer runtime owned by this bridge.
+	// Inputs/results are copied. Begin rejects unsupported presets or invalid poses
+	// without replacing the previous runtime. Move/Retry use the T2A native owner;
+	// no gameplay session, persistence identity or authority transfer is implied.
+	// This main-thread Godot instance owns one detached Explorer runtime. begin replaces it
+	// only after strict rank-2/profile/state admission; subsequent actions require success.
+	// Returned dictionaries/arrays own their values (no borrowed core state) and report
+	// {ok, reason}. Successful snapshots include stable IDs, chart coordinates, domains,
+	// frames and separate display coordinates. Invalid/blocked requests leave state intact.
+	// Single-domain topology remains a candidate; disk-double mechanics follow AE-0056.
+	Dictionary explorer_begin(const Array &dims, const Array &original, const Array &cells, const String &preset);
+	Dictionary explorer_move(int64_t axis, int64_t direction);
+	Dictionary explorer_retry();
+	Dictionary explorer_rotate(int64_t direction); // Exact coherent quarter turn, direction -1/+1.
+	Dictionary explorer_undo(); // Source-bound inverse of the last retained action; empty rejects.
+	Dictionary explorer_neighbors(int64_t cell_id); // Read-only, four chart-axis neighbors of an ID.
 	String get_core_version() const;
 	String get_core_status() const;
 	String echo_text(const String &text) const;
@@ -36,6 +53,7 @@ public:
 	Dictionary validate_live_board_setup(const Variant &setup) const;
 	// Value-owned, read-only production geometry for presentation conformance;
 	// this observation does not construct or mutate a live session or its RNG.
+	Array get_live_2d_production_piece_catalog() const;
 	Array get_live_nd_production_piece_catalog() const;
 	bool run_builtin_plain_2d_smoke_case() const;
 	PackedStringArray list_plain_2d_parity_cases() const;
@@ -89,6 +107,7 @@ public:
 	String live_4d_state_hash() const;
 
 private:
+	std::unique_ptr<tet4d::core::ExplorerPieceRuntime> explorer_runtime_;
 	mutable tet4d::core::Plain2DSession live_2d_session_;
 	mutable tet4d::core::PlainNDSession live_3d_session_{3};
 	mutable tet4d::core::PlainNDSession live_4d_session_{4};

@@ -11,30 +11,44 @@ class_name SafeAreaInsets
 # priority of the board, NEXT/HOLD, piece controls, or Design Laboratory
 # changes. On desktop the safe area equals the window and every inset is zero,
 # which makes this inert there by construction.
+#
+# The display reports its safe area in desktop coordinates, which share the
+# window's origin only on the display at the desktop origin. A MacBook screen
+# arranged below an external monitor starts at y=2952, so reading that
+# position as an inset pushed the fullscreen cockpit entirely off-screen.
+# Resolution therefore always works in window-local coordinates.
 
 const ZERO := {"left": 0, "top": 0, "right": 0, "bottom": 0}
 
 
 # Pure resolution so every device geometry can be asserted headlessly.
-static func resolve(safe_area: Rect2i, window_size: Vector2i) -> Dictionary:
+# `window_position` is the window's client-area origin in the same desktop
+# coordinates as `safe_area`.
+static func resolve(safe_area: Rect2i, window_size: Vector2i, window_position := Vector2i.ZERO) -> Dictionary:
 	if window_size.x <= 0 or window_size.y <= 0:
 		return ZERO.duplicate()
 	if safe_area.size.x <= 0 or safe_area.size.y <= 0:
 		return ZERO.duplicate()
-	# A safe area larger than the window (or reported in a different space)
-	# cannot be interpreted as an inset; treat it as no inset at all.
-	if safe_area.size.x > window_size.x or safe_area.size.y > window_size.y:
+	var local := Rect2i(safe_area.position - window_position, safe_area.size)
+	# A safe area that does not sit inside the window (larger than it, or
+	# reported for another display) cannot be interpreted as an inset; treat
+	# it as no inset at all.
+	if not Rect2i(Vector2i.ZERO, window_size).encloses(local):
 		return ZERO.duplicate()
 	return {
-		"left": maxi(safe_area.position.x, 0),
-		"top": maxi(safe_area.position.y, 0),
-		"right": maxi(window_size.x - (safe_area.position.x + safe_area.size.x), 0),
-		"bottom": maxi(window_size.y - (safe_area.position.y + safe_area.size.y), 0),
+		"left": local.position.x,
+		"top": local.position.y,
+		"right": window_size.x - local.end.x,
+		"bottom": window_size.y - local.end.y,
 	}
 
 
 static func current() -> Dictionary:
-	return resolve(DisplayServer.get_display_safe_area(), DisplayServer.window_get_size())
+	return resolve(
+		DisplayServer.get_display_safe_area(),
+		DisplayServer.window_get_size(),
+		DisplayServer.window_get_position()
+	)
 
 
 # The display reports insets in window pixels; layout runs in canvas units,

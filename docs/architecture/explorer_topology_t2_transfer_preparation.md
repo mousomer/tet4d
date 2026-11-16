@@ -7,6 +7,11 @@ Owners: `docs/architecture/authority_transfer_protocol.md`,
 
 ## 1. Candidate boundary
 
+The expanded 2D Explorer native candidate (bounded, periodic, twisted and
+positive adjacent-edge S² profiles) and executable conformance harness are described in [native T2A transport](explorer_topology_t2a_native_transport.md).
+This is a partial provider slice; the complete T2 transfer conditions below
+remain required. No Godot integration or runtime authority promotion is implied.
+
 Subsystem: **single-domain 2D Explorer deterministic topology transport and queries**.
 Current authority is inherited Python topology/canonical contracts, with the
 approved Explorer RDS governing intentional forward requirement changes.
@@ -27,7 +32,10 @@ queries; persistent cell identity/orientation; one selected translation or
 supported rotation; proposal/classification/atomic application; recorded inverse,
 revision invalidation, Retry and strict serialization of the new Explorer state.
 The provider must preserve count, correspondence, unique occupancy, frames,
-exact inverse and complete-envelope no-op on any rejection.
+exact snapshot Undo and complete-envelope no-op on any rejection. Forward
+translation applies the same board-axis step to every cell; frames never remap
+input, and physical inverse/rigidity checks do not gate acceptance. The RDS
+2026-11-15 free-cellwise amendment controls this expanded scope.
 
 Reuse `native/tet4d_core/include/tet4d_core/query.hpp` and its `src/core/query.cpp`
 implementation: `resolve_topology_cell_step_query`, `topology_neighbor_query`,
@@ -69,7 +77,8 @@ Data owners under `tests/fixtures/explorer_topology/`:
 - `catalog_v1.json`: seven nonselectable representative entries and exact identity vectors.
 - `quotients_v1.json`: square incidence/link/orientation proof evidence and comparison constructions.
 - `transport_v1.json`: E1–E10, cylinder/interior/self-neighbor companions, failure mutations,
-  ordered inverse sequences and finite five-core boundary enumeration.
+  ordered snapshot-Undo sequences, explicit 8×8 S²/RP² board-axis trajectories
+  and finite five-core boundary enumeration.
 
 Current executable **design/reference** checks (exist now):
 
@@ -87,12 +96,12 @@ the verified source-checkout mode; otherwise use the binding emitted by `gov env
 skips due to absent binaries are not evidence. The full gate discovers the new
 specification tests through pytest; no governance family or waiver is added.
 
-**Proposed T2 implementation and commands (do not exist yet):** extend
+**Complete T2 implementation and commands (partially implemented by T2A):** extend
 `native/tet4d_core/tests/query_core_tests.cpp` and `topology_transport_tests.cpp`
 to consume the reviewed fixture format. Add an explicit `--explorer-piece-conformance`
 mode to their existing test/export family and route it through
-`scripts/test_godot_tet4d_core.sh`; that mode must not be claimed passed until
-implemented. Its output compares full expanded semantic states, per-ID witnesses,
+`scripts/test_godot_tet4d_core.sh`; T2A implements this mode in the separate
+`explorer_piece_tests.cpp` suite for expanded canonical 2D cellwise translations. Its output compares full expanded semantic states, per-ID witnesses,
 frames, reasons, descriptor recovery, revisions and retained-state assertions.
 Use `preserved_unchanged`, `historical_comparison_only`,
 `superseded_forward_explorer`, `missing_new_conformance`, `outside_t2_scope`
@@ -137,15 +146,15 @@ Require all of the following, with exact executed commands and source identities
 
 Excluded: ordinary 2D Play; gravity, drop, lock, score, queue/RNG; general gameplay
 legality; Python Playground UI/policy; 3D/4D topology (T4); camera, projection,
-slices and presentation; builder editing (T3+); multi-domain/genuine sphere
-runtime (T6); historical replay/trace reinterpretation; universal manifold
+slices and presentation; builder editing (T3+); general multi-domain runtime (T6; single-square S² is in the expanded 2D scope); historical replay/trace reinterpretation; universal manifold
 classification. Mathematical evidence checking does not own movement.
 
-Before promotion, preserve the bounded Explorer and keep the unaccepted native
-2D feature unavailable. Missing/malformed/failing provider results cause an
+Before authority promotion, preserve bounded Explorer and label the expanded
+2D runtime as a candidate; owner-authorized preset availability does not transfer
+semantic authority. Missing/malformed/failing provider results cause an
 atomic failure/unavailable state, never silent fallback to historical Python
 piece classification. An experimental entry must satisfy exactly the same
-injectivity, inverse and atomicity requirements as an implemented entry.
+injectivity, snapshot Undo and atomicity requirements as an implemented entry.
 
 After promotion, rollback is one reviewed product/authority operation: disable
 new 2D topology selection, restore the bounded-only product, revert the scoped

@@ -26,6 +26,9 @@ elif ARGUMENTS.get("platform") == "windows":
         bootstrap_env.AppendUnique(CCFLAGS=["/pathmap:{}=.".format(repository_root)])
         bootstrap_env.AppendUnique(LINKFLAGS=["/PDBALTPATH:%_PDB%"])
 
+# The deterministic core translates allocation exceptions into resource_limit.
+# Use the supported godot-cpp option consistently for all extension targets.
+ARGUMENTS["disable_exceptions"] = False
 env = bootstrap_env
 Export("env")
 env = SConscript("../third_party/godot-cpp/SConstruct")

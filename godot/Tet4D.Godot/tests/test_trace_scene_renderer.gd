@@ -120,11 +120,8 @@ func run() -> Array:
 			failures.append("live 2D must retain a shaded slab enclosure")
 		if _count_presentation_role(live_grid, "board.cell_volumes") != 0:
 			failures.append("live 2D must never contain filled cell volumes")
-		var spawn_cue := live_grid.find_child("SpawnEntryLabel", true, false) as Label3D
-		if spawn_cue == null or spawn_cue.text.find("SPAWN ENTRY") == -1:
-			failures.append("live 2D should identify intended above-board spawn entry without adding cells")
-		elif spawn_cue.position.y <= 2.0:
-			failures.append("live 2D spawn-entry cue should sit outside the playable board bounds")
+		if live_grid.find_child("SpawnEntryLabel", true, false) != null or _count_presentation_role(live_grid, "board.spawn_entry_cue") != 0:
+			failures.append("live 2D must not draw a spawn-entry cue; spawn is native gameplay state, not board chrome")
 		renderer.set_grid_visible(false)
 		renderer.render_snapshot(renderer._presentation.snapshot)
 		await tree.process_frame

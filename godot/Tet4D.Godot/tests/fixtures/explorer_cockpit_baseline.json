@@ -1,0 +1,4824 @@
+{
+	"2": {
+		"action_bindings": "[[\"explorer_move_up\",[\"Z\"]],[\"explorer_move_down\",[\"X\"]],[\"explorer_replace_piece\",[\"Space\",\"P\"]],[\"explorer_view_xy_neg\",[\"Shift+1\"]],[\"explorer_view_xy_pos\",[\"Shift+2\"]],[\"explorer_view_yz_neg\",[\"Shift+3\"]],[\"explorer_view_yz_pos\",[\"Shift+4\"]],[\"explorer_view_yw_neg\",[\"Shift+5\"]],[\"explorer_view_yw_pos\",[\"Shift+6\"]],[\"explorer_slice_neg\",[\"[\"]],[\"explorer_slice_pos\",[\"]\"]],[\"shell_toggle_fullscreen\",[\"F11\",\"Alt+Enter\"]],[\"live_move_left\",[\"Left\",\"A\"]],[\"live_move_right\",[\"Right\",\"D\"]],[\"live_rotate_cw\",[\"Up\",\"W\",\"X\"]],[\"live_rotate_ccw\",[\"Z\"]],[\"live_soft_drop\",[\"Down\",\"S\"]],[\"live_hard_drop\",[\"Space\"]],[\"live_hold\",[\"C\"]],[\"live_pause\",[\"P\"]],[\"live_reset\",[\"R\"]],[\"live_2d_move_left\",[\"Left\"]],[\"live_2d_move_right\",[\"Right\"]],[\"live_2d_rotate_cw\",[\"Up\"]],[\"live_2d_rotate_ccw\",[\"Z\"]],[\"live_2d_soft_drop\",[\"Down\"]],[\"live_2d_hard_drop\",[\"Space\"]],[\"live_2d_pause\",[\"P\"]],[\"live_3d_move_x_neg\",[\"Left\",\"A\"]],[\"live_3d_move_x_pos\",[\"Right\",\"D\"]],[\"live_3d_move_z_neg\",[\"Up\",\"W\"]],[\"live_3d_move_z_pos\",[\"Down\",\"S\"]],[\"live_3d_soft_drop\",[\"Shift\",\"Ctrl\"]],[\"live_3d_hard_drop\",[\"Space\"]],[\"live_3d_rotate_xy_neg\",[\"R\"]],[\"live_3d_rotate_xy_pos\",[\"T\"]],[\"live_3d_rotate_xz_neg\",[\"F\"]],[\"live_3d_rotate_xz_pos\",[\"G\"]],[\"live_3d_rotate_yz_neg\",[\"V\"]],[\"live_3d_rotate_yz_pos\",[\"B\"]],[\"live_3d_pause\",[\"P\"]],[\"live_3d_reset\",[\"Backspace\"]],[\"live_4d_move_x_neg\",[\"Left\",\"A\"]],[\"live_4d_move_x_pos\",[\"Right\",\"D\"]],[\"live_4d_move_z_neg\",[\"Up\",\"W\"]],[\"live_4d_move_z_pos\",[\"Down\",\"S\"]],[\"live_4d_move_w_neg\",[\"Q\"]],[\"live_4d_move_w_pos\",[\"E\"]],[\"live_4d_soft_drop\",[\"Shift\",\"Ctrl\"]],[\"live_4d_hard_drop\",[\"Space\"]],[\"live_4d_rotate_xy_neg\",[\"R\"]],[\"live_4d_rotate_xy_pos\",[\"T\"]],[\"live_4d_rotate_xz_neg\",[\"F\"]],[\"live_4d_rotate_xz_pos\",[\"G\"]],[\"live_4d_rotate_yz_neg\",[\"V\"]],[\"live_4d_rotate_yz_pos\",[\"B\"]],[\"live_4d_rotate_xw_neg\",[\"Y\"]],[\"live_4d_rotate_xw_pos\",[\"U\"]],[\"live_4d_rotate_yw_neg\",[\"H\"]],[\"live_4d_rotate_yw_pos\",[\"J\"]],[\"live_4d_rotate_zw_neg\",[\"N\"]],[\"live_4d_rotate_zw_pos\",[\"M\"]],[\"live_4d_pause\",[\"P\"]],[\"live_4d_reset\",[\"Backspace\"]],[\"live_4d_camera_pitch_up\",[\"I\"]],[\"live_4d_camera_pitch_down\",[\"K\"]],[\"live_4d_camera_yaw_left\",[\"O\"]],[\"live_4d_camera_yaw_right\",[\"L\"]],[\"live_4d_camera_zoom_in\",[\"=\",\"+\",\"+\"]],[\"live_4d_camera_zoom_out\",[\"-\",\"-\"]],[\"view_zx_neg\",[\"1\"]],[\"view_zx_pos\",[\"2\"]],[\"view_xw_neg\",[\"3\"]],[\"view_xw_pos\",[\"4\"]],[\"view_zw_neg\",[\"5\"]],[\"view_zw_pos\",[\"6\"]],[\"reset\",[\"0\"]]]",
+		"keys": {
+			"0": [
+				"view_reset"
+			],
+			"1": [],
+			"2": [],
+			"3": [],
+			"4": [],
+			"5": [],
+			"6": [],
+			"7": [],
+			"8": [],
+			"9": [
+				"view_fit"
+			],
+			"A": [
+				"move_x_neg"
+			],
+			"B": [],
+			"Backspace": [
+				"retry"
+			],
+			"BracketLeft": [],
+			"BracketRight": [],
+			"C": [],
+			"Ctrl": [],
+			"D": [
+				"move_x_pos"
+			],
+			"Down": [
+				"move_y_pos"
+			],
+			"E": [],
+			"Equal": [
+				"zoom_in"
+			],
+			"F": [],
+			"G": [],
+			"H": [],
+			"I": [],
+			"J": [],
+			"K": [],
+			"Kp Add": [
+				"zoom_in"
+			],
+			"Kp Subtract": [
+				"zoom_out"
+			],
+			"L": [],
+			"Left": [
+				"move_x_neg"
+			],
+			"M": [],
+			"Minus": [
+				"zoom_out"
+			],
+			"N": [],
+			"O": [],
+			"P": [
+				"replace"
+			],
+			"PageDown": [],
+			"PageUp": [],
+			"Plus": [
+				"zoom_in"
+			],
+			"Q": [],
+			"R": [
+				"rotate_xy_neg"
+			],
+			"Right": [
+				"move_x_pos"
+			],
+			"S": [
+				"move_y_pos"
+			],
+			"Shift": [],
+			"Shift+0": [
+				"view_reset"
+			],
+			"Shift+1": [],
+			"Shift+2": [],
+			"Shift+3": [],
+			"Shift+4": [],
+			"Shift+5": [],
+			"Shift+6": [],
+			"Shift+7": [],
+			"Shift+8": [],
+			"Shift+9": [
+				"view_fit"
+			],
+			"Shift+A": [
+				"move_x_neg"
+			],
+			"Shift+B": [],
+			"Shift+Backspace": [
+				"retry"
+			],
+			"Shift+BracketLeft": [],
+			"Shift+BracketRight": [],
+			"Shift+C": [],
+			"Shift+Ctrl": [],
+			"Shift+D": [
+				"move_x_pos"
+			],
+			"Shift+Down": [
+				"move_y_pos"
+			],
+			"Shift+E": [],
+			"Shift+Equal": [
+				"zoom_in"
+			],
+			"Shift+F": [],
+			"Shift+G": [],
+			"Shift+H": [],
+			"Shift+I": [],
+			"Shift+J": [],
+			"Shift+K": [],
+			"Shift+Kp Add": [
+				"zoom_in"
+			],
+			"Shift+Kp Subtract": [
+				"zoom_out"
+			],
+			"Shift+L": [],
+			"Shift+Left": [
+				"move_x_neg"
+			],
+			"Shift+M": [],
+			"Shift+Minus": [
+				"zoom_out"
+			],
+			"Shift+N": [],
+			"Shift+O": [],
+			"Shift+P": [
+				"replace"
+			],
+			"Shift+PageDown": [],
+			"Shift+PageUp": [],
+			"Shift+Plus": [
+				"zoom_in"
+			],
+			"Shift+Q": [],
+			"Shift+R": [
+				"rotate_xy_neg"
+			],
+			"Shift+Right": [
+				"move_x_pos"
+			],
+			"Shift+S": [
+				"move_y_pos"
+			],
+			"Shift+Shift": [],
+			"Shift+Space": [
+				"replace"
+			],
+			"Shift+T": [
+				"rotate_xy_pos"
+			],
+			"Shift+U": [],
+			"Shift+Up": [
+				"move_y_neg"
+			],
+			"Shift+V": [],
+			"Shift+W": [
+				"move_y_neg"
+			],
+			"Shift+X": [
+				"move_y_pos"
+			],
+			"Shift+Y": [],
+			"Shift+Z": [
+				"move_y_neg"
+			],
+			"Space": [
+				"replace"
+			],
+			"T": [
+				"rotate_xy_pos"
+			],
+			"U": [],
+			"Up": [
+				"move_y_neg"
+			],
+			"V": [],
+			"W": [
+				"move_y_neg"
+			],
+			"X": [
+				"move_y_pos"
+			],
+			"Y": [],
+			"Z": [
+				"move_y_neg"
+			]
+		},
+		"piece_helper": [
+			{
+				"action_ids": [
+					"live_3d_move_x_neg",
+					"live_3d_move_x_pos"
+				],
+				"item": [
+					"A/D",
+					"X− / X+",
+					{
+						"cockpit_direction": "horizontal",
+						"signed_axis": "+X"
+					}
+				],
+				"role": "translate"
+			},
+			{
+				"action_ids": [
+					"live_3d_move_z_neg",
+					"live_3d_move_z_pos"
+				],
+				"item": [
+					"W/S",
+					"Y− / Y+",
+					{
+						"cockpit_direction": "screen_vertical",
+						"signed_axis": "+Y"
+					}
+				],
+				"role": "translate"
+			},
+			{
+				"action_ids": [
+					"live_3d_rotate_xy_neg",
+					"live_3d_rotate_xy_pos"
+				],
+				"item": [
+					"R/T",
+					"Rotate XY"
+				],
+				"role": "rotate"
+			},
+			{
+				"action_ids": [
+					"explorer_replace_piece"
+				],
+				"item": [
+					"Space",
+					"Replace piece"
+				],
+				"role": "session"
+			},
+			{
+				"action_ids": [
+					"live_3d_reset"
+				],
+				"item": [
+					"Backspace",
+					"Retry object"
+				],
+				"role": "session"
+			}
+		],
+		"tabs": {
+			"Piece": {
+				"buttons": {
+					"./HBoxContainer_0/Button_0": {
+						"action": "",
+						"commands": [
+							"dimension_2"
+						],
+						"disabled": false,
+						"text": "2D"
+					},
+					"./HBoxContainer_0/Button_1": {
+						"action": "",
+						"commands": [
+							"dimension_3"
+						],
+						"disabled": false,
+						"text": "3D"
+					},
+					"./HBoxContainer_0/Button_2": {
+						"action": "",
+						"commands": [
+							"dimension_4"
+						],
+						"disabled": false,
+						"text": "4D"
+					},
+					"./HBoxContainer_0/Button_3": {
+						"action": "",
+						"commands": [
+							"play"
+						],
+						"disabled": false,
+						"text": "Play"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/Button_0": {
+						"action": "",
+						"commands": [
+							"replace"
+						],
+						"disabled": false,
+						"text": "Replace piece"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/Button_1": {
+						"action": "",
+						"commands": [
+							"target"
+						],
+						"disabled": false,
+						"text": "New target"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/Button_2": {
+						"action": "",
+						"commands": [
+							"retry"
+						],
+						"disabled": false,
+						"text": "Retry object"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_0": {
+						"action": "",
+						"commands": [
+							"move_x_neg"
+						],
+						"disabled": false,
+						"text": "−X"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_1": {
+						"action": "",
+						"commands": [
+							"move_x_pos"
+						],
+						"disabled": false,
+						"text": "+X"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_2": {
+						"action": "",
+						"commands": [
+							"move_y_neg"
+						],
+						"disabled": false,
+						"text": "−Y"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_3": {
+						"action": "",
+						"commands": [
+							"move_y_pos"
+						],
+						"disabled": false,
+						"text": "+Y"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_0": {
+						"action": "",
+						"commands": [
+							"rotate_xy_neg"
+						],
+						"disabled": false,
+						"text": "XY −"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_1": {
+						"action": "",
+						"commands": [
+							"rotate_xy_pos"
+						],
+						"disabled": false,
+						"text": "XY +"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/PracticePieceSelector/item_0": {
+						"commands": [
+							"piece_0"
+						],
+						"disabled": false,
+						"text": "I"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/PracticePieceSelector/item_1": {
+						"commands": [
+							"piece_1"
+						],
+						"disabled": false,
+						"text": "O"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/PracticePieceSelector/item_2": {
+						"commands": [
+							"piece_2"
+						],
+						"disabled": false,
+						"text": "T"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/PracticePieceSelector/item_3": {
+						"commands": [
+							"piece_3"
+						],
+						"disabled": false,
+						"text": "S"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/PracticePieceSelector/item_4": {
+						"commands": [
+							"piece_4"
+						],
+						"disabled": false,
+						"text": "Z"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/PracticePieceSelector/item_5": {
+						"commands": [
+							"piece_5"
+						],
+						"disabled": false,
+						"text": "J"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/PracticePieceSelector/item_6": {
+						"commands": [
+							"piece_6"
+						],
+						"disabled": false,
+						"text": "L"
+					}
+				},
+				"nodes": [
+					[
+						"./Label_0",
+						"Label",
+						""
+					],
+					[
+						"./HBoxContainer_0",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_2",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_3",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0",
+						"TabContainer",
+						""
+					],
+					[
+						"./TabContainer_0/HBoxContainer_0",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/HBoxContainer_0/TabBar_0",
+						"TabBar",
+						""
+					],
+					[
+						"./TabContainer_0/Piece",
+						"ScrollContainer",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0",
+						"VBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/PracticePieceSelector",
+						"OptionButton",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0",
+						"GridContainer",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_2",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_3",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/Label_1",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1",
+						"GridContainer",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/Button_2",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/_v_scroll",
+						"VScrollBar",
+						""
+					],
+					[
+						"./ScrollContainer_0",
+						"ScrollContainer",
+						""
+					],
+					[
+						"./ScrollContainer_0/Label_0",
+						"Label",
+						""
+					]
+				]
+			},
+			"Space": {
+				"buttons": {
+					"./HBoxContainer_0/Button_0": {
+						"action": "",
+						"commands": [
+							"dimension_2"
+						],
+						"disabled": false,
+						"text": "2D"
+					},
+					"./HBoxContainer_0/Button_1": {
+						"action": "",
+						"commands": [
+							"dimension_3"
+						],
+						"disabled": false,
+						"text": "3D"
+					},
+					"./HBoxContainer_0/Button_2": {
+						"action": "",
+						"commands": [
+							"dimension_4"
+						],
+						"disabled": false,
+						"text": "4D"
+					},
+					"./HBoxContainer_0/Button_3": {
+						"action": "",
+						"commands": [
+							"play"
+						],
+						"disabled": false,
+						"text": "Play"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_0": {
+						"action": "",
+						"commands": [
+							"board_x_neg"
+						],
+						"disabled": false,
+						"text": "−"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_1": {
+						"action": "",
+						"commands": [
+							"board_x_pos"
+						],
+						"disabled": false,
+						"text": "+"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_2": {
+						"action": "",
+						"commands": [
+							"board_y_neg"
+						],
+						"disabled": false,
+						"text": "−"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_3": {
+						"action": "",
+						"commands": [
+							"board_y_pos"
+						],
+						"disabled": false,
+						"text": "+"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector/item_0": {
+						"commands": [
+							"topology_bounded"
+						],
+						"disabled": false,
+						"text": "Bounded"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector/item_1": {
+						"commands": [
+							"topology_cylinder_x"
+						],
+						"disabled": false,
+						"text": "Cylinder · wrap X"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector/item_2": {
+						"commands": [
+							"topology_cylinder_y"
+						],
+						"disabled": false,
+						"text": "Cylinder · wrap Y"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector/item_3": {
+						"commands": [
+							"topology_torus"
+						],
+						"disabled": false,
+						"text": "Torus"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector/item_4": {
+						"commands": [
+							"topology_mobius"
+						],
+						"disabled": false,
+						"text": "Möbius strip"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector/item_5": {
+						"commands": [
+							"topology_klein"
+						],
+						"disabled": false,
+						"text": "Klein bottle"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector/item_6": {
+						"commands": [
+							"topology_projective"
+						],
+						"disabled": false,
+						"text": "Projective · experimental"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector/item_7": {
+						"commands": [
+							"topology_sphere_adjacent_positive"
+						],
+						"disabled": false,
+						"text": "Sphere"
+					}
+				},
+				"nodes": [
+					[
+						"./Label_0",
+						"Label",
+						""
+					],
+					[
+						"./HBoxContainer_0",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_2",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_3",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0",
+						"TabContainer",
+						""
+					],
+					[
+						"./TabContainer_0/HBoxContainer_0",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/HBoxContainer_0/TabBar_0",
+						"TabBar",
+						""
+					],
+					[
+						"./TabContainer_0/Space",
+						"ScrollContainer",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0",
+						"VBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0",
+						"VBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector",
+						"OptionButton",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize",
+						"GridContainer",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Label_1",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Label_2",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_2",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Label_3",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_3",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/Label_1",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/_v_scroll",
+						"VScrollBar",
+						""
+					],
+					[
+						"./ScrollContainer_0",
+						"ScrollContainer",
+						""
+					],
+					[
+						"./ScrollContainer_0/Label_0",
+						"Label",
+						""
+					]
+				]
+			},
+			"View": {
+				"buttons": {
+					"./HBoxContainer_0/Button_0": {
+						"action": "",
+						"commands": [
+							"dimension_2"
+						],
+						"disabled": false,
+						"text": "2D"
+					},
+					"./HBoxContainer_0/Button_1": {
+						"action": "",
+						"commands": [
+							"dimension_3"
+						],
+						"disabled": false,
+						"text": "3D"
+					},
+					"./HBoxContainer_0/Button_2": {
+						"action": "",
+						"commands": [
+							"dimension_4"
+						],
+						"disabled": false,
+						"text": "4D"
+					},
+					"./HBoxContainer_0/Button_3": {
+						"action": "",
+						"commands": [
+							"play"
+						],
+						"disabled": false,
+						"text": "Play"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_0/Button_0": {
+						"action": "live_4d_camera_zoom_out",
+						"commands": [
+							"zoom_out"
+						],
+						"disabled": false,
+						"text": "-"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_0/Button_1": {
+						"action": "live_4d_camera_zoom_in",
+						"commands": [
+							"zoom_in"
+						],
+						"disabled": false,
+						"text": "="
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_1/Button_0": {
+						"action": "replay_fit_view",
+						"commands": [
+							"view_fit"
+						],
+						"disabled": false,
+						"text": "9"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_2/Button_0": {
+						"action": "reset",
+						"commands": [
+							"view_reset"
+						],
+						"disabled": false,
+						"text": "0"
+					}
+				},
+				"nodes": [
+					[
+						"./Label_0",
+						"Label",
+						""
+					],
+					[
+						"./HBoxContainer_0",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_2",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_3",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0",
+						"TabContainer",
+						""
+					],
+					[
+						"./TabContainer_0/HBoxContainer_0",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/HBoxContainer_0/TabBar_0",
+						"TabBar",
+						""
+					],
+					[
+						"./TabContainer_0/View",
+						"ScrollContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0",
+						"VBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip",
+						"PanelContainer",
+						"interactive_view_guidance"
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll",
+						"ScrollContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0",
+						"MarginContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0",
+						"VBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlTitle",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups",
+						"GridContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing",
+						"VBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/ControlSectionTitle",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_0",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_0/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_0/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_0/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_1",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_1/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_1/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_2",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_2/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_2/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./ScrollContainer_0",
+						"ScrollContainer",
+						""
+					],
+					[
+						"./ScrollContainer_0/Label_0",
+						"Label",
+						""
+					]
+				]
+			}
+		},
+		"view_helper": [
+			{
+				"action_ids": [
+					"live_4d_camera_zoom_in",
+					"live_4d_camera_zoom_out"
+				],
+				"item": [
+					"-/=",
+					"Zoom",
+					{
+						"negative_action": "live_4d_camera_zoom_out",
+						"negative_binding": "-",
+						"negative_command": "zoom_out",
+						"operation": "Zoom",
+						"positive_action": "live_4d_camera_zoom_in",
+						"positive_binding": "=",
+						"positive_command": "zoom_in"
+					}
+				],
+				"role": "view_framing"
+			},
+			{
+				"action_ids": [
+					"replay_fit_view"
+				],
+				"item": [
+					"9",
+					"Fit",
+					{
+						"action": "replay_fit_view",
+						"command": "view_fit",
+						"operation": "Fit"
+					}
+				],
+				"role": "view_framing"
+			},
+			{
+				"action_ids": [
+					"reset"
+				],
+				"item": [
+					"0",
+					"Reset",
+					{
+						"action": "reset",
+						"command": "view_reset",
+						"operation": "Reset"
+					}
+				],
+				"role": "view_framing"
+			}
+		]
+	},
+	"3": {
+		"action_bindings": "[[\"explorer_move_up\",[\"Z\"]],[\"explorer_move_down\",[\"X\"]],[\"explorer_replace_piece\",[\"Space\",\"P\"]],[\"explorer_view_xy_neg\",[\"Shift+1\"]],[\"explorer_view_xy_pos\",[\"Shift+2\"]],[\"explorer_view_yz_neg\",[\"Shift+3\"]],[\"explorer_view_yz_pos\",[\"Shift+4\"]],[\"explorer_view_yw_neg\",[\"Shift+5\"]],[\"explorer_view_yw_pos\",[\"Shift+6\"]],[\"explorer_slice_neg\",[\"[\"]],[\"explorer_slice_pos\",[\"]\"]],[\"shell_toggle_fullscreen\",[\"F11\",\"Alt+Enter\"]],[\"live_move_left\",[\"Left\",\"A\"]],[\"live_move_right\",[\"Right\",\"D\"]],[\"live_rotate_cw\",[\"Up\",\"W\",\"X\"]],[\"live_rotate_ccw\",[\"Z\"]],[\"live_soft_drop\",[\"Down\",\"S\"]],[\"live_hard_drop\",[\"Space\"]],[\"live_hold\",[\"C\"]],[\"live_pause\",[\"P\"]],[\"live_reset\",[\"R\"]],[\"live_2d_move_left\",[\"Left\"]],[\"live_2d_move_right\",[\"Right\"]],[\"live_2d_rotate_cw\",[\"Up\"]],[\"live_2d_rotate_ccw\",[\"Z\"]],[\"live_2d_soft_drop\",[\"Down\"]],[\"live_2d_hard_drop\",[\"Space\"]],[\"live_2d_pause\",[\"P\"]],[\"live_3d_move_x_neg\",[\"Left\",\"A\"]],[\"live_3d_move_x_pos\",[\"Right\",\"D\"]],[\"live_3d_move_z_neg\",[\"Up\",\"W\"]],[\"live_3d_move_z_pos\",[\"Down\",\"S\"]],[\"live_3d_soft_drop\",[\"Shift\",\"Ctrl\"]],[\"live_3d_hard_drop\",[\"Space\"]],[\"live_3d_rotate_xy_neg\",[\"R\"]],[\"live_3d_rotate_xy_pos\",[\"T\"]],[\"live_3d_rotate_xz_neg\",[\"F\"]],[\"live_3d_rotate_xz_pos\",[\"G\"]],[\"live_3d_rotate_yz_neg\",[\"V\"]],[\"live_3d_rotate_yz_pos\",[\"B\"]],[\"live_3d_pause\",[\"P\"]],[\"live_3d_reset\",[\"Backspace\"]],[\"live_4d_move_x_neg\",[\"Left\",\"A\"]],[\"live_4d_move_x_pos\",[\"Right\",\"D\"]],[\"live_4d_move_z_neg\",[\"Up\",\"W\"]],[\"live_4d_move_z_pos\",[\"Down\",\"S\"]],[\"live_4d_move_w_neg\",[\"Q\"]],[\"live_4d_move_w_pos\",[\"E\"]],[\"live_4d_soft_drop\",[\"Shift\",\"Ctrl\"]],[\"live_4d_hard_drop\",[\"Space\"]],[\"live_4d_rotate_xy_neg\",[\"R\"]],[\"live_4d_rotate_xy_pos\",[\"T\"]],[\"live_4d_rotate_xz_neg\",[\"F\"]],[\"live_4d_rotate_xz_pos\",[\"G\"]],[\"live_4d_rotate_yz_neg\",[\"V\"]],[\"live_4d_rotate_yz_pos\",[\"B\"]],[\"live_4d_rotate_xw_neg\",[\"Y\"]],[\"live_4d_rotate_xw_pos\",[\"U\"]],[\"live_4d_rotate_yw_neg\",[\"H\"]],[\"live_4d_rotate_yw_pos\",[\"J\"]],[\"live_4d_rotate_zw_neg\",[\"N\"]],[\"live_4d_rotate_zw_pos\",[\"M\"]],[\"live_4d_pause\",[\"P\"]],[\"live_4d_reset\",[\"Backspace\"]],[\"live_4d_camera_pitch_up\",[\"I\"]],[\"live_4d_camera_pitch_down\",[\"K\"]],[\"live_4d_camera_yaw_left\",[\"O\"]],[\"live_4d_camera_yaw_right\",[\"L\"]],[\"live_4d_camera_zoom_in\",[\"=\",\"+\",\"+\"]],[\"live_4d_camera_zoom_out\",[\"-\",\"-\"]],[\"view_zx_neg\",[\"1\"]],[\"view_zx_pos\",[\"2\"]],[\"view_xw_neg\",[\"3\"]],[\"view_xw_pos\",[\"4\"]],[\"view_zw_neg\",[\"5\"]],[\"view_zw_pos\",[\"6\"]],[\"reset\",[\"0\"]]]",
+		"keys": {
+			"0": [
+				"view_reset"
+			],
+			"1": [],
+			"2": [],
+			"3": [],
+			"4": [],
+			"5": [],
+			"6": [],
+			"7": [],
+			"8": [],
+			"9": [
+				"view_fit"
+			],
+			"A": [
+				"move_x_neg"
+			],
+			"B": [
+				"rotate_yz_pos"
+			],
+			"Backspace": [
+				"retry"
+			],
+			"BracketLeft": [],
+			"BracketRight": [],
+			"C": [
+				"hold"
+			],
+			"Ctrl": [
+				"soft_drop"
+			],
+			"D": [
+				"move_x_pos"
+			],
+			"Down": [
+				"move_z_pos"
+			],
+			"E": [],
+			"Equal": [
+				"zoom_in"
+			],
+			"F": [
+				"rotate_xz_neg"
+			],
+			"G": [
+				"rotate_xz_pos"
+			],
+			"H": [],
+			"I": [
+				"look_pitch_up"
+			],
+			"J": [],
+			"K": [
+				"look_pitch_down"
+			],
+			"Kp Add": [
+				"zoom_in"
+			],
+			"Kp Subtract": [
+				"zoom_out"
+			],
+			"L": [
+				"look_yaw_right"
+			],
+			"Left": [
+				"move_x_neg"
+			],
+			"M": [],
+			"Minus": [
+				"zoom_out"
+			],
+			"N": [],
+			"O": [
+				"look_yaw_left"
+			],
+			"P": [
+				"replace"
+			],
+			"PageDown": [],
+			"PageUp": [],
+			"Plus": [
+				"zoom_in"
+			],
+			"Q": [],
+			"R": [
+				"rotate_xy_neg"
+			],
+			"Right": [
+				"move_x_pos"
+			],
+			"S": [
+				"move_z_pos"
+			],
+			"Shift": [
+				"soft_drop"
+			],
+			"Shift+0": [
+				"view_reset"
+			],
+			"Shift+1": [],
+			"Shift+2": [],
+			"Shift+3": [],
+			"Shift+4": [],
+			"Shift+5": [],
+			"Shift+6": [],
+			"Shift+7": [],
+			"Shift+8": [],
+			"Shift+9": [
+				"view_fit"
+			],
+			"Shift+A": [
+				"move_x_neg"
+			],
+			"Shift+B": [
+				"rotate_yz_pos"
+			],
+			"Shift+Backspace": [
+				"retry"
+			],
+			"Shift+BracketLeft": [],
+			"Shift+BracketRight": [],
+			"Shift+C": [
+				"hold"
+			],
+			"Shift+Ctrl": [
+				"soft_drop"
+			],
+			"Shift+D": [
+				"move_x_pos"
+			],
+			"Shift+Down": [
+				"move_z_pos"
+			],
+			"Shift+E": [],
+			"Shift+Equal": [
+				"zoom_in"
+			],
+			"Shift+F": [
+				"rotate_xz_neg"
+			],
+			"Shift+G": [
+				"rotate_xz_pos"
+			],
+			"Shift+H": [],
+			"Shift+I": [
+				"look_pitch_up"
+			],
+			"Shift+J": [],
+			"Shift+K": [
+				"look_pitch_down"
+			],
+			"Shift+Kp Add": [
+				"zoom_in"
+			],
+			"Shift+Kp Subtract": [
+				"zoom_out"
+			],
+			"Shift+L": [
+				"look_yaw_right"
+			],
+			"Shift+Left": [
+				"move_x_neg"
+			],
+			"Shift+M": [],
+			"Shift+Minus": [
+				"zoom_out"
+			],
+			"Shift+N": [],
+			"Shift+O": [
+				"look_yaw_left"
+			],
+			"Shift+P": [
+				"replace"
+			],
+			"Shift+PageDown": [],
+			"Shift+PageUp": [],
+			"Shift+Plus": [
+				"zoom_in"
+			],
+			"Shift+Q": [],
+			"Shift+R": [
+				"rotate_xy_neg"
+			],
+			"Shift+Right": [
+				"move_x_pos"
+			],
+			"Shift+S": [
+				"move_z_pos"
+			],
+			"Shift+Shift": [
+				"soft_drop"
+			],
+			"Shift+Space": [
+				"replace"
+			],
+			"Shift+T": [
+				"rotate_xy_pos"
+			],
+			"Shift+U": [],
+			"Shift+Up": [
+				"move_z_neg"
+			],
+			"Shift+V": [
+				"rotate_yz_neg"
+			],
+			"Shift+W": [
+				"move_z_neg"
+			],
+			"Shift+X": [
+				"move_y_pos"
+			],
+			"Shift+Y": [],
+			"Shift+Z": [
+				"move_y_neg"
+			],
+			"Space": [
+				"replace"
+			],
+			"T": [
+				"rotate_xy_pos"
+			],
+			"U": [],
+			"Up": [
+				"move_z_neg"
+			],
+			"V": [
+				"rotate_yz_neg"
+			],
+			"W": [
+				"move_z_neg"
+			],
+			"X": [
+				"move_y_pos"
+			],
+			"Y": [],
+			"Z": [
+				"move_y_neg"
+			]
+		},
+		"piece_helper": [
+			{
+				"action_ids": [
+					"live_3d_move_x_neg",
+					"live_3d_move_x_pos"
+				],
+				"item": [
+					"A/D",
+					"Left / Right [+X]",
+					{
+						"cockpit_direction": "horizontal",
+						"signed_axis": "+X"
+					}
+				],
+				"role": "translate"
+			},
+			{
+				"action_ids": [
+					"live_3d_move_z_neg",
+					"live_3d_move_z_pos"
+				],
+				"item": [
+					"W/S",
+					"Forward / Back [-Z]",
+					{
+						"cockpit_direction": "depth",
+						"signed_axis": "-Z"
+					}
+				],
+				"role": "translate"
+			},
+			{
+				"action_ids": [
+					"explorer_move_down",
+					"explorer_move_up"
+				],
+				"item": [
+					"Z/X",
+					"Y− / Y+",
+					{
+						"cockpit_direction": "vertical",
+						"signed_axis": "+Y"
+					}
+				],
+				"role": "translate"
+			},
+			{
+				"action_ids": [
+					"live_3d_rotate_xy_neg",
+					"live_3d_rotate_xy_pos"
+				],
+				"item": [
+					"R/T",
+					"Rotate XY"
+				],
+				"role": "rotate"
+			},
+			{
+				"action_ids": [
+					"live_3d_rotate_xz_neg",
+					"live_3d_rotate_xz_pos"
+				],
+				"item": [
+					"F/G",
+					"Rotate XZ"
+				],
+				"role": "rotate"
+			},
+			{
+				"action_ids": [
+					"live_3d_rotate_yz_neg",
+					"live_3d_rotate_yz_pos"
+				],
+				"item": [
+					"V/B",
+					"Rotate YZ"
+				],
+				"role": "rotate"
+			},
+			{
+				"action_ids": [
+					"explorer_replace_piece"
+				],
+				"item": [
+					"Space",
+					"Replace piece"
+				],
+				"role": "session"
+			},
+			{
+				"action_ids": [
+					"live_3d_reset"
+				],
+				"item": [
+					"Backspace",
+					"Retry object"
+				],
+				"role": "session"
+			}
+		],
+		"tabs": {
+			"Piece": {
+				"buttons": {
+					"./HBoxContainer_0/Button_0": {
+						"action": "",
+						"commands": [
+							"dimension_2"
+						],
+						"disabled": false,
+						"text": "2D"
+					},
+					"./HBoxContainer_0/Button_1": {
+						"action": "",
+						"commands": [
+							"dimension_3"
+						],
+						"disabled": false,
+						"text": "3D"
+					},
+					"./HBoxContainer_0/Button_2": {
+						"action": "",
+						"commands": [
+							"dimension_4"
+						],
+						"disabled": false,
+						"text": "4D"
+					},
+					"./HBoxContainer_0/Button_3": {
+						"action": "",
+						"commands": [
+							"play"
+						],
+						"disabled": false,
+						"text": "Play"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/Button_0": {
+						"action": "",
+						"commands": [
+							"replace"
+						],
+						"disabled": false,
+						"text": "Replace piece"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/Button_1": {
+						"action": "",
+						"commands": [
+							"target"
+						],
+						"disabled": false,
+						"text": "New target"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/Button_2": {
+						"action": "",
+						"commands": [
+							"retry"
+						],
+						"disabled": false,
+						"text": "Retry object"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_0": {
+						"action": "",
+						"commands": [
+							"move_x_neg"
+						],
+						"disabled": false,
+						"text": "−X"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_1": {
+						"action": "",
+						"commands": [
+							"move_x_pos"
+						],
+						"disabled": false,
+						"text": "+X"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_2": {
+						"action": "",
+						"commands": [
+							"move_y_neg"
+						],
+						"disabled": false,
+						"text": "−Y"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_3": {
+						"action": "",
+						"commands": [
+							"move_y_pos"
+						],
+						"disabled": false,
+						"text": "+Y"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_4": {
+						"action": "",
+						"commands": [
+							"move_z_neg"
+						],
+						"disabled": false,
+						"text": "−Z"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_5": {
+						"action": "",
+						"commands": [
+							"move_z_pos"
+						],
+						"disabled": false,
+						"text": "+Z"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_0": {
+						"action": "",
+						"commands": [
+							"rotate_xy_neg"
+						],
+						"disabled": false,
+						"text": "XY −"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_1": {
+						"action": "",
+						"commands": [
+							"rotate_xy_pos"
+						],
+						"disabled": false,
+						"text": "XY +"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_2": {
+						"action": "",
+						"commands": [
+							"rotate_xz_neg"
+						],
+						"disabled": false,
+						"text": "XZ −"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_3": {
+						"action": "",
+						"commands": [
+							"rotate_xz_pos"
+						],
+						"disabled": false,
+						"text": "XZ +"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_4": {
+						"action": "",
+						"commands": [
+							"rotate_yz_neg"
+						],
+						"disabled": false,
+						"text": "YZ −"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_5": {
+						"action": "",
+						"commands": [
+							"rotate_yz_pos"
+						],
+						"disabled": false,
+						"text": "YZ +"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/PracticePieceSelector/item_0": {
+						"commands": [
+							"piece_0"
+						],
+						"disabled": false,
+						"text": "I3"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/PracticePieceSelector/item_1": {
+						"commands": [
+							"piece_1"
+						],
+						"disabled": false,
+						"text": "O3"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/PracticePieceSelector/item_2": {
+						"commands": [
+							"piece_2"
+						],
+						"disabled": false,
+						"text": "L3"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/PracticePieceSelector/item_3": {
+						"commands": [
+							"piece_3"
+						],
+						"disabled": false,
+						"text": "T3"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/PracticePieceSelector/item_4": {
+						"commands": [
+							"piece_4"
+						],
+						"disabled": false,
+						"text": "S3"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/PracticePieceSelector/item_5": {
+						"commands": [
+							"piece_5"
+						],
+						"disabled": false,
+						"text": "J3D"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/PracticePieceSelector/item_6": {
+						"commands": [
+							"piece_6"
+						],
+						"disabled": false,
+						"text": "SCREW3"
+					}
+				},
+				"nodes": [
+					[
+						"./Label_0",
+						"Label",
+						""
+					],
+					[
+						"./HBoxContainer_0",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_2",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_3",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0",
+						"TabContainer",
+						""
+					],
+					[
+						"./TabContainer_0/HBoxContainer_0",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/HBoxContainer_0/TabBar_0",
+						"TabBar",
+						""
+					],
+					[
+						"./TabContainer_0/Piece",
+						"ScrollContainer",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0",
+						"VBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/PracticePieceSelector",
+						"OptionButton",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0",
+						"GridContainer",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_2",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_3",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_4",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_5",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/Label_1",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1",
+						"GridContainer",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_2",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_3",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_4",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_5",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/Button_2",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/_v_scroll",
+						"VScrollBar",
+						""
+					],
+					[
+						"./ScrollContainer_0",
+						"ScrollContainer",
+						""
+					],
+					[
+						"./ScrollContainer_0/Label_0",
+						"Label",
+						""
+					]
+				]
+			},
+			"Space": {
+				"buttons": {
+					"./HBoxContainer_0/Button_0": {
+						"action": "",
+						"commands": [
+							"dimension_2"
+						],
+						"disabled": false,
+						"text": "2D"
+					},
+					"./HBoxContainer_0/Button_1": {
+						"action": "",
+						"commands": [
+							"dimension_3"
+						],
+						"disabled": false,
+						"text": "3D"
+					},
+					"./HBoxContainer_0/Button_2": {
+						"action": "",
+						"commands": [
+							"dimension_4"
+						],
+						"disabled": false,
+						"text": "4D"
+					},
+					"./HBoxContainer_0/Button_3": {
+						"action": "",
+						"commands": [
+							"play"
+						],
+						"disabled": false,
+						"text": "Play"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_0": {
+						"action": "",
+						"commands": [
+							"board_x_neg"
+						],
+						"disabled": false,
+						"text": "−"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_1": {
+						"action": "",
+						"commands": [
+							"board_x_pos"
+						],
+						"disabled": false,
+						"text": "+"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_2": {
+						"action": "",
+						"commands": [
+							"board_y_neg"
+						],
+						"disabled": false,
+						"text": "−"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_3": {
+						"action": "",
+						"commands": [
+							"board_y_pos"
+						],
+						"disabled": false,
+						"text": "+"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_4": {
+						"action": "",
+						"commands": [
+							"board_z_neg"
+						],
+						"disabled": false,
+						"text": "−"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_5": {
+						"action": "",
+						"commands": [
+							"board_z_pos"
+						],
+						"disabled": false,
+						"text": "+"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector/item_0": {
+						"commands": [
+							"topology_bounded"
+						],
+						"disabled": false,
+						"text": "Bounded"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector/item_1": {
+						"commands": [],
+						"disabled": true,
+						"text": "Cylinder · wrap X"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector/item_2": {
+						"commands": [],
+						"disabled": true,
+						"text": "Cylinder · wrap Y"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector/item_3": {
+						"commands": [],
+						"disabled": true,
+						"text": "Torus"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector/item_4": {
+						"commands": [],
+						"disabled": true,
+						"text": "Möbius strip"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector/item_5": {
+						"commands": [],
+						"disabled": true,
+						"text": "Klein bottle"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector/item_6": {
+						"commands": [],
+						"disabled": true,
+						"text": "Projective · experimental"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector/item_7": {
+						"commands": [],
+						"disabled": true,
+						"text": "Sphere"
+					}
+				},
+				"nodes": [
+					[
+						"./Label_0",
+						"Label",
+						""
+					],
+					[
+						"./HBoxContainer_0",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_2",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_3",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0",
+						"TabContainer",
+						""
+					],
+					[
+						"./TabContainer_0/HBoxContainer_0",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/HBoxContainer_0/TabBar_0",
+						"TabBar",
+						""
+					],
+					[
+						"./TabContainer_0/Space",
+						"ScrollContainer",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0",
+						"VBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0",
+						"VBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector",
+						"OptionButton",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/Label_2",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize",
+						"GridContainer",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Label_1",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Label_2",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_2",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Label_3",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_3",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Label_4",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_4",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Label_5",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_5",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/Label_1",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/_v_scroll",
+						"VScrollBar",
+						""
+					],
+					[
+						"./ScrollContainer_0",
+						"ScrollContainer",
+						""
+					],
+					[
+						"./ScrollContainer_0/Label_0",
+						"Label",
+						""
+					]
+				]
+			},
+			"View": {
+				"buttons": {
+					"./HBoxContainer_0/Button_0": {
+						"action": "",
+						"commands": [
+							"dimension_2"
+						],
+						"disabled": false,
+						"text": "2D"
+					},
+					"./HBoxContainer_0/Button_1": {
+						"action": "",
+						"commands": [
+							"dimension_3"
+						],
+						"disabled": false,
+						"text": "3D"
+					},
+					"./HBoxContainer_0/Button_2": {
+						"action": "",
+						"commands": [
+							"dimension_4"
+						],
+						"disabled": false,
+						"text": "4D"
+					},
+					"./HBoxContainer_0/Button_3": {
+						"action": "",
+						"commands": [
+							"play"
+						],
+						"disabled": false,
+						"text": "Play"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_0/Button_0": {
+						"action": "live_4d_camera_zoom_out",
+						"commands": [
+							"zoom_out"
+						],
+						"disabled": false,
+						"text": "-"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_0/Button_1": {
+						"action": "live_4d_camera_zoom_in",
+						"commands": [
+							"zoom_in"
+						],
+						"disabled": false,
+						"text": "="
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_1/Button_0": {
+						"action": "replay_fit_view",
+						"commands": [
+							"view_fit"
+						],
+						"disabled": false,
+						"text": "9"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_2/Button_0": {
+						"action": "reset",
+						"commands": [
+							"view_reset"
+						],
+						"disabled": false,
+						"text": "0"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient/HBoxContainer_0/Button_0": {
+						"action": "live_4d_camera_yaw_left",
+						"commands": [
+							"look_yaw_left"
+						],
+						"disabled": false,
+						"text": "O ←"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient/HBoxContainer_0/Button_1": {
+						"action": "live_4d_camera_yaw_right",
+						"commands": [
+							"look_yaw_right"
+						],
+						"disabled": false,
+						"text": "L →"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient/HBoxContainer_1/Button_0": {
+						"action": "live_4d_camera_pitch_up",
+						"commands": [
+							"look_pitch_up"
+						],
+						"disabled": false,
+						"text": "I ↑"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient/HBoxContainer_1/Button_1": {
+						"action": "live_4d_camera_pitch_down",
+						"commands": [
+							"look_pitch_down"
+						],
+						"disabled": false,
+						"text": "K ↓"
+					}
+				},
+				"nodes": [
+					[
+						"./Label_0",
+						"Label",
+						""
+					],
+					[
+						"./HBoxContainer_0",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_2",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_3",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0",
+						"TabContainer",
+						""
+					],
+					[
+						"./TabContainer_0/HBoxContainer_0",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/HBoxContainer_0/TabBar_0",
+						"TabBar",
+						""
+					],
+					[
+						"./TabContainer_0/View",
+						"ScrollContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0",
+						"VBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip",
+						"PanelContainer",
+						"interactive_view_guidance"
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll",
+						"ScrollContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0",
+						"MarginContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0",
+						"VBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlTitle",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups",
+						"GridContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient",
+						"VBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient/ControlSectionTitle",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient/HBoxContainer_0",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient/HBoxContainer_0/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient/HBoxContainer_0/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient/HBoxContainer_0/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient/HBoxContainer_1",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient/HBoxContainer_1/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient/HBoxContainer_1/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient/HBoxContainer_1/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing",
+						"VBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/ControlSectionTitle",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_0",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_0/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_0/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_0/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_1",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_1/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_1/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_2",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_2/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_2/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer",
+						"VBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer/ControlSectionTitle",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer/ControlRow__view_pointer",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer/ControlRow__view_pointer/ControlRowOperation",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer/ControlRow__view_pointer/PointerGesture",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer/ControlRow__view_pointer/PointerGesture/PointerGestureKeycap",
+						"Label",
+						"pointer_gesture"
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer/HBoxContainer_1",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer/HBoxContainer_1/ControlRowOperation",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer/HBoxContainer_1/PointerGesture",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer/HBoxContainer_1/PointerGesture/PointerGestureKeycap",
+						"Label",
+						"pointer_gesture"
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer/HBoxContainer_2",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer/HBoxContainer_2/ControlRowOperation",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer/HBoxContainer_2/PointerGesture",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer/HBoxContainer_2/PointerGesture/PointerGestureKeycap",
+						"Label",
+						"pointer_gesture"
+					],
+					[
+						"./ScrollContainer_0",
+						"ScrollContainer",
+						""
+					],
+					[
+						"./ScrollContainer_0/Label_0",
+						"Label",
+						""
+					]
+				]
+			}
+		},
+		"view_helper": [
+			{
+				"action_ids": [
+					"live_4d_camera_yaw_left",
+					"live_4d_camera_yaw_right"
+				],
+				"item": [
+					"O/L",
+					"Yaw",
+					{
+						"negative_action": "live_4d_camera_yaw_left",
+						"negative_binding": "O",
+						"negative_command": "look_yaw_left",
+						"operation": "Yaw",
+						"positive_action": "live_4d_camera_yaw_right",
+						"positive_binding": "L",
+						"positive_command": "look_yaw_right"
+					}
+				],
+				"role": "view_orient"
+			},
+			{
+				"action_ids": [
+					"live_4d_camera_pitch_down",
+					"live_4d_camera_pitch_up"
+				],
+				"item": [
+					"I/K",
+					"Pitch",
+					{
+						"negative_action": "live_4d_camera_pitch_up",
+						"negative_binding": "I",
+						"negative_command": "look_pitch_up",
+						"operation": "Pitch",
+						"positive_action": "live_4d_camera_pitch_down",
+						"positive_binding": "K",
+						"positive_command": "look_pitch_down"
+					}
+				],
+				"role": "view_orient"
+			},
+			{
+				"action_ids": [
+					"live_4d_camera_zoom_in",
+					"live_4d_camera_zoom_out"
+				],
+				"item": [
+					"-/=",
+					"Zoom",
+					{
+						"negative_action": "live_4d_camera_zoom_out",
+						"negative_binding": "-",
+						"negative_command": "zoom_out",
+						"operation": "Zoom",
+						"positive_action": "live_4d_camera_zoom_in",
+						"positive_binding": "=",
+						"positive_command": "zoom_in"
+					}
+				],
+				"role": "view_framing"
+			},
+			{
+				"action_ids": [
+					"replay_fit_view"
+				],
+				"item": [
+					"9",
+					"Fit",
+					{
+						"action": "replay_fit_view",
+						"command": "view_fit",
+						"operation": "Fit"
+					}
+				],
+				"role": "view_framing"
+			},
+			{
+				"action_ids": [
+					"reset"
+				],
+				"item": [
+					"0",
+					"Reset",
+					{
+						"action": "reset",
+						"command": "view_reset",
+						"operation": "Reset"
+					}
+				],
+				"role": "view_framing"
+			},
+			{
+				"action_ids": [],
+				"item": [
+					"Left Drag",
+					"Rotate camera",
+					{
+						"operation": "Orient"
+					}
+				],
+				"role": "view_pointer"
+			},
+			{
+				"action_ids": [],
+				"item": [
+					"Right Drag",
+					"Translate camera",
+					{
+						"operation": "Translate"
+					}
+				],
+				"role": "view_pointer"
+			},
+			{
+				"action_ids": [],
+				"item": [
+					"Wheel",
+					"Zoom",
+					{
+						"operation": "Zoom"
+					}
+				],
+				"role": "view_pointer"
+			}
+		]
+	},
+	"4": {
+		"action_bindings": "[[\"explorer_move_up\",[\"Z\"]],[\"explorer_move_down\",[\"X\"]],[\"explorer_replace_piece\",[\"Space\",\"P\"]],[\"explorer_view_xy_neg\",[\"Shift+1\"]],[\"explorer_view_xy_pos\",[\"Shift+2\"]],[\"explorer_view_yz_neg\",[\"Shift+3\"]],[\"explorer_view_yz_pos\",[\"Shift+4\"]],[\"explorer_view_yw_neg\",[\"Shift+5\"]],[\"explorer_view_yw_pos\",[\"Shift+6\"]],[\"explorer_slice_neg\",[\"[\"]],[\"explorer_slice_pos\",[\"]\"]],[\"shell_toggle_fullscreen\",[\"F11\",\"Alt+Enter\"]],[\"live_move_left\",[\"Left\",\"A\"]],[\"live_move_right\",[\"Right\",\"D\"]],[\"live_rotate_cw\",[\"Up\",\"W\",\"X\"]],[\"live_rotate_ccw\",[\"Z\"]],[\"live_soft_drop\",[\"Down\",\"S\"]],[\"live_hard_drop\",[\"Space\"]],[\"live_hold\",[\"C\"]],[\"live_pause\",[\"P\"]],[\"live_reset\",[\"R\"]],[\"live_2d_move_left\",[\"Left\"]],[\"live_2d_move_right\",[\"Right\"]],[\"live_2d_rotate_cw\",[\"Up\"]],[\"live_2d_rotate_ccw\",[\"Z\"]],[\"live_2d_soft_drop\",[\"Down\"]],[\"live_2d_hard_drop\",[\"Space\"]],[\"live_2d_pause\",[\"P\"]],[\"live_3d_move_x_neg\",[\"Left\",\"A\"]],[\"live_3d_move_x_pos\",[\"Right\",\"D\"]],[\"live_3d_move_z_neg\",[\"Up\",\"W\"]],[\"live_3d_move_z_pos\",[\"Down\",\"S\"]],[\"live_3d_soft_drop\",[\"Shift\",\"Ctrl\"]],[\"live_3d_hard_drop\",[\"Space\"]],[\"live_3d_rotate_xy_neg\",[\"R\"]],[\"live_3d_rotate_xy_pos\",[\"T\"]],[\"live_3d_rotate_xz_neg\",[\"F\"]],[\"live_3d_rotate_xz_pos\",[\"G\"]],[\"live_3d_rotate_yz_neg\",[\"V\"]],[\"live_3d_rotate_yz_pos\",[\"B\"]],[\"live_3d_pause\",[\"P\"]],[\"live_3d_reset\",[\"Backspace\"]],[\"live_4d_move_x_neg\",[\"Left\",\"A\"]],[\"live_4d_move_x_pos\",[\"Right\",\"D\"]],[\"live_4d_move_z_neg\",[\"Up\",\"W\"]],[\"live_4d_move_z_pos\",[\"Down\",\"S\"]],[\"live_4d_move_w_neg\",[\"Q\"]],[\"live_4d_move_w_pos\",[\"E\"]],[\"live_4d_soft_drop\",[\"Shift\",\"Ctrl\"]],[\"live_4d_hard_drop\",[\"Space\"]],[\"live_4d_rotate_xy_neg\",[\"R\"]],[\"live_4d_rotate_xy_pos\",[\"T\"]],[\"live_4d_rotate_xz_neg\",[\"F\"]],[\"live_4d_rotate_xz_pos\",[\"G\"]],[\"live_4d_rotate_yz_neg\",[\"V\"]],[\"live_4d_rotate_yz_pos\",[\"B\"]],[\"live_4d_rotate_xw_neg\",[\"Y\"]],[\"live_4d_rotate_xw_pos\",[\"U\"]],[\"live_4d_rotate_yw_neg\",[\"H\"]],[\"live_4d_rotate_yw_pos\",[\"J\"]],[\"live_4d_rotate_zw_neg\",[\"N\"]],[\"live_4d_rotate_zw_pos\",[\"M\"]],[\"live_4d_pause\",[\"P\"]],[\"live_4d_reset\",[\"Backspace\"]],[\"live_4d_camera_pitch_up\",[\"I\"]],[\"live_4d_camera_pitch_down\",[\"K\"]],[\"live_4d_camera_yaw_left\",[\"O\"]],[\"live_4d_camera_yaw_right\",[\"L\"]],[\"live_4d_camera_zoom_in\",[\"=\",\"+\",\"+\"]],[\"live_4d_camera_zoom_out\",[\"-\",\"-\"]],[\"view_zx_neg\",[\"1\"]],[\"view_zx_pos\",[\"2\"]],[\"view_xw_neg\",[\"3\"]],[\"view_xw_pos\",[\"4\"]],[\"view_zw_neg\",[\"5\"]],[\"view_zw_pos\",[\"6\"]],[\"reset\",[\"0\"]]]",
+		"keys": {
+			"0": [
+				"view_reset"
+			],
+			"1": [
+				"basis_xz_neg"
+			],
+			"2": [
+				"basis_xz_pos"
+			],
+			"3": [
+				"basis_xw_neg"
+			],
+			"4": [
+				"basis_xw_pos"
+			],
+			"5": [
+				"basis_zw_neg"
+			],
+			"6": [
+				"basis_zw_pos"
+			],
+			"7": [],
+			"8": [],
+			"9": [
+				"view_fit"
+			],
+			"A": [
+				"move_x_neg"
+			],
+			"B": [
+				"rotate_yz_pos"
+			],
+			"Backspace": [
+				"retry"
+			],
+			"BracketLeft": [
+				"slice_neg"
+			],
+			"BracketRight": [
+				"slice_pos"
+			],
+			"C": [
+				"hold"
+			],
+			"Ctrl": [
+				"soft_drop"
+			],
+			"D": [
+				"move_x_pos"
+			],
+			"Down": [
+				"move_z_neg"
+			],
+			"E": [
+				"move_w_pos"
+			],
+			"Equal": [
+				"zoom_in"
+			],
+			"F": [
+				"rotate_xz_neg"
+			],
+			"G": [
+				"rotate_xz_pos"
+			],
+			"H": [
+				"rotate_yw_neg"
+			],
+			"I": [
+				"look_pitch_up"
+			],
+			"J": [
+				"rotate_yw_pos"
+			],
+			"K": [
+				"look_pitch_down"
+			],
+			"Kp Add": [
+				"zoom_in"
+			],
+			"Kp Subtract": [
+				"zoom_out"
+			],
+			"L": [
+				"look_yaw_right"
+			],
+			"Left": [
+				"move_x_neg"
+			],
+			"M": [
+				"rotate_zw_pos"
+			],
+			"Minus": [
+				"zoom_out"
+			],
+			"N": [
+				"rotate_zw_neg"
+			],
+			"O": [
+				"look_yaw_left"
+			],
+			"P": [
+				"replace"
+			],
+			"PageDown": [],
+			"PageUp": [],
+			"Plus": [
+				"zoom_in"
+			],
+			"Q": [
+				"move_w_neg"
+			],
+			"R": [
+				"rotate_xy_neg"
+			],
+			"Right": [
+				"move_x_pos"
+			],
+			"S": [
+				"move_z_neg"
+			],
+			"Shift": [
+				"soft_drop"
+			],
+			"Shift+0": [
+				"view_reset"
+			],
+			"Shift+1": [
+				"basis_xy_neg"
+			],
+			"Shift+2": [
+				"basis_xy_pos"
+			],
+			"Shift+3": [
+				"basis_yz_neg"
+			],
+			"Shift+4": [
+				"basis_yz_pos"
+			],
+			"Shift+5": [
+				"basis_yw_neg"
+			],
+			"Shift+6": [
+				"basis_yw_pos"
+			],
+			"Shift+7": [],
+			"Shift+8": [],
+			"Shift+9": [
+				"view_fit"
+			],
+			"Shift+A": [
+				"move_x_neg"
+			],
+			"Shift+B": [
+				"rotate_yz_pos"
+			],
+			"Shift+Backspace": [
+				"retry"
+			],
+			"Shift+BracketLeft": [
+				"slice_neg"
+			],
+			"Shift+BracketRight": [
+				"slice_pos"
+			],
+			"Shift+C": [
+				"hold"
+			],
+			"Shift+Ctrl": [
+				"soft_drop"
+			],
+			"Shift+D": [
+				"move_x_pos"
+			],
+			"Shift+Down": [
+				"move_z_neg"
+			],
+			"Shift+E": [
+				"move_w_pos"
+			],
+			"Shift+Equal": [
+				"zoom_in"
+			],
+			"Shift+F": [
+				"rotate_xz_neg"
+			],
+			"Shift+G": [
+				"rotate_xz_pos"
+			],
+			"Shift+H": [
+				"rotate_yw_neg"
+			],
+			"Shift+I": [
+				"look_pitch_up"
+			],
+			"Shift+J": [
+				"rotate_yw_pos"
+			],
+			"Shift+K": [
+				"look_pitch_down"
+			],
+			"Shift+Kp Add": [
+				"zoom_in"
+			],
+			"Shift+Kp Subtract": [
+				"zoom_out"
+			],
+			"Shift+L": [
+				"look_yaw_right"
+			],
+			"Shift+Left": [
+				"move_x_neg"
+			],
+			"Shift+M": [
+				"rotate_zw_pos"
+			],
+			"Shift+Minus": [
+				"zoom_out"
+			],
+			"Shift+N": [
+				"rotate_zw_neg"
+			],
+			"Shift+O": [
+				"look_yaw_left"
+			],
+			"Shift+P": [
+				"replace"
+			],
+			"Shift+PageDown": [],
+			"Shift+PageUp": [],
+			"Shift+Plus": [
+				"zoom_in"
+			],
+			"Shift+Q": [
+				"move_w_neg"
+			],
+			"Shift+R": [
+				"rotate_xy_neg"
+			],
+			"Shift+Right": [
+				"move_x_pos"
+			],
+			"Shift+S": [
+				"move_z_neg"
+			],
+			"Shift+Shift": [
+				"soft_drop"
+			],
+			"Shift+Space": [
+				"replace"
+			],
+			"Shift+T": [
+				"rotate_xy_pos"
+			],
+			"Shift+U": [
+				"rotate_xw_pos"
+			],
+			"Shift+Up": [
+				"move_z_pos"
+			],
+			"Shift+V": [
+				"rotate_yz_neg"
+			],
+			"Shift+W": [
+				"move_z_pos"
+			],
+			"Shift+X": [
+				"move_y_pos"
+			],
+			"Shift+Y": [
+				"rotate_xw_neg"
+			],
+			"Shift+Z": [
+				"move_y_neg"
+			],
+			"Space": [
+				"replace"
+			],
+			"T": [
+				"rotate_xy_pos"
+			],
+			"U": [
+				"rotate_xw_pos"
+			],
+			"Up": [
+				"move_z_pos"
+			],
+			"V": [
+				"rotate_yz_neg"
+			],
+			"W": [
+				"move_z_pos"
+			],
+			"X": [
+				"move_y_pos"
+			],
+			"Y": [
+				"rotate_xw_neg"
+			],
+			"Z": [
+				"move_y_neg"
+			]
+		},
+		"piece_helper": [
+			{
+				"action_ids": [
+					"live_4d_move_x_neg",
+					"live_4d_move_x_pos"
+				],
+				"item": [
+					"A / D",
+					"Left / Right [+X]",
+					{
+						"cockpit_direction": "horizontal",
+						"signed_axis": "+X"
+					}
+				],
+				"role": "translate"
+			},
+			{
+				"action_ids": [
+					"live_4d_move_z_neg",
+					"live_4d_move_z_pos"
+				],
+				"item": [
+					"W / S",
+					"Forward / Back [+Z]",
+					{
+						"cockpit_direction": "depth",
+						"signed_axis": "+Z"
+					}
+				],
+				"role": "translate"
+			},
+			{
+				"action_ids": [
+					"live_4d_move_w_neg",
+					"live_4d_move_w_pos"
+				],
+				"item": [
+					"Q / E",
+					"Slice - / + [+W]",
+					{
+						"cockpit_direction": "slice",
+						"signed_axis": "+W"
+					}
+				],
+				"role": "translate"
+			},
+			{
+				"action_ids": [
+					"explorer_move_down",
+					"explorer_move_up"
+				],
+				"item": [
+					"Z/X",
+					"Y− / Y+",
+					{
+						"cockpit_direction": "vertical",
+						"signed_axis": "+Y"
+					}
+				],
+				"role": "translate"
+			},
+			{
+				"action_ids": [
+					"live_4d_rotate_xy_neg",
+					"live_4d_rotate_xy_pos"
+				],
+				"item": [
+					"R / T",
+					"XY",
+					{
+						"operation": "XY"
+					}
+				],
+				"role": "rotate"
+			},
+			{
+				"action_ids": [
+					"live_4d_rotate_xz_neg",
+					"live_4d_rotate_xz_pos"
+				],
+				"item": [
+					"F / G",
+					"XZ",
+					{
+						"operation": "XZ"
+					}
+				],
+				"role": "rotate"
+			},
+			{
+				"action_ids": [
+					"live_4d_rotate_yz_neg",
+					"live_4d_rotate_yz_pos"
+				],
+				"item": [
+					"V / B",
+					"YZ",
+					{
+						"operation": "YZ"
+					}
+				],
+				"role": "rotate"
+			},
+			{
+				"action_ids": [
+					"live_4d_rotate_xw_neg",
+					"live_4d_rotate_xw_pos"
+				],
+				"item": [
+					"Y / U",
+					"XW",
+					{
+						"operation": "XW"
+					}
+				],
+				"role": "rotate"
+			},
+			{
+				"action_ids": [
+					"live_4d_rotate_yw_neg",
+					"live_4d_rotate_yw_pos"
+				],
+				"item": [
+					"H / J",
+					"YW",
+					{
+						"operation": "YW"
+					}
+				],
+				"role": "rotate"
+			},
+			{
+				"action_ids": [
+					"live_4d_rotate_zw_neg",
+					"live_4d_rotate_zw_pos"
+				],
+				"item": [
+					"N / M",
+					"ZW",
+					{
+						"operation": "ZW"
+					}
+				],
+				"role": "rotate"
+			},
+			{
+				"action_ids": [
+					"explorer_replace_piece"
+				],
+				"item": [
+					"Space",
+					"Replace piece"
+				],
+				"role": "session"
+			},
+			{
+				"action_ids": [
+					"live_4d_reset"
+				],
+				"item": [
+					"Backspace",
+					"Retry object"
+				],
+				"role": "session"
+			}
+		],
+		"tabs": {
+			"Piece": {
+				"buttons": {
+					"./HBoxContainer_0/Button_0": {
+						"action": "",
+						"commands": [
+							"dimension_2"
+						],
+						"disabled": false,
+						"text": "2D"
+					},
+					"./HBoxContainer_0/Button_1": {
+						"action": "",
+						"commands": [
+							"dimension_3"
+						],
+						"disabled": false,
+						"text": "3D"
+					},
+					"./HBoxContainer_0/Button_2": {
+						"action": "",
+						"commands": [
+							"dimension_4"
+						],
+						"disabled": false,
+						"text": "4D"
+					},
+					"./HBoxContainer_0/Button_3": {
+						"action": "",
+						"commands": [
+							"play"
+						],
+						"disabled": false,
+						"text": "Play"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/Button_0": {
+						"action": "",
+						"commands": [
+							"replace"
+						],
+						"disabled": false,
+						"text": "Replace piece"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/Button_1": {
+						"action": "",
+						"commands": [
+							"target"
+						],
+						"disabled": false,
+						"text": "New target"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/Button_2": {
+						"action": "",
+						"commands": [
+							"retry"
+						],
+						"disabled": false,
+						"text": "Retry object"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_0": {
+						"action": "",
+						"commands": [
+							"move_x_neg"
+						],
+						"disabled": false,
+						"text": "−X"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_1": {
+						"action": "",
+						"commands": [
+							"move_x_pos"
+						],
+						"disabled": false,
+						"text": "+X"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_2": {
+						"action": "",
+						"commands": [
+							"move_y_neg"
+						],
+						"disabled": false,
+						"text": "−Y"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_3": {
+						"action": "",
+						"commands": [
+							"move_y_pos"
+						],
+						"disabled": false,
+						"text": "+Y"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_4": {
+						"action": "",
+						"commands": [
+							"move_z_neg"
+						],
+						"disabled": false,
+						"text": "−Z"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_5": {
+						"action": "",
+						"commands": [
+							"move_z_pos"
+						],
+						"disabled": false,
+						"text": "+Z"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_6": {
+						"action": "",
+						"commands": [
+							"move_w_neg"
+						],
+						"disabled": false,
+						"text": "−W"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_7": {
+						"action": "",
+						"commands": [
+							"move_w_pos"
+						],
+						"disabled": false,
+						"text": "+W"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_0": {
+						"action": "",
+						"commands": [
+							"rotate_xy_neg"
+						],
+						"disabled": false,
+						"text": "XY −"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_1": {
+						"action": "",
+						"commands": [
+							"rotate_xy_pos"
+						],
+						"disabled": false,
+						"text": "XY +"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_10": {
+						"action": "",
+						"commands": [
+							"rotate_zw_neg"
+						],
+						"disabled": false,
+						"text": "ZW −"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_11": {
+						"action": "",
+						"commands": [
+							"rotate_zw_pos"
+						],
+						"disabled": false,
+						"text": "ZW +"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_2": {
+						"action": "",
+						"commands": [
+							"rotate_xz_neg"
+						],
+						"disabled": false,
+						"text": "XZ −"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_3": {
+						"action": "",
+						"commands": [
+							"rotate_xz_pos"
+						],
+						"disabled": false,
+						"text": "XZ +"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_4": {
+						"action": "",
+						"commands": [
+							"rotate_yz_neg"
+						],
+						"disabled": false,
+						"text": "YZ −"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_5": {
+						"action": "",
+						"commands": [
+							"rotate_yz_pos"
+						],
+						"disabled": false,
+						"text": "YZ +"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_6": {
+						"action": "",
+						"commands": [
+							"rotate_xw_neg"
+						],
+						"disabled": false,
+						"text": "XW −"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_7": {
+						"action": "",
+						"commands": [
+							"rotate_xw_pos"
+						],
+						"disabled": false,
+						"text": "XW +"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_8": {
+						"action": "",
+						"commands": [
+							"rotate_yw_neg"
+						],
+						"disabled": false,
+						"text": "YW −"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_9": {
+						"action": "",
+						"commands": [
+							"rotate_yw_pos"
+						],
+						"disabled": false,
+						"text": "YW +"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/PracticePieceSelector/item_0": {
+						"commands": [
+							"piece_0"
+						],
+						"disabled": false,
+						"text": "CROSS4"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/PracticePieceSelector/item_1": {
+						"commands": [
+							"piece_1"
+						],
+						"disabled": false,
+						"text": "SKEW4_A"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/PracticePieceSelector/item_2": {
+						"commands": [
+							"piece_2"
+						],
+						"disabled": false,
+						"text": "SKEW4_B"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/PracticePieceSelector/item_3": {
+						"commands": [
+							"piece_3"
+						],
+						"disabled": false,
+						"text": "TEE4"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/PracticePieceSelector/item_4": {
+						"commands": [
+							"piece_4"
+						],
+						"disabled": false,
+						"text": "CORK4"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/PracticePieceSelector/item_5": {
+						"commands": [
+							"piece_5"
+						],
+						"disabled": false,
+						"text": "STAIR4"
+					},
+					"./TabContainer_0/Piece/VBoxContainer_0/PracticePieceSelector/item_6": {
+						"commands": [
+							"piece_6"
+						],
+						"disabled": false,
+						"text": "FORK4"
+					}
+				},
+				"nodes": [
+					[
+						"./Label_0",
+						"Label",
+						""
+					],
+					[
+						"./HBoxContainer_0",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_2",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_3",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0",
+						"TabContainer",
+						""
+					],
+					[
+						"./TabContainer_0/HBoxContainer_0",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/HBoxContainer_0/TabBar_0",
+						"TabBar",
+						""
+					],
+					[
+						"./TabContainer_0/Piece",
+						"ScrollContainer",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0",
+						"VBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/PracticePieceSelector",
+						"OptionButton",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0",
+						"GridContainer",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_2",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_3",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_4",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_5",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_6",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_7",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/Label_1",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1",
+						"GridContainer",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_2",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_3",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_4",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_5",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_6",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_7",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_8",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_9",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_10",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_1/Button_11",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/VBoxContainer_0/Button_2",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Piece/_v_scroll",
+						"VScrollBar",
+						""
+					],
+					[
+						"./ScrollContainer_0",
+						"ScrollContainer",
+						""
+					],
+					[
+						"./ScrollContainer_0/Label_0",
+						"Label",
+						""
+					]
+				]
+			},
+			"Space": {
+				"buttons": {
+					"./HBoxContainer_0/Button_0": {
+						"action": "",
+						"commands": [
+							"dimension_2"
+						],
+						"disabled": false,
+						"text": "2D"
+					},
+					"./HBoxContainer_0/Button_1": {
+						"action": "",
+						"commands": [
+							"dimension_3"
+						],
+						"disabled": false,
+						"text": "3D"
+					},
+					"./HBoxContainer_0/Button_2": {
+						"action": "",
+						"commands": [
+							"dimension_4"
+						],
+						"disabled": false,
+						"text": "4D"
+					},
+					"./HBoxContainer_0/Button_3": {
+						"action": "",
+						"commands": [
+							"play"
+						],
+						"disabled": false,
+						"text": "Play"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_0": {
+						"action": "",
+						"commands": [
+							"board_x_neg"
+						],
+						"disabled": false,
+						"text": "−"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_1": {
+						"action": "",
+						"commands": [
+							"board_x_pos"
+						],
+						"disabled": false,
+						"text": "+"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_2": {
+						"action": "",
+						"commands": [
+							"board_y_neg"
+						],
+						"disabled": false,
+						"text": "−"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_3": {
+						"action": "",
+						"commands": [
+							"board_y_pos"
+						],
+						"disabled": false,
+						"text": "+"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_4": {
+						"action": "",
+						"commands": [
+							"board_z_neg"
+						],
+						"disabled": false,
+						"text": "−"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_5": {
+						"action": "",
+						"commands": [
+							"board_z_pos"
+						],
+						"disabled": false,
+						"text": "+"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_6": {
+						"action": "",
+						"commands": [
+							"board_w_neg"
+						],
+						"disabled": false,
+						"text": "−"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_7": {
+						"action": "",
+						"commands": [
+							"board_w_pos"
+						],
+						"disabled": false,
+						"text": "+"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector/item_0": {
+						"commands": [
+							"topology_bounded"
+						],
+						"disabled": false,
+						"text": "Bounded"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector/item_1": {
+						"commands": [],
+						"disabled": true,
+						"text": "Cylinder · wrap X"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector/item_2": {
+						"commands": [],
+						"disabled": true,
+						"text": "Cylinder · wrap Y"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector/item_3": {
+						"commands": [],
+						"disabled": true,
+						"text": "Torus"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector/item_4": {
+						"commands": [],
+						"disabled": true,
+						"text": "Möbius strip"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector/item_5": {
+						"commands": [],
+						"disabled": true,
+						"text": "Klein bottle"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector/item_6": {
+						"commands": [],
+						"disabled": true,
+						"text": "Projective · experimental"
+					},
+					"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector/item_7": {
+						"commands": [],
+						"disabled": true,
+						"text": "Sphere"
+					}
+				},
+				"nodes": [
+					[
+						"./Label_0",
+						"Label",
+						""
+					],
+					[
+						"./HBoxContainer_0",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_2",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_3",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0",
+						"TabContainer",
+						""
+					],
+					[
+						"./TabContainer_0/HBoxContainer_0",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/HBoxContainer_0/TabBar_0",
+						"TabBar",
+						""
+					],
+					[
+						"./TabContainer_0/Space",
+						"ScrollContainer",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0",
+						"VBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0",
+						"VBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/ExplorerTopologySelector",
+						"OptionButton",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/VBoxContainer_0/Label_2",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize",
+						"GridContainer",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Label_1",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Label_2",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_2",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Label_3",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_3",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Label_4",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_4",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Label_5",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_5",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Label_6",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_6",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Label_7",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/ExplorerBoardSize/Button_7",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/Space/VBoxContainer_0/Label_1",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/Space/_v_scroll",
+						"VScrollBar",
+						""
+					],
+					[
+						"./ScrollContainer_0",
+						"ScrollContainer",
+						""
+					],
+					[
+						"./ScrollContainer_0/Label_0",
+						"Label",
+						""
+					]
+				]
+			},
+			"View": {
+				"buttons": {
+					"./HBoxContainer_0/Button_0": {
+						"action": "",
+						"commands": [
+							"dimension_2"
+						],
+						"disabled": false,
+						"text": "2D"
+					},
+					"./HBoxContainer_0/Button_1": {
+						"action": "",
+						"commands": [
+							"dimension_3"
+						],
+						"disabled": false,
+						"text": "3D"
+					},
+					"./HBoxContainer_0/Button_2": {
+						"action": "",
+						"commands": [
+							"dimension_4"
+						],
+						"disabled": false,
+						"text": "4D"
+					},
+					"./HBoxContainer_0/Button_3": {
+						"action": "",
+						"commands": [
+							"play"
+						],
+						"disabled": false,
+						"text": "Play"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_0/Button_0": {
+						"action": "explorer_view_xy_neg",
+						"commands": [
+							"basis_xy_neg"
+						],
+						"disabled": false,
+						"text": "⇧1"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_0/Button_1": {
+						"action": "explorer_view_xy_pos",
+						"commands": [
+							"basis_xy_pos"
+						],
+						"disabled": false,
+						"text": "⇧2"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_1/Button_0": {
+						"action": "view_zx_neg",
+						"commands": [
+							"basis_xz_neg"
+						],
+						"disabled": false,
+						"text": "1"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_1/Button_1": {
+						"action": "view_zx_pos",
+						"commands": [
+							"basis_xz_pos"
+						],
+						"disabled": false,
+						"text": "2"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_2/Button_0": {
+						"action": "explorer_view_yz_neg",
+						"commands": [
+							"basis_yz_neg"
+						],
+						"disabled": false,
+						"text": "⇧3"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_2/Button_1": {
+						"action": "explorer_view_yz_pos",
+						"commands": [
+							"basis_yz_pos"
+						],
+						"disabled": false,
+						"text": "⇧4"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_3/Button_0": {
+						"action": "view_xw_neg",
+						"commands": [
+							"basis_xw_neg"
+						],
+						"disabled": false,
+						"text": "3"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_3/Button_1": {
+						"action": "view_xw_pos",
+						"commands": [
+							"basis_xw_pos"
+						],
+						"disabled": false,
+						"text": "4"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_4/Button_0": {
+						"action": "explorer_view_yw_neg",
+						"commands": [
+							"basis_yw_neg"
+						],
+						"disabled": false,
+						"text": "⇧5"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_4/Button_1": {
+						"action": "explorer_view_yw_pos",
+						"commands": [
+							"basis_yw_pos"
+						],
+						"disabled": false,
+						"text": "⇧6"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_5/Button_0": {
+						"action": "view_zw_neg",
+						"commands": [
+							"basis_zw_neg"
+						],
+						"disabled": false,
+						"text": "5"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_5/Button_1": {
+						"action": "view_zw_pos",
+						"commands": [
+							"basis_zw_pos"
+						],
+						"disabled": false,
+						"text": "6"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_0/Button_0": {
+						"action": "live_4d_camera_zoom_out",
+						"commands": [
+							"zoom_out"
+						],
+						"disabled": false,
+						"text": "-"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_0/Button_1": {
+						"action": "live_4d_camera_zoom_in",
+						"commands": [
+							"zoom_in"
+						],
+						"disabled": false,
+						"text": "="
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_1/Button_0": {
+						"action": "replay_fit_view",
+						"commands": [
+							"view_fit"
+						],
+						"disabled": false,
+						"text": "9"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_2/Button_0": {
+						"action": "reset",
+						"commands": [
+							"view_reset"
+						],
+						"disabled": false,
+						"text": "0"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient/HBoxContainer_0/Button_0": {
+						"action": "live_4d_camera_yaw_left",
+						"commands": [
+							"look_yaw_left"
+						],
+						"disabled": false,
+						"text": "O ←"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient/HBoxContainer_0/Button_1": {
+						"action": "live_4d_camera_yaw_right",
+						"commands": [
+							"look_yaw_right"
+						],
+						"disabled": false,
+						"text": "L →"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient/HBoxContainer_1/Button_0": {
+						"action": "live_4d_camera_pitch_up",
+						"commands": [
+							"look_pitch_up"
+						],
+						"disabled": false,
+						"text": "I ↑"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient/HBoxContainer_1/Button_1": {
+						"action": "live_4d_camera_pitch_down",
+						"commands": [
+							"look_pitch_down"
+						],
+						"disabled": false,
+						"text": "K ↓"
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_slice/HBoxContainer_0/Button_0": {
+						"action": "explorer_slice_neg",
+						"commands": [
+							"slice_neg"
+						],
+						"disabled": false,
+						"text": "["
+					},
+					"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_slice/HBoxContainer_0/Button_1": {
+						"action": "explorer_slice_pos",
+						"commands": [
+							"slice_pos"
+						],
+						"disabled": false,
+						"text": "]"
+					}
+				},
+				"nodes": [
+					[
+						"./Label_0",
+						"Label",
+						""
+					],
+					[
+						"./HBoxContainer_0",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_2",
+						"Button",
+						""
+					],
+					[
+						"./HBoxContainer_0/Button_3",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0",
+						"TabContainer",
+						""
+					],
+					[
+						"./TabContainer_0/HBoxContainer_0",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/HBoxContainer_0/TabBar_0",
+						"TabBar",
+						""
+					],
+					[
+						"./TabContainer_0/View",
+						"ScrollContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0",
+						"VBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip",
+						"PanelContainer",
+						"interactive_view_guidance"
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll",
+						"ScrollContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0",
+						"MarginContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0",
+						"VBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlTitle",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups",
+						"GridContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact",
+						"VBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/ControlSectionTitle",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_0",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_0/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_0/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_0/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_1",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_1/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_1/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_1/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_2",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_2/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_2/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_2/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_3",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_3/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_3/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_3/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_4",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_4/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_4/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_4/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_5",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_5/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_5/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_exact/HBoxContainer_5/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient",
+						"VBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient/ControlSectionTitle",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient/HBoxContainer_0",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient/HBoxContainer_0/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient/HBoxContainer_0/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient/HBoxContainer_0/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient/HBoxContainer_1",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient/HBoxContainer_1/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient/HBoxContainer_1/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_orient/HBoxContainer_1/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing",
+						"VBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/ControlSectionTitle",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_0",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_0/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_0/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_0/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_1",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_1/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_1/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_2",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_2/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_framing/HBoxContainer_2/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_slice",
+						"VBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_slice/ControlSectionTitle",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_slice/HBoxContainer_0",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_slice/HBoxContainer_0/Label_0",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_slice/HBoxContainer_0/Button_0",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_slice/HBoxContainer_0/Button_1",
+						"Button",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer",
+						"VBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer/ControlSectionTitle",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer/ControlRow__view_pointer",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer/ControlRow__view_pointer/ControlRowOperation",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer/ControlRow__view_pointer/PointerGesture",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer/ControlRow__view_pointer/PointerGesture/PointerGestureKeycap",
+						"Label",
+						"pointer_gesture"
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer/HBoxContainer_1",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer/HBoxContainer_1/ControlRowOperation",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer/HBoxContainer_1/PointerGesture",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer/HBoxContainer_1/PointerGesture/PointerGestureKeycap",
+						"Label",
+						"pointer_gesture"
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer/HBoxContainer_2",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer/HBoxContainer_2/ControlRowOperation",
+						"Label",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer/HBoxContainer_2/PointerGesture",
+						"HBoxContainer",
+						""
+					],
+					[
+						"./TabContainer_0/View/VBoxContainer_0/LiveViewControlStrip/ViewHelpScroll/MarginContainer_0/VBoxContainer_0/ViewControlGroups/ControlSection__view_pointer/HBoxContainer_2/PointerGesture/PointerGestureKeycap",
+						"Label",
+						"pointer_gesture"
+					],
+					[
+						"./ScrollContainer_0",
+						"ScrollContainer",
+						""
+					],
+					[
+						"./ScrollContainer_0/Label_0",
+						"Label",
+						""
+					]
+				]
+			}
+		},
+		"view_helper": [
+			{
+				"action_ids": [
+					"explorer_view_xy_neg",
+					"explorer_view_xy_pos"
+				],
+				"item": [
+					"Shift+1/Shift+2",
+					"XY",
+					{
+						"negative_action": "explorer_view_xy_neg",
+						"negative_binding": "Shift+1",
+						"negative_command": "basis_xy_neg",
+						"operation": "XY",
+						"positive_action": "explorer_view_xy_pos",
+						"positive_binding": "Shift+2",
+						"positive_command": "basis_xy_pos"
+					}
+				],
+				"role": "view_exact"
+			},
+			{
+				"action_ids": [
+					"view_zx_neg",
+					"view_zx_pos"
+				],
+				"item": [
+					"1/2",
+					"XZ",
+					{
+						"negative_action": "view_zx_neg",
+						"negative_binding": "1",
+						"negative_command": "basis_xz_neg",
+						"operation": "XZ",
+						"positive_action": "view_zx_pos",
+						"positive_binding": "2",
+						"positive_command": "basis_xz_pos"
+					}
+				],
+				"role": "view_exact"
+			},
+			{
+				"action_ids": [
+					"explorer_view_yz_neg",
+					"explorer_view_yz_pos"
+				],
+				"item": [
+					"Shift+3/Shift+4",
+					"YZ",
+					{
+						"negative_action": "explorer_view_yz_neg",
+						"negative_binding": "Shift+3",
+						"negative_command": "basis_yz_neg",
+						"operation": "YZ",
+						"positive_action": "explorer_view_yz_pos",
+						"positive_binding": "Shift+4",
+						"positive_command": "basis_yz_pos"
+					}
+				],
+				"role": "view_exact"
+			},
+			{
+				"action_ids": [
+					"view_xw_neg",
+					"view_xw_pos"
+				],
+				"item": [
+					"3/4",
+					"XW",
+					{
+						"negative_action": "view_xw_neg",
+						"negative_binding": "3",
+						"negative_command": "basis_xw_neg",
+						"operation": "XW",
+						"positive_action": "view_xw_pos",
+						"positive_binding": "4",
+						"positive_command": "basis_xw_pos"
+					}
+				],
+				"role": "view_exact"
+			},
+			{
+				"action_ids": [
+					"explorer_view_yw_neg",
+					"explorer_view_yw_pos"
+				],
+				"item": [
+					"Shift+5/Shift+6",
+					"YW",
+					{
+						"negative_action": "explorer_view_yw_neg",
+						"negative_binding": "Shift+5",
+						"negative_command": "basis_yw_neg",
+						"operation": "YW",
+						"positive_action": "explorer_view_yw_pos",
+						"positive_binding": "Shift+6",
+						"positive_command": "basis_yw_pos"
+					}
+				],
+				"role": "view_exact"
+			},
+			{
+				"action_ids": [
+					"view_zw_neg",
+					"view_zw_pos"
+				],
+				"item": [
+					"5/6",
+					"ZW",
+					{
+						"negative_action": "view_zw_neg",
+						"negative_binding": "5",
+						"negative_command": "basis_zw_neg",
+						"operation": "ZW",
+						"positive_action": "view_zw_pos",
+						"positive_binding": "6",
+						"positive_command": "basis_zw_pos"
+					}
+				],
+				"role": "view_exact"
+			},
+			{
+				"action_ids": [
+					"live_4d_camera_yaw_left",
+					"live_4d_camera_yaw_right"
+				],
+				"item": [
+					"O/L",
+					"Yaw",
+					{
+						"negative_action": "live_4d_camera_yaw_left",
+						"negative_binding": "O",
+						"negative_command": "look_yaw_left",
+						"operation": "Yaw",
+						"positive_action": "live_4d_camera_yaw_right",
+						"positive_binding": "L",
+						"positive_command": "look_yaw_right"
+					}
+				],
+				"role": "view_orient"
+			},
+			{
+				"action_ids": [
+					"live_4d_camera_pitch_down",
+					"live_4d_camera_pitch_up"
+				],
+				"item": [
+					"I/K",
+					"Pitch",
+					{
+						"negative_action": "live_4d_camera_pitch_up",
+						"negative_binding": "I",
+						"negative_command": "look_pitch_up",
+						"operation": "Pitch",
+						"positive_action": "live_4d_camera_pitch_down",
+						"positive_binding": "K",
+						"positive_command": "look_pitch_down"
+					}
+				],
+				"role": "view_orient"
+			},
+			{
+				"action_ids": [
+					"live_4d_camera_zoom_in",
+					"live_4d_camera_zoom_out"
+				],
+				"item": [
+					"-/=",
+					"Zoom",
+					{
+						"negative_action": "live_4d_camera_zoom_out",
+						"negative_binding": "-",
+						"negative_command": "zoom_out",
+						"operation": "Zoom",
+						"positive_action": "live_4d_camera_zoom_in",
+						"positive_binding": "=",
+						"positive_command": "zoom_in"
+					}
+				],
+				"role": "view_framing"
+			},
+			{
+				"action_ids": [
+					"replay_fit_view"
+				],
+				"item": [
+					"9",
+					"Fit",
+					{
+						"action": "replay_fit_view",
+						"command": "view_fit",
+						"operation": "Fit"
+					}
+				],
+				"role": "view_framing"
+			},
+			{
+				"action_ids": [
+					"reset"
+				],
+				"item": [
+					"0",
+					"Reset",
+					{
+						"action": "reset",
+						"command": "view_reset",
+						"operation": "Reset"
+					}
+				],
+				"role": "view_framing"
+			},
+			{
+				"action_ids": [
+					"explorer_slice_neg",
+					"explorer_slice_pos"
+				],
+				"item": [
+					"[/]",
+					"Slice",
+					{
+						"negative_action": "explorer_slice_neg",
+						"negative_binding": "[",
+						"negative_command": "slice_neg",
+						"operation": "Slice",
+						"positive_action": "explorer_slice_pos",
+						"positive_binding": "]",
+						"positive_command": "slice_pos"
+					}
+				],
+				"role": "view_slice"
+			},
+			{
+				"action_ids": [],
+				"item": [
+					"Left Drag",
+					"Rotate camera",
+					{
+						"operation": "Orient"
+					}
+				],
+				"role": "view_pointer"
+			},
+			{
+				"action_ids": [],
+				"item": [
+					"Right Drag",
+					"Translate camera",
+					{
+						"operation": "Translate"
+					}
+				],
+				"role": "view_pointer"
+			},
+			{
+				"action_ids": [],
+				"item": [
+					"Wheel",
+					"Zoom",
+					{
+						"operation": "Zoom"
+					}
+				],
+				"role": "view_pointer"
+			}
+		]
+	}
+}

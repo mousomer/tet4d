@@ -462,11 +462,25 @@ Implemented in code:
 
 ### 4.4 Explorer-only movement contract
 
-The bounded Godot practice Explorer registers `explorer_move_up` and
-`explorer_move_down` in `LiveInputContract` with Z (up) and X (down) defaults
-accessible on compact MacBook keyboards. PageUp/PageDown remain aliases.
+The Godot practice Explorer owns independent `explorer_*` action IDs for
+movement, object rotation, Retry, camera/view, Fit and Reset. One descriptor
+drives dispatch and helper bindings; rebinding Live actions cannot change
+Explorer, and Explorer rebinding cannot change ordinary Play. Godot installs
+defaults at launch and supports process-local InputMap changes; it does not
+load the legacy Python saved key profiles described elsewhere in this RDS.
+
+Cockpit Phase 5 keys (Q2/Q3, landed 2026-11-15): Z/X move Y up/down in every
+Explorer dimension through `explorer_move_y_neg/pos`; 2D additionally keeps
+`explorer_2d_move_y_neg/pos` on W/S and Up/Down. PageUp/PageDown are retired
+from Explorer. X/Z/W and piece rotations use
+`explorer_move_<axis>_<sign>` and `explorer_rotate_<plane>_<sign>`; Retry is
+`explorer_retry` on Backspace. Fit is `explorer_fit_view` on 9 in every
+dimension, plus double-click; F no longer fits in 2D. The §4.1 profile lines
+above describe the legacy Python profiles and are not read by Godot.
+Q4 (3D view turns) remains open.
+
 `explorer_replace_piece` uses Space (with P as an alias) to choose the next native catalogue piece in
-practice; Space is consumed before ordinary hard-drop dispatch. P retains its ordinary Pause behavior outside Explorer.
+practice; Space and Explorer movement bindings are claimed before GUI activation/navigation. Arrow keys move the piece even when a cockpit tab or control has focus; releases and OS echo cannot navigate menus. Modal UI retains input ownership. Other Explorer keyboard actions use the unified unhandled-input path. P retains its ordinary Pause behavior outside Explorer.
 The unified VIEW helper/control panel exposes all six 4D view planes. Its
 keycaps display current bindings and are clickable: Shift+1/2 selects XY−/+,
 Shift+3/4 selects YZ−/+, and Shift+5/6 selects YW−/+. Plain 1–6 retain

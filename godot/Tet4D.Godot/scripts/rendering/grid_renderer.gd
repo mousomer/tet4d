@@ -79,8 +79,6 @@ func rebuild(
 			_add_floor_face(geometry, display_mode, slice_root)
 		_add_lattice(grid_lines, GridDisplayMode.shows_rear_faces_only(grid_mode), display_mode, high_contrast,
 			ReplayVisuals.scaffold_alpha(scaffold_opacity, grid_opacity), cell_opacity, slice_root)
-		if dimension == 2:
-			_add_spawn_entry_cue(geometry, display_mode, high_contrast, slice_root)
 		if dimension >= 4:
 			var frame := Node3D.new()
 			frame.name = "ActiveSliceFrame"
@@ -238,37 +236,6 @@ func _add_floor_face(geometry, display_mode: String, parent: Node3D) -> void:
 	floor.material_override = ReplayVisuals.live_board_floor_material(display_mode)
 	floor.position = geometry.center + Vector3(0.0, min_pos.y + 0.0125, 0.0)
 	parent.add_child(floor)
-
-
-func _add_spawn_entry_cue(
-	geometry,
-	display_mode: String,
-	high_contrast: bool,
-	parent: Node3D
-) -> void:
-	var bounds: Dictionary = geometry.local_bounds()
-	var min_pos: Vector3 = bounds.get("min", Vector3.ZERO)
-	var max_pos: Vector3 = bounds.get("max", Vector3.ZERO)
-	var label := Label3D.new()
-	label.name = "SpawnEntryLabel"
-	label.text = "SPAWN ENTRY  ↘"
-	label.font_size = ReplayVisuals.SPAWN_ENTRY_LABEL_FONT_SIZE
-	label.pixel_size = ReplayVisuals.SPAWN_ENTRY_LABEL_PIXEL_SIZE
-	label.modulate = ReplayVisuals.color_for_role(
-		ReplayVisuals.ROLE_TEXT if high_contrast else ReplayVisuals.ROLE_TEXT_DIM,
-		display_mode
-	)
-	label.outline_modulate = ReplayVisuals.color_for_role(ReplayVisuals.ROLE_BACKGROUND, display_mode)
-	label.outline_size = ReplayVisuals.SPAWN_ENTRY_LABEL_OUTLINE_SIZE
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	label.position = Vector3(
-		min_pos.x - 0.18,
-		max_pos.y + ReplayVisuals.SPAWN_ENTRY_LABEL_VERTICAL_OFFSET,
-		min_pos.z - 0.03
-	)
-	label.set_meta("presentation_role", "board.spawn_entry_cue")
-	parent.add_child(label)
 
 
 func _add_geometry_segments(

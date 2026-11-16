@@ -6,20 +6,20 @@ and their source. The architecture contract is
 `docs/architecture/workspace_governance_v0_1.md`.
 The Stage 56H unified baseline is committed at `0cb30958`.
 ## Purpose
-
 This file contains only the compact state needed to resume staged or
 phase-dependent work. It is not workflow authority, a CI diary, a completed
 stage archive, a task-contract ledger, or a future programme.
 ## Active Focus
-
-Explorer T1: the owner accepted PR #176's pivot fix and authorized dependency-order integration of #172–#176. Remaining Correction 4B catalog/schema/evidence P2 findings are explicitly deferred and nonblocking; no new review cycle or schema refactor is required for this merge. See `docs/BACKLOG.md` and `docs/architecture/explorer_topology_t2_transfer_preparation.md`. Native implementation, runtime conformance and authority transfer remain unstarted.
+Explorer cockpit Phases 0–2 (lock, descriptor and independent input dispatch) are implemented and verified.
+Owner debug reconnection uses compact 2D shell chrome and shared projected helper directions, omits the duplicate vertical row, and adds no functions; focused checks pass. Phases 3–6 and human visual acceptance remain open under `docs/plans/explorer_cockpit_unification.md`.
+Explorer T2A implements the native bounded/cylinder/torus translation candidate and permanent preservation suite described in `docs/architecture/explorer_topology_t2a_native_transport.md`. T1 PRs #172–#176 are the accepted baseline; remaining Correction 4B P2 findings stay deferred. T2B is integrated; the owner-authorized 2D surface candidate adds Möbius/Klein/projective, coherent rotations/Undo and compatibility two-chart S² under `docs/architecture/explorer_surface_runtime.md`. The topology-first amendment selects single-square `sphere_adjacent_positive` and probe semantics for Klein/RP²/S² (RDS §2.5); physical inverse recovery and geometric coherence do not gate translation; destination injectivity remains mandatory. Complete T2/T6 acceptance remains open. Runtime authority has not transferred. See `docs/BACKLOG.md` and `docs/architecture/explorer_topology_t2_transfer_preparation.md`.
+Bounded practice now exposes 2D through the flat live renderer and existing
+native geometry/pose queries; T2 topology transport and transfer remain open.
 Bounded MVP novice acceptance remains pending in `docs/plans/bounded_practice_explorer.md`; unified VIEW helpers and compact Settings/Designer menus remain the baseline.
-
 Machine-readable handoff state. `status` is `active` only on a feature branch
 or draft PR and must name that branch; it is `none` on the default branch and
 on any non-draft PR targeting it. `tools/governance/validate_handoff_lifecycle.py`
 enforces this.
-
 <!-- BEGIN HANDOFF:state -->
 ```json
 {
@@ -30,13 +30,10 @@ enforces this.
 }
 ```
 <!-- END HANDOFF:state -->
-
 <!-- BEGIN HANDOFF:notes -->
 No active handoff.
 <!-- END HANDOFF:notes -->
-
 ## Current Authority
-
 - Workspace/project routing: `.governance/workspace.json` and
   `config/governance/project.json`
 - Unmigrated machine governance and route compatibility facade:
@@ -52,8 +49,9 @@ No active handoff.
 
 ## Next Acceptance Boundary
 
-Next: bounded Designer text-size review; replay toolbar assessment stays separate.
-Repair accepted; publication/master CI is tracked on PR #162. 58B scale stays frozen.
+Next: land cockpit Phases 0–2, then extract the Phase 3 cockpit owner under the plan.
+Bounded MVP novice acceptance and T2 acceptance/authority transfer remain separate open gates.
+Designer text-size review and replay toolbar assessment remain separate; 58B scale stays frozen.
 Stage 58C.7 is owner-accepted with documented tradeoffs; see
 `docs/history/stage_58c_owner_acceptance_2026_11_02.md`. Stage 58D stays separate.
 The Stage 56H human playability checkpoint retains its task contract at
@@ -134,6 +132,8 @@ Tutorial wording drift guard:
 1. Lesson copy must not start with `Goal:` or `Action:`.
 2. Tutorial overlay must keep `Do this:`, `Tip:`, and `USE:` tokens.
 <!-- END GENERATED:current_state_drift_watch -->
+
+Explorer topology-switch repair (2026-11-16): seam-crossed Mobius/other poses now recover the Retry baseline atomically when a different space is chosen, with visible feedback. Compatible poses stay in place. Explorer regressions, cockpit/typography locks and full repository gate pass; prior integration and cellwise authority retained.
 
 ## Restart Checklist
 

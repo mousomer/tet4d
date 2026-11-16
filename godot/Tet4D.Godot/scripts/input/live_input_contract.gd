@@ -15,8 +15,47 @@ const CAMERA_CONTROL_SPECS := {
 }
 
 const ACTION_SPECS := {
-	"explorer_move_up": {"keys": [KEY_Z, KEY_PAGEUP], "display_key": KEY_Z, "context": "explorer"},
-	"explorer_move_down": {"keys": [KEY_X, KEY_PAGEDOWN], "display_key": KEY_X, "context": "explorer"},
+	"explorer_reject_hold": {"keys": [KEY_C], "display_key": KEY_C, "context": "explorer"},
+	"explorer_reject_soft_drop": {"keys": [KEY_SHIFT, KEY_CTRL], "display_key": KEY_SHIFT, "context": "explorer"},
+	"explorer_move_x_neg": {"keys": [KEY_LEFT, KEY_A], "display_key": KEY_A, "context": "explorer"},
+	"explorer_move_x_pos": {"keys": [KEY_RIGHT, KEY_D], "display_key": KEY_D, "context": "explorer"},
+	"explorer_move_z_neg": {"keys": [KEY_UP, KEY_W], "display_key": KEY_W, "context": "explorer"},
+	"explorer_move_z_pos": {"keys": [KEY_DOWN, KEY_S], "display_key": KEY_S, "context": "explorer"},
+	"explorer_2d_move_y_neg": {"keys": [KEY_UP, KEY_W], "display_key": KEY_W, "context": "explorer"},
+	"explorer_2d_move_y_pos": {"keys": [KEY_DOWN, KEY_S], "display_key": KEY_S, "context": "explorer"},
+	"explorer_move_w_neg": {"keys": [KEY_Q], "display_key": KEY_Q, "context": "explorer"},
+	"explorer_move_w_pos": {"keys": [KEY_E], "display_key": KEY_E, "context": "explorer"},
+	"explorer_move_y_neg": {"keys": [KEY_Z], "display_key": KEY_Z, "context": "explorer"},
+	"explorer_move_y_pos": {"keys": [KEY_X], "display_key": KEY_X, "context": "explorer"},
+	"explorer_retry": {"keys": [KEY_BACKSPACE], "display_key": KEY_BACKSPACE, "context": "explorer"},
+	"explorer_reset_view": {"keys": [KEY_0], "display_key": KEY_0, "context": "explorer"},
+	"explorer_camera_pitch_up": {"keys": [KEY_I], "display_key": KEY_I, "context": "explorer"},
+	"explorer_camera_pitch_down": {"keys": [KEY_K], "display_key": KEY_K, "context": "explorer"},
+	"explorer_camera_yaw_left": {"keys": [KEY_O], "display_key": KEY_O, "context": "explorer"},
+	"explorer_camera_yaw_right": {"keys": [KEY_L], "display_key": KEY_L, "context": "explorer"},
+	"explorer_camera_zoom_in": {"keys": [KEY_EQUAL, KEY_PLUS, KEY_KP_ADD], "display_key": KEY_EQUAL, "context": "explorer"},
+	"explorer_camera_zoom_out": {"keys": [KEY_MINUS, KEY_KP_SUBTRACT], "display_key": KEY_MINUS, "context": "explorer"},
+	"explorer_view_xz_neg": {"keys": [KEY_1], "display_key": KEY_1, "context": "explorer"},
+	"explorer_view_xz_pos": {"keys": [KEY_2], "display_key": KEY_2, "context": "explorer"},
+	"explorer_view_xw_neg": {"keys": [KEY_3], "display_key": KEY_3, "context": "explorer"},
+	"explorer_view_xw_pos": {"keys": [KEY_4], "display_key": KEY_4, "context": "explorer"},
+	"explorer_view_zw_neg": {"keys": [KEY_5], "display_key": KEY_5, "context": "explorer"},
+	"explorer_view_zw_pos": {"keys": [KEY_6], "display_key": KEY_6, "context": "explorer"},
+	"explorer_rotate_xy_neg": {"keys": [KEY_R], "display_key": KEY_R, "context": "explorer"},
+	"explorer_rotate_xy_pos": {"keys": [KEY_T], "display_key": KEY_T, "context": "explorer"},
+	"explorer_rotate_xz_neg": {"keys": [KEY_F], "display_key": KEY_F, "context": "explorer"},
+	"explorer_rotate_xz_pos": {"keys": [KEY_G], "display_key": KEY_G, "context": "explorer"},
+	"explorer_rotate_yz_neg": {"keys": [KEY_V], "display_key": KEY_V, "context": "explorer"},
+	"explorer_rotate_yz_pos": {"keys": [KEY_B], "display_key": KEY_B, "context": "explorer"},
+	"explorer_rotate_xw_neg": {"keys": [KEY_Y], "display_key": KEY_Y, "context": "explorer"},
+	"explorer_rotate_xw_pos": {"keys": [KEY_U], "display_key": KEY_U, "context": "explorer"},
+	"explorer_rotate_yw_neg": {"keys": [KEY_H], "display_key": KEY_H, "context": "explorer"},
+	"explorer_rotate_yw_pos": {"keys": [KEY_J], "display_key": KEY_J, "context": "explorer"},
+	"explorer_rotate_zw_neg": {"keys": [KEY_N], "display_key": KEY_N, "context": "explorer"},
+	"explorer_rotate_zw_pos": {"keys": [KEY_M], "display_key": KEY_M, "context": "explorer"},
+	"explorer_fit_view": {"keys": [KEY_9], "display_key": KEY_9, "context": "explorer"},
+	"explorer_move_up": {"keys": [KEY_Z], "display_key": KEY_Z, "context": "explorer"},
+	"explorer_move_down": {"keys": [KEY_X], "display_key": KEY_X, "context": "explorer"},
 	"explorer_replace_piece": {"keys": [KEY_SPACE, KEY_P], "display_key": KEY_SPACE, "context": "explorer"},
 	"explorer_view_xy_neg": {"keys": [KEY_1], "shift": true, "display_key": KEY_1, "context": "explorer"},
 	"explorer_view_xy_pos": {"keys": [KEY_2], "shift": true, "display_key": KEY_2, "context": "explorer"},
@@ -121,24 +160,35 @@ const EXPLORER_CAMERA_ROTATION_SPECS := [
 
 # Shared by Explorer's interactive VIEW helper and its keyboard dispatcher.
 static func practice_view_control_groups(mode: String) -> Array:
+	return explorer_profile(int(mode.trim_prefix("live_").trim_suffix("d"))).view_groups
+
+
+static func _explorer_view_groups(mode: String) -> Array:
 	var groups: Array = []
 	if mode == "live_4d":
 		var rotations: Array = []
-		var camera_specs := exact_camera_rotation_specs() + EXPLORER_CAMERA_ROTATION_SPECS
+		var camera_specs := EXPLORER_CAMERA_ROTATION_SPECS + [
+			{"plane": "XZ", "negative_action": "explorer_view_xz_neg", "positive_action": "explorer_view_xz_pos"},
+			{"plane": "XW", "negative_action": "explorer_view_xw_neg", "positive_action": "explorer_view_xw_pos"},
+			{"plane": "ZW", "negative_action": "explorer_view_zw_neg", "positive_action": "explorer_view_zw_pos"},
+		]
 		for plane in ["XY", "XZ", "YZ", "XW", "YW", "ZW"]:
 			for spec in camera_specs:
 				if spec.plane == plane:
 					rotations.append(_practice_view_pair(plane, spec.negative_action, spec.positive_action, "basis_%s_neg" % plane.to_lower(), "basis_%s_pos" % plane.to_lower()))
 		groups.append({"cockpit_role": "view_exact", "items": rotations})
+	var framing := {"cockpit_role": "view_framing", "items": [
+		_practice_view_pair("Zoom", "explorer_camera_zoom_out", "explorer_camera_zoom_in", "zoom_out", "zoom_in"),
+		[_display_key("explorer_fit_view"), "Fit", {"operation": "Fit", "command": "view_fit", "action": "explorer_fit_view"}],
+		[_display_key("explorer_reset_view"), "Reset", {"operation": "Reset", "command": "view_reset", "action": "explorer_reset_view"}],
+	]}
+	if mode == "live_2d":
+		return [framing]
 	groups.append({"cockpit_role": "view_orient", "items": [
-		_practice_view_pair("Yaw", "live_4d_camera_yaw_left", "live_4d_camera_yaw_right", "look_yaw_left", "look_yaw_right"),
-		_practice_view_pair("Pitch", "live_4d_camera_pitch_up", "live_4d_camera_pitch_down", "look_pitch_up", "look_pitch_down"),
+		_practice_view_pair("Yaw", "explorer_camera_yaw_left", "explorer_camera_yaw_right", "look_yaw_left", "look_yaw_right"),
+		_practice_view_pair("Pitch", "explorer_camera_pitch_up", "explorer_camera_pitch_down", "look_pitch_up", "look_pitch_down"),
 	]})
-	groups.append({"cockpit_role": "view_framing", "items": [
-		_practice_view_pair("Zoom", "live_4d_camera_zoom_out", "live_4d_camera_zoom_in", "zoom_out", "zoom_in"),
-		["Double-click", "Fit", {"operation": "Fit", "command": "view_fit", "action": ""}],
-		[_display_key("reset"), "Reset", {"operation": "Reset", "command": "view_reset", "action": "reset"}],
-	]})
+	groups.append(framing)
 	if mode == "live_4d":
 		groups.append({"cockpit_role": "view_slice", "items": [_practice_view_pair("Slice", "explorer_slice_neg", "explorer_slice_pos", "slice_neg", "slice_pos")]})
 	groups.append({"cockpit_role": "view_pointer", "items": camera_helper_items()})
@@ -237,17 +287,105 @@ static func play_legend_groups(mode: String, basis_snapshot: Dictionary = {}, co
 	return piece_control_groups(mode, basis_snapshot, control_frame)
 
 
-static func practice_piece_control_groups(mode: String, basis_snapshot: Dictionary = {}, control_frame: Dictionary = {}) -> Array:
+# Presentation/input inventory only; native providers retain geometry/topology truth.
+# Each call returns detached data. Legacy bindings and labels are deliberately
+# preserved until the separately approved visible-key phase.
+static func explorer_profile(dimension: int, basis_snapshot: Dictionary = {}, control_frame: Dictionary = {}) -> Dictionary:
+	assert(dimension in [2, 3, 4])
+	var mode := "live_%dd" % dimension
+	var axes: Array = []
+	for label in "xyzw".substr(0, dimension):
+		var prefix := "explorer_2d_move_y_" if dimension == 2 and label == "y" else "explorer_move_%s_" % label
+		var axis := {"label": label, "negative_command": "move_%s_neg" % label, "positive_command": "move_%s_pos" % label, "negative_action": prefix + "neg", "positive_action": prefix + "pos", "alias_actions": [], "relative": dimension > 2 and label != "y", "repeat": dimension == 2 or label != "y"}
+		if dimension == 2 and label == "y":
+			axis.alias_actions = ["explorer_move_y_neg", "explorer_move_y_pos"]
+		axes.append(axis)
+	var planes: Array = []
+	for spec in rotation_control_specs("piece"):
+		var label: String = str(spec.plane).to_lower()
+		if (dimension < 4 and "w" in label) or (dimension < 3 and "z" in label): continue
+		planes.append({"label": label, "negative_command": "rotate_%s_neg" % label, "positive_command": "rotate_%s_pos" % label, "negative_action": "explorer_rotate_" + label + "_neg", "positive_action": "explorer_rotate_" + label + "_pos", "relative": dimension > 2})
+	var session := {
+		"replace": {"label": "Replace piece", "command": "replace", "action": "explorer_replace_piece"},
+		"target": {"label": "New target", "command": "target", "action": ""},
+		"retry": {"label": "Retry object", "command": "retry", "action": "explorer_retry"},
+		"play": {"label": "Play", "command": "play", "action": ""},
+	}
+	var actions: Array = []
+	for record in axes + planes:
+		actions.append([record.negative_action, record.negative_command])
+		actions.append([record.positive_action, record.positive_command])
+	actions.append([session.retry.action, session.retry.command])
+	var topologies: Array = []
+	for record in [["Bounded", "bounded"], ["Cylinder · wrap X", "cylinder_x"], ["Cylinder · wrap Y", "cylinder_y"], ["Torus", "torus"], ["Möbius strip", "mobius"], ["Klein bottle", "klein"], ["Projective · experimental", "projective"], ["Sphere", "sphere_adjacent_positive"]]:
+		topologies.append({"label": record[0], "id": record[1], "disabled": dimension != 2 and record[1] != "bounded"})
+	var view_groups := _explorer_view_groups(mode)
+	return {"input_actions": _explorer_input_actions(axes, planes, session, view_groups), "axes": axes, "rotation_planes": planes, "session": session, "piece_actions": actions, "topologies": topologies, "view_groups": view_groups, "piece_groups": _explorer_piece_groups(mode, axes, planes, session, basis_snapshot, control_frame), "capabilities": {"camera_orbit": dimension > 2, "basis_turns": dimension == 4, "slice": dimension == 4, "relative_frame": dimension > 2, "topology_selector": dimension == 2}}
+
+
+static func _explorer_piece_groups(mode: String, axes: Array, planes: Array, session: Dictionary, basis_snapshot: Dictionary, control_frame: Dictionary) -> Array:
+	# One structure for every dimension: planar moves (compass), the vertical
+	# Up/Down pair, rotation planes and the practice session keys. 2D has no
+	# camera, so its axes are always canonical.
 	var groups: Array = []
-	for source in piece_control_groups(mode, basis_snapshot, control_frame):
-		if source.get("cockpit_role", "") not in ["translate", "rotate"]:
-			continue
-		var group: Dictionary = source.duplicate(true)
-		if group.cockpit_role == "translate":
-			group.items.append([_pair("explorer_move_up", "explorer_move_down"), "Y− / Y+", {"cockpit_direction": "vertical", "signed_axis": "+Y"}])
-		groups.append(group)
-	groups.append({"group": "Practice", "cockpit_role": "session", "items": [[_display_key("explorer_replace_piece"), "Replace piece"], [_display_key("live_3d_reset" if mode == "live_3d" else "live_4d_reset"), "Retry object"]]})
+	var flat := mode == "live_2d"
+	var legacy := control_frame.is_empty()
+	var relative := not flat and str(control_frame.get("translation_frame", "relative")) == "relative"
+	var rotation_relative := not flat and str(control_frame.get("rotation_frame", "relative")) == "relative"
+	var visible_axes: Array = basis_snapshot.get("visible_axes", ["X", "+Y", "Z"])
+	var axis_values := {"x": str(control_frame.get("horizontal_axis", visible_axes[0] if mode == "live_4d" else "+X")), "z": str(control_frame.get("depth_axis", visible_axes[2] if mode == "live_4d" else "+Z")), "w": str(control_frame.get("slice_axis", basis_snapshot.get("slice_axis", "+W")))}
+	var move_rows: Array = []
+	var planar: Array = ["x"] if flat else (["x", "z", "w"] if mode == "live_4d" else ["x", "z"])
+	for label in planar:
+		var axis: Dictionary = axes.filter(func(record): return record.label == label)[0]
+		var direction: String = {"x": "horizontal", "z": "depth", "w": "slice"}[label]
+		var signed_axis: String = axis_values[label] if relative and not legacy else "+" + label.to_upper()
+		var text: String = ("Visible X - / +" if label == "x" else ("Visible Z - / +" if label == "z" else "Slice W - / +")) if legacy and mode == "live_4d" else (({"x": "Left / Right", "z": "Forward / Back", "w": "Slice - / +"}[label] + " [%s]" % signed_axis) if relative and not legacy else label.to_upper() + "− / " + label.to_upper() + "+")
+		move_rows.append([_pair(axis.negative_action, axis.positive_action, " / " if mode == "live_4d" else "/"), text, {"cockpit_direction": direction, "signed_axis": signed_axis}])
+	var y: Dictionary = axes.filter(func(record): return record.label == "y")[0]
+	if flat:
+		# 2D's Y is already on the compass; Z/X remain keyboard aliases.
+		move_rows.append([_pair(y.negative_action, y.positive_action, "/"), "Y− / Y+", {"cockpit_direction": "screen_vertical", "signed_axis": "+Y"}])
+	else:
+		move_rows.append([_pair(y.negative_action, y.positive_action), "Y− / Y+", {"cockpit_direction": "vertical", "signed_axis": "+Y"}])
+	var rotation_rows: Array = []
+	for plane in planes:
+		var text: String = ("" if mode == "live_4d" else "Rotate ") + str(plane.label).to_upper()
+		var row: Array = [_pair(plane.negative_action, plane.positive_action, " / " if mode == "live_4d" else "/"), text]
+		if mode == "live_4d": row.append({"operation": str(plane.label).to_upper()})
+		rotation_rows.append(row)
+	var movement_note := "Canonical X/Y axes." if flat else (("Controls follow the current view; Forward recedes and Back approaches." if mode == "live_3d" else "Controls follow the current view.") if relative else ("Canonical X/Z axes." if mode == "live_3d" else "Canonical X/Z/W axes."))
+	var rotation_note := "Canonical XY plane." if flat else (("Planes follow the current view." if rotation_relative else "Canonical XYZ planes.") if mode == "live_3d" else ("Left: CCW · Right: CW" if legacy else ("Left: CCW · Right: CW · Planes follow the current view." if rotation_relative else "Left: CCW · Right: CW · Canonical XY/XZ/YZ/XW/YW/ZW planes.")))
+	groups.append({"group": "Piece movement", "cockpit_role": "translate", "note": movement_note, "items": move_rows})
+	groups.append({"group": "Piece rotation", "cockpit_role": "rotate", "note": rotation_note, "items": rotation_rows})
+	groups.append({"group": "Practice", "cockpit_role": "session", "items": [[_display_key(session.replace.action), session.replace.label], [_display_key(session.retry.action), session.retry.label]]})
 	return groups
+
+
+static func _explorer_input_actions(axes: Array, planes: Array, session: Dictionary, view_groups: Array) -> Array:
+	var actions: Array = [{"action": session.replace.action, "command": session.replace.command, "kind": "session"}]
+	for group in view_groups:
+		for item in group.items:
+			var metadata: Dictionary = item[2] if item.size() > 2 else {}
+			for prefix in ["negative_", "positive_", ""]:
+				var action := str(metadata.get(prefix + "action", ""))
+				if not action.is_empty(): actions.append({"action": action, "command": metadata[prefix + "command"], "kind": "view", "exact": group.cockpit_role == "view_exact"})
+	for collection in [axes, planes]:
+		for record in collection:
+			for prefix in ["negative_", "positive_"]:
+				actions.append({"action": record[prefix + "action"], "command": record[prefix + "command"], "kind": "move" if collection == axes else "rotate", "relative": record.relative, "repeat": record.get("repeat", false)})
+			# A 2D alias pair (Z/X for Y) dispatches the same command and shares
+			# its axis's held-key repeat state.
+			var aliases: Array = record.get("alias_actions", [])
+			for index in aliases.size():
+				var prefix := "negative_" if index == 0 else "positive_"
+				actions.append({"action": aliases[index], "command": record[prefix + "command"], "kind": "move", "relative": record.relative, "repeat": record.get("repeat", false), "repeat_action": record[prefix + "action"]})
+	if axes.size() > 2:
+		# Preserve existing explicit rejection feedback for Play-only keys.
+		actions.append({"action": "explorer_reject_hold", "command": "hold", "kind": "rejected"})
+		actions.append({"action": "explorer_reject_soft_drop", "command": "soft_drop", "kind": "rejected"})
+	actions.append({"action": session.retry.action, "command": session.retry.command, "kind": "session"})
+	return actions
 
 
 # Passive cockpit consumers select role metadata, never prose labels or a
@@ -435,7 +573,7 @@ static func binding_events(action_name: String) -> Array:
 static func binding_signature() -> String:
 	var bindings: Array = []
 	for action_name in ACTION_SPECS:
-		bindings.append([action_name, binding_events(action_name).map(func(event): return event.as_text())])
+		bindings.append([action_name, binding_events(action_name).map(func(event): return _binding_label(event))])
 	return JSON.stringify(bindings)
 
 
