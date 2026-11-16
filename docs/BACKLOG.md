@@ -745,3 +745,16 @@ receives the same board-axis action; enforce defined/injective/atomic results.
 - [x] Remove the post-Möbius seam selection dead end: select the destination
   atomically using compatible cells or the stored Retry baseline, display recovery,
   and preserve rejected requests. Cover dropdown events and repeated switches.
+
+
+### Explorer PR reconciliation
+
+- #181 integration retains bounded Variant conversion and hostile-container
+  regressions while preserving #184's Explorer implementation. Requirement
+  dispositions for #170/#181/#182/#183 are recorded in
+  `docs/history/pr_170_181_182_183_reconciliation.md`.
+- [ ] Preserve outstanding novice, supported-window/fullscreen, physical-key,
+  adjacency and T2/T2S/T7 acceptance from those PRs under the existing learning
+  and topology gates; closing a superseded PR does not satisfy these duties.
+- Governance #178 is integrated separately; fleet-wide adoption/evidence and
+  owner hook trust remain distinct from repository merge verification.

@@ -17,6 +17,7 @@ func run() -> Array:
 	_assert_invalid_profiles(failures, bridge, fixture)
 	_assert_valid_queries(failures, bridge, fixture)
 	_assert_invalid_queries(failures, bridge, fixture)
+	_assert_hostile_variants(failures, bridge, fixture)
 	return failures
 
 
@@ -170,3 +171,35 @@ func _assert_error(failures: Array, result: Dictionary, case: Dictionary, kind: 
 func _assert_equal(failures: Array, actual, expected, label: String) -> void:
 	if actual != expected:
 		failures.append("%s: expected %s, got %s" % [label, expected, actual])
+
+
+# PR #181 regression: cycles overflowed the native stack before schema admission;
+# repeated aliases expanded exponentially. Exercise every shared DTO entry point.
+func _assert_hostile_variants(failures: Array, bridge: RefCounted, fixture: Dictionary) -> void:
+	var profiles: Dictionary = fixture.profiles
+	var valid: Dictionary = profiles.values()[0]
+	var cyclic := valid.duplicate(true)
+	cyclic["self"] = cyclic
+	var looped: Array = []
+	looped.append(looped)
+	var array_cycle := valid.duplicate(true)
+	array_cycle["seams"] = looped
+	var diamond: Variant = 0
+	for level in 20:
+		diamond = {"left": diamond, "right": diamond}
+	var wide := valid.duplicate(true)
+	wide["extra"] = diamond
+	var hashes := [bridge.live_2d_state_hash(), bridge.live_3d_state_hash(), bridge.live_4d_state_hash()]
+	for hostile in [cyclic, array_cycle, wide]:
+		var profile_result: Dictionary = bridge.topology_transport_profile(hostile)
+		_assert_equal(failures, profile_result.get("error", {}).get("code"), "resource_limit", "hostile profile bounded")
+		var query_profile: Dictionary = bridge.native_topology_transport_query(hostile, {})
+		_assert_equal(failures, query_profile.get("error", {}).get("code"), "resource_limit", "hostile query profile bounded")
+		var query_value: Dictionary = bridge.native_topology_transport_query(valid, hostile)
+		_assert_equal(failures, query_value.get("error", {}).get("code"), "resource_limit", "hostile query payload bounded")
+	var setup := {"contract_version": 1, "mode": "live_2d", "board_shape": [10, 20], "piece_set_id": "classic", "topology_profile": cyclic}
+	_assert_equal(failures, bridge.validate_live_board_setup(setup).get("ok"), false, "cyclic live setup rejected")
+	_assert_equal(failures, bridge.live_2d_configure(setup), false, "cyclic live configuration rejected")
+	_assert_equal(failures, [bridge.live_2d_state_hash(), bridge.live_3d_state_hash(), bridge.live_4d_state_hash()], hashes, "hostile requests preserve Play sessions")
+	cyclic.erase("self")
+	looped.clear()

@@ -6,6 +6,8 @@
 #include <godot_cpp/variant/char_string.hpp>
 #include <godot_cpp/variant/string.hpp>
 
+#include <algorithm>
+#include <cstdint>
 #include <utility>
 
 namespace godot {
@@ -72,13 +74,32 @@ Dictionary boundary_to_dictionary(const tet4d::core::TopologyTransportBoundary &
 	return result;
 }
 
-} // namespace
+// Variants can alias containers: a dictionary may hold itself, or one
+// container may appear under many keys. Unbounded recursion overflows the
+// native stack (a signal, not a catchable exception) before any schema
+// validation runs, and aliasing can multiply work exponentially. Every
+// supported DTO is a few levels deep and small, so both bounds are generous.
+constexpr int MAX_TRANSPORT_DEPTH = 32;
+constexpr std::int64_t MAX_TRANSPORT_VALUES = 65536;
 
-tet4d::core::TopologyTransportResult<tet4d::core::TransportValue>
-topology_transport_value_from_variant(
+tet4d::core::TopologyTransportResult<tet4d::core::TransportValue> convert_bounded(
 		const Variant &value,
-		const std::string &path) {
+		const std::string &path,
+		int depth,
+		std::int64_t &remaining) {
 	using tet4d::core::TransportValue;
+	if (depth > MAX_TRANSPORT_DEPTH) {
+		return failure<TransportValue>(
+				"resource_limit", path,
+				"at most " + std::to_string(MAX_TRANSPORT_DEPTH) + " nested containers",
+				"deeper nesting", path + " is nested too deeply (possibly self-referential)");
+	}
+	if (--remaining < 0) {
+		return failure<TransportValue>(
+				"resource_limit", path,
+				"at most " + std::to_string(MAX_TRANSPORT_VALUES) + " values",
+				"more values", "The request holds too many values (possibly a repeatedly shared container)");
+	}
 	switch (value.get_type()) {
 		case Variant::NIL:
 			return success(TransportValue{});
@@ -93,10 +114,10 @@ topology_transport_value_from_variant(
 		case Variant::ARRAY: {
 			const Array input = value;
 			TransportValue::Array output;
-			output.reserve(static_cast<std::size_t>(input.size()));
+			output.reserve(static_cast<std::size_t>(std::min<std::int64_t>(input.size(), remaining + 1)));
 			for (int64_t index = 0; index < input.size(); ++index) {
-				auto item = topology_transport_value_from_variant(
-						input[index], path + "[" + std::to_string(index) + "]");
+				auto item = convert_bounded(
+						input[index], path + "[" + std::to_string(index) + "]", depth + 1, remaining);
 				if (!item.ok()) {
 					return item;
 				}
@@ -116,8 +137,7 @@ topology_transport_value_from_variant(
 							variant_category(key.get_type()), path + " keys must be strings");
 				}
 				const std::string field = to_std_string(static_cast<String>(key));
-				auto item = topology_transport_value_from_variant(
-						input[key], path + "." + field);
+				auto item = convert_bounded(input[key], path + "." + field, depth + 1, remaining);
 				if (!item.ok()) {
 					return item;
 				}
@@ -129,6 +149,16 @@ topology_transport_value_from_variant(
 			return success(TransportValue(tet4d::core::UnsupportedTransportValue{
 					variant_category(value.get_type())}));
 	}
+}
+
+} // namespace
+
+tet4d::core::TopologyTransportResult<tet4d::core::TransportValue>
+topology_transport_value_from_variant(
+		const Variant &value,
+		const std::string &path) {
+	std::int64_t remaining = MAX_TRANSPORT_VALUES;
+	return convert_bounded(value, path, 0, remaining);
 }
 
 Dictionary topology_transport_error_dictionary(
