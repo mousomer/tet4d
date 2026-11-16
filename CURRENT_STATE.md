@@ -11,11 +11,11 @@ telemetry gates remain intact. The plan is
 `docs/plans/policy_kit_logging_and_meta_testing_repairs.md`.
 The Stage 56H unified baseline is committed at `0cb30958`.
 ## Purpose
-
 This file contains only the compact state needed to resume staged or
 phase-dependent work. It is not workflow authority, a CI diary, a completed
 stage archive, a task-contract ledger, or a future programme.
 ## Active Focus
+CI latency work on `codex/ci-godot-parallel`: focused Explorer first, native dependency cache, four required Godot partitions; separate from Explorer PR #184.
 
 Explorer T2A implements the native bounded/cylinder/torus translation candidate and permanent preservation suite described in `docs/architecture/explorer_topology_t2a_native_transport.md`. T1 PRs #172–#176 are the accepted baseline; remaining Correction 4B P2 findings stay deferred. T2B Godot integration, T2C rotations/twisted profiles and complete T2 acceptance remain separate. Runtime authority has not transferred. See `docs/BACKLOG.md` and `docs/architecture/explorer_topology_t2_transfer_preparation.md`.
 Bounded MVP novice acceptance remains pending in `docs/plans/bounded_practice_explorer.md`; unified VIEW helpers and compact Settings/Designer menus remain the baseline.

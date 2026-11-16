@@ -202,15 +202,34 @@ EDITOR_IMPORT_LOG="$VERIFY_ROOT/editor_import.log"
 run_godot_step "editor import" "$EDITOR_IMPORT_LOG" stream env "${GODOT_ENV[@]}" "$GODOT_BIN" \
   --headless --editor --path "$PROJECT_COPY" --quit
 assert_no_teardown_leak "editor import" "$EDITOR_IMPORT_LOG"
+# Fail on Explorer regressions before the expensive full acceptance partition.
+EXPLORER_TEST_LOG="$VERIFY_ROOT/explorer_tests.log"
+run_godot_step "focused Explorer tests" "$EXPLORER_TEST_LOG" stream \
+  env "${GODOT_ENV[@]}" TET4D_GODOT_TEST_GROUP=explorer "$GODOT_BIN" \
+  --headless --path "$PROJECT_COPY" --script tests/run_tests.gd
+assert_no_script_error "focused Explorer tests" "$EXPLORER_TEST_LOG"
+assert_no_teardown_leak "focused Explorer tests" "$EXPLORER_TEST_LOG"
 REPLAY_TEST_LOG="$VERIFY_ROOT/run_tests.log"
 GODOT_STEP_TIMEOUT_SECONDS="$GODOT_REPLAY_TEST_TIMEOUT_SECONDS" \
-  run_godot_step "replay tests" "$REPLAY_TEST_LOG" stream env "${GODOT_ENV[@]}" "$GODOT_BIN" \
+  run_godot_step "replay tests" "$REPLAY_TEST_LOG" stream env "${GODOT_ENV[@]}" TET4D_GODOT_TEST_GROUP= "$GODOT_BIN" \
   --headless --path "$PROJECT_COPY" --script tests/run_tests.gd
 assert_no_script_error "replay tests" "$REPLAY_TEST_LOG"
 assert_no_teardown_leak "replay tests" "$REPLAY_TEST_LOG"
 # The P0 event-to-native movement regression is mandatory, including when a
 # test aborts with a typed empty return or its registration is accidentally lost.
-if ! grep -q '^LIVE_RELATIVE_TRANSLATION_PASS: 3D + 4D$' "$REPLAY_TEST_LOG"; then
+# Only the partition owning this script must emit its success marker.
+translation_owner="$("$PYTHON_BIN" - "$ROOT_DIR" <<'PYCODE'
+import os
+import re
+import sys
+from pathlib import Path
+runner = (Path(sys.argv[1]) / "godot/Tet4D.Godot/tests/run_tests.gd").read_text()
+paths = re.findall(r'"(res://tests/test_[^"\n]+\.gd)"', runner.split("const EXPECTED_NEGATIVE_PATH_TESTS", 1)[0])
+index = paths.index("res://tests/test_live_relative_translation.gd")
+print(int(index % int(os.environ.get("TET4D_GODOT_SHARD_COUNT", "1")) == int(os.environ.get("TET4D_GODOT_SHARD", "0"))))
+PYCODE
+)"
+if [[ "$translation_owner" == "1" ]] && ! grep -q '^LIVE_RELATIVE_TRANSLATION_PASS: 3D + 4D$' "$REPLAY_TEST_LOG"; then
   echo "Mandatory Live 3D/4D relative translation regression did not pass." >&2
   exit 1
 fi

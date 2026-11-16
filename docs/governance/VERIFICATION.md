@@ -1,7 +1,7 @@
 # Verification
 
 Canonical owner: test strategy, evidence composition, focused checks, full-gate
-triggers, and verification reporting.
+triggers, and verification reporting. Parallel Godot execution preserves this evidence contract; see `docs/architecture/godot_ci_execution.md`.
 
 ## Evidence model
 

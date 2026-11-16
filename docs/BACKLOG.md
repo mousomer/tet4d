@@ -28,6 +28,10 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ## Active Work
 
+- CI latency: focused Explorer checks before full Godot replay shards, cached
+  native dependency compilation and four required parallel partitions. Preserve
+  complete acceptance; measure cold/warm hosted timings after publication.
+
 - [x] Correct the aggregate input-map regression to validate declared Shift modifiers and reject plain-key aliases for Explorer view actions.
 - [x] Repair Windows release interpreter binding: explicit Bash environment export and setup-python `PYTHON_BIN` for the initial native build, covered by the packaging contract test.
 - [ ] Publish 0.9.2 from the merged CI-verified SHA through `current_all` packaging, inspect the draft manifest/assets, and complete the separate publication workflow.
