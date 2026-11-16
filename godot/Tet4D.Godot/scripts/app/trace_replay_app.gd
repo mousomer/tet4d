@@ -2108,9 +2108,9 @@ func _legend_screen_directions(dimension: int) -> Dictionary:
 	var intents := ["move_x_neg", "move_x_pos", "move_y_neg", "move_y_pos", "move_z_neg", "move_z_pos", "move_w_neg", "move_w_pos"].slice(0, dimension * 2)
 	# Measure the command each key dispatches, exactly as input routing does.
 	for intent in intents:
-		var command := str(mapping.translation_command(intent, _translation_frame))
+		var command := str(mapping.translation_command(intent, ControlFrameMappingScript.FRAME_ABSOLUTE if dimension == 2 else _translation_frame))
 		result[intent] = _board_axis_screen_direction(shape, origin, "xyzw".find(command.get_slice("_", 1)), 1 if command.ends_with("_pos") else -1)
-	var relative := ControlFrameMappingScript.normalize_frame(_rotation_frame) == ControlFrameMappingScript.FRAME_RELATIVE
+	var relative := dimension > 2 and ControlFrameMappingScript.normalize_frame(_rotation_frame) == ControlFrameMappingScript.FRAME_RELATIVE
 	for local_index in range(dimension):
 		var label := "xyzw"[local_index]
 		var axis := int(mapping.axis_for_local(label).get("axis", local_index)) if relative else local_index
