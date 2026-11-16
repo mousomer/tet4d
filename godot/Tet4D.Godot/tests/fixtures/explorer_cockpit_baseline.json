@@ -230,21 +230,6 @@
 			},
 			{
 				"action_ids": [
-					"explorer_move_down",
-					"explorer_move_up"
-				],
-				"item": [
-					"Z/X",
-					"Y− / Y+",
-					{
-						"cockpit_direction": "vertical",
-						"signed_axis": "+Y"
-					}
-				],
-				"role": "translate"
-			},
-			{
-				"action_ids": [
 					"live_3d_rotate_xy_neg",
 					"live_3d_rotate_xy_pos"
 				],

@@ -344,10 +344,8 @@ static func _explorer_piece_groups(mode: String, axes: Array, planes: Array, ses
 		move_rows.append([_pair(axis.negative_action, axis.positive_action, " / " if mode == "live_4d" else "/"), text, {"cockpit_direction": direction, "signed_axis": signed_axis}])
 	var y: Dictionary = axes.filter(func(record): return record.label == "y")[0]
 	if flat:
-		# 2D's Y is the screen vertical: W/S sit on the compass, and the shared
-		# Z/X pair keeps the same Up/Down row as 3D/4D.
+		# 2D's Y is already on the compass; Z/X remain keyboard aliases.
 		move_rows.append([_pair(y.negative_action, y.positive_action, "/"), "Y− / Y+", {"cockpit_direction": "screen_vertical", "signed_axis": "+Y"}])
-		move_rows.append([_pair(y.alias_actions[0], y.alias_actions[1], "/"), "Y− / Y+", {"cockpit_direction": "vertical", "signed_axis": "+Y"}])
 	else:
 		move_rows.append([_pair(y.negative_action, y.positive_action), "Y− / Y+", {"cockpit_direction": "vertical", "signed_axis": "+Y"}])
 	var rotation_rows: Array = []

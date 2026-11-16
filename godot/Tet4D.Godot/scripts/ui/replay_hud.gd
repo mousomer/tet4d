@@ -842,6 +842,7 @@ func set_practice_state(dimension: int, feedback: String = "", pieces: Array = [
 	if _practice_panel != null:
 		_practice_panel.visible = active
 		if active:
+			_practice_panel.set_meta("shell_chrome", dimension == 2)
 			_practice_panel.configure(dimension)
 			_practice_panel.update_state(feedback)
 			_practice_panel.update_piece_choices(pieces, selected_piece)

@@ -179,7 +179,7 @@ func _is_designer_product() -> bool:
 func _process(delta: float) -> void:
 	if _pending_fit_view:
 		_fit_view()
-	if _mode in [MODE_LIVE_3D, MODE_LIVE_4D]:
+	if _mode in [MODE_LIVE_2D, MODE_LIVE_3D, MODE_LIVE_4D]:
 		_publish_legend_screen_directions()
 	if _practice != null:
 		_process_explorer_input_repeat(delta)
@@ -1623,10 +1623,6 @@ func _refresh_practice_panel() -> void:
 	var mode_name: String = {2: MODE_LIVE_2D, 3: MODE_LIVE_3D, 4: MODE_LIVE_4D}[_practice.dimension()]
 	var spec: Dictionary = BoardExtentContractV1.mode_spec(mode_name)
 	_hud.set_practice_state(_practice.dimension(), _practice.feedback, _practice.piece_names(), _practice.selected_piece, _practice.topology, _practice.board_shape(), spec.get("axis_minima", []), spec.get("axis_maxima", []))
-	if _practice.dimension() == 2:
-		# 2D has no camera: its legend compass is the screen itself.
-		_published_legend_directions = {}
-		_hud.set_legend_screen_directions(EXPLORER_2D_LEGEND_DIRECTIONS)
 
 
 func _refresh_hud() -> void:
@@ -2088,17 +2084,10 @@ func _dispatch_live_2d_control_intent(intent: String) -> bool:
 # screen. Axis names cannot carry that: under view-relative controls the same
 # key keeps its on-screen effect while its board axis changes with the view,
 # so the old labels changed (X -> Z) exactly when nothing changed for the hand.
-const EXPLORER_2D_LEGEND_DIRECTIONS := {
-	"move_x_neg": Vector2(-1, 0), "move_x_pos": Vector2(1, 0),
-	"move_y_neg": Vector2(0, -1), "move_y_pos": Vector2(0, 1),
-	"x": Vector2(1, 0), "y": Vector2(0, -1),
-}
-
-
 func _publish_legend_screen_directions() -> void:
 	if _hud == null or not _hud.has_method("set_legend_screen_directions"):
 		return
-	var directions := _legend_screen_directions(4 if _mode == MODE_LIVE_4D else 3)
+	var directions := _legend_screen_directions(_renderer.presented_board_shape().size())
 	if _legend_directions_close(directions, _published_legend_directions):
 		return
 	_published_legend_directions = directions
@@ -2116,9 +2105,7 @@ func _legend_screen_directions(dimension: int) -> Dictionary:
 	for extent in shape:
 		origin.append(floori(float(extent) * 0.5))
 	var mapping = _control_frame_mapping(dimension)
-	var intents := ["move_x_neg", "move_x_pos", "move_z_neg", "move_z_pos"]
-	if dimension >= 4:
-		intents.append_array(["move_w_neg", "move_w_pos"])
+	var intents := ["move_x_neg", "move_x_pos", "move_y_neg", "move_y_pos", "move_z_neg", "move_z_pos", "move_w_neg", "move_w_pos"].slice(0, dimension * 2)
 	# Measure the command each key dispatches, exactly as input routing does.
 	for intent in intents:
 		var command := str(mapping.translation_command(intent, _translation_frame))

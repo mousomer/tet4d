@@ -28,6 +28,10 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ## Active Work
 
+- Explorer debug reconnection: compact 2D editors through existing shell chrome,
+  publish actual-dimension camera projections to shared helper glyphs, and omit
+  the duplicate 2D Up/Down row. Verify existing Explorer and typography locks.
+
 - Explorer PR #184 CI repair: reacquire helper-deck controls after dimension
   transitions in the 2D access regression; full Godot/parity acceptance is
   required before merge.

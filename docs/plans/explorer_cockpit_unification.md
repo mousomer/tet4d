@@ -19,6 +19,14 @@ button arrays can contain freed nodes. The 2D access regression retains its
 visibility assertions against the current controls. Product contracts and
 cellwise semantics are unchanged.
 
+## Owner-requested reconnection pass (2026-11-16)
+
+Use existing compact shell chrome for the 2D Explorer editors. Publish legend
+directions through the shared board projection using the actual presented
+dimension. The 2D compass already contains both axes, so omit its duplicate
+Z/X Up/Down helper row while preserving those keyboard aliases. Reuse existing
+style, projection and glyph owners; add no parallel implementations.
+
 ## Goal
 
 One Explorer cockpit for 2D, 3D and 4D: one structure, one key vocabulary,
