@@ -27,6 +27,13 @@ dimension. The 2D compass already contains both axes, so omit its duplicate
 Z/X Up/Down helper row while preserving those keyboard aliases. Reuse existing
 style, projection and glyph owners; add no parallel implementations.
 
+## Cross-platform binding signature repair (2026-11-16)
+
+Binding signatures consume the existing shared binding-label formatter used by
+the UI instead of platform-specific event text. Regenerate only binding-label signatures with the existing capture command;
+preserve event order, command observations and all other baseline sections.
+Do not add a second normalization implementation.
+
 ## Goal
 
 One Explorer cockpit for 2D, 3D and 4D: one structure, one key vocabulary,

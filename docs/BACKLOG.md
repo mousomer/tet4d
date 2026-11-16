@@ -28,6 +28,9 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ## Active Work
 
+- Explorer Linux CI: reconnect binding signatures to the existing shared label
+  formatter; require remote Godot acceptance before merging PR #184.
+
 - Explorer debug reconnection: compact 2D editors through existing shell chrome,
   publish actual-dimension camera projections to shared helper glyphs, and omit
   the duplicate 2D Up/Down row. Verify existing Explorer and typography locks.

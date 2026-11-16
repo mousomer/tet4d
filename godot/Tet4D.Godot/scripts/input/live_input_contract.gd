@@ -573,7 +573,7 @@ static func binding_events(action_name: String) -> Array:
 static func binding_signature() -> String:
 	var bindings: Array = []
 	for action_name in ACTION_SPECS:
-		bindings.append([action_name, binding_events(action_name).map(func(event): return event.as_text())])
+		bindings.append([action_name, binding_events(action_name).map(func(event): return _binding_label(event))])
 	return JSON.stringify(bindings)
 
 
