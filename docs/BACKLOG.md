@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-11-15
+Updated: 2026-11-16
 Scope: active work, explicit deferrals, and near-term acceptance boundaries.
 
 Completed chronology is recoverable from Git, merged PRs, CI, and
@@ -27,6 +27,10 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   facts)
 
 ## Active Work
+
+- Explorer PR #184 CI repair: reacquire helper-deck controls after dimension
+  transitions in the 2D access regression; full Godot/parity acceptance is
+  required before merge.
 
 
 - [x] Correct the aggregate input-map regression to validate declared Shift modifiers and reject plain-key aliases for Explorer view actions.

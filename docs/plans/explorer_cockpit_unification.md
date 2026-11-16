@@ -11,6 +11,14 @@ Explorer key contract `docs/rds/RDS_KEYBINDINGS.md` §4.4. The locked Live
 2D/3D/4D cockpit and Main Menu (`test_locked_shell_layouts.gd`) are out of
 scope and must not move.
 
+## CI regression repair (2026-11-16)
+
+Dimension transitions rebuild the helper deck hosted inside the Explorer panel.
+Tests must resolve descendant controls after the transition; pre-transition
+button arrays can contain freed nodes. The 2D access regression retains its
+visibility assertions against the current controls. Product contracts and
+cellwise semantics are unchanged.
+
 ## Goal
 
 One Explorer cockpit for 2D, 3D and 4D: one structure, one key vocabulary,

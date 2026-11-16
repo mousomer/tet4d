@@ -612,6 +612,9 @@ func _check_2d_access(tree: SceneTree, app, hud) -> void:
 	var native_before: String = app._live_bridge.live_2d_snapshot_json()
 	_check(panel == hud._practice_panel and panel.is_visible_in_tree(), "2D retains visible Explorer panel")
 	_check(model.piece_names().size() == 7, "2D exposes seven native classic pieces")
+	# Dimension changes rebuild the helper deck inside the panel. Resolve its
+	# current controls after the transition instead of dereferencing freed nodes.
+	buttons = panel.find_children("*", "Button", true, false)
 	for button in buttons:
 		var action: String = button.get_meta("practice_action", "")
 		if action.begins_with("move_") or action.begins_with("rotate_"):
