@@ -345,6 +345,53 @@ def render(summary: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _accepted_text_scan(stdout: bytes) -> bool:
+    try:
+        result = json.loads(stdout)
+    except (ValueError, UnicodeError, RecursionError):
+        return False
+    if not isinstance(result, dict):
+        return False
+    required = (
+        "schema_version",
+        "inspected_files",
+        "finding_count",
+        "error_count",
+        "skipped_count",
+    )
+    if any(type(result.get(key)) is not int or result[key] < 0 for key in required):
+        return False
+    if (
+        result["schema_version"] != 2
+        or result.get("execution") != "completed"
+        or result.get("profile") != "git-visible-text-patterns-v1"
+        or result["finding_count"]
+        or result["error_count"]
+        or result.get("findings") != []
+        or result.get("errors") != []
+    ):
+        return False
+    counts = result.get("coverage_counts")
+    permitted = SKIP_REASONS - {"unreadable-text"}
+    if not isinstance(counts, dict) or any(
+        key not in permitted or type(count) is not int or count <= 0
+        for key, count in counts.items()
+    ):
+        return False
+    skipped = result.get("skipped")
+    return (
+        sum(counts.values()) == result["skipped_count"]
+        and isinstance(skipped, list)
+        and len(skipped) == min(result["skipped_count"], 50)
+        and all(
+            isinstance(row, dict)
+            and isinstance(row.get("reason"), str)
+            and row["reason"] in counts
+            for row in skipped
+        )
+    )
+
+
 def execute(
     checker: str,
     argv: list[str],
@@ -407,6 +454,12 @@ def execute(
         result.pop("stdout_preview", b""),
         result.pop("stderr_preview", b""),
     )
+    if (
+        checker == "pack_sanitation"
+        and code == 0
+        and (len(stdout) != result["stdout_bytes"] or not _accepted_text_scan(stdout))
+    ):
+        code = 2
     report = summarize(
         checker, code, stdout, stderr, allowed_locations=allowed_locations
     )

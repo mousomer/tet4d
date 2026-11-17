@@ -12,6 +12,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
 from support import scrubbed_environment, write
 
 from tools.workspace_governance.resolver.core import (
@@ -141,3 +142,22 @@ def test_bootstrap_never_selects_an_interpreter_nested_under_tool_paths(
     assert refused.returncode == 1
     assert "bootstrap.interpreter" in refused.stderr
     assert str(decoy) not in refused.stdout
+
+
+@pytest.mark.parametrize("binding", [".claude/settings.json", ".codex/hooks.json"])
+def test_fresh_checkout_rejects_a_missing_hook_binding(
+    checkout: Path, isolated_user_overlay: Path, binding: str
+) -> None:
+    declare(isolated_user_overlay, {"schema_version": 1, "interpreter": sys.executable})
+    (checkout / binding).unlink()
+
+    checked = gov(checkout, "check", "--json")
+
+    assert checked.returncode != 0
+    assert any(
+        issue["code"] == "PACK_DRIFT"
+        and issue["fact"] == "execution.enforcement"
+        and binding in issue["reason"]
+        for issue in json.loads(checked.stdout)
+    )
+    assert (Path(__file__).resolve().parents[3] / binding).is_file()

@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "name": "workspace-governance",
-  "version": "0.9.2",
-  "revision": "v0.9-no-autonomous-polling-3",
+  "version": "1.0.1",
+  "revision": "v1.0-supervised-completion-2",
   "version_file": "VERSION",
   "lock_algorithm": "sha256-path-and-content-v1",
   "pack_hash_excludes": [
@@ -19,7 +19,8 @@
     "sync",
     "env",
     "telemetry",
-    "ci-status"
+    "ci-status",
+    "op"
   ],
   "diagnostics": [
     "DUPLICATE_AUTHORITY",
@@ -202,6 +203,14 @@
     {
       "path": "hooks/codex_no_polling.rules",
       "role": "governance_treatment"
+    },
+    {
+      "path": "operation_supervisor.py",
+      "role": "executable_machinery"
+    },
+    {
+      "path": "policies/operation_profiles.json",
+      "role": "governance_treatment"
     }
   ],
   "bootstrap_roots": [
@@ -275,7 +284,7 @@
     "python_requires": ">=3.11"
   },
   "execution_policy": {
-    "id": "synchronous-completion-v2",
+    "id": "supervised-completion-v3",
     "path": "policies/execution.json"
   }
 }
