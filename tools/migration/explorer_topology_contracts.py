@@ -558,6 +558,21 @@ def _check_case(case: dict, state: dict, profile: dict, root: Path) -> None:
     )
 
 
+def _check_cellwise_references(data: dict, profiles: dict) -> None:
+    for row in data.get("cellwise_reference_sequences", []):
+        require(row["profile_ref"] in profiles, "missing cellwise reference profile")
+        dims = profiles[row["profile_ref"]]["payload"]["board_dimensions"]
+        require(dims == [8, 8], "owner trajectory requires an 8x8 board")
+        require(len(row["targets"]) == len(row["frames"]), "incomplete cellwise frames")
+        for coord in [row["source"], *row["targets"]]:
+            require(
+                all(0 <= v < dims[i] for i, v in enumerate(coord)),
+                "cellwise coordinate bounds",
+            )
+        for frame in row["frames"]:
+            _check_frame(frame)
+
+
 def check_transport(data: dict, catalog: dict, root: Path = ROOT) -> None:
     check_schema(data, "transport_fixtures", root)
     require(
@@ -584,6 +599,7 @@ def check_transport(data: dict, catalog: dict, root: Path = ROOT) -> None:
                 == profile["construction_id"],
                 "catalog fixture recipe mismatch",
             )
+    _check_cellwise_references(data, profiles)
     states, cases = unique_rows(data["states"]), unique_rows(data["cases"])
     for state in states.values():
         _check_state(state, profiles)

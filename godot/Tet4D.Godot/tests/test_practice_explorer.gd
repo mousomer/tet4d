@@ -10,6 +10,7 @@ var completed := false
 func run() -> Array:
 	var bridge = Bridge.new()
 	_check(bridge.is_available(), "native provider available")
+	_check_native_candidate_adapter()
 	for dimension in [3, 4]:
 		_model_contract(bridge, dimension)
 	var tree := Engine.get_main_loop() as SceneTree
@@ -28,6 +29,8 @@ func run() -> Array:
 	entry.pressed = true
 	app._input(entry)
 	_check(app._practice != null and app._mode == "live_4d", "main-menu E enters 4D Explorer")
+	await _check_2d_access(tree, app, hud)
+	await _check_surface_ui(tree, app, hud)
 	for dimension in [3, 4]:
 		var previous_panel = hud._practice_panel
 		previous_panel._tabs.current_tab = 0
@@ -44,7 +47,7 @@ func run() -> Array:
 		var hash_before := _native_hash(app, dimension)
 		app._process(120.0)
 		_check(model.cells == initial and _native_hash(app, dimension) == hash_before, "%dD elapsed time cannot move, lock or advance native state" % dimension)
-		_check(hud._practice_panel._tabs.get_tab_count() == 2 and hud._practice_panel._tabs.get_child(0).name == "View" and hud._practice_panel._tabs.get_child(1).name == "Piece", "%dD Explorer prioritizes View and keeps piece controls secondary" % dimension)
+		_check(hud._practice_panel._tabs.get_tab_count() == 3 and hud._practice_panel._tabs.get_child(0).name == "View" and hud._practice_panel._tabs.get_child(1).name == "Piece" and hud._practice_panel._tabs.get_child(2).name == "Space", "%dD Explorer tabs are View | Piece | Space in every dimension" % dimension)
 		var panel_text := ""
 		for label in hud._practice_panel.find_children("*", "Label", true, false):
 			panel_text += label.text + "\n"
@@ -74,7 +77,7 @@ func run() -> Array:
 			_check(view_help.roles.has("view_exact") and view_help.roles.has("view_orient"), "4D full helper includes basis and slice orientation")
 		for button in hud._practice_panel.find_children("*", "Button", true, false):
 			_check(button.focus_mode == Control.FOCUS_NONE, "%dD dynamically created controls preserve the live keyboard capture policy" % dimension)
-		for tab in range(2):
+		for tab in range(3):
 			hud._practice_panel._tabs.current_tab = tab
 			await tree.process_frame
 			await tree.process_frame
@@ -85,15 +88,18 @@ func run() -> Array:
 		app._ensure_live_game_paused_for_focus_loss()
 		_check(not app._live_mode_paused(), "%dD gravity-free practice does not become stuck paused after focus loss" % dimension)
 		var before: Array = model.cells.duplicate(true)
-		for pair in [[KEY_Z, KEY_X], [KEY_PAGEUP, KEY_PAGEDOWN]]:
-			var up := InputEventKey.new()
-			up.keycode = pair[0]
-			up.pressed = true
+		var up := InputEventKey.new()
+		up.pressed = true
+		up.keycode = KEY_Z
+		app._unhandled_input(up)
+		_check(model.cells != before, "%dD Z moves object up" % dimension)
+		up.keycode = KEY_X
+		app._unhandled_input(up)
+		_check(model.cells == before, "%dD X reverses Y movement" % dimension)
+		for retired in [KEY_PAGEUP, KEY_PAGEDOWN]:
+			up.keycode = retired
 			app._unhandled_input(up)
-			_check(model.cells != before, "%dD %s moves object up" % [dimension, OS.get_keycode_string(pair[0])])
-			up.keycode = pair[1]
-			app._unhandled_input(up)
-			_check(model.cells == before, "%dD %s reverses Y movement" % [dimension, OS.get_keycode_string(pair[1])])
+			_check(model.cells == before, "%dD %s is retired from Explorer" % [dimension, OS.get_keycode_string(retired)])
 		await _check_stable_panel(tree, app, hud, dimension)
 		await _check_view_and_replacement(tree, app, hud, dimension)
 		await _check_layout_stability(tree, app, hud, dimension)
@@ -118,7 +124,7 @@ func run() -> Array:
 		oracle.cells = model.cells.duplicate(true)
 		oracle.command(expected)
 		var event := InputEventAction.new()
-		event.action = "live_%dd_move_x_pos" % dimension
+		event.action = "explorer_move_x_pos"
 		event.pressed = true
 		app._unhandled_input(event)
 		_check(model.cells == oracle.cells, "%dD keyboard camera-relative displacement matches native query" % dimension)
@@ -191,6 +197,10 @@ func _model_contract(bridge, dimension: int) -> void:
 	var expected: Array = [[3, 4, 3], [4, 4, 3], [4, 5, 3]] if dimension == 3 else [[3, 4, 3, 3], [4, 4, 3, 3], [4, 5, 3, 3]]
 	_check(initial == expected, "%dD fixed coordinate oracle for native normalization/centering" % dimension)
 	var face_steps: Array = model.neighbors()
+	model.select_next_cell()
+	_check(model.selected_cell == 1, "model cell inspection remains available without player dispatch")
+	_check(model.neighbors()[0].target == bridge.query_topology_axis_wrap_cell_step(dims, [], model.cells[1], 0, -1).get("target"), "inspection neighbors still come from native query")
+	model.selected_cell = 0
 	_check(face_steps[0].target == ([2, 4, 3] if dimension == 3 else [2, 4, 3, 3]), "%dD native -X neighbor matches canonical coordinate oracle" % dimension)
 	for axis in "xyzw".substr(0, dimension):
 		_check(model.command("move_%s_pos" % axis) and model.command("move_%s_neg" % axis), "%dD %s both directions accepted" % [dimension, axis])
@@ -324,7 +334,7 @@ func _check_view_and_replacement(tree: SceneTree, app, hud, dimension: int) -> v
 	hud._window_mode_poll_accumulator = 1.0
 	hud._process(0.3)
 	_check(piece_rows == hud._piece_control_strip.find_children("*", "Label", true, false).map(func(node): return node.get_instance_id()), "%dD periodic binding refresh preserves helper rows" % dimension)
-	var operations := ["view_fit", "view_reset", "neighbors", "neighbors", "cell", "retry", "dimension_%d" % dimension]
+	var operations := ["view_fit", "view_reset", "move_x_pos", "move_x_neg", "retry", "dimension_%d" % dimension]
 	if dimension == 4:
 		operations.append_array(["basis_xw_pos", "basis_xw_neg", "basis_zw_pos", "basis_zw_neg", "slice_pos", "slice_neg", "view_reset"])
 	for operation in operations:
@@ -402,7 +412,7 @@ func _check_layout_stability(tree: SceneTree, app, hud, dimension: int) -> void:
 		scroll.scroll_vertical = 20
 		await tree.process_frame
 		var before := _layout_snapshot(hud)
-		var operations := ["space", "move_y_neg", "rotate_xy_pos", "retry", "piece_0", "boundary_rejection", "cell", "neighbors", "target", "view_fit", "view_reset", "long_feedback", "camera_turn"]
+		var operations := ["space", "move_y_neg", "rotate_xy_pos", "retry", "piece_0", "boundary_rejection", "move_x_pos", "move_x_neg", "target", "view_fit", "view_reset", "long_feedback", "camera_turn"]
 		if dimension == 4:
 			operations.append_array(["basis_xw_pos", "slice_pos", "slice_neg", "basis_xw_neg", "basis_xy_pos", "basis_xy_neg", "basis_yz_pos", "basis_yz_neg", "basis_yw_pos", "slice_pos", "slice_neg", "basis_yw_neg"])
 		for operation in operations:
@@ -532,10 +542,10 @@ func _check_unified_view_controls(tree: SceneTree, app, hud, dimension: int) -> 
 				app._practice_action("view_reset")
 				var key: InputEventKey = InputContract.binding_events(action)[0].duplicate()
 				key.pressed = true
-				app._input(key)
+				app._unhandled_input(key)
 				_check(app._live_4d_basis.slots() == clicked and not app._live_4d_basis.is_identity(), "%s shortcut and clickable helper execute exactly the same rotation" % command)
 				key.echo = true
-				app._input(key)
+				app._unhandled_input(key)
 				_check(app._live_4d_basis.slots() == clicked, "%s held shortcut does not repeat or invoke the unshifted plane" % command)
 		# A rebound/cleared action must change the same keycap and dispatch path.
 		var action := "explorer_view_xy_neg"
@@ -550,7 +560,7 @@ func _check_unified_view_controls(tree: SceneTree, app, hud, dimension: int) -> 
 		_check(keycap.text == "F9", "rebinding updates the unified helper keycap")
 		app._practice_action("view_reset")
 		rebound.pressed = true
-		app._input(rebound)
+		app._unhandled_input(rebound)
 		_check(app._live_4d_basis.slots() == [-2, 1, 3, 4], "rebound Explorer shortcut rotates XY rather than another plane")
 		InputMap.action_erase_events(action)
 		hud._refresh_configured_control_reference()
@@ -558,7 +568,7 @@ func _check_unified_view_controls(tree: SceneTree, app, hud, dimension: int) -> 
 		keycap = buttons.filter(func(button): return button.get_meta("binding_action", "") == action)[0]
 		_check(keycap.text == "Unbound", "clearing a shortcut does not print or resurrect its default")
 		app._practice_action("view_reset")
-		app._input(rebound)
+		app._unhandled_input(rebound)
 		_check(app._live_4d_basis.is_identity(), "cleared shortcut stops dispatching")
 		var cleared_default := InputEventKey.new()
 		cleared_default.keycode = KEY_1
@@ -573,12 +583,315 @@ func _check_unified_view_controls(tree: SceneTree, app, hud, dimension: int) -> 
 	# 3D and 4D share look helpers and command identities.
 	app._practice_action("view_reset")
 	var yaw_before: float = app._live_4d_local_orientation.local_yaw if dimension == 4 else app._camera_rig.presentation_snapshot().current_yaw
-	var look_key: InputEventKey = InputContract.binding_events("live_4d_camera_yaw_left")[0].duplicate()
+	var look_key: InputEventKey = InputContract.binding_events("explorer_camera_yaw_left")[0].duplicate()
 	look_key.pressed = true
-	app._input(look_key)
+	app._unhandled_input(look_key)
 	var yaw_after: float = app._live_4d_local_orientation.local_yaw if dimension == 4 else app._camera_rig.presentation_snapshot().current_yaw
 	_check(not is_equal_approx(yaw_before, yaw_after), "%dD look helper shortcut changes camera orientation" % dimension)
 	_check(app._practice.cells == cells and _native_hash(app, dimension) == hash_before, "%dD helper buttons/shortcuts leave object coordinates and native gameplay unchanged" % dimension)
 	app._practice_action("view_reset")
 	for frame in 90:
 		await tree.process_frame
+
+
+func _check_2d_access(tree: SceneTree, app, hud) -> void:
+	var panel = hud._practice_panel
+	var buttons: Array = panel.find_children("*", "Button", true, false)
+	var two_d: Array = buttons.filter(func(button): return button.get_meta("practice_action", "") == "dimension_2")
+	_check(two_d.size() == 1, "Explorer visibly offers 2D")
+	if two_d.size() != 1:
+		return
+	two_d[0].pressed.emit()
+	await tree.process_frame
+	await tree.process_frame
+	_check(app._practice != null and app._practice.dimension() == 2 and app._mode == "live_2d", "2D button opens real flat practice")
+	if app._practice == null or app._practice.dimension() != 2:
+		return
+	var model = app._practice
+	var initial: Array = model.cells.duplicate(true)
+	var native_before: String = app._live_bridge.live_2d_snapshot_json()
+	_check(panel == hud._practice_panel and panel.is_visible_in_tree(), "2D retains visible Explorer panel")
+	_check(model.piece_names().size() == 7, "2D exposes seven native classic pieces")
+	# Dimension changes rebuild the helper deck inside the panel. Resolve its
+	# current controls after the transition instead of dereferencing freed nodes.
+	buttons = panel.find_children("*", "Button", true, false)
+	for button in buttons:
+		var action: String = button.get_meta("practice_action", "")
+		if action.begins_with("move_") or action.begins_with("rotate_"):
+			var axes := action.get_slice("_", 1)
+			_check(button.visible == (not "z" in axes and not "w" in axes), "2D shows only XY piece controls: " + action)
+	app._process(120.0)
+	_check(model.cells == initial, "2D practice has no automatic gravity")
+	for command in ["move_x_neg", "move_x_pos", "rotate_xy_pos", "rotate_xy_neg"]:
+		app._practice_action(command)
+	_check(model.cells == initial, "2D movement and rotation inverse pairs restore pose")
+	var key := InputEventKey.new()
+	key.pressed = true
+	key.keycode = KEY_LEFT
+	app._unhandled_input(key)
+	_check(model.cells != initial, "2D keyboard moves detached practice piece")
+	app._practice_action("retry")
+	_check(model.cells == initial, "2D restart retries practice object")
+	for pair in [[KEY_W, KEY_S], [KEY_UP, KEY_DOWN]]:
+		key.keycode = pair[0]
+		app._unhandled_input(key)
+		_check(model.cells != initial, "2D 3D-subset binding moves vertically")
+		key.keycode = pair[1]
+		app._unhandled_input(key)
+		_check(model.cells == initial, "2D inverse vertical binding restores object")
+	for unused in [KEY_PAGEUP, KEY_PAGEDOWN, KEY_F]:
+		key.keycode = unused
+		app._unhandled_input(key)
+		_check(model.cells == initial, "2D excludes retired aliases: " + OS.get_keycode_string(unused))
+	# Z/X move Y in every Explorer dimension, including 2D (not Live 2D rotation).
+	key.keycode = KEY_Z
+	app._unhandled_input(key)
+	_check(model.cells != initial, "2D Z moves the piece up")
+	key.keycode = KEY_X
+	app._unhandled_input(key)
+	_check(model.cells == initial, "2D X moves it back down")
+	var oracle = Practice.new(app._live_bridge)
+	_check(oracle.begin(app._current_snapshot), "2D native-query comparison initializes")
+	oracle.command("rotate_xy_neg")
+	key.keycode = KEY_R
+	app._unhandled_input(key)
+	_check(model.cells == oracle.cells, "2D R reuses 3D XY rotation")
+	key.keycode = KEY_BACKSPACE
+	app._unhandled_input(key)
+	_check(model.cells == initial, "2D Backspace reuses 3D Retry")
+	app._practice_action("retry")
+	Input.action_press("explorer_2d_move_y_neg")
+	key.keycode = KEY_W
+	app._unhandled_input(key)
+	app._process_explorer_input_repeat(0.0)
+	app._process_explorer_input_repeat(1.0)
+	_check(model.cells != initial, "2D held W repeats Y movement through its Explorer action")
+	Input.action_press("explorer_2d_move_y_pos")
+	key.keycode = KEY_S
+	app._unhandled_input(key)
+	var held_pose: Array = model.cells.duplicate(true)
+	app._process_explorer_input_repeat(1.0)
+	_check(model.cells == held_pose, "2D opposite held directions cancel")
+	Input.action_release("explorer_2d_move_y_neg")
+	Input.action_release("explorer_2d_move_y_pos")
+	app._practice_action("retry")
+	for turn in 4:
+		_check(model.command("rotate_xy_pos"), "2D XY quarter-turn accepted")
+	_check(model.cells == initial, "2D four XY turns restore exact pose")
+	for axis in ["x", "y"]:
+		for attempt in int(app._current_snapshot.board_shape[0]) + int(app._current_snapshot.board_shape[1]):
+			model.command("move_%s_neg" % axis)
+		var wall: Array = model.cells.duplicate(true)
+		_check(not model.command("move_%s_neg" % axis) and model.cells == wall, "2D wall rejection is atomic: " + axis)
+		model.retry()
+	_check(not model.command("move_z_pos") and not model.command("rotate_xz_pos"), "2D rejects spatial commands")
+	_check(model.place_target() and not model.cells.has(model.target), "2D marks a native-legal target away from the object")
+
+	for command in ["hard_drop", "soft_drop", "hold", "tick"]:
+		app._practice_action(command)
+	_check(model.cells == initial, "2D rejects gameplay-only commands")
+	await _check_2d_stability_and_topologies(tree, app, hud)
+	app._practice_action("replace")
+	_check(model.selected_piece >= 0, "2D replacement uses native catalogue")
+	app._practice_action("view_reset")
+	app._practice_action("view_fit")
+	_check(app._live_bridge.live_2d_snapshot_json() == native_before, "2D actions preserve complete native gameplay session")
+	app._return_to_main_menu()
+	app._practice_action("dimension_2")
+	_check(app._practice == model and app._is_live_viewer_active(), "2D menu return retains practice")
+	app._practice_action("play")
+	_check(app._practice == null and app._mode == "live_2d" and not panel.visible, "2D Play restores ordinary game")
+	app._practice_action("dimension_4")
+	await tree.process_frame
+
+
+func _check_2d_stability_and_topologies(tree: SceneTree, app, hud) -> void:
+	var model = app._practice
+	var panel = hud._practice_panel
+	for window_size in [Vector2i(1280, 800), Vector2i(1280, 720)]:
+		tree.root.size = window_size
+		panel._tabs.current_tab = 1
+		for frame in 180:
+			await tree.process_frame
+			if frame > 30 and hud._live_cockpit.fit_settled():
+				break
+		var nodes: Array = panel.find_children("*", "", true, false).map(func(node): return node.get_instance_id())
+		var helpers: Array = hud._piece_control_strip.find_children("*", "", true, false).map(func(node): return node.get_instance_id())
+		var before := _layout_snapshot(hud)
+		for action in ["move_x_neg", "move_y_neg", "move_x_pos", "move_y_pos", "rotate_xy_neg", "rotate_xy_pos", "retry"]:
+			app._practice_action(action)
+			var stable := true
+			for frame in 24:
+				await tree.process_frame
+				stable = _same_layout(before, _layout_snapshot(hud)) and stable
+			_check(stable, "2D " + action + " preserves panel rectangles and fit on every frame")
+			_check(nodes == panel.find_children("*", "", true, false).map(func(node): return node.get_instance_id()), "2D piece movement preserves every panel node")
+			_check(helpers == hud._piece_control_strip.find_children("*", "", true, false).map(func(node): return node.get_instance_id()), "2D piece movement preserves every helper node")
+	panel._tabs.current_tab = 2
+	_check(panel._topologies.is_visible_in_tree(), "2D topology access is on the Space tab")
+	_check(not panel._topologies.is_item_disabled(4) and not panel._topologies.is_item_disabled(5), "twisted profiles expose native surface transport")
+	for preset in ["cylinder_x", "cylinder_y", "torus"]:
+		app._practice_action("retry")
+		var index := 1 if preset == "cylinder_x" else (2 if preset == "cylinder_y" else 3)
+		panel._topologies.item_selected.emit(index)
+		_check(model.topology == preset and panel._topologies.selected == index, "topology selector applies real native " + preset)
+		var initial: Array = model.cells.duplicate(true)
+		var shape: Array = app._current_snapshot.board_shape
+		for axis in ([0, 1] if preset == "torus" else [0 if preset == "cylinder_x" else 1]):
+			for step in int(shape[axis]):
+				_check(model.command("move_%s_pos" % "xy"[axis]), "native seam movement accepted")
+			_check(model.cells == initial, preset + " complete wrap restores all indexed cells")
+			model.command("move_%s_neg" % "xy"[axis])
+			model.command("move_%s_pos" % "xy"[axis])
+			_check(model.cells == initial, preset + " seam inverse restores exact cells")
+		if preset != "torus":
+			var wall_axis := "y" if preset == "cylinder_x" else "x"
+			for step in int(shape[0]) + int(shape[1]):
+				model.command("move_%s_neg" % wall_axis)
+			var wall: Array = model.cells.duplicate(true)
+			_check(not model.command("move_%s_neg" % wall_axis) and model.cells == wall, "cylinder unwrapped wall rejects atomically")
+		app._practice_action("retry")
+		_check(model.command("rotate_xy_pos"), "coherent surface rotation uses native material development")
+		app._practice_action("retry")
+		_check(model.cells == initial, "native topology Retry restores exact baseline")
+		app._practice_action("topology_bounded")
+		_check(model.topology == "bounded", "return to bounded preserves compatible piece")
+	# Compatible pieces switch in place; seam-framed pieces recover atomically
+	# without leaving the dropdown stuck on the old topology.
+	app._practice_action("retry")
+	app._practice_action("move_x_neg")
+	var moved: Array = model.cells.duplicate(true)
+	panel._topologies.select(3)
+	panel._topologies.item_selected.emit(3)
+	_check(model.topology == "torus" and model.cells == moved and panel._topologies.selected == 3, "moved piece switches topology in place")
+	var wrapped := true
+	for step in int(app._current_snapshot.board_shape[0]):
+		app._practice_action("move_x_neg")
+		wrapped = wrapped and model.feedback == "Moved."
+	_check(wrapped and model.cells == moved, "switched piece wraps all the way around the torus")
+	app._practice_action("topology_mobius")
+	for step in int(app._current_snapshot.board_shape[0]):
+		app._practice_action("move_x_neg")
+	var recovery_pose: Array = model._initial.duplicate(true)
+	var tab_before: int = panel._tabs.current_tab
+	var panel_before: int = panel.get_instance_id()
+	panel._topologies.select(5)
+	panel._topologies.item_selected.emit(5)
+	_check(model.topology == "klein" and panel._topologies.selected == 5, "dropdown changes space after a Mobius seam crossing")
+	_check(model.cells == recovery_pose and model._pristine, "seam-crossed switch admits the exact Retry baseline")
+	_check(panel._feedback.is_visible_in_tree() and panel._feedback.text.contains("Retry pose restored"), "topology recovery is visibly explained")
+	_check(panel.get_instance_id() == panel_before and panel._tabs.current_tab == tab_before, "recovery retains controls and selected tab")
+	for index in [0, 1, 2, 3, 4, 5, 6, 7, 0]:
+		var next_topology: String = panel._topologies.get_item_metadata(index)
+		panel._topologies.select(index)
+		panel._topologies.item_selected.emit(index)
+		_check(model.topology == next_topology and panel._topologies.selected == index, "successive topology choices stay available")
+	app._practice_action("retry")
+	app._practice_action("topology_bounded")
+	await _check_board_resize_and_sphere(tree, app, hud)
+	model = app._practice
+	var old: Array = model.cells.duplicate(true)
+	app._practice_action("topology_unknown")
+	_check(model.topology == "bounded" and model.cells == old and panel._topologies.selected == 0, "unknown topology leaves selector and piece unchanged")
+	app._practice_action("retry")
+
+
+# Space tab: board size steps within the Live contract, restarts the piece and
+# keeps the topology; Sphere squares a rectangular board instead of refusing.
+func _check_board_resize_and_sphere(tree: SceneTree, app, hud) -> void:
+	var model = app._practice
+	var panel = hud._practice_panel
+	app._practice_action("topology_bounded")
+	var shape: Array = model.board_shape()
+	app._practice_action("board_x_pos")
+	await tree.process_frame
+	_check(model.board_shape() == [int(shape[0]) + 1, int(shape[1])] and app._current_snapshot.board_shape == model.board_shape(), "Space tab grows the board along X")
+	_check(panel._board_readouts["x"].text == str(int(shape[0]) + 1), "board readout follows the resize")
+	app._practice_action("topology_torus")
+	app._practice_action("board_y_neg")
+	_check(model.topology == "torus" and model.board_shape()[1] == int(shape[1]) - 1, "resize keeps a topology that fits the new board")
+	for step in 40:
+		app._practice_action("board_y_neg")
+	_check(model.board_shape()[1] == 6 and panel._board_buttons["y"][0].disabled, "resize stops at the contract minimum and disables the button")
+	app._practice_action("topology_sphere_adjacent_positive")
+	await tree.process_frame
+	var square: Array = model.board_shape()
+	_check(model.topology == "sphere_adjacent_positive" and square[0] == square[1], "Sphere squares a rectangular board instead of refusing")
+	_check(model.feedback.contains("square board"), "Sphere says why the board changed")
+	var crossed := false
+	for step in square[0] + 2:
+		crossed = app._practice.command("move_x_neg") or crossed
+	_check(crossed, "square Sphere accepts moves through its seams")
+	app._practice_action("retry")
+	app._practice_action("board_x_pos")
+	_check(model.topology == "sphere_adjacent_positive" and model.board_shape() == [square[0] + 1, square[0] + 1], "Sphere resize couples both extents and retains topology")
+	_check(panel._board_rows.x[0].text == "N" and not panel._board_rows.y[0].visible, "Sphere exposes one size N")
+	var retained: Array = model.board_shape()
+	_check(not model.resize_board([retained[0] + 1, retained[1]]) and model.board_shape() == retained and model.topology == "sphere_adjacent_positive", "rectangular requests preserve Sphere atomically")
+	app._practice_action("topology_bounded")
+	app._practice.resize_board(shape)
+	app._practice_action("topology_projective")
+	_check(model.square_surface() and model.board_shape()[0] == model.board_shape()[1], "RP2 selection squares rectangular setup")
+	_check(panel._board_rows.x[0].text == "N" and not panel._board_rows.y[0].visible, "RP2 exposes one size N")
+	var projective_side: int = model.board_shape()[0]
+	app._practice_action("board_x_pos")
+	_check(model.topology == "projective" and model.board_shape() == [projective_side + 1, projective_side + 1], "RP2 resize couples both extents")
+	app._practice_action("topology_bounded")
+	_check(panel._board_rows.x[0].text == "X" and panel._board_rows.y[0].visible, "leaving square surfaces restores independent extents")
+	app._practice.resize_board(shape)
+	app._refresh_practice_snapshot()
+	# The 2D helper uses the 3D/4D legend: compass, Up/Down row, rotation glyph.
+	var strip = hud._piece_control_strip
+	var legend: Dictionary = strip.deterministic_snapshot()
+	var compass: Dictionary = legend.get("compass_keys", {})
+	_check(compass.get("move_x_neg", "") == "A" and compass.get("move_y_neg", "") == "W", "2D helper draws the shared movement compass")
+	_check(legend.get("spatial", false) and legend.get("plane_glyphs", []).size() == 1, "2D helper draws the shared rotation glyph")
+
+
+func _check_native_candidate_adapter() -> void:
+	var bridge = Bridge.new()
+	var original := [[1, 1], [2, 1]]
+	var admitted: Dictionary = bridge.explorer_begin([4, 4], original, original, "torus")
+	_check(admitted.get("ok", false) and admitted.get("cell_ids", []) == [0, 1], "native adapter admits stable indexed cells")
+	for turn in 4:
+		var result: Dictionary = bridge.explorer_move(0, 1)
+		_check(result.get("ok", false) and result.get("cell_ids", []) == [0, 1] and result.cells.size() == 2, "native adapter conserves identities across seam")
+	var invalid: Dictionary = bridge.explorer_begin([4, 4], original, [[1, 1], [1, 1]], "torus")
+	_check(not invalid.get("ok", true), "native adapter rejects duplicate occupancy")
+	_check(not bridge.explorer_begin([4, 4], original, original, "unknown").get("ok", true), "native adapter rejects unsupported preset")
+	_check(not bridge.explorer_move(2, 1).get("ok", true) and not bridge.explorer_move(0, 0).get("ok", true), "native adapter rejects invalid axes and directions")
+	var retried: Dictionary = bridge.explorer_retry()
+	_check(retried.get("ok", false) and retried.cells == original, "invalid adapter requests preserve prior runtime and Retry")
+
+
+func _check_surface_ui(tree: SceneTree, app, hud) -> void:
+	app._start_practice(2)
+	await tree.process_frame
+	var native_before: String = app._live_bridge.live_2d_snapshot_json()
+	var panel = hud._practice_panel
+	for preset in ["mobius", "klein", "projective", "sphere_double_2d"]:
+		app._practice_action("retry")
+		app._practice_action("topology_" + preset)
+		_check(app._practice.topology == preset, "surface selector reaches " + preset)
+		_check(not panel._topology_note.text.is_empty(), "surface note describes " + preset)
+		_check(panel._undo.visible, "surface Undo is discoverable")
+		if preset != "sphere_double_2d":
+			_check(app._renderer._grid_root.get_child_count() == 1, "seam annotations preserve the shared grid owner")
+			_check(app._renderer._annotation_root.get_child_count() == 1 and app._renderer._seam_annotations.visible, "identified edges use their independent annotation root")
+		for size in [Vector2i(1280, 800), Vector2i(1280, 720)]:
+			tree.root.size = size
+			app._fit_view()
+			for frame in 3: await tree.process_frame
+			if preset == "sphere_double_2d":
+				var charts = app._renderer._surface_charts
+				_check(is_instance_valid(charts) and charts.visible and charts.charts.size() == 2, "sphere renders two separate grids")
+				_check(charts.labels[0].text == "Chart A" and charts.labels[1].text == "Chart B", "sphere charts are labelled")
+				_check(charts.charts[0].position != charts.charts[1].position, "chart display positions remain separate")
+				_check(charts.labels[0].position != charts.labels[1].position and charts.labels[0].position.y > 0, "chart labels use continuous positions above each chart")
+		app._practice_action("move_x_neg")
+		app._practice_action("undo")
+		_check(app._live_bridge.live_2d_snapshot_json() == native_before, "surface actions leave native gameplay session unchanged")
+		app._practice_action("retry")
+	app._practice_action("play")
+	for frame in 3: await tree.process_frame
+	_check(app._practice == null and (not is_instance_valid(app._renderer._surface_charts) or not app._renderer._surface_charts.visible), "ordinary Play hides sphere charts")

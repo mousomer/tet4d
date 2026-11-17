@@ -1,7 +1,8 @@
 # Bounded Godot practice Explorer
 
-This plan records the **bounded 3D/4D MVP implementation and its pending novice
-acceptance**. It is not the forward topology roadmap. The normative 2D/3D/4D
+This plan records **bounded 2D/3D/4D practice and pending novice
+acceptance**. The 2D access repair composes existing bounded native queries;
+it does not activate T2 topology transport or complete its transfer. It is not the forward topology roadmap. The normative 2D/3D/4D
 preset/builder and movement contract is `docs/rds/RDS_EXPLORER_TOPOLOGIES.md`;
 see its stages T1-T7. Retain these bounded regression requirements without
 imposing a bounded-only restriction on the new Explorer.
@@ -33,6 +34,7 @@ suite must pass. Do not claim novice or physical-device acceptance from tests.
 
 | Provider | Consumer | Evidence |
 | --- | --- | --- |
+| Native T2A indexed piece runtime | Godot 2D topology selector and practice adapter | Admitted profile/identity/failure/Retry adapter tests, core preservation suite and Explorer seam integration |
 | Existing native geometry, pose and step queries | Godot practice adapter | Query conformance and boundary tests |
 | Existing native configured piece selection | Detached Sandbox pose | Fixed-seed initialization and deterministic retry |
 | Existing Godot control-frame, basis and camera owners | Practice input and view | 3D/4D input and isolation regressions |
@@ -51,8 +53,17 @@ Launch the game bootstrap using the supported Godot executable:
 "$GODOT_BIN" --path godot/Tet4D.Godot res://scenes/game_bootstrap.tscn
 ```
 
-Open Main Menu → Explorer or press `E` on the Main Menu. Choose 3D/4D in
-the practice rail. Entry and slice selection draw no automatic dots; New
+Open Main Menu → Explorer or press `E` on the Main Menu. Choose 2D/3D/4D in
+the practice rail. In 2D, use left/right and the usual rotation bindings;
+W/S or Up/Down move Y, A/D or Left/Right move X; R/T rotate XY and
+Backspace retries, sharing the 3D action inventory. PageUp/PageDown do not move
+the 2D piece. The View page offers bounded, X/Y cylinders and torus profiles;
+verify seam crossing, wrapped-axis inverse, unwrapped walls, exact Retry and
+atomic rejection of an incompatible switch. Möbius/Klein and non-bounded
+rotations remain visibly unavailable. Movement must preserve panel node IDs,
+selected tab, scroll, rectangles and fit scale through intermediate frames. Verify the
+flat board, all seven classic pieces, Retry, menu return and fresh Play.
+2D has no orbit, basis, slice, Z-axis or W-axis controls. Entry and slice selection draw no automatic dots; New
 target (Piece page) explicitly marks a reachable target away from the object.
 In 4D, Slice −/+ moves the active-slice frame off the object's layer; basis
 turns and Reset View return it to the object.

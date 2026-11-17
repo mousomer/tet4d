@@ -33,8 +33,10 @@ from tools.migration.explorer_rotation_contract_evidence import (
     classify_correspondence,
     compose,
     identity_wrap_axes,
+    inverse,
     nearest_centroid_ids,
     pivot_doubled,
+    reference_id,
     rotation_evidence,
     turn_lift,
 )
@@ -63,7 +65,7 @@ def package():
 
 def test_complete_design_package():
     assert validate_package() == {
-        "catalog_entries": 7,
+        "catalog_entries": 8,
         "quotient_witnesses": 9,
         "transport_cases": 23,
         "negative_specs": 19,
@@ -285,8 +287,22 @@ def test_translation_witnesses_match_existing_cell_reference_only():
         resolver = build_explorer_transport_resolver(profile, dims)
         action = case["action"]
         step = MoveStep(axis=action["axis"], delta=action["delta"])
+        # Only explicitly superseded E10 rows retain historical material-frame meaning.
+        rest = {c["id"]: tuple(c["coordinate"]) for c in state["rest_cells"]}
+        reference = next(
+            c["frame"] for c in state["cells"] if c["id"] == reference_id(rest)
+        )
+        unit = [0, 0]
+        unit[action["axis"]] = action["delta"]
         for source, witness in zip(state["cells"], case["per_cell"], strict=True):
-            result = resolver.resolve_cell_step(source["coordinate"], step)
+            direction = (
+                apply_frame(compose(source["frame"], inverse(reference)), unit)
+                if case["legacy_comparison"] == "superseded_forward_explorer"
+                else tuple(unit)
+            )
+            own_axis = 0 if direction[0] else 1
+            own = MoveStep(axis=own_axis, delta=direction[own_axis])
+            result = resolver.resolve_cell_step(source["coordinate"], own)
             assert list(result.target or ()) == witness["target"]
             if result.target is not None:
                 transport = result.piece_frame_transform
@@ -338,7 +354,6 @@ def test_fixture_coverage_and_no_fabricated_execution_results():
         "destination_collision",
         "ambiguous_destination",
         "inverse_mismatch",
-        "rotation_undefined",
         "invalid_piece_state",
         "invalid_profile",
         "stale_candidate",
@@ -659,17 +674,28 @@ def test_supported_rotation_identity_matrix(capsys):
         for (label, sequence, outcome), count in counts.items():
             if sequence == seq:
                 totals[outcome] += count
+        # Closed surfaces (torus, Klein) only refuse overlap; open edges refuse the rest.
         assert totals == (
-            {"restored": 4072, "rotation_undefined": 768, "destination_collision": 216}
+            {
+                "restored": 4348,
+                "unconnected_boundary": 492,
+                "destination_collision": 216,
+            }
             if seq.endswith("4")
             else {
-                "restored": 4300,
-                "rotation_undefined": 540,
+                "restored": 4516,
+                "unconnected_boundary": 324,
                 "destination_collision": 216,
             }
         )
+    assert not any(
+        label.startswith(("torus", "klein")) and outcome == "unconnected_boundary"
+        for (label, _, outcome), count in counts.items()
+        if count
+    )
     assert any(key[2] == "destination_collision" for key in counts)
-    assert any(key[2] == "rotation_undefined" for key in counts)
+    assert any(key[2] == "unconnected_boundary" for key in counts)
+    assert not any(key[2] == "rotation_undefined" for key in counts)
     with capsys.disabled():
         print("\nT1 rotation evidence (not runtime):", dict(admitted))
         for label in admitted:
@@ -680,7 +706,7 @@ def test_supported_rotation_identity_matrix(capsys):
                         outcome: counts[label, seq, outcome]
                         for outcome in (
                             "restored",
-                            "rotation_undefined",
+                            "unconnected_boundary",
                             "destination_collision",
                         )
                     }
@@ -698,7 +724,7 @@ def test_supported_rotation_identity_matrix(capsys):
         ("E7_torus", "rigid_transform"),
         ("E4", "rigid_transform"),
         ("E5_second", "cellwise_deformation"),
-        ("E10_third", "plain_translation"),
+        ("E10_third", "cellwise_deformation"),
         ("E9", "plain_translation"),
         ("mobius_self", "rigid_transform"),
     ],
@@ -749,9 +775,11 @@ def test_period_equivalence_does_not_leak_to_twisted_axes_or_global_isometry():
         classify_correspondence(state["cells"], result["cells"], rectangular)
         == "cellwise_deformation"
     )
-    # Klein's identity X seam alone cannot enable rotation projection.
+    # A turn walks across Klein's seams instead of needing an in-chart projection.
     state = rotation_state(ROTATION_SHAPES["domino_h"], [(3, 1), (0, 1)])
-    assert rotation_evidence(state, klein, TURN)["reason"] == "rotation_undefined"
+    turned = rotation_evidence(state, klein, TURN)
+    assert not turned["reason"]
+    assert [c["coordinate"] for c in turned["cells"]] == [[3, 1], [3, 0]]
 
 
 def test_literal_mobius_and_collision_witnesses_and_recorded_inverse():
@@ -772,7 +800,9 @@ def test_literal_mobius_and_collision_witnesses_and_recorded_inverse():
                 for c in result["cells"]
             )
         if case["id"] == "rotation_crossing_undefined":
+            # The lift leaves the chart at x=4; the walk crosses the flipped seam.
             assert result["evidence"]["rotated_lift"] == [[3, 2], [4, 2]]
+            assert [c["coordinate"] for c in result["cells"]] == [[3, 2], [0, 1]]
         if case["id"] == "E7_rotation_collision":
             assert result["evidence"]["pivot_doubled"] == [0, 2]
             assert result["evidence"]["rotated_lift"] == [[-1, 1], [0, 1], [1, 1]]
@@ -801,12 +831,17 @@ def test_literal_mobius_and_collision_witnesses_and_recorded_inverse():
             "permutation": [1, 0],
             "signs": [case["action"]["quarter_turn"], -case["action"]["quarter_turn"]],
         }
-        assert [compose(reverse_q, c["frame"]) for c in result["cells"]] == [
-            c["frame"] for c in state["cells"]
-        ]
+        q = inverse(reverse_q)
+        # Cells that stayed in one chart turned by q alone; others also crossed a seam.
+        for transport, cell, source in zip(
+            result["transports"], result["cells"], state["cells"], strict=True
+        ):
+            assert compose(transport, source["frame"]) == cell["frame"]
+            if transport == q:
+                assert compose(reverse_q, cell["frame"]) == source["frame"]
 
 
-@pytest.mark.parametrize("case_id", ["E3", "E7_torus", "E10_third"])
+@pytest.mark.parametrize("case_id", ["E3", "E7_torus", "E9"])
 def test_old_chart_classifications_fail_validation(case_id):
     catalog, _, data = package()
     next(c for c in data["cases"] if c["id"] == case_id)["classification"] = (
@@ -835,3 +870,54 @@ def test_rejected_rotation_cannot_retain_an_inverse_descriptor():
     case["inverse"]["source_ref"] = "rotate_collision"
     with pytest.raises(ValueError, match="retains inverse data"):
         check_transport(data, catalog)
+
+
+@pytest.mark.parametrize(
+    "entry_id,chi,orientable,vertices",
+    [
+        ("klein_2d", 0, False, [["A", "B", "C", "D"]]),
+        ("projective_2d", 1, False, [["A", "C"], ["B", "D"]]),
+        ("sphere_adjacent_positive", 2, True, [["A"], ["B", "D"], ["C"]]),
+    ],
+)
+def test_named_explorer_surface_quotients(entry_id, chi, orientable, vertices):
+    catalog, proofs, _ = package()
+    entry = next(row for row in catalog["entries"] if row["id"] == entry_id)
+    actual = analyze_square(entry["recipe"])
+    witness = next(
+        row for row in proofs["cases"] if row["id"] == entry["evidence"][0]["record_id"]
+    )
+    assert actual == witness["expected"]
+    assert actual["vertex_classes"] == vertices
+    assert all(link["kind"] == "circle" for link in actual["vertex_links"])
+    assert actual["euler_characteristic"] == chi
+    assert actual["orientable"] is orientable
+    assert actual["boundary_cycles"] == []
+
+
+def test_owner_cellwise_reference_trajectories():
+    catalog, _, data = package()
+    check_transport(data, catalog)
+    profiles = {r["id"]: r["payload"] for r in data["profiles"]}
+    references = data["cellwise_reference_sequences"]
+    assert {r["id"] for r in references} == {"sphere_up_twice", "projective_up_twice"}
+    for row in references:
+        payload = profiles[row["profile_ref"]]
+        decoded, dimensions = topology_contract_profile(payload)
+        resolver = build_explorer_transport_resolver(decoded, dimensions)
+        coordinate = row["source"]
+        frame = copy.deepcopy(IDENTITY)
+        for target, expected_frame in zip(row["targets"], row["frames"], strict=True):
+            result = resolver.resolve_cell_step(coordinate, MoveStep(**row["action"]))
+            assert list(result.target) == target
+            transform = result.piece_frame_transform
+            if transform is not None:
+                frame = compose(
+                    {
+                        "permutation": list(transform.permutation),
+                        "signs": list(transform.signs),
+                    },
+                    frame,
+                )
+            assert frame == expected_frame
+            coordinate = target

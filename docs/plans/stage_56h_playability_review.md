@@ -198,6 +198,7 @@ explanation and debug vocabulary.
    - SCORE gets no more emphasis than any other field.
    - "SPAWN ENTRY ↘" floats beside the 2D board, and one key label is
      truncated ("counter-clock…").
+     (The spawn cue was removed on 2026-11-15.)
    - "Show Quick Settings" opens no settings panel. It adds detail to the status
      line, which then overflows ("… | Clas…").
    - "Designer: Open" opens a Live Presentation Designer (A/B capture, profile

@@ -653,9 +653,10 @@ The transient status-strip text no longer shows
 command echoes and `C++` in it.
 
 Not changed, recorded deliberately:
-- The 2D `SPAWN ENTRY ↘` cue is specified by
-  `docs/architecture/godot_vector_arcade_cockpit_overhaul.md` (§ Slice labels
-  and 2D spawn entry). It is not diagnostic output.
+- The 2D `SPAWN ENTRY ↘` cue was kept here as specified board chrome.
+  Superseded 2026-11-15: the owner removed it (see
+  `docs/architecture/godot_vector_arcade_cockpit_overhaul.md`, § Slice labels
+  and 2D spawn).
 - The mode label keeps `Live Plain nD`: "Plain" names the bounded topology
   across menus and docs.
 

@@ -53,11 +53,22 @@ general planning redirection or repo-wide ownership notes.
 - Does **not** own programme stage order, durable product behaviour, topology
   semantics, server implementation or new research-study authorization.
 
+### `typography_cleanup.md`
+- Role: `spec`; status: `active`.
+- Owns typography cleanup sequencing and its effective-typography lock.
+- Visible changes (glyph coverage, rule reconciliation) remain owner decisions.
+
 ### `bounded_practice_explorer.md`
 - Role: `spec`; status: `active`.
 - Owns bounded Godot Sandbox implementation scope and novice acceptance tasks.
 - Product/query composition contract: `docs/architecture/bounded_practice_explorer.md`.
 - Human `EXPLORER_LEARNING_READY` acceptance remains distinct from automated tests.
+
+### `explorer_cockpit_unification.md`
+- Role: `spec`; status: `active`.
+- Owns sequencing of one Explorer cockpit (structure, keys, dispatch) across
+  2D/3D/4D and its key→command behaviour lock.
+- Owner decisions Q1–Q5 (placement, keys, Fit, 3D view turns, Space tab) accepted 2026-11-11.
 
 ### `gameboard_visual_language_design.md`
 - Role: `authority`

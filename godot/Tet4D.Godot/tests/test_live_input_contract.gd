@@ -93,4 +93,22 @@ func run() -> Array:
 			failures.append("%s must reuse the canonical repository basis binding" % action_id)
 		if keycode in reserved_keys:
 			failures.append("%s must not collide with piece rotation, drop, or camera actions" % action_id)
+	for dimension in [2, 3, 4]:
+		var profile: Dictionary = LiveInputContractScript.explorer_profile(dimension)
+		if profile.axes.size() != dimension or profile.rotation_planes.size() != dimension * (dimension - 1) / 2:
+			failures.append("Explorer descriptor must expose exactly its dimension's axes and planes")
+		var commands: Array = []
+		for record in profile.axes + profile.rotation_planes:
+			for sign_name in ["negative", "positive"]:
+				var command: String = record[sign_name + "_command"]
+				if command in commands or not LiveInputContractScript.ACTION_SPECS.has(record[sign_name + "_action"]):
+					failures.append("Explorer descriptor commands must be unique and bind existing action IDs")
+				commands.append(command)
+		if profile.topologies.size() != 8 or profile.topologies[1].disabled != (dimension != 2) or profile.topologies[4].disabled != (dimension != 2):
+			failures.append("Explorer topology availability must respect native dimension support")
+		profile.axes.clear()
+		profile.session.retry.label = "mutated fixture"
+		var fresh: Dictionary = LiveInputContractScript.explorer_profile(dimension)
+		if fresh.axes.size() != dimension or fresh.session.retry.label != "Retry object":
+			failures.append("Explorer profiles must not share mutable returned data")
 	return failures
