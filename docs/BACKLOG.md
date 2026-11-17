@@ -31,6 +31,11 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ## Active Work
 
+- [x] Adopt canonical distribution 1.8.2 / runtime 1.0.2 as the reviewed successor
+  to 1.8.1: wrapped/Glob probes, cross-profile duplicate identity, argument-role
+  run matching and mandatory remote head binding. Publish governance-only bytes;
+  require the unchanged full product gate and preserve fleet audit/trust gaps.
+
 - [x] Install canonical distribution 1.8.1 / runtime 1.0.1 through guarded
   direct-checkout receipts. The unchanged full product verifier gates acceptance;
   supervised completion v3 uses profile-owned operation handling.

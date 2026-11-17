@@ -61,7 +61,7 @@ demonstrated.
 
 ## Completion-based execution
 
-Tet4D consumes canonical distribution 1.8.1 / runtime 1.0.1. The pack binds
+Tet4D consumes canonical distribution 1.8.2 / runtime 1.0.2. The pack binds
 `supervised-completion-v3` through its manifest; `gov explain
 execution.completion` supplies provenance. The canonical immutable release owns
 the policy, operation profiles and supervisor; Tet4D owns its verifier and
@@ -86,8 +86,13 @@ duties. The current coverage declaration and runtime-specific limits live in the
 installed operation profiles and shared execution policy, not a second Tet4D
 rule set. Consumer fixtures copy versioned hook bindings, profiles and supervisor
 with the pack; missing or weakened bindings must reject governance.
-Runtime 1.0.1 uses standard integer parsing for process exit-status files so
+Runtime 1.0.2 retains standard integer parsing for process exit-status files so
 consumer reuse validation remains enforced; malformed status remains unknown.
+The 1.8.2 successor checks commands wrapped in new operations before dispatch,
+matches Glob probes to artifacts, and rejects duplicate service identities across
+profiles. Run-ID checks follow argument roles. GitHub verification requires an
+explicit full head SHA; mismatches fail and unbound success remains unknown.
+These fixes preserve the declared adapter coverage and live-trust acceptance limits.
 
 The exact native verifier graph and environment are preserved. The product
 policy authority is excluded from installer-owned content and remains enforced

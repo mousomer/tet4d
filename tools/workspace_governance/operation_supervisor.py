@@ -42,6 +42,7 @@ import argparse
 import contextlib
 import copy
 import fcntl
+import fnmatch
 import hashlib
 import json
 import os
@@ -520,12 +521,16 @@ class GitHubRunService:
             data = json.loads(result.stdout)
         except ValueError as exc:
             raise MechanismError("gh returned unreadable JSON") from exc
-        if identity.get("head_sha") and data.get("headSha") != identity["head_sha"]:
+        expected = str(identity.get("head_sha") or "").lower()
+        if expected and str(data.get("headSha") or "").lower() != expected:
             raise MechanismError("run head commit does not match the operation")
         if data.get("status") != "completed":
             return Observation(PENDING, str(data.get("status")))
         conclusion = str(data.get("conclusion"))
         if conclusion == "success":
+            if not expected:
+                # Success is verification only for the source commit it binds.
+                return Observation(UNKNOWN, "success without a source-commit binding")
             return Observation(SUCCEEDED, conclusion)
         if conclusion == "cancelled":
             return Observation(CANCELLED, conclusion)
@@ -810,13 +815,16 @@ class Supervisor:
         key = _identity_key(profile, identity)
         with self.registry.locked():
             for record in self.registry.open_records():
-                if record.get("key") == key:
+                if record.get("corrupt"):
+                    continue
+                if _record_key(record) == key:
                     raise Refused(
                         f"{record['id']} already tracks this operation "
                         f"({record['status']}); a second submission would duplicate it",
                         next_action(record, self),
                         record["id"],
                     )
+                self._refuse_child_probe(record, identity)
             op_id = "op-" + uuid.uuid4().hex[:12]
             directory = self.registry.dir / "artifacts" / op_id
             record = {
@@ -864,6 +872,27 @@ class Supervisor:
                     raise MechanismError(f"could not start operation: {exc}") from exc
             self.registry.save(record)
         return record
+
+    def _refuse_child_probe(self, record: dict, identity: dict) -> None:
+        """A submitted command is checked against pending operations before it runs.
+
+        Wrapping a probe in a new operation must not escape the restrictions of
+        the operation it probes, or acquire a fresh budget for probing it.
+        """
+        argv = identity.get("argv")
+        if not isinstance(argv, list) or not argv or _completed_locally(record):
+            return
+        child = {"tool": "Bash", "command": shlex.join(map(str, argv)), "input": {}}
+        denial = _probe(
+            record, child, str(identity.get("cwd") or ""), _HookView(self.registry)
+        )
+        if denial is not None:
+            raise Refused(
+                f"the submitted command would probe or duplicate pending operation "
+                f"{denial.operation} ({denial.violation}): {denial.reason}",
+                denial.next_action,
+                denial.operation,
+            )
 
     # -- waiting
     def wait(self, op_id: str) -> WaitResult:
@@ -1239,10 +1268,32 @@ def default_services() -> dict[str, Any]:
 
 
 def _identity_key(profile: str, identity: dict) -> str:
-    stable = {k: v for k, v in identity.items() if k not in {"pid"}}
+    """Operation identity shared by every profile that drives the same service.
+
+    Profiles differ in how completion is awaited, not in what runs: the same
+    command in the same directory is one local operation, and the same run of
+    one repository is one remote operation, whichever profile submits it.
+    """
+    argv = identity.get("argv")
+    if isinstance(argv, list):
+        cwd = os.path.realpath(str(identity.get("cwd") or "."))
+        stable: list = ["local-process", [str(a) for a in argv], cwd]
+    elif identity.get("run_id") is not None:
+        repository = str(identity.get("repository") or "").lower()
+        stable = ["github-run", repository, str(identity["run_id"])]
+    else:
+        stable = [profile, {k: v for k, v in identity.items() if k != "pid"}]
     return hashlib.sha256(
-        json.dumps([profile, stable], sort_keys=True, default=str).encode()
+        json.dumps(stable, sort_keys=True, default=str).encode()
     ).hexdigest()
+
+
+def _record_key(record: dict) -> str:
+    # Recomputed, so records stored under an earlier key form still match.
+    identity = record.get("identity")
+    if not isinstance(identity, dict):
+        return str(record.get("key"))
+    return _identity_key(str(record.get("profile")), identity)
 
 
 def _tail(record: dict) -> list[str]:
@@ -1361,6 +1412,9 @@ class _Call:
     joined: str
     tokens: frozenset[str]
     cwd: str
+    tool: str = ""
+    tool_input: Any = None
+    globs: tuple[str, ...] = ()
 
 
 def _invocation_texts(invocation: dict) -> list[str]:
@@ -1372,36 +1426,128 @@ def _invocation_texts(invocation: dict) -> list[str]:
         for key in ("file_path", "path", "notebook_path")
         if isinstance(tool_input.get(key), str)
     ]
+    texts += list(_glob_patterns(invocation, ""))
     if str(invocation.get("tool") or "").startswith("mcp__"):
         texts.append(json.dumps(tool_input, sort_keys=True, default=str))
     return texts
 
 
-def single_supervisor_call(command: str) -> bool:
-    """True only for one plain ``gov op`` invocation with no shell composition."""
+def _glob_patterns(invocation: dict, cwd: str) -> tuple[str, ...]:
+    """A Glob call's ``pattern``, anchored at its ``path`` (or the cwd if given)."""
+    if invocation.get("tool") != "Glob":
+        return ()
+    tool_input = invocation.get("input") or {}
+    pattern = tool_input.get("pattern")
+    if not isinstance(pattern, str) or not pattern:
+        return ()
+    base = tool_input.get("path")
+    base = base if isinstance(base, str) and base else cwd
+    if base and not os.path.isabs(os.path.expanduser(pattern)):
+        return (os.path.join(base, pattern),)
+    return (os.path.expanduser(pattern),)
+
+
+SUPERVISOR_VALUE_OPTIONS = {"--profile", "--output", "--run-id", "--repo", "--head-sha"}
+
+
+def _supervisor_args(command: str) -> list[str] | None:
+    """Arguments of one plain ``gov op`` invocation with no shell composition."""
     if "`" in command or "$(" in command or "\n" in command:
-        return False
+        return None
     try:
         lexer = shlex.shlex(command, posix=True, punctuation_chars=True)
         lexer.whitespace_split = True
         words = list(lexer)
     except ValueError:
-        return False
+        return None
     if any(word and set(word) <= SHELL_OPERATORS for word in words):
-        return False
+        return None
+    rest = _supervisor_entry(words)
+    if rest is None:
+        return None
+    while rest[:1] == ["--root"] or (rest and rest[0].startswith("--root=")):
+        rest = rest[2:] if rest[0] == "--root" else rest[1:]
+    return rest
+
+
+def _supervisor_entry(words: list[str]) -> list[str] | None:
+    """Words after the supervisor entry point (``gov op`` or the module)."""
     if not words:
-        return False
+        return None
     head = words[0].rsplit("/", 1)[-1]
     rest = words[1:]
     if head in {"python", "python3"} or head.startswith("python3."):
-        return any(w.endswith("operation_supervisor.py") for w in rest[:2]) or (
-            rest[:2] == ["-m", "tools.workspace_governance.operation_supervisor"]
-        )
+        if rest[:1] and rest[0].endswith("operation_supervisor.py"):
+            return rest[1:]
+        if rest[:2] == ["-m", "tools.workspace_governance.operation_supervisor"]:
+            return rest[2:]
+        return None
     if head != "gov":
-        return False
+        return None
     if rest[:1] == ["--root"]:
         rest = rest[2:]
-    return rest[:1] == ["op"]
+    return rest[1:] if rest[:1] == ["op"] else None
+
+
+def single_supervisor_call(command: str) -> bool:
+    """True only for one plain ``gov op`` invocation with no shell composition."""
+    return _supervisor_args(command) is not None
+
+
+def _submitted_child(args: list[str]) -> list[str]:
+    """The command a ``run`` or ``submit`` call would start (argparse REMAINDER)."""
+    if args[:1] not in (["run"], ["submit"]):
+        return []
+    index = 1
+    while index < len(args):
+        word = args[index]
+        if word == "--":
+            return args[index + 1 :]
+        if word in SUPERVISOR_VALUE_OPTIONS:
+            index += 2
+        elif word.startswith("-"):
+            index += 1
+        else:
+            return args[index:]
+    return []
+
+
+_CONTINUE = object()
+
+
+def _supervisor_probe(record, supervisor_call, command, cwd, view, deny):
+    """Checks for a call of the supervisor itself; ``_CONTINUE`` if composed."""
+    action, rest = supervisor_call.group(1), supervisor_call.group(2)
+    targets_this = record.get("id", "?") in rest
+    if (
+        targets_this
+        and action in {"wait", "result"}
+        and view.registry.waiter_active(record["id"])
+    ):
+        reason = (
+            f"`op {action}` would duplicate the supervised wait already attached "
+            "to this operation"
+        )
+        return deny(("REDUNDANT_WAIT", reason), waiter=True)
+    status_query = action == "list" or (action == "result" and targets_this)
+    if status_query and view.registry.status_queried(record["id"]):
+        reason = (
+            "the supervisor already reported this operation's status for the "
+            "current user instruction; repeating the query to detect completion "
+            "is polling"
+        )
+        return deny(("STATUS_QUERY", reason))
+    args = _supervisor_args(command or "")
+    if args is None:
+        return _CONTINUE
+    # The supervisor enforces its own budgets and status-query limit, but the
+    # command it would start is an agent command like any other: a probe
+    # wrapped in a new operation is still a probe of this one.
+    child = _submitted_child(args)
+    if not child:
+        return None
+    wrapped = {"tool": "Bash", "command": shlex.join(child), "input": {}}
+    return _probe(record, wrapped, cwd, view)
 
 
 def _probe(record: dict, invocation: dict, cwd: str, view) -> Denial | None:
@@ -1422,34 +1568,23 @@ def _probe(record: dict, invocation: dict, cwd: str, view) -> Denial | None:
 
     supervisor_call = SUPERVISOR.search(command or "")
     if supervisor_call:
-        action, rest = supervisor_call.group(1), supervisor_call.group(2)
-        targets_this = record.get("id", "?") in rest
-        if (
-            targets_this
-            and action in {"wait", "result"}
-            and view.registry.waiter_active(record["id"])
-        ):
-            reason = (
-                f"`op {action}` would duplicate the supervised wait already attached "
-                "to this operation"
-            )
-            return deny(("REDUNDANT_WAIT", reason), waiter=True)
-        status_query = action == "list" or (action == "result" and targets_this)
-        if status_query and view.registry.status_queried(record["id"]):
-            reason = (
-                "the supervisor already reported this operation's status for the "
-                "current user instruction; repeating the query to detect completion "
-                "is polling"
-            )
-            return deny(("STATUS_QUERY", reason))
-        if single_supervisor_call(command or ""):
-            # The supervisor enforces its own budgets and status-query limit.
-            return None
+        outcome = _supervisor_probe(record, supervisor_call, command, cwd, view, deny)
+        if outcome is not _CONTINUE:
+            return outcome
         # Composed with other commands: every probe check still applies.
     if record.get("corrupt"):
         return None
     joined = "\n".join(texts)
-    call = _Call(command, tuple(texts), joined, frozenset(_tokens(joined)), cwd)
+    call = _Call(
+        command,
+        tuple(texts),
+        joined,
+        frozenset(_tokens(joined)),
+        cwd,
+        str(invocation.get("tool") or ""),
+        invocation.get("input") or {},
+        _glob_patterns(invocation, cwd),
+    )
     for name in view_profile_probes(record):
         found = PROBE_CHECKS[name](record, call) if name in PROBE_CHECKS else None
         if found is not None:
@@ -1471,7 +1606,10 @@ def _artifact_probe(record: dict, call: _Call) -> tuple[str, str] | None:
     artifacts = record.get("artifacts", {})
     paths = [artifacts.get(key) for key in ("directory", "log", "exit_file")]
     paths += list(artifacts.get("outputs") or [])
-    if _mentions_path(call.texts, call.tokens, [p for p in paths if p], call.cwd):
+    paths = [p for p in paths if p]
+    if _mentions_path(call.texts, call.tokens, paths, call.cwd) or _glob_matches(
+        call.globs, paths
+    ):
         reason = (
             "reading or testing this operation's log, exit file or declared outputs "
             "before completion is a completion probe"
@@ -1481,13 +1619,77 @@ def _artifact_probe(record: dict, call: _Call) -> tuple[str, str] | None:
 
 
 def _run_probe(record: dict, call: _Call) -> tuple[str, str] | None:
+    """A query of the run itself, judged by tool, command and argument role.
+
+    A bare number elsewhere (``git log -n 123``, ``--maxfail=123``) is not a
+    reference to run 123.
+    """
     run_id = record.get("identity", {}).get("run_id")
     if run_id is None:
         return None
     run_id = str(run_id)
-    if run_id in call.tokens or re.search(rf"/runs/{re.escape(run_id)}\b", call.joined):
-        return "STATUS_PROBE", f"the call queries run {run_id}"
+    found = "STATUS_PROBE", f"the call queries run {run_id}"
+    if re.search(rf"/runs/{re.escape(run_id)}(?![\w-])", call.joined):
+        return found  # REST paths and URLs, through gh api, curl or a tool
+    if call.tool.startswith("mcp__"):
+        return found if _mcp_names_run(call.tool, call.tool_input, run_id) else None
+    if call.command is None:
+        return None
+    segments = _command_segments(call.command)
+    listed = any(_gh_run_call(words) == "list" for words in segments)
+    for words in segments:
+        sub = _gh_run_call(words)
+        if sub and sub != "list" and run_id in words[words.index("run") + 1 :]:
+            return found  # gh run view/watch/download/cancel <id>
+    if listed and run_id in call.tokens:
+        return found  # gh run list filtered for this run
     return None
+
+
+def _gh_run_call(words: list[str]) -> str | None:
+    """The ``gh run`` subcommand a simple command invokes, if any."""
+    for index, word in enumerate(words):
+        if word.rsplit("/", 1)[-1] != "gh":
+            continue
+        rest = words[index + 1 :]
+        while rest and rest[0].startswith("-"):
+            rest = rest[2:] if rest[0] in {"-R", "--repo"} else rest[1:]
+        if rest[:1] == ["run"]:
+            return rest[1] if len(rest) > 1 else "run"
+    return None
+
+
+def _mcp_names_run(tool: str, tool_input: Any, run_id: str) -> bool:
+    run_tool = "run" in tool.lower()
+
+    def walk(value: Any, key: str) -> bool:
+        if isinstance(value, dict):
+            return any(walk(v, str(k)) for k, v in value.items())
+        if isinstance(value, list):
+            return any(walk(v, key) for v in value)
+        named = "run" in key.lower() or (run_tool and key.lower() in {"id", ""})
+        return named and str(value) == run_id
+
+    return walk(tool_input, "")
+
+
+def _command_segments(command: str, depth: int = 0) -> list[list[str]]:
+    """Simple commands of a shell command line, including ``sh -c`` scripts."""
+    try:
+        lexer = shlex.shlex(command, posix=True, punctuation_chars=True)
+        lexer.whitespace_split = True
+        words = list(lexer)
+    except ValueError:
+        words = command.split()
+    segments: list[list[str]] = [[]]
+    for word in words:
+        if word and set(word) <= SHELL_OPERATORS:
+            segments.append([])
+            continue
+        segments[-1].append(word)
+        if depth < 3 and any(c.isspace() for c in word):
+            segments += _command_segments(word, depth + 1)
+    return [s for s in segments if s]
 
 
 def _handle_probe(record: dict, call: _Call) -> tuple[str, str] | None:
@@ -1573,6 +1775,29 @@ def _mentions_path(texts, tokens, paths, cwd) -> bool:
                 return True
     joined = "\n".join(texts)
     return any(p in joined for p in paths)
+
+
+def _glob_matches(globs, paths) -> bool:
+    """True when a glob pattern would match an artifact (``*`` may cross ``/``)."""
+    if not globs:
+        return False
+    candidates = {p for p in paths} | {os.path.realpath(p) for p in paths}
+    for pattern in globs:
+        variants = {pattern, _real_glob(pattern)}
+        for variant in variants:
+            if any(fnmatch.fnmatchcase(c, variant) for c in candidates):
+                return True
+    return False
+
+
+def _real_glob(pattern: str) -> str:
+    # Resolve the literal leading directories, so /tmp and /private/tmp agree.
+    match = re.search(r"[*?\[]", pattern)
+    head = pattern[: match.start()] if match else pattern
+    directory = head.rsplit("/", 1)[0] if "/" in head else ""
+    if not directory:
+        return pattern
+    return os.path.realpath(directory) + pattern[len(directory) :]
 
 
 def _normalized(command: str) -> str:
@@ -1704,12 +1929,21 @@ def _identity(args, supervisor) -> dict:
     if command[:1] == ["--"]:
         command = command[1:]
     if args.profile == "github-actions-run":
-        if not (args.run_id and args.repo):
-            raise Refused("github-actions-run needs --run-id and --repo", "supply both")
+        if not (args.run_id and args.repo and args.head_sha):
+            raise Refused(
+                "github-actions-run needs --run-id, --repo and --head-sha: a run's "
+                "success is verification only for the source commit it binds",
+                "supply all three, with the full commit SHA the run must test",
+            )
+        if not re.fullmatch(r"[0-9a-fA-F]{40}", args.head_sha):
+            raise Refused(
+                "--head-sha must be a full 40-character commit SHA",
+                "supply the full commit SHA the run must test",
+            )
         return {
             "run_id": args.run_id,
             "repository": args.repo,
-            "head_sha": args.head_sha,
+            "head_sha": args.head_sha.lower(),
         }
     if not command:
         raise Refused(f"{args.profile} needs a command after --", "supply the command")

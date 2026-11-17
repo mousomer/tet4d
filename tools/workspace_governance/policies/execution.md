@@ -127,8 +127,17 @@ compaction. While an operation is pending it refuses status queries, log and
 output-file reads, process probes, `sleep` substitutes for waiting, duplicate
 submissions, redundant waits and a repeated supervisor status report under the
 same user instruction. A `gov op` call composed with other shell commands gets
-every probe check. Submission and wait ownership are registered atomically
-under the registry and waiter locks.
+every probe check. The command a `gov op run` or `submit` would start gets the
+same checks, in the hook and again in the supervisor before it starts, so a
+probe wrapped in a new operation is still a probe of the pending one.
+Duplicate detection uses the service identity (command and directory, or
+repository and run), not the profile that awaits it. Run references are judged
+by argument role (`gh run <action> <id>`, `/runs/<id>` paths, run-named tool
+arguments), not by any matching number, and Glob patterns are matched against
+the operation's artifacts. A remote run's success is verification only when
+its head commit matches the full commit SHA bound at submission; without that
+binding the outcome is `unknown`. Submission and wait ownership are registered
+atomically under the registry and waiter locks.
 
 A denial names the operation and the permitted next action and blocks only the
 offending call. It must not start a retry cycle: continue independent work, use

@@ -1,6 +1,6 @@
 # CURRENT_STATE (Restart Handoff)
 
-Tet4D consumes distribution 1.8.1 / runtime 1.0.1. `gov op` provides
+Tet4D consumes distribution 1.8.2 / runtime 1.0.2. `gov op` provides
 profile-owned supervised completion with durable identity and budgets. The
 unchanged full verifier gates product acceptance. See `./gov explain
 execution.completion` and `docs/architecture/workspace_governance_v0_1.md`.
@@ -98,7 +98,7 @@ From `python scripts/arch_metrics.py`:
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 3.13`
+1. `delivery_size_pressure = 3.14`
 2. `code_balance = 1.91`
 <!-- END GENERATED:current_state_metric_snapshot -->
 

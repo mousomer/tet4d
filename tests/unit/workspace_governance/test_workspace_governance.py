@@ -853,3 +853,39 @@ def test_consumed_supervisor_runs_a_local_command(tmp_path: Path) -> None:
     assert payload["profile"] == "local-command"
     assert payload["mechanism"] == "synchronous_return"
     assert "consumer-supervisor-ok" in "\n".join(payload["log_tail"])
+
+
+@pytest.mark.parametrize("head", [None, "abc123"])
+def test_consumed_remote_supervisor_refuses_missing_or_short_head(
+    tmp_path: Path, head: str | None
+) -> None:
+    """Consumer CLI must reject an unbound run before any GitHub request."""
+    command = [
+        str(ROOT / "gov"),
+        "op",
+        "run",
+        "--profile",
+        "github-actions-run",
+        "--repo",
+        "example/project",
+        "--run-id",
+        "123",
+    ]
+    if head is not None:
+        command += ["--head-sha", head]
+    result = subprocess.run(
+        command,
+        cwd=ROOT,
+        env=scrubbed_environment(
+            GOVERNANCE_PYTHON=sys.executable,
+            GOVERNANCE_OPERATION_STATE=str(tmp_path / "operations"),
+        ),
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
+    )
+    assert result.returncode == 3
+    payload = json.loads(result.stdout)
+    assert "head-sha" in payload["refused"]
+    assert payload["operation"] is None
