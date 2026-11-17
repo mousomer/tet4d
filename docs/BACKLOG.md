@@ -10,8 +10,11 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ## Current Authority
 
+- CI repair: observe settled Designer geometry and retry interrupted macOS
+  asset transfers; full Godot and macOS packaging evidence remain merge gates.
 - T2A CI repair: enable extension exception support to preserve allocation-failure
   handling; native, parity and platform evidence must pass before merge.
+
 
 - Product programme: `docs/plans/professional_godot_game_programme.md`
 - Spatial-learning study plan: `docs/plans/spatial_intuition_research_plan.md`
@@ -28,6 +31,10 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ## Active Work
 
+- [x] Adopt no-autonomous-polling completion policy (distribution 1.6.2 / runtime 0.9.2): `synchronous-completion-v2`, pack-managed Claude/Codex PreToolUse guard, `gov ci-status`, local vs remote evidence separation.
+- [ ] Owner: trust the Codex project hook (`/hooks`) so Codex enforces the guard; untrusted hooks are skipped.
+
+- [x] Adopt shared completion policy (distribution 1.5.0 / runtime 0.8.0): manifest binding, resolver provenance, canonical skills and regression protection; preserve fleet exclusions and deferred telemetry.
 - Explorer Linux CI: reconnect binding signatures to the existing shared label
   formatter; require remote Godot acceptance before merging PR #184.
 

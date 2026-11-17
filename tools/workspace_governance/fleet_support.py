@@ -19,6 +19,8 @@ from contextlib import contextmanager
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+from tools.workspace_governance import hook_adapters
+
 SCHEMA = 1
 BEGIN = "<!-- BEGIN workspace-governance managed dispatch -->"
 END = "<!-- END workspace-governance managed dispatch -->"
@@ -1214,8 +1216,8 @@ def rendered(
 ) -> dict[str, tuple[bytes, int]]:
     body = (
         "Use `./gov check` before work and `./gov resolve` for governed context.\n"
-        "The adopted pack is pinned in `.governance/fleet.json`. Existing local\n"
-        "instructions and stronger verification duties continue to apply.\n"
+        "Pinned in `.governance/fleet.json`; local instructions and stronger duties apply.\n"
+        "Never poll remote state: observe once, report PENDING_EXTERNAL, stop.\n"
         "Run the declared project verifier; its managed hook checks the pack first."
     )
     generated: dict[str, tuple[bytes, int]] = {}
@@ -1253,6 +1255,8 @@ def rendered(
             "sha256": digest(canonical(verification["execution_environment"])),
         }
     generated[".governance/fleet.json"] = (canonical(metadata), 0o644)
+    for name, data in hook_adapters.render(root).items():
+        generated[name] = (data, state(confined(root, name))["mode"] or 0o644)
     for entry in row.get("managed_files", []):
         name = relative(entry["path"])
         if name in generated:

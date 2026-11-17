@@ -6,6 +6,10 @@ Stage: 54F-2, extended by the Stage 54F-4 built-in style catalog surface
 
 ## Purpose
 
+Automated geometry acceptance waits for the cockpit's `fit_settled()` lifecycle
+after opening the Designer, with a bounded timeout that remains a test failure.
+The first process frame is not a completed-layout guarantee.
+
 The Live Presentation Designer is a developer/designer instrument for changing
 registered presentation values against one running deterministic live game. It
 exists to shorten visual iteration without restarting a session, editing source

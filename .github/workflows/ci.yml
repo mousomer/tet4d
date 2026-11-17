@@ -321,7 +321,7 @@ jobs:
       - name: Download and verify Godot
         run: |
           mkdir -p "$RUNNER_TEMP/tet4d-godot"
-          curl --fail --location --retry 3 \
+          curl --fail --location --retry 3 --retry-all-errors --connect-timeout 30 \
             --output "$RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_NAME" \
             "$GODOT_ASSET_URL"
           echo "$GODOT_ASSET_SHA256  $RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_NAME" \
@@ -456,7 +456,7 @@ jobs:
       - name: Install exact Godot editor and macOS export template
         run: |
           mkdir -p "$RUNNER_TEMP/tet4d-godot"
-          curl --fail --location --retry 3 \
+          curl --fail --location --retry 3 --retry-all-errors --connect-timeout 30 \
             --output "$RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_NAME" \
             "$GODOT_ASSET_URL"
           echo "$GODOT_ASSET_SHA256  $RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_NAME" \
@@ -466,7 +466,7 @@ jobs:
           echo "GODOT_BIN=$RUNNER_TEMP/tet4d-godot/$GODOT_ASSET_EXECUTABLE" \
             >> "$GITHUB_ENV"
 
-          curl --fail --location --retry 3 \
+          curl --fail --location --retry 3 --retry-all-errors --connect-timeout 30 \
             --output "$RUNNER_TEMP/tet4d-godot/$GODOT_TEMPLATE_NAME" \
             "$GODOT_TEMPLATE_URL"
           echo "$GODOT_TEMPLATE_SHA512  $RUNNER_TEMP/tet4d-godot/$GODOT_TEMPLATE_NAME" \
