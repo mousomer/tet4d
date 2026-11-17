@@ -12,34 +12,71 @@ import hashlib
 import json
 from pathlib import Path
 
-from tools.workspace_governance import command_policy
+from tools.workspace_governance import command_policy, operation_supervisor
 
-POLICY_ID = "synchronous-completion-v2"
+POLICY_ID = "supervised-completion-v3"
 POLICY_PATH = "policies/execution.json"
 REQUIRED = {
+    "agent_wait_polling": "forbidden",
+    "polling_definition": "repeated_status_log_file_or_process_queries_to_detect_completion",
+    "repository_inspection": "permitted",
     "local_completion": "await_exit",
-    "remote_completion": "single_observation_or_notification",
-    "autonomous_polling": "forbidden",
-    "tool_watch_modes": "forbidden",
+    "ownership": "pack_rules_profiles_mechanisms_supervisor_selection_and_state_adapters_execution_hooks_predispatch_denial",
+    "operation_profiles": "policies/operation_profiles.json",
+    "profile_before_start": "required",
+    "profile_validation": "reject_incomplete_or_contradictory_before_start",
+    "completion_selection": "first_available_in_profile_preference_order",
+    "completion_delivery": "synchronous_return_notification_blocking_wait_or_controlled_continuation",
+    "adapter_polling": "explicit_profile_authorization_when_no_preferred_mechanism_available",
+    "agent_mechanism_choice": "forbidden",
+    "fallback": "profile_authorized_only_preserving_identity_and_consumed_budget",
+    "unsupported_completion": "report_limitation_no_agent_polling_fallback",
+    "cadence_owner": "adapter",
+    "service_polling": "approved_adapter_min_interval_backoff_request_limit_deadline",
+    "concurrent_waits": "forbidden",
+    "continuation": "existing_handle_enforced_blocking_interval",
+    "repeated_immediate_pending": "adapter_fault_no_automatic_retry",
+    "terminal_outcome": "success_failure_or_cancellation_with_evidence",
+    "response_window_expiry": "continue_same_handle_within_remaining_budget",
+    "budget_scope": "per_operation_persisted_across_waits_fallbacks_interfaces_and_sessions",
+    "deadline_expiry": "pending_preserve_handle_no_restart_no_cancel",
+    "budget_renewal": "new_user_instruction_bounded_renewals",
+    "mechanism_failure": "report_error_no_fallback_keep_unrelated_work",
+    "outcome_distinction": "response_window_deadline_budget_and_mechanism_failure_machine_readable",
+    "decision_record": "mechanism_profile_version_transition_reasons_budgets_and_enforcement_errors",
+    "status_queries": "supervisor_status_once_per_user_instruction",
+    "denial_scope": "offending_action_only",
+    "denial_content": "operation_and_permitted_next_action",
+    "denial_followup": "independent_work_designated_mechanism_or_yield",
+    "guard_failure": "block_wait_and_status_probes_only",
+    "hook_state": "durable_across_turns_interfaces_and_compaction",
+    "tool_watch_modes": "forbidden_outside_approved_adapters",
     "synthetic_waiting": "forbidden",
-    "remote_wait": "only_when_declared_gate_requires",
-    "pending_external": "terminal_for_current_observation",
+    "unmanaged_remote_state": "single_observation_then_pending_external",
     "reobservation": "requires_notification_event_or_user_instruction",
+    "remote_wait": "only_when_declared_gate_requires",
     "non_success_states": "never_verification",
-    "yield_handling": "resume_same_local_invocation",
+    "yield_handling": "resume_same_handle",
     "parallel_completion": "await_all_preserve_failures",
     "unknown_outcome": "never_success",
     "recovery": "reconnect_same_identity_no_automatic_redispatch",
     "undetermined_remote_invocation": "deny",
-    "enforcement": "pretooluse_shared_command_policy",
+    "enforcement": "pretooluse_operation_registry_and_shared_command_policy",
+    "coverage_declaration": "required",
 }
 EXPECTED = {
-    "schema_version": 2,
+    "schema_version": 3,
     "id": POLICY_ID,
-    "supersedes": "synchronous-completion-v1",
+    "supersedes": "synchronous-completion-v2",
     "scope": "all_work_types_projects_roles_and_execution_modes",
+    "primary_acceptance": "no_uncontrolled_agent_polling",
     "requirements": REQUIRED,
-    "codes": {"violation": "NO_AUTONOMOUS_POLLING", "pending": "PENDING_EXTERNAL"},
+    "codes": {
+        "violation": "NO_AUTONOMOUS_POLLING",
+        "operation": "OPERATION_PENDING",
+        "pending": "PENDING_EXTERNAL",
+        "degraded": "GUARD_DEGRADED",
+    },
 }
 OBSERVATION_RESULTS = {
     "pass": "success",
@@ -63,6 +100,11 @@ def load_policy(pack: Path, manifest: dict) -> dict:
     policy = json.loads(raw)
     if policy != EXPECTED:
         raise ValueError("shared execution policy is incomplete or weakened")
+    profiles = pack / REQUIRED["operation_profiles"]
+    if profiles.is_symlink() or not profiles.resolve().is_relative_to(pack.resolve()):
+        raise ValueError("operation profiles must be owned by the selected pack")
+    # Incomplete or contradictory profiles are rejected before any operation starts.
+    operation_supervisor.load_profiles(profiles)
     return {**policy, "sha256": hashlib.sha256(raw).hexdigest()}
 
 

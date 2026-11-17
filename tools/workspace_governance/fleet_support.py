@@ -874,7 +874,11 @@ def prohibited_environment_name(name: str) -> bool:
 
 def execution_policy(verification: dict[str, Any] | None = None) -> dict[str, Any]:
     """Explicit approved inputs, not a sandbox against an actor with this UID."""
-    declaration = (verification or {}).get("execution_environment", {})
+    if verification is not None and not isinstance(verification, dict):
+        raise FleetError("Invalid verification declaration")
+    declaration = (
+        {} if verification is None else verification.get("execution_environment", {})
+    )
     if not isinstance(declaration, dict) or set(declaration) - {
         "version",
         "inherit",

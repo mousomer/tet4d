@@ -2,7 +2,7 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Bash|Monitor|mcp__.*",
+        "matcher": "Bash|Monitor|Read|Grep|Glob|mcp__.*",
         "hooks": [
           {
             "type": "command",

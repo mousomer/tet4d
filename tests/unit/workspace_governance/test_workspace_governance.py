@@ -817,8 +817,39 @@ def test_relocking_cannot_waive_shared_completion_policy(checkout: Path) -> None
 
     policy = checkout / "tools/workspace_governance/policies/execution.json"
     payload = json.loads(policy.read_text())
-    payload["requirements"]["autonomous_polling"] = "allowed"
+    payload["requirements"]["agent_wait_polling"] = "allowed"
     policy.write_text(json.dumps(payload))
     resolver = GovernanceResolver.for_root(checkout)
     _sync(checkout, resolver)
     assert "PACK_DRIFT" in codes(resolver.check())
+
+
+def test_consumed_supervisor_runs_a_local_command(tmp_path: Path) -> None:
+    env = scrubbed_environment(
+        GOVERNANCE_PYTHON=sys.executable,
+        GOVERNANCE_OPERATION_STATE=str(tmp_path / "operations"),
+    )
+    result = subprocess.run(
+        [
+            str(ROOT / "gov"),
+            "op",
+            "run",
+            "--profile",
+            "local-command",
+            "--",
+            sys.executable,
+            "-c",
+            "print('consumer-supervisor-ok')",
+        ],
+        cwd=ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["status"] == "succeeded"
+    assert payload["profile"] == "local-command"
+    assert payload["mechanism"] == "synchronous_return"
+    assert "consumer-supervisor-ok" in "\n".join(payload["log_tail"])

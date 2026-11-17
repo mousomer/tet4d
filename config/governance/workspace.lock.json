@@ -1,5 +1,5 @@
 {
-  "content_sha256": "6ce1b9aa45203a43dc0f43a283c66a6775c1f89561db4e1ab5b5d272beb91a6d",
+  "content_sha256": "4f1e0409dac6f6c908ad3776ab955d74f4a6cbc2753292059fc560295c9785f3",
   "files": [
     ".ruff.toml",
     "MANIFEST.json",
@@ -22,9 +22,11 @@
     "hooks/codex_no_polling.rules",
     "hooks/no_polling.py",
     "hooks/no_polling.sh",
+    "operation_supervisor.py",
     "policies/execution.json",
     "policies/execution.md",
     "policies/external_checkouts.md",
+    "policies/operation_profiles.json",
     "policies/ownership.md",
     "policies/workspace_baseline.md",
     "release.py",
@@ -47,7 +49,7 @@
   "lock_algorithm": "sha256-path-and-content-v1",
   "pack_name": "workspace-governance",
   "pack_path": "tools/workspace_governance",
-  "revision": "v0.9-no-autonomous-polling-3",
+  "revision": "v1.0-supervised-completion-2",
   "schema_version": 1,
-  "version": "0.9.2"
+  "version": "1.0.1"
 }

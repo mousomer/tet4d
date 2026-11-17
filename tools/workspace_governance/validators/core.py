@@ -69,6 +69,7 @@ SUPPORTED_COMMANDS = {
     "env",
     "telemetry",
     "ci-status",
+    "op",
 }
 PYTHON_APPLICATION_FIELDS = {
     "python_requires",

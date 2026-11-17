@@ -202,6 +202,9 @@ def _record(
 def main(argv: list[str] | None = None) -> int:
     started = time.monotonic()
     original_argv = list(sys.argv[1:] if argv is None else argv)
+    delegated = _operation_command(original_argv)
+    if delegated is not None:
+        return delegated
     raw_argv = list(original_argv)
     as_json = "--json" in raw_argv
     raw_argv = [item for item in raw_argv if item != "--json"]
@@ -264,6 +267,18 @@ def main(argv: list[str] | None = None) -> int:
         # visible to their callers.
         print(f"gov: telemetry not recorded ({type(exc).__name__})", file=sys.stderr)
     return status
+
+
+def _operation_command(argv: list[str]) -> int | None:
+    """``gov [--root R] op ...``: supervised managed operations (no telemetry)."""
+    head = argv[:2] if argv[:1] == ["--root"] else []
+    rest = argv[len(head) :]
+    if rest[:1] != ["op"]:
+        return None
+    from tools.workspace_governance import operation_supervisor
+
+    root = Path(head[1]).resolve() if head else Path.cwd().resolve()
+    return operation_supervisor.main(rest[1:], root=root)
 
 
 def _ci_status_command(root: Path, args: argparse.Namespace) -> int:

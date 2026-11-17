@@ -1,11 +1,19 @@
-"""PreToolUse adapter for Claude Code and Codex over the shared command policy.
+"""PreToolUse adapter for Claude Code and Codex (``supervised-completion-v3``).
 
 Usage: ``no_polling.py <claude|codex> [prompt]``; the hook payload arrives as
 JSON on stdin. A denial exits 2 with the reason on stderr, which both runtimes
 treat as a pre-execution block. ``prompt`` mode (UserPromptSubmit) starts a new
-observation epoch and never blocks. The only state is a per-session record of
-remote status targets already observed in the current epoch, kept under the
-temporary directory; it never touches the repository or the network.
+observation epoch, records a new user instruction for the operation supervisor
+and never blocks.
+
+Two checks run in order. The operation check consults the durable registry of
+pending managed operations (``operation_supervisor``) and refuses only calls that
+probe or duplicate one of them, naming the operation and the permitted next
+action. The shared command policy then refuses tool watch modes and agent
+polling loops. A guard failure is scoped: it blocks only a call that looks like
+a wait or status probe and lets every other call proceed with a visible
+``GUARD_DEGRADED`` warning, so no waiting-policy failure becomes a blanket
+prohibition of unrelated work.
 """
 
 from __future__ import annotations
@@ -23,22 +31,66 @@ from pathlib import Path
 
 PROMPT_MODE = "prompt" in sys.argv[2:]
 ALARM_SECONDS = 18
+POLICY_CODE = "NO_AUTONOMOUS_POLLING"
+RAW = {"text": ""}
+# Fallback used only when the guard itself fails: block what plainly waits for or
+# probes an operation, allow everything else. Mirrors the launcher's case list.
+FALLBACK_PROBE = re.compile(
+    r"gh\s+run\s+(?:watch|view)|gh\s+pr\s+checks|gh\s+api\s+\S*(?:/runs|status|check)"
+    r"|(?:^|[\s;&|(\"])watch\s|--watch|--interval|(?:^|[\s;&|(\"])sleep\s+[0-9]"
+    r"|tail\s+-[A-Za-z]*[fF]|while\s.*sleep\s|until\s.*;\s*do|ps\s+-p|kill\s+-0"
+    r"|(?:^|[\s;&|(\"])pgrep\s"
+)
+
+
+def _keep_enforcement_error(detail: str) -> None:
+    """Best effort: record the error with the checkout's managed operations."""
+    try:
+        payload = json.loads(RAW["text"] or "{}")
+        cwd = str(payload.get("cwd") or os.getcwd())
+        from tools.workspace_governance import operation_supervisor
+
+        operation_supervisor.record_enforcement_error(checkout_roots(cwd), detail)
+    except Exception:  # noqa: BLE001 - recording must never change the decision
+        return
+
+
+def scoped_failure(
+    runtime: str, detail: str, text: str | None = None, *, keep: bool = True
+) -> int:
+    """Turn a guard failure into a block of probe-like calls only."""
+    text = RAW["text"] if text is None else text
+    if PROMPT_MODE:
+        return 0
+    if keep:
+        _keep_enforcement_error(f"GUARD_DEGRADED: {detail}")
+    if FALLBACK_PROBE.search(text or ""):
+        sys.stderr.write(
+            f"{POLICY_CODE} (GUARD_FAILURE): {detail}. This call looks like a wait or "
+            "status probe, so it is blocked while the guard is degraded. Unrelated "
+            "commands remain available; repair the pack-managed hook (./gov check).\n"
+        )
+        return 2
+    warning = (
+        f"{POLICY_CODE} (GUARD_DEGRADED): {detail}. Waiting-policy enforcement is "
+        "degraded for this call, which is allowed because it is not a wait or status "
+        "probe. Report this enforcement error; repair with ./gov check."
+    )
+    sys.stderr.write(warning + "\n")
+    if runtime == "claude":
+        sys.stdout.write(json.dumps({"systemMessage": warning}) + "\n")
+    return 0
 
 
 def _deadline(*_):
-    # Independent of the launcher's watchdog: a hang becomes a block, never a pass.
-    sys.stderr.write(
-        "NO_AUTONOMOUS_POLLING (GUARD_FAILURE): classifier deadline exceeded; "
-        "the call is blocked.\n"
-    )
-    os._exit(0 if PROMPT_MODE else 2)
+    # Independent of the launcher's watchdog: a hang is scoped, never a blanket block.
+    runtime = sys.argv[1] if len(sys.argv) > 1 else ""
+    os._exit(scoped_failure(runtime, "classifier deadline exceeded", keep=False))
 
 
 ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-
-from tools.workspace_governance import command_policy
 
 MAX_INPUT = 1 << 20
 SHELL_TOOLS = {"Bash", "Monitor", "exec_command", "shell", "local_shell"}
@@ -55,6 +107,7 @@ class GuardError(Exception):
 
 def _read_payload() -> dict:
     raw = sys.stdin.buffer.read(MAX_INPUT + 1)
+    RAW["text"] = raw[:MAX_INPUT].decode("utf-8", "replace")
     if len(raw) > MAX_INPUT:
         raise GuardError("hook payload too large")
     payload = json.loads(raw.decode("utf-8"))
@@ -132,7 +185,9 @@ def script_reader(cwd: str):
     return read
 
 
-def classify(invocation: dict, cwd: str = "") -> command_policy.Decision:
+def classify(invocation: dict, cwd: str = ""):
+    from tools.workspace_governance import command_policy
+
     tool = invocation["tool"]
     if (
         tool == "Monitor"
@@ -236,8 +291,13 @@ def _record(path: Path, payload: dict, decision) -> str | None:
     try:
         state = _load_state(path)
     except (GuardError, ValueError, OSError):
-        _save_state(path, {"epoch": "reset", "seen": []})
-        raise GuardError("observation state was unreadable and has been reset")
+        # Reset and continue: corrupt bookkeeping must not block the current call.
+        sys.stderr.write(
+            f"{POLICY_CODE} (GUARD_DEGRADED): observation state was unreadable and "
+            "has been reset.\n"
+        )
+        _keep_enforcement_error("GUARD_DEGRADED: observation state reset")
+        state = {"epoch": "reset", "seen": []}
     epoch = str(_turn(payload) or state.get("epoch") or "initial")
     same = state.get("epoch") == epoch
     seen = state["seen"] if same else []
@@ -256,25 +316,70 @@ def _record(path: Path, payload: dict, decision) -> str | None:
 
 
 def deny(violation: str, reason: str) -> int:
-    print(
-        f"{command_policy.POLICY_CODE} ({violation}): {reason}",
-        file=sys.stderr,
-    )
+    print(f"{POLICY_CODE} ({violation}): {reason}", file=sys.stderr)
     return 2
+
+
+def checkout_roots(cwd: str) -> list[Path]:
+    """The guard's own consumer root plus the governed checkout containing cwd."""
+    roots = [ROOT]
+    current = Path(cwd or ".").expanduser()
+    for candidate in (current, *current.parents):
+        if (candidate / "tools/workspace_governance/MANIFEST.json").is_file():
+            if candidate.resolve() != ROOT:
+                roots.append(candidate.resolve())
+            break
+    return roots
+
+
+def _command_text(invocation: dict) -> str:
+    command = invocation.get("command")
+    if isinstance(command, str):
+        return command
+    return json.dumps(invocation.get("input") or {}, default=str)
 
 
 def main(argv: list[str]) -> int:
     runtime = argv[1] if len(argv) > 1 else ""
+    payload = _read_payload()  # first, so a scoped failure can see the call
     if runtime not in {"claude", "codex"}:
         raise GuardError("unknown runtime")
-    payload = _read_payload()
+    cwd = str(payload.get("cwd") or os.getcwd())
     if len(argv) > 2 and argv[2] == "prompt":
         new_epoch(runtime, payload)
+        from tools.workspace_governance import operation_supervisor
+
+        operation_supervisor.advance_user_epoch(checkout_roots(cwd))
         return 0
-    decision = classify(normalize(payload), str(payload.get("cwd") or ""))
+    invocation = normalize(payload)
+    text = _command_text(invocation)
+    try:
+        from tools.workspace_governance import operation_supervisor
+
+        denial = operation_supervisor.hook_check(invocation, cwd, checkout_roots(cwd))
+    except Exception as exc:  # noqa: BLE001 - scoped, never blanket
+        return scoped_failure(
+            runtime, f"operation registry unavailable ({type(exc).__name__})", text
+        )
+    if denial is not None:
+        print(denial.message(), file=sys.stderr)
+        return 2
+    try:
+        from tools.workspace_governance import command_policy
+
+        decision = classify(invocation, cwd)
+    except Exception as exc:  # noqa: BLE001 - scoped, never blanket
+        return scoped_failure(
+            runtime, f"command classifier failed ({type(exc).__name__})", text
+        )
     if decision.decision != command_policy.ALLOW:
         return deny(decision.violation or "UNDETERMINED_REMOTE", decision.reason)
-    target = repeated(runtime, payload, decision)
+    try:
+        target = repeated(runtime, payload, decision)
+    except Exception as exc:  # noqa: BLE001 - bookkeeping must not block the call
+        return scoped_failure(
+            runtime, f"observation state unavailable ({type(exc).__name__})", text
+        )
     if target is not None:
         return deny(
             "REPEATED_STATUS_QUERY",
@@ -290,11 +395,6 @@ if __name__ == "__main__":
     signal.alarm(ALARM_SECONDS)
     try:
         sys.exit(main(sys.argv))
-    except Exception as exc:  # noqa: BLE001 - every guard failure must block
-        print(
-            f"{command_policy.POLICY_CODE} (GUARD_FAILURE): {type(exc).__name__}: "
-            f"{exc}. The no-polling guard could not classify this call, so it is "
-            "blocked; repair the pack-managed hook (./gov check).",
-            file=sys.stderr,
-        )
-        sys.exit(2 if "prompt" not in sys.argv[2:] else 0)
+    except Exception as exc:  # noqa: BLE001 - guard failure is scoped, never blanket
+        runtime = sys.argv[1] if len(sys.argv) > 1 else ""
+        sys.exit(scoped_failure(runtime, f"{type(exc).__name__}: {exc}"))

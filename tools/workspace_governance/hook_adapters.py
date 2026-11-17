@@ -1,4 +1,4 @@
-"""Pack-managed PreToolUse adapters binding the shared no-polling guard.
+"""Pack-managed PreToolUse adapters binding the shared supervised-completion guard.
 
 The adapters are JSON hook entries merged into a consumer's
 ``.claude/settings.json`` and ``.codex/hooks.json``. Merging preserves every
@@ -48,7 +48,9 @@ def _entry(
 def claude_entries() -> dict[str, dict[str, Any]]:
     return {
         "PreToolUse": _entry(
-            "Bash|Monitor|mcp__.*",
+            # Read/Grep/Glob are bound so log and output-file probes of a pending
+            # managed operation are refused on the file tools as well as in Bash.
+            "Bash|Monitor|Read|Grep|Glob|mcp__.*",
             f"{CLAUDE_GUARD} claude || exit 2",
             block_on_failure=True,
         ),

@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-11-16
+Updated: 2026-11-17
 Scope: active work, explicit deferrals, and near-term acceptance boundaries.
 
 Completed chronology is recoverable from Git, merged PRs, CI, and
@@ -30,6 +30,13 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   facts)
 
 ## Active Work
+
+- [x] Install canonical distribution 1.8.1 / runtime 1.0.1 through guarded
+  direct-checkout receipts. The unchanged full product verifier gates acceptance;
+  supervised completion v3 uses profile-owned operation handling.
+- [ ] Preserve fleet audit gaps, desktop hook trust and live Claude/Codex
+  enforcement as separate acceptance duties; repository installation and tests
+  do not establish these claims.
 
 - [x] Adopt no-autonomous-polling completion policy (distribution 1.6.2 / runtime 0.9.2): `synchronous-completion-v2`, pack-managed Claude/Codex PreToolUse guard, `gov ci-status`, local vs remote evidence separation.
 - [ ] Owner: trust the Codex project hook (`/hooks`) so Codex enforces the guard; untrusted hooks are skipped.
