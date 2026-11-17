@@ -1,21 +1,16 @@
 # CURRENT_STATE (Restart Handoff)
 
-Harness repair consumes distribution 1.4.0 / runtime 0.7.0. Candidate and
-immutable kit gates, source/skill integrity, guarded direct adoption and manual
-owner migrations are retained in durable private receipts. Tet4D's current
-native verifier and committed project rules are preserved in the reviewed
-binding. The owner selected harness repairs and existing offline checks;
-the private fleet audit owns fresh scoped outcomes and remaining gaps.
-Protected data, historical releases/evidence, product authority and deferred
-telemetry gates remain intact. The plan is
-`docs/plans/policy_kit_logging_and_meta_testing_repairs.md`.
+Tet4D uses distribution 1.6.2 / runtime 0.9.2. Run `./gov explain
+execution.completion` to inspect the shared no-polling completion requirements
+and their source. The architecture contract is
+`docs/architecture/workspace_governance_v0_1.md`.
 The Stage 56H unified baseline is committed at `0cb30958`.
 ## Purpose
 This file contains only the compact state needed to resume staged or
 phase-dependent work. It is not workflow authority, a CI diary, a completed
 stage archive, a task-contract ledger, or a future programme.
 ## Active Focus
-Explorer cockpit Phases 0–2 (lock, descriptor and independent input dispatch) are implemented and verified.
+Explorer cockpit Phases 0–2 (lock, descriptor and independent input dispatch) are implemented and verified. CI work remains isolated in PR #185.
 Owner debug reconnection uses compact 2D shell chrome and shared projected helper directions, omits the duplicate vertical row, and adds no functions; focused checks pass. Phases 3–6 and human visual acceptance remain open under `docs/plans/explorer_cockpit_unification.md`.
 Explorer T2A implements the native bounded/cylinder/torus translation candidate and permanent preservation suite described in `docs/architecture/explorer_topology_t2a_native_transport.md`. T1 PRs #172–#176 are the accepted baseline; remaining Correction 4B P2 findings stay deferred. T2B is integrated; the owner-authorized 2D surface candidate adds Möbius/Klein/projective, coherent rotations/Undo and compatibility two-chart S² under `docs/architecture/explorer_surface_runtime.md`. The topology-first amendment selects single-square `sphere_adjacent_positive` and probe semantics for Klein/RP²/S² (RDS §2.5); physical inverse recovery and geometric coherence do not gate translation; destination injectivity remains mandatory. Complete T2/T6 acceptance remains open. Runtime authority has not transferred. See `docs/BACKLOG.md` and `docs/architecture/explorer_topology_t2_transfer_preparation.md`.
 Bounded practice now exposes 2D through the flat live renderer and existing
@@ -99,11 +94,11 @@ From `python scripts/arch_metrics.py`:
 - `deep_imports.ai_to_engine_non_api.count = 28` (allowed under current rule)
 - `engine_core_purity.violation_count = 0`
 - `migration_debt_signals.pygame_imports_non_test.count = 0`
-- `tech_debt.score = 6.02` (`low`)
+- `tech_debt.score = 6.03` (`low`)
 
 Dominant remaining pressure:
 
-1. `delivery_size_pressure = 3.12`
+1. `delivery_size_pressure = 3.13`
 2. `code_balance = 1.91`
 <!-- END GENERATED:current_state_metric_snapshot -->
 
@@ -119,7 +114,7 @@ Top 8 live Python hotspots by real LOC:
 3. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `3194` real LOC
 4. `tools/governance/validate_project_contracts.py`: `2754` real LOC
 5. `src/tet4d/ui/pygame/front4d_render.py`: `2153` real LOC
-6. `tools/workspace_governance/validators/core.py`: `2104` real LOC
+6. `tools/workspace_governance/validators/core.py`: `2121` real LOC
 7. `scripts/arch_metrics.py`: `1899` real LOC
 8. `src/tet4d/ui/pygame/locked_cell_explosion/board_view.py`: `1883` real LOC
 

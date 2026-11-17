@@ -17,6 +17,7 @@ from uuid import uuid4
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from tools.workspace_governance import hook_adapters
 from tools.workspace_governance.fleet_execution import (
     COLLECTOR_ID,
     make_environment,
@@ -119,6 +120,8 @@ def plan(registry_path: Path, release_path: Path) -> dict[str, Any]:
                 section_owned = name in {
                     "AGENTS.md",
                     "CLAUDE.md",
+                    hook_adapters.CLAUDE_PATH,
+                    hook_adapters.CODEX_PATH,
                     row["verification"]["runner"]["path"],
                 }
                 replace = row.get("replace_sha256", {}).get(name)
@@ -182,6 +185,8 @@ def pending_operations(
         section_owned = operation["path"] in {
             "AGENTS.md",
             "CLAUDE.md",
+            hook_adapters.CLAUDE_PATH,
+            hook_adapters.CODEX_PATH,
             row["verification"]["runner"]["path"],
         }
         if (

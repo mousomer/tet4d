@@ -168,6 +168,14 @@ func _test_live_app_integration() -> Array:
 	var hold_before: Dictionary = _piece_semantic_snapshot(hud._hold_piece_panel.deterministic_snapshot())
 	hud._open_presentation_designer()
 	await tree.process_frame
+	# Opening the detached editor queues asynchronous cockpit fitting. Geometry
+	# assertions must observe its completed layout, not the first queued frame.
+	for _frame in range(120):
+		await tree.process_frame
+		if hud._live_cockpit.fit_settled():
+			break
+	if not hud._live_cockpit.fit_settled():
+		failures.append("Designer cockpit layout must settle before geometry inspection")
 	if designer == null or designer.state() != DesignerScript.STATE_FULL or not hud.live_interaction_owns_input():
 		failures.append("opening the live Designer should show the full editor and transfer gameplay input ownership")
 	var layout: Dictionary = hud.layout_contract_snapshot()

@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from tools.workspace_governance.execution_policy import load_policy
 from tools.workspace_governance.resolver.roles import (
     WORKSPACE_MANIFEST,
     RoleIndex,
@@ -276,6 +277,10 @@ class GovernanceResolver:
         workspace, project, local = self.load()
         project_source = self.project_source()
         workspace_source = self._source(self.workspace_path)
+        pack_lock = load_manifest_json(self.root / workspace["governance_pack"]["lock"])
+        pack_root = self.root / pack_lock["pack_path"]
+        pack_manifest = load_manifest_json(pack_root / "MANIFEST.json")
+        completion_policy = load_policy(pack_root, pack_manifest)
         profiles = project["execution"]["profiles"]
         selected = mode or project["execution"]["default_mode"]
         matched_scenario: str | None = None
@@ -356,6 +361,11 @@ class GovernanceResolver:
             "project.id": entry(project["project"]["id"], "project", project_source),
             "project.name": entry(
                 project["project"]["name"], "project", project_source
+            ),
+            "execution.completion": entry(
+                completion_policy,
+                "shared_pack",
+                f"{pack_lock['pack_path']}/{pack_manifest['execution_policy']['path']}",
             ),
             "execution.mode": entry(
                 selected, "project", f"{project_source}#/execution"
