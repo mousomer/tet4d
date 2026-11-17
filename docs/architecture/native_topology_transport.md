@@ -66,3 +66,13 @@ Stage 53C owns strict topology domain constructors outside this DTO. Deferred
 work includes Stage 53D persistence and legacy recovery adapters, the Stage
 53E–53F repository-wide boundary-classification programme, topology-aware
 gameplay, diagnostics, the Godot Topology Lab, and any authority transfer.
+
+
+## Bounded Godot DTO conversion
+
+Before schema admission, the shared Variant converter limits each request to
+32 nested levels and 65,536 visited values. Cyclic containers and exponentially
+repeated aliases return a structured `resource_limit` error; callers reject
+before mutating a session. These are technical admission limits, not topology
+classification. Profile/query validation and live setup/configuration share
+this boundary. Valid existing DTOs and their canonical identity are unchanged.
