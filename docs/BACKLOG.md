@@ -31,6 +31,11 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ## Active Work
 
+- Explorer 2D relative movement: reconnect horizontal keyboard intents and
+  their helper directions to the existing shared control-frame mapper. Preserve
+  native board-coordinate transport and explicit absolute-frame preferences. Pin
+  camera-relative defaults in all dimensions and rear-view 2D input with regression tests.
+
 - CI latency (PR #185): focused Explorer first, cached native dependencies and
   four required Godot partitions. Preserve full acceptance; reconcile against
   the accepted governance baseline without including adoption changes in its diff.

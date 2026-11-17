@@ -5,7 +5,9 @@ geometry/pose queries and classic catalogue through the live flat renderer.
 This dimension-access repair does not activate the T2 topology runtime or
 complete its separate native transport transfer. Bounded 2D uses the same
 inherited geometry authority as the existing bounded practice adapter.
-2D reuses 3D binding actions: A/D or Left/Right move X, W/S, Up/Down or the
+Keyboard movement defaults to the shared camera-relative control frame in
+2D/3D/4D; absolute board-axis movement is opt-in. In 2D, A/D or Left/Right move
+view-relative X (canonical X in explicit absolute mode); W/S, Up/Down or the
 shared Z/X pair move Y, R/T rotate XY and Backspace retries. PageUp/PageDown
 are retired from Explorer in every dimension; 9 fits the view. Ordinary piece actions update only practice readouts and
 render inputs, without camera-status/control-help initialization.

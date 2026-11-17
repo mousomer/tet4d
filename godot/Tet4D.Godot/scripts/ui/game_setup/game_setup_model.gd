@@ -267,6 +267,7 @@ func _default_entry(mode: String) -> Dictionary:
 		"random_mode": GameSetupSpecScript.RANDOM_MODE_FIXED_SEED,
 		"seed": GameSetupSpecScript.DEFAULT_SEED,
 		"initial_speed_level": GameSetupSpecScript.MIN_SPEED_LEVEL,
+		# Default to camera-relative movement; preserve explicitly saved absolute preferences.
 		"translation_frame": "relative",
 		"rotation_frame": "relative",
 	}

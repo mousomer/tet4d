@@ -66,6 +66,7 @@ var _live_4d_last_rotation_label := "none"
 var _live_4d_last_rotation_status := "none"
 var _live_4d_basis = SliceBasis4DScript.identity()
 var _live_4d_local_orientation = SliceLocalOrientationScript.new()
+# Camera-relative translation is the default in 2D/3D/4D; absolute is an explicit setup preference.
 var _translation_frame := ControlFrameMappingScript.FRAME_RELATIVE
 var _rotation_frame := ControlFrameMappingScript.FRAME_RELATIVE
 var _published_legend_directions := {}
@@ -2108,7 +2109,7 @@ func _legend_screen_directions(dimension: int) -> Dictionary:
 	var intents := ["move_x_neg", "move_x_pos", "move_y_neg", "move_y_pos", "move_z_neg", "move_z_pos", "move_w_neg", "move_w_pos"].slice(0, dimension * 2)
 	# Measure the command each key dispatches, exactly as input routing does.
 	for intent in intents:
-		var command := str(mapping.translation_command(intent, ControlFrameMappingScript.FRAME_ABSOLUTE if dimension == 2 else _translation_frame))
+		var command := str(mapping.translation_command(intent, _translation_frame))
 		result[intent] = _board_axis_screen_direction(shape, origin, "xyzw".find(command.get_slice("_", 1)), 1 if command.ends_with("_pos") else -1)
 	var relative := dimension > 2 and ControlFrameMappingScript.normalize_frame(_rotation_frame) == ControlFrameMappingScript.FRAME_RELATIVE
 	for local_index in range(dimension):

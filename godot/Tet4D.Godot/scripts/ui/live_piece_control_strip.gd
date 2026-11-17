@@ -107,7 +107,7 @@ func configure(mode: String, basis_snapshot: Dictionary = {}, control_frame: Dic
 		for item in group.get("items", []):
 			items.append([item[0], _item_metadata(item).get("cockpit_direction", "") if str(group.get("cockpit_role", "")) == "translate" else item[1]])
 		rendered_groups.append([group.get("cockpit_role", ""), items])
-	var next_render_signature := JSON.stringify([mode, density, source, layout, practice, rendered_groups if legend and mode in ["live_3d", "live_4d"] else groups])
+	var next_render_signature := JSON.stringify([mode, density, source, layout, practice, rendered_groups if legend and (mode in ["live_3d", "live_4d"] or practice) else groups])
 	var needs_rebuild := next_render_signature != _render_signature
 	_mode = mode
 	_practice = practice

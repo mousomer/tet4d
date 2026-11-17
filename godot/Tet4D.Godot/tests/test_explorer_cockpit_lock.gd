@@ -200,7 +200,8 @@ func _legacy_binding_signature() -> String:
 
 
 # Explicit namespace migration only. Keys, commands, node identities, binding
-# values and helper text still compare against the untouched Phase 0 fixture.
+# values and helper text compare against the reviewed fixture, including the
+# owner-approved 2D relative movement description.
 func _legacy_id_projection(value: Variant, dimension: int) -> Variant:
 	if value is Array:
 		return value.map(func(item): return _legacy_id_projection(item, dimension))
