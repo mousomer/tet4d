@@ -121,10 +121,32 @@ func _run_all() -> void:
 	# still returns [] because run() is typed, so that case is caught by the
 	# SCRIPT ERROR check in scripts/verify_godot_4_7.sh, not here.
 	var failures: Array = _unregistered_scripts()
-	var executed := 0
+	var shard_text := OS.get_environment("TET4D_GODOT_SHARD")
+	var count_text := OS.get_environment("TET4D_GODOT_SHARD_COUNT")
+	var shard := int(shard_text) if not shard_text.is_empty() else 0
+	var count := int(count_text) if not count_text.is_empty() else 1
+	var group := OS.get_environment("TET4D_GODOT_TEST_GROUP")
+	if (not shard_text.is_empty() and not shard_text.is_valid_int()) or (not count_text.is_empty() and not count_text.is_valid_int()) or count < 1 or count > TEST_SCRIPTS.size() or shard < 0 or shard >= count or group not in ["", "explorer"]:
+		push_error("Invalid Godot test selection")
+		quit(1)
+		return
+	var selected: Array = []
 	for index in TEST_SCRIPTS.size():
-		var script_path: String = TEST_SCRIPTS[index]
-		print("Godot replay test %d/%d: %s" % [index + 1, TEST_SCRIPTS.size(), script_path])
+		var path: String = TEST_SCRIPTS[index]
+		if group == "explorer":
+			if "explorer" in path or "typography_lock" in path:
+				selected.append(path)
+		elif index % count == shard:
+			selected.append(path)
+	if selected.is_empty():
+		push_error("Godot test selection is empty")
+		quit(1)
+		return
+	print("Godot selection: group=%s shard=%d/%d scripts=%d" % [group, shard, count, selected.size()])
+	var executed := 0
+	for index in selected.size():
+		var script_path: String = selected[index]
+		print("Godot replay test %d/%d: %s" % [index + 1, selected.size(), script_path])
 		if EXPECTED_NEGATIVE_PATH_TESTS.has(script_path):
 			print("EXPECTED_NEGATIVE_PATH: %s" % EXPECTED_NEGATIVE_PATH_TESTS[script_path])
 		var script: Resource = load(script_path)
@@ -146,9 +168,9 @@ func _run_all() -> void:
 			continue
 		executed += 1
 		failures.append_array(outcome)
-	if executed != TEST_SCRIPTS.size():
+	if executed != selected.size():
 		failures.append(
-			"executed %d of %d registered test scripts" % [executed, TEST_SCRIPTS.size()]
+			"executed %d of %d registered test scripts" % [executed, selected.size()]
 		)
 	if failures.is_empty():
 		print("Godot replay tests passed: %d scripts executed." % executed)

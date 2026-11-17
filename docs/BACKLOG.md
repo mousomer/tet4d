@@ -31,6 +31,10 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ## Active Work
 
+- CI latency (PR #185): focused Explorer first, cached native dependencies and
+  four required Godot partitions. Preserve full acceptance; reconcile against
+  the accepted governance baseline without including adoption changes in its diff.
+
 - [x] Adopt no-autonomous-polling completion policy (distribution 1.6.2 / runtime 0.9.2): `synchronous-completion-v2`, pack-managed Claude/Codex PreToolUse guard, `gov ci-status`, local vs remote evidence separation.
 - [ ] Owner: trust the Codex project hook (`/hooks`) so Codex enforces the guard; untrusted hooks are skipped.
 

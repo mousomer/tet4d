@@ -275,6 +275,14 @@ jobs:
     if: needs.plan.outputs.lane_godot == 'true'
     runs-on: ubuntu-24.04
 
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    env:
+      TET4D_GODOT_SHARD: ${{ matrix.shard }}
+      TET4D_GODOT_SHARD_COUNT: 4
+
     steps:
       - uses: actions/checkout@v5
         with:
@@ -289,6 +297,7 @@ jobs:
         run: |
           echo "GOVERNANCE_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
           echo "TET4D_PYTHON=${{ steps.setup-python.outputs.python-path }}" >> "$GITHUB_ENV"
+          echo "SCONS_CACHE=$RUNNER_TEMP/godot-cpp-cache" >> "$GITHUB_ENV"
 
       - name: Install Python and native build dependencies
         run: |
@@ -337,11 +346,35 @@ jobs:
           "$GODOT_BIN" --version
           git -C native/third_party/godot-cpp rev-parse HEAD
 
+      - name: Verify partition coverage and failure handling
+        run: python -m pytest -q tests/unit/governance/test_godot_ci_partitions.py
+
+      - name: Identify native dependency cache
+        id: native-cache
+        run: |
+          compiler="$(c++ --version | sha256sum | cut -d ' ' -f 1)"
+          binding="$(git -C native/third_party/godot-cpp rev-parse HEAD)"
+          echo "key=godot-cpp-v1-${{ runner.os }}-${{ runner.arch }}-$compiler-$binding-${{ hashFiles('native/tet4d_core/SConstruct', 'scripts/build_godot_tet4d_core.sh', 'pyproject.toml') }}" >> "$GITHUB_OUTPUT"
+
+      - name: Restore native dependency compilation cache
+        id: restore-native-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.SCONS_CACHE }}
+          key: ${{ steps.native-cache.outputs.key }}
+
       - name: Build and test the native extension
         run: |
           python tools/codegen/generate_topology_contract.py --check
           ./scripts/build_godot_tet4d_core.sh
           ./scripts/test_godot_tet4d_core.sh
+
+      - name: Save successful native dependency compilation
+        if: steps.restore-native-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.SCONS_CACHE }}
+          key: ${{ steps.native-cache.outputs.key }}
 
       - name: Verify Godot import, scripts, resources, GDExtension, and startup
         run: |
@@ -353,7 +386,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: godot-verification-log
+          name: godot-verification-log-${{ matrix.shard }}
           path: ${{ runner.temp }}/godot-verification.log
           if-no-files-found: warn
 
