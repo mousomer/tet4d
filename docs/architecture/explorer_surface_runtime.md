@@ -36,6 +36,10 @@ substitute another quotient. Select a square board to explore this Sphere. The e
 `sphere_double_2d` path remains compatibility-only and is absent from the normal
 selector; the older `sphere_2d` catalog identity is also unchanged.
 
+Keyboard movement defaults to the shared camera-relative input mapper in
+2D/3D/4D; explicit absolute mode bypasses view remapping. The mapper produces
+the board-axis action supplied to native transport below.
+
 These three constructions use ordinary `explorer-piece-transport/1` state (the
 former `explorer-piece-probes/1` mode is removed). Under RDS §2.5's free-cellwise amendment every cell receives the same
 canonical board-axis translation. Frames accumulate across seams but never

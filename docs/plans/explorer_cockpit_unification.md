@@ -34,11 +34,23 @@ the UI instead of platform-specific event text. Regenerate only binding-label si
 preserve event order, command observations and all other baseline sections.
 Do not add a second normalization implementation.
 
+## 2D relative movement wiring (2026-11-17)
+
+2D Explorer horizontal keyboard intents consume the existing control-frame
+mapper, just as 3D/4D do. Camera-relative translation is the default in all three
+dimensions; absolute movement is opt-in. The shared legend projects the same remapped command.
+Regression tests pin fresh setup defaults, frame fallback and actual rear-view
+Left/Right dispatch without overriding the configured default.
+Y remains the existing gravity-axis pair; native cellwise transport remains in
+board coordinates. Absolute-frame preferences still select canonical movement.
+Reuse the existing descriptor, dispatcher, repeat path and mapper; no new
+projection, movement or animation implementation is introduced.
+
 ## Goal
 
 One Explorer cockpit for 2D, 3D and 4D: one structure, one key vocabulary,
 one input dispatch path and one capability table. A dimension may *lack* a
-capability (2D has no Z, W, orbit, basis or slice); it may not *spell* a shared
+capability (2D has no Z, W, exact 4D basis or slice); it may not *spell* a shared
 capability differently, place it elsewhere, or route it through a different
 code path.
 
@@ -115,7 +127,7 @@ no UI or key.
 | Exact view turns | — | — | 6 planes | 3D has orbit but no quarter-turn basis |
 | New target | yes | yes | yes | |
 | Slice inspection | — | — | yes | inherent |
-| Canonical-axis buttons vs relative keys | equal (no camera) | differ | differ | documented, but unexplained in the UI |
+| Canonical-axis buttons vs relative keys | equal (historical mapping bypass) | differ | differ | 2D bypass fixed 2026-11-17; current keyboard default is camera-relative |
 
 ## Divergences to remove
 

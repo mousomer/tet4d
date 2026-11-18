@@ -494,3 +494,9 @@ not become ordinary gameplay drop or traversal actions.
 1. `move_up` and `move_down` are explorer-only traversal actions and are stored under the dedicated `explorer` keybinding group, not under normal gameplay translation.
 2. Normal Game controls must not expose or dispatch `move_up`.
 3. Explorer Mode help/control panels must show the bound `move_up` / `move_down` keys whenever exploration controls are active.
+
+Explorer keyboard movement defaults to the shared camera-relative control frame
+in 2D/3D/4D; absolute board-axis movement is an explicit setup preference.
+2D Explorer horizontal keyboard movement consumes that configured frame. From the rear view, relative Left/Right remain
+screen-left/screen-right; native cellwise transport still receives board-axis
+commands. Y keeps its existing gravity-axis convention.

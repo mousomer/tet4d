@@ -205,7 +205,7 @@
 				],
 				"item": [
 					"A/D",
-					"X− / X+",
+					"Left / Right [+X]",
 					{
 						"cockpit_direction": "horizontal",
 						"signed_axis": "+X"

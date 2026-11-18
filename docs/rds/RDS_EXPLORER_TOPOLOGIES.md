@@ -364,7 +364,7 @@ All five mandatory presets must execute native **cellwise, atomically batched** 
 
 T2 must document old Python golden divergences; a duplicate destination must block even if Python historically called it deformation. Complete the **2D Explorer transport** transfer record with status `transferred` and an authority-map update after the conformance and compatibility gates. Until then T2 is incomplete, irrespective of visual quality.
 
-Retain bounded 3D/4D camera-relative, exact-basis/slice and ordinary Play isolation regressions. Human T2 review must show novice discovery of the five presets, prediction of torus/Möbius crossing and recognition of a single piece after visually separated cell movement.
+Retain bounded 2D/3D/4D camera-relative, exact-basis/slice and ordinary Play isolation regressions. Human T2 review must show novice discovery of the five presets, prediction of torus/Möbius crossing and recognition of a single piece after visually separated cell movement.
 
 **Not T2:** edge-pairing builder or saved profiles (T3), 3D/4D topology runtime (T4), face/hyperface builder (T5), multi-domain spheres or surface/product construction generators (T6 or later). The T2S extension is scoped separately from the mandatory five-preset T2 authority-transfer gate.
 
@@ -493,7 +493,7 @@ Do **not** require a rigidly playable profile to apply an otherwise valid topolo
 
 ## 11. Input, readability, and lifecycle
 
-Existing Explorer movement, rotation, view, camera/slice, piece selector, retry, reset, input bindings, helper-keycap and reflow policies remain the default. Builder-specific actions (select, connect, align, reflect, test, apply, undo/redo, back) use visible semantic action descriptors and keyboard alternatives to precision clicking. Input focus must isolate text and edit actions from game movement.
+Explorer keyboard movement defaults to camera-relative translation in 2D/3D/4D through the existing shared mapper; absolute board-axis movement is an explicit setup preference. Y retains its gravity-axis convention, and explicitly labelled canonical-axis panel actions remain canonical. Input mapping selects the board-axis command before free cellwise transport (§2.5); transported cell frames never remap that command. Existing Explorer rotation, view, camera/slice, piece selector, retry, reset, input bindings, helper-keycap and reflow policies remain the default. Builder-specific actions (select, connect, align, reflect, test, apply, undo/redo, back) use visible semantic action descriptors and keyboard alternatives to precision clicking. Input focus must isolate text and edit actions from game movement.
 
 Panels and text resize for readability, then scroll below the readability floor. Test 1280x720, 1280x800, narrow windows and fullscreen. Normal movement/preview must not rebuild control nodes or change selected tab, control state, scrollbar position, board allocation or camera.
 
@@ -505,7 +505,7 @@ Save/load/duplicate/rename/delete/export/import custom topology definitions usin
 
 **T1:** schema/catalog and ID correspondence checks; transport-versus-certification contract reviews; five 2D positive and negative fixture **specifications**; complete bounded authority-transfer design including Python divergences and rollback. T1 does not claim implementation tests passed or an authority transfer.
 
-**T2:** native deterministic tests for all five real presets (normal, seam, corner, degenerate, inverse-frame, multi-cell deformation, one-to-many, many-to-one, partial-block), native/Godot contract parity, preset gallery and UX, historical compatibility distinctions, human 2D comprehension review, regression of 3D/4D camera-relative controls, 4D basis/slices, responsive panels and normal Play, **and terminal 2D authority-transfer record**.
+**T2:** native deterministic tests for all five real presets (normal, seam, corner, degenerate, inverse-frame, multi-cell deformation, one-to-many, many-to-one, partial-block), native/Godot contract parity, preset gallery and UX, historical compatibility distinctions, human 2D comprehension review, regression of default 2D/3D/4D camera-relative controls, 4D basis/slices, responsive panels and normal Play, **and terminal 2D authority-transfer record**.
 
 **T2S:** single-square `S²` and `RP²` construction certification, exact directed pairings and corner resolution, square-only extent admission and rendered aspect ratio, persistent labelled-arrow seam visualisation, board-axis cellwise validity/injectivity/atomic rejection and exact snapshot Undo, legacy sphere/Klein non-aliasing, and manual 2D Explorer crossing inspection. Do not test or promise repaired Euclidean geometry.
 

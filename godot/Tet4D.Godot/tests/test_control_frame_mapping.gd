@@ -6,6 +6,9 @@ const SliceBasis4DScript = preload("res://scripts/presentation/slice_basis_4d.gd
 
 func run() -> Array:
 	var failures: Array = []
+	for frame in ["", "relative", "unknown"]:
+		_assert_equal(failures, ControlFrameMappingScript.normalize_frame(frame), "relative", "missing or invalid frame defaults to camera-relative: %s" % frame)
+	_assert_equal(failures, ControlFrameMappingScript.normalize_frame("absolute"), "absolute", "absolute requires an explicit preference")
 	_test_2d_relative_screen_mapping(failures)
 	_test_3d_relative_view_mapping(failures)
 	_test_identity_and_yaw(failures)

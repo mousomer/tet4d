@@ -12,6 +12,8 @@ func run() -> Array:
 	for mode in GameSetupSpecScript.modes():
 		if not model.set_mode(mode):
 			failures.append("supported mode should select: %s" % mode)
+		if model.selected_control_frames().get("translation_frame", "") != "relative":
+			failures.append("%s must default to camera-relative translation" % mode)
 		if model.selected_preset_id() != "standard":
 			failures.append("%s should default to the generated standard dimensions" % mode)
 		if model.selected_shape().size() != int(mode.right(2).left(1)):

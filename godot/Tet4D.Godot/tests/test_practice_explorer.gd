@@ -2,6 +2,7 @@ extends RefCounted
 
 const Practice = preload("res://scripts/presentation/practice_explorer.gd")
 const InputContract = preload("res://scripts/input/live_input_contract.gd")
+const DirectionProbe = preload("res://tests/support/legend_direction_probe.gd")
 const Bridge = preload("res://scripts/native/tet4d_core_bridge.gd")
 var failures: Array = []
 var completed := false
@@ -610,6 +611,33 @@ func _check_2d_access(tree: SceneTree, app, hud) -> void:
 	var model = app._practice
 	var initial: Array = model.cells.duplicate(true)
 	var native_before: String = app._live_bridge.live_2d_snapshot_json()
+	var helper_nodes: Array = hud._piece_control_strip.find_children("*", "", true, false).map(func(node): return node.get_instance_id())
+	var translation_frame: String = app._translation_frame
+	_check(translation_frame == "relative", "2D Explorer defaults to camera-relative translation without a test override")
+	app._camera_rig.nudge_yaw(PI)
+	app._camera_rig._process(10.0)
+	app._process(0.0)
+	var screen_before: Vector2 = DirectionProbe.active_centroid(app)
+	var relative_key := InputEventKey.new()
+	relative_key.pressed = true
+	relative_key.keycode = KEY_RIGHT
+	app._input(relative_key)
+	_check(DirectionProbe.active_centroid(app).x > screen_before.x, "2D Right moves screen-right from the back view through the shared mapper")
+	_check(hud._piece_control_strip.deterministic_snapshot().screen_directions.move_x_pos.x > 0.0, "2D Right helper follows the remapped command")
+	_check(helper_nodes == hud._piece_control_strip.find_children("*", "", true, false).map(func(node): return node.get_instance_id()), "2D remapping preserves shared helper nodes")
+	relative_key.keycode = KEY_LEFT
+	app._input(relative_key)
+	_check(model.cells == initial, "2D relative Left restores the pose from the back view")
+	app._translation_frame = "absolute"
+	screen_before = DirectionProbe.active_centroid(app)
+	relative_key.keycode = KEY_RIGHT
+	app._input(relative_key)
+	_check(DirectionProbe.active_centroid(app).x < screen_before.x, "2D explicit absolute-frame preference still uses board-right")
+	app._practice_action("retry")
+	app._translation_frame = translation_frame
+	app._practice_action("view_reset")
+	app._camera_rig._process(10.0)
+	app._process(0.0)
 	_check(panel == hud._practice_panel and panel.is_visible_in_tree(), "2D retains visible Explorer panel")
 	_check(model.piece_names().size() == 7, "2D exposes seven native classic pieces")
 	# Dimension changes rebuild the helper deck inside the panel. Resolve its

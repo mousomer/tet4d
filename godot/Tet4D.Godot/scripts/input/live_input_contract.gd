@@ -296,7 +296,7 @@ static func explorer_profile(dimension: int, basis_snapshot: Dictionary = {}, co
 	var axes: Array = []
 	for label in "xyzw".substr(0, dimension):
 		var prefix := "explorer_2d_move_y_" if dimension == 2 and label == "y" else "explorer_move_%s_" % label
-		var axis := {"label": label, "negative_command": "move_%s_neg" % label, "positive_command": "move_%s_pos" % label, "negative_action": prefix + "neg", "positive_action": prefix + "pos", "alias_actions": [], "relative": dimension > 2 and label != "y", "repeat": dimension == 2 or label != "y"}
+		var axis := {"label": label, "negative_command": "move_%s_neg" % label, "positive_command": "move_%s_pos" % label, "negative_action": prefix + "neg", "positive_action": prefix + "pos", "alias_actions": [], "relative": label != "y", "repeat": dimension == 2 or label != "y"}
 		if dimension == 2 and label == "y":
 			axis.alias_actions = ["explorer_move_y_neg", "explorer_move_y_pos"]
 		axes.append(axis)
@@ -320,17 +320,17 @@ static func explorer_profile(dimension: int, basis_snapshot: Dictionary = {}, co
 	for record in [["Bounded", "bounded"], ["Cylinder · wrap X", "cylinder_x"], ["Cylinder · wrap Y", "cylinder_y"], ["Torus", "torus"], ["Möbius strip", "mobius"], ["Klein bottle", "klein"], ["Projective · experimental", "projective"], ["Sphere", "sphere_adjacent_positive"]]:
 		topologies.append({"label": record[0], "id": record[1], "disabled": dimension != 2 and record[1] != "bounded"})
 	var view_groups := _explorer_view_groups(mode)
-	return {"input_actions": _explorer_input_actions(axes, planes, session, view_groups), "axes": axes, "rotation_planes": planes, "session": session, "piece_actions": actions, "topologies": topologies, "view_groups": view_groups, "piece_groups": _explorer_piece_groups(mode, axes, planes, session, basis_snapshot, control_frame), "capabilities": {"camera_orbit": dimension > 2, "basis_turns": dimension == 4, "slice": dimension == 4, "relative_frame": dimension > 2, "topology_selector": dimension == 2}}
+	return {"input_actions": _explorer_input_actions(axes, planes, session, view_groups), "axes": axes, "rotation_planes": planes, "session": session, "piece_actions": actions, "topologies": topologies, "view_groups": view_groups, "piece_groups": _explorer_piece_groups(mode, axes, planes, session, basis_snapshot, control_frame), "capabilities": {"camera_orbit": dimension > 2, "basis_turns": dimension == 4, "slice": dimension == 4, "relative_frame": true, "topology_selector": dimension == 2}}
 
 
 static func _explorer_piece_groups(mode: String, axes: Array, planes: Array, session: Dictionary, basis_snapshot: Dictionary, control_frame: Dictionary) -> Array:
 	# One structure for every dimension: planar moves (compass), the vertical
-	# Up/Down pair, rotation planes and the practice session keys. 2D has no
-	# camera, so its axes are always canonical.
+	# Up/Down pair, rotation planes and the practice session keys. Translation
+	# descriptions consume the same configured control frame in every dimension.
 	var groups: Array = []
 	var flat := mode == "live_2d"
 	var legacy := control_frame.is_empty()
-	var relative := not flat and str(control_frame.get("translation_frame", "relative")) == "relative"
+	var relative := str(control_frame.get("translation_frame", "relative")) == "relative"
 	var rotation_relative := not flat and str(control_frame.get("rotation_frame", "relative")) == "relative"
 	var visible_axes: Array = basis_snapshot.get("visible_axes", ["X", "+Y", "Z"])
 	var axis_values := {"x": str(control_frame.get("horizontal_axis", visible_axes[0] if mode == "live_4d" else "+X")), "z": str(control_frame.get("depth_axis", visible_axes[2] if mode == "live_4d" else "+Z")), "w": str(control_frame.get("slice_axis", basis_snapshot.get("slice_axis", "+W")))}
@@ -354,7 +354,7 @@ static func _explorer_piece_groups(mode: String, axes: Array, planes: Array, ses
 		var row: Array = [_pair(plane.negative_action, plane.positive_action, " / " if mode == "live_4d" else "/"), text]
 		if mode == "live_4d": row.append({"operation": str(plane.label).to_upper()})
 		rotation_rows.append(row)
-	var movement_note := "Canonical X/Y axes." if flat else (("Controls follow the current view; Forward recedes and Back approaches." if mode == "live_3d" else "Controls follow the current view.") if relative else ("Canonical X/Z axes." if mode == "live_3d" else "Canonical X/Z/W axes."))
+	var movement_note := "Canonical X/Y axes." if flat and not relative else (("Controls follow the current view; Forward recedes and Back approaches." if mode == "live_3d" else "Controls follow the current view.") if relative else ("Canonical X/Z axes." if mode == "live_3d" else "Canonical X/Z/W axes."))
 	var rotation_note := "Canonical XY plane." if flat else (("Planes follow the current view." if rotation_relative else "Canonical XYZ planes.") if mode == "live_3d" else ("Left: CCW · Right: CW" if legacy else ("Left: CCW · Right: CW · Planes follow the current view." if rotation_relative else "Left: CCW · Right: CW · Canonical XY/XZ/YZ/XW/YW/ZW planes.")))
 	groups.append({"group": "Piece movement", "cockpit_role": "translate", "note": movement_note, "items": move_rows})
 	groups.append({"group": "Piece rotation", "cockpit_role": "rotate", "note": rotation_note, "items": rotation_rows})

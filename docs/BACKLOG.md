@@ -31,6 +31,11 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ## Active Work
 
+- Explorer 2D relative movement: reconnect horizontal keyboard intents and
+  their helper directions to the existing shared control-frame mapper. Preserve
+  native board-coordinate transport and explicit absolute-frame preferences. Pin
+  camera-relative defaults in all dimensions and rear-view 2D input with regression tests.
+
 - [x] Adopt canonical distribution 1.8.2 / runtime 1.0.2 as the reviewed successor
   to 1.8.1: wrapped/Glob probes, cross-profile duplicate identity, argument-role
   run matching and mandatory remote head binding. Publish governance-only bytes;
