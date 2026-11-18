@@ -358,7 +358,7 @@ jobs:
 
       - name: Restore native dependency compilation cache
         id: restore-native-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: ${{ env.SCONS_CACHE }}
           key: ${{ steps.native-cache.outputs.key }}
@@ -371,7 +371,7 @@ jobs:
 
       - name: Save successful native dependency compilation
         if: steps.restore-native-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: ${{ env.SCONS_CACHE }}
           key: ${{ steps.native-cache.outputs.key }}
@@ -384,7 +384,7 @@ jobs:
 
       - name: Preserve canonical Godot and Live translation execution evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: godot-verification-log-${{ matrix.shard }}
           path: ${{ runner.temp }}/godot-verification.log
