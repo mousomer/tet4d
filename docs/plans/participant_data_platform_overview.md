@@ -93,13 +93,13 @@ The intended journey is:
 
 The game must remain fully usable offline. Interrupted connections must not erase progress or create duplicate results.
 
-Supabase is a **proposed provider**, not a claim that hosting already exists. An account, contract, region choice, privacy review and deployment authorization are still needed.
+Supabase is the **leading candidate**, not a claim that hosting already exists. The final provider is chosen in a separate decision once the measurement and storage contract is agreed. An account, contract, region choice, privacy review and deployment authorization are still needed.
 
 ## 6. How we will keep storage small
 
 The guiding rule is **save what is needed to answer a defined question, not everything the computer does**.
 
-- Routine gameplay: small session summaries, with an initial target of no more than about 10 KB of logical summary data per session.
+- Routine gameplay: small session summaries, with an initial target of no more than about 10 KiB (roughly ten thousand bytes) of logical summary data per session.
 - Assessments: individual responses and task information, because they are needed for later comparison.
 - Detailed research: only selected sessions; compressed sequences of meaningful actions rather than full boards after every move.
 - Temporary records: remove or archive them under an approved retention policy.

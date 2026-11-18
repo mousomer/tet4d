@@ -155,9 +155,12 @@ documentation/priority decision, not approval to deploy a study or backend.
   export/deletion and independent session reconstruction. The non-technical
   overview is `docs/plans/participant_data_platform_overview.md` and the full
   proposed PR sequence/gates are in
-  `docs/plans/participant_data_platform_implementation.md`. Supabase Ireland is
-  a hosting candidate only; no provider is provisioned, no server is claimed,
-  and no participant collection is authorized by these documents.
+  `docs/plans/participant_data_platform_implementation.md`. Depends on P3,
+  which owns the assessment design that P4's assessment PRs implement.
+  Supabase Ireland is the leading hosting candidate for a separate provider
+  decision after the storage contract is approved; no provider is provisioned,
+  no server is claimed, and no participant collection is authorized by these
+  documents.
 - [ ] P5: run a consent-compliant instrumentation/usability pilot and only
   then a controlled learning study; report negative or inconclusive results.
 - [ ] P6+ / deferred: research Windows/Linux distribution if recruitment needs

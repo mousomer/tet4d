@@ -172,8 +172,11 @@ Define explicitly before implementation:
 - event-volume and performance budgets so logging does not change input
   timing or experimental conditions.
 
-Supabase in Ireland is the proposed first hosting option in the separate
-implementation plan, not an approved or deployed participant backend. Actual
+No hosting vendor, authentication provider, database or cloud architecture is
+selected by this plan. Select them in a separate design decision based on the
+approved E3-derived schema, operations and compliance requirements. The
+implementation plan names Supabase in Ireland as the leading candidate for that
+decision; it is not an approved or deployed participant backend, and
 provisioning and collection still depend on the frozen measurement contract,
 operational/security review, provider terms and applicable privacy/ethics approval.
 

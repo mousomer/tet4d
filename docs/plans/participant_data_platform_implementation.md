@@ -16,11 +16,11 @@ Plain-language explanation: `participant_data_platform_overview.md`
 
 Target: optional personal cloud saves, meaningful compact session records, versioned assessment results, and opt-in reproducible research traces for Tet4D's 2D/3D/4D Play and Explorer.
 
-Decisions proposed for first implementation:
+Candidate choices for first implementation. Provider and stack are selected only by a separate design decision after the E3-derived storage contract is approved (`spatial_intuition_research_plan.md` E4); this table records the leading candidates, not that decision:
 
 | Concern | V1 proposal |
 | --- | --- |
-| Managed host | Supabase project in Ireland (`eu-west-1`), subject to procurement/privacy approval |
+| Managed host | Supabase project in Ireland (`eu-west-1`) — leading candidate, subject to the provider design decision and procurement/privacy approval |
 | Relational records | PostgreSQL |
 | Accounts | Supabase Auth; email OTP initially |
 | API | Authenticated Supabase Edge Functions; TypeScript, modular handlers |
@@ -29,7 +29,7 @@ Decisions proposed for first implementation:
 | Analyses | Versioned, reproducible Python analysis and export; not a continuously running service |
 | Environments | Local CLI stack, separate staging, production |
 | Early research cohort | Adults only, after review |
-| Initial recording defaults | Guest local-only, registered player compact summary, research only when separately authorized |
+| Initial recording defaults | Guest local-only (L0); registered player compact summary (L1), plus individual attempts (L2) only for assessments they choose to take; research traces (L3) only when separately authorized |
 
 Alternatives deferred: custom VPS/FastAPI, streaming infrastructure, new player-ranking system, automatic adaptive teaching, online replication of the native game engine, a bespoke identity provider, and global recording of raw controller inputs. Revisit providers only with measured operational or compliance evidence; PostgreSQL/schema/exports must remain portable.
 
@@ -77,7 +77,7 @@ No changes to platform-support matrices, existing gameplay rules, native/topolog
 
 ## 3. Measurement design before telemetry design
 
-Precede a production event schema with the smallest versioned assessment contract:
+Precede a production event schema with the smallest versioned assessment contract. Item, form and scoring design is owned by research-plan E3 / backlog P3; the table below is illustrative input to that work, and this plan's PR 1 and PR 5 implement the result rather than define it:
 
 | Domain | Example item | Primary observation |
 | --- | --- | --- |
@@ -111,7 +111,7 @@ Recording mode is frozen for each session. A mode/permission change starts a new
 
 Suggested initial engineering targets, to be benchmarked rather than claimed as measured: L1 summary <=10 KiB, L2 session <=100 KiB, L3 trace soft target <=250 KiB per 30 minutes compressed, trace segment <=64 KiB compressed, max batch 256 semantic actions, normal network flush every 15–30 s. Transport and queue limits must be defined from measured build behavior. **Never silently truncate research evidence:** split segments, mark incomplete on unsustainable volume and alert. Routine mode must have bounded queues and storage pressure UI/recovery.
 
-Capacity model: 1,000 sessions/day × 10 KB ≈300 MB summaries/month; if 10% produce 250 KB traces, ≈750 MB trace content/month. These are logical new bytes, excluding indexes, backups, auth, egress, and retention accumulation.
+Capacity model: 1,000 sessions/day × 10 KiB ≈290 MiB summaries/month; if 10% produce 250 KiB traces, ≈730 MiB trace content/month. These are logical new bytes, excluding indexes, backups, auth, egress, and retention accumulation.
 
 ## 5. Identity, tables, and integrity
 
@@ -269,7 +269,7 @@ Do not silently discard failed records when storage pressure occurs; for researc
 
 ## 11. PR-by-PR execution plan
 
-**PR 1 — Contract and architecture.** New product-data RDS, assessment RDS outline/first small task set, versioned schemas (`session`, `summary`, `attempt`, `trace`), ownership map, storage/retention rationale and focused schema validators. Declare field purposes, accepted dimensions/topologies, recording levels, and research exclusions. No data collection or hosting. **Gate:** reviewable conformance examples and explicit privacy/scoring open decisions.
+**PR 1 — Contract and architecture.** New product-data RDS, assessment RDS outline recording the P3 assessment design as a contract, versioned schemas (`session`, `summary`, `attempt`, `trace`), ownership map, storage/retention rationale and focused schema validators. Declare field purposes, accepted dimensions/topologies, recording levels, and research exclusions. No data collection or hosting. **Gate:** reviewable conformance examples and explicit privacy/scoring open decisions.
 
 **PR 2 — Local Godot recorder.** Implement session coordinator, recording policy, aggregator and journal. Integrate post-action observations for ordinary 2D/3D/4D Play and current Explorer without modifying native execution. Synthetic fixtures and restart tests. **Gate:** no altered game/replay hashes, bounded memory/storage, crash recovery, silent network absence.
 
@@ -277,7 +277,7 @@ Do not silently discard failed records when storage pressure occurs; for researc
 
 **PR 4 — Account and sync.** Add account UI, transport/sync coordinator, supported token handling, explicit guest import, pending/receipt UX, staged deployment on synthetic data. **Gate:** login/logout, fresh-device progress, outage, crash-between-commit-and-ACK and account-switch behavior.
 
-**PR 5 — Assessment V1.** Create small versioned assessment runner reusing Explorer, fixed items plus generator contract, immutable attempts and simple domain-level progress with comparable-form flags. **Gate:** novice task usability, independent rescoring, version mismatch and stimulus-reconstruction tests.
+**PR 5 — Assessment V1.** Implement P3's smallest assessment task slice: a small versioned assessment runner reusing Explorer, fixed items plus generator contract, immutable attempts and simple domain-level progress with comparable-form flags. **Gate:** novice task usability, independent rescoring, version mismatch and stimulus-reconstruction tests.
 
 **PR 6 — Authorized detailed traces.** Implement study enrollment/permissions, L3 compact events and private object segments, reconstruction and consent/withdrawal enforcement, storage cleanup. **Gate:** full session reconstruction; integrity/volume and authorization negative tests.
 
@@ -287,7 +287,7 @@ Do not silently discard failed records when storage pressure occurs; for researc
 
 **PR 9 — Authorized pilot and protocol freeze.** Adult usability/data-quality pilot. Evaluate item calibration, missingness, recording overhead, retention, completeness, cost and comprehension. Revise tasks then freeze protocol for the controlled main study. **Gate:** `RESEARCH_PLATFORM_READY` evidence as governed by the existing research plan. The pilot is not evidence of improved spatial competence by itself.
 
-PR 1/2 research design can proceed alongside current Explorer work but do not deploy studies until beginner acceptance, experimental UI stability and required approvals. Each PR contains its relevant source/tests/docs and scoped authority changes; avoid a single all-subsystems PR.
+When PR 1/2 may start relative to other work is set by `professional_godot_game_programme.md`, not by this plan. Do not deploy studies until beginner acceptance, experimental UI stability and required approvals. Each PR contains its relevant source/tests/docs and scoped authority changes; avoid a single all-subsystems PR.
 
 ## 12. Test matrix and objective gates
 
