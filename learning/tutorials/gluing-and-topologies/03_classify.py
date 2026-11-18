@@ -1,6 +1,7 @@
 """Chapter 1, Example 3: quotient vertices, Euler characteristic, topology."""
 from collections import Counter
-from square_gluings import all_gluings, classify, label, orbits, vertex_classes
+
+from square_gluings import all_gluings, classify, label, orbits
 
 for complete in (True, False):
     gluings = all_gluings(complete=complete)
@@ -15,6 +16,6 @@ for complete in (True, False):
         print(f"  {label(g):16s} | orbit={len(members)} "
               f"| V={data['V']} E={data['E']} F={data['F']} "
               f"| chi={data['chi']:2d} b={data['boundary']} "
-              f"| orientable={str(data['orientable']):5s} | {data['name']}")
+              f"| orientable={data['orientable']!s:5s} | {data['name']}")
         assert all(classify(member) == data for member in members)
     assert len(counts) == (4 if complete else 7)
