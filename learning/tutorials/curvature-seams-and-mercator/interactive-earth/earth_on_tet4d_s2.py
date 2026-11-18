@@ -7,13 +7,13 @@ triangles of the square with paired-edge coordinates agreeing pointwise.
 Uses Basemap's bundled low-resolution coastline polygons; no downloaded map
 texture is needed. Requirements: numpy, pillow, matplotlib, scipy, basemap.
 """
-from pathlib import Path
-import numpy as np
 from math import pi
-from PIL import Image, ImageDraw
-from mpl_toolkits.basemap import Basemap
+from pathlib import Path
+
 import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
+import numpy as np
+from mpl_toolkits.basemap import Basemap
+from PIL import Image, ImageDraw
 
 OUTPUT=Path(__file__).with_name('earth_on_tet4d_s2.png')
 BOARD=Path(__file__).with_name('earth_on_tet4d_s2_board.png')
@@ -60,10 +60,8 @@ def earth_to_board(lon,lat):
     t1=theta/THETA_M
     t2=(theta-THETA_M)/(THETA_C-THETA_M)
     t3=(theta-THETA_C)/(2*pi-THETA_C)
-    ba=np.where(theta<=THETA_M,1-t1,np.where(theta<=THETA_C,0,t3))
     bm=np.where(theta<=THETA_M,t1,np.where(theta<=THETA_C,1-t2,0))
     bc=np.where(theta<=THETA_M,0,np.where(theta<=THETA_C,t2,1-t3))
-    a=1/3+r*(ba-1/3)
     m=1/3+r*(bm-1/3)
     c=1/3+r*(bc-1/3)
     north=lat>=0
@@ -145,7 +143,7 @@ def draw_graticule(ax):
         line(np.full(360,lon),lat[:360]);line(np.full(361,lon),lat[360:])
     for pt,caption,offset in [((1/3,2/3),'N pole',(-22,12)),((2/3,1/3),'S pole',(12,-19))]:
         ax.plot(*pt,marker='o',markersize=4,color='white',markeredgecolor='#203844',zorder=8)
-        ax.annotate(caption,pt,xytext=offset,textcoords='offset points',fontsize=9,weight='bold',color='white',ha='center',bbox=dict(boxstyle='round,pad=.28',fc='#163046',ec='none',alpha=.8),zorder=9)
+        ax.annotate(caption,pt,xytext=offset,textcoords='offset points',fontsize=9,weight='bold',color='white',ha='center',bbox={'boxstyle': 'round,pad=.28', 'fc': '#163046', 'ec': 'none', 'alpha': .8},zorder=9)
     ax.plot([0,1],[0,1],color='#ffe7b4',lw=1.8,ls='--',alpha=.9,zorder=7)
 
 
