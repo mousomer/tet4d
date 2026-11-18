@@ -2,7 +2,8 @@
 
 Role: reference
 Status: reference
-Source of truth: none; explanatory companion to `spatial_intuition_research_plan.md` and `participant_data_platform_implementation.md`
+Source of truth: none
+Companion documents: `spatial_intuition_research_plan.md`, `participant_data_platform_implementation.md`
 Supersedes: none
 Date: 2026-11-18
 
