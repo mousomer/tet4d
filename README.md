@@ -83,6 +83,10 @@ GODOT_BIN=/path/to/Godot packaging/godot/build_macos.sh
 See `docs/RELEASE_INSTALLERS.md` for the product families, artifact checks,
 outside-tree smoke procedures, and current platform evidence.
 
+## Learning and tutorials
+
+The [learning tutorials](learning/tutorials/README.md) include [Chapter 1: Gluing Edges and Recognizing Topological Surfaces](learning/tutorials/gluing-and-topologies/chapter_01_gluing_and_topologies.md), with executable Python examples and regression tests.
+
 ## Why This Exists
 
 Tet4D is motivated by a philosophical question:
