@@ -4,6 +4,10 @@
 
 This chapter distinguishes the topology of a quotient from the metric on it, the coordinate atlas used to display it, and the discrete movement operator. It derives the cone-angle defects of Tet4D's single-square sphere, explores seam direction changes, and derives spherical Mercator projection and its distortion.
 
+## Interactive Earth on the S² square
+
+[Drag the Earth across the glued square](interactive-earth/index.html) in a standalone offline browser demo. [Read its source, mathematical explanation and data licence](interactive-earth/README.md).
+
 ## Reproducible Python laboratory
 
 - `curvature_mercator_lab.py` — vertex equivalence, cone defects, discrete Gauss–Bonnet checks, illustrative sphere seam mappings, Mercator projection and scale.

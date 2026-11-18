@@ -405,6 +405,10 @@ Switching from Mercator to a stereographic chart near a pole avoids the specific
 
 Likewise, a multi-chart Explorer could make a seam crossing visually continuous in one chart and discontinuous in another without changing the topology at all. This is a statement about representation, not a proposal to change the present runtime.
 
+### Interactive Earth demonstration
+
+The [offline draggable Earth on the Tet4D S² square](interactive-earth/index.html) illustrates how geography can rotate continuously under the fixed pairings `L(t) ≡ B(t)` and `R(t) ≡ T(t)`. The [demo source and dataset attribution](interactive-earth/README.md) explain the two-triangle projection, raster coastline source and local browser controls. It is an educational mapping, not an implementation of Explorer cell movement.
+
 ## 2.9 A mathematical diagnostic framework for Explorer
 
 A robust analysis labels each property by the layer to which it belongs. It must not silently reject a mathematically valid sphere because a flat-board piece appears to deform.
