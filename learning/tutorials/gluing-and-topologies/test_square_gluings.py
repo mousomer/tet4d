@@ -3,8 +3,13 @@ import unittest
 from collections import Counter
 
 from square_gluings import (
-    D4, all_gluings, classify, normalize, orbit, orbits,
-    transform, vertex_classes,
+    D4,
+    all_gluings,
+    classify,
+    normalize,
+    orbits,
+    transform,
+    vertex_classes,
 )
 
 
