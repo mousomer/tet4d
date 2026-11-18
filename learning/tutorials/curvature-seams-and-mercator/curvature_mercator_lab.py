@@ -6,8 +6,8 @@ Standard library only; educational calculations, NOT Tet4D movement logic.
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Iterable
 from math import cos, isfinite, log, pi, radians, tan
-from typing import Iterable
 
 # Natural tangent coordinate directions from Chapter 1.
 EDGES = {
@@ -51,7 +51,7 @@ def vertex_classes(gluings: Iterable[tuple[str, str, int]]) -> tuple[tuple[str, 
     groups: dict[str, list[str]] = defaultdict(list)
     for vertex in "ABCD":
         groups[find(vertex)].append(vertex)
-    return tuple(sorted((tuple(sorted(g)) for g in groups.values())))
+    return tuple(sorted(tuple(sorted(g)) for g in groups.values()))
 
 
 def cone_defects(gluings: Iterable[tuple[str, str, int]]) -> dict[tuple[str, ...], float]:
