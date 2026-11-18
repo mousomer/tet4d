@@ -1,5 +1,6 @@
 """Chapter 1, Example 1: enumerate all disjoint square-edge gluings."""
 from collections import Counter
+
 from square_gluings import all_gluings, label
 
 for complete in (True, False):
