@@ -3,6 +3,7 @@
 Reads the same local HTML/CSS/JS assets as the offline demo and injects them
 into a browser document; requires no localhost server or network access.
 """
+
 from pathlib import Path
 from shutil import which
 
@@ -15,13 +16,19 @@ def run():
     css = (root / "styles.css").read_text(encoding="utf-8")
     mask = (root / "gshhg_landmask.generated.js").read_text(encoding="utf-8")
     js = (root / "earth_s2.js").read_text(encoding="utf-8")
-    html = html.replace('<link rel="stylesheet" href="styles.css">', f"<style>{css}</style>")
-    html = html.replace('<script src="gshhg_landmask.generated.js"></script>', f"<script>{mask}</script>")
+    html = html.replace(
+        '<link rel="stylesheet" href="styles.css">', f"<style>{css}</style>"
+    )
+    html = html.replace(
+        '<script src="gshhg_landmask.generated.js"></script>',
+        f"<script>{mask}</script>",
+    )
     html = html.replace('<script src="earth_s2.js"></script>', f"<script>{js}</script>")
 
     with sync_playwright() as p:
         browser = p.chromium.launch(
-            headless=True, executable_path=which("chromium") or which("chromium-browser") or None,
+            headless=True,
+            executable_path=which("chromium") or which("chromium-browser") or None,
             args=["--no-sandbox"],
         )
         page = browser.new_page(viewport={"width": 1280, "height": 850})

@@ -26,7 +26,9 @@ SURFACES = {
 }
 
 
-def vertex_classes(gluings: Iterable[tuple[str, str, int]]) -> tuple[tuple[str, ...], ...]:
+def vertex_classes(
+    gluings: Iterable[tuple[str, str, int]],
+) -> tuple[tuple[str, ...], ...]:
     """Identify corner endpoints, independently of any cell-centre resolver."""
     parent = {vertex: vertex for vertex in "ABCD"}
     pairs = tuple(gluings)
@@ -54,7 +56,9 @@ def vertex_classes(gluings: Iterable[tuple[str, str, int]]) -> tuple[tuple[str, 
     return tuple(sorted(tuple(sorted(g)) for g in groups.values()))
 
 
-def cone_defects(gluings: Iterable[tuple[str, str, int]]) -> dict[tuple[str, ...], float]:
+def cone_defects(
+    gluings: Iterable[tuple[str, str, int]],
+) -> dict[tuple[str, ...], float]:
     """Angular deficits for the unit-square's inherited piecewise-Euclidean metric.
 
     Assumes that the edge pairing defines a closed 2-manifold. Vertex links
@@ -104,7 +108,9 @@ def mercator_scale(latitude_radians: float) -> float:
     return 1 / cos(latitude_radians)
 
 
-def mercator_distortion_samples(degrees: Iterable[float] = (0, 30, 60, 80, 85)) -> list[tuple[float, float, float]]:
+def mercator_distortion_samples(
+    degrees: Iterable[float] = (0, 30, 60, 80, 85),
+) -> list[tuple[float, float, float]]:
     """Rows: latitude degrees, local linear scale, local area scale."""
     result = []
     for deg in degrees:
@@ -116,9 +122,9 @@ def mercator_distortion_samples(degrees: Iterable[float] = (0, 30, 60, 80, 85)) 
 if __name__ == "__main__":
     for name, pairs in SURFACES.items():
         chi, defect = quotient_summary(pairs)
-        print(f"{name:11} chi={chi:+d} total_defect/pi={defect/pi:.1f}")
+        print(f"{name:11} chi={chi:+d} total_defect/pi={defect / pi:.1f}")
         for cls, angle in cone_defects(pairs).items():
-            print(f"  {''.join(cls):4} delta/pi={angle/pi:.2f}")
+            print(f"  {''.join(cls):4} delta/pi={angle / pi:.2f}")
     print("Mercator local scale:")
     for lat, linear, area in mercator_distortion_samples():
         print(f"  {lat:4g} deg: length={linear:8.4f} area={area:9.4f}")

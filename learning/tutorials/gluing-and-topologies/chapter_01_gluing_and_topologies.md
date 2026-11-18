@@ -316,6 +316,7 @@ Each edge is parameterized naturally as follows:
 A sign of +1 matches first endpoints and last endpoints.
 A sign of -1 swaps them.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -331,9 +332,11 @@ EDGE_ENDS: dict[str, tuple[Point, Point]] = {
 EDGE_ORDER = "LRBT"
 EDGE_INDEX = {name: index for index, name in enumerate(EDGE_ORDER)}
 
+
 @dataclass(frozen=True, order=True)
 class Pair:
     """A paired edge pair (first < second by EDGE_ORDER) and tangent sign."""
+
     first: str
     second: str
     sign: int
@@ -343,6 +346,7 @@ class Pair:
             raise ValueError("Pair edges must be in canonical order")
         if self.sign not in (-1, 1):
             raise ValueError("Gluing sign must be +1 or -1")
+
 
 # A gluing is a tuple of disjoint edge pairs; any unmentioned edge is left free.
 Gluing = tuple[Pair, ...]
@@ -361,11 +365,14 @@ def normalize(pairs: list[tuple[str, str, int]]) -> Gluing:
         if EDGE_INDEX[a] > EDGE_INDEX[b]:
             a, b = b, a
         normalized.append(Pair(a, b, sign))
-    return tuple(sorted(normalized, key=lambda p: (EDGE_INDEX[p.first], EDGE_INDEX[p.second])))
+    return tuple(
+        sorted(normalized, key=lambda p: (EDGE_INDEX[p.first], EDGE_INDEX[p.second]))
+    )
 
 
 def all_gluings(complete: bool = True) -> list[Gluing]:
     """Generate 12 complete pairings, or all 25 including free edges."""
+
     def matchings(edges: tuple[str, ...]):
         if not edges:
             yield ()
@@ -389,16 +396,21 @@ def all_gluings(complete: bool = True) -> list[Gluing]:
 @dataclass(frozen=True)
 class SquareSymmetry:
     """(x,y) -> signed permutation of coordinates on [0,1]^2."""
+
     perm: tuple[int, int]
     flips: tuple[bool, bool]
 
     def apply(self, p: Point) -> Point:
-        return tuple(1-p[self.perm[i]] if self.flips[i] else p[self.perm[i]]
-                     for i in (0, 1))  # type: ignore[return-value]
+        return tuple(
+            1 - p[self.perm[i]] if self.flips[i] else p[self.perm[i]] for i in (0, 1)
+        )  # type: ignore[return-value]
 
 
-D4 = tuple(SquareSymmetry(p, f) for p in permutations((0, 1))
-           for f in product((False, True), repeat=2))
+D4 = tuple(
+    SquareSymmetry(p, f)
+    for p in permutations((0, 1))
+    for f in product((False, True), repeat=2)
+)
 
 
 def mapped_edge(sym: SquareSymmetry, edge: str) -> tuple[str, int]:
@@ -443,14 +455,14 @@ def symmetry_name(sym: SquareSymmetry) -> str:
     """Human-readable D4 element based on its action on vertices."""
     vertices = ((0, 0), (1, 0), (1, 1), (0, 1))
     signatures = {
-        ((0,0),(1,0),(1,1),(0,1)): "identity",
-        ((1,0),(1,1),(0,1),(0,0)): "rotate 90°",
-        ((1,1),(0,1),(0,0),(1,0)): "rotate 180°",
-        ((0,1),(0,0),(1,0),(1,1)): "rotate 270°",
-        ((1,0),(0,0),(0,1),(1,1)): "reflect vertical",
-        ((0,1),(1,1),(1,0),(0,0)): "reflect horizontal",
-        ((0,0),(0,1),(1,1),(1,0)): "reflect main diagonal",
-        ((1,1),(1,0),(0,0),(0,1)): "reflect other diagonal",
+        ((0, 0), (1, 0), (1, 1), (0, 1)): "identity",
+        ((1, 0), (1, 1), (0, 1), (0, 0)): "rotate 90°",
+        ((1, 1), (0, 1), (0, 0), (1, 0)): "rotate 180°",
+        ((0, 1), (0, 0), (1, 0), (1, 1)): "rotate 270°",
+        ((1, 0), (0, 0), (0, 1), (1, 1)): "reflect vertical",
+        ((0, 1), (1, 1), (1, 0), (0, 0)): "reflect horizontal",
+        ((0, 0), (0, 1), (1, 1), (1, 0)): "reflect main diagonal",
+        ((1, 1), (1, 0), (0, 0), (0, 1)): "reflect other diagonal",
     }
     return signatures[tuple(sym.apply(v) for v in vertices)]
 
@@ -492,8 +504,7 @@ def validate_vertex_links(gluing: Gluing) -> None:
     vertex the assembled graph is a single circle or a single interval.
     """
     corners = {v for endpoints in EDGE_ENDS.values() for v in endpoints}
-    incident = {v: [e for e, ends in EDGE_ENDS.items() if v in ends]
-                for v in corners}
+    incident = {v: [e for e, ends in EDGE_ENDS.items() if v in ends] for v in corners}
     germs = [(v, e) for v in corners for e in incident[v]]
     dsu = DSU(germs)
     for pair in gluing:
@@ -525,8 +536,11 @@ def validate_vertex_links(gluing: Gluing) -> None:
             explored.add(node)
             stack.extend(adjacency[node] - explored)
         loose_ends = sum(d == 1 for d in degree.values())
-        if explored != remaining or any(d not in (1, 2) for d in degree.values()) \
-                or loose_ends not in (0, 2):
+        if (
+            explored != remaining
+            or any(d not in (1, 2) for d in degree.values())
+            or loose_ends not in (0, 2)
+        ):
             raise ValueError(f"Non-manifold quotient vertex link: {vertex_group}")
 
 
@@ -537,8 +551,9 @@ def orientable(gluing: Gluing) -> bool:
     A paired edge must induce opposite boundary orientations to be orientable.
     """
     boundary_sign = {"B": 1, "R": 1, "T": -1, "L": -1}
-    return all(boundary_sign[p.first] * p.sign * boundary_sign[p.second] == -1
-               for p in gluing)
+    return all(
+        boundary_sign[p.first] * p.sign * boundary_sign[p.second] == -1 for p in gluing
+    )
 
 
 def boundary_components(gluing: Gluing) -> int:
@@ -581,34 +596,55 @@ def classify(gluing: Gluing) -> dict:
         if remainder < 0 or remainder % 2:
             raise ValueError("Invariants do not specify an orientable surface")
         g = remainder // 2
-        name = {(0,1): "disk", (0,2): "annulus / cylinder", (0,0): "sphere", (1,0): "torus"}.get((g,b), f"orientable genus {g}, {b} boundaries")
+        name = {
+            (0, 1): "disk",
+            (0, 2): "annulus / cylinder",
+            (0, 0): "sphere",
+            (1, 0): "torus",
+        }.get((g, b), f"orientable genus {g}, {b} boundaries")
     else:
         k = 2 - b - chi
         if k < 1:
             raise ValueError("Invariants do not specify a nonorientable surface")
-        name = {(1,1): "Möbius strip", (1,0): "projective plane (RP²)", (2,0): "Klein bottle"}.get((k,b), f"nonorientable crosscaps {k}, {b} boundaries")
-    return {"name": name, "V": V, "E": E, "F": F,
-            "chi": chi, "boundary": b, "orientable": oriented}
+        name = {
+            (1, 1): "Möbius strip",
+            (1, 0): "projective plane (RP²)",
+            (2, 0): "Klein bottle",
+        }.get((k, b), f"nonorientable crosscaps {k}, {b} boundaries")
+    return {
+        "name": name,
+        "V": V,
+        "E": E,
+        "F": F,
+        "chi": chi,
+        "boundary": b,
+        "orientable": oriented,
+    }
 
 
 def label(gluing: Gluing) -> str:
     if not gluing:
         return "no pairs"
-    return ", ".join(f"{p.first}{p.second}{'+' if p.sign == 1 else '-'}" for p in gluing)
+    return ", ".join(
+        f"{p.first}{p.second}{'+' if p.sign == 1 else '-'}" for p in gluing
+    )
 ```
 
 ## A.2 `01_enumerate.py`
 
 ```python
 """Chapter 1, Example 1: enumerate all disjoint square-edge gluings."""
+
 from collections import Counter
 from square_gluings import all_gluings, label
 
 for complete in (True, False):
     gluings = all_gluings(complete=complete)
     print(f"\n{'COMPLETE' if complete else 'INCLUDING FREE EDGES'}: {len(gluings)}")
-    print("Number of pairs -> configurations:",
-          dict(sorted(Counter(len(g) for g in gluings).items())))
+    print(
+        "Number of pairs -> configurations:",
+        dict(sorted(Counter(len(g) for g in gluings).items())),
+    )
     for g in gluings:
         print("  ", label(g))
 
@@ -620,17 +656,19 @@ assert len(all_gluings(False)) == 25
 
 ```python
 """Chapter 1, Example 2: D4 action and Burnside's lemma."""
+
 from square_gluings import D4, all_gluings, label, orbits, symmetry_name, transform
 
 for complete in (True, False):
     gluings = all_gluings(complete=complete)
     symmetry_orbits = orbits(gluings)
-    fixed = [(symmetry_name(s), sum(transform(g, s) == g for g in gluings))
-             for s in D4]
+    fixed = [(symmetry_name(s), sum(transform(g, s) == g for g in gluings)) for s in D4]
     print(f"\n{len(gluings)} gluings -> {len(symmetry_orbits)} D4 orbits")
     for representative_orbit in symmetry_orbits:
-        print(f"  {label(representative_orbit[0]):16s} "
-              f"orbit size = {len(representative_orbit)}")
+        print(
+            f"  {label(representative_orbit[0]):16s} "
+            f"orbit size = {len(representative_orbit)}"
+        )
     print("Fixed configurations:")
     for name, count in fixed:
         print(f"  {name:24s}: {count}")
@@ -643,6 +681,7 @@ for complete in (True, False):
 
 ```python
 """Chapter 1, Example 3: quotient vertices, Euler characteristic, topology."""
+
 from collections import Counter
 from square_gluings import all_gluings, classify, label, orbits, vertex_classes
 
@@ -656,10 +695,12 @@ for complete in (True, False):
     for members in orbits(gluings):
         g = members[0]
         data = classify(g)
-        print(f"  {label(g):16s} | orbit={len(members)} "
-              f"| V={data['V']} E={data['E']} F={data['F']} "
-              f"| chi={data['chi']:2d} b={data['boundary']} "
-              f"| orientable={str(data['orientable']):5s} | {data['name']}")
+        print(
+            f"  {label(g):16s} | orbit={len(members)} "
+            f"| V={data['V']} E={data['E']} F={data['F']} "
+            f"| chi={data['chi']:2d} b={data['boundary']} "
+            f"| orientable={str(data['orientable']):5s} | {data['name']}"
+        )
         assert all(classify(member) == data for member in members)
     assert len(counts) == (4 if complete else 7)
 ```
@@ -668,12 +709,19 @@ for complete in (True, False):
 
 ```python
 """Standard-library regression tests for Chapter 1's examples."""
+
 import unittest
 from collections import Counter
 
 from square_gluings import (
-    D4, all_gluings, classify, normalize, orbit, orbits,
-    transform, vertex_classes,
+    D4,
+    all_gluings,
+    classify,
+    normalize,
+    orbit,
+    orbits,
+    transform,
+    vertex_classes,
 )
 
 
@@ -685,32 +733,45 @@ class SquareGluingTests(unittest.TestCase):
         self.assertEqual(len(orbits(all_gluings(False))), 11)
 
     def test_closed_surface_distribution(self):
-        counts = Counter(classify(g)['name'] for g in all_gluings(True))
-        self.assertEqual(counts, {
-            'torus': 1, 'Klein bottle': 4,
-            'projective plane (RP²)': 5, 'sphere': 2,
-        })
+        counts = Counter(classify(g)["name"] for g in all_gluings(True))
+        self.assertEqual(
+            counts,
+            {
+                "torus": 1,
+                "Klein bottle": 4,
+                "projective plane (RP²)": 5,
+                "sphere": 2,
+            },
+        )
 
     def test_partial_surface_set(self):
-        got = {classify(g)['name'] for g in all_gluings(False)}
-        self.assertEqual(got, {
-            'disk', 'annulus / cylinder', 'Möbius strip', 'sphere',
-            'torus', 'Klein bottle', 'projective plane (RP²)',
-        })
+        got = {classify(g)["name"] for g in all_gluings(False)}
+        self.assertEqual(
+            got,
+            {
+                "disk",
+                "annulus / cylinder",
+                "Möbius strip",
+                "sphere",
+                "torus",
+                "Klein bottle",
+                "projective plane (RP²)",
+            },
+        )
 
     def test_torus_and_sphere_examples(self):
-        torus = normalize([('L', 'R', 1), ('B', 'T', 1)])
-        sphere = normalize([('L', 'B', 1), ('R', 'T', 1)])
-        self.assertEqual(classify(torus)['chi'], 0)
-        self.assertEqual(classify(torus)['name'], 'torus')
-        self.assertEqual(classify(sphere)['chi'], 2)
-        self.assertEqual(classify(sphere)['name'], 'sphere')
+        torus = normalize([("L", "R", 1), ("B", "T", 1)])
+        sphere = normalize([("L", "B", 1), ("R", "T", 1)])
+        self.assertEqual(classify(torus)["chi"], 0)
+        self.assertEqual(classify(torus)["name"], "torus")
+        self.assertEqual(classify(sphere)["chi"], 2)
+        self.assertEqual(classify(sphere)["name"], "sphere")
         self.assertEqual(len(vertex_classes(sphere)), 3)
 
     def test_legacy_negative_adjacent_is_klein(self):
-        legacy = normalize([('L', 'B', -1), ('R', 'T', -1)])
-        self.assertEqual(classify(legacy)['name'], 'Klein bottle')
-        self.assertFalse(classify(legacy)['orientable'])
+        legacy = normalize([("L", "B", -1), ("R", "T", -1)])
+        self.assertEqual(classify(legacy)["name"], "Klein bottle")
+        self.assertFalse(classify(legacy)["orientable"])
 
     def test_action_preserves_topology(self):
         for g in all_gluings(False):
@@ -734,6 +795,6 @@ class SquareGluingTests(unittest.TestCase):
             self.assertEqual(set(flattened), set(all_gluings(complete)))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
 ```

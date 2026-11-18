@@ -464,9 +464,13 @@ The following abbreviated calls illustrate the laboratory:
 ~~~python
 from math import pi, radians
 from curvature_mercator_lab import (
-    SURFACES, vertex_classes, cone_defects,
-    quotient_summary, sphere_seam_vector,
-    mercator_y, mercator_scale,
+    SURFACES,
+    vertex_classes,
+    cone_defects,
+    quotient_summary,
+    sphere_seam_vector,
+    mercator_y,
+    mercator_scale,
 )
 
 print(vertex_classes(SURFACES["sphere"]))
@@ -474,11 +478,11 @@ print(vertex_classes(SURFACES["sphere"]))
 
 chi, total_defect = quotient_summary(SURFACES["sphere"])
 assert chi == 2
-assert abs(total_defect - 4*pi) < 1e-12
+assert abs(total_defect - 4 * pi) < 1e-12
 
 print(sphere_seam_vector(-1, 0))  # (0, 1)
 print(mercator_scale(radians(60)))  # approximately 2
-print(mercator_y(radians(80)))      # finite, but rapidly increasing
+print(mercator_y(radians(80)))  # finite, but rapidly increasing
 ~~~
 
 The seam illustration implements the two affine unfoldings from §2.4; its vector function returns the associated Jacobian action. This is **not** a substitute for Tet4D's native cell-step resolver.

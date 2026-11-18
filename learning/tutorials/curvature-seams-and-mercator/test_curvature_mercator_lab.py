@@ -18,7 +18,9 @@ from curvature_mercator_lab import (
 
 class ChapterTwoTests(unittest.TestCase):
     def test_sphere_vertex_classes(self):
-        self.assertEqual(vertex_classes(SURFACES["sphere"]), (("A",), ("B", "D"), ("C",)))
+        self.assertEqual(
+            vertex_classes(SURFACES["sphere"]), (("A",), ("B", "D"), ("C",))
+        )
 
     def test_sphere_defects(self):
         d = cone_defects(SURFACES["sphere"])
@@ -36,7 +38,9 @@ class ChapterTwoTests(unittest.TestCase):
 
     def test_flat_torus_and_klein(self):
         for name in ("torus", "klein"):
-            self.assertTrue(all(abs(a) < 1e-12 for a in cone_defects(SURFACES[name]).values()))
+            self.assertTrue(
+                all(abs(a) < 1e-12 for a in cone_defects(SURFACES[name]).values())
+            )
 
     def test_sphere_seam_endpoints(self):
         for t in (0, 0.23, 0.77, 1):
@@ -51,7 +55,9 @@ class ChapterTwoTests(unittest.TestCase):
 
     def test_mercator_equator_and_symmetry(self):
         self.assertAlmostEqual(mercator_y(0), 0)
-        self.assertAlmostEqual(mercator_y(math.radians(60)), -mercator_y(math.radians(-60)))
+        self.assertAlmostEqual(
+            mercator_y(math.radians(60)), -mercator_y(math.radians(-60))
+        )
         self.assertAlmostEqual(mercator_scale(0), 1)
         self.assertAlmostEqual(mercator_scale(math.radians(60)), 2)
 

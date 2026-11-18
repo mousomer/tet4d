@@ -1,4 +1,5 @@
 """Standard-library regression tests for Chapter 1's examples."""
+
 import unittest
 from collections import Counter
 
@@ -21,32 +22,45 @@ class SquareGluingTests(unittest.TestCase):
         self.assertEqual(len(orbits(all_gluings(False))), 11)
 
     def test_closed_surface_distribution(self):
-        counts = Counter(classify(g)['name'] for g in all_gluings(True))
-        self.assertEqual(counts, {
-            'torus': 1, 'Klein bottle': 4,
-            'projective plane (RP²)': 5, 'sphere': 2,
-        })
+        counts = Counter(classify(g)["name"] for g in all_gluings(True))
+        self.assertEqual(
+            counts,
+            {
+                "torus": 1,
+                "Klein bottle": 4,
+                "projective plane (RP²)": 5,
+                "sphere": 2,
+            },
+        )
 
     def test_partial_surface_set(self):
-        got = {classify(g)['name'] for g in all_gluings(False)}
-        self.assertEqual(got, {
-            'disk', 'annulus / cylinder', 'Möbius strip', 'sphere',
-            'torus', 'Klein bottle', 'projective plane (RP²)',
-        })
+        got = {classify(g)["name"] for g in all_gluings(False)}
+        self.assertEqual(
+            got,
+            {
+                "disk",
+                "annulus / cylinder",
+                "Möbius strip",
+                "sphere",
+                "torus",
+                "Klein bottle",
+                "projective plane (RP²)",
+            },
+        )
 
     def test_torus_and_sphere_examples(self):
-        torus = normalize([('L', 'R', 1), ('B', 'T', 1)])
-        sphere = normalize([('L', 'B', 1), ('R', 'T', 1)])
-        self.assertEqual(classify(torus)['chi'], 0)
-        self.assertEqual(classify(torus)['name'], 'torus')
-        self.assertEqual(classify(sphere)['chi'], 2)
-        self.assertEqual(classify(sphere)['name'], 'sphere')
+        torus = normalize([("L", "R", 1), ("B", "T", 1)])
+        sphere = normalize([("L", "B", 1), ("R", "T", 1)])
+        self.assertEqual(classify(torus)["chi"], 0)
+        self.assertEqual(classify(torus)["name"], "torus")
+        self.assertEqual(classify(sphere)["chi"], 2)
+        self.assertEqual(classify(sphere)["name"], "sphere")
         self.assertEqual(len(vertex_classes(sphere)), 3)
 
     def test_legacy_negative_adjacent_is_klein(self):
-        legacy = normalize([('L', 'B', -1), ('R', 'T', -1)])
-        self.assertEqual(classify(legacy)['name'], 'Klein bottle')
-        self.assertFalse(classify(legacy)['orientable'])
+        legacy = normalize([("L", "B", -1), ("R", "T", -1)])
+        self.assertEqual(classify(legacy)["name"], "Klein bottle")
+        self.assertFalse(classify(legacy)["orientable"])
 
     def test_action_preserves_topology(self):
         for g in all_gluings(False):
@@ -70,5 +84,5 @@ class SquareGluingTests(unittest.TestCase):
             self.assertEqual(set(flattened), set(all_gluings(complete)))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
