@@ -130,6 +130,11 @@ campaign is not required for the first experiment and follows afterwards.
 
 ### E4 — Participant records, local recovery and server ingestion
 
+The non-technical rationale is in `participant_data_platform_overview.md`;
+proposed platform implementation and staged acceptance are in
+`participant_data_platform_implementation.md`. Neither file authorizes
+real-person collection or changes this plan's scientific endpoints.
+
 Derive the storage contract from E3 rather than guessing what future analysis
 might need.
 
@@ -167,9 +172,10 @@ Define explicitly before implementation:
 - event-volume and performance budgets so logging does not change input
   timing or experimental conditions.
 
-No hosting vendor, authentication provider, database or cloud architecture is
-selected by this planning change. Select them in a separate design decision
-based on the approved schema, operations and compliance requirements.
+Supabase in Ireland is the proposed first hosting option in the separate
+implementation plan, not an approved or deployed participant backend. Actual
+provisioning and collection still depend on the frozen measurement contract,
+operational/security review, provider terms and applicable privacy/ethics approval.
 
 Gate `RESEARCH_PLATFORM_READY`: scenario and scoring contracts are frozen,
 consent/withdrawal and storage recovery have evidence, auth separation and
