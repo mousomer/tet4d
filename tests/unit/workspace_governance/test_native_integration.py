@@ -88,7 +88,7 @@ if phase=='git_sanitation':
     print('WARN: filenames with spaces detected (tracked or untracked, excluding ignored)')
     print('WARN: sanitation checks reported 4 issue class(es)')
 if phase=='tools/workspace_governance/sanitation.py':
-    print(json.dumps({'profile':'git-visible-text-patterns-v1','inspected_files':1,'finding_count':0,'skipped_count':100000,'error_count':0,'findings':[],'errors':[],'skipped':[{'path':'SYNTHETIC_MATCHED_SOURCE_NEVER_DISPLAY','reason':'binary'}]*50}))
+    print(json.dumps({'schema_version':2,'execution':'completed','coverage_counts':{'binary':100000},'profile':'git-visible-text-patterns-v1','inspected_files':1,'finding_count':0,'skipped_count':100000,'error_count':0,'findings':[],'errors':[],'skipped':[{'path':'SYNTHETIC_MATCHED_SOURCE_NEVER_DISPLAY','reason':'binary'}]*50}))
 """
     )
     python.chmod(0o755)

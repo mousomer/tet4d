@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "id": "managed-operation-profiles-v1",
+  "policy": "supervised-completion-v3",
+  "profiles": {
+    "local-command": {
+      "description": "A local command whose exit status is returned to the invocation that started it.",
+      "identity": ["operation_id", "argv", "cwd", "pid"],
+      "completion": {
+        "preference": ["synchronous_return"],
+        "synchronous_return": {"response_window_seconds": 600},
+        "adapter_polling": {
+          "authorized": true,
+          "min_interval_seconds": 2,
+          "backoff_factor": 2.0,
+          "max_interval_seconds": 30
+        }
+      },
+      "budget": {
+        "deadline_seconds": 3600,
+        "max_requests": 200,
+        "max_waits": 3,
+        "max_renewals": 2
+      },
+      "on_response_window": "continue_same_handle_within_budget",
+      "on_budget_exhausted": "report_pending_preserve_handle",
+      "on_mechanism_failure": "report_execution_error",
+      "probes": ["process_id", "artifact_path", "duplicate_submission", "synthetic_wait"]
+    },
+    "local-process": {
+      "description": "A long local job submitted once and awaited by the supervisor.",
+      "identity": ["operation_id", "argv", "cwd", "pid"],
+      "completion": {
+        "preference": ["blocking_wait"],
+        "blocking_wait": {"response_window_seconds": 300},
+        "adapter_polling": {
+          "authorized": true,
+          "min_interval_seconds": 2,
+          "backoff_factor": 2.0,
+          "max_interval_seconds": 30
+        }
+      },
+      "budget": {
+        "deadline_seconds": 1800,
+        "max_requests": 200,
+        "max_waits": 3,
+        "max_renewals": 2
+      },
+      "on_response_window": "continue_same_handle_within_budget",
+      "on_budget_exhausted": "report_pending_preserve_handle",
+      "on_mechanism_failure": "report_execution_error",
+      "probes": ["process_id", "artifact_path", "duplicate_submission", "synthetic_wait"]
+    },
+    "github-actions-run": {
+      "description": "A GitHub Actions run bound to its run id and head commit. The service offers this adapter no blocking or notification path, so the profile authorizes adapter polling as its only mechanism.",
+      "identity": ["operation_id", "repository", "run_id", "head_sha"],
+      "completion": {
+        "preference": [],
+        "adapter_polling": {
+          "authorized": true,
+          "min_interval_seconds": 30,
+          "backoff_factor": 1.5,
+          "max_interval_seconds": 180
+        }
+      },
+      "budget": {
+        "deadline_seconds": 2700,
+        "max_requests": 60,
+        "max_waits": 2,
+        "max_renewals": 1
+      },
+      "on_response_window": "continue_same_handle_within_budget",
+      "on_budget_exhausted": "report_pending_preserve_handle",
+      "on_mechanism_failure": "report_enforcement_error",
+      "probes": ["remote_run_id", "duplicate_submission", "synthetic_wait"]
+    },
+    "continuation-handle": {
+      "description": "A tool that returns a handle and requires continuation calls on that handle. No polling fallback is authorized.",
+      "identity": ["operation_id", "handle"],
+      "completion": {
+        "preference": ["controlled_continuation"],
+        "controlled_continuation": {
+          "block_seconds": 30,
+          "immediate_fraction": 0.5,
+          "max_immediate_pending": 2
+        }
+      },
+      "budget": {
+        "deadline_seconds": 1800,
+        "max_requests": 120,
+        "max_waits": 3,
+        "max_renewals": 2
+      },
+      "on_response_window": "continue_same_handle_within_budget",
+      "on_budget_exhausted": "report_pending_preserve_handle",
+      "on_mechanism_failure": "report_enforcement_error",
+      "probes": ["handle", "artifact_path", "duplicate_submission", "synthetic_wait"]
+    },
+    "notified-operation": {
+      "description": "An operation whose service delivers a completion notification, with a blocking wait as the authorized second preference. No polling fallback is authorized.",
+      "identity": ["operation_id", "subscription"],
+      "completion": {
+        "preference": ["notification", "blocking_wait"],
+        "notification": {"response_window_seconds": 600},
+        "blocking_wait": {"response_window_seconds": 300}
+      },
+      "budget": {
+        "deadline_seconds": 3600,
+        "max_requests": 12,
+        "max_waits": 3,
+        "max_renewals": 2
+      },
+      "on_response_window": "continue_same_handle_within_budget",
+      "on_budget_exhausted": "report_pending_preserve_handle",
+      "on_mechanism_failure": "report_enforcement_error",
+      "probes": ["artifact_path", "duplicate_submission", "synthetic_wait"]
+    }
+  },
+  "coverage": {
+    "enforced_interfaces": {
+      "claude": ["Bash", "Monitor", "Read", "Grep", "Glob", "mcp__*"],
+      "codex": ["Bash", "exec_command", "shell", "local_shell", "mcp__*"]
+    },
+    "enforced_services": [
+      "local-command",
+      "local-process",
+      "github-actions-run (gh CLI adapter)"
+    ],
+    "fixture_only_services": ["continuation-handle", "notified-operation"],
+    "not_covered": [
+      "commands that probe an operation only through indirection the classifier cannot read (generated scripts, network sockets, editor plugins)",
+      "harnesses without a bound PreToolUse hook",
+      "web, browser and subagent tools that do not pass through the bound hook",
+      "direct edits to the per-checkout operation registry outside the supervisor",
+      "enforcement errors raised before the hook interpreter starts, which are reported on stderr and in the Claude systemMessage but not recorded in the registry",
+      "waiting time of a waiter killed mid-window is accounted only up to its last checkpoint"
+    ]
+  }
+}

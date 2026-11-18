@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-11-16
+Updated: 2026-11-17
 Scope: active work, explicit deferrals, and near-term acceptance boundaries.
 
 Completed chronology is recoverable from Git, merged PRs, CI, and
@@ -35,6 +35,18 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   their helper directions to the existing shared control-frame mapper. Preserve
   native board-coordinate transport and explicit absolute-frame preferences. Pin
   camera-relative defaults in all dimensions and rear-view 2D input with regression tests.
+
+- [x] Adopt canonical distribution 1.8.2 / runtime 1.0.2 as the reviewed successor
+  to 1.8.1: wrapped/Glob probes, cross-profile duplicate identity, argument-role
+  run matching and mandatory remote head binding. Publish governance-only bytes;
+  require the unchanged full product gate and preserve fleet audit/trust gaps.
+
+- [x] Install canonical distribution 1.8.1 / runtime 1.0.1 through guarded
+  direct-checkout receipts. The unchanged full product verifier gates acceptance;
+  supervised completion v3 uses profile-owned operation handling.
+- [ ] Preserve fleet audit gaps, desktop hook trust and live Claude/Codex
+  enforcement as separate acceptance duties; repository installation and tests
+  do not establish these claims.
 
 - CI latency (PR #185): focused Explorer first, cached native dependencies and
   four required Godot partitions. Preserve full acceptance; reconcile against

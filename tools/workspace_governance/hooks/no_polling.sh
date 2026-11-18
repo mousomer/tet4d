@@ -1,25 +1,49 @@
 #!/bin/sh
-# Pack-managed PreToolUse guard (workspace-governance, NO_AUTONOMOUS_POLLING).
+# Pack-managed PreToolUse guard (workspace-governance, supervised-completion-v3).
 # Usage: no_polling.sh <claude|codex> [prompt]; hook JSON arrives on stdin.
-# Fail closed: any failure to start or run the shared classifier blocks the
-# tool call (exit 2), and a deadline below the runtime's 30 s hook timeout turns
-# a hang into a block before the runtime would let the call proceed. Prompt
-# mode only advances the observation epoch and never blocks a user prompt.
+# The classifier decides normally. When the guard itself fails (no approved
+# interpreter, crash, deadline), the failure is scoped: only a call that plainly
+# waits for or probes an operation is blocked (exit 2); every other call proceeds
+# with a GUARD_DEGRADED warning. A waiting-policy failure never becomes a blanket
+# prohibition of unrelated work. Prompt mode never blocks a user prompt. This
+# launcher uses shell builtins only on its failure paths, so a broken PATH cannot
+# turn into a blanket denial either.
 mode="${2:-tool}"
+runtime="${1:-}"
 deadline="${NO_POLLING_GUARD_DEADLINE:-20}"
 case "$deadline" in
   [1-9] | 1[0-9] | 2[0-5]) ;;
   *) deadline=20 ;;
 esac
-fail() {
-  echo "NO_AUTONOMOUS_POLLING (GUARD_FAILURE): $1; the call is blocked. Repair the pack-managed hook (./gov check)." >&2
+payload=""
+while IFS= read -r line || [ -n "$line" ]; do
+  payload="$payload$line
+"
+done
+scoped() {
   if [ "$mode" = prompt ]; then exit 0; fi
-  exit 2
+  case "$payload" in
+    *"gh run watch"* | *"gh run view"* | *"gh pr checks"* | *"--watch"* | \
+    *"--interval"* | *"gh api"*"/runs"* | *"gh api"*"status"* | *"watch "* | \
+    *"sleep "[0-9]* | *"tail -f"* | *"tail -F"* | *"while "*"sleep "* | \
+    *"until "*"; do"* | *"ps -p"* | *"kill -0"* | *"pgrep "*)
+      echo "NO_AUTONOMOUS_POLLING (GUARD_FAILURE): $1. This call looks like a wait or status probe, so it is blocked while the guard is degraded. Unrelated commands remain available; repair the pack-managed hook (./gov check)." >&2
+      exit 2 ;;
+  esac
+  message="NO_AUTONOMOUS_POLLING (GUARD_DEGRADED): $1. Waiting-policy enforcement is degraded for this call, which is allowed because it is not a wait or status probe. Report this enforcement error; repair with ./gov check."
+  echo "$message" >&2
+  if [ "$runtime" = claude ]; then
+    printf '{"systemMessage": "%s"}\n' "$message"
+  fi
+  exit 0
 }
-here=$(CDPATH='' cd -- "$(dirname -- "$0")" 2>/dev/null && pwd) || fail "hook directory unavailable"
+case "$0" in
+  */*) here="${0%/*}" ;;
+  *) here="." ;;
+esac
+here=$(CDPATH='' cd -- "$here" 2>/dev/null && pwd) || scoped "hook directory unavailable"
 root="${here%/tools/workspace_governance/hooks}"
-[ "$root" != "$here" ] || fail "consumer root unavailable"
-exec 3<&0
+[ "$root" != "$here" ] || scoped "consumer root unavailable"
 guard() {
   python=""
   if [ -x "$root/scripts/resolve_bootstrap_python.sh" ]; then
@@ -29,7 +53,9 @@ guard() {
     python="$GOVERNANCE_PYTHON"
   fi
   [ -n "$python" ] && [ -x "$python" ] || exit 97
-  exec "$python" -I -B "$here/no_polling.py" "$@" <&3
+  exec "$python" -I -B "$here/no_polling.py" "$@" <<GUARD_PAYLOAD
+$payload
+GUARD_PAYLOAD
 }
 guard "$@" &
 child=$!
@@ -47,7 +73,7 @@ kill "$watchdog" 2>/dev/null
 case "$status" in
   0) exit 0 ;;
   2) if [ "$mode" = prompt ]; then exit 0; fi; exit 2 ;;
-  97) fail "no approved governance interpreter" ;;
-  137) fail "classifier exceeded its ${deadline}s deadline" ;;
-  *) fail "classifier exited with status $status" ;;
+  97) scoped "no approved governance interpreter" ;;
+  137) scoped "classifier exceeded its ${deadline}s deadline" ;;
+  *) scoped "classifier exited with status $status" ;;
 esac
