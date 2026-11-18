@@ -5,6 +5,7 @@ Run: python generate_landmask.py
 import base64
 import json
 from pathlib import Path
+
 from mpl_toolkits.basemap import Basemap
 from PIL import Image, ImageDraw
 
