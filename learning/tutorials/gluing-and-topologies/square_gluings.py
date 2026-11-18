@@ -13,7 +13,7 @@ A sign of -1 swaps them.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from itertools import combinations, permutations, product
+from itertools import permutations, product
 
 Point = tuple[int, int]
 EDGE_ENDS: dict[str, tuple[Point, Point]] = {
@@ -169,7 +169,7 @@ class DSU:
 
 
 def vertex_classes(gluing: Gluing) -> tuple[tuple[Point, ...], ...]:
-    dsu = DSU(set(v for ends in EDGE_ENDS.values() for v in ends))
+    dsu = DSU({v for ends in EDGE_ENDS.values() for v in ends})
     for p in gluing:
         a0, a1 = EDGE_ENDS[p.first]
         b0, b1 = EDGE_ENDS[p.second]
