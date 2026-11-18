@@ -1,6 +1,6 @@
 # Chapter 2 — Curvature, Seam Traversal, and Mercator Maps
 
-**Gluings and Topologies: a computational introduction**  
+**Gluings and Topologies: a computational introduction**
 *Mathematical text and executable Python laboratory · 18 November 2026*
 
 > **Central question.** Chapter 1 used edge identifications to construct topological surfaces from a square. Some of those surfaces—especially the sphere—cannot be everywhere flat. Why, then, can we still build them by gluing flat edges? What exactly goes wrong when an Explorer cell crosses a seam? And why is this closely related to the distortions of a Mercator world map?

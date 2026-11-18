@@ -1,6 +1,6 @@
 # Chapter 1 — Gluing Edges and Recognizing Topological Surfaces
 
-**Gluings and Topologies: a computational introduction**  
+**Gluings and Topologies: a computational introduction**
 *Mathematical text and executable Python laboratory · 18 November 2026*
 
 > **Scope.** We begin with one closed square and identify its boundary edges in pairs. We distinguish raw gluing descriptions, descriptions equivalent under square symmetry, and quotient surfaces equivalent up to homeomorphism. The Python laboratory reproduces every count and checks the local quotient structure. The final section relates the construction to Tet4D's Explorer, without conflating the continuous quotient with discrete piece movement.
