@@ -53,6 +53,14 @@ general planning redirection or repo-wide ownership notes.
 - Does **not** own programme stage order, durable product behaviour, topology
   semantics, server implementation or new research-study authorization.
 
+### `participant_data_platform_implementation.md`
+- Role: `spec`; status: `active`.
+- Owns the proposed engineering sequence, storage/API boundaries, recovery,
+  verification and acceptance plan for optional cloud progress and research data.
+- Does **not** own the scientific hypothesis/endpoints, programme sequencing,
+  durable product RDS behavior, or authorization to collect participant data.
+- Plain-language explanation: `participant_data_platform_overview.md`.
+
 ### `typography_cleanup.md`
 - Role: `spec`; status: `active`.
 - Owns typography cleanup sequencing and its effective-typography lock.
@@ -138,6 +146,7 @@ Current reference files:
 
 - `piece_transform_extraction.md`
 - `piece_transform_inventory.md`
+- `participant_data_platform_overview.md` — non-technical explanation; not an execution authority
 
 Reference files do not control execution when they conflict with an active
 authority/spec document.
