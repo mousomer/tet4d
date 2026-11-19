@@ -57,12 +57,6 @@ def start_visit(conninfo, enrollment, visit, client_build):
     )
 
 
-def mark_slot_presented(conninfo, enrollment, slot):
-    _call(
-        conninfo, "SELECT assessment_api.mark_slot_presented(%s, %s)", enrollment, slot
-    )
-
-
 def close_visit(conninfo, enrollment, visit, status):
     _call(
         conninfo,

@@ -20,6 +20,7 @@ FIELDS = {
     "outcome": ("slot", "status", "attempt"),
     "close_visit": ("visit", "status"),
     "withdrawal": ("enrollment",),
+    "presentation": ("slot",),
 }
 INTEGER_FIELDS = {"ordinal", "active_ms", "examples", "latency_ms"}
 
@@ -112,6 +113,15 @@ class _Ledger:
             "unknown activity"
         )
 
+    def _presentation(self, record):
+        slot = record["slot"]
+        visit = self.records["slot"][slot]["visit"]
+        assert visit not in self.records["close_visit"], "closed visit"
+        assert self._enrollment_of_slot(slot) not in self.records["withdrawal"], (
+            "withdrawn enrollment"
+        )
+        assert slot not in self.records["outcome"], "terminal slot"
+
     def _attempt(self, record):
         slot = record["slot"]
         self.records["slot"][slot]
@@ -119,6 +129,7 @@ class _Ledger:
             "withdrawn enrollment"
         )
         assert slot not in self.records["outcome"], "terminal slot"
+        assert slot in self.records["presentation"], "missing presentation"
         assert slot not in self.attempts_by_slot, "duplicate attempt"
         response = record["response"]
         assert (
@@ -134,6 +145,11 @@ class _Ledger:
         slot = record["slot"]
         self.records["slot"][slot]
         status = record["status"]
+        presented = slot in self.records["presentation"]
+        if status == "unpresented":
+            assert not presented, "presented slot"
+        else:
+            assert presented, "missing presentation"
         attempt = self.attempts_by_slot.get(slot)
         if status == "submitted":
             assert attempt is not None and record["attempt"] == attempt, "attempt link"
@@ -164,6 +180,14 @@ class _Ledger:
         assert record["enrollment"] in self.records["assignment"], "unknown enrollment"
 
 
+def _index(kind, **match):
+    return next(
+        index
+        for index, record in enumerate(FIXTURE["records"])
+        if record["kind"] == kind and all(record[k] == v for k, v in match.items())
+    )
+
+
 def _load(records):
     ledger = _Ledger()
     for record in records:
@@ -183,8 +207,9 @@ def test_e4_reconstructs_assigned_visits_and_missingness():
         }
         for visit, slots in ledger.slots_by_visit.items()
     } == FIXTURE["expected_visits"]
-    assert ledger.accept(FIXTURE["records"][4]) == "retry"
-    ledger.accept(FIXTURE["records"][4])
+    answer = FIXTURE["records"][_index("attempt", id="answer-1")]
+    assert ledger.accept(answer) == "retry"
+    ledger.accept(answer)
     assert len(ledger.records["attempt"]) == 2
 
 
@@ -200,7 +225,7 @@ def _record(kind, **fields):
 
 
 def test_e4_withdrawal_closes_open_visit_as_withdrawn():
-    ledger = _load(FIXTURE["records"][:15])
+    ledger = _load(FIXTURE["records"][: _index("outcome", slot="b1") + 1])
     ledger.accept(_record("outcome", slot="b2", status="interrupted", attempt=None))
     with pytest.raises(AssertionError, match="withdrawal missing"):
         ledger.accept(_record("close_visit", visit="post", status="withdrawn"))
@@ -210,7 +235,7 @@ def test_e4_withdrawal_closes_open_visit_as_withdrawn():
 
 
 def test_e4_rejects_attempts_after_withdrawal():
-    ledger = _load(FIXTURE["records"][:13])
+    ledger = _load(FIXTURE["records"][: _index("slot", id="b2") + 1])
     ledger.accept(_record("withdrawal", enrollment="synthetic-1"))
     with pytest.raises(AssertionError, match="withdrawn enrollment"):
         ledger.accept(

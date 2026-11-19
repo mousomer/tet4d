@@ -4,7 +4,7 @@ Role: authority
 Status: active
 Source of truth: this file for planning-document ownership and precedence
 Supersedes: ad hoc ownership notes spread across active planning docs
-Last updated: 2026-11-18
+Last updated: 2026-11-19
 
 ## Purpose
 
@@ -23,6 +23,9 @@ planning redirection notes.
 | Proposed spatial-intuition study design, assessment instrument, research data/consent requirements (not product stage ordering) | `spatial_intuition_research_plan.md` |
 | Plain-language explanation of player progress and research-data goals (non-authoritative) | `participant_data_platform_overview.md` |
 | Proposed participant data platform engineering stages, API/storage design and implementation gates (not scientific endpoints) | `participant_data_platform_implementation.md` |
+| E3 coordinate-prediction instrument, scoring rules and record boundaries (draft; not study endpoints) | `assessment_measurement_contract.md` |
+| E4 logical assessment records and write/reconstruction rules | `e4_assessment_storage_contract.md` (logical); `docs/architecture/participant_data_platform.md` (physical schema, roles, error contract) |
+| Local synthetic E4 database setup notes (non-authoritative) | `e4_local_postgresql.md` |
 | Bounded practice Explorer **MVP baseline** and its novice acceptance tasks | `bounded_practice_explorer.md` |
 | Forward Godot 2D/3D/4D Explorer topology semantics, presets, transport and secondary builder | `docs/rds/RDS_EXPLORER_TOPOLOGIES.md` (product requirements); `professional_godot_game_programme.md` (stage order) |
 | Explorer T1 implementation inventory, contract gaps and Session 2 inputs (audit only) | `docs/architecture/explorer_topology_t1_contract_inventory.md` |

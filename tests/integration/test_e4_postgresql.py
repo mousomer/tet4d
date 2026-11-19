@@ -3,6 +3,9 @@
 Every call goes through the `assessment_api` functions as the role a real
 caller would hold (assessment_ingest or assessment_operator), so the grants
 are exercised, not bypassed by the owner.
+
+CI sets TET4D_E4_REQUIRE_POSTGRES=1 next to the DSN, so a missing database
+fails the run instead of silently skipping it.
 """
 
 import json
@@ -18,6 +21,11 @@ import pytest
 
 DSN = os.environ.get("TET4D_E4_TEST_DSN")
 if not DSN:
+    if os.environ.get("TET4D_E4_REQUIRE_POSTGRES") == "1":
+        pytest.fail(
+            "TET4D_E4_REQUIRE_POSTGRES=1 but TET4D_E4_TEST_DSN is not set",
+            pytrace=False,
+        )
     pytest.skip(
         "set TET4D_E4_TEST_DSN for disposable PostgreSQL", allow_module_level=True
     )
@@ -113,6 +121,15 @@ def _baseline(*, start=True, window=None):
     return enrollment, principal, visit, _slots(visit)
 
 
+def _present(slot, observed_at=None):
+    return {
+        "id": str(uuid4()),
+        "kind": "present",
+        "slot": str(slot),
+        "observed_at": observed_at,
+    }
+
+
 def _submit(slot, observed_at=None):
     return {
         "id": str(uuid4()),
@@ -163,7 +180,15 @@ def _windows():
 
 
 def _complete_baseline(enrollment, principal, visit, slots):
-    _send(principal, enrollment, _submit(slots[0]), _outcome(slots[1]))
+    first, second = slots
+    _send(
+        principal,
+        enrollment,
+        _present(first),
+        _submit(first),
+        _present(second),
+        _outcome(second),
+    )
     operations.close_visit(DSN, enrollment, visit, "completed")
 
 
@@ -191,11 +216,20 @@ def _closure(visit):
     return _query("SELECT status FROM assessment.visit_close WHERE visit = %s", visit)
 
 
+def _audit(enrollment):
+    return _query(
+        "SELECT action, command FROM assessment_private.access_audit"
+        " WHERE enrollment = %s ORDER BY id",
+        enrollment,
+    )
+
+
 # Behaviour carried over from the original slice -------------------------------
 
 
 def test_replay_after_closure_and_withdrawal():
     enrollment, principal, visit, slots = _baseline()
+    _send(principal, enrollment, _present(slots[0]), _present(slots[1]))
     command = _submit(slots[0])
     receipt = _send(principal, enrollment, command)
     _send(principal, enrollment, _outcome(slots[1]))
@@ -212,26 +246,28 @@ def test_replay_after_closure_and_withdrawal():
 
 def test_batch_rollback_including_attempt_written_before_outcome_failure():
     enrollment, principal, _, slots = _baseline()
-    _send(principal, enrollment, _outcome(slots[1]))
+    _send(principal, enrollment, _present(slots[1]), _outcome(slots[1]))
+    shown = _present(slots[0])
     first, conflicts = map(_submit, slots)
     with pytest.raises(IngestError, match="conflict"):
-        _send(principal, enrollment, first, conflicts)
+        _send(principal, enrollment, shown, first, conflicts)
     assert not _query("SELECT 1 FROM assessment.attempt WHERE slot = ANY(%s)", slots)
+    assert not _query("SELECT 1 FROM assessment.presentation WHERE slot = %s", slots[0])
     assert not _query(
-        "SELECT 1 FROM assessment.receipt WHERE enrollment = %s AND command = %s",
+        "SELECT 1 FROM assessment.receipt WHERE enrollment = %s AND command = ANY(%s)",
         enrollment,
-        first["id"],
+        [shown["id"], first["id"]],
     )
-    assert len(_send(principal, enrollment, first)) == 1
+    assert len(_send(principal, enrollment, shown, first)) == 2
 
 
 def test_enrollment_isolation_and_missing_dependency():
     enrollment, principal, _, slots = _baseline()
     foreign_enrollment, foreign_principal, _, foreign_slots = _baseline()
     with pytest.raises(IngestError, match="authorization_failure"):
-        _send(foreign_principal, enrollment, _submit(slots[0]))
+        _send(foreign_principal, enrollment, _present(slots[0]))
     with pytest.raises(IngestError, match="missing_dependency"):
-        _send(principal, enrollment, _submit(foreign_slots[0]))
+        _send(principal, enrollment, _present(foreign_slots[0]))
     with pytest.raises(IngestError, match="missing_dependency"):
         _send(foreign_principal, foreign_enrollment, _exposure())
 
@@ -254,15 +290,23 @@ def test_allocation_followups_expiry_and_reconciliation():
     posttest = followups["posttest"]
     operations.start_visit(DSN, enrollment, posttest, "synthetic-build")
     answered, abandoned = _slots(posttest)
-    operations.mark_slot_presented(DSN, enrollment, abandoned)
     opens, closes = windows["posttest"]
-    command = _submit(answered, _utc(opens + (closes - opens) / 2))
-    receipt = _send(principal, enrollment, command)[0]
-    assert receipt.received_at > windows["posttest"][1]
+    during = _utc(opens + (closes - opens) / 2)
+    receipts = _send(
+        principal,
+        enrollment,
+        _present(abandoned, during),
+        _present(answered, during),
+        _submit(answered, during),
+    )
+    assert all(receipt.received_at > closes for receipt in receipts)
     operations.close_visit(DSN, enrollment, posttest, "interrupted")
     assert _query(
         "SELECT status, timing FROM assessment.outcome WHERE slot = %s", answered
     ) == [("submitted", "in_window")]
+    assert _query(
+        "SELECT timing FROM assessment.presentation WHERE slot = %s", answered
+    ) == [("in_window",)]
     assert _outcomes([abandoned]) == ["interrupted"]
     assert _outcomes(_slots(retention)) == []
 
@@ -294,6 +338,7 @@ def _race(first, second):
 
 def test_duplicate_concurrent_submission_returns_one_durable_receipt():
     enrollment, principal, _, slots = _baseline()
+    _send(principal, enrollment, _present(slots[0]))
     command = _submit(slots[0])
 
     def send():
@@ -309,6 +354,7 @@ def test_duplicate_concurrent_submission_returns_one_durable_receipt():
 @pytest.mark.parametrize("race_with", ["close", "withdraw"])
 def test_submit_races_with_finalization_under_same_lock(race_with):
     enrollment, principal, visit, slots = _baseline()
+    _send(principal, enrollment, _present(slots[0]))
     command = _submit(slots[0])
 
     def finalize():
@@ -341,7 +387,7 @@ def test_wire_rejects_duplicate_fields_and_unknown_version():
 
 def test_http_uses_only_middleware_identity_and_returns_committed_receipt():
     enrollment, principal, _, slots = _baseline()
-    command = _submit(slots[0])
+    command = _present(slots[0])
     payload = json.dumps({"version": 1, "commands": [command]}).encode()
     environ = {
         "REQUEST_METHOD": "POST",
@@ -370,7 +416,7 @@ def test_http_uses_only_middleware_identity_and_returns_committed_receipt():
     assert statuses == ["401 Unauthorized", "200 OK", "200 OK"]
 
 
-# Roles and grants (finding 2) --------------------------------------------------
+# Roles and grants -----------------------------------------------------------------
 
 
 def test_callers_can_only_use_their_granted_functions():
@@ -395,19 +441,61 @@ def test_callers_can_only_use_their_granted_functions():
 
 def test_sql_functions_validate_commands_without_the_adapter():
     enrollment, principal, _, slots = _baseline()
+    _send(principal, enrollment, _present(slots[0]))
     command = _submit(slots[0]) | {"response": [1, 2, 3, 4.5]}
+    with connect(DSN, "assessment_ingest") as connection:
+        rows = connection.execute(
+            "SELECT error FROM assessment_api.ingest(%s, %s, %s, %s)",
+            (principal, enrollment, Jsonb([command]), [bytes(32)]),
+        ).fetchall()
+    assert rows == [("invalid_payload",)]
+    assert not _query("SELECT 1 FROM assessment.attempt WHERE slot = %s", slots[0])
+
+
+# Presentation provenance (review of #194, P1) ------------------------------------
+
+
+def test_answers_require_a_presentation_record():
+    enrollment, principal, _, (first, second) = _baseline()
+    for command in (_submit(first), _outcome(first), _outcome(first, "interrupted")):
+        with pytest.raises(IngestError, match="missing_dependency"):
+            _send(principal, enrollment, command)
+    observed = _utc(datetime.now(UTC) - timedelta(minutes=90))
+    _send(principal, enrollment, _present(first, observed), _submit(first))
+    assert _query(
+        "SELECT p.timing, o.status, o.presentation = p.slot"
+        " FROM assessment.presentation p JOIN assessment.outcome o ON o.slot = p.slot"
+        " WHERE p.slot = %s",
+        first,
+    ) == [("in_window", "submitted", True)]
     with (
-        connect(DSN, "assessment_ingest") as connection,
-        pytest.raises(psycopg.Error) as caught,
+        psycopg.connect(DSN) as connection,
+        pytest.raises(psycopg.errors.CheckViolation),
     ):
         connection.execute(
-            "SELECT * FROM assessment_api.ingest(%s, %s, %s, %s)",
-            (principal, enrollment, Jsonb([command]), [bytes(32)]),
+            "INSERT INTO assessment.outcome (slot, status, timing)"
+            " VALUES (%s, 'invalid', 'unknown')",
+            (second,),
         )
-    assert caught.value.sqlstate == "T4001"
 
 
-# Finding 3: the account link stays out of the research schema --------------------
+def test_presentation_and_unpresented_outcome_are_exclusive():
+    enrollment, principal, _, (first, second) = _baseline()
+    _send(principal, enrollment, _outcome(first, "unpresented"))
+    with pytest.raises(IngestError, match="conflict"):
+        _send(principal, enrollment, _present(first))
+    _send(principal, enrollment, _present(second))
+    with pytest.raises(IngestError, match="conflict"):
+        _send(principal, enrollment, _outcome(second, "unpresented"))
+    with pytest.raises(IngestError, match="conflict"):
+        _send(principal, enrollment, _present(second))
+    assert _query(
+        "SELECT count(*) FROM assessment.presentation p"
+        " JOIN assessment.outcome o ON o.slot = p.slot WHERE o.status = 'unpresented'"
+    ) == [(0,)]
+
+
+# Account link stays out of the research schema; its reads are audited -----------
 
 
 def test_research_reader_cannot_reach_the_account_link():
@@ -418,10 +506,9 @@ def test_research_reader_cannot_reach_the_account_link():
         )
         == []
     )
-    with pytest.raises(psycopg.errors.InsufficientPrivilege):
-        _query(
-            "SELECT 1 FROM assessment_private.enrollment_access", role="research_reader"
-        )
+    for table in ("enrollment_access", "access_audit"):
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            _query(f"SELECT 1 FROM assessment_private.{table}", role="research_reader")
     enrollment, *_ = _baseline(start=False)
     assert _query(
         "SELECT count(*) FROM assessment.enrollment WHERE id = %s",
@@ -430,7 +517,28 @@ def test_research_reader_cannot_reach_the_account_link():
     ) == [(1,)]
 
 
-# Finding 4: withdrawal ------------------------------------------------------------
+def test_account_link_reads_and_conflicts_are_audited():
+    enrollment, principal, _, slots = _baseline()
+    command = _present(slots[0])
+    _send(principal, enrollment, command)
+    with pytest.raises(IngestError, match="authorization_failure"):
+        _send(uuid4(), enrollment, _present(slots[1]))
+    with pytest.raises(IngestError, match="conflict"):
+        _send(
+            principal, enrollment, command | {"observed_at": "2026-11-19T10:00:00.000Z"}
+        )
+    actions = _audit(enrollment)
+    assert [action for action, _ in actions] == [
+        "grant",
+        "read_allow",
+        "read_deny",
+        "read_allow",
+        "conflict",
+    ]
+    assert str(actions[-1][1]) == command["id"]
+
+
+# Withdrawal -------------------------------------------------------------------------
 
 
 def test_withdrawal_closes_open_visits_and_keeps_attrition_reconstructible():
@@ -438,7 +546,7 @@ def test_withdrawal_closes_open_visits_and_keeps_attrition_reconstructible():
     posttest = followups["posttest"]
     operations.start_visit(DSN, enrollment, posttest, "synthetic-build")
     shown, unseen = _slots(posttest)
-    operations.mark_slot_presented(DSN, enrollment, shown)
+    _send(principal, enrollment, _present(shown))
     operations.withdraw(DSN, enrollment)
     operations.withdraw(DSN, enrollment)
 
@@ -465,13 +573,16 @@ def test_withdrawal_closes_open_visits_and_keeps_attrition_reconstructible():
         operations.start_visit(DSN, enrollment, posttest, "synthetic-build")
     with pytest.raises(IngestError, match="invalid_status"):
         operations.close_visit(DSN, enrollment, posttest, "withdrawn")
-    assert _query(
-        "SELECT action FROM assessment_private.access_audit WHERE enrollment = %s ORDER BY id",
-        enrollment,
-    ) == [("grant",), ("revoke",)]
+    assert [action for action, _ in _audit(enrollment)] == [
+        "grant",
+        "read_allow",
+        "read_allow",
+        "revoke",
+        "read_deny",
+    ]
 
 
-# Finding 5: offline grace and late delivery ------------------------------------------
+# Offline grace and late delivery ------------------------------------------------------
 
 
 def test_interrupted_close_waits_for_grace_and_keeps_late_deliveries():
@@ -480,12 +591,12 @@ def test_interrupted_close_waits_for_grace_and_keeps_late_deliveries():
         window=(now - timedelta(minutes=10), now - timedelta(seconds=1))
     )
     first, second = slots
-    operations.mark_slot_presented(DSN, enrollment, first)
-    _send(principal, enrollment, _submit(first))
+    _send(principal, enrollment, _present(first), _submit(first))
     with pytest.raises(IngestError, match="reconciliation_pending"):
         operations.close_visit(DSN, enrollment, visit, "interrupted")
 
-    _send(principal, enrollment, _submit(second, _utc(datetime.now(UTC))))
+    late = _utc(datetime.now(UTC))
+    _send(principal, enrollment, _present(second, late), _submit(second, late))
     assert _query("SELECT timing FROM assessment.outcome WHERE slot = %s", second) == [
         ("after_window",)
     ]
@@ -495,24 +606,7 @@ def test_interrupted_close_waits_for_grace_and_keeps_late_deliveries():
         _send(principal, enrollment, _outcome(second))
 
 
-# Finding 6: presentation and "unpresented" are exclusive --------------------------
-
-
-def test_presentation_and_unpresented_outcome_are_exclusive():
-    enrollment, principal, _, (first, second) = _baseline()
-    _send(principal, enrollment, _outcome(first, "unpresented"))
-    with pytest.raises(IngestError, match="conflict"):
-        operations.mark_slot_presented(DSN, enrollment, first)
-    operations.mark_slot_presented(DSN, enrollment, second)
-    with pytest.raises(IngestError, match="conflict"):
-        _send(principal, enrollment, _outcome(second, "unpresented"))
-    assert _query(
-        "SELECT count(*) FROM assessment.slot s JOIN assessment.outcome o ON o.slot = s.id"
-        " WHERE s.presented_at IS NOT NULL AND o.status = 'unpresented'"
-    ) == [(0,)]
-
-
-# Finding 7: stable error codes from trusted operations --------------------------------
+# Stable error codes from trusted operations -----------------------------------------
 
 
 def test_double_allocation_is_a_stable_conflict():
@@ -541,8 +635,8 @@ def test_observed_at_must_use_the_canonical_form():
         "2026-11-19T10:00:00.000+00:00",
     ):
         with pytest.raises(IngestError, match="invalid_payload"):
-            _send(principal, enrollment, _submit(first, variant))
-    command = _submit(first, "2026-11-19T10:00:00.000Z")
+            _send(principal, enrollment, _present(first, variant))
+    command = _present(first, "2026-11-19T10:00:00.000Z")
     assert _send(principal, enrollment, command) == _send(
         principal, enrollment, command
     )

@@ -106,6 +106,10 @@ def _fields(record, expected):
         raise IngestError("invalid_payload")
 
 
+def _presentation(record):
+    _fields(record, {"id", "kind", "slot", "observed_at"})
+
+
 def _submission(record):
     _fields(
         record,
@@ -134,7 +138,12 @@ def _exposure(record):
         raise IngestError("invalid_payload")
 
 
-VALIDATORS = {"submit": _submission, "outcome": _other_outcome, "exposure": _exposure}
+VALIDATORS = {
+    "present": _presentation,
+    "submit": _submission,
+    "outcome": _other_outcome,
+    "exposure": _exposure,
+}
 
 
 def parse(payload):
@@ -168,12 +177,17 @@ def parse(payload):
 
 
 def ingest(conninfo, principal, enrollment, payload):
-    """Apply one ordered batch as assessment_ingest; receipts follow commit."""
+    """Apply one ordered batch as assessment_ingest; receipts follow commit.
+
+    The function reports denials and rejected batches as an error row rather
+    than raising, so their audit records commit. Commit first, then raise.
+    """
     commands, digests = parse(payload)
     try:
         with connect(conninfo, "assessment_ingest") as connection:
             rows = connection.execute(
-                "SELECT command, digest, received_at FROM assessment_api.ingest(%s, %s, %s, %s)",
+                "SELECT command, digest, received_at, error"
+                " FROM assessment_api.ingest(%s, %s, %s, %s)",
                 (principal, enrollment, Jsonb(commands), digests),
             ).fetchall()
     except psycopg.Error as error:
@@ -181,9 +195,12 @@ def ingest(conninfo, principal, enrollment, payload):
         if mapped is None:
             raise
         raise mapped from None
+    errors = [error for *_, error in rows if error is not None]
+    if errors:
+        raise IngestError(errors[0])
     return [
-        Receipt(command, digest.hex(), received_at)
-        for command, digest, received_at in rows
+        Receipt(command, digest.hex(), received)
+        for command, digest, received, _ in rows
     ]
 
 

@@ -66,12 +66,22 @@
     },
     {
       "version": 1,
+      "kind": "presentation",
+      "slot": "a1"
+    },
+    {
+      "version": 1,
       "kind": "slot",
       "id": "a2",
       "visit": "base",
       "ordinal": 1,
       "item": "baseline-second@2",
       "scorer": "coordinate@2"
+    },
+    {
+      "version": 1,
+      "kind": "presentation",
+      "slot": "a2"
     },
     {
       "version": 1,
@@ -139,12 +149,22 @@
     },
     {
       "version": 1,
+      "kind": "presentation",
+      "slot": "b1"
+    },
+    {
+      "version": 1,
       "kind": "slot",
       "id": "b2",
       "visit": "post",
       "ordinal": 1,
       "item": "held-out-inverse@2",
       "scorer": "coordinate@2"
+    },
+    {
+      "version": 1,
+      "kind": "presentation",
+      "slot": "b2"
     },
     {
       "version": 1,
@@ -235,7 +255,7 @@
   "rejections": [
     {
       "name": "allocation_before_baseline_close",
-      "after": 7,
+      "after": 9,
       "error": "baseline still open",
       "record": {
         "version": 1,
@@ -246,7 +266,7 @@
     },
     {
       "name": "unassigned_form",
-      "after": 10,
+      "after": 12,
       "error": "form assignment mismatch",
       "record": {
         "version": 1,
@@ -273,7 +293,7 @@
     },
     {
       "name": "reused_ordinal",
-      "after": 3,
+      "after": 4,
       "error": "duplicate slot ordinal",
       "record": {
         "version": 1,
@@ -315,7 +335,7 @@
     },
     {
       "name": "boolean_coordinate",
-      "after": 4,
+      "after": 6,
       "error": "invalid response",
       "record": {
         "version": 1,
@@ -333,7 +353,7 @@
     },
     {
       "name": "wrong_attempt_link",
-      "after": 14,
+      "after": 18,
       "error": "attempt link",
       "record": {
         "version": 1,
@@ -345,7 +365,7 @@
     },
     {
       "name": "duplicate_attempt",
-      "after": 5,
+      "after": 7,
       "error": "duplicate attempt",
       "record": {
         "version": 1,
@@ -363,7 +383,7 @@
     },
     {
       "name": "conflicting_retry",
-      "after": 21,
+      "after": 25,
       "error": "conflicting retry",
       "record": {
         "version": 1,
@@ -381,7 +401,7 @@
     },
     {
       "name": "missing_assigned_slot",
-      "after": 3,
+      "after": 4,
       "error": "incomplete slot assignment",
       "record": {
         "version": 1,
@@ -392,7 +412,7 @@
     },
     {
       "name": "missing_outcome",
-      "after": 6,
+      "after": 8,
       "error": "missing outcome",
       "record": {
         "version": 1,
@@ -403,7 +423,7 @@
     },
     {
       "name": "expired_with_answers",
-      "after": 7,
+      "after": 9,
       "error": "visit outcome mismatch",
       "record": {
         "version": 1,
@@ -414,7 +434,7 @@
     },
     {
       "name": "raw_payload",
-      "after": 6,
+      "after": 8,
       "error": "record fields",
       "record": {
         "version": 1,
@@ -435,6 +455,40 @@
         "enrollment": "synthetic-1",
         "protocol": "fixture@2",
         "sequence": "AB"
+      }
+    },
+    {
+      "name": "outcome_without_presentation",
+      "after": 5,
+      "error": "missing presentation",
+      "record": {
+        "version": 1,
+        "kind": "outcome",
+        "slot": "a2",
+        "status": "invalid",
+        "attempt": null
+      }
+    },
+    {
+      "name": "unpresented_after_presentation",
+      "after": 6,
+      "error": "presented slot",
+      "record": {
+        "version": 1,
+        "kind": "outcome",
+        "slot": "a2",
+        "status": "unpresented",
+        "attempt": null
+      }
+    },
+    {
+      "name": "presentation_after_unpresented",
+      "after": 24,
+      "error": "terminal slot",
+      "record": {
+        "version": 1,
+        "kind": "presentation",
+        "slot": "c1"
       }
     }
   ]

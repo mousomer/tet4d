@@ -121,11 +121,19 @@ CREATE TABLE assessment.slot (
     ordinal integer NOT NULL,
     item text NOT NULL,
     scorer text NOT NULL,
-    presented_at timestamptz,
     UNIQUE (visit, ordinal),
     FOREIGN KEY (visit, form) REFERENCES assessment.visit (id, form),
     FOREIGN KEY (form, ordinal, item) REFERENCES assessment.form_item (form, ordinal, item),
     FOREIGN KEY (item, scorer) REFERENCES assessment.item (ref, scorer)
+);
+-- A client-reported presentation, with its own time provenance. Every answered,
+-- invalid or interrupted outcome must reference one (see outcome.presentation).
+CREATE TABLE assessment.presentation (
+    slot uuid PRIMARY KEY REFERENCES assessment.slot,
+    observed_at timestamptz,
+    timing text NOT NULL CHECK (timing IN ('unknown', 'before_window', 'in_window', 'after_window')),
+    received_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+    CHECK ((observed_at IS NULL) = (timing = 'unknown'))
 );
 CREATE TABLE assessment.attempt (
     id uuid PRIMARY KEY,
@@ -141,9 +149,15 @@ CREATE TABLE assessment.outcome (
     slot uuid PRIMARY KEY REFERENCES assessment.slot,
     status text NOT NULL CHECK (status IN ('submitted', 'invalid', 'interrupted', 'unpresented')),
     attempt uuid,
+    presentation uuid,
     observed_at timestamptz,
     timing text NOT NULL CHECK (timing IN ('unknown', 'before_window', 'in_window', 'after_window')),
     CHECK ((status = 'submitted') = (attempt IS NOT NULL)),
+    -- Only an unpresented slot lacks a presentation; every other outcome is
+    -- tied to its own slot's presentation record by foreign key.
+    CHECK ((status = 'unpresented') = (presentation IS NULL)),
+    CHECK (presentation IS NULL OR presentation = slot),
+    FOREIGN KEY (presentation) REFERENCES assessment.presentation (slot),
     CHECK ((observed_at IS NULL) = (timing = 'unknown')),
     CHECK (status <> 'unpresented' OR observed_at IS NULL),
     FOREIGN KEY (slot, attempt) REFERENCES assessment.attempt (slot, id)
@@ -179,12 +193,17 @@ CREATE TABLE assessment_private.enrollment_access (
     granted_at timestamptz NOT NULL DEFAULT clock_timestamp(),
     revoked_at timestamptz
 );
+-- Every read or change of enrollment_access is recorded here, as the parent
+-- plan requires, along with rejected conflicting commands. Rows survive a
+-- rejected batch because ingest rolls the batch back to a savepoint.
 CREATE TABLE assessment_private.access_audit (
     id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     enrollment uuid NOT NULL REFERENCES assessment.enrollment,
     principal uuid NOT NULL,
-    action text NOT NULL CHECK (action IN ('grant', 'revoke')),
-    at timestamptz NOT NULL DEFAULT clock_timestamp()
+    action text NOT NULL CHECK (action IN ('grant', 'revoke', 'read_allow', 'read_deny', 'conflict')),
+    command uuid,
+    at timestamptz NOT NULL DEFAULT clock_timestamp(),
+    CHECK ((action = 'conflict') = (command IS NOT NULL))
 );
 
 -- Private helpers ----------------------------------------------------------
@@ -224,23 +243,30 @@ BEGIN
 END
 $$;
 
--- Collection (ingest, start, present, allocate) needs live access and no
--- withdrawal. Bookkeeping (closing visits) needs only the enrollment.
-CREATE FUNCTION assessment_private.require_collection(p_enrollment uuid, p_principal uuid)
+-- Operator collection steps (allocate, start) need an enrollment that has not
+-- withdrawn. withdraw() is the only path that revokes access, so this check
+-- never reads the private account link.
+CREATE FUNCTION assessment_private.require_open(p_enrollment uuid)
 RETURNS void LANGUAGE plpgsql SET search_path = pg_catalog AS $$
 BEGIN
     IF NOT assessment_private.lock_enrollment(p_enrollment) THEN
-        PERFORM assessment_private.fail(
-            CASE WHEN p_principal IS NULL THEN 'missing_dependency' ELSE 'authorization_failure' END);
+        PERFORM assessment_private.fail('missing_dependency');
     END IF;
-    IF NOT EXISTS (
-        SELECT 1 FROM assessment_private.enrollment_access
-        WHERE enrollment = p_enrollment AND revoked_at IS NULL
-          AND (p_principal IS NULL OR principal = p_principal)
-    ) OR EXISTS (SELECT 1 FROM assessment.withdrawal WHERE enrollment = p_enrollment) THEN
+    IF EXISTS (SELECT 1 FROM assessment.withdrawal WHERE enrollment = p_enrollment) THEN
         PERFORM assessment_private.fail('authorization_failure');
     END IF;
 END
+$$;
+
+CREATE FUNCTION assessment_private.timing(
+    p_observed timestamptz, p_opens timestamptz, p_closes timestamptz
+) RETURNS text LANGUAGE sql IMMUTABLE SET search_path = pg_catalog AS $$
+    SELECT CASE
+        WHEN p_observed IS NULL THEN 'unknown'
+        WHEN p_observed < p_opens THEN 'before_window'
+        WHEN p_observed >= p_closes THEN 'after_window'
+        ELSE 'in_window'
+    END;
 $$;
 
 CREATE FUNCTION assessment_private.uuid_field(p_record jsonb, p_field text) RETURNS uuid
@@ -322,11 +348,58 @@ $$;
 -- Resolve every slot still without an outcome when a visit is closed.
 CREATE FUNCTION assessment_private.fill_open_slots(p_visit uuid) RETURNS void
 LANGUAGE sql SET search_path = pg_catalog AS $$
-    INSERT INTO assessment.outcome (slot, status, timing)
-    SELECT s.id, CASE WHEN s.presented_at IS NULL THEN 'unpresented' ELSE 'interrupted' END, 'unknown'
+    INSERT INTO assessment.outcome (slot, status, presentation, timing)
+    SELECT s.id, CASE WHEN p.slot IS NULL THEN 'unpresented' ELSE 'interrupted' END, p.slot, 'unknown'
     FROM assessment.slot s
+    LEFT JOIN assessment.presentation p ON p.slot = s.id
     WHERE s.visit = p_visit
       AND NOT EXISTS (SELECT 1 FROM assessment.outcome o WHERE o.slot = s.id);
+$$;
+
+-- Look up a slot of this enrollment that can still take client records.
+CREATE FUNCTION assessment_private.open_slot(
+    p_enrollment uuid, p_slot uuid,
+    OUT opens_at timestamptz, OUT closes_at timestamptz,
+    OUT presented boolean, OUT resolved boolean
+) LANGUAGE plpgsql SET search_path = pg_catalog AS $$
+DECLARE
+    closed boolean;
+    started boolean;
+BEGIN
+    SELECT v.opens_at, v.closes_at, v.started_at IS NOT NULL,
+           EXISTS (SELECT 1 FROM assessment.visit_close c WHERE c.visit = v.id),
+           EXISTS (SELECT 1 FROM assessment.presentation p WHERE p.slot = s.id),
+           EXISTS (SELECT 1 FROM assessment.outcome o WHERE o.slot = s.id)
+    INTO opens_at, closes_at, started, closed, presented, resolved
+    FROM assessment.slot s JOIN assessment.visit v ON v.id = s.visit
+    WHERE s.id = p_slot AND v.enrollment = p_enrollment;
+    IF NOT FOUND THEN
+        PERFORM assessment_private.fail('missing_dependency');
+    END IF;
+    IF closed THEN
+        PERFORM assessment_private.fail('visit_closed');
+    END IF;
+    IF NOT started THEN
+        PERFORM assessment_private.fail('missing_dependency');
+    END IF;
+END
+$$;
+
+CREATE FUNCTION assessment_private.write_presentation(p_enrollment uuid, p_command jsonb)
+RETURNS void LANGUAGE plpgsql SET search_path = pg_catalog AS $$
+DECLARE
+    target uuid := assessment_private.uuid_field(p_command, 'slot');
+    observed timestamptz := assessment_private.observed_at(p_command);
+    state record;
+BEGIN
+    SELECT * INTO state FROM assessment_private.open_slot(p_enrollment, target);
+    -- A slot is presented before it is resolved, never after.
+    IF state.resolved OR state.presented THEN
+        PERFORM assessment_private.fail('conflict');
+    END IF;
+    INSERT INTO assessment.presentation (slot, observed_at, timing)
+    VALUES (target, observed, assessment_private.timing(observed, state.opens_at, state.closes_at));
+END
 $$;
 
 CREATE FUNCTION assessment_private.write_slot(p_enrollment uuid, p_command jsonb) RETURNS void
@@ -334,28 +407,34 @@ LANGUAGE plpgsql SET search_path = pg_catalog AS $$
 DECLARE
     target uuid := assessment_private.uuid_field(p_command, 'slot');
     observed timestamptz := assessment_private.observed_at(p_command);
-    window_row record;
+    state record;
     new_attempt uuid;
     new_status text;
     response jsonb;
 BEGIN
-    SELECT v.opens_at, v.closes_at, v.started_at, s.presented_at,
-           EXISTS (SELECT 1 FROM assessment.visit_close c WHERE c.visit = v.id) AS closed
-    INTO window_row
-    FROM assessment.slot s JOIN assessment.visit v ON v.id = s.visit
-    WHERE s.id = target AND v.enrollment = p_enrollment;
-    IF NOT FOUND THEN
-        PERFORM assessment_private.fail('missing_dependency');
-    END IF;
-    IF window_row.closed THEN
-        PERFORM assessment_private.fail('visit_closed');
-    END IF;
-    IF window_row.started_at IS NULL THEN
-        PERFORM assessment_private.fail('missing_dependency');
-    END IF;
+    SELECT * INTO state FROM assessment_private.open_slot(p_enrollment, target);
 
     IF p_command ->> 'kind' = 'submit' THEN
         new_status := 'submitted';
+    ELSE
+        new_status := p_command ->> 'status';
+        IF new_status IS NULL OR new_status NOT IN ('invalid', 'interrupted', 'unpresented') THEN
+            PERFORM assessment_private.fail('invalid_payload');
+        END IF;
+        IF new_status = 'unpresented' AND observed IS NOT NULL THEN
+            PERFORM assessment_private.fail('invalid_payload');
+        END IF;
+    END IF;
+    -- Presentation and "unpresented" are mutually exclusive; every other
+    -- outcome needs the slot's presentation record first.
+    IF new_status = 'unpresented' AND state.presented THEN
+        PERFORM assessment_private.fail('conflict');
+    END IF;
+    IF new_status <> 'unpresented' AND NOT state.presented THEN
+        PERFORM assessment_private.fail('missing_dependency');
+    END IF;
+
+    IF new_status = 'submitted' THEN
         new_attempt := assessment_private.uuid_field(p_command, 'attempt');
         response := p_command -> 'response';
         IF jsonb_typeof(response) IS DISTINCT FROM 'array' OR jsonb_array_length(response) <> 4 THEN
@@ -370,28 +449,13 @@ BEGIN
             assessment_private.int_field(response -> 3, -2147483648),
             assessment_private.int_field(p_command -> 'latency_ms', 0)
         );
-    ELSE
-        new_status := p_command ->> 'status';
-        IF new_status IS NULL OR new_status NOT IN ('invalid', 'interrupted', 'unpresented') THEN
-            PERFORM assessment_private.fail('invalid_payload');
-        END IF;
-        IF new_status = 'unpresented' AND observed IS NOT NULL THEN
-            PERFORM assessment_private.fail('invalid_payload');
-        END IF;
-        IF new_status = 'unpresented' AND window_row.presented_at IS NOT NULL THEN
-            PERFORM assessment_private.fail('conflict');
-        END IF;
     END IF;
 
-    INSERT INTO assessment.outcome (slot, status, attempt, observed_at, timing)
+    INSERT INTO assessment.outcome (slot, status, attempt, presentation, observed_at, timing)
     VALUES (
-        target, new_status, new_attempt, observed,
-        CASE
-            WHEN observed IS NULL THEN 'unknown'
-            WHEN observed < window_row.opens_at THEN 'before_window'
-            WHEN observed >= window_row.closes_at THEN 'after_window'
-            ELSE 'in_window'
-        END
+        target, new_status, new_attempt,
+        CASE WHEN new_status = 'unpresented' THEN NULL ELSE target END,
+        observed, assessment_private.timing(observed, state.opens_at, state.closes_at)
     );
 END
 $$;
@@ -428,15 +492,28 @@ $$;
 -- p_commands: the adapter's validated command array. p_digests: the adapter's
 -- SHA-256 of each command's RFC 8785 form, in the same order. jsonb cannot
 -- detect duplicate keys or produce RFC 8785, so both happen before this call.
+--
+-- Authorization denials and rejected batches are returned as a single row with
+-- `error` set instead of raised, so their audit rows commit. The batch itself
+-- runs in a savepoint and is rolled back as a whole. The caller must commit
+-- and then treat an error row as a failure.
 CREATE FUNCTION assessment_api.ingest(
     p_principal uuid, p_enrollment uuid, p_commands jsonb, p_digests bytea[]
-) RETURNS TABLE (command uuid, digest bytea, received_at timestamptz)
+) RETURNS TABLE (command uuid, digest bytea, received_at timestamptz, error text)
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog AS $$
 DECLARE
     idx integer;
     entry jsonb;
     entry_digest bytea;
+    entry_command uuid;
+    entry_time timestamptz;
     prior record;
+    allowed boolean;
+    failure text;
+    failure_state text;
+    done_commands uuid[] := '{}';
+    done_digests bytea[] := '{}';
+    done_times timestamptz[] := '{}';
 BEGIN
     IF p_principal IS NULL OR p_enrollment IS NULL
        OR jsonb_typeof(p_commands) IS DISTINCT FROM 'array'
@@ -444,46 +521,80 @@ BEGIN
        OR p_digests IS NULL OR cardinality(p_digests) <> jsonb_array_length(p_commands) THEN
         PERFORM assessment_private.fail('invalid_payload');
     END IF;
-    PERFORM assessment_private.require_collection(p_enrollment, p_principal);
+    IF NOT assessment_private.lock_enrollment(p_enrollment) THEN
+        RETURN QUERY SELECT NULL::uuid, NULL::bytea, NULL::timestamptz, 'authorization_failure'::text;
+        RETURN;
+    END IF;
 
-    FOR idx IN 0 .. jsonb_array_length(p_commands) - 1 LOOP
-        entry := p_commands -> idx;
-        entry_digest := p_digests[idx + 1];
-        IF jsonb_typeof(entry) IS DISTINCT FROM 'object'
-           OR entry_digest IS NULL OR octet_length(entry_digest) <> 32 THEN
-            PERFORM assessment_private.fail('invalid_payload');
-        END IF;
-        command := assessment_private.uuid_field(entry, 'id');
+    allowed := EXISTS (
+        SELECT 1 FROM assessment_private.enrollment_access a
+        WHERE a.enrollment = p_enrollment AND a.principal = p_principal AND a.revoked_at IS NULL
+    ) AND NOT EXISTS (SELECT 1 FROM assessment.withdrawal w WHERE w.enrollment = p_enrollment);
+    INSERT INTO assessment_private.access_audit (enrollment, principal, action)
+    VALUES (p_enrollment, p_principal, CASE WHEN allowed THEN 'read_allow' ELSE 'read_deny' END);
+    IF NOT allowed THEN
+        RETURN QUERY SELECT NULL::uuid, NULL::bytea, NULL::timestamptz, 'authorization_failure'::text;
+        RETURN;
+    END IF;
 
-        SELECT r.digest, r.received_at INTO prior
-        FROM assessment.receipt r
-        WHERE r.enrollment = p_enrollment AND r.command = ingest.command;
-        IF FOUND THEN
-            IF prior.digest <> entry_digest THEN
-                PERFORM assessment_private.fail('conflict');
-            END IF;
-            digest := prior.digest;
-            received_at := prior.received_at;
-            RETURN NEXT;
-            CONTINUE;
-        END IF;
-
-        CASE entry ->> 'kind'
-            WHEN 'submit', 'outcome' THEN
-                PERFORM assessment_private.write_slot(p_enrollment, entry);
-            WHEN 'exposure' THEN
-                PERFORM assessment_private.write_exposure(p_enrollment, entry);
-            ELSE
+    BEGIN
+        FOR idx IN 0 .. jsonb_array_length(p_commands) - 1 LOOP
+            entry := p_commands -> idx;
+            entry_digest := p_digests[idx + 1];
+            entry_command := NULL;
+            IF jsonb_typeof(entry) IS DISTINCT FROM 'object'
+               OR entry_digest IS NULL OR octet_length(entry_digest) <> 32 THEN
                 PERFORM assessment_private.fail('invalid_payload');
-        END CASE;
+            END IF;
+            entry_command := assessment_private.uuid_field(entry, 'id');
 
-        INSERT INTO assessment.receipt AS r (enrollment, command, digest)
-        VALUES (p_enrollment, ingest.command, entry_digest)
-        RETURNING r.digest, r.received_at INTO digest, received_at;
-        RETURN NEXT;
-    END LOOP;
-EXCEPTION WHEN integrity_constraint_violation THEN
-    PERFORM assessment_private.fail('conflict');
+            SELECT r.digest, r.received_at INTO prior
+            FROM assessment.receipt r
+            WHERE r.enrollment = p_enrollment AND r.command = entry_command;
+            IF FOUND THEN
+                IF prior.digest <> entry_digest THEN
+                    PERFORM assessment_private.fail('conflict');
+                END IF;
+                entry_time := prior.received_at;
+            ELSE
+                CASE entry ->> 'kind'
+                    WHEN 'present' THEN
+                        PERFORM assessment_private.write_presentation(p_enrollment, entry);
+                    WHEN 'submit', 'outcome' THEN
+                        PERFORM assessment_private.write_slot(p_enrollment, entry);
+                    WHEN 'exposure' THEN
+                        PERFORM assessment_private.write_exposure(p_enrollment, entry);
+                    ELSE
+                        PERFORM assessment_private.fail('invalid_payload');
+                END CASE;
+                INSERT INTO assessment.receipt AS r (enrollment, command, digest)
+                VALUES (p_enrollment, entry_command, entry_digest)
+                RETURNING r.received_at INTO entry_time;
+            END IF;
+            done_commands := done_commands || entry_command;
+            done_digests := done_digests || entry_digest;
+            done_times := done_times || entry_time;
+        END LOOP;
+    EXCEPTION WHEN OTHERS THEN
+        GET STACKED DIAGNOSTICS failure_state = RETURNED_SQLSTATE, failure = MESSAGE_TEXT;
+        IF failure_state LIKE '23%' THEN
+            failure := 'conflict';
+        ELSIF failure_state NOT LIKE 'T4%' THEN
+            RAISE;
+        END IF;
+    END;
+
+    IF failure IS NOT NULL THEN
+        IF failure = 'conflict' AND entry_command IS NOT NULL THEN
+            INSERT INTO assessment_private.access_audit (enrollment, principal, action, command)
+            VALUES (p_enrollment, p_principal, 'conflict', entry_command);
+        END IF;
+        RETURN QUERY SELECT NULL::uuid, NULL::bytea, NULL::timestamptz, failure;
+        RETURN;
+    END IF;
+    RETURN QUERY
+        SELECT u.c, u.d, u.t, NULL::text
+        FROM unnest(done_commands, done_digests, done_times) AS u (c, d, t);
 END
 $$;
 
@@ -517,7 +628,7 @@ DECLARE
     phase_name text;
     created jsonb := '{}';
 BEGIN
-    PERFORM assessment_private.require_collection(p_enrollment, NULL);
+    PERFORM assessment_private.require_open(p_enrollment);
     SELECT e.protocol INTO enrolled_protocol
     FROM assessment.enrollment e
     JOIN assessment.visit v ON v.enrollment = e.id AND v.phase = 'baseline'
@@ -568,7 +679,7 @@ CREATE FUNCTION assessment_api.start_visit(
     p_enrollment uuid, p_visit uuid, p_client_build text
 ) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog AS $$
 BEGIN
-    PERFORM assessment_private.require_collection(p_enrollment, NULL);
+    PERFORM assessment_private.require_open(p_enrollment);
     IF p_client_build IS NULL OR p_client_build = '' THEN
         PERFORM assessment_private.fail('invalid_payload');
     END IF;
@@ -576,23 +687,6 @@ BEGIN
     SET client_build = p_client_build, started_at = clock_timestamp()
     WHERE v.id = p_visit AND v.enrollment = p_enrollment AND v.started_at IS NULL
       AND NOT EXISTS (SELECT 1 FROM assessment.visit_close c WHERE c.visit = v.id);
-    IF NOT FOUND THEN
-        PERFORM assessment_private.fail('conflict');
-    END IF;
-END
-$$;
-
-CREATE FUNCTION assessment_api.mark_slot_presented(p_enrollment uuid, p_slot uuid)
-RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog AS $$
-BEGIN
-    PERFORM assessment_private.require_collection(p_enrollment, NULL);
-    UPDATE assessment.slot s
-    SET presented_at = coalesce(s.presented_at, clock_timestamp())
-    FROM assessment.visit v
-    WHERE s.id = p_slot AND s.visit = v.id AND v.enrollment = p_enrollment
-      AND v.started_at IS NOT NULL
-      AND NOT EXISTS (SELECT 1 FROM assessment.visit_close c WHERE c.visit = v.id)
-      AND NOT EXISTS (SELECT 1 FROM assessment.outcome o WHERE o.slot = s.id);
     IF NOT FOUND THEN
         PERFORM assessment_private.fail('conflict');
     END IF;
@@ -615,7 +709,8 @@ BEGIN
                AS grace_elapsed,
            (SELECT c.status FROM assessment.visit_close c WHERE c.visit = v.id) AS closed_status,
            EXISTS (SELECT 1 FROM assessment.slot s
-                   WHERE s.visit = v.id AND s.presented_at IS NOT NULL) AS any_presented,
+                   JOIN assessment.presentation pr ON pr.slot = s.id
+                   WHERE s.visit = v.id) AS any_presented,
            NOT EXISTS (SELECT 1 FROM assessment.slot s
                        LEFT JOIN assessment.outcome o ON o.slot = s.id
                        WHERE s.visit = v.id AND o.slot IS NULL) AS all_resolved,
@@ -713,7 +808,6 @@ GRANT EXECUTE ON FUNCTION
     assessment_api.assign_baseline(uuid, uuid, text, text, timestamptz, timestamptz),
     assessment_api.allocate(uuid, text, boolean, jsonb),
     assessment_api.start_visit(uuid, uuid, text),
-    assessment_api.mark_slot_presented(uuid, uuid),
     assessment_api.close_visit(uuid, uuid, text),
     assessment_api.withdraw(uuid)
 TO assessment_operator;

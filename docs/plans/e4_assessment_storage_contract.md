@@ -1,8 +1,11 @@
 # E4 assessment storage contract v1
 
-Role: contract draft
-Status: local synthetic implementation
-Source: [approved E3 record boundaries](assessment_measurement_contract.md) and
+Role: spec
+Status: active
+Source of truth: this file for E4 logical assessment records, write and reconstruction rules (synthetic implementation only; physical schema in `docs/architecture/participant_data_platform.md`)
+Supersedes: none
+Last updated: 2026-11-19
+Derived from: [approved E3 record boundaries](assessment_measurement_contract.md) and
 [participant-platform implementation plan](participant_data_platform_implementation.md)
 
 ## Scope and ownership
@@ -41,8 +44,9 @@ must follow the registry contract. The fixture uses opaque registry references.
 | `visit` | `id`, `enrollment`, `phase`, `form` | Assign a form independently of responses. The protocol and sequence must authorize the phase/form pair. A phase has at most one visit per enrollment in this slice. |
 | `slot` | `id`, `visit`, `ordinal`, `item`, `scorer` | Assign each zero-based form position once. Item must match the manifest and scorer must match the item registry. |
 | `exposure` | `enrollment`, `activity`, `active_ms`, `examples` | One coarse practice summary after allocation, including explicit zero exposure when known. Missing summary means unknown. Activity may differ from assigned arm. |
+| `presentation` | `slot` | One client-reported presentation per slot, with its own observation time, window classification and server receipt time. Required before any `attempt` and before every outcome except `unpresented`; never allowed after an outcome. |
 | `attempt` | `id`, `slot`, `response`, `latency_ms` | One immutable valid submission per slot. Response is exactly four signed 32-bit integer coordinates in X, Y, Z, W order. Latency is nonnegative elapsed monotonic time from usable stimulus to submission. |
-| `outcome` | `slot`, `status`, `attempt` | One terminal outcome per slot. `submitted` must link to its own attempt. `invalid`, `interrupted`, and `unpresented` carry a null attempt. |
+| `outcome` | `slot`, `status`, `attempt` | One terminal outcome per slot. `submitted` must link to its own attempt. `invalid`, `interrupted`, and `unpresented` carry a null attempt. Only `unpresented` may lack a presentation, and an `unpresented` slot can never have one, so presented, submitted and unpresented classifications cannot disagree. |
 | `close_visit` | `visit`, `status` | One terminal visit status: `completed`, `interrupted`, `expired` or `withdrawn`. Require a complete assigned-slot manifest and explicit outcomes. An expired visit has only unpresented slots. A completed visit allows submitted or invalid slots. An interrupted or withdrawn visit may include any supported slot outcome. `withdrawn` requires the enrollment's withdrawal record. |
 | `withdrawal` | `enrollment` | One immutable withdrawal. It carries no account identity. It stops collection immediately and closes every open visit as `withdrawn`, so attrition can be reconstructed from study records alone. |
 
@@ -192,3 +196,37 @@ Review fixes changed four details of the defaults above:
 - Client observation times use one canonical form,
   `YYYY-MM-DDTHH:MM:SS.sssZ`, so equal instants produce equal digests.
   Exposure activities are protocol data, not a fixed list.
+- Presentation is a client event with its own time provenance, delivered
+  through the same idempotent ingest path as answers. A foreign key ties
+  every non-`unpresented` outcome to its slot's presentation record.
+- Every read of the account link is audited (`read_allow`, `read_deny`),
+  as are grants, revocations and rejected conflicting commands. Audit rows
+  survive a rejected batch.
+
+## Before real enrollment: assignment integrity
+
+The local slice accepts the arm and the eligibility decision from a trusted
+caller (`allocate(enrollment, arm, eligible, windows)`). That is acceptable for
+synthetic data only. A caller-supplied `eligible = true` is not a research
+eligibility authority, and a caller-chosen arm is not concealed randomization.
+Before any real enrollment, the trusted study service must:
+
+1. **Compute eligibility server-side** from the stored, completed baseline
+   records under the frozen protocol version's rule (for example the E3
+   valid-response threshold), and record the rule version and inputs with the
+   decision. No caller argument may override it.
+2. **Draw the arm from a concealed allocation sequence** generated before
+   enrollment opens: variable block sizes, balanced within form sequence as E3
+   requires, stored where neither callers nor study readers can see unused
+   entries, and consumed strictly in order. The arm is revealed only by
+   committing the allocation.
+3. **Audit every assignment**: sequence position, protocol version,
+   eligibility inputs and decision, and time, in a record study readers can
+   verify without seeing future allocations.
+4. **Prove it with tests**: callers cannot choose or preview an arm,
+   ineligible baselines cannot be allocated, concurrent allocations cannot
+   consume the same position, and the realised allocation matches the
+   sequence.
+
+Until those exist, this slice must not be used for real participants. Hosting,
+authentication provider and deployment decisions remain separate.

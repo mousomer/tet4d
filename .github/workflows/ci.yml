@@ -169,6 +169,28 @@ jobs:
           - "3.13"
           - "3.14"
 
+    # Disposable PostgreSQL for the E4 assessment storage suite
+    # (tests/integration/test_e4_postgresql.py). Synthetic data only; the
+    # password exists only inside this job's service container.
+    services:
+      postgres:
+        image: postgres:16.6
+        env:
+          POSTGRES_USER: e4
+          POSTGRES_PASSWORD: e4-synthetic-only
+          POSTGRES_DB: e4
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U e4 -d e4"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      TET4D_E4_TEST_DSN: host=127.0.0.1 port=5432 user=e4 password=e4-synthetic-only dbname=e4
+      TET4D_E4_REQUIRE_POSTGRES: "1"
+
     steps:
       - uses: actions/checkout@v5
         with:
@@ -188,6 +210,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e .[dev]
+          pip install -r migration/participant_data/requirements.txt
           python -m ruff --version
 
       - name: Run canonical Python verification

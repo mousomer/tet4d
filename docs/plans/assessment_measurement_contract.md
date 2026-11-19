@@ -1,7 +1,9 @@
 # E3 assessment measurement contract
 
-Role: specification draft
-Status: proposed for research and product review
+Role: spec
+Status: active
+Source of truth: this file for the E3 coordinate-prediction instrument, its scoring and its record boundaries (draft for research review; not study endpoints or approval to collect data)
+Supersedes: none
 Last updated: 2026-11-19
 Parent authority: [Spatial Intuition Research Plan, E3](spatial_intuition_research_plan.md#e3--assessment-instrument-and-study-protocol)
 

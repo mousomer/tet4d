@@ -1,5 +1,11 @@
 # E4 local PostgreSQL slice
 
+Role: reference
+Status: active
+Source of truth: none (operating notes; behaviour is owned by `docs/architecture/participant_data_platform.md`)
+Supersedes: none
+Last updated: 2026-11-19
+
 The [E4 contract](e4_assessment_storage_contract.md) defines the logical
 records. `migration/participant_data/001_assessment.sql` implements them as
 typed tables and PL/pgSQL entry points, described in the
@@ -25,6 +31,7 @@ cannot provide identity. `operations` wraps the trusted study calls.
 
 | Kind | Other fields |
 | --- | --- |
+| `present` | `slot`, nullable `observed_at` (required before `submit`, `invalid` and `interrupted`) |
 | `submit` | `slot`, `attempt`, four-coordinate `response`, `latency_ms`, nullable `observed_at` |
 | `outcome` | `slot`, `status` (invalid, interrupted or unpresented), nullable `observed_at` |
 | `exposure` | `activity`, `active_ms`, `examples` |
