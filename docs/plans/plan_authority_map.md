@@ -4,7 +4,7 @@ Role: authority
 Status: active
 Source of truth: this file for planning-document ownership and precedence
 Supersedes: ad hoc ownership notes spread across active planning docs
-Last updated: 2026-11-01
+Last updated: 2026-11-18
 
 ## Purpose
 
@@ -21,6 +21,8 @@ planning redirection notes.
 | Planning-document ownership and precedence | `plan_authority_map.md` |
 | Professional Godot product priorities, programme sequencing, and phase gates | `professional_godot_game_programme.md` |
 | Proposed spatial-intuition study design, assessment instrument, research data/consent requirements (not product stage ordering) | `spatial_intuition_research_plan.md` |
+| Plain-language explanation of player progress and research-data goals (non-authoritative) | `participant_data_platform_overview.md` |
+| Proposed participant data platform engineering stages, API/storage design and implementation gates (not scientific endpoints) | `participant_data_platform_implementation.md` |
 | Bounded practice Explorer **MVP baseline** and its novice acceptance tasks | `bounded_practice_explorer.md` |
 | Forward Godot 2D/3D/4D Explorer topology semantics, presets, transport and secondary builder | `docs/rds/RDS_EXPLORER_TOPOLOGIES.md` (product requirements); `professional_godot_game_programme.md` (stage order) |
 | Explorer T1 implementation inventory, contract gaps and Session 2 inputs (audit only) | `docs/architecture/explorer_topology_t1_contract_inventory.md` |

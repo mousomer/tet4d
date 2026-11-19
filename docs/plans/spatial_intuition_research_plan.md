@@ -4,7 +4,7 @@ Role: spec
 Status: active
 Source of truth: this file for proposed spatial-learning study design and participant data requirements; programme priority and gates remain with `docs/plans/professional_godot_game_programme.md`
 Supersedes: none
-Last updated: 2026-11-01
+Last updated: 2026-11-18
 Programme authority: `docs/plans/professional_godot_game_programme.md`
 Active execution/debt: `docs/BACKLOG.md`
 
@@ -130,6 +130,11 @@ campaign is not required for the first experiment and follows afterwards.
 
 ### E4 — Participant records, local recovery and server ingestion
 
+The non-technical rationale is in `participant_data_platform_overview.md`;
+proposed platform implementation and staged acceptance are in
+`participant_data_platform_implementation.md`. Neither file authorizes
+real-person collection or changes this plan's scientific endpoints.
+
 Derive the storage contract from E3 rather than guessing what future analysis
 might need.
 
@@ -168,8 +173,12 @@ Define explicitly before implementation:
   timing or experimental conditions.
 
 No hosting vendor, authentication provider, database or cloud architecture is
-selected by this planning change. Select them in a separate design decision
-based on the approved schema, operations and compliance requirements.
+selected by this plan. Select them in a separate design decision based on the
+approved E3-derived schema, operations and compliance requirements. The
+implementation plan names Supabase in Ireland as the leading candidate for that
+decision; it is not an approved or deployed participant backend, and
+provisioning and collection still depend on the frozen measurement contract,
+operational/security review, provider terms and applicable privacy/ethics approval.
 
 Gate `RESEARCH_PLATFORM_READY`: scenario and scoring contracts are frozen,
 consent/withdrawal and storage recovery have evidence, auth separation and

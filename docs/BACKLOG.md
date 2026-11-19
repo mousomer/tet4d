@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-11-17
+Updated: 2026-11-18
 Scope: active work, explicit deferrals, and near-term acceptance boundaries.
 
 Completed chronology is recoverable from Git, merged PRs, CI, and
@@ -150,10 +150,17 @@ documentation/priority decision, not approval to deploy a study or backend.
 - [ ] P3: specify pre/post and held-out transfer assessments, a feasible
   comparison/control, retention, reproducible items and scoring before
   designing participant events. Build the smallest assessment task slice.
-- [ ] P4: design pseudonymous participant identity, consent/withdrawal,
-  local event buffering, versioned server storage, idempotent ingestion, privacy,
-  export/deletion and independent session reconstruction. No provider is yet
-  selected and no server is claimed to exist.
+- [ ] P4: implement pseudonymous research identity, optional player accounts,
+  local event buffering, versioned storage, idempotent ingestion, privacy,
+  export/deletion and independent session reconstruction. The non-technical
+  overview is `docs/plans/participant_data_platform_overview.md` and the full
+  proposed PR sequence/gates are in
+  `docs/plans/participant_data_platform_implementation.md`. Depends on P3,
+  which owns the assessment design that P4's assessment PRs implement.
+  Supabase Ireland is the leading hosting candidate for a separate provider
+  decision after the storage contract is approved; no provider is provisioned,
+  no server is claimed, and no participant collection is authorized by these
+  documents.
 - [ ] P5: run a consent-compliant instrumentation/usability pilot and only
   then a controlled learning study; report negative or inconclusive results.
 - [ ] P6+ / deferred: research Windows/Linux distribution if recruitment needs
