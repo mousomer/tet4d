@@ -108,6 +108,13 @@ def build():
 
     RELEASE.mkdir(exist_ok=True)
     shutil.copyfile(LEARNING / "release.css", RELEASE / "release.css")
+    shutil.copyfile(LEARNING / "tet4d-learning.js", RELEASE / "tet4d-learning.js")
+    (RELEASE / "embed.html").write_text(
+        page(
+            "Embed", (LEARNING / "release_embed.html").read_text(encoding="utf-8"), ""
+        ),
+        encoding="utf-8",
+    )
     (RELEASE / "index.html").write_text(
         page("Home", (LEARNING / "release_home.html").read_text(encoding="utf-8"), ""),
         encoding="utf-8",
