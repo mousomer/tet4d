@@ -3,7 +3,7 @@
 The [E4 contract](e4_assessment_storage_contract.md) defines the logical
 records. `migration/participant_data/001_assessment.sql` implements them as
 typed tables and PL/pgSQL entry points, described in the
-[platform architecture](../architecture/participant_data_platform.md). It is
+platform architecture (`docs/architecture/participant_data_platform.md`). It is
 for a disposable database with synthetic data only. The game does not depend
 on it.
 

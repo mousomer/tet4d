@@ -178,7 +178,8 @@ implementation evidence. The ledger tests continue to cover logical shape.
 ## Local implementation (review fixes, 2026-11-19)
 
 The local slice implements these rules as PostgreSQL functions, specified in
-[the participant data platform architecture](../architecture/participant_data_platform.md).
+the participant data platform architecture
+(`docs/architecture/participant_data_platform.md`).
 Review fixes changed four details of the defaults above:
 
 - The account link lives in a private schema that study readers cannot
