@@ -96,6 +96,15 @@ documentation/priority decision, not approval to deploy a study or backend.
 - [ ] P1 acceptance: run the plan's novice tasks and supported-window visual
   review; `EXPLORER_LEARNING_READY` remains pending. No learning-study or
   participant-backend readiness is implied by the implementation.
+  The tutorials in `learning/tutorials/` provide
+  worked seam-crossing, bond and collision exercises for the selected Sphere and RP² presets.
+  The matched domino examples compare board Up with a native-verified piece rotation.
+  Lesson 03 in `learning/tutorials/seam-comparisons/` includes an offline,
+  synchronized frame comparison, a three-board control comparison, and a
+  labelled domino bond exercise. Five three-gluing clips extend the worked
+  translation and rotation comparisons with recorded native traces. The
+  offline demo replays all five sequences side by side and computes the
+  8 × 8 benchmark with worked examples of a block and a lost bond.
 - [ ] P1T — Explorer Topologies RDS (`docs/rds/RDS_EXPLORER_TOPOLOGIES.md`): **T1** establishes catalog identities, certification and transport contracts; **T2** covers five working 2D presets and formal scoped transfer; **T2S** covers square S²/RP² with persistent directed seams, native cellwise/injective/atomic movement and snapshot Undo. Latest §2.5 governs current availability and movement; formal transfer remains open. **T3** 2D builder; **T4/T5** higher-dimensional transport/builders; **T6** optional multi-domain spheres; **T7** integrated human acceptance. Legacy `sphere_2d` keeps its historical Klein identity; normal Sphere is `sphere_adjacent_positive`.
 - [x] P1T / T1 Session 2 design: `docs/architecture/explorer_topology_piece_transport_contract.md` specifies stable cell IDs, signed local frames, global-axis translation, recorded inverse operations, restricted coherent rotation, atomic revision-bound application, native reuse and exact conformance examples. Documentation only; review disposition and remaining runtime gates are recorded below.
 - [x] P1T / T1 Session 3 design: `docs/architecture/explorer_topology_catalog_certification_contract.md` owns identities, catalog/status schema and independent quotient evidence; `tests/fixtures/explorer_topology/` owns the representative data and transport specifications; `docs/architecture/explorer_topology_t2_transfer_preparation.md` owns the nonterminal bounded transfer package. No runtime or certification promotion.
