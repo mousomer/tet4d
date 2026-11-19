@@ -1,0 +1,441 @@
+{
+  "protocols": {
+    "fixture@1": {
+      "sequences": {
+        "AB": {
+          "baseline": "A@1",
+          "posttest": "B@1",
+          "retention": "C@1"
+        }
+      },
+      "arms": [
+        "rotation_4d",
+        "rotation_3d"
+      ],
+      "activities": [
+        "rotation_4d",
+        "rotation_3d",
+        "none"
+      ]
+    }
+  },
+  "forms": {
+    "A@1": [
+      "baseline-turn@1",
+      "baseline-second@1"
+    ],
+    "B@1": [
+      "held-out-pivot@1",
+      "held-out-inverse@1"
+    ],
+    "C@1": [
+      "held-out-unpresented@1"
+    ]
+  },
+  "items": {
+    "baseline-turn@1": "coordinate@1",
+    "baseline-second@1": "coordinate@1",
+    "held-out-pivot@1": "coordinate@1",
+    "held-out-inverse@1": "coordinate@1",
+    "held-out-unpresented@1": "coordinate@1"
+  },
+  "records": [
+    {
+      "version": 1,
+      "kind": "assignment",
+      "enrollment": "synthetic-1",
+      "protocol": "fixture@1",
+      "sequence": "AB"
+    },
+    {
+      "version": 1,
+      "kind": "visit",
+      "id": "base",
+      "enrollment": "synthetic-1",
+      "phase": "baseline",
+      "form": "A@1"
+    },
+    {
+      "version": 1,
+      "kind": "slot",
+      "id": "a1",
+      "visit": "base",
+      "ordinal": 0,
+      "item": "baseline-turn@1",
+      "scorer": "coordinate@1"
+    },
+    {
+      "version": 1,
+      "kind": "slot",
+      "id": "a2",
+      "visit": "base",
+      "ordinal": 1,
+      "item": "baseline-second@1",
+      "scorer": "coordinate@1"
+    },
+    {
+      "version": 1,
+      "kind": "attempt",
+      "id": "answer-1",
+      "slot": "a1",
+      "response": [
+        -3,
+        5,
+        1,
+        2
+      ],
+      "latency_ms": 700
+    },
+    {
+      "version": 1,
+      "kind": "outcome",
+      "slot": "a1",
+      "status": "submitted",
+      "attempt": "answer-1"
+    },
+    {
+      "version": 1,
+      "kind": "outcome",
+      "slot": "a2",
+      "status": "invalid",
+      "attempt": null
+    },
+    {
+      "version": 1,
+      "kind": "close_visit",
+      "visit": "base",
+      "status": "completed"
+    },
+    {
+      "version": 1,
+      "kind": "allocation",
+      "enrollment": "synthetic-1",
+      "arm": "rotation_4d"
+    },
+    {
+      "version": 1,
+      "kind": "exposure",
+      "enrollment": "synthetic-1",
+      "activity": "rotation_3d",
+      "active_ms": 9000,
+      "examples": 2
+    },
+    {
+      "version": 1,
+      "kind": "visit",
+      "id": "post",
+      "enrollment": "synthetic-1",
+      "phase": "posttest",
+      "form": "B@1"
+    },
+    {
+      "version": 1,
+      "kind": "slot",
+      "id": "b1",
+      "visit": "post",
+      "ordinal": 0,
+      "item": "held-out-pivot@1",
+      "scorer": "coordinate@1"
+    },
+    {
+      "version": 1,
+      "kind": "slot",
+      "id": "b2",
+      "visit": "post",
+      "ordinal": 1,
+      "item": "held-out-inverse@1",
+      "scorer": "coordinate@1"
+    },
+    {
+      "version": 1,
+      "kind": "attempt",
+      "id": "answer-2",
+      "slot": "b1",
+      "response": [
+        5,
+        9,
+        4,
+        4
+      ],
+      "latency_ms": 550
+    },
+    {
+      "version": 1,
+      "kind": "outcome",
+      "slot": "b1",
+      "status": "submitted",
+      "attempt": "answer-2"
+    },
+    {
+      "version": 1,
+      "kind": "outcome",
+      "slot": "b2",
+      "status": "interrupted",
+      "attempt": null
+    },
+    {
+      "version": 1,
+      "kind": "close_visit",
+      "visit": "post",
+      "status": "interrupted"
+    },
+    {
+      "version": 1,
+      "kind": "visit",
+      "id": "late",
+      "enrollment": "synthetic-1",
+      "phase": "retention",
+      "form": "C@1"
+    },
+    {
+      "version": 1,
+      "kind": "slot",
+      "id": "c1",
+      "visit": "late",
+      "ordinal": 0,
+      "item": "held-out-unpresented@1",
+      "scorer": "coordinate@1"
+    },
+    {
+      "version": 1,
+      "kind": "outcome",
+      "slot": "c1",
+      "status": "unpresented",
+      "attempt": null
+    },
+    {
+      "version": 1,
+      "kind": "close_visit",
+      "visit": "late",
+      "status": "expired"
+    }
+  ],
+  "expected_visits": {
+    "base": {
+      "status": "completed",
+      "slots": [
+        "submitted",
+        "invalid"
+      ]
+    },
+    "post": {
+      "status": "interrupted",
+      "slots": [
+        "submitted",
+        "interrupted"
+      ]
+    },
+    "late": {
+      "status": "expired",
+      "slots": [
+        "unpresented"
+      ]
+    }
+  },
+  "rejections": [
+    {
+      "name": "allocation_before_baseline_close",
+      "after": 7,
+      "error": "baseline still open",
+      "record": {
+        "version": 1,
+        "kind": "allocation",
+        "enrollment": "synthetic-1",
+        "arm": "rotation_4d"
+      }
+    },
+    {
+      "name": "unassigned_form",
+      "after": 10,
+      "error": "form assignment mismatch",
+      "record": {
+        "version": 1,
+        "kind": "visit",
+        "id": "post",
+        "enrollment": "synthetic-1",
+        "phase": "posttest",
+        "form": "A@1"
+      }
+    },
+    {
+      "name": "unknown_visit",
+      "after": 2,
+      "error": "foreign",
+      "record": {
+        "version": 1,
+        "kind": "slot",
+        "id": "a1",
+        "visit": "foreign",
+        "ordinal": 0,
+        "item": "baseline-turn@1",
+        "scorer": "coordinate@1"
+      }
+    },
+    {
+      "name": "reused_ordinal",
+      "after": 3,
+      "error": "duplicate slot ordinal",
+      "record": {
+        "version": 1,
+        "kind": "slot",
+        "id": "duplicate",
+        "visit": "base",
+        "ordinal": 0,
+        "item": "baseline-turn@1",
+        "scorer": "coordinate@1"
+      }
+    },
+    {
+      "name": "wrong_item",
+      "after": 2,
+      "error": "item mismatch",
+      "record": {
+        "version": 1,
+        "kind": "slot",
+        "id": "a1",
+        "visit": "base",
+        "ordinal": 0,
+        "item": "held-out-pivot@1",
+        "scorer": "coordinate@1"
+      }
+    },
+    {
+      "name": "wrong_scorer",
+      "after": 2,
+      "error": "scorer mismatch",
+      "record": {
+        "version": 1,
+        "kind": "slot",
+        "id": "a1",
+        "visit": "base",
+        "ordinal": 0,
+        "item": "baseline-turn@1",
+        "scorer": "coordinate@2"
+      }
+    },
+    {
+      "name": "boolean_coordinate",
+      "after": 4,
+      "error": "invalid response",
+      "record": {
+        "version": 1,
+        "kind": "attempt",
+        "id": "answer-1",
+        "slot": "a1",
+        "response": [
+          true,
+          5,
+          1,
+          2
+        ],
+        "latency_ms": 700
+      }
+    },
+    {
+      "name": "wrong_attempt_link",
+      "after": 14,
+      "error": "attempt link",
+      "record": {
+        "version": 1,
+        "kind": "outcome",
+        "slot": "b1",
+        "status": "submitted",
+        "attempt": "answer-1"
+      }
+    },
+    {
+      "name": "duplicate_attempt",
+      "after": 5,
+      "error": "duplicate attempt",
+      "record": {
+        "version": 1,
+        "kind": "attempt",
+        "id": "duplicate",
+        "slot": "a1",
+        "response": [
+          -3,
+          5,
+          1,
+          2
+        ],
+        "latency_ms": 700
+      }
+    },
+    {
+      "name": "conflicting_retry",
+      "after": 21,
+      "error": "conflicting retry",
+      "record": {
+        "version": 1,
+        "kind": "attempt",
+        "id": "answer-1",
+        "slot": "a1",
+        "response": [
+          -3,
+          5,
+          1,
+          2
+        ],
+        "latency_ms": 999
+      }
+    },
+    {
+      "name": "missing_assigned_slot",
+      "after": 3,
+      "error": "incomplete slot assignment",
+      "record": {
+        "version": 1,
+        "kind": "close_visit",
+        "visit": "base",
+        "status": "completed"
+      }
+    },
+    {
+      "name": "missing_outcome",
+      "after": 6,
+      "error": "missing outcome",
+      "record": {
+        "version": 1,
+        "kind": "close_visit",
+        "visit": "base",
+        "status": "completed"
+      }
+    },
+    {
+      "name": "expired_with_answers",
+      "after": 7,
+      "error": "visit outcome mismatch",
+      "record": {
+        "version": 1,
+        "kind": "close_visit",
+        "visit": "base",
+        "status": "expired"
+      }
+    },
+    {
+      "name": "raw_payload",
+      "after": 6,
+      "error": "record fields",
+      "record": {
+        "version": 1,
+        "kind": "outcome",
+        "slot": "a2",
+        "status": "invalid",
+        "attempt": null,
+        "raw_payload": "synthetic"
+      }
+    },
+    {
+      "name": "unknown_version",
+      "after": 0,
+      "error": "version",
+      "record": {
+        "version": 2,
+        "kind": "assignment",
+        "enrollment": "synthetic-1",
+        "protocol": "fixture@1",
+        "sequence": "AB"
+      }
+    }
+  ]
+}

@@ -106,6 +106,9 @@ tasks are calibrated.
 
 ### E3 — Assessment instrument and study protocol
 
+The [draft measurement contract](assessment_measurement_contract.md) defines
+the first coordinate-prediction slice and its synthetic scoring evidence.
+
 Before designing the production event schema, define:
 
 1. **Population and recruitment:** eligibility, experience with 3D/4D
@@ -135,8 +138,8 @@ proposed platform implementation and staged acceptance are in
 `participant_data_platform_implementation.md`. Neither file authorizes
 real-person collection or changes this plan's scientific endpoints.
 
-Derive the storage contract from E3 rather than guessing what future analysis
-might need.
+The [E4 assessment storage contract](e4_assessment_storage_contract.md)
+records the first logical storage slice and its synthetic conformance checks.
 
 Separate domains:
 
