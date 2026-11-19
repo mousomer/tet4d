@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Drag Earth across the Tet4D S² board · Tet4D Learning</title>
+  <link rel="stylesheet" href="../../../release.css">
+</head>
+<body>
+  <header class="site-header"><a href="../../../index.html">Tet4D Learning</a></header>
+  <main><h1 id="drag-earth-across-the-tet4d-s²-board">Drag Earth across the
+Tet4D S² board</h1>
+<p>Get the repository checkout and open
+<code>learning/tutorials/curvature-seams-and-mercator/interactive-earth/index.html</code>
+in a browser. Keep the adjacent JavaScript, CSS and generated land mask
+together. The <a href="index.html">HTML link</a> on GitHub shows the
+source.</p>
+<p>The square uses the exact adjacent positive gluings from <a
+href="../../gluing-and-topologies/chapter_01_gluing_and_topologies.html">Chapter
+1</a> and analysed in <a
+href="../chapter_02_curvature_seams_and_mercator.html">Chapter 2</a>:</p>
+<p><code>L(t) ≡ B(t)</code>, <code>R(t) ≡ T(t)</code>.</p>
+<p>The square is divided into two triangles, initially mapping to the
+northern and southern hemispheres. Dragging applies a quaternion
+rotation to the geographical sphere underneath the <em>fixed</em> board.
+The underlying Earth mapping is not equal-area, conformal or
+distance-preserving.</p>
+<p><strong>Controls:</strong> pointer/touch drag, <strong>Reset
+globe</strong>, <strong>Hide/Show graticule</strong>.</p>
+<h2 id="code-and-data">Code and data</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="index.html">index.html</a></td>
+<td>Offline interactive app, controls and layout</td>
+</tr>
+<tr>
+<td><a href="styles.css">styles.css</a></td>
+<td>Responsive presentation</td>
+</tr>
+<tr>
+<td><a href="earth_s2.js">earth_s2.js</a></td>
+<td>Square-to-sphere geometry, quaternion drag, raster rendering,
+interaction</td>
+</tr>
+<tr>
+<td><a
+href="gshhg_landmask.generated.js">gshhg_landmask.generated.js</a></td>
+<td>Losslessly encoded, locally available GSHHG land mask</td>
+</tr>
+<tr>
+<td><a href="generate_landmask.py">generate_landmask.py</a></td>
+<td>Optional reproducible mask builder using Basemap and Pillow</td>
+</tr>
+<tr>
+<td><a href="earth_on_tet4d_s2.py">earth_on_tet4d_s2.py</a></td>
+<td>Original Python static map and numerical verification source
+(requires NumPy, Pillow, Matplotlib, Basemap)</td>
+</tr>
+<tr>
+<td><a
+href="COASTLINE_DATA_LICENSE.html">COASTLINE_DATA_LICENSE.md</a></td>
+<td>Dataset licence and attribution</td>
+</tr>
+<tr>
+<td><a href="smoke_browser.py">smoke_browser.py</a></td>
+<td>Optional Playwright seam/drag/controls smoke test</td>
+</tr>
+</tbody>
+</table>
+<p>For local serving (optional): <code>python -m http.server 8000</code>
+from this directory, then open <code>http://localhost:8000/</code>. No
+network or third-party packages are needed to <em>run</em> the HTML
+demo.</p>
+<p>To regenerate the coastlines:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> pip install basemap pillow</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> generate_landmask.py</span></code></pre></div>
+<p>The external coastline dataset is <strong>LGPL-3.0-or-later</strong>;
+see its dedicated attribution. The demo is only a projection of the
+topological quotient, not the game’s native cell-step transport.</p>
+<p>Optional browser verification (requires Playwright and Chromium):
+<code>python smoke_browser.py</code>.</p>
+</main>
+</body>
+</html>

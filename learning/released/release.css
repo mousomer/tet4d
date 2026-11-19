@@ -1,0 +1,36 @@
+:root {
+  color-scheme: light dark;
+  font: 17px/1.65 system-ui, sans-serif;
+  color: #172438;
+  background: #f6f9fe;
+  --link: #185695;
+  --surface: #fff;
+  --border: #c7d6e9;
+  --muted: #495972;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+.site-header, main { max-width: 960px; margin: auto; padding-inline: clamp(16px, 5vw, 52px); }
+.site-header { padding-top: 1.1rem; font-weight: 700; }
+main { padding-block: 1rem 4rem; }
+a { color: var(--link); text-underline-offset: .2em; overflow-wrap: anywhere; }
+a:focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
+h1, h2, h3 { line-height: 1.18; letter-spacing: -.02em; }
+h1 { font-size: clamp(2rem, 6vw, 3.5rem); margin: .6em 0 .45em; }
+h2 { margin-top: 1.5em; }
+.lead { max-width: 56ch; font-size: 1.13rem; color: var(--muted); }
+.chapters { display: grid; gap: .85rem; margin: 1.65rem 0; }
+.chapters article, pre, details { color: inherit; background: var(--surface); border: 1px solid var(--border); border-radius: .75rem; padding: .8rem 1.1rem; }
+.chapters h2 { margin: .25rem 0; font-size: 1.25rem; }
+.chapters p { margin: .35rem 0; }
+.note { color: var(--muted); }
+img { max-width: 100%; height: auto; }
+pre, math[display="block"] { overflow-x: auto; max-width: 100%; }
+table { display: block; overflow-x: auto; border-collapse: collapse; margin: 1rem 0; }
+td, th { padding: .4rem .65rem; border: 1px solid var(--border); }
+blockquote { border-inline-start: .2rem solid var(--border); padding-inline-start: 1rem; margin-inline: 0; }
+details { margin-block: 1rem; }
+summary { cursor: pointer; }
+@media (prefers-color-scheme: dark) {
+  :root { color: #ecf1fa; background: #111827; --link: #9cc8ff; --surface: #1b2537; --border: #41546e; --muted: #b6c5d9; }
+}
