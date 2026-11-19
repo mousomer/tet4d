@@ -429,7 +429,7 @@ The factor multiplies both planar directions equally: Mercator is **conformal**.
 The local map-to-ground scale and area scale are
 
 ```math
-\boxed{k(\phi)=\sec\phi,\qquad k_{\rm area}(\phi)=\sec^2\phi.}
+\boxed{k(\phi)=\sec\phi,\qquad k_{\mathrm{area}}(\phi)=\sec^2\phi.}
 ```
 
 | Latitude | Linear scale | Area scale |

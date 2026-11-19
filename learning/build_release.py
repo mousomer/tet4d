@@ -61,18 +61,24 @@ def page(title, body, root):
 
 def render_markdown(source):
     # GitHub-style heading identifiers preserve links between the lesson sources.
-    return subprocess.run(
+    rendered = subprocess.run(
         [
             "pandoc",
             "--from=markdown+gfm_auto_identifiers",
             "--to=html5",
-            "--mathml",
+            "--math-method=mathml",
+            "--fail-if-warnings",
+            f"--lua-filter={LEARNING / 'display_equations.lua'}",
             str(source),
         ],
         check=True,
-        capture_output=True,
+        stdout=subprocess.PIPE,
         text=True,
     ).stdout
+
+    if re.search(r'<pre class="math(?: |")', rendered):
+        raise ValueError(f"{source.name}: a fenced equation was rendered as code")
+    return rendered
 
 
 def build():
