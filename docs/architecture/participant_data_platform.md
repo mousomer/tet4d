@@ -64,6 +64,33 @@ back to the savepoint, keeps the audit row, and returns one row whose
 as a failure. Direct reads by the database owner are outside this audit and
 belong to deployment access controls.
 
+The audit is append-only and nothing prunes it in this slice. It writes one
+row per `ingest` call, not per command, so exact retries each add a
+`read_allow` row. The production requirement is in
+`docs/plans/e4_assessment_storage_contract.md` ("Before production:
+access-audit retention and capacity"). In summary:
+
+- **Retention.** Rows are kept while the link exists, then for the
+  post-revocation period that the approved retention schedule names. No
+  default period is set here; the schedule needs legal review. An approved
+  deletion of the link or the study records prunes that enrollment's rows,
+  because `principal` identifies the account.
+- **No aggregation.** Each call is a separate authorization read, so it
+  keeps its own row. Volume is bounded by batching, adapter rate limits and
+  the stop-on-`authorization_failure` rule.
+- **Indexes.** `(enrollment, at)` and `(principal, at)` ship with their
+  first reader (export, deletion or pruning). The local slice has none, and
+  a BRIN index on `at` needs measured evidence.
+- **Capacity.** With three 12-slot visits, a visit writes 1 to 48 audit rows
+  (about 0.2 to 9.6 KiB). Its assessment rows take about 11 KiB, so in the
+  worst case the audit nearly matches the assessment data.
+- **Pruning.** Only a dedicated definer function may prune, granted to a
+  separate retention role. It writes a prune record in the same
+  transaction, to an append-only table with no foreign key to the
+  enrollment and no principal.
+
+No schema change is needed until a production reader exists.
+
 Every entry point takes the enrollment row lock first, so writes,
 finalization and withdrawal are serialized for each enrollment. A raised
 error in an operator function aborts the whole call; an ingest batch is rolled
