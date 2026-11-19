@@ -99,11 +99,12 @@
       </div>
 
       <h3 id="domino-sequences" class="domino-heading">The same domino on A, B and C</h3>
-      <div class="experiment" aria-labelledby="domino-sequences">
-        <p class="intro">Choose a sequence and step through it on all three boards. A gold line marks a shared edge, including bonds that cross a seam.</p>
+      <div class="experiment" id="domino-playground" tabindex="0" aria-labelledby="domino-sequences">
+        <p class="intro">Use the direction buttons or focus this panel and press the arrow keys. Choose a replay from the dropdown to step through a recorded sequence. A gold line marks a shared edge, including bonds that cross a seam.</p>
         <div class="sequence-picker">
           <label for="domino-sequence">Sequence</label>
           <select id="domino-sequence">
+            <option value="free" selected>Free movement</option>
             <option value="LUR">Left → Up → Right</option>
             <option value="LTR">Left → Clockwise turn → Right</option>
             <option value="LR">Left → Right</option>
@@ -112,9 +113,17 @@
           </select>
         </div>
         <div class="controls">
-          <button id="sequence-previous" type="button" disabled>Previous move</button>
-          <button id="sequence-next" type="button">Next move</button>
-          <button id="sequence-reset" type="button" disabled>Reset sequence</button>
+          <div id="domino-replay-controls" hidden>
+            <button id="sequence-previous" type="button" disabled>Previous move</button>
+            <button id="sequence-next" type="button">Next move</button>
+          </div>
+          <div id="domino-free-controls">
+            <button type="button" data-domino-direction="L" aria-keyshortcuts="ArrowLeft"><span aria-hidden="true">←</span> Left</button>
+            <button type="button" data-domino-direction="R" aria-keyshortcuts="ArrowRight"><span aria-hidden="true">→</span> Right</button>
+            <button type="button" data-domino-direction="U" aria-keyshortcuts="ArrowUp"><span aria-hidden="true">↑</span> Up</button>
+            <button type="button" data-domino-direction="D" aria-keyshortcuts="ArrowDown"><span aria-hidden="true">↓</span> Down</button>
+          </div>
+          <button id="sequence-reset" type="button" disabled>Reset free movement</button>
         </div>
         <p id="sequence-progress" role="status"></p>
         <div class="boards comparison-boards">

@@ -112,3 +112,11 @@ canvas { display: block; width: 100%; max-width: 320px; margin: auto; }
 .benchmark-table td { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .benchmark-table meter { display: block; width: clamp(3rem, 14vw, 9rem); height: .65rem; }
 #benchmark-next { background: var(--mint); color: #10231c; }
+
+:is(#domino-replay-controls, #domino-free-controls):not([hidden]) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+
+#domino-playground:focus-visible { outline: 2px solid var(--mint); outline-offset: 3px; }

@@ -146,20 +146,25 @@
     return index === 0 ? startingDomino : trace.get(`${code} ${traceBoard[id]} ${index}`);
   }
 
+  function displayPose(board, { a, b, bonded }, previouslyBonded) {
+    const label = bonded ? (previouslyBonded ? "Bond intact" : "Bond rejoined") :
+      (previouslyBonded ? "Bond broken" : "Bond still broken");
+    drawDomino(board.ctx, a, b, board.seams, bonded);
+    board.bond.textContent = label;
+    board.bond.dataset.bonded = String(bonded);
+    board.cells.textContent = `1 at (${a.join(", ")}) · 2 at (${b.join(", ")})`;
+    return label.toLowerCase();
+  }
+
   function renderSequence(index) {
     sequenceStep = index;
     const code = sequence.value;
     const status = [index === 0 ? "Start" : moves[code[index - 1]], `Move ${index} of ${code.length}`];
-    for (const { id, seams, ctx, cells, bond } of sequenceBoards) {
-      const { a, b, bonded } = tracePose(code, id, index);
-      const previouslyBonded = tracePose(code, id, Math.max(0, index - 1)).bonded;
-      const label = bonded ? (previouslyBonded ? "Bond intact" : "Bond rejoined") :
-        (previouslyBonded ? "Bond broken" : "Bond still broken");
-      drawDomino(ctx, a, b, seams, bonded);
-      bond.textContent = label;
-      bond.dataset.bonded = String(bonded);
-      cells.textContent = `1 at (${a.join(", ")}) · 2 at (${b.join(", ")})`;
-      status.push(`${id.toUpperCase()} ${label.toLowerCase()}`);
+    for (const board of sequenceBoards) {
+      const pose = tracePose(code, board.id, index);
+      const previousPose = tracePose(code, board.id, Math.max(0, index - 1));
+      const label = displayPose(board, pose, previousPose.bonded);
+      status.push(`${board.id.toUpperCase()} ${label}`);
     }
     sequenceProgress.textContent = status.join(" · ");
     sequencePrevious.disabled = index === 0;
@@ -167,7 +172,60 @@
     sequenceNext.disabled = index === code.length;
   }
 
-  sequence.addEventListener("change", () => renderSequence(0));
+  const replayControls = byId("domino-replay-controls");
+  const freeControls = byId("domino-free-controls");
+  const playground = byId("domino-playground");
+  const freeButtons = [...freeControls.querySelectorAll("[data-domino-direction]")];
+  const freeDirections = { L: left, R: right, U: up, D: down };
+  const arrowDirections = { ArrowLeft: "L", ArrowRight: "R", ArrowUp: "U", ArrowDown: "D" };
+  let freePoses;
+
+  function resetMode() {
+    const free = sequence.value === "free";
+    replayControls.hidden = free;
+    freeControls.hidden = !free;
+    sequenceReset.textContent = free ? "Reset free movement" : "Reset sequence";
+    if (free) {
+      freePoses = sequenceBoards.map(board => {
+        displayPose(board, startingDomino, true);
+        return startingDomino;
+      });
+      sequenceProgress.textContent = "Start · All three boards are bonded.";
+      sequenceReset.disabled = true;
+    } else {
+      renderSequence(0);
+    }
+  }
+
+  function moveFreely(key) {
+    const status = [moves[key]];
+    freePoses = sequenceBoards.map((board, index) => {
+      const previous = freePoses[index];
+      const a = move(previous.a, freeDirections[key], board.seams);
+      const b = move(previous.b, freeDirections[key], board.seams);
+      const blocked = sameCell(a, b);
+      const pose = blocked ? previous : {
+        a, b, bonded: neighbours.some(delta => sameCell(move(a, delta, board.seams), b)),
+      };
+      const label = displayPose(board, pose, previous.bonded);
+      status.push(`${board.id.toUpperCase()} ${blocked ? "blocked, " : ""}${label}`);
+      return pose;
+    });
+    sequenceProgress.textContent = status.join(" · ");
+    sequenceReset.disabled = false;
+  }
+
+  for (const button of freeButtons) {
+    button.addEventListener("click", () => moveFreely(button.dataset.dominoDirection));
+  }
+  playground.addEventListener("keydown", event => {
+    const direction = arrowDirections[event.key];
+    if (!direction || freeControls.hidden || event.target === sequence ||
+        event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    event.preventDefault();
+    moveFreely(direction);
+  });
+  sequence.addEventListener("change", resetMode);
   sequencePrevious.addEventListener("click", () => {
     renderSequence(sequenceStep - 1);
     if (sequencePrevious.disabled) sequenceNext.focus();
@@ -177,11 +235,12 @@
     if (sequenceNext.disabled) sequencePrevious.focus();
   });
   sequenceReset.addEventListener("click", () => {
-    renderSequence(0);
-    sequenceNext.focus();
+    resetMode();
+    (freeControls.hidden ? sequenceNext : freeButtons[0]).focus();
   });
 
-  renderSequence(0);
+  resetMode();
+  if (location.hash === "#domino-sequences") playground.focus({ preventScroll: true });
   renderComparison(0);
   renderDomino(false);
 })();

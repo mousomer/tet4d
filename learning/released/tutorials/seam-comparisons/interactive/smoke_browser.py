@@ -7,8 +7,8 @@ from playwright.sync_api import sync_playwright
 
 
 def check_controls_and_bonds(page):
-    compare = page.get_by_role("button", name="Right", exact=True)
-    back = page.get_by_role("button", name="Left", exact=True)
+    compare = page.locator("#compare-right")
+    back = page.locator("#compare-left")
     positions = [page.locator(f"#position-{board}") for board in "abc"]
     assert back.is_disabled()
     compare.click()
@@ -33,7 +33,7 @@ def check_controls_and_bonds(page):
     }"""
     gold = [255, 209, 122, 255]
     assert page.evaluate(bond_pixels) == [gold, gold]
-    page.get_by_role("button", name="Up", exact=True).click()
+    page.locator("#domino-up").click()
     assert page.locator("#domino-position").inner_text() == "1 at (4, 2) · 2 at (0, 4)"
     assert "Bond broken" in page.locator("#domino-status").inner_text()
     assert all(pixel != gold for pixel in page.evaluate(bond_pixels))
@@ -58,7 +58,7 @@ def check_domino_sequences(page, trace_path):
     reset = page.get_by_role("button", name="Reset sequence")
     assert set(
         picker.locator("option").evaluate_all("(options) => options.map(o => o.value)")
-    ) == {code for code, _, _ in expected}
+    ) == {code for code, _, _ in expected} | {"free"}
     for code in ("LUR", "LTR", "LR", "LUL", "LDLRL"):
         picker.select_option(code)
         assert previous.is_disabled()
@@ -99,6 +99,51 @@ def check_domino_sequences(page, trace_path):
 
     reset.click()
     assert previous.is_disabled() and reset.is_disabled()
+
+
+def check_free_domino(page):
+    picker = page.get_by_label("Sequence", exact=True)
+
+    def move(key):
+        page.keyboard.press(key)
+
+    positions = [page.locator(f"#sequence-cells-{board}") for board in "abc"]
+    start = "1 at (0, 1) · 2 at (1, 1)"
+    assert page.evaluate("document.activeElement.id") == "domino-playground"
+    assert picker.input_value() == "free"
+    assert page.locator("[data-domino-direction]:visible").count() == 4
+    assert not page.get_by_role("button", name="Next move").is_visible()
+    assert all(position.inner_text() == start for position in positions)
+    move("ArrowLeft")
+    move("ArrowUp")
+    assert page.locator("#sequence-bond-b").inner_text() == "Bond broken"
+    move("ArrowLeft")
+    assert page.locator("#sequence-bond-b").inner_text() == "Bond rejoined"
+    reset = page.get_by_role("button", name="Reset free movement")
+    reset.click()
+    move("ArrowDown")
+    before = [position.inner_text() for position in positions]
+    move("ArrowLeft")
+    assert "A blocked" in page.locator("#sequence-progress").inner_text()
+    assert positions[0].inner_text() == before[0]
+    assert positions[2].inner_text() != before[2]
+    page.locator('[data-domino-direction="R"]').click()
+    move("ArrowRight")
+    reset.click()
+    assert reset.is_disabled()
+    assert all(position.inner_text() == start for position in positions)
+    picker.select_option("LR")
+    assert page.get_by_role("button", name="Next move").is_visible()
+    assert page.locator("[data-domino-direction]:visible").count() == 0
+    page.locator("#domino-playground").focus()
+    move("ArrowLeft")
+    assert all(position.inner_text() == start for position in positions)
+    picker.select_option("free")
+    picker.focus()
+    move("ArrowDown")
+    assert all(position.inner_text() == start for position in positions)
+    picker.select_option("free")
+    assert page.locator("[data-domino-direction]:visible").count() == 4
 
 
 def check_benchmark(page):
@@ -170,6 +215,9 @@ def run():
         page.goto(demo.as_uri() + "#controls-and-bonds")
         check_benchmark(page)
         check_controls_and_bonds(page)
+        page.goto(demo.as_uri() + "#domino-sequences")
+        page.reload()
+        check_free_domino(page)
         check_domino_sequences(
             page, demo.parent.parent / "domino-comparisons" / "native_traces.txt"
         )

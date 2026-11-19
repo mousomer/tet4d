@@ -53,9 +53,31 @@ A and B share exactly the seam exercised here. B and C share the same topology. 
 
 ### Worked comparison · The same domino on A, B and C
 
-[Step through the five domino comparisons](interactive/index.html#domino-sequences) on 5 × 5 boards, or [watch the clips](domino-comparisons/README.md). The clips start with two labels at (0,1) and (1,1), then use Left to bring the domino across a seam. Predict which boards keep the bond when the next action is **Up**, and which keep it when the next action is a **clockwise quarter-turn** about the first cell.
+[Open the interactive domino tutorial](interactive/index.html#domino-sequences) to send the same Left, Right, Up, or Down command to all three boards. **Free movement** starts automatically. Use the direction buttons or press the arrow keys while the movement panel has focus. Use the **Sequence** dropdown to switch to any of the five replays. The clips start with two labels at (0,1) and (1,1), then use Left to bring the domino across a seam. Predict which boards keep the bond when the next action is **Up**, and which keep it when the next action is a **clockwise quarter-turn** about the first cell.
 
 The clips show the sphere, opposite-edge projective plane, and adjacent-edge projective plane in that order. In this lesson those boards are **A, C, B**. The letters shown on the tiles label the two cells. [Chapter 2’s two-board exercise](../curvature-seams-and-mercator/chapter_02_curvature_seams_and_mercator.md#three-sequences-from-the-same-domino) uses 4 × 4 boards and a counterclockwise turn.
+
+#### Left → Up → Right
+
+![Up breaks the seam bond on all three boards.](domino-comparisons/01_left_up_right.gif)
+
+#### Left → Clockwise turn → Right
+
+![The bond survives on all three boards.](domino-comparisons/02_left_rotate_right.gif)
+
+#### Left → Right
+
+![Only board C finishes bonded.](domino-comparisons/03_opposite_only.gif)
+
+#### Left → Up → Left
+
+![Only board B finishes bonded after its seam bond rejoins.](domino-comparisons/04_adjacent_projective_only.gif)
+
+#### Left → Down → Left → Right → Left
+
+![Only board A finishes bonded.](domino-comparisons/05_sphere_only.gif)
+
+[Domino clip guide and native traces](domino-comparisons/README.md)
 
 ## 3 · Give “worse” a denominator
 
