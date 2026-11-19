@@ -1,0 +1,495 @@
+{
+  "protocols": {
+    "fixture@2": {
+      "sequences": {
+        "AB": {
+          "baseline": "A@2",
+          "posttest": "B@2",
+          "retention": "C@2"
+        }
+      },
+      "arms": [
+        "rotation_4d",
+        "rotation_3d"
+      ],
+      "activities": [
+        "rotation_4d",
+        "rotation_3d",
+        "none"
+      ]
+    }
+  },
+  "forms": {
+    "A@2": [
+      "baseline-turn@2",
+      "baseline-second@2"
+    ],
+    "B@2": [
+      "held-out-pivot@2",
+      "held-out-inverse@2"
+    ],
+    "C@2": [
+      "held-out-unpresented@2"
+    ]
+  },
+  "items": {
+    "baseline-turn@2": "coordinate@2",
+    "baseline-second@2": "coordinate@2",
+    "held-out-pivot@2": "coordinate@2",
+    "held-out-inverse@2": "coordinate@2",
+    "held-out-unpresented@2": "coordinate@2"
+  },
+  "records": [
+    {
+      "version": 1,
+      "kind": "assignment",
+      "enrollment": "synthetic-1",
+      "protocol": "fixture@2",
+      "sequence": "AB"
+    },
+    {
+      "version": 1,
+      "kind": "visit",
+      "id": "base",
+      "enrollment": "synthetic-1",
+      "phase": "baseline",
+      "form": "A@2"
+    },
+    {
+      "version": 1,
+      "kind": "slot",
+      "id": "a1",
+      "visit": "base",
+      "ordinal": 0,
+      "item": "baseline-turn@2",
+      "scorer": "coordinate@2"
+    },
+    {
+      "version": 1,
+      "kind": "presentation",
+      "slot": "a1"
+    },
+    {
+      "version": 1,
+      "kind": "slot",
+      "id": "a2",
+      "visit": "base",
+      "ordinal": 1,
+      "item": "baseline-second@2",
+      "scorer": "coordinate@2"
+    },
+    {
+      "version": 1,
+      "kind": "presentation",
+      "slot": "a2"
+    },
+    {
+      "version": 1,
+      "kind": "attempt",
+      "id": "answer-1",
+      "slot": "a1",
+      "response": [
+        -3,
+        5,
+        1,
+        2
+      ],
+      "latency_ms": 700
+    },
+    {
+      "version": 1,
+      "kind": "outcome",
+      "slot": "a1",
+      "status": "submitted",
+      "attempt": "answer-1"
+    },
+    {
+      "version": 1,
+      "kind": "outcome",
+      "slot": "a2",
+      "status": "invalid",
+      "attempt": null
+    },
+    {
+      "version": 1,
+      "kind": "close_visit",
+      "visit": "base",
+      "status": "completed"
+    },
+    {
+      "version": 1,
+      "kind": "allocation",
+      "enrollment": "synthetic-1",
+      "arm": "rotation_4d"
+    },
+    {
+      "version": 1,
+      "kind": "exposure",
+      "enrollment": "synthetic-1",
+      "activity": "rotation_3d",
+      "active_ms": 9000,
+      "examples": 2
+    },
+    {
+      "version": 1,
+      "kind": "visit",
+      "id": "post",
+      "enrollment": "synthetic-1",
+      "phase": "posttest",
+      "form": "B@2"
+    },
+    {
+      "version": 1,
+      "kind": "slot",
+      "id": "b1",
+      "visit": "post",
+      "ordinal": 0,
+      "item": "held-out-pivot@2",
+      "scorer": "coordinate@2"
+    },
+    {
+      "version": 1,
+      "kind": "presentation",
+      "slot": "b1"
+    },
+    {
+      "version": 1,
+      "kind": "slot",
+      "id": "b2",
+      "visit": "post",
+      "ordinal": 1,
+      "item": "held-out-inverse@2",
+      "scorer": "coordinate@2"
+    },
+    {
+      "version": 1,
+      "kind": "presentation",
+      "slot": "b2"
+    },
+    {
+      "version": 1,
+      "kind": "attempt",
+      "id": "answer-2",
+      "slot": "b1",
+      "response": [
+        5,
+        9,
+        4,
+        4
+      ],
+      "latency_ms": 550
+    },
+    {
+      "version": 1,
+      "kind": "outcome",
+      "slot": "b1",
+      "status": "submitted",
+      "attempt": "answer-2"
+    },
+    {
+      "version": 1,
+      "kind": "outcome",
+      "slot": "b2",
+      "status": "interrupted",
+      "attempt": null
+    },
+    {
+      "version": 1,
+      "kind": "close_visit",
+      "visit": "post",
+      "status": "interrupted"
+    },
+    {
+      "version": 1,
+      "kind": "visit",
+      "id": "late",
+      "enrollment": "synthetic-1",
+      "phase": "retention",
+      "form": "C@2"
+    },
+    {
+      "version": 1,
+      "kind": "slot",
+      "id": "c1",
+      "visit": "late",
+      "ordinal": 0,
+      "item": "held-out-unpresented@2",
+      "scorer": "coordinate@2"
+    },
+    {
+      "version": 1,
+      "kind": "outcome",
+      "slot": "c1",
+      "status": "unpresented",
+      "attempt": null
+    },
+    {
+      "version": 1,
+      "kind": "close_visit",
+      "visit": "late",
+      "status": "expired"
+    }
+  ],
+  "expected_visits": {
+    "base": {
+      "status": "completed",
+      "slots": [
+        "submitted",
+        "invalid"
+      ]
+    },
+    "post": {
+      "status": "interrupted",
+      "slots": [
+        "submitted",
+        "interrupted"
+      ]
+    },
+    "late": {
+      "status": "expired",
+      "slots": [
+        "unpresented"
+      ]
+    }
+  },
+  "rejections": [
+    {
+      "name": "allocation_before_baseline_close",
+      "after": 9,
+      "error": "baseline still open",
+      "record": {
+        "version": 1,
+        "kind": "allocation",
+        "enrollment": "synthetic-1",
+        "arm": "rotation_4d"
+      }
+    },
+    {
+      "name": "unassigned_form",
+      "after": 12,
+      "error": "form assignment mismatch",
+      "record": {
+        "version": 1,
+        "kind": "visit",
+        "id": "post",
+        "enrollment": "synthetic-1",
+        "phase": "posttest",
+        "form": "A@2"
+      }
+    },
+    {
+      "name": "unknown_visit",
+      "after": 2,
+      "error": "foreign",
+      "record": {
+        "version": 1,
+        "kind": "slot",
+        "id": "a1",
+        "visit": "foreign",
+        "ordinal": 0,
+        "item": "baseline-turn@2",
+        "scorer": "coordinate@2"
+      }
+    },
+    {
+      "name": "reused_ordinal",
+      "after": 4,
+      "error": "duplicate slot ordinal",
+      "record": {
+        "version": 1,
+        "kind": "slot",
+        "id": "duplicate",
+        "visit": "base",
+        "ordinal": 0,
+        "item": "baseline-turn@2",
+        "scorer": "coordinate@2"
+      }
+    },
+    {
+      "name": "wrong_item",
+      "after": 2,
+      "error": "item mismatch",
+      "record": {
+        "version": 1,
+        "kind": "slot",
+        "id": "a1",
+        "visit": "base",
+        "ordinal": 0,
+        "item": "held-out-pivot@2",
+        "scorer": "coordinate@2"
+      }
+    },
+    {
+      "name": "wrong_scorer",
+      "after": 2,
+      "error": "scorer mismatch",
+      "record": {
+        "version": 1,
+        "kind": "slot",
+        "id": "a1",
+        "visit": "base",
+        "ordinal": 0,
+        "item": "baseline-turn@2",
+        "scorer": "coordinate@1"
+      }
+    },
+    {
+      "name": "boolean_coordinate",
+      "after": 6,
+      "error": "invalid response",
+      "record": {
+        "version": 1,
+        "kind": "attempt",
+        "id": "answer-1",
+        "slot": "a1",
+        "response": [
+          true,
+          5,
+          1,
+          2
+        ],
+        "latency_ms": 700
+      }
+    },
+    {
+      "name": "wrong_attempt_link",
+      "after": 18,
+      "error": "attempt link",
+      "record": {
+        "version": 1,
+        "kind": "outcome",
+        "slot": "b1",
+        "status": "submitted",
+        "attempt": "answer-1"
+      }
+    },
+    {
+      "name": "duplicate_attempt",
+      "after": 7,
+      "error": "duplicate attempt",
+      "record": {
+        "version": 1,
+        "kind": "attempt",
+        "id": "duplicate",
+        "slot": "a1",
+        "response": [
+          -3,
+          5,
+          1,
+          2
+        ],
+        "latency_ms": 700
+      }
+    },
+    {
+      "name": "conflicting_retry",
+      "after": 25,
+      "error": "conflicting retry",
+      "record": {
+        "version": 1,
+        "kind": "attempt",
+        "id": "answer-1",
+        "slot": "a1",
+        "response": [
+          -3,
+          5,
+          1,
+          2
+        ],
+        "latency_ms": 999
+      }
+    },
+    {
+      "name": "missing_assigned_slot",
+      "after": 4,
+      "error": "incomplete slot assignment",
+      "record": {
+        "version": 1,
+        "kind": "close_visit",
+        "visit": "base",
+        "status": "completed"
+      }
+    },
+    {
+      "name": "missing_outcome",
+      "after": 8,
+      "error": "missing outcome",
+      "record": {
+        "version": 1,
+        "kind": "close_visit",
+        "visit": "base",
+        "status": "completed"
+      }
+    },
+    {
+      "name": "expired_with_answers",
+      "after": 9,
+      "error": "visit outcome mismatch",
+      "record": {
+        "version": 1,
+        "kind": "close_visit",
+        "visit": "base",
+        "status": "expired"
+      }
+    },
+    {
+      "name": "raw_payload",
+      "after": 8,
+      "error": "record fields",
+      "record": {
+        "version": 1,
+        "kind": "outcome",
+        "slot": "a2",
+        "status": "invalid",
+        "attempt": null,
+        "raw_payload": "synthetic"
+      }
+    },
+    {
+      "name": "unknown_version",
+      "after": 0,
+      "error": "version",
+      "record": {
+        "version": 2,
+        "kind": "assignment",
+        "enrollment": "synthetic-1",
+        "protocol": "fixture@2",
+        "sequence": "AB"
+      }
+    },
+    {
+      "name": "outcome_without_presentation",
+      "after": 5,
+      "error": "missing presentation",
+      "record": {
+        "version": 1,
+        "kind": "outcome",
+        "slot": "a2",
+        "status": "invalid",
+        "attempt": null
+      }
+    },
+    {
+      "name": "unpresented_after_presentation",
+      "after": 6,
+      "error": "presented slot",
+      "record": {
+        "version": 1,
+        "kind": "outcome",
+        "slot": "a2",
+        "status": "unpresented",
+        "attempt": null
+      }
+    },
+    {
+      "name": "presentation_after_unpresented",
+      "after": 24,
+      "error": "terminal slot",
+      "record": {
+        "version": 1,
+        "kind": "presentation",
+        "slot": "c1"
+      }
+    }
+  ]
+}

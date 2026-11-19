@@ -150,6 +150,13 @@ documentation/priority decision, not approval to deploy a study or backend.
 - [ ] P3: specify pre/post and held-out transfer assessments, a feasible
   comparison/control, retention, reproducible items and scoring before
   designing participant events. Build the smallest assessment task slice.
+  Review the [draft measurement contract](plans/assessment_measurement_contract.md)
+  and synthetic scoring fixtures before deriving the P4 storage contract.
+  E3 defaults and record boundaries approved. Calibration thresholds remain
+  provisional. Review the [E4 logical assessment storage contract](plans/e4_assessment_storage_contract.md)
+  and synthetic conformance for the local assessment slice. The approved
+  defaults are implemented in [local PostgreSQL](plans/e4_local_postgresql.md).
+  Identity-provider integration, deployment and client journaling remain open.
 - [ ] P4: implement pseudonymous research identity, optional player accounts,
   local event buffering, versioned storage, idempotent ingestion, privacy,
   export/deletion and independent session reconstruction. The non-technical
