@@ -19,6 +19,7 @@ FIELDS = {
     "attempt": ("id", "slot", "response", "latency_ms"),
     "outcome": ("slot", "status", "attempt"),
     "close_visit": ("visit", "status"),
+    "withdrawal": ("enrollment",),
 }
 INTEGER_FIELDS = {"ordinal", "active_ms", "examples", "latency_ms"}
 
@@ -33,6 +34,10 @@ class _Ledger:
         self.visits_by_phase = {}
         self.slots_by_visit = {}
         self.attempts_by_slot = {}
+
+    def _enrollment_of_slot(self, slot):
+        visit = self.records["slot"][slot]["visit"]
+        return self.records["visit"][visit]["enrollment"]
 
     def accept(self, record):
         kind = record["kind"]
@@ -110,6 +115,9 @@ class _Ledger:
     def _attempt(self, record):
         slot = record["slot"]
         self.records["slot"][slot]
+        assert self._enrollment_of_slot(slot) not in self.records["withdrawal"], (
+            "withdrawn enrollment"
+        )
         assert slot not in self.records["outcome"], "terminal slot"
         assert slot not in self.attempts_by_slot, "duplicate attempt"
         response = record["response"]
@@ -144,9 +152,16 @@ class _Ledger:
             "completed": {"submitted", "invalid"},
             "expired": {"unpresented"},
             "interrupted": {"submitted", "invalid", "interrupted", "unpresented"},
+            "withdrawn": {"submitted", "invalid", "interrupted", "unpresented"},
         }
+        if record["status"] == "withdrawn":
+            enrollment = self.records["visit"][visit]["enrollment"]
+            assert enrollment in self.records["withdrawal"], "withdrawal missing"
         statuses = {outcomes[slot]["status"] for slot in slots.values()}
         assert statuses <= allowed[record["status"]], "visit outcome mismatch"
+
+    def _withdrawal(self, record):
+        assert record["enrollment"] in self.records["assignment"], "unknown enrollment"
 
 
 def _load(records):
@@ -178,3 +193,28 @@ def test_e4_rejects_nonconforming_records(case):
     ledger = _load(FIXTURE["records"][: case["after"]])
     with pytest.raises((AssertionError, KeyError), match=case["error"]):
         ledger.accept(case["record"])
+
+
+def _record(kind, **fields):
+    return {"version": 1, "kind": kind, **fields}
+
+
+def test_e4_withdrawal_closes_open_visit_as_withdrawn():
+    ledger = _load(FIXTURE["records"][:15])
+    ledger.accept(_record("outcome", slot="b2", status="interrupted", attempt=None))
+    with pytest.raises(AssertionError, match="withdrawal missing"):
+        ledger.accept(_record("close_visit", visit="post", status="withdrawn"))
+    ledger.accept(_record("withdrawal", enrollment="synthetic-1"))
+    ledger.accept(_record("close_visit", visit="post", status="withdrawn"))
+    assert ledger.records["close_visit"]["post"]["status"] == "withdrawn"
+
+
+def test_e4_rejects_attempts_after_withdrawal():
+    ledger = _load(FIXTURE["records"][:13])
+    ledger.accept(_record("withdrawal", enrollment="synthetic-1"))
+    with pytest.raises(AssertionError, match="withdrawn enrollment"):
+        ledger.accept(
+            _record(
+                "attempt", id="late", slot="b2", response=[0, 0, 0, 1], latency_ms=5
+            )
+        )

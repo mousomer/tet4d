@@ -1,7 +1,7 @@
 # E4 assessment storage contract v1
 
-Role: contract draft  
-Status: local synthetic implementation  
+Role: contract draft
+Status: local synthetic implementation
 Source: [approved E3 record boundaries](assessment_measurement_contract.md) and
 [participant-platform implementation plan](participant_data_platform_implementation.md)
 
@@ -43,7 +43,8 @@ must follow the registry contract. The fixture uses opaque registry references.
 | `exposure` | `enrollment`, `activity`, `active_ms`, `examples` | One coarse practice summary after allocation, including explicit zero exposure when known. Missing summary means unknown. Activity may differ from assigned arm. |
 | `attempt` | `id`, `slot`, `response`, `latency_ms` | One immutable valid submission per slot. Response is exactly four signed 32-bit integer coordinates in X, Y, Z, W order. Latency is nonnegative elapsed monotonic time from usable stimulus to submission. |
 | `outcome` | `slot`, `status`, `attempt` | One terminal outcome per slot. `submitted` must link to its own attempt. `invalid`, `interrupted`, and `unpresented` carry a null attempt. |
-| `close_visit` | `visit`, `status` | One terminal visit status: `completed`, `interrupted`, or `expired`. Require a complete assigned-slot manifest and explicit outcomes. An expired visit has only unpresented slots. A completed visit allows submitted or invalid slots. An interrupted visit may include any supported slot outcome. |
+| `close_visit` | `visit`, `status` | One terminal visit status: `completed`, `interrupted`, `expired` or `withdrawn`. Require a complete assigned-slot manifest and explicit outcomes. An expired visit has only unpresented slots. A completed visit allows submitted or invalid slots. An interrupted or withdrawn visit may include any supported slot outcome. `withdrawn` requires the enrollment's withdrawal record. |
+| `withdrawal` | `enrollment` | One immutable withdrawal. It carries no account identity. It stops collection immediately and closes every open visit as `withdrawn`, so attrition can be reconstructed from study records alone. |
 
 Unknown record fields, versions and kinds are rejected. Ordinals, durations
 and example counts are nonnegative integers. Booleans are not integers.
@@ -173,3 +174,20 @@ interoperability. Reconstruct never-assigned, unresolved, expired, and
 interrupted visits distinctly. Require a migration test against the
 supported prior schema when one exists. These checks are required for
 implementation evidence. The ledger tests continue to cover logical shape.
+
+## Local implementation (review fixes, 2026-11-19)
+
+The local slice implements these rules as PostgreSQL functions, specified in
+[the participant data platform architecture](../architecture/participant_data_platform.md).
+Review fixes changed four details of the defaults above:
+
+- The account link lives in a private schema that study readers cannot
+  reach. Study records carry no principal.
+- Interrupted closure waits for the offline grace period unless every slot
+  already has an outcome. New outcomes after closure return `visit_closed`,
+  distinct from `conflict`.
+- Expiry is allowed while no slot has been presented, even if the visit
+  started. A presented slot makes `interrupted` the only abandonment closure.
+- Client observation times use one canonical form,
+  `YYYY-MM-DDTHH:MM:SS.sssZ`, so equal instants produce equal digests.
+  Exposure activities are protocol data, not a fixed list.

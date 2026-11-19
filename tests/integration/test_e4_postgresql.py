@@ -1,4 +1,9 @@
-"""Synthetic integration against a disposable PostgreSQL database."""
+"""Synthetic integration against a disposable PostgreSQL database.
+
+Every call goes through the `assessment_api` functions as the role a real
+caller would hold (assessment_ingest or assessment_operator), so the grants
+are exercised, not bypassed by the owner.
+"""
 
 import json
 import os
@@ -18,14 +23,15 @@ if not DSN:
     )
 
 import psycopg
-
-from tet4d.participant_data import lifecycle
-from tet4d.participant_data.http import application
-from tet4d.participant_data.ingestion import IngestError, ingest
+from e4_harness import operations
+from e4_harness.edge import IngestError, application, connect, ingest
+from psycopg.types.json import Jsonb
 
 ROOT = Path(__file__).resolve().parents[2]
 MIGRATION = ROOT / "migration" / "participant_data" / "001_assessment.sql"
 FIXTURE = ROOT / "tests" / "unit" / "research" / "fixtures" / "e4_storage_v1.json"
+PROTOCOL = "fixture@2"
+GRACE_SECONDS = 60
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -37,7 +43,9 @@ def database():
         ).fetchone()[0], "Use an empty disposable database"
         connection.execute(MIGRATION.read_text(encoding="utf-8"))
     with psycopg.connect(DSN) as connection:
-        connection.execute("INSERT INTO assessment.protocol VALUES ('fixture@1', 60)")
+        connection.execute(
+            "INSERT INTO assessment.protocol VALUES (%s, %s)", (PROTOCOL, GRACE_SECONDS)
+        )
         for item, scorer in manifest["items"].items():
             connection.execute(
                 "INSERT INTO assessment.item VALUES (%s, %s, %s, sha256(%s::bytea), %s)",
@@ -50,21 +58,28 @@ def database():
                     "INSERT INTO assessment.form_item VALUES (%s, %s, %s)",
                     (form, ordinal, item),
                 )
-        protocol = manifest["protocols"]["fixture@1"]
+        protocol = manifest["protocols"][PROTOCOL]
         for sequence, visits in protocol["sequences"].items():
             for phase, form in visits.items():
                 connection.execute(
-                    "INSERT INTO assessment.protocol_visit VALUES ('fixture@1', %s, %s, %s)",
-                    (sequence, phase, form),
+                    "INSERT INTO assessment.protocol_visit VALUES (%s, %s, %s, %s)",
+                    (PROTOCOL, sequence, phase, form),
                 )
         for arm in protocol["arms"]:
             connection.execute(
-                "INSERT INTO assessment.protocol_arm VALUES ('fixture@1', %s)", (arm,)
+                "INSERT INTO assessment.protocol_arm VALUES (%s, %s)", (PROTOCOL, arm)
+            )
+        for activity in protocol["activities"]:
+            connection.execute(
+                "INSERT INTO assessment.protocol_activity VALUES (%s, %s)",
+                (PROTOCOL, activity),
             )
 
 
-def _query(sql, *params):
+def _query(sql, *params, role=None):
     with psycopg.connect(DSN) as connection:
+        if role:
+            connection.execute(f"SET ROLE {role}")
         return connection.execute(sql, params).fetchall()
 
 
@@ -77,19 +92,28 @@ def _slots(visit):
     ]
 
 
-def _baseline(*, start=True):
-    enrollment, principal = uuid4(), uuid4()
+def _utc(moment):
+    """Canonical wire form: millisecond precision, Z suffix."""
+    moment = moment.astimezone(UTC)
+    return moment.strftime("%Y-%m-%dT%H:%M:%S.") + f"{moment.microsecond // 1000:03d}Z"
+
+
+def _past_window():
     now = datetime.now(UTC)
-    window = (now - timedelta(hours=2), now - timedelta(hours=1))
-    visit = lifecycle.assign_baseline(
-        DSN, enrollment, principal, "fixture@1", "AB", window
+    return now - timedelta(hours=2), now - timedelta(hours=1)
+
+
+def _baseline(*, start=True, window=None):
+    enrollment, principal = uuid4(), uuid4()
+    visit = operations.assign_baseline(
+        DSN, enrollment, principal, PROTOCOL, "AB", window or _past_window()
     )
     if start:
-        lifecycle.start_visit(DSN, enrollment, visit, "synthetic-build")
+        operations.start_visit(DSN, enrollment, visit, "synthetic-build")
     return enrollment, principal, visit, _slots(visit)
 
 
-def _submit(slot):
+def _submit(slot, observed_at=None):
     return {
         "id": str(uuid4()),
         "kind": "submit",
@@ -97,7 +121,7 @@ def _submit(slot):
         "attempt": str(uuid4()),
         "response": [-3, 5, 1, 2],
         "latency_ms": 700,
-        "observed_at": None,
+        "observed_at": observed_at,
     }
 
 
@@ -108,6 +132,16 @@ def _outcome(slot, status="invalid"):
         "slot": str(slot),
         "status": status,
         "observed_at": None,
+    }
+
+
+def _exposure(activity="none", active_ms=0, examples=0):
+    return {
+        "id": str(uuid4()),
+        "kind": "exposure",
+        "activity": activity,
+        "active_ms": active_ms,
+        "examples": examples,
     }
 
 
@@ -130,21 +164,48 @@ def _windows():
 
 def _complete_baseline(enrollment, principal, visit, slots):
     _send(principal, enrollment, _submit(slots[0]), _outcome(slots[1]))
-    lifecycle.close_visit(DSN, enrollment, visit, "completed")
+    operations.close_visit(DSN, enrollment, visit, "completed")
 
 
-def test_replay_after_closure_and_revocation():
+def _allocated():
+    enrollment, principal, visit, slots = _baseline()
+    _complete_baseline(enrollment, principal, visit, slots)
+    followups = operations.allocate(
+        DSN, enrollment, "rotation_4d", eligible=True, follow_up_windows=_windows()
+    )
+    return enrollment, principal, followups
+
+
+def _outcomes(slots):
+    return [
+        status
+        for (status,) in _query(
+            "SELECT o.status FROM assessment.outcome o JOIN assessment.slot s ON s.id = o.slot"
+            " WHERE o.slot = ANY(%s) ORDER BY s.ordinal",
+            slots,
+        )
+    ]
+
+
+def _closure(visit):
+    return _query("SELECT status FROM assessment.visit_close WHERE visit = %s", visit)
+
+
+# Behaviour carried over from the original slice -------------------------------
+
+
+def test_replay_after_closure_and_withdrawal():
     enrollment, principal, visit, slots = _baseline()
     command = _submit(slots[0])
     receipt = _send(principal, enrollment, command)
     _send(principal, enrollment, _outcome(slots[1]))
-    lifecycle.close_visit(DSN, enrollment, visit, "completed")
+    operations.close_visit(DSN, enrollment, visit, "completed")
     assert (
         _send(principal, enrollment, dict(reversed(list(command.items())))) == receipt
     )
     with pytest.raises(IngestError, match="conflict"):
         _send(principal, enrollment, command | {"latency_ms": 900})
-    lifecycle.revoke(DSN, enrollment)
+    operations.withdraw(DSN, enrollment)
     with pytest.raises(IngestError, match="authorization_failure"):
         _send(principal, enrollment, command)
 
@@ -171,67 +232,47 @@ def test_enrollment_isolation_and_missing_dependency():
         _send(foreign_principal, enrollment, _submit(slots[0]))
     with pytest.raises(IngestError, match="missing_dependency"):
         _send(principal, enrollment, _submit(foreign_slots[0]))
-    exposure = {
-        "id": str(uuid4()),
-        "kind": "exposure",
-        "activity": "none",
-        "active_ms": 0,
-        "examples": 0,
-    }
     with pytest.raises(IngestError, match="missing_dependency"):
-        _send(foreign_principal, foreign_enrollment, exposure)
+        _send(foreign_principal, foreign_enrollment, _exposure())
 
 
 def test_allocation_followups_expiry_and_reconciliation():
     enrollment, principal, visit, slots = _baseline()
     with pytest.raises(IngestError, match="ineligible_baseline"):
-        lifecycle.allocate(
+        operations.allocate(
             DSN, enrollment, "rotation_4d", eligible=True, follow_up_windows=_windows()
         )
     _complete_baseline(enrollment, principal, visit, slots)
     windows = _windows()
-    followups = lifecycle.allocate(
+    followups = operations.allocate(
         DSN, enrollment, "rotation_4d", eligible=True, follow_up_windows=windows
     )
     retention = followups["retention"]
     with pytest.raises(IngestError, match="invalid_expiry"):
-        lifecycle.close_visit(DSN, enrollment, retention, "expired")
-    assert (
-        _query("SELECT status FROM assessment.visit_close WHERE visit = %s", retention)
-        == []
-    )
+        operations.close_visit(DSN, enrollment, retention, "expired")
+    assert _closure(retention) == []
     posttest = followups["posttest"]
-    lifecycle.start_visit(DSN, enrollment, posttest, "synthetic-build")
+    operations.start_visit(DSN, enrollment, posttest, "synthetic-build")
     answered, abandoned = _slots(posttest)
-    lifecycle.mark_slot_presented(DSN, enrollment, abandoned)
-    during_window = windows["posttest"][0].isoformat().replace("+00:00", "Z")
-    command = _submit(answered) | {"observed_at": during_window}
+    operations.mark_slot_presented(DSN, enrollment, abandoned)
+    opens, closes = windows["posttest"]
+    command = _submit(answered, _utc(opens + (closes - opens) / 2))
     receipt = _send(principal, enrollment, command)[0]
     assert receipt.received_at > windows["posttest"][1]
-    lifecycle.close_visit(DSN, enrollment, posttest, "interrupted")
+    operations.close_visit(DSN, enrollment, posttest, "interrupted")
     assert _query(
         "SELECT status, timing FROM assessment.outcome WHERE slot = %s", answered
     ) == [("submitted", "in_window")]
-    assert _query(
-        "SELECT status FROM assessment.outcome WHERE slot = %s", abandoned
-    ) == [("interrupted",)]
-    assert (
-        _query(
-            "SELECT status FROM assessment.outcome WHERE slot = %s",
-            _slots(retention)[0],
-        )
-        == []
-    )
+    assert _outcomes([abandoned]) == ["interrupted"]
+    assert _outcomes(_slots(retention)) == []
 
 
 def test_expired_baseline_has_unpresented_slots_and_cannot_allocate():
     enrollment, _, visit, slots = _baseline(start=False)
-    lifecycle.close_visit(DSN, enrollment, visit, "expired")
-    assert _query(
-        "SELECT status FROM assessment.outcome WHERE slot = ANY(%s)", slots
-    ) == [("unpresented",), ("unpresented",)]
+    operations.close_visit(DSN, enrollment, visit, "expired")
+    assert _outcomes(slots) == ["unpresented", "unpresented"]
     with pytest.raises(IngestError, match="ineligible_baseline"):
-        lifecycle.allocate(
+        operations.allocate(
             DSN, enrollment, "rotation_4d", eligible=True, follow_up_windows=_windows()
         )
 
@@ -272,9 +313,9 @@ def test_submit_races_with_finalization_under_same_lock(race_with):
 
     def finalize():
         if race_with == "close":
-            lifecycle.close_visit(DSN, enrollment, visit, "interrupted")
+            operations.close_visit(DSN, enrollment, visit, "interrupted")
         else:
-            lifecycle.revoke(DSN, enrollment)
+            operations.withdraw(DSN, enrollment)
 
     submission, finalization = _race(
         lambda: _send(principal, enrollment, command), finalize
@@ -285,7 +326,7 @@ def test_submit_races_with_finalization_under_same_lock(race_with):
         assert written == [(1,)]
     else:
         assert submission == (
-            "conflict" if race_with == "close" else "authorization_failure"
+            "visit_closed" if race_with == "close" else "authorization_failure"
         )
         assert not written
 
@@ -329,13 +370,188 @@ def test_http_uses_only_middleware_identity_and_returns_committed_receipt():
     assert statuses == ["401 Unauthorized", "200 OK", "200 OK"]
 
 
-def test_read_only_role_cannot_write_assessment_tables():
+# Roles and grants (finding 2) --------------------------------------------------
+
+
+def test_callers_can_only_use_their_granted_functions():
     with psycopg.connect(DSN) as connection:
-        connection.execute("SET LOCAL ROLE pg_read_all_data")
-        with (
-            pytest.raises(psycopg.errors.InsufficientPrivilege),
-            connection.transaction(),
-        ):
-            connection.execute(
-                "INSERT INTO assessment.protocol VALUES ('forbidden@1', 0)"
-            )
+        for role, statement in [
+            (
+                "research_reader",
+                "INSERT INTO assessment.protocol VALUES ('forbidden@1', 0)",
+            ),
+            ("assessment_ingest", "SELECT 1 FROM assessment.enrollment"),
+            ("assessment_operator", "SELECT 1 FROM assessment.enrollment"),
+            ("assessment_ingest", "SELECT assessment_api.withdraw(gen_random_uuid())"),
+            ("research_reader", "SELECT assessment_api.withdraw(gen_random_uuid())"),
+        ]:
+            with (
+                pytest.raises(psycopg.errors.InsufficientPrivilege),
+                connection.transaction(),
+            ):
+                connection.execute(f"SET LOCAL ROLE {role}")
+                connection.execute(statement)
+
+
+def test_sql_functions_validate_commands_without_the_adapter():
+    enrollment, principal, _, slots = _baseline()
+    command = _submit(slots[0]) | {"response": [1, 2, 3, 4.5]}
+    with (
+        connect(DSN, "assessment_ingest") as connection,
+        pytest.raises(psycopg.Error) as caught,
+    ):
+        connection.execute(
+            "SELECT * FROM assessment_api.ingest(%s, %s, %s, %s)",
+            (principal, enrollment, Jsonb([command]), [bytes(32)]),
+        )
+    assert caught.value.sqlstate == "T4001"
+
+
+# Finding 3: the account link stays out of the research schema --------------------
+
+
+def test_research_reader_cannot_reach_the_account_link():
+    assert (
+        _query(
+            "SELECT table_name FROM information_schema.columns"
+            " WHERE table_schema = 'assessment' AND column_name = 'principal'"
+        )
+        == []
+    )
+    with pytest.raises(psycopg.errors.InsufficientPrivilege):
+        _query(
+            "SELECT 1 FROM assessment_private.enrollment_access", role="research_reader"
+        )
+    enrollment, *_ = _baseline(start=False)
+    assert _query(
+        "SELECT count(*) FROM assessment.enrollment WHERE id = %s",
+        enrollment,
+        role="research_reader",
+    ) == [(1,)]
+
+
+# Finding 4: withdrawal ------------------------------------------------------------
+
+
+def test_withdrawal_closes_open_visits_and_keeps_attrition_reconstructible():
+    enrollment, principal, followups = _allocated()
+    posttest = followups["posttest"]
+    operations.start_visit(DSN, enrollment, posttest, "synthetic-build")
+    shown, unseen = _slots(posttest)
+    operations.mark_slot_presented(DSN, enrollment, shown)
+    operations.withdraw(DSN, enrollment)
+    operations.withdraw(DSN, enrollment)
+
+    assert _outcomes([shown, unseen]) == ["interrupted", "unpresented"]
+    assert _outcomes(_slots(followups["retention"])) == ["unpresented"]
+    attrition = _query(
+        "SELECT a.arm, v.phase, c.status, w.enrollment IS NOT NULL"
+        " FROM assessment.allocation a"
+        " JOIN assessment.visit v ON v.enrollment = a.enrollment"
+        " JOIN assessment.visit_close c ON c.visit = v.id"
+        " LEFT JOIN assessment.withdrawal w ON w.enrollment = a.enrollment"
+        " WHERE a.enrollment = %s ORDER BY v.opens_at",
+        enrollment,
+        role="research_reader",
+    )
+    assert attrition == [
+        ("rotation_4d", "baseline", "completed", True),
+        ("rotation_4d", "posttest", "withdrawn", True),
+        ("rotation_4d", "retention", "withdrawn", True),
+    ]
+    with pytest.raises(IngestError, match="authorization_failure"):
+        _send(principal, enrollment, _exposure())
+    with pytest.raises(IngestError, match="authorization_failure"):
+        operations.start_visit(DSN, enrollment, posttest, "synthetic-build")
+    with pytest.raises(IngestError, match="invalid_status"):
+        operations.close_visit(DSN, enrollment, posttest, "withdrawn")
+    assert _query(
+        "SELECT action FROM assessment_private.access_audit WHERE enrollment = %s ORDER BY id",
+        enrollment,
+    ) == [("grant",), ("revoke",)]
+
+
+# Finding 5: offline grace and late delivery ------------------------------------------
+
+
+def test_interrupted_close_waits_for_grace_and_keeps_late_deliveries():
+    now = datetime.now(UTC)
+    enrollment, principal, visit, slots = _baseline(
+        window=(now - timedelta(minutes=10), now - timedelta(seconds=1))
+    )
+    first, second = slots
+    operations.mark_slot_presented(DSN, enrollment, first)
+    _send(principal, enrollment, _submit(first))
+    with pytest.raises(IngestError, match="reconciliation_pending"):
+        operations.close_visit(DSN, enrollment, visit, "interrupted")
+
+    _send(principal, enrollment, _submit(second, _utc(datetime.now(UTC))))
+    assert _query("SELECT timing FROM assessment.outcome WHERE slot = %s", second) == [
+        ("after_window",)
+    ]
+    operations.close_visit(DSN, enrollment, visit, "interrupted")
+    assert _outcomes(slots) == ["submitted", "submitted"]
+    with pytest.raises(IngestError, match="visit_closed"):
+        _send(principal, enrollment, _outcome(second))
+
+
+# Finding 6: presentation and "unpresented" are exclusive --------------------------
+
+
+def test_presentation_and_unpresented_outcome_are_exclusive():
+    enrollment, principal, _, (first, second) = _baseline()
+    _send(principal, enrollment, _outcome(first, "unpresented"))
+    with pytest.raises(IngestError, match="conflict"):
+        operations.mark_slot_presented(DSN, enrollment, first)
+    operations.mark_slot_presented(DSN, enrollment, second)
+    with pytest.raises(IngestError, match="conflict"):
+        _send(principal, enrollment, _outcome(second, "unpresented"))
+    assert _query(
+        "SELECT count(*) FROM assessment.slot s JOIN assessment.outcome o ON o.slot = s.id"
+        " WHERE s.presented_at IS NOT NULL AND o.status = 'unpresented'"
+    ) == [(0,)]
+
+
+# Finding 7: stable error codes from trusted operations --------------------------------
+
+
+def test_double_allocation_is_a_stable_conflict():
+    enrollment, _, _ = _allocated()
+    with pytest.raises(IngestError, match="conflict"):
+        operations.allocate(
+            DSN, enrollment, "rotation_4d", eligible=True, follow_up_windows=_windows()
+        )
+
+
+# Minor items -----------------------------------------------------------------------
+
+
+def test_started_visit_with_nothing_presented_can_expire():
+    enrollment, _, visit, slots = _baseline()
+    operations.close_visit(DSN, enrollment, visit, "expired")
+    assert _closure(visit) == [("expired",)]
+    assert _outcomes(slots) == ["unpresented", "unpresented"]
+
+
+def test_observed_at_must_use_the_canonical_form():
+    enrollment, principal, _, (first, _) = _baseline()
+    for variant in (
+        "2026-11-19T10:00:00Z",
+        "2026-11-19T10:00:00.0Z",
+        "2026-11-19T10:00:00.000+00:00",
+    ):
+        with pytest.raises(IngestError, match="invalid_payload"):
+            _send(principal, enrollment, _submit(first, variant))
+    command = _submit(first, "2026-11-19T10:00:00.000Z")
+    assert _send(principal, enrollment, command) == _send(
+        principal, enrollment, command
+    )
+
+
+def test_exposure_activity_must_belong_to_the_protocol():
+    enrollment, principal, _ = _allocated()
+    with pytest.raises(IngestError, match="invalid_payload"):
+        _send(principal, enrollment, _exposure("rotation_5d", 10, 1))
+    with pytest.raises(IngestError, match="invalid_payload"):
+        _send(principal, enrollment, _exposure("none", 10, 0))
+    assert len(_send(principal, enrollment, _exposure("rotation_3d", 9000, 2))) == 1

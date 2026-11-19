@@ -1,1 +1,0 @@
-"""Local participant data services."""

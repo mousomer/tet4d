@@ -398,9 +398,6 @@ It is a public symbol skim for navigation, not full API documentation, and it do
 - `src/tet4d/engine/ui_logic/menu_graph_linter.py`: `MenuGraphIssue`, `lint_menu_graph()`
 - `src/tet4d/engine/ui_logic/menu_layout.py`: `LayoutRect`, `MenuLayoutZones`, `compute_menu_layout_zones(*, width, height, outer_pad, header_height, ...)`
 - `src/tet4d/engine/ui_logic/view_modes.py`: `GridMode`, `ShadowMode`, `cycle_grid_mode(mode)`, `grid_mode_label(mode)`, `shadow_mode_label(mode)`
-- `src/tet4d/participant_data/http.py`: `application(conninfo)`
-- `src/tet4d/participant_data/ingestion.py`: `IngestError(code)`, `Receipt`, `lock_enrollment(connection, enrollment)`, `ingest(conninfo, principal, enrollment, payload)`
-- `src/tet4d/participant_data/lifecycle.py`: `assign_baseline(conninfo, enrollment, principal, protocol, sequence, ...)`, `allocate(conninfo, enrollment, arm, *, eligible, ...)`, `start_visit(conninfo, enrollment, visit, client_build)`, `mark_slot_presented(conninfo, enrollment, slot)`, `close_visit(conninfo, enrollment, visit, status)`, `revoke(conninfo, enrollment)`
 - `src/tet4d/replay/__init__.py`: `play_replay_2d(script)`, `play_replay_nd_ticks(script)`, `record_replay_2d(*, config, seed, actions)`, `record_replay_nd_ticks(*, config, seed, ticks)`
 - `src/tet4d/replay/format.py`: `ReplayFormatError`, `ReplayEvent2D`, `ReplayScript2D`, `ReplayTickScriptND`
 - `src/tet4d/shared/nd_coords.py`: `coord_from_column(column, lateral_axes, gravity_axis, gravity_value, ...)`
@@ -560,7 +557,6 @@ Match labels are shown inline as `(exact)`, `(prefix)`, or `(fallback)`.
 - `src/tet4d/engine/tutorial/setup_apply.py`: `tests/unit/engine/test_tutorial_setup_apply.py` (fallback)
 - `src/tet4d/engine/ui_logic/menu_layout.py`: `tests/unit/engine/test_menu_layout.py` (exact)
 - `src/tet4d/generated/board_extent_contract_v1.py`: `tests/unit/governance/test_generate_board_extent_contract.py` (fallback)
-- `src/tet4d/participant_data/lifecycle.py`: `tests/unit/engine/test_lifecycle_rules.py` (prefix)
 - `src/tet4d/ui/pygame/endgame_animation.py`: `tests/unit/engine/test_endgame_animation.py` (exact)
 - `src/tet4d/ui/pygame/front2d_setup.py`: `tests/unit/engine/test_front2d_setup.py` (exact)
 - `src/tet4d/ui/pygame/front4d_render.py`: `tests/unit/engine/test_front4d_render.py` (exact)

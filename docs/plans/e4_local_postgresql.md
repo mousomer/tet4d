@@ -1,20 +1,27 @@
 # E4 local PostgreSQL slice
 
 The [E4 contract](e4_assessment_storage_contract.md) defines the logical
-records. This slice maps them to typed tables and a synchronous ingestion
-service with a WSGI endpoint. It is for a disposable database with synthetic data. Apply
-`migration/participant_data/001_assessment.sql` as the database owner.
-Install `migration/participant_data/requirements.txt` for Psycopg and RFC
-8785 canonical serialization. The game does not import these local service
-dependencies.
+records. `migration/participant_data/001_assessment.sql` implements them as
+typed tables and PL/pgSQL entry points, described in the
+[platform architecture](../architecture/participant_data_platform.md). It is
+for a disposable database with synthetic data only. The game does not depend
+on it.
 
-The WSGI factory is `tet4d.participant_data.http.application(conninfo)`.
-POST UTF-8 JSON to `/v1/assessment/enrollments/{enrollment}/commands`
-with `{"version":1,"commands":[...]}`. Trusted authentication middleware
-sets `tet4d.verified_principal` to a verified UUID in the WSGI environment.
-Headers and payload fields cannot provide this identity. The service can
-also be called directly via `tet4d.participant_data.ingestion.ingest`.
-A command carries a canonical UUID `id` and one of these shapes.
+Apply the migration as a role that can create roles and schemas. It creates
+four NOLOGIN roles if they are missing (`assessment_owner`,
+`assessment_ingest`, `assessment_operator`, `research_reader`) and builds every
+object as `assessment_owner`. Provision synthetic manifest rows (protocol,
+items, forms, protocol visits, arms and activities) as the database owner.
+A deployment must supply verified authentication, login roles that are members
+of the caller roles, and a reviewed host decision before exposing anything
+remotely.
+
+`tests/integration/e4_harness/` is the test-only edge adapter. `edge.ingest`
+and the WSGI factory `edge.application(conninfo)` accept
+`POST /v1/assessment/enrollments/{enrollment}/commands` with
+`{"version":1,"commands":[...]}`. Trusted authentication middleware sets
+`tet4d.verified_principal` to a verified UUID; headers and payload fields
+cannot provide identity. `operations` wraps the trusted study calls.
 
 | Kind | Other fields |
 | --- | --- |
@@ -22,29 +29,16 @@ A command carries a canonical UUID `id` and one of these shapes.
 | `outcome` | `slot`, `status` (invalid, interrupted or unpresented), nullable `observed_at` |
 | `exposure` | `activity`, `active_ms`, `examples` |
 
-Use an ISO 8601 UTC timestamp ending in Z for known observations. Timing
-classification uses the client-reported observation and remains distinct
-from server receipt. A successful response carries each command ID, digest
-and original durable receipt timestamp. Provision synthetic access and
-immutable manifest rows through the database owner. A deployment must
-supply verified authentication and restricted service grants before exposing
-this entry point remotely. The client command envelope carries no principal
-or account ID. Trusted callers own scheduling, eligibility, and the
-randomization decision. PostgreSQL serializes writes, finalization and
-revocation on the enrollment row. Receipt timestamps measure ingestion and
-client UTC observations are declared separately from monotonic latency.
-Calibration thresholds and scheduling windows remain protocol inputs.
+`observed_at` is null or exactly `YYYY-MM-DDTHH:MM:SS.sssZ`. Calibration
+thresholds and scheduling windows remain protocol inputs.
 
-Run integration tests against an **empty, disposable PostgreSQL database**
-using `TET4D_E4_TEST_DSN` and the optional dependencies. The local test
-role needs schema creation and permission to assume `pg_read_all_data`. The suite refuses a
-database that already has an assessment schema and leaves its synthetic
-records in the disposable database. A regular repository test run skips
-these tests when no DSN is supplied.
+## Running the integration suite
 
-Run the synthetic suite with:
+Use an **empty, disposable** database. The suite refuses a database that
+already has the `assessment` schema and leaves its synthetic records behind.
+Without `TET4D_E4_TEST_DSN` a normal test run skips it.
 
 ```sh
 python -m pip install -r migration/participant_data/requirements.txt
-TET4D_E4_TEST_DSN='<disposable PostgreSQL connection string>'   python -m pytest tests/integration/test_e4_postgresql.py
+TET4D_E4_TEST_DSN='<disposable PostgreSQL connection string>' python -m pytest tests/integration/test_e4_postgresql.py
 ```

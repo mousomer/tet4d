@@ -1,8 +1,8 @@
 # E3 assessment measurement contract
 
-Role: specification draft  
-Status: proposed for research and product review  
-Updated: 2026-11-19  
+Role: specification draft
+Status: proposed for research and product review
+Last updated: 2026-11-19
 Parent authority: [Spatial Intuition Research Plan, E3](spatial_intuition_research_plan.md#e3--assessment-instrument-and-study-protocol)
 
 ## First instrument slice
