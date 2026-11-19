@@ -125,12 +125,14 @@ Target logical tables (create by stage, not all in PR 1):
 | --- | --- |
 | `public.player_profiles` | `user_id` FK to `auth.users` PK, created/updated; no custom password |
 | `public.sessions` | `session_id` UUID PK, `user_id` FK, mode/activity, start/end, status, recording level, build/collector/config versions, validated setup JSON |
-| `public.session_summaries` | `session_id` PK FK, revision, aggregate JSONB, content digest, sealed flag |
+| `public.session_summaries` | (`session_id` FK, `revision`) PK, aggregate JSONB, content digest, received_at; every received revision is kept and none is overwritten |
+| `public.session_summary_heads` | `session_id` PK FK, current `revision` FK, sealed flag; the only row that changes when a newer revision is accepted |
 | `public.assessment_attempts` | immutable `attempt_id` UUID PK, session FK, `item_id`+`version`, stimulus digest, response, outcome, timing, scoring version |
 | `public.assessment_items` | unique `item_id`+`version`, task/domain, frozen stimulus reference or generator/seed, rubric/digest |
 | `public.ability_estimates` | player FK, domain, model version, input-set digest, estimate/uncertainty, computed_at |
 | `research.studies` | study ID, approved protocol version/status, task-set refs |
-| `research.participants` | random participant ID; restricted account mapping |
+| `research.participants` | random participant ID; no account identifier |
+| `research_private.account_links` | participant ID ↔ `auth.users.id`; reachable only by the service role, every read logged in `research.access_audit`; never joined in researcher queries or exports |
 | `research.enrollments` | participant, study, condition, eligibility, status, approval provenance |
 | `research.permission_records` | purpose, notice/protocol version, decision/legal-basis record, effective_at, withdrawal |
 | `research.trace_manifests` | session FK, enrollment, contiguous sequence range, hash, size, object path, verification state |
@@ -138,7 +140,7 @@ Target logical tables (create by stage, not all in PR 1):
 
 **Indexes:** sessions on (`user_id`, `started_at`); attempts on (`session_id`, `item_id`); ability history on (`user_id`, `domain`, `computed_at`); research manifests on (`session_id`, `first_seq`). Add query indexes only with measured evidence. Direct client writes to protected research/attempt records must be denied.
 
-**Idempotency:** `session_id` identifies a session; `attempt_id` an immutable answer; summary pair (`session_id`, `revision`) identifies a revision; trace segment is (`session_id`, `first_seq`, `last_seq`, content hash). Identical replays acknowledge; same identity with different payload rejects and audits; overlapping conflicting trace ranges reject. Preserve old received revisions for integrity or an auditable digest chain; a sealed summary is immutable.
+**Idempotency:** `session_id` identifies a session; `attempt_id` an immutable answer; summary pair (`session_id`, `revision`) identifies a revision; trace segment is (`session_id`, `first_seq`, `last_seq`, content hash). Identical replays acknowledge; same identity with different payload rejects and audits; overlapping conflicting trace ranges reject. Old received revisions stay in `session_summaries`; accepting a newer revision only moves the pointer in `session_summary_heads`, and a revision lower than the current head is rejected. Once a head is sealed, no further revision is accepted.
 
 Versioned session envelope MUST contain: activity/dimension, canonical board extents, topology space/construction/profile IDs (where applicable), build/commit + gameplay contract, collector + input-control version, seed, camera/basis/slice/presentation state needed for assessment, recording level, task/study ID when applicable, client monotonic timing and UTC timestamp provenance. The server assigns its own receipt times. Never infer topology IDs from display labels; camera is not a native gameplay hash.
 
@@ -167,9 +169,9 @@ Integration ownership to inspect before coding:
 
 Do not add HTTP, scoring, or filesystem writes directly to the large app controller. Provide narrow signals/callbacks at existing authoritative post-action seams. New UI should reuse cockpit style/navigation, not invent a separate menu framework.
 
-Use `user://participant_data/` with versioned record files and checksums. Design atomic append/segment replacement, crash-tail recovery, bounded memory, journal compaction after verified ACK, migration of old local schema, protection against duplicate session imports, and disk-full behavior. Confirm durability guarantees on actual Windows/macOS/Linux builds; Godot file closure alone must not be claimed as crash-proof without tests.
+Use `user://participant_data/` with versioned record files and checksums. Design atomic append/segment replacement, crash-tail recovery, bounded memory, journal compaction after verified ACK, migration of old local schema, protection against duplicate session imports, and disk-full behavior. Confirm durability guarantees on actual builds for each release platform, in the programme's order (currently Windows → Linux → Android tablets; macOS once its packaging is scheduled). Android needs its own evidence: the OS may stop the app at any moment without a clean shutdown, so recovery must never depend on an orderly exit. Godot file closure alone must not be claimed as crash-proof without tests.
 
-**Authentication token safety:** do not put privileged keys in clients. The public Supabase project URL and publishable key are not service credentials, but tokens still require protection. Persist a long-lived refresh token only if the target platform has an approved secure-storage adapter; otherwise require login again across launches. Server never trusts a local flag for identity or study authorization.
+**Authentication token safety:** do not put privileged keys in clients. The public Supabase project URL and publishable key are not service credentials, but tokens still require protection. Persist a long-lived refresh token only if the target platform has an approved secure-storage adapter (OS credential store on desktop; an Android Keystore-backed adapter, which Godot does not provide natively and needs a plugin); otherwise require login again across launches. Server never trusts a local flag for identity or study authorization.
 
 ## 7. Hosted API and authorization
 
@@ -185,6 +187,7 @@ One authenticated Edge Function, `participant-api`, with modular handlers. Versi
 | POST | `/v1/sessions/{id}/close` | Seal session, completeness status |
 | GET | `/v1/me/progress` | Paginated own history/derived measures |
 | POST | `/v1/studies/{id}/enroll` | Controlled participant enrollment; no client-selected condition |
+| POST | `/v1/studies/{id}/withdraw` | Record withdrawal as a new `research.permission_records` row, effective before the next upload check; idempotent; response states the retention rule that applies to already-received data. Withdrawal is not deletion |
 | POST | `/v1/me/export-requests` | Personal export job with authenticated delivery |
 | POST | `/v1/me/deletion-requests` | Account/research deletion request workflow |
 
@@ -210,7 +213,9 @@ Session creation/closure and attempts are server-authoritative receipts of clien
 7. Retry transient errors with bounded exponential backoff+jitter and connectivity recovery; surface persistent failures.
 8. On restart, recover journal and retry exactly the same IDs/content. A crash between server commit and local ACK is expected and must not duplicate data.
 9. Out-of-order arrival may be buffered/manifested, but finalized research traces must have verified contiguous sequence coverage or an explicit incomplete status.
-10. On withdrawal or account sign-out, stop new privileged uploads and apply the required discard/retention rule to queued sensitive records.
+10. Every journal record carries the account (or guest) it belongs to, fixed when it is written. Records are uploaded only while that same account is signed in and never under another account.
+11. On sign-out, stop uploading and keep the account's queued records; resume when the same account signs in again. Discard queued L0–L2 records only when the player explicitly chooses to.
+12. On withdrawal or lost research authorization, stop L3 uploads immediately and apply the study's discard/retention rule to queued research records. Ordinary L1/L2 progress for the account is unaffected.
 
 No fake "offline synchronization succeeded" state; show local-only, pending, synced or error. Causal order inside a single task must be preserved. Timestamps alone do not determine sequence order.
 
@@ -296,15 +301,15 @@ When PR 1/2 may start relative to other work is set by `professional_godot_game_
 | Gameplay isolation | Same seed + actions yield identical gameplay snapshots and hashes with recording on/off in 2D/3D/4D |
 | Explorer isolation | Object/camera/basis/slice operations retain existing semantics including non-bounded cases; reject taxonomy errors |
 | Local durability | Disk failure, truncation, process interruption and restart; accepted committed records recovered or explicitly incomplete |
-| Sync | Offline 24h equivalent, reconnect, unordered uploads, duplicate ACK, mismatched digest, account switch |
-| Security | Guest/owner/foreign user, expired auth, role escalation, injection/oversized payload, private object URL denial |
-| Research permission | No L3 without authorization; withdrawal before queued upload; consent/protocol version mismatch |
+| Sync | Offline 24h equivalent, reconnect, unordered uploads, duplicate ACK, mismatched digest, account switch (queued records never upload under the new account), sign-out then same-account sign-in resumes the queue |
+| Security | Guest/owner/foreign user, expired auth, role escalation, injection/oversized payload, private object URL denial, researcher role cannot read `research_private.account_links` or join a participant to an account |
+| Research permission | No L3 without authorization; withdrawal through `/v1/studies/{id}/withdraw` before queued upload; repeated withdrawal is idempotent; withdrawal leaves L1/L2 progress intact; consent/protocol version mismatch |
 | Contract evolution | Older supported build/version; unknown fields; invalid topology IDs; explicit incompatible version handling |
 | Task scoring | Frozen stimuli, scored answers, expected error classes, replay, attempts immutable; holdout separation |
 | Volume/performance | Representative 30-min activity, bursty input, memory cap, bytes/session, no frame/input-loop blocking |
 | Research reproducibility | Export+recompute from identical fixtures independent of original client/server |
 | Operations | Backup/restore both database and objects, orphan reconciliation, retention/deletion, cost alert |
-| Platform | Human review on supported desktop platforms; no release readiness inferred from headless CI |
+| Platform | Human review on each release platform in programme order (Windows → Linux → Android tablets), including journal recovery after the OS stops the app on Android; no release readiness inferred from headless CI |
 
 Required gates:
 
@@ -328,7 +333,7 @@ The following must be resolved at their stated gates rather than guessed:
 
 1. Which exact assessment items/forms and primary endpoints will be valid for novice 4D participants? **Before PR 1 closes / before PR 5 implementation.**
 2. Which research permission/legal-basis model and retention/deletion schedules apply, especially to minors? **Before live recruitment.**
-3. Whether approved OS credential stores are available on each supported distribution; otherwise reauthenticate rather than insecurely persist tokens. **Before PR 4 release.**
+3. Whether approved credential stores are available on each release platform (desktop OS stores; an Android Keystore plugin for Godot); otherwise reauthenticate rather than insecurely persist tokens. **Before PR 4 release.**
 4. Detailed L3 traces required to reconstruct presentation-dependent tasks, including camera continuous motion representation. **Before PR 6 freeze.**
 5. Concrete Supabase project, region, payer, service owners, DPA/subprocessor and operational costs. **Before staging/production provisioning.**
 6. Disaster recovery objectives, external backup destination and scheduled restore owner. **Before production data.**
