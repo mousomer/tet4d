@@ -28,8 +28,11 @@ ordered list of item versions and its use in the protocol. Scoring has its
 own version so an independent analysis can reproduce the original result.
 
 For axes A and B, subtract the pivot to get the input offset. A positive
-quarter-turn maps offsets (a, b) to (-b, a). A negative quarter-turn maps them
-to (b, -a). Preserve the two other offsets and add the pivot back. The scorer
+quarter-turn maps offsets (a, b) to (b, -a). A negative quarter-turn maps them
+to (-b, a). Preserve the two other offsets and add the pivot back. This is the
+gameplay engine's sign (`rotate_point_nd` and the native core), so a turn
+shown in an item means the same as that turn in Explorer practice. Items show
+turns with the same glyphs and labels as the Explorer rotation controls. The scorer
 compares the submitted four coordinates exactly. A valid answer receives 1
 when correct and 0 otherwise. Tag an incorrect answer as unchanged if it
 equals the marked point, opposite turn if it equals the inverse result, or
@@ -86,7 +89,7 @@ condition assignment and the frozen stimulus reference. A future
 display-dependent task must also freeze relevant presentation state. The
 contract adds no runtime event schema, account identity or gameplay rules.
 
-The `tests/unit/research/fixtures/e3_coordinate_prediction_v1.json`
+The `tests/unit/research/fixtures/e3_coordinate_prediction_v2.json`
 and `tests/unit/research/test_e3_coordinate_prediction.py`
 exercise positive and negative turns, a non-origin pivot, correct and
 incorrect answers, invalid input, interruption, an unpresented slot and a

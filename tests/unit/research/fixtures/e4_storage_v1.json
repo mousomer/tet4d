@@ -1,11 +1,11 @@
 {
   "protocols": {
-    "fixture@1": {
+    "fixture@2": {
       "sequences": {
         "AB": {
-          "baseline": "A@1",
-          "posttest": "B@1",
-          "retention": "C@1"
+          "baseline": "A@2",
+          "posttest": "B@2",
+          "retention": "C@2"
         }
       },
       "arms": [
@@ -20,31 +20,31 @@
     }
   },
   "forms": {
-    "A@1": [
-      "baseline-turn@1",
-      "baseline-second@1"
+    "A@2": [
+      "baseline-turn@2",
+      "baseline-second@2"
     ],
-    "B@1": [
-      "held-out-pivot@1",
-      "held-out-inverse@1"
+    "B@2": [
+      "held-out-pivot@2",
+      "held-out-inverse@2"
     ],
-    "C@1": [
-      "held-out-unpresented@1"
+    "C@2": [
+      "held-out-unpresented@2"
     ]
   },
   "items": {
-    "baseline-turn@1": "coordinate@1",
-    "baseline-second@1": "coordinate@1",
-    "held-out-pivot@1": "coordinate@1",
-    "held-out-inverse@1": "coordinate@1",
-    "held-out-unpresented@1": "coordinate@1"
+    "baseline-turn@2": "coordinate@2",
+    "baseline-second@2": "coordinate@2",
+    "held-out-pivot@2": "coordinate@2",
+    "held-out-inverse@2": "coordinate@2",
+    "held-out-unpresented@2": "coordinate@2"
   },
   "records": [
     {
       "version": 1,
       "kind": "assignment",
       "enrollment": "synthetic-1",
-      "protocol": "fixture@1",
+      "protocol": "fixture@2",
       "sequence": "AB"
     },
     {
@@ -53,7 +53,7 @@
       "id": "base",
       "enrollment": "synthetic-1",
       "phase": "baseline",
-      "form": "A@1"
+      "form": "A@2"
     },
     {
       "version": 1,
@@ -61,8 +61,8 @@
       "id": "a1",
       "visit": "base",
       "ordinal": 0,
-      "item": "baseline-turn@1",
-      "scorer": "coordinate@1"
+      "item": "baseline-turn@2",
+      "scorer": "coordinate@2"
     },
     {
       "version": 1,
@@ -70,8 +70,8 @@
       "id": "a2",
       "visit": "base",
       "ordinal": 1,
-      "item": "baseline-second@1",
-      "scorer": "coordinate@1"
+      "item": "baseline-second@2",
+      "scorer": "coordinate@2"
     },
     {
       "version": 1,
@@ -126,7 +126,7 @@
       "id": "post",
       "enrollment": "synthetic-1",
       "phase": "posttest",
-      "form": "B@1"
+      "form": "B@2"
     },
     {
       "version": 1,
@@ -134,8 +134,8 @@
       "id": "b1",
       "visit": "post",
       "ordinal": 0,
-      "item": "held-out-pivot@1",
-      "scorer": "coordinate@1"
+      "item": "held-out-pivot@2",
+      "scorer": "coordinate@2"
     },
     {
       "version": 1,
@@ -143,8 +143,8 @@
       "id": "b2",
       "visit": "post",
       "ordinal": 1,
-      "item": "held-out-inverse@1",
-      "scorer": "coordinate@1"
+      "item": "held-out-inverse@2",
+      "scorer": "coordinate@2"
     },
     {
       "version": 1,
@@ -185,7 +185,7 @@
       "id": "late",
       "enrollment": "synthetic-1",
       "phase": "retention",
-      "form": "C@1"
+      "form": "C@2"
     },
     {
       "version": 1,
@@ -193,8 +193,8 @@
       "id": "c1",
       "visit": "late",
       "ordinal": 0,
-      "item": "held-out-unpresented@1",
-      "scorer": "coordinate@1"
+      "item": "held-out-unpresented@2",
+      "scorer": "coordinate@2"
     },
     {
       "version": 1,
@@ -254,7 +254,7 @@
         "id": "post",
         "enrollment": "synthetic-1",
         "phase": "posttest",
-        "form": "A@1"
+        "form": "A@2"
       }
     },
     {
@@ -267,8 +267,8 @@
         "id": "a1",
         "visit": "foreign",
         "ordinal": 0,
-        "item": "baseline-turn@1",
-        "scorer": "coordinate@1"
+        "item": "baseline-turn@2",
+        "scorer": "coordinate@2"
       }
     },
     {
@@ -281,8 +281,8 @@
         "id": "duplicate",
         "visit": "base",
         "ordinal": 0,
-        "item": "baseline-turn@1",
-        "scorer": "coordinate@1"
+        "item": "baseline-turn@2",
+        "scorer": "coordinate@2"
       }
     },
     {
@@ -295,8 +295,8 @@
         "id": "a1",
         "visit": "base",
         "ordinal": 0,
-        "item": "held-out-pivot@1",
-        "scorer": "coordinate@1"
+        "item": "held-out-pivot@2",
+        "scorer": "coordinate@2"
       }
     },
     {
@@ -309,8 +309,8 @@
         "id": "a1",
         "visit": "base",
         "ordinal": 0,
-        "item": "baseline-turn@1",
-        "scorer": "coordinate@2"
+        "item": "baseline-turn@2",
+        "scorer": "coordinate@1"
       }
     },
     {
@@ -433,7 +433,7 @@
         "version": 2,
         "kind": "assignment",
         "enrollment": "synthetic-1",
-        "protocol": "fixture@1",
+        "protocol": "fixture@2",
         "sequence": "AB"
       }
     }

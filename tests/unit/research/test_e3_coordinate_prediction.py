@@ -3,7 +3,11 @@
 import json
 from pathlib import Path
 
-FIXTURE = Path(__file__).parent / "fixtures" / "e3_coordinate_prediction_v1.json"
+import pytest
+
+from tet4d.engine.core.piece_transform import rotate_point_nd
+
+FIXTURE = Path(__file__).parent / "fixtures" / "e3_coordinate_prediction_v2.json"
 
 
 def _rotate(item, direction):
@@ -13,8 +17,10 @@ def _rotate(item, direction):
     offset_a = point[axis_a] - pivot[axis_a]
     offset_b = point[axis_b] - pivot[axis_b]
     assert (offset_a, offset_b) != (0, 0)
-    point[axis_a] = pivot[axis_a] - direction * offset_b
-    point[axis_b] = pivot[axis_b] + direction * offset_a
+    # A positive quarter-turn maps plane offsets (a, b) to (b, -a), the
+    # engine's convention, so scored answers match what training teaches.
+    point[axis_a] = pivot[axis_a] + direction * offset_b
+    point[axis_b] = pivot[axis_b] - direction * offset_a
     return point
 
 
@@ -42,7 +48,7 @@ def _score(item, slot):
 
 def test_e3_scored_fixtures_and_form_totals():
     fixture = json.loads(FIXTURE.read_text(encoding="utf-8"))
-    assert fixture["scoring_version"] == 1
+    assert fixture["scoring_version"] == 2
     for run in fixture["runs"]:
         slots = run["slots"]
         item_ids = fixture["forms"][run["form"]]["items"]
@@ -71,3 +77,14 @@ def test_e3_forms_have_disjoint_items_and_frozen_stimuli():
         json.dumps(fixture["items"][item_id], sort_keys=True) for item_id in item_ids
     ]
     assert len(set(stimuli)) == len(stimuli)
+
+
+@pytest.mark.parametrize("direction", [1, -1])
+def test_e3_turn_sign_matches_engine_rotation(direction):
+    fixture = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    for item in fixture["items"].values():
+        axis_a, axis_b = item["plane"]
+        offset = [p - q for p, q in zip(item["point"], item["pivot"], strict=True)]
+        rotated = rotate_point_nd(offset, axis_a, axis_b, direction)
+        expected = [r + q for r, q in zip(rotated, item["pivot"], strict=True)]
+        assert _rotate(item, direction) == expected
