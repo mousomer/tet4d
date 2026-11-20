@@ -61,6 +61,15 @@ general planning redirection or repo-wide ownership notes.
   durable product RDS behavior, or authorization to collect participant data.
 - Plain-language explanation: `participant_data_platform_overview.md`.
 
+### `participant_data_security_plan.md`
+- Role: `spec`; status: `active`.
+- Owns proposed participant identity/security boundaries, field protection,
+  key custody, role isolation and pre-deployment negative tests.
+- Does **not** replace repository-wide security governance, establish provider
+  approval, authorize user collection or claim implemented encryption.
+- Dated November handoff (history, not active authority):
+  `docs/history/participant_data_handoff_2026_11_20.md`.
+
 ### `typography_cleanup.md`
 - Role: `spec`; status: `active`.
 - Owns typography cleanup sequencing and its effective-typography lock.
