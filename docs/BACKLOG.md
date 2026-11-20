@@ -168,6 +168,12 @@ documentation/priority decision, not approval to deploy a study or backend.
   decision after the storage contract is approved; no provider is provisioned,
   no server is claimed, and no participant collection is authorized by these
   documents.
+  Proposed identity-security and breach-isolation requirements are in
+  `docs/plans/participant_data_security_plan.md`; these require review before
+  adding account or production research services. The dated handoff snapshot
+  is `docs/history/participant_data_handoff_2026_11_20.md` (history only).
+  No custom password store, KMS, encrypted email index, hosted RLS or secure
+  local-token handling is claimed to exist.
 - [ ] P5: run a consent-compliant instrumentation/usability pilot and only
   then a controlled learning study; report negative or inconclusive results.
 - [ ] P6+ / deferred: research Windows/Linux distribution if recruitment needs
