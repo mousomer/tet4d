@@ -1,9 +1,9 @@
 # Participant Data Platform — Handoff Snapshot (2026-11-20)
 
-**Role:** historical/restart reference, not an active-task or planning authority  
-**Snapshot:** 20 November 2026, `master` at `912edfbb54402ef4f5fc4c6480db1a91d153cff2`  
-**Programme owner:** `docs/plans/professional_godot_game_programme.md`  
-**Live status owner:** `docs/BACKLOG.md` and root `CURRENT_STATE.md`  
+**Role:** historical/restart reference, not an active-task or planning authority
+**Snapshot:** 20 November 2026, `master` at `912edfbb54402ef4f5fc4c6480db1a91d153cff2`
+**Programme owner:** `docs/plans/professional_godot_game_programme.md`
+**Live status owner:** `docs/BACKLOG.md` and root `CURRENT_STATE.md`
 **Current domain design:** `docs/plans/participant_data_platform_implementation.md`; proposed security design: `docs/plans/participant_data_security_plan.md`
 
 This is a dated handoff of the November 2026 research-platform planning/review session. It must not be interpreted as the latest runtime status or become a second authority for stage order. For subsequent work, read the current repository and governing owners.
