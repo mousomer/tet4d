@@ -230,3 +230,108 @@ Before any real enrollment, the trusted study service must:
 
 Until those exist, this slice must not be used for real participants. Hosting,
 authentication provider and deployment decisions remain separate.
+
+## Before production: access-audit retention and capacity
+
+`assessment_private.access_audit` is append-only and nothing prunes it. One
+row is written per `ingest` call, not per command: `read_allow` or
+`read_deny`, plus one `conflict` row for each rejected conflicting command.
+Retries of an acknowledged batch add a new `read_allow` row each time. Calls
+for an unknown enrollment write no row, since the row would have no enrollment
+to reference. The local slice may keep this behaviour for synthetic data.
+Before production, the trusted study service must meet these rules:
+
+1. **Retention follows the account link, not a fixed clock.** Keep every
+   audit row for an enrollment while its `enrollment_access` row exists.
+   After revocation, keep it for the post-revocation period named in the
+   approved retention schedule. The parent plan requires legal review of
+   research retention and forbids both inferred automatic deletion and
+   indefinite retention ([implementation plan §10.2 and §14 item 2](participant_data_platform_implementation.md)).
+   This contract therefore sets no default period. The schedule must give
+   one period for audit rows. An audited prune ends that period early when
+   an approved deletion removes the link or the study records. The schedule
+   must cover these cases:
+   - Audit rows never outlive the study records they evidence. The foreign
+     key to `assessment.enrollment` already enforces this.
+   - When an approved deletion removes an enrollment's study records or its
+     link, the same audited prune removes that enrollment's audit rows.
+     `principal` is an account identifier, so keeping those rows after the
+     link is gone would keep a path back to the person.
+   - Withdrawal alone deletes nothing. It is a `revoke` row, and the
+     post-revocation period starts there.
+   - Pruned rows stay in database backups until those backups expire, under
+     the backup-retention rule in implementation plan §10.3.
+2. **One row per call, never aggregated.** Every call performs a fresh
+   authorization read of the link, so every call is a separate access event,
+   even when its commands are exact retries. Folding repeats into a counter
+   would make the audit mutable through updates, and it would erase the
+   timing that tells a client retry loop from a replayed credential.
+   Volume is bounded at the source instead:
+   - the client sends one batch per flush, up to 64 commands;
+   - the adapter rate-limits each principal and each enrollment;
+   - an `authorization_failure` stops uploads for that enrollment, as the
+     error contract requires.
+   Compaction after the raw period would be a new audited prune mode. It
+   needs its own review, and it is not part of v1.
+3. **Indexes for the expected queries.** Production adds them in the
+   migration that adds their first reader (export, deletion or pruning).
+   No query in the local slice needs them.
+   - By enrollment and time, `(enrollment, at)`: a participant access
+     request, a withdrawal or incident review of one enrollment, and the
+     per-enrollment prune.
+   - By principal and time, `(principal, at)`: account deletion or export,
+     and review of a suspected compromised principal across enrollments.
+   - Monitoring of deny rates over all rows by time uses the identity key's
+     insertion order. A BRIN index on `at` is added only with measured
+     evidence, as the parent plan requires for query indexes.
+4. **Capacity budget per participant per visit.** The E3 protocol has
+   three scored visits per participant: baseline on form A or B, the
+   immediate posttest on the other form, and retention on form C. Forms A
+   and B have 12 slots. Form C is assumed to have 12 as well, since E3
+   does not size it yet. Each slot needs two commands, `present` and then
+   `submit` or `outcome`, so a visit has about 24 commands:
+
+   | Case | Audit rows per visit | Audit bytes per visit |
+   | --- | --- | --- |
+   | One batch per visit | 1 | about 0.2 KiB |
+   | One call per answered slot (typical online client) | 12 | about 2.4 KiB |
+   | One command per call | 24 | about 4.8 KiB |
+   | Worst case: one command per call, each retried once | 48 | about 9.6 KiB |
+
+   The byte estimates take about 0.2 KiB per row: a heap tuple of about 90 bytes,
+   the primary key, and the two indexes above. The visit's own assessment
+   rows (slots, presentations, attempts, outcomes and two receipts per
+   slot, with their indexes) come to about 11 KiB, or about 0.9 KiB per
+   slot. So in the worst case the audit nearly equals the assessment data,
+   and over three visits it reaches about 30 KiB per participant.
+   The 24-person feasibility pilot stays under 1 MiB.
+   At the parent plan's planning scale of 1,000 sessions a day, the worst
+   case is about 280 MiB a month. That matches the plan's whole summary
+   budget, so audit volume needs its own capacity line and alert.
+   Monitor audit rows per enrollment per visit. Investigate above twice the
+   48-row worst case, matching the parent plan's >2x volume trigger. Treat
+   a stream of `read_deny` rows for one enrollment as an incident.
+5. **Pruning is a separate audited privilege.** Rows may be removed only
+   through a dedicated `SECURITY DEFINER` function owned by
+   `assessment_owner`. Its EXECUTE grant goes to a retention role that is
+   neither `assessment_ingest`, `assessment_operator` nor `research_reader`.
+   The function:
+   - deletes only one enrollment's rows that the schedule has made eligible;
+   - never updates a row;
+   - in the same transaction, writes a prune record: enrollment, row count,
+     id and time range, schedule version, reason (retention expiry or an
+     approved deletion request), the database role, and the operator
+     identity supplied by the trusted service.
+   Prune records go to an append-only table with no foreign key to
+   `assessment.enrollment`, so they outlive the rows they describe. They
+   carry no principal, and that function cannot prune them. Direct deletes
+   by the database owner are outside the audit, as they are for reads, and
+   belong to deployment access controls.
+6. **Prove it with tests:**
+   - retry counts produce the expected row counts;
+   - ingest, operator and research roles cannot delete or update audit rows;
+   - a prune leaves exactly one prune record, and it refuses rows that the
+     schedule has not made eligible;
+   - account deletion removes every row for that principal;
+   - both indexes serve their queries on a seeded volume at the worst-case
+     budget.
