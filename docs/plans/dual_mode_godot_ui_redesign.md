@@ -6,7 +6,7 @@ Source of truth: `docs/design/godot_visual_system.md` for current visual authori
 Supersedes: none
 Prepared: 2026-11-22
 Branch: `design/dual-mode-ui-redesign-2026-11-22`
-Decision state: **candidate design / not approved product implementation**
+Decision state: **2D/3D/4D visual direction accepted; implementation, library choice and human runtime acceptance pending**
 
 ## 1. Intent
 
@@ -17,6 +17,8 @@ Create a professionally designed Tet4D UI that can read as either a clean applic
 - **Diagnostic:** existing examination-oriented theme retained unchanged for the redesign's initial implementation.
 
 The existing persisted shell IDs remain `plain`, `tron` and `diagnostic`. The default remains `plain`. High Contrast and Reduced Motion remain independent preferences. No new setting or theme identity is authorized by this plan.
+
+**Accepted board design target:** [2D / 3D / 4D gameplay visual direction](../design/accepted_gameplay_ui_direction.md). This replaces the rejected original dual-theme SVG concepts. 2D and 3D use pronounced cells; 4D is a coherent matrix of full 3D slice volumes in one viewport. This design target does not approve any specific toolkit.
 
 ## 2. Existing architecture, not a greenfield UI
 
@@ -73,14 +75,21 @@ The restyling adaptor maps one set of semantic component purposes to the existin
 
 Avoid new fonts and third-party icon packs until license, inclusion footprint and readability are reviewed. Preserve existing axis colour semantics and structural depth cues.
 
-## 6. Conceptual screen artifacts
+## 6. Accepted board-mode design artifacts
 
-Original side-by-side design references (schematic 4D HUD, not engine captures):
+The owner-accepted presentation is defined by
+[`docs/design/accepted_gameplay_ui_direction.md`](../design/accepted_gameplay_ui_direction.md):
 
-- [Instrument concept](../design/mockups/dual_mode_plain_concept.svg)
-- [Vector Arcade concept](../design/mockups/dual_mode_tron_concept.svg)
+- [2D — one large flat cell grid](../design/mockups/accepted_2d_gameplay.svg)
+- [3D — one solid-cell volumetric board](../design/mockups/accepted_3d_gameplay.svg)
+- [4D — multiple 3D slice volumes, one unified playfield](../design/mockups/accepted_4d_slice_matrix.svg)
 
-Both deliberately use one fixed screen structure while varying surface treatment, accent and framing. These are hypotheses for review, not accepted layouts, geometry or gameplay screenshots.
+These original SVGs are schematic implementation references, not Godot captures.
+The previous `dual_mode_plain_concept.svg` and `dual_mode_tron_concept.svg`
+mockups were rejected and removed from the active design branch. The 4D
+viewport must not become a single nested cube or a panel-per-slice dashboard.
+The existing adaptive layout owner decides rows/columns; the example 4-slice
+horizontal arrangement is not a runtime constant.
 
 ## 7. Screen information architecture
 
@@ -117,27 +126,44 @@ Candidate findings and sources are captured in `docs/design/game_ui_best_practic
 
 Comparison rubric: 30% ownership/fit, 20% usability/accessibility, 20% Godot/platform/CI compatibility, 15% binary/package and runtime cost, 15% maintenance/licensing. Require documented evidence for every category, not marketing counts. **Never install WoldUI and gohud simultaneously into product UI.** A third-party component may be adopted only when it solves a measured problem better than existing native Controls and does not create competing theme authority.
 
-## 9. Work packages (separate, reviewable PRs)
+## 9. Work packages (separate reviewable PRs)
 
 **R0 — visual and interaction baseline.**
-Capture current main menu, settings, setup, Live 2D/3D/4D, Explorer 2D/3D/4D, Replay and Designer. Annotate board occupancy, clutter, reading order, focus path, contrast failures, label duplication, truncation and help discoverability. Preserve current screenshots/acceptance evidence; do not rewrite older evidence.
+Capture current menu/settings, Live 2D/3D/4D, Explorer, Replay and Designer at
+supported viewport sizes; record cell/board legibility, size, colour noise,
+clipping, focus and user comprehension. Do not rewrite historical evidence.
 
-**R1 — library spikes and design tokens.**
-Isolated prototypes of native-only, WoldUI and gohud. Resolve package license/version and Godot compatibility. Inventory duplicate token constants and style overrides before any refactor. Present two representative screen designs built over the same component tree. Choose native-only or one narrow adapter through a recorded decision.
+**R1 — shared design roles and toolkit spikes.**
+Compare native-only, isolated WoldUI and isolated gohud for one menu/HUD
+component set. Do not install either in the shipping product without a
+separate architectural decision. Keep the existing theme/profile owners.
 
-**R2 — application shell.**
-Reskin menu, setup, settings, status dialogs, tabs and help using shared semantic controls. Main menu and onboarding novice clarity first. No change to entry routing.
+**R2 — accepted 2D and 3D cell/board appearance.**
+Reuse existing renderers. Make 2D squares and 3D cubes individually legible,
+with restrained colours, distinct active/locked/ghost treatment and prominent
+board boundaries. Preserve the existing camera and simulation contracts.
 
-**R3 — game cockpit.**
-Apply the two skins to shared Live and Explorer HUD components after respecting Explorer Phase 3 ownership. Repair visual hierarchy, NEXT/HOLD grouping, board fit, visible controls, and focus only. Reuse (do not fork) responsive and keybinding contracts.
+**R3 — 4D as an adaptive matrix of 3D boards.**
+Reuse the *same 3D voxel grammar* for each signed slice; preserve the existing
+basis-dependent mapping, row-major fitted layout, local volume borders,
+coherent camera orientation/scale and active-piece multi-slice emphasis. Keep
+one viewport and one outer gameboard visual treatment; never create per-slice
+UI panels or a nested hypercube impostor. Test W=1, 4, 7 and 8 examples where
+admitted, including nonidentity visible bases.
 
-**R4 — detail polish.**
-Add selectively: active-selection cues, legible focus, reversible transitions, reduced-motion handling, pressed/hover/status feedback. No global animation that consumes gameplay input or obscures geometry.
+**R4 — shared application shell/cockpit.**
+Reskin the Main Menu, setup/settings, NEXT/HOLD, Piece/View controls, status,
+help and Designer through the same Control tree in Instrument and Vector Arcade.
+Respect the Explorer cockpit ownership/extraction work and responsive policy.
 
-**R5 — acceptance and integration.**
-Run focused Godot UI/theme tests and unchanged complete verification gate, produce per-theme screenshot matrix, do human novice review and macOS/Windows desktop visual review as available. No automatic merge based on snapshot differences alone.
+**R5 — restrained feedback polish.**
+Selection/focus/press/readable error states, Reduced Motion, clean selected W
+frame labels, no globally animated noisy chrome or invented keybindings.
 
-Every package lists its owning files, observed baseline, change-scope diff, executable tests, unexecuted checks and human acceptance status. Do not combine whole-app refactor, toolkit install, Explorer functional changes or native geometry fixes into one PR.
+**R6 — acceptance and integration.**
+Focused Godot UI and geometry regression, unchanged full verifier, human novice
+review and captured real-platform per-dimension/per-theme screenshot matrix.
+Evidence and implementation must be separate from a design approval claim.
 
 ## 10. Acceptance criteria
 
