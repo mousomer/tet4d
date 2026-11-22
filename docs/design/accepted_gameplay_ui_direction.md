@@ -127,7 +127,7 @@ The following are original, schematic SVGs representing the accepted geometry. T
 - [3D board design](mockups/accepted_3d_gameplay.svg)
 - [4D multi-3D-slice board design](mockups/accepted_4d_slice_matrix.svg)
 
-The two earlier `dual_mode_plain_concept.svg` and `dual_mode_tron_concept.svg` illustrations are rejected historical concepts. Do not use them for implementation acceptance.
+The two earlier `dual_mode_plain_concept.svg` and `dual_mode_tron_concept.svg` illustrations were rejected and removed from this branch. They are not implementation references.
 
 ## 6. Engineering mapping and acceptance gate
 
