@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-11-18
+Updated: 2026-11-22
 Scope: active work, explicit deferrals, and near-term acceptance boundaries.
 
 Completed chronology is recoverable from Git, merged PRs, CI, and
@@ -30,6 +30,8 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   facts)
 
 ## Active Work
+
+- [ ] Graphical redesign (design branch `design/dual-mode-ui-redesign-2026-11-22`): capture current UI and run bounded native/WoldUI/gohud theme/component comparisons before adopting a toolkit. Target one Control/layout implementation with Instrument (`plain`) and Vector Arcade (`tron`) presentations; preserve Diagnostic, High Contrast, Reduced Motion, Explorer ownership and all gameplay semantics. Plan: `docs/plans/dual_mode_godot_ui_redesign.md`.
 
 - Explorer 2D relative movement: reconnect horizontal keyboard intents and
   their helper directions to the existing shared control-frame mapper. Preserve
