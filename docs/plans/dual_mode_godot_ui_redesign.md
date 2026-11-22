@@ -6,7 +6,7 @@ Source of truth: `docs/design/godot_visual_system.md` for current visual authori
 Supersedes: none
 Prepared: 2026-11-22
 Branch: `design/dual-mode-ui-redesign-2026-11-22`
-Decision state: **2D/3D/4D visual direction accepted; implementation, library choice and human runtime acceptance pending**
+Decision state: **visual-language direction accepted only; no gameboard-semantic or geometric changes authorized; runtime styling and human acceptance pending**
 
 ## 1. Intent
 
@@ -18,7 +18,20 @@ Create a professionally designed Tet4D UI that can read as either a clean applic
 
 The existing persisted shell IDs remain `plain`, `tron` and `diagnostic`. The default remains `plain`. High Contrast and Reduced Motion remain independent preferences. No new setting or theme identity is authorized by this plan.
 
-**Accepted board design target:** [2D / 3D / 4D gameplay visual direction](../design/accepted_gameplay_ui_direction.md). This replaces the rejected original dual-theme SVG concepts. 2D and 3D use pronounced cells; 4D is a coherent matrix of full 3D slice volumes in one viewport. This design target does not approve any specific toolkit.
+**Accepted aesthetic reference:** [2D / 3D / 4D gameplay visual direction](../design/accepted_gameplay_ui_direction.md). This replaces the rejected initial colour/contrast mockups **as visual style references only**. The actual 2D, 3D and 4D gameboards, slice topology, 4D projection, placements and camera behavior are already defined elsewhere and must not be redesigned to match concept art. No toolkit adoption is approved here.
+
+### Hard boundary: style is not gameboard semantics
+
+Allowed scope: colours, materials, cell-outline prominence, luminance,
+decorative framing, typography, UI control states and HUD visual hierarchy
+within existing projection and layout contracts.
+
+Disallowed scope: changes to board dimensions, coordinate and slice mapping,
+layout algorithm, number/order/position of 4D slices, camera/view/basis
+transformations, voxel geometry, pieces, rotation, collision, topology, input
+semantics or research measurements. The styling work may call an existing
+renderer but **must not replace or reinterpret its geometric outputs**.
+Illustrative SVG arrangements are non-authoritative.
 
 ## 2. Existing architecture, not a greenfield UI
 
@@ -138,18 +151,21 @@ Compare native-only, isolated WoldUI and isolated gohud for one menu/HUD
 component set. Do not install either in the shipping product without a
 separate architectural decision. Keep the existing theme/profile owners.
 
-**R2 — accepted 2D and 3D cell/board appearance.**
-Reuse existing renderers. Make 2D squares and 3D cubes individually legible,
-with restrained colours, distinct active/locked/ghost treatment and prominent
-board boundaries. Preserve the existing camera and simulation contracts.
+**R2 — apply the accepted 2D/3D visual style.**
+Keep the existing rendered geometry and gameboard layout fixed. Within those
+outputs, increase visible cell-edge separation, restrained face shading,
+active/locked/ghost contrast and board boundary legibility. Do not modify
+game state, projection, camera or board-size logic.
 
-**R3 — 4D as an adaptive matrix of 3D boards.**
-Reuse the *same 3D voxel grammar* for each signed slice; preserve the existing
-basis-dependent mapping, row-major fitted layout, local volume borders,
-coherent camera orientation/scale and active-piece multi-slice emphasis. Keep
-one viewport and one outer gameboard visual treatment; never create per-slice
-UI panels or a nested hypercube impostor. Test W=1, 4, 7 and 8 examples where
-admitted, including nonidentity visible bases.
+**R3 — apply the visual style to the existing 4D presentation.**
+Treat the live 4D renderer and its existing 3D slice geometry, signed basis,
+actual slice count, membership, order and adaptive fitted matrix as read-only
+authorities. Change only materials, contours, emphasis and surrounding chrome
+through existing presentation roles. No replacement renderer, no change to the
+number or arrangement of slices, and no drawing of a single fake 3D cube.
+Compare before/after identical-state captures, including nonidentity view
+bases and permitted W counts. Test that all geometry and interaction stay
+unchanged.
 
 **R4 — shared application shell/cockpit.**
 Reskin the Main Menu, setup/settings, NEXT/HOLD, Piece/View controls, status,
@@ -167,7 +183,7 @@ Evidence and implementation must be separate from a design approval claim.
 
 ## 10. Acceptance criteria
 
-- **No gameplay regressions:** input-to-command semantics, camera-relative motion, basis/view controls, topology rules, replay identity and deterministic native state unchanged; regression checks cover all dimensions.
+- **No geometric or semantic changes:** board shape, cell positions, individual slice mapping and order, projection, viewport fit, camera-relative motion, basis/view controls, native rules, replay identity and input-to-command semantics unchanged; focused regressions cover all dimensions.
 - **Contrast:** target WCAG 2.2 AA-like 4.5:1 for normal UI text, 3:1 for large text and functional non-text indicators, including normal/hover/focus/disabled as applicable. Record exception rationale, not false certification.
 - **Keyboard and controllers:** visible focus, predictable order, no keyboard/gameplay leakage from text fields or dialogs, labelled alternatives for every essential visible control.
 - **Readable at scale:** default and enlarged UI scale; no clipped control labels or hidden primary actions at existing 680x520 minimum and supported sizes (960x640, 1280x800, 1600x960, 1920x1080). Tablet portrait/landscape are additional evaluation targets, not an expansion of released-platform support.
@@ -180,7 +196,7 @@ Evidence and implementation must be separate from a design approval claim.
 
 ## 11. Explicit exclusions
 
-No third-party dependency is added by this planning branch. No change to releases, project settings, telemetry, research consent, cloud identity, data capture, geometry, piece simulation, topology transport, cameras, input defaults, built-in presentation style catalog, or existing theme IDs. These require their own owning contracts and review.
+No third-party dependency is added by this planning branch. No change to releases, project settings, telemetry, research consent, cloud identity, data capture, **gameboard semantics, dimensions, 4D slicing/layout, projection**, piece simulation, topology transport, cameras, input defaults, built-in presentation style catalog or existing theme IDs. These remain under their separate owning contracts.
 
 ## 12. Design handoff boundary
 
