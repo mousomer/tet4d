@@ -142,9 +142,9 @@
 <text x="1407" y="332" fill="#C2C0B8" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="650" letter-spacing="2">EMPTY</text>
 <path d="M1128,423L1544,423" stroke="#354054" stroke-width="1"/>
 <text x="1128" y="463" fill="#C2C0B8" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="15" font-weight="600" letter-spacing="1">SCORE</text>
-<text x="1529" y="463" fill="#ECE9E1" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="28" font-weight="650" letter-spacing="0">000420</text>
+<text x="1424" y="463" fill="#ECE9E1" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="28" font-weight="650" letter-spacing="0">000420</text>
 <text x="1128" y="510" fill="#C2C0B8" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="15" font-weight="600" letter-spacing="1">CLEARED</text>
-<text x="1529" y="510" fill="#ECE9E1" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="26" font-weight="650" letter-spacing="0">03</text>
+<text x="1496" y="510" fill="#ECE9E1" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="26" font-weight="650" letter-spacing="0">03</text>
 <text x="1128" y="562" fill="#C2C0B8" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="600" letter-spacing="0.5">CURRENT ACTION</text>
 <text x="1128" y="594" fill="#C7A45A" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="19" font-weight="700" letter-spacing="0.8">ROTATE XW</text>
 <rect x="1128" y="639" width="416" height="52" rx="8" fill="#3B3426" stroke="#C7A45A" stroke-width="1" />
