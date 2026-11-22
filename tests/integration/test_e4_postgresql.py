@@ -649,3 +649,163 @@ def test_exposure_activity_must_belong_to_the_protocol():
     with pytest.raises(IngestError, match="invalid_payload"):
         _send(principal, enrollment, _exposure("none", 10, 0))
     assert len(_send(principal, enrollment, _exposure("rotation_3d", 9000, 2))) == 1
+
+
+def test_journal_restart_replays_lost_batch_with_one_audit_read_per_call(tmp_path):
+    from e4_harness.journal import Journal
+    from e4_harness.sync import Reply, Sync
+
+    enrollment, principal, visit, slots = _baseline()
+    clock = 100_000
+    calls = []
+    drop_response = True
+
+    def send(target, payload):
+        assert target == enrollment
+        calls.append(payload)
+        app = application(DSN)
+        status = []
+        document = b"".join(
+            app(
+                {
+                    "PATH_INFO": f"/v1/assessment/enrollments/{target}/commands",
+                    "REQUEST_METHOD": "POST",
+                    "CONTENT_LENGTH": str(len(payload)),
+                    "wsgi.input": BytesIO(payload),
+                    "tet4d.verified_principal": principal,
+                },
+                lambda line, _headers: status.append(int(line.split()[0])),
+            )
+        )
+        if drop_response:
+            raise OSError("synthetic response loss after commit")
+        return Reply(status[0], json.loads(document))
+
+    def restart():
+        client = Sync(
+            Journal(tmp_path, principal, enrollment),
+            lambda: clock,
+            send,
+            slots=slots,
+            jitter=lambda delay: delay,
+        )
+        client.bind(principal)
+        return client
+
+    client = restart()
+    client.capture(_present(slots[0]))
+    client.capture(_submit(slots[0]))
+    client.capture(_present(slots[1]))
+    client.capture(_outcome(slots[1]))
+    client.flush(early=True)
+    assert [action for action, _ in _audit(enrollment)] == ["grant", "read_allow"]
+    operations.close_visit(DSN, enrollment, visit, "completed")
+    drop_response = False
+    client = restart()
+    client.flush(early=True)
+    assert len(calls) == 1
+    clock += 5_000
+    client.flush(early=True)
+    assert client.status == "synced" and calls[0] == calls[1]
+    assert [action for action, _ in _audit(enrollment)] == [
+        "grant",
+        "read_allow",
+        "read_allow",
+    ]
+    assert _outcomes(slots) == ["submitted", "invalid"]
+
+
+def test_journal_denial_stops_audit_growth(tmp_path):
+    from e4_harness.journal import Journal
+    from e4_harness.sync import Reply, Sync
+
+    enrollment, principal, _, slots = _baseline()
+    clock = 100_000
+
+    def send(target, payload):
+        with pytest.raises(IngestError, match="authorization_failure"):
+            ingest(DSN, principal, target, payload)
+        return Reply(403, {"error": "authorization_failure"})
+
+    client = Sync(
+        Journal(tmp_path, principal, enrollment), lambda: clock, send, slots=slots
+    )
+    client.bind(principal)
+    client.capture(_present(slots[0]))
+    operations.withdraw(DSN, enrollment)
+    client.flush(early=True)
+    assert [action for action, _ in _audit(enrollment)] == [
+        "grant",
+        "revoke",
+        "read_deny",
+    ]
+    restarted = Sync(
+        Journal(tmp_path, principal, enrollment), lambda: clock, send, slots=slots
+    )
+    restarted.bind(principal)
+    restarted.resume()
+    clock += 60_000
+    restarted.flush(early=True)
+    assert restarted.status == "paused"
+    assert len(restarted.journal.records) == 1
+    assert [action for action, _ in _audit(enrollment)] == [
+        "grant",
+        "revoke",
+        "read_deny",
+    ]
+
+
+@pytest.mark.parametrize("grace_elapsed", [False, True])
+def test_offline_journal_reconciles_only_while_visit_is_open(tmp_path, grace_elapsed):
+    from e4_harness.journal import Journal
+    from e4_harness.sync import Reply, Sync
+
+    now = datetime.now(UTC)
+    closes = now - timedelta(seconds=GRACE_SECONDS + 10 if grace_elapsed else 1)
+    opens = closes - timedelta(minutes=10)
+    enrollment, principal, visit, slots = _baseline(window=(opens, closes))
+
+    def send(target, payload):
+        try:
+            receipts = ingest(DSN, principal, target, payload)
+        except IngestError as error:
+            assert error.code == "visit_closed"
+            return Reply(409, {"error": error.code})
+        return Reply(
+            200,
+            {
+                "receipts": [
+                    {
+                        "command": str(receipt.command),
+                        "digest": receipt.digest,
+                        "received_at": receipt.received_at.isoformat(),
+                    }
+                    for receipt in receipts
+                ]
+            },
+        )
+
+    client = Sync(
+        Journal(tmp_path, principal, enrollment), lambda: 100_000, send, slots=slots
+    )
+    client.bind(principal)
+    observed = _utc(opens + timedelta(seconds=5))
+    client.capture(_present(slots[0], observed))
+    client.capture(_submit(slots[0], observed))
+    if grace_elapsed:
+        operations.close_visit(DSN, enrollment, visit, "expired")
+    else:
+        with pytest.raises(IngestError, match="reconciliation_pending"):
+            operations.close_visit(DSN, enrollment, visit, "interrupted")
+    client.flush(early=True)
+    assert [action for action, _ in _audit(enrollment)] == ["grant", "read_allow"]
+    if grace_elapsed:
+        assert client.status == "blocked"
+        assert client.journal.checkpoint.reason == "visit_closed"
+        assert len(client.journal.records) == 2
+        assert _outcomes(slots) == ["unpresented", "unpresented"]
+    else:
+        assert client.status == "synced"
+        assert _query(
+            "SELECT status, timing FROM assessment.outcome WHERE slot = %s", slots[0]
+        ) == [("submitted", "in_window")]

@@ -156,7 +156,9 @@ documentation/priority decision, not approval to deploy a study or backend.
   provisional. Review the [E4 logical assessment storage contract](plans/e4_assessment_storage_contract.md)
   and synthetic conformance for the local assessment slice. The approved
   defaults are implemented in [local PostgreSQL](plans/e4_local_postgresql.md).
-  Identity-provider integration, deployment and client journaling remain open.
+  [Client journal and sync defaults](plans/e4_client_journal_and_sync.md)
+  are approved and exercised by a synthetic recovery and audit-count slice.
+  Godot integration, identity-provider integration and deployment remain open.
 - [ ] P4: implement pseudonymous research identity, optional player accounts,
   local event buffering, versioned storage, idempotent ingestion, privacy,
   export/deletion and independent session reconstruction. The non-technical
