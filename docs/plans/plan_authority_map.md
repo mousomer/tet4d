@@ -29,7 +29,7 @@ planning redirection notes.
 | Bounded practice Explorer **MVP baseline** and its novice acceptance tasks | `bounded_practice_explorer.md` |
 | Forward Godot 2D/3D/4D Explorer topology semantics, presets, transport and secondary builder | `docs/rds/RDS_EXPLORER_TOPOLOGIES.md` (product requirements); `professional_godot_game_programme.md` (stage order) |
 | Explorer T1 implementation inventory, contract gaps and Session 2 inputs (audit only) | `docs/architecture/explorer_topology_t1_contract_inventory.md` |
-| Typography cleanup sequencing and its effective-typography lock | `typography_cleanup.md` |
+| Typography cleanup sequencing and its effective-typography lock | `typography_cleanup.md` || Proposed dual-look Godot shell redesign work packages and toolkit adoption gate (does not supersede visual authority) | `dual_mode_godot_ui_redesign.md` (scope and acceptance); `docs/design/godot_visual_system.md` (current visual authority) |
 | Explorer cockpit unification sequencing (structure, keys, dispatch) and its behaviour lock | `explorer_cockpit_unification.md` |
 | Repo-wide structural cleanup sequencing | `cleanup_master_plan.md` |
 | Live 3D and future Live 4D gameboard visual language | `gameboard_visual_language_design.md` |
