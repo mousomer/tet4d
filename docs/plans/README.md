@@ -66,14 +66,13 @@ general planning redirection or repo-wide ownership notes.
 - Owns typography cleanup sequencing and its effective-typography lock.
 - Visible changes (glyph coverage, rule reconciliation) remain owner decisions.
 
-### `bounded_practice_explorer.md`
 ### `dual_mode_godot_ui_redesign.md`
 - Role: `spec`; status: `active` (proposal, no production adoption yet).
 - Owns bounded work packages, two-look shared shell experiments, toolkit comparison and acceptance.
 - Current design authority remains `docs/design/godot_visual_system.md`.
 - Research and source links: `docs/design/game_ui_best_practices_2026_11_22.md`.
 
-
+### `bounded_practice_explorer.md`
 - Role: `spec`; status: `active`.
 - Owns bounded Godot Sandbox implementation scope and novice acceptance tasks.
 - Product/query composition contract: `docs/architecture/bounded_practice_explorer.md`.
