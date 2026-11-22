@@ -70,7 +70,7 @@ row per `ingest` call, not per command, so exact retries each add a
 `docs/plans/e4_assessment_storage_contract.md` ("Before production:
 access-audit retention and capacity"). In summary:
 
-- **Retention.** Rows are kept while the link exists, then for the
+- **Retention.** Rows are kept while the link is unrevoked, then for the
   post-revocation period that the approved retention schedule names. No
   default period is set here; the schedule needs legal review. An approved
   deletion of the link or the study records prunes that enrollment's rows,

@@ -4,7 +4,7 @@ Role: spec
 Status: active
 Source of truth: this file for E4 logical assessment records, write and reconstruction rules (synthetic implementation only; physical schema in `docs/architecture/participant_data_platform.md`)
 Supersedes: none
-Last updated: 2026-11-19
+Last updated: 2026-11-20
 Derived from: [approved E3 record boundaries](assessment_measurement_contract.md) and
 [participant-platform implementation plan](participant_data_platform_implementation.md)
 
@@ -242,8 +242,10 @@ to reference. The local slice may keep this behaviour for synthetic data.
 Before production, the trusted study service must meet these rules:
 
 1. **Retention follows the account link, not a fixed clock.** Keep every
-   audit row for an enrollment while its `enrollment_access` row exists.
-   After revocation, keep it for the post-revocation period named in the
+   audit row for an enrollment while its `enrollment_access` link is unrevoked
+   (`revoked_at` is null). Revocation keeps the link row and only sets
+   `revoked_at`, so the row's existence is not the test. After revocation,
+   keep it for the post-revocation period named in the
    approved retention schedule. The parent plan requires legal review of
    research retention and forbids both inferred automatic deletion and
    indefinite retention ([implementation plan §10.2 and §14 item 2](participant_data_platform_implementation.md)).
