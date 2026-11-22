@@ -69,7 +69,7 @@ general planning redirection or repo-wide ownership notes.
 ### `dual_mode_godot_ui_redesign.md`
 - Role: `spec`; status: `active` (proposal, no production adoption yet).
 - Owns bounded work packages, two-look shared shell experiments, toolkit comparison and acceptance.
-- Current design authority remains `docs/design/godot_visual_system.md`.
+- Current design authority remains `docs/design/godot_visual_system.md`; accepted gameboard direction is detailed in `docs/design/accepted_gameplay_ui_direction.md`.
 - Research and source links: `docs/design/game_ui_best_practices_2026_11_22.md`.
 
 ### `bounded_practice_explorer.md`
