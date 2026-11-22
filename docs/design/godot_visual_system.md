@@ -16,32 +16,29 @@ without competing with it. Glow, repeated bright borders, heavy nested cards,
 and simultaneous accent colours are exceptional treatments rather than the
 default grammar.
 
-## Owner-accepted gameplay redesign direction (2026-11-22)
+## Accepted gameplay visual style (2026-11-22)
 
-The accepted, concrete 2D/3D/4D gameplay visual target is recorded in
+The 2D, 3D and 4D **appearance** targets are recorded in
 [`accepted_gameplay_ui_direction.md`](accepted_gameplay_ui_direction.md),
-with original mode-specific board references in `docs/design/mockups/accepted_*.svg`.
-This extends the existing visual hierarchy without changing native semantics,
-input, the presentation registry, or the three saved shell theme identities.
+with original concept art under `docs/design/mockups/accepted_*.svg`.
+This is a **visual language only**, not a new gameboard semantic authority.
 
-- **2D:** large, filled, strongly separated square cells on one flat board.
-- **3D:** one exterior-view volumetric gameboard; each occupied cell is a
-  pronounced solid cube with coherent face shading and crisp boundaries.
-- **4D:** **one shared playfield made of multiple true 3D slice volumes**,
-  not one large 3D cube, a nested translucent hypercube, or separate UI cards.
-  Every basis-derived signed slice is rendered in the same 3D cell grammar,
-  orientation and scale. Use the existing adaptive row-major fitted matrix,
-  per-slice labels and all active-layer frames when the piece spans slices.
-- **Palette and shell:** desaturated dark charcoal and blue-grey structure,
-  restrained warm interaction emphasis, off-white text, subdued locked-cell
-  colours, modest/no glow; active/locked/ghost contrast is achieved with
-  luminance, shape and edge strength before hue. The board visually dominates.
+The desired changes are more legible individual cells and voxel faces,
+pronounced cell/board outlines, clear active/locked/ghost contrast, calm
+desaturated shell colours, and less decorative competition with the board.
+Apply the same visual principles to the **existing** 2D board, 3D board and
+4D multi-3D-slice gameboard.
 
-The earlier first-pass dual-theme SVG concepts were rejected as visual references.
-No design render or screenshot is accepted as a source of gameplay truth.
-The existing board geometry, view basis, camera, configuration and test contracts
-still govern implementation. Runtime implementation and comparative GUI acceptance
-remain separate, pending gates.
+The 4D slice decomposition, signed slice indices, adaptive row/column layout,
+geometry, camera/view-basis projection, cell ownership and renderer outputs
+are unchanged and remain governed by their existing contracts. The intention
+is only to style the existing 3D slice presentation as a coherent gameboard
+without adding independent decorative UI cards per slice. No number, shape,
+arrangement, scale or position of slices may be derived from concept art.
+
+The concepts are moodboards and do not specify controls, game states, camera
+views, geometry or new HUD/gameplay semantics. The initial dual-theme SVGs
+were rejected. Implementation and live screenshot acceptance remain pending.
 
 ## Theme purposes
 
