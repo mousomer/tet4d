@@ -31,7 +31,7 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ## Active Work
 
-- [ ] Graphical redesign (draft PR #199, `design/dual-mode-ui-redesign-2026-11-22`): accepted 2D and 3D board/cell visual concepts and corrected 4D-as-multiple-3D-slices shared-viewport target. Design contract: `docs/design/accepted_gameplay_ui_direction.md`; implementation plan: `docs/plans/dual_mode_godot_ui_redesign.md`. Next: baseline captures, native-only/WoldUI/gohud isolated comparison, 2D/3D renderer appearance, 4D slice matrix, shared cockpit and real human acceptance. No shipping implementation or toolkit adoption yet.
+- [ ] Graphical redesign (draft PR #199, `design/dual-mode-ui-redesign-2026-11-22`): accepted 2D/3D cell-clarity and restrained-colour visual language, to be applied to the existing 4D multi-3D-slice gameboard without changing its geometry, slice layout or semantics. Design contract: `docs/design/accepted_gameplay_ui_direction.md`; implementation plan: `docs/plans/dual_mode_godot_ui_redesign.md`. Next: baseline captures, native-only/WoldUI/gohud isolated comparison, 2D/3D renderer appearance, 4D slice matrix, shared cockpit and real human acceptance. No shipping implementation or toolkit adoption yet.
 
 - Explorer 2D relative movement: reconnect horizontal keyboard intents and
   their helper directions to the existing shared control-frame mapper. Preserve
