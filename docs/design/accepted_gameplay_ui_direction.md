@@ -1,24 +1,59 @@
 # Accepted 2D / 3D / 4D gameboard visual direction
 
-Role: design specification
-Status: owner-accepted concept; runtime implementation pending
+Role: visual-language reference (non-semantic)
+Status: owner-accepted visual references; application to existing renderer pending
 Decision date: 2026-11-22
 Workstream: `docs/plans/dual_mode_godot_ui_redesign.md`
 Existing authoritative implementation constraints: `docs/design/godot_visual_system.md`, `docs/plans/gameboard_visual_language_design.md`, `docs/architecture/configurable_plain_boards_and_4d_layout.md`
 
 ## Decision and scope
 
-This specification records the user's visual acceptance of the revised **2D** and **3D** game screens and the correction to the **4D** representation. It supersedes the initial 2026-11-22 plain/tron SVG concept mockups as design references, **not** the existing gameplay/rendering contracts.
+This document specifies **appearance only**. It records approved visual qualities
+of the 2D and 3D concept images and the requirement that the 4D styling respect
+the existing multi-3D-slice presentation. It rejects the earlier conceptual
+mockups as *style references* only.
 
-The accepted direction is **one visual language, three geometric presentations**. Screens, component semantics, placement policy, accessibility and input ownership are shared. UI skin remains selectable with existing IDs `plain` and `tron` (plus `diagnostic`); a skin does not define a different gameplay geometry.
+**It neither establishes nor replaces any gameboard semantics or geometric
+presentation contract.** Every actual displayed coordinate, board extent,
+slice-membership rule, signed basis, placement, cell shape, camera projection,
+orientation, layout, piece geometry, movement, collision, topology and
+gameplay operation is determined by its existing authoritative owner.
 
-**Confirmed constraints:**
-- The gameboard, not the HUD or decorative panels, is the clear focal object.
-- Individual occupied cells are prominent, solid, sharply bounded and legible at ordinary gameplay scale.
-- The palette is controlled: dark charcoal/blue-black, blue-grey structure, warm off-white labels, subdued gameplay colours and one restrained interface accent. No noisy rainbow chrome, blanket cyan neon, high bloom, or a flood of borders.
-- Gameboard presentation must remain diagrammatic and geometrically truthful. A visual mockup cannot override core game semantics.
-- 4D is **a set of 3D board slices**, not a single 3D box labelled 4D or a nested-cube/hypercube spectacle.
-- **Do not separate 4D gameboard slices into independent app cards/panels.** Each slice is its own volumetric region but the set is rendered as one coherent playfield in one viewport, with common projection/scale and an intelligible W order.
+The approved visual qualities are:
+
+- **Cells read first:** occupied cells are pronounced, with crisp contours and
+  strong perceptual separation; active, locked and ghost states remain distinct.
+- **Board first:** visually emphasize the actual rendered board and reduce the
+  visual weight of menus, panels and decorative chrome.
+- **Restrained palette:** dark neutral surfaces, desaturated structure, limited
+  interface accent, legible typography and subdued effects.
+- **Consistent dimensional styling:** 2D retains its existing flat board, 3D
+  retains its existing volumetric board, and 4D retains its actual collection
+  of 3D slice presentations; visually style each as rendered by the game.
+- **Unified shell:** do not wrap already rendered 4D slices in separate,
+  competing application cards. This is a *chrome treatment*, not a requirement
+  to alter slice layout, viewport architecture or coordinate mapping.
+
+The images in this folder are **aesthetic moodboards**, not authoritative
+screenshots, test fixtures, example game states, keybinding specifications or
+geometric layout diagrams. Differences between an image and the actual board
+are resolved in favour of the existing runtime/gameboard contracts, never by
+modifying the gameboard to make it resemble a picture.
+
+### Unchanged owners
+
+- The relevant `docs/rds/*`, native deterministic core, accepted topology and
+  movement contracts own gameplay and board semantics.
+- The existing Godot coordinate mapper, scene renderer, view-basis and camera
+  contracts own visual projection and coordinate placement.
+- `docs/architecture/configurable_plain_boards_and_4d_layout.md` and later
+  owning contracts own 4D slice placement and adaptive fitting.
+- `docs/design/godot_visual_system.md` and
+  `docs/plans/gameboard_visual_language_design.md` retain current visual
+  implementation rules. This document supplies the approved *style target*
+  within those rules; it does not supersede them.
+- `docs/plans/dual_mode_godot_ui_redesign.md` owns staging of style work,
+  not new board behavior.
 
 ## 1. Visual grammar shared by all dimensions
 
@@ -57,7 +92,7 @@ These are **design swatches for comparisons**, not changes to `shell_theme_palet
 
 - 2D squares: flat, large, filled, crisp contours; minimal corner radius; cell edges remain visible inside a multi-cell piece.
 - 3D voxels: cubical body, consistent scale, top/front/side face brightness, bounded edge contrast; no excessive emissive halos or fake depth.
-- 4D cells: **the same 3D voxel primitive**, reused without shrinking/flattening into a 2D tile merely because it belongs to another W slice.
+- 4D cells: visually match the existing 3D cell rendering grammar where corresponding 3D slice cells are visible; do not change their geometry or underlying renderer contract.
 - Locked/active cells have identical geometric envelopes in 3D and 4D. Display styling changes emphasis, never occupancy or geometry.
 - A grid is a board lattice, not a collection of isolated cell-edge fragments.
 
@@ -65,22 +100,21 @@ These are **design swatches for comparisons**, not changes to `shell_theme_palet
 
 Use a compact navigation/title row, a secondary score/next/hold rail and short Piece/View contextual controls. The board gets first claim on width and height. Play and Explorer use the same control language but have different permissions and context. Never draw pretend keybindings in screenshots: screen hints must come from the authoritative input contract. Decorative chrome and oversized stats must not crowd the board.
 
-## 2. Live 2D — accepted presentation
+## 2. Live 2D — accepted visual treatment
 
-- Default board remains **10 × 20**; all other valid configured sizes continue to work.
+- The flat 10 × 20 example in the approved picture is not a board-size directive. Render whatever valid size the existing gameplay configuration specifies.
 - Single tall, flat, centred board occupying the main viewport.
 - Occupied squares have strong outer and inner contours; locked stacks read as coherent patterns of distinct squares.
 - Active piece visually dominates, with landing ghost visible but not confusing.
-- Spatial reference needs no 3D shadows, tilted surfaces, perspective lattice or camera widget.
+- Use flat-looking materials and crisp flat outlines; do not add visual decoration that implies nonexistent depth or changes the existing 2D rendering model.
 - NEXT, HOLD and score remain accessible outside the board.
 - Use the accepted 2D screenshot as an aesthetic reference, not as evidence of exact state, scores, controls or piece selection.
 
 Acceptance: user can resolve every occupied cell and active-piece shape immediately at normal scale; shrinking the board to fit ornamental HUD is a failure.
 
-## 3. Live 3D — accepted presentation
+## 3. Live 3D — accepted visual treatment
 
-- One three-dimensional volume with a stable exterior three-quarter camera view, Y-down gravity, and an explicit axis gizmo.
-- Camera projection continues to respect the existing canonical view/fit contract.
+- Style the actual 3D board and canonical camera/view presentation already provided by the renderer. Do not introduce new camera, gravity, orientation, axis, or projection behavior.
 - Every voxel has a solid top/front/side reading, prominent but non-glaring edges, clear foreground/background occlusion and stable depth contrast.
 - Active piece has bounded visual emphasis; settled cell stack is quieter but *each cube* stays parseable.
 - Rear-face grid, bounds and floor preserve position without obscuring front voxels.
@@ -88,44 +122,58 @@ Acceptance: user can resolve every occupied cell and active-piece shape immediat
 
 Acceptance: the active 3D polycube's extension direction and each locked cube are identifiable without needing to orbit the camera.
 
-## 4. Live 4D — the governing correction
+## 4. Live 4D — visual language over existing semantics
 
-Let a 4D state be `B ⊂ ℤ⁴`. For an identity W view, the displayed 3D slice at W index `w` is
+The actual 4D gameboard is already represented by a set of rendered 3D slices
+under the owning gameboard, projection and adaptive-layout contracts. That fact
+is **context for styling**, not a new definition or replacement algorithm.
 
-`B_w = {(x,y,z) | (x,y,z,w) ∈ B}`.
+For every slice, apply the same perceptual principles used for 3D: clear
+individual cubes, legible occupied structures, quiet lattice and depth cues,
+and distinction between active/locked/ghost appearance. The 4D playfield
+as a whole should look continuous and coherent rather than like a row of
+separate app widgets. Keep the surrounding chrome visually quiet.
 
-In an arbitrary basis-derived view, use the current authoritative signed slice-axis coordinate rather than assume the slice axis is always canonical W. The 3D visible basis and signed labels derive from that same view state.
+**No changes are authorized to:**
 
-- Render **one 3D board per valid signed slice index**, each using the **same 3D cell renderer and visual grammar** as Live 3D.
-- All visible slice volumes are placed inside **one 4D gameboard viewport**. No separate self-contained cards, unrelated dashboards, per-slice control strips or individually framed application windows.
-- Each slice must have a **consistent orientation, orthographic scale, camera frame, grid style, voxel scale, perspective convention and cell material**. Changing view basis rotates/transforms all slice presentations coherently.
-- Preserve the currently governed **adaptive fitted matrix** (`configurable_plain_boards_and_4d_layout.md`): the number of columns and rows depends on layer count and viewport, stable row-major slice order, complete visibility at Fit, bounded inter-volume gutters. A horizontal row in the concept example is not a hardcoded layout rule.
-- 3D volumes retain their own structural outer box edges because they identify board boundaries; that is **not** permission to encase each slice in a different decorative panel.
-- The whole matrix has one common visual envelope/background and optional subtle W-order connection/guide line; no artificial nested 3D boxes or blended 4D projection pretending to display a single 3D occupancy.
-- A signed W/slice-axis label must be attached to each actual 3D volume and readable in ordinary and high-contrast modes.
-- Every 3D slice intersected by the **active 4D piece** receives active emphasis. It is incorrect to highlight only one slice when the piece spans several slice coordinates.
-- The locked stack, active cells and ghost in a slice are exactly its own projections, not copies of neighboring slices. A shape may have occupied cells on several W slices; no invented cross-slice connecting cubes.
-- Semantic slice indices and axis labels are part of understanding 4D, not ornament.
+- the definition or number of slices, their indices, membership or ordering;
+- signed view basis, projection, slice positions, spacing or adaptive
+  row/column arrangement;
+- camera orientation, fitted bounds, transforms, pan/zoom or axis controls;
+- piece or cell geometry, visibility/occlusion truth, active-piece membership,
+  state and input contracts;
+- W-axis labels or other semantic indicators, except cosmetic legibility;
+- internal renderer structure, viewport ownership, physics, topology,
+  recording or replay.
 
-For example a 4-slice board may appear as four identically oriented 3D cube volumes arranged horizontally, sharing a single playfield background and fitted camera. A taller viewport may prefer a 2×2 arrangement. Neither case implies independent panel membership or separate game modes.
+Visual emphasis must be applied only to states the existing runtime exposes.
+Never infer active-slice membership, duplicate cells, create cross-slice
+connections or synthesize a single 3D substitute from a mockup.
 
-### Invariants to test
+The 4D SVG is a *visual illustration of cell prominence and shared shell
+treatment*, not a prescription for four columns, a fixed W ordering, a
+particular camera, a 3D projection model, fixed cell sizes or layout. The
+actual screenshot produced by the running game determines what is being styled.
 
-1. A cell `(x,y,z,w)` is drawn exactly in the volume corresponding to its basis-derived slice coordinate.
-2. Visually adjacent 3D slices may be separated by a small fitted gutter, but are not independent UI viewports or detached apps.
-3. W order remains predictable during camera movement, window resizing and basis changes.
-4. Each slice uses one local renderer transform; active/locked/ghost cell geometry is identical to 3D.
-5. If an active 4D piece spans several W slices, all of those slices are emphasized.
-6. All slices fit at Reset/Fit on supported viewports; if zoomed/panned manually, user can always restore the complete matrix.
-7. The visual layer does not alter native game state, movement/rotation/transport, session hashes, study measures or accessibility semantics.
+### Visual-only acceptance checks
+
+1. Same state/board dimensions and same cells before and after theme change.
+2. Same slice layout, camera framing and view basis, within normal rendering
+   tolerance; no redesign-triggered relayout.
+3. Same ability to distinguish adjacent, active, locked and ghost cells.
+4. No per-slice decorative card that obscures the existing board.
+5. Improved board/cell legibility at all supported window sizes, with standard
+   and High Contrast options.
+6. No change to game input mappings, native state, hashes, traces, rotation,
+   collision, topology or study records.
 
 ## 5. UI reference artifacts
 
-The following are original, schematic SVGs representing the accepted geometry. They are **design references**, not pixel-perfect copies of user-approved raster images, screenshots of Godot, or evidence that current code matches the design.
+The following are original, schematic SVGs illustrating the accepted visual style. They are **design references**, not pixel-perfect copies of user-approved raster images, screenshots of Godot, or evidence that current code matches the design.
 
 - [2D board design](mockups/accepted_2d_gameplay.svg)
 - [3D board design](mockups/accepted_3d_gameplay.svg)
-- [4D multi-3D-slice board design](mockups/accepted_4d_slice_matrix.svg)
+- [4D multi-3D-slice visual treatment (illustrative layout only)](mockups/accepted_4d_slice_matrix.svg)
 
 The two earlier `dual_mode_plain_concept.svg` and `dual_mode_tron_concept.svg` illustrations were rejected and removed from this branch. They are not implementation references.
 
@@ -134,11 +182,11 @@ The two earlier `dual_mode_plain_concept.svg` and `dual_mode_tron_concept.svg` i
 Affected existing Godot owners to investigate, not replace uncritically:
 
 - `godot/Tet4D.Godot/scripts/ui/replay_visuals.gd` and the active renderer/material owners for 2D and 3D cell/board appearance.
-- 4D slice mapper, basis/view transforms, board bounds and fitted matrix layout; preserve a shared coordinate model.
+- Existing 4D slice projection, basis/view transforms, board bounds and fitted matrix layout are **read-only dependencies** to inspect and protect, not targets for redesign.
 - `scripts/ui/live_cockpit.gd`, `replay_hud.gd`, `responsive_panel_policy.gd` and `scripts/ui/style/*` for HUD/component hierarchy.
 - `godot/Tet4D.Godot/config/shell_theme_palettes.json`, shell settings registry and presentation profiles for semantic roles, persistent values and accessible overrides.
 
-Do one baseline capture for each dimension, then change 2D/3D material and board legibility, then 4D rendering via reuse and matrix-fit review, finally HUD and two theme skins. Each stage: existing automated regression tests plus real rendered snapshots; verify 680×520, 960×640, 1280×800, 1600×960, 1920×1080 and custom W counts, including 1, 4, 7 and 8 where admitted.
+Do one baseline capture for each dimension, then change 2D/3D material and board legibility, apply equivalent visual styling to the existing 4D slice renderer *without changing slice geometry or layout*, and finally restyle HUD and the two theme skins. Each stage: existing automated regression tests plus real rendered snapshots; verify 680×520, 960×640, 1280×800, 1600×960, 1920×1080 and custom W counts, including 1, 4, 7 and 8 where admitted.
 
 Human design acceptance must compare: board occupancy of the screen, legibility of individual cubes, neighbouring slices and W labels, piece orientation, ghost distinction, missing/clipped UI, style noise, high contrast and reduced motion. Existing semantics and accepted infrastructure are nonnegotiable.
 
