@@ -73,7 +73,16 @@ The restyling adaptor maps one set of semantic component purposes to the existin
 
 Avoid new fonts and third-party icon packs until license, inclusion footprint and readability are reviewed. Preserve existing axis colour semantics and structural depth cues.
 
-## 6. Screen information architecture
+## 6. Conceptual screen artifacts
+
+Original side-by-side design references (schematic 4D HUD, not engine captures):
+
+- [Instrument concept](../design/mockups/dual_mode_plain_concept.svg)
+- [Vector Arcade concept](../design/mockups/dual_mode_tron_concept.svg)
+
+Both deliberately use one fixed screen structure while varying surface treatment, accent and framing. These are hypotheses for review, not accepted layouts, geometry or gameplay screenshots.
+
+## 7. Screen information architecture
 
 **Main menu.** One strong Play action; Explorer as the second first-class activity; dimension entry and setup close by. Settings, Designer, Replay, Help and Diagnostics form secondary grouped routes. Clear current/default mode. Do not create more top-level entry routes.
 
@@ -94,7 +103,7 @@ Illustrative widescreen composition, **not** an instruction to create a new cock
 
 At narrow widths, the existing responsive policy reflows NEXT/HOLD and Piece/View below the board in a stable sequence. The board must not shrink to make decorative chrome fit.
 
-## 7. Library evaluation, without premature adoption
+## 8. Library evaluation, without premature adoption
 
 Candidate findings and sources are captured in `docs/design/game_ui_best_practices_2026_11_22.md`.
 
@@ -108,7 +117,7 @@ Candidate findings and sources are captured in `docs/design/game_ui_best_practic
 
 Comparison rubric: 30% ownership/fit, 20% usability/accessibility, 20% Godot/platform/CI compatibility, 15% binary/package and runtime cost, 15% maintenance/licensing. Require documented evidence for every category, not marketing counts. **Never install WoldUI and gohud simultaneously into product UI.** A third-party component may be adopted only when it solves a measured problem better than existing native Controls and does not create competing theme authority.
 
-## 8. Work packages (separate, reviewable PRs)
+## 9. Work packages (separate, reviewable PRs)
 
 **R0 — visual and interaction baseline.**
 Capture current main menu, settings, setup, Live 2D/3D/4D, Explorer 2D/3D/4D, Replay and Designer. Annotate board occupancy, clutter, reading order, focus path, contrast failures, label duplication, truncation and help discoverability. Preserve current screenshots/acceptance evidence; do not rewrite older evidence.
@@ -130,7 +139,7 @@ Run focused Godot UI/theme tests and unchanged complete verification gate, produ
 
 Every package lists its owning files, observed baseline, change-scope diff, executable tests, unexecuted checks and human acceptance status. Do not combine whole-app refactor, toolkit install, Explorer functional changes or native geometry fixes into one PR.
 
-## 9. Acceptance criteria
+## 10. Acceptance criteria
 
 - **No gameplay regressions:** input-to-command semantics, camera-relative motion, basis/view controls, topology rules, replay identity and deterministic native state unchanged; regression checks cover all dimensions.
 - **Contrast:** target WCAG 2.2 AA-like 4.5:1 for normal UI text, 3:1 for large text and functional non-text indicators, including normal/hover/focus/disabled as applicable. Record exception rationale, not false certification.
@@ -143,10 +152,10 @@ Every package lists its owning files, observed baseline, change-scope diff, exec
 - **Performance and packaging:** measure frame time, memory, shader stutter, editor import and package size against baseline; reject unexplained regressions. Run actual target builds before claiming platform acceptance.
 - **Design review:** humans approve both screenshots and direct keyboard/pointer interaction. The existing visual system remains authority until a separate explicit authority update is accepted.
 
-## 10. Explicit exclusions
+## 11. Explicit exclusions
 
 No third-party dependency is added by this planning branch. No change to releases, project settings, telemetry, research consent, cloud identity, data capture, geometry, piece simulation, topology transport, cameras, input defaults, built-in presentation style catalog, or existing theme IDs. These require their own owning contracts and review.
 
-## 11. Design handoff boundary
+## 12. Design handoff boundary
 
 This branch establishes scope, decision criteria and research, not an accepted UI implementation. The next bounded engineering action is R0 capture + R1 isolated comparative prototypes. Library adoption, default appearance changes, layout rewrite and merge remain separate owner/reviewer decisions.
