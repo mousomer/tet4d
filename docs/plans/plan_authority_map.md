@@ -30,7 +30,7 @@ planning redirection notes.
 | Forward Godot 2D/3D/4D Explorer topology semantics, presets, transport and secondary builder | `docs/rds/RDS_EXPLORER_TOPOLOGIES.md` (product requirements); `professional_godot_game_programme.md` (stage order) |
 | Explorer T1 implementation inventory, contract gaps and Session 2 inputs (audit only) | `docs/architecture/explorer_topology_t1_contract_inventory.md` |
 | Typography cleanup sequencing and its effective-typography lock | `typography_cleanup.md` |
-| P2 graphical redesign, shared dimension-parameterized cockpit infrastructure, authorized cockpit/menu layout redesign and acceptance gates | `dual_mode_godot_ui_redesign.md` (work packages); `professional_godot_game_programme.md` (phase order); `docs/design/godot_visual_system.md` (shell style); `gameboard_visual_language_design.md` (3D/4D cell grammar); `explorer_cockpit_unification.md` (Explorer contract/Phase 3) |
+| P2 graphical redesign, shared dimension-parameterized cockpit infrastructure, authorized cockpit/menu layout redesign and acceptance gates | `unified_cockpit_visual_redesign.md` (work packages); `professional_godot_game_programme.md` (phase order); `docs/design/godot_visual_system.md` (shell style); `gameboard_visual_language_design.md` (3D/4D cell grammar); `explorer_cockpit_unification.md` (Explorer contract/Phase 3) |
 | Explorer cockpit unification sequencing (structure, keys, dispatch) and its behaviour lock | `explorer_cockpit_unification.md` |
 | Repo-wide structural cleanup sequencing | `cleanup_master_plan.md` |
 | Live 3D and future Live 4D gameboard visual language | `gameboard_visual_language_design.md` |
