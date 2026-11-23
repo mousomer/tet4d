@@ -69,6 +69,21 @@ same contract. The right inspector keeps its reserved width and remains
 vertically scrollable; horizontal scrolling is disabled so panel content wraps
 inside the reserved inspector.
 
+## Later layout redesign authorization (2026-11-23)
+
+The 2026-10-25 accepted shell layouts and the 2026-10-27 observation lock
+remain **historical baseline contracts**, enforced until an accepted successor
+is delivered. The owner has reopened the Main Menu and Live 2D/3D/4D
+**cockpit-control layout** for P2 redesign, as recorded in
+`docs/design/ui_cockpit_result_lock_2026_10_27.md` and the draft plan
+`docs/plans/dual_mode_godot_ui_redesign.md` (PR #199). This authorizes
+design evaluation, not an immediately changed runtime layout or a waived test.
+Replacement layouts require a separate owner acceptance and contemporaneous
+new/updated shell-layout regression checks. The redesign also requires one
+dimension/activity-parameterized cockpit infrastructure. This does not
+transfer authority for gameboard geometry, 4D slice positions, projection,
+native state or gameplay.
+
 ## Orchestration repair boundary
 
 The accepted results and supplied pre-repair observations are locked in
