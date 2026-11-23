@@ -3,7 +3,7 @@
 Role: visual-language reference (non-semantic)
 Status: owner-accepted visual references; application to existing renderer pending
 Decision date: 2026-11-22
-Workstream: `docs/plans/dual_mode_godot_ui_redesign.md`
+Workstream: `docs/plans/unified_cockpit_visual_redesign.md`
 Existing authoritative implementation constraints: `docs/design/godot_visual_system.md`, `docs/plans/gameboard_visual_language_design.md`, `docs/architecture/configurable_plain_boards_and_4d_layout.md`
 
 ## Decision and scope
@@ -52,7 +52,7 @@ modifying the gameboard to make it resemble a picture.
   `docs/plans/gameboard_visual_language_design.md` retain current visual
   implementation rules. This document supplies the approved *style target*
   within those rules; it does not supersede them.
-- `docs/plans/dual_mode_godot_ui_redesign.md` owns staging of style work,
+- `docs/plans/unified_cockpit_visual_redesign.md` owns staging of style work,
   not new board behavior.
 
 ## 1. Visual grammar shared by all dimensions
