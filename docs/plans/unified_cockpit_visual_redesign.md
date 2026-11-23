@@ -91,7 +91,7 @@ The schematic SVGs are **aesthetic references only**, not accepted screen layout
 
 ## 6. Programme placement and design ownership
 
-Placed in **Phase III `9.1 Professional UI review and correction**, **P2** of `docs/plans/professional_godot_game_programme.md`; after the established Stage 57 control legibility/restart work and alongside relevant Stage 58C/59 readability acceptance. This is **not a new numbered Stage** and does not reopen `PROFESSIONAL_CORE_GAME_READY`. Priority against active P0/P1 work remains programme-owned.
+Placed in **Phase III §9.1 Professional UI review and correction**, **P2** of `docs/plans/professional_godot_game_programme.md`; after the established Stage 57 control legibility/restart work and alongside relevant Stage 58C/59 readability acceptance. This is **not a new numbered Stage** and does not reopen `PROFESSIONAL_CORE_GAME_READY`. Priority against active P0/P1 work remains programme-owned.
 
 Decision evidence: owner instruction in the **2026-11-23 Tet4D project conversation**, followed by the single-cockpit requirement in that same conversation; recorded in the dated lock addendum and PR #199. The permission reopens design exploration, **not** the locked runtime baseline. Replacement layout acceptance, baseline migration and implementation PR approval are separate decisions. Preserve legacy evidence and compare old/new results.
 
