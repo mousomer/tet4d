@@ -29,6 +29,38 @@ Sources of acceptance are the owner-accepted 2026-10-25 layout contract in
 `stage_58b_readability_evidence.md`. Earlier 58B viewport-share measurements
 remain historical; they do not override the later drawn-content contract.
 
+## Later owner decision: redesign exploration reopened (2026-11-23)
+
+**Status of this historical lock:** the 2026-10-25 accepted menu and cockpit
+layout is still the current **implemented/tested baseline**, but is no longer
+an immutable target for the P2 professional redesign. The owner explicitly
+stated in the Tet4D project conversation on **2026-11-23** that the design lock
+is being reopened, and subsequently required a **single cockpit infrastructure
+for Play/Explorer and 2D/3D/4D**, with dimension differences represented by
+capability/configuration rather than copied UI code. The decision is also
+recorded in [draft PR #199](https://github.com/mousomer/tet4d/pull/199).
+
+This authorizes **design and review of alternatives**, including Main Menu
+order/grouping, Live 2D/3D rail placement, Live 4D control split and responsive
+placement. It **does not approve any replacement** or change the current
+behavioral contract. The original observations, numeric baselines, accepted
+fit behavior and test evidence below remain historical facts. The existing
+`godot/Tet4D.Godot/tests/test_locked_shell_layouts.gd` remains enforced through
+behavior-preserving infrastructure work. An owner-accepted replacement layout
+must update/re-lock its expectations **in the same implementation PR**, with
+equivalent reachability, input, focus, fit, resize and board-preservation
+coverage. Never silently rewrite the October evidence or disable its test.
+
+This reopening is **only about application/cockpit layout and visual styling**.
+Gameboard semantics, 4D internal slice layout, native commands, projection,
+camera mapping, topology and replay identity remain governed elsewhere.
+
+Redesign plan: `docs/plans/dual_mode_godot_ui_redesign.md` (new proposed
+`unified_cockpit_visual_redesign.md` path once renamed). Original
+`docs/plans/ui_cockpit_orchestration_repair.md` and
+`docs/architecture/godot_shell_layout_stabilization.md` remain valid
+historical accounts of the accepted 2026-10-25/27 results.
+
 ## Frozen results
 
 | Surface | Result that must remain |
