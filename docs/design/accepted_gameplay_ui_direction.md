@@ -98,7 +98,20 @@ These are **design swatches for comparisons**, not changes to `shell_theme_palet
 
 ### Shell
 
-Use a compact navigation/title row, a secondary score/next/hold rail and short Piece/View contextual controls. The board gets first claim on width and height. Play and Explorer use the same control language but have different permissions and context. Never draw pretend keybindings in screenshots: screen hints must come from the authoritative input contract. Decorative chrome and oversized stats must not crowd the board.
+The cockpit layout itself is **reopened for design** by owner decision on
+2026-11-23. The old side-rail/4D-split/menu ordering is a baseline, not the
+permanent target; no replacement placement is accepted yet. The concept images
+illustrate visual hierarchy, **not** a required top navigation row or a
+particular arrangement of NEXT/HOLD, Piece/View or settings.
+
+Use **one shared cockpit infrastructure across 2D, 3D and 4D**, with Play and
+Explorer composing the same UI modules and styling. Differences in the visible
+actions, controls and arrangement are selected by *capability/configuration*
+and responsive content measurement, never by separate per-dimension cockpit
+implementations. Existing Play/Explorer command meaning and native semantics
+remain unchanged. The board gets first claim on legible space; controls,
+NEXT/HOLD and status remain accessible. Key hints derive from the input contract
+rather than concept art; decorative chrome must not crowd the board.
 
 ## 2. Live 2D — accepted visual treatment
 
