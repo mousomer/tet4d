@@ -67,10 +67,11 @@ general planning redirection or repo-wide ownership notes.
 - Visible changes (glyph coverage, rule reconciliation) remain owner decisions.
 
 ### `dual_mode_godot_ui_redesign.md`
-- Role: `spec`; status: `active` (proposal, no production adoption yet).
-- Owns bounded work packages, two-look shared shell experiments, toolkit comparison and acceptance.
-- Current design authority remains `docs/design/godot_visual_system.md`; accepted gameboard direction is detailed in `docs/design/accepted_gameplay_ui_direction.md`.
-- Research and source links: `docs/design/game_ui_best_practices_2026_11_22.md`.
+- Role: `spec`; status: `active` (approved goals, proposed execution; no replacement layout accepted).
+- Owns P2 graphical redesign packages, the one dimension/activity-parameterized cockpit architectural requirement, reopened October 25 layout-lock migration and acceptance.
+- Shell style authority: `docs/design/godot_visual_system.md`; 3D/4D visual grammar: `gameboard_visual_language_design.md`; Explorer descriptor, dispatch and Phase 3: `explorer_cockpit_unification.md`; phase order: `professional_godot_game_programme.md`.
+- Accepted aesthetic reference (not gameplay geometry): `docs/design/accepted_gameplay_ui_direction.md`.
+- Optional toolkit research: `docs/design/game_ui_best_practices_2026_11_22.md`.
 
 ### `bounded_practice_explorer.md`
 - Role: `spec`; status: `active`.
