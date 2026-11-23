@@ -40,6 +40,17 @@ The concepts are moodboards and do not specify controls, game states, camera
 views, geometry or new HUD/gameplay semantics. The initial dual-theme SVGs
 were rejected. Implementation and live screenshot acceptance remain pending.
 
+The 2026-11-23 owner decision reopens the earlier Main Menu and Live 2D/3D/4D
+**cockpit layout** acceptance for professional redesign; the old lock is kept
+as baseline until a replacement is explicitly accepted and its regression test
+migrated. New HUD components must form **one shared cockpit infrastructure**:
+2D/3D/4D and Play/Explorer differences are supplied by dimension/activity
+capabilities and configuration, not independent cockpit implementations.
+The shared Control tree, theme/roles, adaptive layout, focus handling and
+common command presentation are singular. Explorer retains its own authorized
+command/behavior contract; the 4D game's *internal 3D slice placement* remains
+outside this layout-redesign permission.
+
 ## Theme purposes
 
 The persisted theme IDs remain `plain`, `diagnostic`, and `tron`.
