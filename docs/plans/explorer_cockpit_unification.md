@@ -14,7 +14,7 @@ scope and must not move.
 ## Integration with owner-reopened UI redesign (2026-11-23)
 
 The later owner decision authorizes a **separate P2 professional UI redesign**
-(`docs/plans/dual_mode_godot_ui_redesign.md`) to reconsider the old Main Menu,
+(`docs/plans/unified_cockpit_visual_redesign.md`) to reconsider the old Main Menu,
 Live rail and 4D split layouts. That permission does not retroactively change
 the behavior-preserving Phase 0–3 Explorer requirements or approve a new layout.
 Keep the October 25 layout lock and Explorer regression baselines effective
