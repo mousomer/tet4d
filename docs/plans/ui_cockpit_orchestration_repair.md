@@ -11,7 +11,7 @@ The historical 2026-10-25/27 layout lock described here is retained as
 accepted **baseline evidence**, but the owner has now reopened Main Menu and
 2D/3D/4D cockpit **layout design** under draft PR #199. See
 `docs/design/ui_cockpit_result_lock_2026_10_27.md` for the dated addendum and
-`docs/plans/dual_mode_godot_ui_redesign.md` for proposed P2 work.
+`docs/plans/unified_cockpit_visual_redesign.md` for proposed P2 work.
 No replacement layout is yet accepted. This historical orchestration-repair
 scope, verified observations and tests are not retroactively rewritten; keep
 the existing lock tests active until a specifically approved successor is
