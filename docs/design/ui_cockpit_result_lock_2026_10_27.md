@@ -55,8 +55,8 @@ This reopening is **only about application/cockpit layout and visual styling**.
 Gameboard semantics, 4D internal slice layout, native commands, projection,
 camera mapping, topology and replay identity remain governed elsewhere.
 
-Redesign plan: `docs/plans/dual_mode_godot_ui_redesign.md` (new proposed
-`unified_cockpit_visual_redesign.md` path once renamed). Original
+Redesign plan: `docs/plans/unified_cockpit_visual_redesign.md`.
+Original
 `docs/plans/ui_cockpit_orchestration_repair.md` and
 `docs/architecture/godot_shell_layout_stabilization.md` remain valid
 historical accounts of the accepted 2026-10-25/27 results.
