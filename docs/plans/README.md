@@ -66,7 +66,7 @@ general planning redirection or repo-wide ownership notes.
 - Owns typography cleanup sequencing and its effective-typography lock.
 - Visible changes (glyph coverage, rule reconciliation) remain owner decisions.
 
-### `dual_mode_godot_ui_redesign.md`
+### `unified_cockpit_visual_redesign.md`
 - Role: `spec`; status: `active` (approved goals, proposed execution; no replacement layout accepted).
 - Owns P2 graphical redesign packages, the one dimension/activity-parameterized cockpit architectural requirement, reopened October 25 layout-lock migration and acceptance.
 - Shell style authority: `docs/design/godot_visual_system.md`; 3D/4D visual grammar: `gameboard_visual_language_design.md`; Explorer descriptor, dispatch and Phase 3: `explorer_cockpit_unification.md`; phase order: `professional_godot_game_programme.md`.
