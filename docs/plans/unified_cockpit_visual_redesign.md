@@ -65,6 +65,8 @@ Explorer: consume the existing `LiveInputContract.explorer_profile(dimension)` a
 
 The owner-accepted aesthetic moodboards are in `docs/design/accepted_gameplay_ui_direction.md`. They show **prominent individual cells**, crisp outlines, restrained blue/charcoal shell, quiet grid, muted locked fills and distinct active/ghost states. They do **not** specify cell coordinates, a 4D projection, a slice count or a prescribed panel layout.
 
+**Implementation art-direction basis:** `docs/design/accepted_gameplay_ui_direction.md` §Visual-language signature — Luminous Geometric Instrument§ (owner clarification, 2026-11-23). Use its board/cell priority, restrained materials, typography, shell-to-board hierarchy and explicit 4D multi-3D-slice correction in R2/R3/R4B/R5 acceptance. Preserve the existing Godot semantic role/material owners and adaptive slice layout; the signature is a visual target, **not** permission to approximate the geometry in concept art.
+
 - **2D:** style the existing flat board's cell contours and visual density; no dimensional geometry changes.
 - **3D:** style exterior voxel faces, depth-readable locked cells and active outlines; preserve canonical projection and the existing renderer.
 - **4D:** style the existing **set of 3D slices** with the same 3D voxel grammar. No replacement slice mapping, nested cube or independent panel-per-slice dashboard. W counts/layout remain computed by the existing presentation authority.
