@@ -55,6 +55,81 @@ modifying the gameboard to make it resemble a picture.
 - `docs/plans/unified_cockpit_visual_redesign.md` owns staging of style work,
   not new board behavior.
 
+## Visual-language signature — Luminous Geometric Instrument (2026-11-23 clarification)
+
+**Art-direction statement:** *A precise mathematical instrument with the visual presence of a modern puzzle game.* The board is the subject; the cockpit is the instrument panel that makes the board understandable. The aim is **diagrammatic dimensional clarity with restrained, tactile illumination**, not a sci-fi simulation console or a decorative neon arcade.
+
+This is an owner-directed *appearance and information-hierarchy* target, not a new renderer, topology, gameplay, UI-capability, or 4D mapping authority. Apply it only through the existing semantic roles, presentation profiles, rendering owners and shared cockpit layout policy. All numerical values or named colours below are comparison targets for screenshots, not new executable constants or additional configuration settings.
+
+### A. Image hierarchy and information architecture
+
+At first glance the player should see, in order:
+
+1. **The active piece and its individual constituent cells**, distinct from every other object.
+2. **The occupied stack and predicted landing**, with each cell individually resolved.
+3. **The containing board volumes, their depth/orientation and current layer emphasis.**
+4. **The immediately necessary state**, e.g. score/clears, pause, NEXT/HOLD where supported, active dimension and mode.
+5. **Piece movement, piece rotation, camera/view and W-slice controls** as separately labeled groups.
+6. Optional settings, explanations and diagnostics.
+
+The primary board claims the main visual field. The HUD supports it using compact rails/decks chosen by the *existing responsive layout engine*. The concept images' large headers, nested cards, invented scoring values or footer key legends are **not** pixel/layout targets. A single cockpit infrastructure exposes common modules using current dimension/activity capabilities and current runtime binding labels. Unavailable capabilities are absent or disabled rather than shown as decorative fake buttons. Preserve keyboard focus order, visible focus, modal reachability, current menu routes and appropriate touch targets.
+
+### B. Palette and contrast behaviour
+
+The reference mood is **deep charcoal / desaturated midnight slate**, warm off-white text, blue-gray board scaffolding, and a **single controlled warm accent** (amber) for primary interaction or active-element emphasis. Per-piece colour may exist to distinguish pieces and state, but it is *board information*, not license to tint every panel. Muted steel-blue locked cells are the default image mood; any piece-family colour on locked cells stays subordinate to the active object. The alternative `tron` skin may use a cooler cyan interaction accent **without changing board logic or introducing competing light sources**. `plain` remains the low-noise Instrument default; `diagnostic` and independent High Contrast overrides remain supported.
+
+Use the current project's semantic palette mapping. The colour proposals already recorded below (`#0B1119`, `#080E16`, `#17222E`, `#F1F0E9`, `#A9B7C5`, `#536B7E`, `#97AABD`, `#F0B65C`, `#6A8398`) are *reference swatches* to compare on genuine Godot captures. A large collection of saturated hues, glowing cyan panels, intense purple frames and permanent orange borders is specifically **not** the accepted aesthetic.
+
+A desirable luminance order is: active cell body/edge > relevant locked cell contour > active slice/boundary > external wireframe > internal grid > dark board > dark cockpit background. Text and actual affordances must still meet the existing accessibility targets. Do not achieve this order by washing out locked cells or erasing distant slices. Distinguish state through edge, opacity, label and shape in addition to hue.
+
+### C. Materials, edges and lighting
+
+**2D material:** flat filled square; firm uninterrupted outer silhouette and perceptible inner seams between occupied cells; very small corner radius or none; restrained internal value gradient if it does not imply false 3D depth. A multi-square piece must read as one shape *and* individually occupied cells.
+
+**3D material:** visually solid cubical voxels with a gentle, consistent difference among top/front/side faces; controlled exterior edges; no shiny photorealistic reflection, glass, hollow cages or extremely soft rounded toy shapes. The accepted Godot camera/projection, cube envelopes and occlusion remain unchanged. The existing depth-written active/locked compositing and presentation-controlled settled opacity remain authoritative.
+
+**4D material:** exactly the same cubical vocabulary, applied to **each actual 3D slice volume**. The entire slice matrix shares one gameplay canvas and visual grammar. Individual slice boxes and signed labels must be legible, but **never wrap each slice in a separate application card or independently designed miniature game screen**. Do not force all slices into one continuous lattice; each 3D volume retains its real spatial bounds, and the adaptive layout owns the gaps and row/column arrangement. Do not approximate 4D by one giant cube, nested cubes, a projection-fake tesseract or an always-horizontal strip of three fixed slices.
+
+**Edge grammar:** an occupied cell's physical outline is crisp and stronger than its local internal lattice; outer board wireframe remains continuous and cleaner than the internal grid. Avoid drawing the lattice through foreground filled cells. Keep the current Godot border/full/none lattice semantics and active/locked/ghost mesh geometry.
+
+**Emission:** reserved for the currently manipulated piece and rare action feedback; use a slight halo, if any, not enough to bleed adjacent cells together. Locked cubes are quieter, not unlit. The currently active layer is emphasized by its existing frame treatment and runtime state; do not invent extra illuminated W slices. Ghost is an intentional translucent/outlined predictive form, not a duplicate opaque piece or a generic dim cell.
+
+### D. Typography, geometry and cockpit components
+
+Use the established Godot font and effective-typography scale rather than introducing a separate font library: a clear display title, compact section headings, readable labels and restrained numerical emphasis. Use tabular/monospaced presentation only where it serves coordinates, scores, seeds, hashes or numeric status. A large “Tet4D” masthead in the illustrations is branding, **not a requirement to consume that much gameplay space**.
+
+Surfaces: near-black background, subtly lifted slate cockpit panels, thin quiet borders; intentional negative space rather than repeated bright card frames. Buttons have comfortable targets and states, with selection indicated by more than colour. Bottom/side control modules share one component geometry. Visually distinct control groups correspond to Piece, View/camera and Piece State; Explorer extends them without a bespoke design language. Use the current shared responsive/sizing policy and presentation settings for density, not arbitrary screen-relative artboard coordinates.
+
+The geometry of a panel is subordinate to the geometry of a cell. A cell may have a stronger edge than a button; that contrast is deliberate. Board edges and active frames are functional orientation aids, not decoration. Chamfers, small accent rules and angular cuts may appear rarely in the more stylized theme; they must not make the interface busier than the game.
+
+### E. Dimensional grammar and key corrections from generated images
+
+| Mode | Visual identity | Specific rejection |
+| --- | --- | --- |
+| **2D** | one flat rectangular grid with strong discrete squares, active/locked/ghost hierarchy | decorative depth effects, losing cell seams, fixed image board dimensions |
+| **3D** | one exterior-view voxel volume, strong edge/face readability and quiet enclosing structure | glass cubes, internal walls masquerading as cells, perspective/camera changes for cosmetic fit |
+| **4D** | an **adaptive matrix of actual 3D slice volumes**, consistent camera-relative orientation, signed slice labels and selective runtime-derived active emphasis; one unbroken **UI canvas** | one 3D box pretending to be 4D, overlapping/nested cube illustrations, three separate UI cards, or manually fixed horizontal slice layout |
+
+**No triptych product screen.** A three-panel 2D/3D/4D collage is a comparison of design language, not a requirement that all modes appear concurrently. Normal play shows the selected dimension in the shared cockpit.
+
+**No invented visual semantics.** Generated illustrations may have wrong piece shapes, block stacks, scores, key assignments, position of a ghost, W ordering, gravity, rotations and even geometrically impossible 3D structures. Those details must be discarded. The running Tet4D state and input contracts decide all visible game data.
+
+### F. Design acceptance and concrete rejection tests
+
+Capture representative *real* 2D, 3D and 4D live play, including configured small/large boards, alternate W counts, active pieces spanning multiple W slices and the currently available camera-relative views. Compare both approved skins at default/enlarged UI scale and High Contrast. The image treatment passes only if:
+
+1. At ordinary fitted size the viewer can count the active piece's cells; each occupied cell has a clear boundary; adjacent locked cubes do not melt into one block.
+2. A 3D piece's extension direction and gravity orientation are clear without compulsory orbiting. Lattice and rear faces support orientation without obscuring foreground cells.
+3. 4D reads as **several real 3D slice volumes in one composition**. W labels are readable, active occupancy is accurate, no slice is lost or duplicated, and the adaptive layout/projection is unchanged.
+4. Mode, status, NEXT/HOLD and actual available Piece/View controls remain reachable and legible while the *rendered* board remains dominant.
+5. Real theme transitions do not alter geometry, game state, inputs, camera/basis, slice arrangement, deterministic hashes or Explorer behavior.
+6. No persistent bright outlines on every panel, excessive glow, high-saturation multi-colour chrome, invented orientation arrows, fake keys or decorative controls.
+7. Both Instrument and Vector Arcade are clearly related in materials, spacing, cell structure and control semantics; their differences are palette/finish, not duplicate UI implementations.
+
+**Implementation sequence:** first preserve screenshot and code baselines (R0), then board/cell appearance in 2D/3D (R2), inherit the same appearance across the existing W-slice renderer (R3), and only then evaluate a revised common cockpit composition and final finish through the separately gated R4/R5/R6 work. The October layout lock remains the tested baseline until an explicit new layout approval and its regression update. The selected look alone does not approve a replacement layout or modification of 4D semantics.
+
+---
+
 ## 1. Visual grammar shared by all dimensions
 
 ### Priority hierarchy
