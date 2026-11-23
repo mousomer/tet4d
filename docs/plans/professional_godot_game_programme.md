@@ -5,7 +5,7 @@ Status: active
 Source of truth: this file for product priorities, phase sequencing, and
 completion gates  
 Supersedes: none  
-Last updated: 2026-11-14
+Last updated: 2026-11-23
 
 ## 1. Purpose
 
@@ -1456,10 +1456,24 @@ feedback, navigation and cockpit density. Review novice comprehension as
 well as expert visual judgement. Use the existing Design Laboratory and the
 Stage 58C/59 evidence rather than inventing another styling system.
 
-Preserve the accepted Stage 58B board allocation, locked cockpit/layout
-contracts and correct renderer semantics. A structural redesign of an accepted
-layout requires an explicit product decision and new human evidence. Close
-confirmed defects through bounded PRs, not a blanket UI rewrite.
+The 2026-11-23 owner decision explicitly **reopens the 2026-10-25 Main Menu
+and Live 2D/3D/4D cockpit layout lock** for professional graphical redesign.
+This is a product-design authorization, **not acceptance of a replacement
+layout**. The existing `test_locked_shell_layouts.gd` and Stage 58B results
+remain the measurable baseline until a proposed new layout is reviewed and its
+replacement invariant tests are published in the same implementation PR.
+Reopening external HUD/control-panel allocation does not reopen gameboard
+semantics, 4D slice projection/layout, native controls or gameplay rules.
+
+The redesign is a **single dimension/activity-parameterized cockpit**:
+2D/3D/4D Play and Explorer must reuse control modules, adaptive layout,
+focus/state handling and common action presentation, with capability and
+configuration differences rather than independent cockpit implementations.
+Preserve Explorer-specific input dispatch/held-repeat isolation and use the
+pending Explorer Phase 3 extraction as a composition host, not a second
+framework. Keep the existing renderer semantics and Stage 58B evidence as
+historical comparisons. Deliver bounded UI PRs and human review; do not
+combine a semantic/gameboard migration with a shell redesign.
 
 ### 9.2 Experimental assessment before data-schema implementation
 
@@ -1668,7 +1682,7 @@ The new priority order is:
 | P0 | Bounded existing-game corrections | Designer sizing, confirmed cockpit/replay defects, camera-relative movement and active Stage 58C/59 readability; preserve accepted layouts |
 | P1 | Accept existing bounded Godot Explorer baseline | `EXPLORER_LEARNING_READY`; maintain 3D/4D movement, basis, slices and view stability |
 | P1T | **Explorer topologies: T1 mathematical/catalog/transport contracts; T2 2D presets and scoped native authority transfer; T2S square S²/RP² with directed seams; then builders and higher-dimensional transport** | `RDS_EXPLORER_TOPOLOGIES.md` stages T1-T7 including T2S; latest cellwise §2.5 governs preset availability/movement, independently of formal T2 transfer; dimensional transfer is required in T4, optional multi-domain authority in T6; transfers remain pending, no Python-oracle veto. Current implementation status is tracked in `docs/BACKLOG.md`. |
-| P2 | Professional UI review and verified fixes | Expert and novice comprehension checks, including 3D/4D depth and cockpit hierarchy |
+| P2 | Professional UI redesign and verified fixes | Owner reopened October 25 menu/cockpit layout lock for design; one capability-driven cockpit across Play/Explorer 2D/3D/4D; retain current layout tests until approved replacement is locked and human-tested; protect gameboard semantics |
 | P3 | Study protocol and minimal assessment tasks | Baseline, held-out transfer, control/comparison and reproducible scoring before telemetry schema freezes |
 | P4 | Participant identity, persistence and telemetry | Consent-aware versioned backend/local recovery and data reconstructability |
 | P5 | Pilot and first controlled learning experiment | `RESEARCH_PLATFORM_READY` then `FIRST_EXPERIMENT_COMPLETE` |
