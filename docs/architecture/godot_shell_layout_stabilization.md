@@ -76,7 +76,7 @@ remain **historical baseline contracts**, enforced until an accepted successor
 is delivered. The owner has reopened the Main Menu and Live 2D/3D/4D
 **cockpit-control layout** for P2 redesign, as recorded in
 `docs/design/ui_cockpit_result_lock_2026_10_27.md` and the draft plan
-`docs/plans/dual_mode_godot_ui_redesign.md` (PR #199). This authorizes
+`docs/plans/unified_cockpit_visual_redesign.md` (PR #199). This authorizes
 design evaluation, not an immediately changed runtime layout or a waived test.
 Replacement layouts require a separate owner acceptance and contemporaneous
 new/updated shell-layout regression checks. The redesign also requires one
