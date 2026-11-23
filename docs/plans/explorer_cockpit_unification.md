@@ -11,6 +11,23 @@ Explorer key contract `docs/rds/RDS_KEYBINDINGS.md` §4.4. The locked Live
 2D/3D/4D cockpit and Main Menu (`test_locked_shell_layouts.gd`) are out of
 scope and must not move.
 
+## Integration with owner-reopened UI redesign (2026-11-23)
+
+The later owner decision authorizes a **separate P2 professional UI redesign**
+(`docs/plans/dual_mode_godot_ui_redesign.md`) to reconsider the old Main Menu,
+Live rail and 4D split layouts. That permission does not retroactively change
+the behavior-preserving Phase 0–3 Explorer requirements or approve a new layout.
+Keep the October 25 layout lock and Explorer regression baselines effective
+until a separately accepted replacement layout and updated tests are delivered.
+
+The new architectural invariant is **one shared cockpit infrastructure** for
+Play/Explorer, 2D/3D/4D, with dimension/activity-dependent configuration,
+not independent UI trees, sizing policies or copied controls. The planned
+`ExplorerCockpit` Phase 3 owner may remain as an activity-specific composition
+host, but it must reuse the shared cockpit layout/control components and
+binding-label infrastructure. Explorer action IDs, dispatch ownership and
+held-repeat isolation remain owned by this plan and existing RDS contracts.
+
 ## CI regression repair (2026-11-16)
 
 Dimension transitions rebuild the helper deck hosted inside the Explorer panel.
