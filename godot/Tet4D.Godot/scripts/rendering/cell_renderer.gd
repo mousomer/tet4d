@@ -19,7 +19,7 @@ func setup(
 	var cell_depth := size if depth < 0.0 else depth
 	# With a bevel the body shrinks to the inner square and the strips tile the
 	# rim, so every pixel of the cell is one layer at the configured opacity.
-	var body := size - 2.0 * size * float(bevel.get("width", 0.0)) if not bevel.is_empty() else size
+	var body := size - 2.0 * size * float(bevel["width"]) if not bevel.is_empty() else size
 	_add_box(Vector3.ZERO, Vector3(body, body, cell_depth), material)
 	if border_material != null and border_size > size:
 		_add_edge_outline(Vector3(border_size, border_size, cell_depth + (border_size - size)), border_size - size, border_material)
@@ -103,8 +103,8 @@ func add_halo(material: Material, size: float) -> void:
 # the bottom and right, laid on the camera-facing face. The four strips tile
 # the rim without overlapping, so no two coplanar strips fight for depth.
 func _add_bevel(size: float, depth: float, bevel: Dictionary) -> void:
-	var width := size * float(bevel.get("width", 0.16))
-	var thickness := maxf(0.002, size * 0.01)
+	var width := size * float(bevel["width"])
+	var thickness := maxf(float(bevel["min_thickness"]), size * float(bevel["thickness"]))
 	var z := depth * 0.5 - thickness * 0.5
 	var half := size * 0.5
 	var light: Material = bevel.get("light")

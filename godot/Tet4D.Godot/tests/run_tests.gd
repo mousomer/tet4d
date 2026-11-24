@@ -4,6 +4,7 @@ const TEST_SCRIPTS := [
 	"res://tests/test_bundle_loader.gd",
 	"res://tests/test_trace_snapshot_extractor.gd",
 	"res://tests/test_replay_visuals.gd",
+	"res://tests/test_graphical_language_config.gd",
 	"res://tests/test_shell_theme_palettes.gd",
 	"res://tests/test_shell_style_manager.gd",
 	"res://tests/test_shell_settings_registry.gd",

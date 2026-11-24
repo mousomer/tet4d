@@ -60,6 +60,11 @@ describes the older "calm instrument" look.
   replay hashes unchanged. Layout lock test unchanged and green.
 
 **P1 as built (2026-11-24):**
+- Every Luminous tuning value (emission, halo, bevel, seam, ghost, edges,
+  face shades) lives in `godot/Tet4D.Godot/config/graphical_language.json`
+  and is read through `GraphicalLanguageConfig`. Code holds none of them; a
+  missing value is reported and yields NAN. `test_graphical_language_config.gd`
+  validates the shipped file and checks that the renderer uses it.
 - The active-piece glow is a per-cell halo sprite in the piece's own hue,
   not Environment glow. Godot's glow threshold works on luminance, so it
   cannot bloom dark hues (purple, blue) without clipping them to another

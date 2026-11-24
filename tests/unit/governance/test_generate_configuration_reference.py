@@ -517,3 +517,24 @@ def test_check_generated_docs_detects_stale_output(monkeypatch, tmp_path: Path) 
 
     _write_text(user_path, "user-doc\n")
     assert config_doc.check_generated_docs() == 0
+
+
+def test_render_configuration_reference_includes_declared_visual_tuning(
+    monkeypatch, tmp_path: Path
+) -> None:
+    config_root = tmp_path / "config"
+    tuning_path = "godot/Tet4D.Godot/config/graphical_language.json"
+    _write_text(
+        config_root / "project" / "policy_pack.json",
+        '{"governance": {"godot_settings_externalization_contract": '
+        '{"visual_tuning": {"config_path": "' + tuning_path + '"}}}}\n',
+    )
+    _write_text(
+        tmp_path / tuning_path, '{"luminous": {"board": {"halo": {"alpha": 0.45}}}}\n'
+    )
+    monkeypatch.setattr(config_doc, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(config_doc, "CONFIG_ROOT", config_root)
+    monkeypatch.setattr(config_doc, "CONFIG_SCHEMA_DIR", config_root / "schema")
+    rendered = config_doc.render_configuration_reference()
+    assert f"### `{tuning_path}`" in rendered
+    assert "`luminous.board.halo.alpha`" in rendered

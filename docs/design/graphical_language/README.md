@@ -35,6 +35,11 @@ data. The running game supplies every value.
 
 ## Visual tokens
 
+Tuning values for the Luminous board (and, from P2, the shell skin) live in
+`godot/Tet4D.Godot/config/graphical_language.json`. To change how bright,
+translucent or rounded something is, edit that file; no code holds these
+numbers.
+
 The swatches were sampled from the concept images and are approximate. A
 P1/P2 capture is accepted on side-by-side comparison, not on hex equality.
 
