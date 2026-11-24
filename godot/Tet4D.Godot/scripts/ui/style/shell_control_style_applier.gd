@@ -4,6 +4,7 @@ class_name ShellControlStyleApplier
 
 const ShellStyleRolesScript = preload("res://scripts/ui/style/shell_style_roles.gd")
 const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
+const SECTION_TITLE_NAMES := ["ControlSectionTitle", "PieceControlTitle", "ViewControlTitle", "NextPieceTitle", "HoldPieceTitle"]
 
 
 func apply_to_tree(root: Control, style_manager) -> void:
@@ -23,6 +24,10 @@ func apply_panel(panel: Control, style_manager, elevated: bool = false) -> void:
 	if panel.name == "GameArea" or panel.theme_type_variation == "ViewportFrame":
 		background_role = ShellStyleRolesScript.BACKGROUND_BOARD
 		border_role = ShellStyleRolesScript.GRID_MAJOR
+		# Luminous lifts cockpit cards (NEXT, HOLD, control strips) above the
+		# page like the concept cards; only the board frame keeps the board fill.
+		if _uses_luminous_skin(style_manager) and panel.name != "GameArea":
+			background_role = ShellStyleRolesScript.BACKGROUND_PANEL
 	elif panel.name.find("ControlModeCard") >= 0:
 		background_role = ShellStyleRolesScript.BACKGROUND_ELEVATED
 		border_role = ShellStyleRolesScript.GRID_MINOR
@@ -116,8 +121,11 @@ func _apply_label(label: Label, style_manager) -> void:
 		role = ShellStyleRolesScript.STATE_PAUSED
 	elif label.name.find("GameOver") >= 0:
 		role = ShellStyleRolesScript.STATE_GAME_OVER
+	if _uses_luminous_skin(style_manager) and label.name in SECTION_TITLE_NAMES:
+		# Concept headings are white; amber marks only the selected item.
+		role = ShellStyleRolesScript.TEXT_PRIMARY
 	label.add_theme_color_override("font_color", style_manager.get_color(role))
-	if label.name in ["ControlSectionTitle", "PieceControlTitle", "ViewControlTitle", "NextPieceTitle", "HoldPieceTitle"]:
+	if label.name in SECTION_TITLE_NAMES:
 		label.add_theme_font_size_override("font_size", _font_size(label, ShellDesignTokensScript.FONT_SECTION))
 	elif label.name.find("Title") >= 0 and label.name.find("Subtitle") < 0:
 		label.add_theme_font_size_override("font_size", _font_size(label, ShellDesignTokensScript.FONT_SCREEN_TITLE))
@@ -151,27 +159,27 @@ func _apply_button(button: Button, style_manager) -> void:
 		popup.theme.set_font_size("font_size", "PopupMenu", _font_size(button, ShellDesignTokensScript.FONT_BODY))
 	button.add_theme_color_override("font_color", style_manager.get_color(ShellStyleRolesScript.TEXT_PRIMARY))
 	button.add_theme_color_override("font_hover_color", style_manager.get_color(ShellStyleRolesScript.TEXT_PRIMARY))
-	button.add_theme_color_override("font_pressed_color", style_manager.get_color(ShellStyleRolesScript.TEXT_INVERSE))
+	button.add_theme_color_override("font_pressed_color", style_manager.get_color(_pressed_text_role(style_manager)))
 	button.add_theme_color_override("font_disabled_color", style_manager.get_color(ShellStyleRolesScript.TEXT_MUTED))
 	var margin := ShellDesignTokensScript.CHROME_CONTROL_PADDING if _is_shell_chrome(button) else ShellDesignTokensScript.CONTROL_PADDING
 	button.add_theme_stylebox_override("normal", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_ELEVATED, ShellStyleRolesScript.GRID_MINOR, margin))
 	button.add_theme_stylebox_override("hover", _button_box(style_manager, ShellStyleRolesScript.ACCENT_SOFT, ShellStyleRolesScript.ACCENT_FOCUS, margin))
 	button.add_theme_stylebox_override("focus", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_ELEVATED, ShellStyleRolesScript.ACCENT_FOCUS, margin, _focus_border_width(style_manager)))
-	button.add_theme_stylebox_override("pressed", _button_box(style_manager, ShellStyleRolesScript.ACCENT_PRIMARY, ShellStyleRolesScript.ACCENT_PRIMARY, margin))
+	button.add_theme_stylebox_override("pressed", _button_box(style_manager, _pressed_fill_role(style_manager), ShellStyleRolesScript.ACCENT_PRIMARY, margin))
 	button.add_theme_stylebox_override("disabled", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_PANEL, ShellStyleRolesScript.CONTROL_DISABLED, margin))
 
 
 func _apply_action_button(button: Button, style_manager) -> void:
 	button.add_theme_color_override("font_color", style_manager.get_color(ShellStyleRolesScript.TEXT_PRIMARY))
 	button.add_theme_color_override("font_hover_color", style_manager.get_color(ShellStyleRolesScript.TEXT_PRIMARY))
-	button.add_theme_color_override("font_pressed_color", style_manager.get_color(ShellStyleRolesScript.TEXT_INVERSE))
+	button.add_theme_color_override("font_pressed_color", style_manager.get_color(_pressed_text_role(style_manager)))
 	button.add_theme_color_override("font_disabled_color", style_manager.get_color(ShellStyleRolesScript.TEXT_MUTED))
 	button.add_theme_font_size_override("font_size", _font_size(button, ShellDesignTokensScript.FONT_BODY))
 	var margin := ShellDesignTokensScript.CHROME_ACTION_PADDING if _is_shell_chrome(button) else ShellDesignTokensScript.CONTROL_PADDING + ShellDesignTokensScript.SPACE_1
 	button.add_theme_stylebox_override("normal", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_ELEVATED, ShellStyleRolesScript.ACCENT_PRIMARY, margin, 2))
 	button.add_theme_stylebox_override("hover", _button_box(style_manager, ShellStyleRolesScript.ACCENT_SOFT, ShellStyleRolesScript.ACCENT_FOCUS, margin, 2))
 	button.add_theme_stylebox_override("focus", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_ELEVATED, ShellStyleRolesScript.ACCENT_FOCUS, margin, _focus_border_width(style_manager)))
-	button.add_theme_stylebox_override("pressed", _button_box(style_manager, ShellStyleRolesScript.ACCENT_PRIMARY, ShellStyleRolesScript.ACCENT_PRIMARY, margin, 2))
+	button.add_theme_stylebox_override("pressed", _button_box(style_manager, _pressed_fill_role(style_manager), ShellStyleRolesScript.ACCENT_PRIMARY, margin, 2))
 	button.add_theme_stylebox_override("disabled", _button_box(style_manager, ShellStyleRolesScript.BACKGROUND_PANEL, ShellStyleRolesScript.CONTROL_DISABLED, margin, 2))
 
 
@@ -258,11 +266,56 @@ func _font_size(control: Control, readable_size: int) -> int:
 func _flat_box(style_manager, background_role: String, border_role: String, radius: int = ShellDesignTokensScript.RADIUS_PANEL, content_margin: int = ShellDesignTokensScript.CONTROL_PADDING, border_width: int = ShellDesignTokensScript.BORDER_STANDARD) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = style_manager.get_color(background_role)
-	style.border_color = style_manager.get_color(border_role)
+	style.border_color = _border_color(style_manager, border_role)
 	style.set_border_width_all(border_width)
-	style.set_corner_radius_all(radius)
+	style.set_corner_radius_all(_radius(style_manager, radius))
 	style.set_content_margin_all(content_margin)
 	return style
+
+
+# Concept A's selected item: a dark amber fill behind an amber border with
+# light text. Other themes keep the bright amber fill with inverse text.
+func _pressed_fill_role(style_manager) -> String:
+	return ShellStyleRolesScript.ACCENT_SOFT if _uses_luminous_skin(style_manager) else ShellStyleRolesScript.ACCENT_PRIMARY
+
+
+func _pressed_text_role(style_manager) -> String:
+	return ShellStyleRolesScript.TEXT_PRIMARY if _uses_luminous_skin(style_manager) else ShellStyleRolesScript.TEXT_INVERSE
+
+
+func _uses_luminous_skin(style_manager) -> bool:
+	return style_manager.get_theme_id() == "luminous" and not style_manager.is_high_contrast_enabled()
+
+
+# Luminous rounds corners up one step. Content margins are set separately, so
+# this never moves a control.
+func _radius(style_manager, radius: int) -> int:
+	if not _uses_luminous_skin(style_manager):
+		return radius
+	match radius:
+		ShellDesignTokensScript.RADIUS_KEYCAP:
+			return ShellDesignTokensScript.LUMINOUS_RADIUS_KEYCAP
+		ShellDesignTokensScript.RADIUS_CONTROL:
+			return ShellDesignTokensScript.LUMINOUS_RADIUS_CONTROL
+		ShellDesignTokensScript.RADIUS_PANEL:
+			return ShellDesignTokensScript.LUMINOUS_RADIUS_PANEL
+		ShellDesignTokensScript.RADIUS_EMPHASIS:
+			return ShellDesignTokensScript.LUMINOUS_RADIUS_EMPHASIS
+	return radius
+
+
+# The colour a border role resolves to on panels and controls.
+func border_color_for_role(style_manager, border_role: String) -> Color:
+	return _border_color(style_manager, border_role)
+
+
+# The grid roles also colour the board's glass edges, which Luminous makes
+# bright. Panels and controls take a soft border one step above their surface
+# instead, as in the concepts; accent, focus and state borders are unchanged.
+func _border_color(style_manager, border_role: String) -> Color:
+	if _uses_luminous_skin(style_manager) and border_role in [ShellStyleRolesScript.GRID_MINOR, ShellStyleRolesScript.GRID_MAJOR]:
+		return style_manager.get_color(ShellStyleRolesScript.BACKGROUND_ELEVATED).lightened(ShellDesignTokensScript.LUMINOUS_BORDER_LIFT)
+	return style_manager.get_color(border_role)
 
 
 func _button_box(style_manager, background_role: String, border_role: String, content_margin: int = ShellDesignTokensScript.CONTROL_PADDING, border_width: int = ShellDesignTokensScript.BORDER_STANDARD) -> StyleBoxFlat:

@@ -37,6 +37,15 @@ const RADIUS_CONTROL := 3
 const RADIUS_PANEL := 4
 const RADIUS_EMPHASIS := 6
 
+# Luminous shell skin (docs/design/graphical_language/): rounder corners and a
+# soft panel border. Radii and border colour never change content margins, so
+# layout is identical across themes.
+const LUMINOUS_RADIUS_KEYCAP := 5
+const LUMINOUS_RADIUS_CONTROL := 6
+const LUMINOUS_RADIUS_PANEL := 10
+const LUMINOUS_RADIUS_EMPHASIS := 12
+const LUMINOUS_BORDER_LIFT := 0.12
+
 const PANEL_PADDING := SPACE_4
 const COMPACT_PADDING := SPACE_3
 const PANEL_COMPACT_SIZE := Vector2(1024, 640)
