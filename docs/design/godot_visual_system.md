@@ -4,6 +4,15 @@ Role: current authority for Godot product-shell visual design
 
 ## Direction
 
+> **Superseded target (2026-11-24).** The owner's graphical language in
+> `docs/design/graphical_language/README.md` is now the target look:
+> saturated per-piece colour, bevelled cells, a glowing active piece, glass
+> board volumes, amber selection. The paragraphs below describe the older
+> "calm instrument" direction and apply to the existing `plain`, `tron` and
+> `diagnostic` themes until `docs/plans/graphical_language_adoption.md` P3
+> retires `plain` and `tron`. The semantic roles, typography, spacing and
+> accessibility rules in this file still apply.
+
 Tet4D should read as a calm geometry instrument: geometric, restrained,
 precise, readable, and slightly futuristic. The Python/Pygame interface is the
 strongest internal reference for hierarchy, negative space, quiet board

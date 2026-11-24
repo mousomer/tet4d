@@ -78,6 +78,13 @@ general planning redirection or repo-wide ownership notes.
   2D/3D/4D and its key→command behaviour lock.
 - Owner decisions Q1–Q5 (placement, keys, Fit, 3D view turns, Space tab) accepted 2026-11-11.
 
+### `graphical_language_adoption.md`
+- Role: `spec`; status: `active`.
+- Owns the phased adoption (P0–P4) of the owner's graphical language: board
+  skin, shell skin, then the cockpit and menu redesign.
+- The target look itself is owned by `docs/design/graphical_language/README.md`
+  and its concept images.
+
 ### `gameboard_visual_language_design.md`
 - Role: `authority`
 - Status: `active`
