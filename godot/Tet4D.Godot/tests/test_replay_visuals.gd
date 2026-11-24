@@ -200,6 +200,11 @@ func _assert_luminous_graphical_language(failures: Array) -> void:
 	_assert_color_close(failures, "luminous board edges use the bright boundary role", Color(edge.albedo_color.r, edge.albedo_color.g, edge.albedo_color.b), ReplayVisuals.color_for_role(ReplayVisuals.ROLE_BOARD_OUTLINE, luminous))
 	if absf(edge.albedo_color.a - 0.8) > 0.001 or ReplayVisuals.board_edge_thickness_scale(luminous) <= 1.0:
 		failures.append("luminous board edges should follow board.boundary_opacity and draw thicker than the lattice")
+	# A piece behind a bright edge must not paint over it (3D front edges).
+	if edge.depth_draw_mode != BaseMaterial3D.DEPTH_DRAW_ALWAYS:
+		failures.append("bright luminous board edges should write depth so pieces behind them stay behind")
+	if ReplayVisuals.board_edge_material(luminous, 0.3, 0.3).depth_draw_mode != BaseMaterial3D.DEPTH_DRAW_DISABLED:
+		failures.append("faint luminous board edges should not write depth")
 	for mode in [ReplayVisuals.DISPLAY_MODE_PLAIN, ReplayVisuals.DISPLAY_MODE_TRON, ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC]:
 		var shared := ReplayVisuals.board_edge_material(mode, 0.3, 0.8)
 		var scaffold := ReplayVisuals.board_scaffold_material(mode, 0.3)
