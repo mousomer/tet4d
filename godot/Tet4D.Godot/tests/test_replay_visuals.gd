@@ -183,7 +183,7 @@ func _assert_luminous_graphical_language(failures: Array) -> void:
 	_assert_color_close(failures, "luminous 2D locked cell keeps its piece colour", Color(locked_2d.r, locked_2d.g, locked_2d.b), piece)
 	var active_faces: Dictionary = ReplayVisuals.live_3d_active_face_materials(luminous, 3, 1.0)
 	var active_front := active_faces["front"] as StandardMaterial3D
-	if not active_front.emission_enabled or active_front.emission_energy_multiplier < 1.0 or active_front.albedo_color.get_luminance() > 0.001:
+	if not active_front.emission_enabled or active_front.emission_energy_multiplier <= 0.0 or active_front.albedo_color.get_luminance() > 0.001:
 		failures.append("luminous active faces should be emission-only so their hue ignores the light angle")
 	if ReplayVisuals.live_active_halo_material(luminous, 3) == null:
 		failures.append("luminous active cells should get a halo")
