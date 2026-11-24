@@ -17,7 +17,12 @@ const PLAN_ND := [["move_x_neg", 2], ["move_x_pos", 2], ["move_z_neg", 2], ["mov
 func _initialize() -> void:
 	call_deferred("_go")
 func _go() -> void:
-	var out: String = OS.get_cmdline_user_args()[0]
+	var args := OS.get_cmdline_user_args()
+	if args.size() != 1 or not DirAccess.dir_exists_absolute(args[0]):
+		push_error("Pass an existing screenshot output directory after --.")
+		quit(1)
+		return
+	var out := args[0]
 	var root_node = load("res://scenes/game_bootstrap.tscn").instantiate()
 	root.add_child(root_node)
 	for i in 12: await process_frame
@@ -43,6 +48,11 @@ func _go() -> void:
 			await process_frame
 		for i in 30: await process_frame
 		await RenderingServer.frame_post_draw
-		root.get_texture().get_image().save_png(out.path_join(mode + ".png"))
+		var path := out.path_join(mode + ".png")
+		var save_error := root.get_texture().get_image().save_png(path)
+		if save_error != OK:
+			push_error("Could not save screenshot %s: %s" % [path, error_string(save_error)])
+			quit(1)
+			return
 		print(mode, " theme=", app._state.display_mode, " locked=", app._renderer._presentation.locked_cells().size())
 	quit()

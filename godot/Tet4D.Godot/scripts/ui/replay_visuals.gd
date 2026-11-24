@@ -29,7 +29,6 @@ const LUMINOUS_ACTIVE_FACE_EMISSION := 1.0
 const LUMINOUS_ACTIVE_EDGE_EMISSION := 1.0
 const LUMINOUS_BOARD_EDGE_EMISSION := 0.35
 const LUMINOUS_BOARD_EDGE_THICKNESS_SCALE := 1.8
-const LUMINOUS_EDGE_DEPTH_WRITE_MIN_ALPHA := 0.5
 const LUMINOUS_LOCKED_ALPHA_SCALE := 0.88
 const LUMINOUS_SEAM_ALPHA := 0.85
 const LUMINOUS_GHOST_FILL_ALPHA := 0.2
@@ -858,21 +857,10 @@ static func board_enclosure_material(mode: String, opacity: float = -1.0, bounda
 static func board_edge_material(mode: String, surface_opacity: float = -1.0, boundary_opacity: float = -1.0, high_contrast: bool = false) -> StandardMaterial3D:
 	if not is_luminous(mode) or high_contrast:
 		return board_scaffold_material(mode, surface_opacity, high_contrast)
-	var material := _scaffold_surface(mode, ROLE_BOARD_OUTLINE, _parameter_value_or_default("board.boundary_opacity", boundary_opacity), "board.boundary_opacity", -10)
+	# Blend over depth-tested cells after their transparent faces have drawn.
+	var material := _scaffold_surface(mode, ROLE_BOARD_OUTLINE, _parameter_value_or_default("board.boundary_opacity", boundary_opacity), "board.boundary_opacity", 1)
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.depth_draw_mode = board_edge_depth_draw_mode(mode, material.albedo_color.a, high_contrast)
 	return material
-
-
-# Board edges are transparent and drawn before the cells. Without a depth write,
-# a piece behind an edge (the 3D front corner edges) is painted over it. Bright
-# Luminous edges write depth so they stay in front of what is behind them; faint
-# edges do not, because a depth-writing faint line would cut thin holes in
-# whatever lies behind it.
-static func board_edge_depth_draw_mode(mode: String, alpha: float, high_contrast: bool = false) -> BaseMaterial3D.DepthDrawMode:
-	if is_luminous(mode) and not high_contrast and alpha >= LUMINOUS_EDGE_DEPTH_WRITE_MIN_ALPHA:
-		return BaseMaterial3D.DEPTH_DRAW_ALWAYS
-	return BaseMaterial3D.DEPTH_DRAW_DISABLED
 
 
 static func board_edge_thickness_scale(mode: String) -> float:

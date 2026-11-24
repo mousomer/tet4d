@@ -84,13 +84,11 @@ describes the older "calm instrument" look.
   cell is one layer at the configured opacity.
 - Board outer edges in 2D/3D/4D are a bright glass-edge material (thicker,
   at `board.boundary_opacity`) above the quiet face and interior lattice.
-  While mostly opaque (alpha ≥ 0.5) they write depth, so a piece behind a
-  3D front edge stays behind it instead of being painted over the edge.
-  Pixel acceptance (windowed; the headless Godot lane draws nothing):
-  `godot --path godot/Tet4D.Godot --script tests/run_board_edge_occlusion_acceptance.gd`
-  renders an active slab behind the nearest 3D edge and fails if the edge
-  pixels change. It fails (10% of edge pixels kept) with the depth write
-  removed and passes (100%) with it.
+  Edges depth-test and blend after the cell faces. The windowed
+  `tests/run_board_edge_occlusion_acceptance.gd` checks that an opaque frame
+  stays in front of the slab and that the slab shows through a half-opacity
+  frame. Capture commands require an existing output directory and fail if
+  any screenshot cannot be written.
 - Captures: `docs/design/screenshots/graphical_language_p1/`, taken through
   normal startup at 1440×900 with registry defaults (no style preset). Same
   seeded game, default `luminous` versus `plain`.

@@ -13,7 +13,7 @@ extends SceneTree
 # are painted over by the active piece drawn after them. It renders an empty
 # board, then the same board with an active slab packed in behind that edge,
 # both through the production TraceSceneRenderer, CameraRig fit and lighting,
-# and requires the pixels on the projected edge to be unchanged.
+# and compares opaque edges with translucent edges at the same pixels.
 
 const Renderer = preload("res://scripts/rendering/trace_scene_renderer.gd")
 const RigScript = preload("res://scripts/rendering/camera_rig.gd")
@@ -55,20 +55,28 @@ func _run() -> void:
 	_build_world()
 	await process_frame
 	var profile = Profile.canonical_defaults().with_overrides({"theme.name": Visuals.DISPLAY_MODE_LUMINOUS})
-	var empty := await _render(profile, [])
+	var opaque_profile = profile.with_overrides({"board.boundary_opacity": 1.0})
+	var half_profile = profile.with_overrides({"board.boundary_opacity": 0.5})
+	var empty := await _render(opaque_profile, [])
 	var corner := _nearest_vertical_corner()
 	var top: Vector3 = corner + _row_offset(SLAB_ROWS[0] + 0.5)
 	var bottom: Vector3 = corner + _row_offset(SLAB_ROWS[-1] + 0.5)
-	var slab := await _render(profile, _slab_cells(corner))
+	var cells := _slab_cells(corner)
+	var slab := await _render(opaque_profile, cells)
+	var half_empty := await _render(half_profile, [])
+	var half_slab := await _render(half_profile, cells)
 	var top_px := _camera.unproject_position(top)
 	var bottom_px := _camera.unproject_position(bottom)
 	var side := (bottom_px - top_px).orthogonal().normalized()
 	var kept := 0
 	var covered := 0
+	var blended := 0
 	for index in range(SAMPLES):
 		var point := top_px.lerp(bottom_px, (index + 0.5) / SAMPLES)
 		if _distance(empty, slab, point) <= EDGE_TOLERANCE:
 			kept += 1
+		if _distance(half_empty, half_slab, point) > 0.04 and _distance(slab, half_slab, point) > 0.04:
+			blended += 1
 		if maxf(_distance(empty, slab, point + side * COVER_OFFSET_PX), _distance(empty, slab, point - side * COVER_OFFSET_PX)) >= COVER_THRESHOLD:
 			covered += 1
 	var debug_dir := OS.get_environment("TET4D_EDGE_OCCLUSION_DEBUG_DIR")
@@ -85,6 +93,12 @@ func _run() -> void:
 		return
 	if kept_share < MIN_EDGE_KEPT:
 		print("BOARD EDGE OCCLUSION: FAIL - the active piece behind the front edge is painted over it")
+		quit(1)
+		return
+	var blended_share := float(blended) / SAMPLES
+	print("board edge blending: visible piece under the half-opacity frame at %.2f of samples" % blended_share)
+	if blended_share < MIN_COVERED:
+		push_error("Half-opacity edge did not blend with the piece behind it.")
 		quit(1)
 		return
 	print("BOARD EDGE OCCLUSION: PASS")
