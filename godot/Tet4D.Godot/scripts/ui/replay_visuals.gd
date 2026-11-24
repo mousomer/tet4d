@@ -13,11 +13,33 @@ const PresentationProfileScript = preload("res://scripts/presentation/presentati
 const DISPLAY_MODE_DIAGNOSTIC := "diagnostic"
 const DISPLAY_MODE_TRON := "tron"
 const DISPLAY_MODE_PLAIN := "plain"
+# Owner graphical language (docs/design/graphical_language/README.md).
+const DISPLAY_MODE_LUMINOUS := "luminous"
 const DISPLAY_MODES := [
 	DISPLAY_MODE_DIAGNOSTIC,
 	DISPLAY_MODE_TRON,
 	DISPLAY_MODE_PLAIN,
+	DISPLAY_MODE_LUMINOUS,
 ]
+
+# Luminous material targets, tuned against docs/design/graphical_language/.
+const LUMINOUS_ACTIVE_WHITEN := 0.06
+const LUMINOUS_ACTIVE_EMISSION := 1.0
+const LUMINOUS_ACTIVE_FACE_EMISSION := 1.0
+const LUMINOUS_ACTIVE_EDGE_EMISSION := 1.0
+const LUMINOUS_BOARD_EDGE_EMISSION := 0.35
+const LUMINOUS_LOCKED_ALPHA_SCALE := 0.88
+const LUMINOUS_SEAM_ALPHA := 0.85
+const LUMINOUS_GHOST_FILL_ALPHA := 0.2
+const LUMINOUS_BEVEL_WIDTH := 0.16
+const LUMINOUS_HALO_ALPHA := 1.0
+const LUMINOUS_HALO_SCALE := 2.6
+const LUMINOUS_ACTIVE_FACE_SHADES := {
+	"base": 1.0, "top": 1.22, "front": 1.04, "right": 0.9, "left": 0.86, "back": 0.8, "bottom": 0.7,
+}
+const LUMINOUS_LOCKED_FACE_SHADES := {
+	"base": 1.0, "top": 1.12, "front": 0.94, "right": 0.8, "left": 0.76, "back": 0.7, "bottom": 0.6,
+}
 
 const OUTER_MARGIN := 12
 const BODY_GAP := 10
@@ -172,6 +194,7 @@ const TRACE_COLOR_PALETTE := [
 ]
 
 static var _palette_cache := {}
+static var _halo_texture_cache: GradientTexture2D = null
 static var _canonical_presentation_profile = PresentationProfileScript.canonical_defaults()
 
 
@@ -203,6 +226,8 @@ static func display_mode_label(mode: String) -> String:
 			return "Vector Arcade"
 		DISPLAY_MODE_PLAIN:
 			return "Instrument"
+		DISPLAY_MODE_LUMINOUS:
+			return "Luminous"
 		_:
 			return DISPLAY_MODE_DIAGNOSTIC.capitalize()
 
@@ -226,7 +251,8 @@ static func build_theme(mode: String = DISPLAY_MODE_PLAIN) -> Theme:
 	match display_mode:
 		DISPLAY_MODE_TRON:
 			theme_path = TRON_THEME_PATH
-		DISPLAY_MODE_PLAIN:
+		# Luminous shares the Instrument Control resource until P2 gives it its own.
+		DISPLAY_MODE_PLAIN, DISPLAY_MODE_LUMINOUS:
 			theme_path = PLAIN_THEME_PATH
 	var shell_theme := load(theme_path).duplicate() as Theme
 	shell_theme.default_font_size = ShellDesignTokensScript.FONT_BODY
@@ -242,6 +268,9 @@ static func gameplay_active_cell_material(mode: String = DISPLAY_MODE_PLAIN, opa
 
 
 static func live_active_cell_material(mode: String = DISPLAY_MODE_PLAIN, color_id: int = 1, opacity: float = -1.0) -> StandardMaterial3D:
+	if is_luminous(mode):
+		var glow_base := _trace_color(color_id, false).lerp(Color.WHITE, LUMINOUS_ACTIVE_WHITEN)
+		return _apply_opacity(_make_glow_material(glow_base, LUMINOUS_ACTIVE_EMISSION, false), opacity, "active_cells.opacity")
 	var base := _trace_color(color_id, false).lerp(Color.WHITE, 0.08)
 	return _apply_opacity(_make_material(base, _role_emission(ROLE_ACTIVE_CELL, mode) + 0.1, false), opacity, "active_cells.opacity")
 
@@ -249,6 +278,12 @@ static func live_active_cell_material(mode: String = DISPLAY_MODE_PLAIN, color_i
 static func ghost_cell_material(mode: String = DISPLAY_MODE_PLAIN, color_id: int = 1, high_contrast: bool = false, opacity_multiplier: float = -1.0) -> StandardMaterial3D:
 	opacity_multiplier = _parameter_value_or_default("ghost.opacity", opacity_multiplier)
 	var role_color := color_for_role(ROLE_GHOST_CELL, mode)
+	if is_luminous(mode) and not high_contrast:
+		# Concept B: a translucent grey form, read by its outline first.
+		var ghost := _make_material(role_color, 0.0, true)
+		ghost.albedo_color.a = clampf(LUMINOUS_GHOST_FILL_ALPHA * opacity_multiplier, 0.0, 1.0)
+		ghost.emission_energy_multiplier = 0.0
+		return ghost
 	var base := _trace_color(color_id, false).lerp(role_color, 0.42 if high_contrast else 0.52)
 	var material := _make_material(base.lightened(0.10 if high_contrast else 0.0), 0.16 if high_contrast else 0.09, true)
 	var baseline_alpha := (0.62 if normalize_display_mode(mode) != DISPLAY_MODE_TRON else 0.68) if high_contrast else (0.46 if normalize_display_mode(mode) != DISPLAY_MODE_TRON else 0.54)
@@ -259,6 +294,10 @@ static func ghost_cell_material(mode: String = DISPLAY_MODE_PLAIN, color_id: int
 
 
 static func ghost_cell_border_material(mode: String = DISPLAY_MODE_PLAIN, high_contrast: bool = false) -> StandardMaterial3D:
+	if is_luminous(mode) and not high_contrast:
+		var outline := _make_material(color_for_role(ROLE_GHOST_CELL, mode).lightened(0.25), 0.05, true)
+		outline.albedo_color.a = 0.8
+		return outline
 	var material := _make_material(color_for_role(ROLE_GHOST_CELL, mode).lightened(0.16 if high_contrast else 0.0), 0.24 if high_contrast else 0.16, true)
 	material.albedo_color.a = (1.0 if normalize_display_mode(mode) != DISPLAY_MODE_TRON else 1.0) if high_contrast else (0.88 if normalize_display_mode(mode) != DISPLAY_MODE_TRON else 0.94)
 	return material
@@ -271,6 +310,8 @@ static func live_3d_active_cell_material(mode: String = DISPLAY_MODE_PLAIN, colo
 
 # Live 3D and 4D active pieces share one exterior material (Stage 58C).
 static func live_3d_active_face_materials(mode: String = DISPLAY_MODE_PLAIN, color_id: int = 1, opacity: float = -1.0) -> Dictionary:
+	if is_luminous(mode):
+		return _luminous_face_materials(_trace_color(color_id, false).lerp(Color.WHITE, LUMINOUS_ACTIVE_WHITEN), true, opacity)
 	var base := _trace_color(color_id, false).lerp(Color.WHITE, 0.13)
 	return _live_3d_face_materials(base, mode, true, opacity)
 
@@ -281,6 +322,9 @@ static func locked_cell_material(mode: String = DISPLAY_MODE_PLAIN, opacity: flo
 
 
 static func live_locked_cell_material(mode: String = DISPLAY_MODE_PLAIN, color_id: int = 1, opacity: float = -1.0) -> StandardMaterial3D:
+	if is_luminous(mode):
+		# Locked cells keep their piece hue: no darkening, no blend toward grey.
+		return _apply_opacity(_make_material(_trace_color(color_id, false), 0.0, false), opacity)
 	var base := _trace_color(color_id, false).darkened(0.22).lerp(color_for_role(ROLE_LOCKED_CELL, mode), 0.18)
 	return _apply_opacity(_make_material(base, _role_emission(ROLE_LOCKED_CELL, mode), false), opacity)
 
@@ -291,29 +335,39 @@ static func live_3d_locked_cell_material(mode: String = DISPLAY_MODE_PLAIN, colo
 
 
 static func live_3d_locked_face_materials(mode: String = DISPLAY_MODE_PLAIN, color_id: int = 1, opacity: float = -1.0) -> Dictionary:
+	if is_luminous(mode):
+		return _luminous_face_materials(_trace_color(color_id, false), false, opacity)
 	var base := _trace_color(color_id, false).darkened(0.42).lerp(color_for_role(ROLE_LIVE_3D_LOCKED, mode), 0.28)
 	return _live_3d_face_materials(base, mode, false, opacity)
 
 
 static func live_active_cell_border_material(mode: String = DISPLAY_MODE_PLAIN) -> StandardMaterial3D:
+	if is_luminous(mode):
+		return _make_glow_material(color_for_role(ROLE_LIVE_CELL_ACTIVE_BORDER, mode), LUMINOUS_ACTIVE_EDGE_EMISSION, false)
 	if normalize_display_mode(mode) == DISPLAY_MODE_PLAIN:
 		return _make_material(color_for_role(ROLE_TEXT, mode), 0.06, false)
 	return _role_material(ROLE_LIVE_CELL_ACTIVE_BORDER, mode, _role_emission(ROLE_LIVE_CELL_ACTIVE_BORDER, mode))
 
 
 static func live_locked_cell_border_material(mode: String = DISPLAY_MODE_PLAIN) -> StandardMaterial3D:
+	if is_luminous(mode):
+		return _luminous_seam_material(mode)
 	if normalize_display_mode(mode) == DISPLAY_MODE_PLAIN:
 		return _make_material(color_for_role(ROLE_TEXT_SECONDARY, mode).darkened(0.18), 0.01, false)
 	return _role_material(ROLE_LIVE_CELL_LOCKED_BORDER, mode, _role_emission(ROLE_LIVE_CELL_LOCKED_BORDER, mode))
 
 
 static func live_3d_active_cell_border_material(mode: String = DISPLAY_MODE_PLAIN) -> StandardMaterial3D:
+	if is_luminous(mode):
+		return _make_glow_material(color_for_role(ROLE_LIVE_CELL_ACTIVE_BORDER, mode), LUMINOUS_ACTIVE_EDGE_EMISSION, false)
 	if normalize_display_mode(mode) == DISPLAY_MODE_PLAIN:
 		return _make_material(color_for_role(ROLE_TEXT, mode).darkened(0.12), 0.02, false)
 	return _role_material(ROLE_LIVE_3D_ACTIVE_OUTLINE, mode, _role_emission(ROLE_LIVE_3D_ACTIVE_OUTLINE, mode))
 
 
 static func live_3d_locked_cell_border_material(mode: String = DISPLAY_MODE_PLAIN) -> StandardMaterial3D:
+	if is_luminous(mode):
+		return _luminous_seam_material(mode)
 	if normalize_display_mode(mode) == DISPLAY_MODE_PLAIN:
 		return _make_material(color_for_role(ROLE_TEXT, mode).darkened(0.25), 0.01, false)
 	return _role_material(ROLE_LIVE_3D_LOCKED_OUTLINE, mode, _role_emission(ROLE_LIVE_3D_LOCKED_OUTLINE, mode))
@@ -403,6 +457,8 @@ static func particle_trail_material(
 static func board_outline_material(mode: String = DISPLAY_MODE_PLAIN, high_contrast: bool = false, opacity: float = -1.0) -> StandardMaterial3D:
 	opacity = _parameter_value_or_default("board.boundary_opacity", opacity)
 	var material := _role_material(ROLE_BOARD_OUTLINE, mode, 0.18 if high_contrast else _role_emission(ROLE_BOARD_OUTLINE, mode))
+	if is_luminous(mode) and not high_contrast:
+		material.emission_energy_multiplier = LUMINOUS_BOARD_EDGE_EMISSION
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA if opacity < 1.0 or high_contrast else BaseMaterial3D.TRANSPARENCY_DISABLED
 	material.albedo_color = _with_alpha(material.albedo_color.lightened(0.08) if high_contrast else material.albedo_color, maxf(opacity, 0.98) if high_contrast else opacity)
 	return material
@@ -573,6 +629,105 @@ static func _role_emission(role: String, mode: String) -> float:
 			return 0.12 + mode_boost
 		_:
 			return 0.08 + mode_boost
+
+
+static func is_luminous(mode: String) -> bool:
+	return normalize_display_mode(mode) == DISPLAY_MODE_LUMINOUS
+
+
+# Bevel strips for a flat (2D) cell: a lighter top/left rim and a darker
+# bottom/right rim. Empty for every theme except Luminous.
+static func live_cell_bevel_materials(mode: String, color_id: int, active: bool) -> Dictionary:
+	if not is_luminous(mode):
+		return {}
+	var base := _trace_color(color_id, false)
+	if active:
+		base = base.lerp(Color.WHITE, LUMINOUS_ACTIVE_WHITEN)
+	var light := _make_material(base.lerp(Color.WHITE, 0.5), LUMINOUS_ACTIVE_EMISSION if active else 0.0, false)
+	var dark := _make_material(base.darkened(0.42), 0.0, false)
+	if not active:
+		light.emission_energy_multiplier = 0.0
+	return {"light": light, "dark": dark, "width": LUMINOUS_BEVEL_WIDTH}
+
+
+# A soft camera-facing halo for one active cell: additive, in the piece's own
+# hue, depth-tested so the cell's faces hide its centre. Drawn geometry rather
+# than Environment glow, whose luminance threshold cannot bloom dark hues
+# (purple, blue) without clipping them to another colour. Null off Luminous.
+static func live_active_halo_material(mode: String, color_id: int) -> StandardMaterial3D:
+	if not is_luminous(mode):
+		return null
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	material.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	material.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+	material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	material.albedo_texture = _halo_texture()
+	material.albedo_color = _with_alpha(_trace_color(color_id, false), LUMINOUS_HALO_ALPHA)
+	return material
+
+
+static func _halo_texture() -> GradientTexture2D:
+	if _halo_texture_cache != null:
+		return _halo_texture_cache
+	var gradient := Gradient.new()
+	gradient.offsets = PackedFloat32Array([0.0, 0.45, 1.0])
+	gradient.colors = PackedColorArray([Color(1, 1, 1, 1), Color(1, 1, 1, 0.55), Color(1, 1, 1, 0)])
+	var texture := GradientTexture2D.new()
+	texture.gradient = gradient
+	texture.fill = GradientTexture2D.FILL_RADIAL
+	texture.fill_from = Vector2(0.5, 0.5)
+	texture.fill_to = Vector2(1.0, 0.5)
+	texture.width = 128
+	texture.height = 128
+	_halo_texture_cache = texture
+	return texture
+
+
+static func _make_glow_material(color: Color, emission_energy: float, use_alpha: bool) -> StandardMaterial3D:
+	var material := _make_material(color, 0.0, use_alpha)
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+	material.specular_mode = BaseMaterial3D.SPECULAR_DISABLED
+	material.metallic_specular = 0.0
+	material.disable_ambient_light = true
+	material.albedo_color = Color(0.0, 0.0, 0.0, material.albedo_color.a)
+	material.emission_enabled = true
+	material.emission = Color(color.r, color.g, color.b, 1.0)
+	material.emission_energy_multiplier = emission_energy
+	return material
+
+
+static func _luminous_seam_material(mode: String) -> StandardMaterial3D:
+	var seam := _make_material(color_for_role(ROLE_LIVE_BOARD_FILL, mode).darkened(0.35), 0.0, true)
+	seam.albedo_color.a = LUMINOUS_SEAM_ALPHA
+	seam.emission_energy_multiplier = 0.0
+	return seam
+
+
+static func _luminous_face_materials(base: Color, active: bool, opacity: float) -> Dictionary:
+	var shades: Dictionary = LUMINOUS_ACTIVE_FACE_SHADES if active else LUMINOUS_LOCKED_FACE_SHADES
+	var setting_id := "active_cells.opacity" if active else "settled_cells.opacity"
+	var materials := {}
+	for face in shades:
+		var color := _shade_color(base, float(shades[face]))
+		# Unshaded: the per-face factors are the cube's lighting. Scene lights
+		# would push bright locked faces past the glow threshold and bloom them.
+		var material := _make_glow_material(color, LUMINOUS_ACTIVE_FACE_EMISSION, false) if active else _make_material(color, 0.0, false)
+		if not active:
+			material.emission_energy_multiplier = 0.0
+		if active:
+			material = _apply_structural_opacity(material, opacity, setting_id)
+			material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			material.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
+		else:
+			# Translucent locked cells: the style's settled opacity, scaled so the
+			# active piece and inner layers stay visible through the stack.
+			var resolved := _normalized_parameter_value(setting_id, opacity) * LUMINOUS_LOCKED_ALPHA_SCALE
+			material = _apply_structural_opacity(material, resolved, setting_id)
+		materials[face] = material
+	return materials
 
 
 static func _trace_color(color_id: int, escaped: bool) -> Color:

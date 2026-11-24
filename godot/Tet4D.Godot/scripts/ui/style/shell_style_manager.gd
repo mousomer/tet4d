@@ -9,7 +9,7 @@ signal theme_changed(theme_id: String)
 
 const PALETTE_PATH := "res://config/shell_theme_palettes.json"
 const DEFAULT_THEME_ID := "plain"
-const REQUIRED_THEME_IDS := ["diagnostic", "plain", "tron"]
+const REQUIRED_THEME_IDS := ["diagnostic", "plain", "tron", "luminous"]
 
 var _palettes: Dictionary = {}
 var _active_theme_id := DEFAULT_THEME_ID

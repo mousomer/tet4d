@@ -34,7 +34,7 @@ func _test_policy_derivation(failures: Array) -> void:
 func _test_focus_and_contrast(failures: Array) -> void:
 	var style_manager = ShellStyleManagerScript.new()
 	var applier = ShellControlStyleApplierScript.new()
-	for theme_id in ["diagnostic", "plain", "tron"]:
+	for theme_id in ["diagnostic", "plain", "tron", "luminous"]:
 		style_manager.set_theme(theme_id)
 		var standard_focus := style_manager.get_color("accent.focus")
 		style_manager.set_high_contrast_enabled(true)

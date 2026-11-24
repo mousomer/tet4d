@@ -210,13 +210,13 @@ func _check_settings_registry() -> Array:
 	var values: Array = []
 	for option in spec.data.get("options", []):
 		values.append(str(option.get("value", "")))
-	if values != ["diagnostic", "plain", "tron"]:
-		failures.append("theme.name options should be diagnostic/plain/tron, got %s" % values)
+	if values != ["diagnostic", "plain", "tron", "luminous"]:
+		failures.append("theme.name options should be diagnostic/plain/tron/luminous, got %s" % [values])
 	var labels: Array = []
 	for option in spec.data.get("options", []):
 		labels.append(str(option.get("label", "")))
-	if labels != ["Diagnostic", "Instrument", "Vector Arcade"]:
-		failures.append("theme.name labels should present the three distinct visual purposes, got %s" % labels)
+	if labels != ["Diagnostic", "Instrument", "Vector Arcade", "Luminous"]:
+		failures.append("theme.name labels should present the four distinct visual purposes, got %s" % [labels])
 	if spec.control_type() != "dropdown":
 		failures.append("theme.name should remain a dropdown")
 	var manager = ShellStyleManagerScript.new()

@@ -8,7 +8,7 @@ func run() -> Array:
 	var failures: Array = []
 	var manager = ShellStyleManagerScript.new()
 	failures.append_array(manager.validate_all())
-	_assert_equal(failures, manager.available_theme_ids(), ["diagnostic", "plain", "tron"], "theme ids")
+	_assert_equal(failures, manager.available_theme_ids(), ["diagnostic", "plain", "tron", "luminous"], "theme ids")
 	for theme_id in manager.available_theme_ids():
 		var palette = manager.palette(theme_id)
 		if palette == null:

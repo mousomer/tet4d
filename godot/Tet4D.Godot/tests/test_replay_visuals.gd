@@ -35,6 +35,8 @@ func run() -> Array:
 	_assert_theme_loads(failures, ReplayVisuals.DISPLAY_MODE_TRON)
 	_assert_theme_loads(failures, ReplayVisuals.DISPLAY_MODE_PLAIN)
 	_assert_plain_theme_is_visible_choice(failures)
+	_assert_theme_loads(failures, ReplayVisuals.DISPLAY_MODE_LUMINOUS)
+	_assert_luminous_graphical_language(failures)
 	var cyan_active := ReplayVisuals.active_cell_material(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC, 1)
 	var yellow_active := ReplayVisuals.active_cell_material(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC, 2)
 	var gameplay_active := ReplayVisuals.gameplay_active_cell_material(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC)
@@ -163,6 +165,33 @@ func run() -> Array:
 		0.95
 	)
 	return failures
+
+
+# docs/design/graphical_language/: locked cells keep their hue, only the
+# active piece gets a halo and emission, and other themes are untouched.
+func _assert_luminous_graphical_language(failures: Array) -> void:
+	var luminous := ReplayVisuals.DISPLAY_MODE_LUMINOUS
+	_assert_equal(failures, ReplayVisuals.display_mode_label(luminous), "Luminous", "luminous display label")
+	var piece := ReplayVisuals.TRACE_COLOR_PALETTE[3] as Color
+	var locked_faces: Dictionary = ReplayVisuals.live_3d_locked_face_materials(luminous, 3, 1.0)
+	var front := (locked_faces["front"] as StandardMaterial3D).albedo_color
+	if absf(front.h - piece.h) > 0.02 or front.s < piece.s - 0.02:
+		failures.append("luminous locked faces should keep the piece hue and saturation, got %s for %s" % [front, piece])
+	if (locked_faces["front"] as StandardMaterial3D).albedo_color.a >= 1.0:
+		failures.append("luminous locked faces should be translucent")
+	var locked_2d := ReplayVisuals.live_locked_cell_material(luminous, 3, 1.0).albedo_color
+	_assert_color_close(failures, "luminous 2D locked cell keeps its piece colour", Color(locked_2d.r, locked_2d.g, locked_2d.b), piece)
+	var active_faces: Dictionary = ReplayVisuals.live_3d_active_face_materials(luminous, 3, 1.0)
+	var active_front := active_faces["front"] as StandardMaterial3D
+	if not active_front.emission_enabled or active_front.emission_energy_multiplier < 1.0 or active_front.albedo_color.get_luminance() > 0.001:
+		failures.append("luminous active faces should be emission-only so their hue ignores the light angle")
+	if ReplayVisuals.live_active_halo_material(luminous, 3) == null:
+		failures.append("luminous active cells should get a halo")
+	if ReplayVisuals.live_cell_bevel_materials(luminous, 3, false).is_empty():
+		failures.append("luminous flat cells should get bevel strips")
+	for mode in [ReplayVisuals.DISPLAY_MODE_PLAIN, ReplayVisuals.DISPLAY_MODE_TRON, ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC]:
+		if ReplayVisuals.live_active_halo_material(mode, 3) != null or not ReplayVisuals.live_cell_bevel_materials(mode, 3, true).is_empty():
+			failures.append("%s should not get the luminous halo or bevel" % mode)
 
 
 func _assert_theme_loads(failures: Array, display_mode: String) -> void:

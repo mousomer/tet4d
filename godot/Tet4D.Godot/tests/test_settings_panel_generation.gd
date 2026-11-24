@@ -51,7 +51,7 @@ func run() -> Array:
 	_assert_slider_value_label(failures, panel, "display.projection_strength")
 	_assert_control_type(failures, panel, "theme.name", OptionButton, "enum should produce dropdown")
 	_assert_control_type(failures, panel, "interface.show_onboarding", CheckBox, "onboarding preference should produce checkbox")
-	_assert_dropdown_options(failures, panel, "theme.name", ["diagnostic", "plain", "tron"])
+	_assert_dropdown_options(failures, panel, "theme.name", ["diagnostic", "plain", "tron", "luminous"])
 	_assert_wrapped_setting_label(failures, content, "display.projection_strength")
 	panel.set_presentation_context("live_2d")
 	if panel.get_node("SettingsScroll/SettingsContent/SettingRow__display__show_w_labels").visible:

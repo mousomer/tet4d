@@ -3,6 +3,41 @@
   "catalog_schema_version": 1,
   "styles": [
     {
+      "style_id": "tet4d_luminous",
+      "display_name": "Tet4D Luminous",
+      "short_description": "Owner graphical language. Saturated glass-cube pieces, glowing active piece, navy board.",
+      "category": "baseline",
+      "ordering": 5,
+      "animated": false,
+      "accent_summary": "Luminous palette, amber selection, translucent locked cells, bright board edges",
+      "recommended_modes": ["live_2d", "live_3d", "live_4d"],
+      "presentation_profile": {
+        "schema_version": 1,
+        "values": {
+          "theme.name": "luminous",
+          "display.hud_density": "standard",
+          "display.board_detail": "standard",
+          "display.grid_mode": "full",
+          "display.show_w_labels": true,
+          "board.grid_opacity": 0.28,
+          "board.enclosure_opacity": 0.12,
+          "board.back_scaffold_opacity": 0.32,
+          "board.cell_volume_opacity": 0.025,
+          "board.boundary_opacity": 1.0,
+          "active_cells.opacity": 1.0,
+          "settled_cells.opacity": 0.9,
+          "ghost.enabled": true,
+          "ghost.opacity": 1.05,
+          "environment.background_intensity": 0.95,
+          "environment.background_animation_mode": "none",
+          "environment.background_animation_intensity": 0.0,
+          "environment.background_animation_speed": 1.0,
+          "accessibility.high_contrast": false,
+          "accessibility.reduced_motion": false
+        }
+      }
+    },
+    {
       "style_id": "tet4d_balanced",
       "display_name": "Tet4D Balanced",
       "short_description": "Restrained shipped baseline. Even grid, calm background, readable in every mode.",

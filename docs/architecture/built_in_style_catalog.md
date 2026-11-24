@@ -214,6 +214,7 @@ enter a deterministic comparison.
 
 | Style | Category | Purpose | Notable choices |
 | --- | --- | --- | --- |
+| Tet4D Luminous | baseline | Owner graphical language (`docs/design/graphical_language/`) | Luminous palette, grid `0.28`, enclosure `0.12`, settled `0.90`, haloed active piece |
 | Tet4D Balanced | baseline | Restrained shipped baseline | Instrument palette, grid `0.35`, background `0.95`, static |
 | Python Reference | heritage | Flat homage to the Python build | Diagnostic palette, fine grid `0.22`, hard boundary `1.00`, subdued Ghost `0.75`, background `0.55` |
 | Arcade Neon | vivid | Bright cabinet look | Grid `0.55`, full board detail, Ghost `1.30`, background `1.25` |
@@ -255,7 +256,7 @@ canonical, pinned, governance, settings-externalization, semantic-boundary,
 sanitation, and full repository gates remain required.
 
 
-All six built-in styles explicitly specify enclosure, rear-scaffold and internal-scaffold
+All seven built-in styles explicitly specify enclosure, rear-scaffold and internal-scaffold
 opacity in the settings registry vocabulary. Structural roles are invariant:
 NONE = enclosure + floor; BORDER adds rear subdivisions; FULL adds batched
 internal cell-boundary edges. Python/Arcade rear opacity remains perceptible; Blueprint

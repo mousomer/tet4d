@@ -494,7 +494,8 @@
       "options": [
         {"value": "diagnostic", "label": "Diagnostic"},
         {"value": "plain", "label": "Instrument"},
-        {"value": "tron", "label": "Vector Arcade"}
+        {"value": "tron", "label": "Vector Arcade"},
+        {"value": "luminous", "label": "Luminous"}
       ],
       "semantic_owner": "PALETTE_PRESENTATION",
       "accessibility_classification": "accessibility_composable",

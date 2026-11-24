@@ -38,8 +38,8 @@ describes the older "calm instrument" look.
   the surface, accent, grid and frame swatches from the spec.
 - Add a built-in style `tet4d_luminous` to
   `config/built_in_style_catalog.json` (theme `luminous`, a lower
-  `settled_cells.opacity`, a glass-level `board.enclosure_opacity`). Make it
-  the default style.
+  `settled_cells.opacity`, a glass-level `board.enclosure_opacity`). It
+  becomes the default once the owner accepts the captures.
 - Cell materials in `scripts/ui/replay_visuals.gd`, gated on the `luminous`
   theme so the other themes' captures and Designer fingerprints are
   unchanged:
@@ -58,6 +58,25 @@ describes the older "calm instrument" look.
 - Acceptance: captures of 2D, 3D and 4D at 1440×900 from the same seeded
   states, before and after, set next to the concept images. Gameplay and
   replay hashes unchanged. Layout lock test unchanged and green.
+
+**P1 as built (2026-11-24):**
+- The active-piece glow is a per-cell halo sprite in the piece's own hue,
+  not Environment glow. Godot's glow threshold works on luminance, so it
+  cannot bloom dark hues (purple, blue) without clipping them to another
+  colour. The active piece is emission-only, so its hue doesn't depend on the
+  light angle.
+- Locked cube faces are unshaded; the per-face factors are the shading. This
+  keeps them at or below full brightness and true to hue.
+- 3D/4D locked cells render at 88% of `settled_cells.opacity`. 2D locked
+  cells use the setting as-is, because transparency over a flat dark board
+  only dims them.
+- Everything is gated on the `luminous` theme. The `plain`, `tron` and
+  `diagnostic` materials are unchanged.
+- The default theme is still `plain`. `tet4d_luminous` is selectable from the
+  built-in styles. Making it the default changes fresh-profile and Designer
+  fingerprints, so it waits for the owner's review of the captures.
+- 4D's existing recession of inactive slices (Stage 58C) still applies.
+- Captures: `docs/design/screenshots/graphical_language_p1/`.
 
 ### P2 — Shell skin
 - `luminous` panel styling: corner radius, soft border, lift; type scale;
