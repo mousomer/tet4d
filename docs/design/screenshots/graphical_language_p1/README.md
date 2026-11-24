@@ -1,20 +1,17 @@
 # Graphical language P1: board skin captures
 
-These are before and after captures of the same fixture boards, rendered by the
-production `TraceSceneRenderer` through
-`godot/Tet4D.Godot/tests/run_spatial_readability_capture.gd`:
+These were captured through **normal startup** (`game_bootstrap.tscn` with the
+player settings store) at a 1440×900 window, using
+`godot/Tet4D.Godot/tests/run_graphical_language_capture.gd`. Each run plays the
+same fixed-seed game (seed 1337) with the same scripted drops, so the before
+and after images show identical game state.
 
-```text
-godot --path godot/Tet4D.Godot --script tests/run_spatial_readability_capture.gd -- <out> \
-  scenes=2d_stack,3d_dense,4d_dense styles=<style> grids=full sizes=ref masks=0
-```
-
-| File | Style | Theme |
+| File | Settings file | Theme the player gets |
 | --- | --- | --- |
-| `*_before.png` | `tet4d_balanced` (shipped default) | `plain` |
-| `*_after.png` | `tet4d_luminous` | `luminous` |
+| `live_*d_default.png` | window size + onboarding off only | `luminous` (new default) |
+| `live_*d_plain.png` | same, plus `theme.name: plain` at schema 4 | `plain` (Instrument) |
 
-Each pair renders identical board content: the same cells and colour IDs, the
-same camera and the same fit. Compare them with the concept images in
-`docs/design/graphical_language/`. They are presentation evidence only; they
-are not perceptual measurements.
+No built-in style preset is applied: opacity, grid and enclosure values are
+the registry defaults every new player receives. Compare against the concept
+images in `docs/design/graphical_language/`. Cockpit layout and shell chrome
+are unchanged here; they belong to P2 and P3.

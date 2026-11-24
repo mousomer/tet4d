@@ -281,7 +281,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 				locked_size if _presentation.is_live else -1.0,
 				_live_locked_border_material(_presentation.uses_live_exterior_cells, _presentation.is_live),
 				(locked_size + ReplayVisuals.LIVE_CELL_BORDER_DELTA * _edge_weight()) if _presentation.is_live else 0.0,
-				ReplayVisuals.live_cell_bevel_materials(_display_mode, locked_color_id, false) if _presentation.is_live else {}
+				ReplayVisuals.live_cell_bevel_materials(_display_mode, locked_color_id, false, _locked_cell_opacity) if _presentation.is_live else {}
 			)
 		node.basis = _presentation.local_render_basis()
 
@@ -335,7 +335,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 				active_size if _presentation.is_live else -1.0,
 				_live_active_border_material(_presentation.uses_live_exterior_cells, _presentation.is_live),
 				(active_size + ReplayVisuals.LIVE_CELL_BORDER_DELTA * _edge_weight()) if _presentation.is_live else 0.0,
-				ReplayVisuals.live_cell_bevel_materials(_display_mode, active_color_id, true) if _presentation.is_live else {}
+				ReplayVisuals.live_cell_bevel_materials(_display_mode, active_color_id, true, _active_cell_opacity) if _presentation.is_live else {}
 			)
 		if _presentation.is_live:
 			node.add_halo(ReplayVisuals.live_active_halo_material(_display_mode, active_color_id), active_size * ReplayVisuals.LUMINOUS_HALO_SCALE)

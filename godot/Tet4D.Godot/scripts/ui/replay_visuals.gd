@@ -28,6 +28,7 @@ const LUMINOUS_ACTIVE_EMISSION := 1.0
 const LUMINOUS_ACTIVE_FACE_EMISSION := 1.0
 const LUMINOUS_ACTIVE_EDGE_EMISSION := 1.0
 const LUMINOUS_BOARD_EDGE_EMISSION := 0.35
+const LUMINOUS_BOARD_EDGE_THICKNESS_SCALE := 1.8
 const LUMINOUS_LOCKED_ALPHA_SCALE := 0.88
 const LUMINOUS_SEAM_ALPHA := 0.85
 const LUMINOUS_GHOST_FILL_ALPHA := 0.2
@@ -636,17 +637,19 @@ static func is_luminous(mode: String) -> bool:
 
 
 # Bevel strips for a flat (2D) cell: a lighter top/left rim and a darker
-# bottom/right rim. Empty for every theme except Luminous.
-static func live_cell_bevel_materials(mode: String, color_id: int, active: bool) -> Dictionary:
+# bottom/right rim, at the same opacity as the cell body (the renderer insets
+# the body so strips and body never overlap). Empty off Luminous.
+static func live_cell_bevel_materials(mode: String, color_id: int, active: bool, opacity: float = -1.0) -> Dictionary:
 	if not is_luminous(mode):
 		return {}
+	var setting_id := "active_cells.opacity" if active else "settled_cells.opacity"
 	var base := _trace_color(color_id, false)
 	if active:
 		base = base.lerp(Color.WHITE, LUMINOUS_ACTIVE_WHITEN)
-	var light := _make_material(base.lerp(Color.WHITE, 0.5), LUMINOUS_ACTIVE_EMISSION if active else 0.0, false)
-	var dark := _make_material(base.darkened(0.42), 0.0, false)
-	if not active:
-		light.emission_energy_multiplier = 0.0
+	var light := _apply_opacity(_make_material(base.lerp(Color.WHITE, 0.5), 0.0, false), opacity, setting_id)
+	var dark := _apply_opacity(_make_material(base.darkened(0.42), 0.0, false), opacity, setting_id)
+	light.emission_energy_multiplier = 0.0
+	dark.emission_energy_multiplier = 0.0
 	return {"light": light, "dark": dark, "width": LUMINOUS_BEVEL_WIDTH}
 
 
@@ -847,6 +850,21 @@ static func board_enclosure_material(mode: String, opacity: float = -1.0, bounda
 	material.cull_mode = BaseMaterial3D.CULL_FRONT
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
 	return material
+
+# The board's outer edges. Luminous draws them as bright glass edges at the
+# boundary opacity, above the quiet face and interior lattice; every other theme
+# keeps the shared surface-scaffold material.
+static func board_edge_material(mode: String, surface_opacity: float = -1.0, boundary_opacity: float = -1.0, high_contrast: bool = false) -> StandardMaterial3D:
+	if not is_luminous(mode) or high_contrast:
+		return board_scaffold_material(mode, surface_opacity, high_contrast)
+	var material := _scaffold_surface(mode, ROLE_BOARD_OUTLINE, _parameter_value_or_default("board.boundary_opacity", boundary_opacity), "board.boundary_opacity", -10)
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	return material
+
+
+static func board_edge_thickness_scale(mode: String) -> float:
+	return LUMINOUS_BOARD_EDGE_THICKNESS_SCALE if is_luminous(mode) else 1.0
+
 
 static func board_scaffold_material(mode: String, opacity: float = -1.0, high_contrast: bool = false) -> StandardMaterial3D:
 	var material := _scaffold_surface(mode, ROLE_LIVE_BOARD_GRID, opacity, "board.back_scaffold_opacity", -20)

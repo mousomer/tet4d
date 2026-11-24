@@ -81,8 +81,13 @@ func run() -> Array:
 					failures.append("enclosure must use resolved style alpha")
 				if mode != 2:
 					var line: StandardMaterial3D = _nodes(grid, GridMode.GRID_EDGE).filter(func(n): return n is MultiMeshInstance3D)[0].material_override
-					var expected_alpha := Visuals.board_scaffold_material(str(profile.value("theme.name")), Visuals.scaffold_alpha(float(profile.value("board.back_scaffold_opacity")), float(profile.value("board.grid_opacity"))), bool(profile.value("accessibility.high_contrast"))).albedo_color.a
-					if not is_equal_approx(line.albedo_color.a, expected_alpha) or line.albedo_color.a > 0.6:
+					var theme_name := str(profile.value("theme.name"))
+					var hc := bool(profile.value("accessibility.high_contrast"))
+					var expected_alpha := Visuals.board_edge_material(theme_name, Visuals.scaffold_alpha(float(profile.value("board.back_scaffold_opacity")), float(profile.value("board.grid_opacity"))), float(profile.value("board.boundary_opacity")), hc).albedo_color.a
+					# Luminous draws the outer edges as bright glass at the boundary
+					# opacity (graphical language); every other theme keeps them subordinate.
+					var bright_edges := Visuals.is_luminous(theme_name) and not hc
+					if not is_equal_approx(line.albedo_color.a, expected_alpha) or (not bright_edges and line.albedo_color.a > 0.6):
 						failures.append("border lattice must use subordinate resolved style alpha")
 				if dimension == 4:
 					var frames := _nodes(grid, "board.frame_active").filter(func(n): return n.is_visible_in_tree())

@@ -78,7 +78,7 @@ func rebuild(
 		if included.has(GridDisplayMode.FLOOR):
 			_add_floor_face(geometry, display_mode, slice_root)
 		_add_lattice(grid_lines, GridDisplayMode.shows_rear_faces_only(grid_mode), display_mode, high_contrast,
-			ReplayVisuals.scaffold_alpha(scaffold_opacity, grid_opacity), cell_opacity, slice_root)
+			ReplayVisuals.scaffold_alpha(scaffold_opacity, grid_opacity), cell_opacity, slice_root, boundary_opacity)
 		if dimension >= 4:
 			var frame := Node3D.new()
 			frame.name = "ActiveSliceFrame"
@@ -139,7 +139,7 @@ func _add_enclosure(geometry, display_mode: String, opacity: float, boundary_opa
 # Edge and face lines keep the surface-scaffold material; interior lines keep
 # the subordinate internal material. Topology never depends on material. Face
 # lines batch per face so camera selection can hide whole front faces.
-func _add_lattice(grid_lines: Array, rear_faces_only: bool, display_mode: String, high_contrast: bool, surface_opacity: float, interior_opacity: float, parent: Node3D) -> void:
+func _add_lattice(grid_lines: Array, rear_faces_only: bool, display_mode: String, high_contrast: bool, surface_opacity: float, interior_opacity: float, parent: Node3D, boundary_opacity: float = -1.0) -> void:
 	var thickness := ReplayVisuals.grid_internal_thickness(high_contrast)
 	var batches: Dictionary = {}
 	for line in grid_lines:
@@ -155,8 +155,11 @@ func _add_lattice(grid_lines: Array, rear_faces_only: bool, display_mode: String
 		var material := (
 			ReplayVisuals.board_internal_scaffold_material(display_mode, interior_opacity, high_contrast)
 			if role == GridDisplayMode.GRID_INTERIOR
+			else ReplayVisuals.board_edge_material(display_mode, surface_opacity, boundary_opacity, high_contrast)
+			if role == GridDisplayMode.GRID_EDGE
 			else ReplayVisuals.board_scaffold_material(display_mode, surface_opacity, high_contrast)
 		)
+		var line_thickness := thickness * ReplayVisuals.board_edge_thickness_scale(display_mode) if role == GridDisplayMode.GRID_EDGE else thickness
 		var batch_parent := parent
 		if role == GridDisplayMode.GRID_FACE:
 			var axis := int(lines[0].face_axis)
@@ -173,7 +176,7 @@ func _add_lattice(grid_lines: Array, rear_faces_only: bool, display_mode: String
 			if rear_faces_only:
 				_rear_faces.append(face)
 			batch_parent = face
-		_add_geometry_segments(lines, thickness, material, batch_parent, role)
+		_add_geometry_segments(lines, line_thickness, material, batch_parent, role)
 
 
 # Camera-relative rear faces stay visible; front and edge-on faces hide.
@@ -322,7 +325,9 @@ func _update_role_opacities(node: Node, mode: String, high_contrast: bool, enclo
 			match str(node.get_meta("presentation_role", "")):
 				GridDisplayMode.ENCLOSURE:
 					material.albedo_color.a = ReplayVisuals.board_enclosure_material(mode, enclosure, boundary, high_contrast).albedo_color.a
-				GridDisplayMode.GRID_EDGE, GridDisplayMode.GRID_FACE:
+				GridDisplayMode.GRID_EDGE:
+					material.albedo_color.a = ReplayVisuals.board_edge_material(mode, ReplayVisuals.scaffold_alpha(rear, grid), boundary, high_contrast).albedo_color.a
+				GridDisplayMode.GRID_FACE:
 					material.albedo_color.a = ReplayVisuals.board_scaffold_material(mode, ReplayVisuals.scaffold_alpha(rear, grid), high_contrast).albedo_color.a
 				GridDisplayMode.GRID_INTERIOR:
 					material.albedo_color.a = ReplayVisuals.board_internal_scaffold_material(mode, internal, high_contrast).albedo_color.a

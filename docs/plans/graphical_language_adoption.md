@@ -74,10 +74,19 @@ describes the older "calm instrument" look.
   `diagnostic` materials are unchanged.
 - `luminous` is the default theme (owner decision 2026-11-24, after
   reviewing the captures). Fresh profiles, reset-to-defaults, invalid
-  settings files and unknown theme IDs all resolve to it. A saved `plain`,
-  `tron` or `diagnostic` choice is kept.
+  settings files and unknown theme IDs all resolve to it. Settings schema 4
+  migrates a pre-4 saved `plain` (the old default, written for everyone) to
+  `luminous`. Saved `tron` and `diagnostic` are kept, and `plain` chosen at
+  schema 4 or later is kept.
 - 4D's existing recession of inactive slices (Stage 58C) still applies.
-- Captures: `docs/design/screenshots/graphical_language_p1/`.
+- 2D bevel strips carry the same opacity as the cell body. The body is inset
+  to the inner square so strips and body never overlap, and every pixel of a
+  cell is one layer at the configured opacity.
+- Board outer edges in 2D/3D/4D are a bright glass-edge material (thicker,
+  at `board.boundary_opacity`) above the quiet face and interior lattice.
+- Captures: `docs/design/screenshots/graphical_language_p1/`, taken through
+  normal startup at 1440×900 with registry defaults (no style preset). Same
+  seeded game, default `luminous` versus `plain`.
 
 ### P2 — Shell skin
 - `luminous` panel styling: corner radius, soft border, lift; type scale;

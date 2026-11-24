@@ -238,7 +238,8 @@ func _assert_rendered(failures: Array, app, catalog, style_id: String, grid_mode
 		failures.append("%s: renderer must keep style %s appearance" % [label, style_id])
 	var lattice := internals.filter(func(node: Node) -> bool: return node is MultiMeshInstance3D)
 	if not lattice.is_empty():
-		var expected := ReplayVisuals.board_scaffold_material(theme, ReplayVisuals.scaffold_alpha(float(style.value("board.back_scaffold_opacity")), float(style.value("board.grid_opacity"))), high_contrast).albedo_color
+		# Lattice nodes here are the board's outer edges (INTERNAL_ROLES).
+		var expected := ReplayVisuals.board_edge_material(theme, ReplayVisuals.scaffold_alpha(float(style.value("board.back_scaffold_opacity")), float(style.value("board.grid_opacity"))), float(style.value("board.boundary_opacity")), high_contrast).albedo_color
 		if not (lattice[0] as MultiMeshInstance3D).material_override.albedo_color.is_equal_approx(expected):
 			failures.append("%s: lattice must use style %s material" % [label, style_id])
 	for node in boundaries:

@@ -56,7 +56,7 @@ def validate_bundle(bundle_dir: Path, registry_path: Path) -> dict[str, Any]:
 
 def load_registry_specs(registry: dict[str, Any]) -> dict[str, dict[str, Any]]:
     settings = registry.get("settings")
-    if registry.get("schema_version") != 3 or not isinstance(settings, list):
+    if registry.get("schema_version") != 4 or not isinstance(settings, list):
         raise ValidationError("canonical settings registry is unsupported")
     specs: dict[str, dict[str, Any]] = {}
     for raw in settings:

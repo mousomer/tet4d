@@ -189,6 +189,22 @@ func _assert_luminous_graphical_language(failures: Array) -> void:
 		failures.append("luminous active cells should get a halo")
 	if ReplayVisuals.live_cell_bevel_materials(luminous, 3, false).is_empty():
 		failures.append("luminous flat cells should get bevel strips")
+	for active in [false, true]:
+		var body: StandardMaterial3D = ReplayVisuals.live_active_cell_material(luminous, 3, 0.5) if active else ReplayVisuals.live_locked_cell_material(luminous, 3, 0.5)
+		var bevel: Dictionary = ReplayVisuals.live_cell_bevel_materials(luminous, 3, active, 0.5)
+		for strip in ["light", "dark"]:
+			var strip_alpha := (bevel[strip] as StandardMaterial3D).albedo_color.a
+			if absf(strip_alpha - body.albedo_color.a) > 0.001 or absf(strip_alpha - 0.5) > 0.001:
+				failures.append("luminous %s bevel %s strip should follow the cell opacity 0.5, got %s (body %s)" % ["active" if active else "locked", strip, strip_alpha, body.albedo_color.a])
+	var edge := ReplayVisuals.board_edge_material(luminous, 0.3, 0.8)
+	_assert_color_close(failures, "luminous board edges use the bright boundary role", Color(edge.albedo_color.r, edge.albedo_color.g, edge.albedo_color.b), ReplayVisuals.color_for_role(ReplayVisuals.ROLE_BOARD_OUTLINE, luminous))
+	if absf(edge.albedo_color.a - 0.8) > 0.001 or ReplayVisuals.board_edge_thickness_scale(luminous) <= 1.0:
+		failures.append("luminous board edges should follow board.boundary_opacity and draw thicker than the lattice")
+	for mode in [ReplayVisuals.DISPLAY_MODE_PLAIN, ReplayVisuals.DISPLAY_MODE_TRON, ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC]:
+		var shared := ReplayVisuals.board_edge_material(mode, 0.3, 0.8)
+		var scaffold := ReplayVisuals.board_scaffold_material(mode, 0.3)
+		if shared.albedo_color != scaffold.albedo_color or ReplayVisuals.board_edge_thickness_scale(mode) != 1.0:
+			failures.append("%s board edges should keep the shared scaffold material and thickness" % mode)
 	for mode in [ReplayVisuals.DISPLAY_MODE_PLAIN, ReplayVisuals.DISPLAY_MODE_TRON, ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC]:
 		if ReplayVisuals.live_active_halo_material(mode, 3) != null or not ReplayVisuals.live_cell_bevel_materials(mode, 3, true).is_empty():
 			failures.append("%s should not get the luminous halo or bevel" % mode)

@@ -82,8 +82,8 @@ func run() -> Array:
 	if fresh.value("diagnostics.show_layout_bounds") != false:
 		failures.append("session-only diagnostics should not round-trip")
 	var payload = JSON.parse_string(_read_file())
-	if not (payload is Dictionary) or int(payload.get("schema_version", 0)) != 3:
-		failures.append("saved settings should use schema version 3 JSON")
+	if not (payload is Dictionary) or int(payload.get("schema_version", 0)) != 4:
+		failures.append("saved settings should use schema version 4 JSON")
 	else:
 		var saved: Dictionary = payload.get("settings", {})
 		if saved.size() != registry.persistent_specs().size():
@@ -95,16 +95,17 @@ func run() -> Array:
 				failures.append("settings file must retain established preference %s" % persistent_preference)
 	_test_invalid_inputs(failures, registry)
 	_test_schema_representations(failures, registry)
+	_test_luminous_default_migration(failures, registry)
 	_test_failure_safe_replacement(failures, registry)
-	_write_file(JSON.stringify({"schema_version": 1, "settings": {"theme.name": "plain", "interface.show_onboarding": false, "controls_help.show_keyboard_hints": false}}))
+	_write_file(JSON.stringify({"schema_version": 1, "settings": {"theme.name": "diagnostic", "interface.show_onboarding": false, "controls_help.show_keyboard_hints": false}}))
 	var migrated = StoreScript.new(registry, TEST_PATH)
-	if migrated.deterministic_snapshot().get("load_state") != "migrated_v1" or migrated.value("theme.name") != "plain":
+	if migrated.deterministic_snapshot().get("load_state") != "migrated_v1" or migrated.value("theme.name") != "diagnostic":
 		failures.append("Stage 48 schema should migrate valid preferences in memory")
 	if migrated.value("display.ui_scale") != "standard" or migrated.value("interface.show_onboarding") != false or migrated.value("accessibility.show_help_hints") != false:
 		failures.append("Stage 48 migration should default new fields while migrating hints and preserving onboarding")
-	_write_file(JSON.stringify({"schema_version": 1, "settings": {"theme.name": "plain", "controls_help.show_keyboard_hints": "wrong", "unknown.key": true}}))
+	_write_file(JSON.stringify({"schema_version": 1, "settings": {"theme.name": "diagnostic", "controls_help.show_keyboard_hints": "wrong", "unknown.key": true}}))
 	var partial = StoreScript.new(registry, TEST_PATH)
-	if partial.value("theme.name") != "plain" or partial.value("accessibility.show_help_hints") != true:
+	if partial.value("theme.name") != "diagnostic" or partial.value("accessibility.show_help_hints") != true:
 		failures.append("partially valid files should preserve valid values and default invalid values")
 	if not _diagnostics_contain(partial, "unknown") or not _diagnostics_contain(partial, "invalid"):
 		failures.append("partial recovery should report unknown and invalid values")
@@ -136,23 +137,72 @@ func _test_invalid_inputs(failures: Array, registry) -> void:
 			failures.append("recovery should not rewrite malformed or unsupported input automatically")
 
 
+# Schema 4 made Luminous the default. Older files stored the old default
+# "plain" whether or not the player chose it, so it loads as Luminous; other
+# saved themes are kept, and plain saved at schema 4 is a real choice.
+func _test_luminous_default_migration(failures: Array, registry) -> void:
+	for old_schema in [1, 2, 3]:
+		_write_file(JSON.stringify({"schema_version": old_schema, "settings": {"theme.name": "plain", "board.grid_opacity": 0.31}}))
+		var original := _read_file()
+		var store = StoreScript.new(registry, TEST_PATH)
+		if store.value("theme.name") != "luminous":
+			failures.append("schema %d saved plain should load as the Luminous default, got %s" % [old_schema, store.value("theme.name")])
+		if absf(float(store.value("board.grid_opacity")) - 0.31) > 0.001:
+			failures.append("schema %d theme migration must keep the other saved settings" % old_schema)
+		if not _diagnostics_contain(store, "Luminous theme"):
+			failures.append("schema %d theme migration should be reported" % old_schema)
+		if _read_file() != original:
+			failures.append("schema %d theme migration should not rewrite the file on load" % old_schema)
+	for kept in ["tron", "diagnostic"]:
+		_write_file(JSON.stringify({"schema_version": 3, "settings": {"theme.name": kept}}))
+		if StoreScript.new(registry, TEST_PATH).value("theme.name") != kept:
+			failures.append("schema 3 saved %s is a real choice and must be kept" % kept)
+	# The target is pinned to luminous: a registry whose default moved on (here
+	# to tron) must still upgrade a schema 1-3 plain to luminous.
+	var registry_text := FileAccess.get_file_as_string(RegistryScript.REGISTRY_PATH)
+	var registry_data: Dictionary = JSON.parse_string(registry_text)
+	for spec_data in registry_data.get("settings", []):
+		if str(spec_data.get("id", "")) == "theme.name":
+			spec_data["default"] = "tron"
+	var moved_path := "user://stage48_moved_default_registry.json"
+	_write_file_at(moved_path, JSON.stringify(registry_data))
+	var moved_registry = RegistryScript.new()
+	moved_registry.load_from_path(moved_path)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(moved_path))
+	if str(moved_registry.get_spec("theme.name").default_value()) != "tron":
+		failures.append("moved-default registry fixture should default to tron")
+	_write_file(JSON.stringify({"schema_version": 3, "settings": {"theme.name": "plain"}}))
+	if StoreScript.new(moved_registry, TEST_PATH).value("theme.name") != "luminous":
+		failures.append("schema 3 plain must migrate to the pinned luminous target, not the current default")
+	_write_file(JSON.stringify({"schema_version": 3, "settings": {"theme.name": "plain"}}))
+	var migrated = StoreScript.new(registry, TEST_PATH)
+	migrated.set_value("theme.name", "plain")
+	var reopened = StoreScript.new(registry, TEST_PATH)
+	if reopened.value("theme.name") != "plain" or reopened.deterministic_snapshot().get("load_state") != "loaded":
+		failures.append("choosing Instrument after the migration should persist at schema 4")
+
+
 func _test_schema_representations(failures: Array, registry) -> void:
 	for case in [
 		{"label": "schema 1 integer", "value": 1, "load_state": "migrated_v1"},
 		{"label": "schema 2 integer", "value": 2, "load_state": "migrated_v2"},
-		{"label": "schema 3 integer", "value": 3, "load_state": "loaded"},
+		{"label": "schema 3 integer", "value": 3, "load_state": "migrated_v3"},
+		{"label": "schema 4 integer", "value": 4, "load_state": "loaded"},
 		{"label": "schema 1 integral number", "value": 1.0, "load_state": "migrated_v1"},
 		{"label": "schema 2 integral number", "value": 2.0, "load_state": "migrated_v2"},
-		{"label": "schema 3 integral number", "value": 3.0, "load_state": "loaded"},
+		{"label": "schema 3 integral number", "value": 3.0, "load_state": "migrated_v3"},
+		{"label": "schema 4 integral number", "value": 4.0, "load_state": "loaded"},
 	]:
-		_write_file(JSON.stringify({"schema_version": case.get("value"), "settings": {"theme.name": "plain"}}))
+		_write_file(JSON.stringify({"schema_version": case.get("value"), "settings": {"theme.name": "diagnostic"}}))
 		var store = StoreScript.new(registry, TEST_PATH)
-		if store.deterministic_snapshot().get("load_state") != case.get("load_state") or store.value("theme.name") != "plain":
+		if store.deterministic_snapshot().get("load_state") != case.get("load_state") or store.value("theme.name") != "diagnostic":
 			failures.append("%s should be accepted exactly" % case.get("label"))
 	for case in [
 		{"label": "fractional schema 1", "value": 1.5},
 		{"label": "fractional schema 2", "value": 2.5},
 		{"label": "fractional schema 3", "value": 3.5},
+		{"label": "fractional schema 4", "value": 4.5},
+		{"label": "future schema", "value": 5},
 		{"label": "numeric string", "value": "3"},
 		{"label": "boolean", "value": true},
 		{"label": "null", "value": null},
@@ -320,7 +370,7 @@ func _test_restore_copy_fallback(failures: Array, registry) -> void:
 
 
 func _write_valid_settings(theme_name: String) -> void:
-	_write_file(JSON.stringify({"schema_version": 3, "settings": {"theme.name": theme_name}}))
+	_write_file(JSON.stringify({"schema_version": StoreScript.SCHEMA_VERSION, "settings": {"theme.name": theme_name}}))
 
 
 func _saved_theme() -> String:

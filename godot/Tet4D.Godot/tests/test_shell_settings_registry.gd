@@ -9,7 +9,7 @@ func run() -> Array:
 	var registry = SettingsRegistryScript.new()
 	registry.load_from_path(SettingsRegistryScript.REGISTRY_PATH)
 	failures.append_array(registry.validate())
-	_assert_equal(failures, registry.schema_version, 3, "Stage 52 registry schema version")
+	_assert_equal(failures, registry.schema_version, 4, "registry schema version matches the settings store (schema 4: Luminous default)")
 	_assert_equal(failures, registry.categories.size(), 8, "Stage 52 category count")
 	_assert_equal(failures, registry.settings.size(), 32, "presentation parameter contract setting count")
 	var setting_ids: Array = []

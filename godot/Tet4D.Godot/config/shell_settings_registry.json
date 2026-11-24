@@ -1,5 +1,5 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "legacy_setting_migrations": {
     "display.grid_visible": {
       "replacement": "display.grid_mode",
