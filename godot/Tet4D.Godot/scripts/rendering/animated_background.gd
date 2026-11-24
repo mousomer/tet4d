@@ -31,7 +31,7 @@ var _intensity := 0.0
 var _speed := 0.0
 var _motion_scale := 1.0
 var _phase := 0.0
-var _display_mode := ReplayVisuals.DISPLAY_MODE_PLAIN
+var _display_mode := ReplayVisuals.default_display_mode()
 var _base_color := Color.BLACK
 var _viewport_aspect := 1.7777778
 var _material: ShaderMaterial

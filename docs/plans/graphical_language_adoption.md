@@ -38,8 +38,8 @@ describes the older "calm instrument" look.
   the surface, accent, grid and frame swatches from the spec.
 - Add a built-in style `tet4d_luminous` to
   `config/built_in_style_catalog.json` (theme `luminous`, a lower
-  `settled_cells.opacity`, a glass-level `board.enclosure_opacity`). It
-  becomes the default once the owner accepts the captures.
+  `settled_cells.opacity`, a glass-level `board.enclosure_opacity`). The
+  `luminous` theme is the default.
 - Cell materials in `scripts/ui/replay_visuals.gd`, gated on the `luminous`
   theme so the other themes' captures and Designer fingerprints are
   unchanged:
@@ -72,9 +72,10 @@ describes the older "calm instrument" look.
   only dims them.
 - Everything is gated on the `luminous` theme. The `plain`, `tron` and
   `diagnostic` materials are unchanged.
-- The default theme is still `plain`. `tet4d_luminous` is selectable from the
-  built-in styles. Making it the default changes fresh-profile and Designer
-  fingerprints, so it waits for the owner's review of the captures.
+- `luminous` is the default theme (owner decision 2026-11-24, after
+  reviewing the captures). Fresh profiles, reset-to-defaults, invalid
+  settings files and unknown theme IDs all resolve to it. A saved `plain`,
+  `tron` or `diagnostic` choice is kept.
 - 4D's existing recession of inactive slices (Stage 58C) still applies.
 - Captures: `docs/design/screenshots/graphical_language_p1/`.
 

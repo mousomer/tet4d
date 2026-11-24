@@ -199,7 +199,7 @@ static var _canonical_presentation_profile = PresentationProfileScript.canonical
 
 
 static func default_display_mode() -> String:
-	return DISPLAY_MODE_PLAIN
+	return DISPLAY_MODE_LUMINOUS
 
 
 static func supported_shell_minimum_size() -> Vector2:
@@ -215,7 +215,7 @@ static func supported_live_shell_minimum_size() -> Vector2:
 
 
 static func normalize_display_mode(mode: String) -> String:
-	return mode if DISPLAY_MODES.has(mode) else DISPLAY_MODE_PLAIN
+	return mode if DISPLAY_MODES.has(mode) else default_display_mode()
 
 
 static func display_mode_label(mode: String) -> String:

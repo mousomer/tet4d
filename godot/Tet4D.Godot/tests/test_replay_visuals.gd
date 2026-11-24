@@ -10,8 +10,8 @@ func run() -> Array:
 	_assert_equal(
 		failures,
 		ReplayVisuals.default_display_mode(),
-		ReplayVisuals.DISPLAY_MODE_PLAIN,
-		"Instrument should be the startup display mode"
+		ReplayVisuals.DISPLAY_MODE_LUMINOUS,
+		"Luminous should be the startup display mode"
 	)
 	_assert_equal(
 		failures,

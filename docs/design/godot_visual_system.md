@@ -31,10 +31,10 @@ The persisted theme IDs are `plain`, `diagnostic`, `tron` and `luminous`.
 
 | ID | Display purpose |
 | --- | --- |
-| `plain` | Default Instrument presentation: calm, dark, and generally usable |
+| `plain` | Instrument presentation: calm, dark, and generally usable |
 | `diagnostic` | High-clarity inspection with stronger structural separation |
 | `tron` | Optional Vector Arcade presentation with more energy and colour |
-| `luminous` | Owner graphical language (`docs/design/graphical_language/`): saturated translucent cells, haloed active piece, navy board |
+| `luminous` | Default. Owner graphical language (`docs/design/graphical_language/`): saturated translucent cells, haloed active piece, navy board |
 
 High Contrast composes with all three identities. It is an accessibility
 override, not a replacement theme.

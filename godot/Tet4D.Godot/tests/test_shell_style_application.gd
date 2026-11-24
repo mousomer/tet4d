@@ -21,8 +21,8 @@ func run() -> Array:
 	tree.root.add_child(panel)
 	panel.size = Vector2(420, 620)
 	await tree.process_frame
-	if panel.get_meta("shell_style_theme_id", "") != "plain":
-		failures.append("settings panel should receive Instrument style metadata")
+	if panel.get_meta("shell_style_theme_id", "") != "luminous":
+		failures.append("settings panel should receive default Luminous style metadata")
 	var title := panel.get_node_or_null("SettingsScroll/SettingsContent/SettingsIntro/SettingsTitle") as Label
 	if title == null:
 		failures.append("settings title missing")
@@ -205,8 +205,8 @@ func _check_settings_registry() -> Array:
 	var spec = registry.get_spec("theme.name")
 	if spec == null:
 		return ["theme.name setting missing"]
-	if spec.default_value() != "plain":
-		failures.append("theme.name default should be Instrument")
+	if spec.default_value() != "luminous":
+		failures.append("theme.name default should be Luminous")
 	var values: Array = []
 	for option in spec.data.get("options", []):
 		values.append(str(option.get("value", "")))
@@ -221,8 +221,8 @@ func _check_settings_registry() -> Array:
 		failures.append("theme.name should remain a dropdown")
 	var manager = ShellStyleManagerScript.new()
 	manager.set_theme(str(spec.default_value()))
-	if manager.get_theme_id() != "plain":
-		failures.append("theme.name default should drive style manager to Instrument")
+	if manager.get_theme_id() != "luminous":
+		failures.append("theme.name default should drive style manager to Luminous")
 	return failures
 
 

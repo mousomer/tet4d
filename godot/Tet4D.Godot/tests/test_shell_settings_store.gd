@@ -64,7 +64,7 @@ func run() -> Array:
 	var store = StoreScript.new(registry, TEST_PATH)
 	if store.deterministic_snapshot().get("load_state") != "defaults_missing_file":
 		failures.append("missing settings file should load canonical defaults")
-	if store.value("theme.name") != "plain" or store.value("interface.show_onboarding") != true:
+	if store.value("theme.name") != "luminous" or store.value("interface.show_onboarding") != true:
 		failures.append("registry defaults should seed a missing settings file")
 	store.set_value("theme.name", "plain")
 	store.set_value("accessibility.show_help_hints", false)
@@ -113,7 +113,7 @@ func run() -> Array:
 	if not partial.reset_to_defaults():
 		failures.append("reset should save registry defaults")
 	var reset_store = StoreScript.new(registry, TEST_PATH)
-	if reset_store.value("theme.name") != "plain" or reset_store.value("interface.show_onboarding") != true:
+	if reset_store.value("theme.name") != "luminous" or reset_store.value("interface.show_onboarding") != true:
 		failures.append("reset defaults should survive reopening")
 	_cleanup()
 	return failures
@@ -130,7 +130,7 @@ func _test_invalid_inputs(failures: Array, registry) -> void:
 		_write_file(str(case.get("text")))
 		var original := _read_file()
 		var store = StoreScript.new(registry, TEST_PATH)
-		if store.value("theme.name") != "plain" or not _diagnostics_contain(store, str(case.get("diagnostic"))):
+		if store.value("theme.name") != "luminous" or not _diagnostics_contain(store, str(case.get("diagnostic"))):
 			failures.append("invalid settings case should recover with readable %s diagnostic" % case.get("diagnostic"))
 		if _read_file() != original:
 			failures.append("recovery should not rewrite malformed or unsupported input automatically")
@@ -162,7 +162,7 @@ func _test_schema_representations(failures: Array, registry) -> void:
 		_write_file(JSON.stringify({"schema_version": case.get("value"), "settings": {"theme.name": "plain"}}))
 		var original := _read_file()
 		var store = StoreScript.new(registry, TEST_PATH)
-		if store.deterministic_snapshot().get("load_state") != "recovered_defaults" or store.value("theme.name") != "plain":
+		if store.deterministic_snapshot().get("load_state") != "recovered_defaults" or store.value("theme.name") != "luminous":
 			failures.append("%s should be rejected" % case.get("label"))
 		if _read_file() != original:
 			failures.append("%s rejection should not rewrite input" % case.get("label"))

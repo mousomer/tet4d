@@ -1,5 +1,5 @@
 {
-  "default_theme": "plain",
+  "default_theme": "luminous",
   "themes": {
     "diagnostic": {
       "background.primary": "#101318",
