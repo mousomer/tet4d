@@ -266,6 +266,9 @@ gates pass; evidence is in the external scaffold correction report. User manual
 review accepts the board-lattice renderer correction. Renderer work is closed;
 opacity, colour, scale, camera and depth tuning belong to later stages.
 
+P1 Luminous review follow-up in PR #202 covers transparent edge compositing
+and screenshot write failures. Owner visual acceptance remains open.
+
 ### Stage 57 gameplay ergonomics
 
 - [x] 57A: retain compact mode-specific gameplay guidance, resolve effective

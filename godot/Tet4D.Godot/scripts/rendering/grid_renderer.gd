@@ -326,9 +326,7 @@ func _update_role_opacities(node: Node, mode: String, high_contrast: bool, enclo
 				GridDisplayMode.ENCLOSURE:
 					material.albedo_color.a = ReplayVisuals.board_enclosure_material(mode, enclosure, boundary, high_contrast).albedo_color.a
 				GridDisplayMode.GRID_EDGE:
-					var edge := ReplayVisuals.board_edge_material(mode, ReplayVisuals.scaffold_alpha(rear, grid), boundary, high_contrast)
-					material.albedo_color.a = edge.albedo_color.a
-					material.depth_draw_mode = edge.depth_draw_mode
+					material.albedo_color.a = ReplayVisuals.board_edge_material(mode, ReplayVisuals.scaffold_alpha(rear, grid), boundary, high_contrast).albedo_color.a
 				GridDisplayMode.GRID_FACE:
 					material.albedo_color.a = ReplayVisuals.board_scaffold_material(mode, ReplayVisuals.scaffold_alpha(rear, grid), high_contrast).albedo_color.a
 				GridDisplayMode.GRID_INTERIOR:

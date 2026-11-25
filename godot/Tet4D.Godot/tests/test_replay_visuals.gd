@@ -183,7 +183,7 @@ func _assert_luminous_graphical_language(failures: Array) -> void:
 	_assert_color_close(failures, "luminous 2D locked cell keeps its piece colour", Color(locked_2d.r, locked_2d.g, locked_2d.b), piece)
 	var active_faces: Dictionary = ReplayVisuals.live_3d_active_face_materials(luminous, 3, 1.0)
 	var active_front := active_faces["front"] as StandardMaterial3D
-	if not active_front.emission_enabled or active_front.emission_energy_multiplier < 1.0 or active_front.albedo_color.get_luminance() > 0.001:
+	if not active_front.emission_enabled or active_front.emission_energy_multiplier <= 0.0 or active_front.albedo_color.get_luminance() > 0.001:
 		failures.append("luminous active faces should be emission-only so their hue ignores the light angle")
 	if ReplayVisuals.live_active_halo_material(luminous, 3) == null:
 		failures.append("luminous active cells should get a halo")
@@ -200,11 +200,8 @@ func _assert_luminous_graphical_language(failures: Array) -> void:
 	_assert_color_close(failures, "luminous board edges use the bright boundary role", Color(edge.albedo_color.r, edge.albedo_color.g, edge.albedo_color.b), ReplayVisuals.color_for_role(ReplayVisuals.ROLE_BOARD_OUTLINE, luminous))
 	if absf(edge.albedo_color.a - 0.8) > 0.001 or ReplayVisuals.board_edge_thickness_scale(luminous) <= 1.0:
 		failures.append("luminous board edges should follow board.boundary_opacity and draw thicker than the lattice")
-	# A piece behind a bright edge must not paint over it (3D front edges).
-	if edge.depth_draw_mode != BaseMaterial3D.DEPTH_DRAW_ALWAYS:
-		failures.append("bright luminous board edges should write depth so pieces behind them stay behind")
-	if ReplayVisuals.board_edge_material(luminous, 0.3, 0.3).depth_draw_mode != BaseMaterial3D.DEPTH_DRAW_DISABLED:
-		failures.append("faint luminous board edges should not write depth")
+	if edge.depth_draw_mode != BaseMaterial3D.DEPTH_DRAW_DISABLED or edge.render_priority <= active_front.render_priority:
+		failures.append("luminous edges should blend after transparent cells without writing depth")
 	for mode in [ReplayVisuals.DISPLAY_MODE_PLAIN, ReplayVisuals.DISPLAY_MODE_TRON, ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC]:
 		var shared := ReplayVisuals.board_edge_material(mode, 0.3, 0.8)
 		var scaffold := ReplayVisuals.board_scaffold_material(mode, 0.3)

@@ -79,6 +79,22 @@ def _config_targets() -> list[ConfigDocTarget]:
     return targets
 
 
+# Config files outside config/ that the policy pack declares as canonical
+# tuning sources (godot_settings_externalization_contract.visual_tuning).
+def _contract_config_targets() -> list[ConfigDocTarget]:
+    policy_path = CONFIG_ROOT / "project" / "policy_pack.json"
+    if not policy_path.is_file():
+        return []
+    policy = _load_json(policy_path)
+    governance = policy.get("governance", {}) if isinstance(policy, dict) else {}
+    contract = governance.get("godot_settings_externalization_contract", {})
+    tuning = contract.get("visual_tuning", {}) if isinstance(contract, dict) else {}
+    config_path = tuning.get("config_path") if isinstance(tuning, dict) else None
+    if not isinstance(config_path, str) or not (PROJECT_ROOT / config_path).is_file():
+        return []
+    return [ConfigDocTarget(rel_path=config_path, kind="json")]
+
+
 def _json_kind(value: object) -> str:
     if value is None:
         return "null"
@@ -214,7 +230,7 @@ def _render_text_target(target: ConfigDocTarget) -> str:
 
 
 def render_configuration_reference() -> str:
-    targets = _config_targets()
+    targets = _config_targets() + _contract_config_targets()
     lines = [
         "# Configuration Reference",
         "",
@@ -226,6 +242,10 @@ def render_configuration_reference() -> str:
         "",
         "Coverage:",
         "- Includes source-controlled config assets under `config/`.",
+        (
+            "- Includes the Godot visual tuning config declared by the policy "
+            "pack's `godot_settings_externalization_contract.visual_tuning`."
+        ),
         "- Workspace membership in `.governance/workspace.json` is outside this scope; `gov check` validates it.",
         (
             "- Excludes `config/schema/`, which defines validation contracts rather "

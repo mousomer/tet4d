@@ -338,7 +338,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 				ReplayVisuals.live_cell_bevel_materials(_display_mode, active_color_id, true, _active_cell_opacity) if _presentation.is_live else {}
 			)
 		if _presentation.is_live:
-			node.add_halo(ReplayVisuals.live_active_halo_material(_display_mode, active_color_id), active_size * ReplayVisuals.LUMINOUS_HALO_SCALE)
+			node.add_halo(ReplayVisuals.live_active_halo_material(_display_mode, active_color_id), active_size * ReplayVisuals.luminous_halo_scale())
 		node.basis = _presentation.local_render_basis()
 	_refresh_settled_weights(true)
 

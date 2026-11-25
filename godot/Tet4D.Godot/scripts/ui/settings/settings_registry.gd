@@ -4,6 +4,8 @@ class_name SettingsRegistry
 
 const SettingSpecScript = preload("res://scripts/ui/settings/setting_spec.gd")
 const REGISTRY_PATH := "res://config/shell_settings_registry.json"
+# Must equal SettingsStore.SCHEMA_VERSION (check_godot_settings_externalization.py).
+const SCHEMA_VERSION := 4
 
 var categories: Array = []
 var settings: Array = []
@@ -36,8 +38,8 @@ func load_from_data(data: Dictionary) -> void:
 
 func validate() -> Array: # tet4d-semantic-boundary: allow diagnostic-presentation
 	var failures: Array = []
-	if schema_version != 4:
-		failures.append("settings registry schema_version must be 4")
+	if schema_version != SCHEMA_VERSION:
+		failures.append("settings registry schema_version must be %d" % SCHEMA_VERSION)
 	var category_ids: Array = []
 	for category_data in categories:
 		if not (category_data is Dictionary):

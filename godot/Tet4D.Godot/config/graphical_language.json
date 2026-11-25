@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "description": "Tuning values for the owner graphical language (docs/design/graphical_language/README.md). Code reads every number from here through GraphicalLanguageConfig; none is hard-coded.",
+  "luminous": {
+    "board": {
+      "active": {
+        "whiten": 0.06,
+        "cell_emission": 0.85,
+        "face_emission": 0.85,
+        "edge_emission": 0.7,
+        "face_shades": {
+          "base": 1.0,
+          "top": 1.22,
+          "front": 1.04,
+          "right": 0.9,
+          "left": 0.86,
+          "back": 0.8,
+          "bottom": 0.7
+        }
+      },
+      "halo": {
+        "alpha": 0.45,
+        "scale_cells": 2.0,
+        "texture_size_px": 128,
+        "gradient_offsets": [
+          0.0,
+          0.45,
+          1.0
+        ],
+        "gradient_alphas": [
+          1.0,
+          0.55,
+          0.0
+        ]
+      },
+      "locked": {
+        "alpha_scale": 0.88,
+        "face_shades": {
+          "base": 1.0,
+          "top": 1.12,
+          "front": 0.94,
+          "right": 0.8,
+          "left": 0.76,
+          "back": 0.7,
+          "bottom": 0.6
+        }
+      },
+      "seam": {
+        "alpha": 0.85,
+        "darken": 0.35
+      },
+      "bevel": {
+        "width_cells": 0.16,
+        "light_lerp_to_white": 0.5,
+        "dark_darken": 0.42,
+        "thickness_cells": 0.01,
+        "min_thickness": 0.002
+      },
+      "ghost_form": {
+        "fill_alpha": 0.2,
+        "outline_lighten": 0.25,
+        "outline_emission": 0.05,
+        "outline_alpha": 0.8
+      },
+      "edges": {
+        "emission": 0.35,
+        "thickness_scale": 1.8,
+        "render_priority": 1
+      }
+    }
+  }
+}

@@ -28,6 +28,9 @@ def _contract_root(tmp_path: Path) -> Path:
         Path(declaration["consumer"])
         for declaration in registry.get("legacy_setting_migrations", {}).values()
     )
+    tuning = contract["visual_tuning"]
+    copied_paths += (Path(tuning["config_path"]), Path(tuning["loader_path"]))
+    copied_paths += tuple(Path(path) for path in tuning["consumer_paths"])
     for relative_path in copied_paths:
         destination = tmp_path / relative_path
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -188,3 +191,47 @@ def test_gate_rejects_malformed_legacy_migrations(tmp_path: Path) -> None:
     registry["legacy_setting_migrations"] = []
     _write_registry(path, registry)
     assert "legacy setting migrations must be an object" in validate_repository(root)
+
+
+def _tuning(root: Path) -> dict:
+    policy = json.loads((root / POLICY_PACK_PATH).read_text(encoding="utf-8"))
+    return policy["governance"]["godot_settings_externalization_contract"][
+        "visual_tuning"
+    ]
+
+
+def test_gate_rejects_tuning_constant_in_consumer(tmp_path: Path) -> None:
+    root = _contract_root(tmp_path)
+    consumer = root / _tuning(root)["consumer_paths"][0]
+    consumer.write_text(
+        consumer.read_text(encoding="utf-8") + "\nconst LUMINOUS_HALO_ALPHA := 0.45\n",
+        encoding="utf-8",
+    )
+    issues = validate_repository(root)
+    assert any(
+        "declares tuning constant LUMINOUS_HALO_ALPHA" in issue for issue in issues
+    )
+
+
+def test_gate_rejects_consumer_that_bypasses_loader(tmp_path: Path) -> None:
+    root = _contract_root(tmp_path)
+    tuning = _tuning(root)
+    consumer = root / tuning["loading_consumer_paths"][0]
+    loader_resource = "res://" + str(
+        Path(tuning["loader_path"]).relative_to("godot/Tet4D.Godot")
+    )
+    consumer.write_text(
+        consumer.read_text(encoding="utf-8").replace(
+            loader_resource, "res://elsewhere.gd"
+        ),
+        encoding="utf-8",
+    )
+    issues = validate_repository(root)
+    assert any("must read tuning through" in issue for issue in issues)
+
+
+def test_gate_rejects_missing_tuning_config(tmp_path: Path) -> None:
+    root = _contract_root(tmp_path)
+    (root / _tuning(root)["config_path"]).unlink()
+    issues = validate_repository(root)
+    assert any("visual tuning config" in issue for issue in issues)
