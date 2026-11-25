@@ -101,10 +101,6 @@ func oriented_local_point(centered_point: Vector3) -> Vector3:
 	return local_render_basis() * centered_point
 
 
-func oriented_local_vector(local_vector: Vector3) -> Vector3:
-	return local_render_basis() * local_vector
-
-
 func local_render_basis() -> Basis:
 	return local_orientation.passive_render_basis() if applies_local_orientation else Basis.IDENTITY
 

@@ -38,7 +38,7 @@ Python remains the semantic oracle. Authoritative config stays under
 `config/`, authoritative traces stay under `migration/golden_traces/`, and
 authority docs stay in `docs/` plus `CURRENT_STATE.md`.
 
-Unity/Godot replay spikes should consume this bundle as input data for trace
+The Godot replay shell should consume this bundle as input data for trace
 replay before implementing independent topology, gameplay, or endgame logic.
 Engine scene, inspector, or project defaults must not replace the Python/config
 authorities.

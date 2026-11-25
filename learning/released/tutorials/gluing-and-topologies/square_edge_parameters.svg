@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 390" role="img" aria-labelledby="title desc">
+<title id="title">A unit square with natural edge coordinates</title>
+<desc id="desc">Square vertices A bottom-left, B bottom-right, C top-right, D top-left. Left and right edge arrows point up; bottom and top edge arrows point right.</desc>
+<defs><marker id="blueArrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#1976bd"/></marker><marker id="ochreArrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#b86e18"/></marker></defs>
+<rect x="250" y="70" width="250" height="250" fill="#e7f1fa" stroke="#334155" stroke-width="3"/>
+<g font-family="DejaVu Sans, Arial, sans-serif" fill="#182636" font-size="24" text-anchor="middle">
+<text x="228" y="348">A (0,0)</text><text x="535" y="348">B (1,0)</text><text x="539" y="56">C (1,1)</text><text x="223" y="56">D (0,1)</text>
+<text x="188" y="205">L</text><text x="561" y="205">R</text><text x="377" y="360">B</text><text x="376" y="45">T</text></g>
+<g stroke="#1976bd" stroke-width="7" fill="none" marker-end="url(#blueArrow)">
+<path d="M250 267 L250 116"/><path d="M500 267 L500 116"/>
+</g><g stroke="#b86e18" stroke-width="7" fill="none" marker-end="url(#ochreArrow)">
+<path d="M297 320 L453 320"/><path d="M297 70 L453 70"/>
+</g></svg>

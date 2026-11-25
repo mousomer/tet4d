@@ -17,11 +17,6 @@ from .scene_state import (
 )
 
 
-def clear_scene_explosion(state: TopologyLabState) -> None:
-    state.pending_explosion_surface_state = None
-    state.scene_explosion = None
-
-
 def consume_pending_scene_explosion_launch(state: TopologyLabState):
     pending = state.pending_explosion_surface_state
     state.pending_explosion_surface_state = None

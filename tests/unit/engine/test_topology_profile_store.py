@@ -15,17 +15,10 @@ from tet4d.engine.runtime.project_config import (
     state_dir_path,
     topology_profiles_file_default_path,
 )
-from tet4d.engine.runtime.topology_explorer_bridge import (
-    explorer_profile_from_legacy_profile,
-)
 from tet4d.engine.runtime.topology_profile_store import (
     load_topology_profile,
     load_topology_profiles_payload,
     save_topology_profile,
-)
-from tet4d.engine.topology_explorer.canonical_contract import (
-    canonical_topology_payload,
-    topology_contract_identity,
 )
 
 
@@ -105,12 +98,6 @@ class TestTopologyProfileStore(unittest.TestCase):
                     (EDGE_BOUNDED, EDGE_BOUNDED),
                 ),
             )
-            before = topology_contract_identity(
-                canonical_topology_payload(
-                    explorer_profile_from_legacy_profile(explorer),
-                    (6, 10),
-                )
-            )
 
             ok, message = save_topology_profile(explorer, root_dir=root)
             self.assertTrue(ok, message)
@@ -120,16 +107,10 @@ class TestTopologyProfileStore(unittest.TestCase):
                 2,
                 root_dir=root,
             )
-            after = topology_contract_identity(
-                canonical_topology_payload(
-                    explorer_profile_from_legacy_profile(loaded),
-                    (6, 10),
-                )
-            )
 
             self.assertEqual(set(payload), {"version", "topology_profiles"})
             self.assertEqual(payload["version"], 1)
-            self.assertEqual(before, after)
+            self.assertEqual(explorer, loaded)
         finally:
             shutil.rmtree(root, ignore_errors=True)
 

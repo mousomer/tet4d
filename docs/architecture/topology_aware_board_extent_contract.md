@@ -89,7 +89,7 @@ for an invalid request; the generated no-argument/default-mode constructors
 remain canonical-only. Godot uses the checked configure methods.
 
 Godot consumes generated defaults and emits an explicit bounded profile, then
-calls `validate_live_board_setup` and `live_*_configure_checked`. GDScript owns
+calls `validate_live_board_setup` and `live_configure_checked(dimension, setup)`. GDScript owns
 the setup interaction and presets but not professional extent, piece, spawn,
 or topology admissibility. Stage 54B-2 persistence schema 3 retains concrete
 shapes; schemas 1 and 2 remain source adapters that migrate preset IDs to a

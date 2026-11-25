@@ -88,9 +88,9 @@ func _run() -> void:
 				hud._set_onboarding_visible(false)
 			else:
 				match mode:
-					"2D": app._enter_live_2d_mode()
-					"3D": app._enter_live_3d_mode()
-					"4D": app._enter_live_4d_mode()
+					"2D": app._enter_live_mode("live_2d")
+					"3D": app._enter_live_mode("live_3d")
+					"4D": app._enter_live_mode("live_4d")
 			for i in range(8):
 				await process_frame
 			if _ordinary_game and (str(app._current_snapshot).contains("TRACE_") or hud.design_affordances_enabled()):
@@ -100,9 +100,9 @@ func _run() -> void:
 			# NEXT/HOLD must also fit with an occupied HOLD preview (R3.1).
 			if bool(case.get("next_hold_without_scroll", false)):
 				match mode:
-					"2D": app._dispatch_live_gameplay_command("hold")
-					"3D": app._dispatch_live_3d_gameplay_command("hold")
-					"4D": app._dispatch_live_4d_gameplay_command("hold")
+					"2D": app._dispatch_live_command("live_2d", "hold")
+					"3D": app._dispatch_live_command("live_3d", "hold")
+					"4D": app._dispatch_live_command("live_4d", "hold")
 				for i in range(4):
 					await process_frame
 				_assert_case(hud, app, case, "%s hold occupied" % mode)

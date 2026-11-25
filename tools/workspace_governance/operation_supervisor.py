@@ -56,6 +56,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Protocol
 
+if not __package__:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+from tools.workspace_governance import command_policy
+from tools.workspace_governance.ci_status import REMOTE_URL
+
 POLICY_ID = "supervised-completion-v3"
 PROFILES_PATH = Path(__file__).resolve().parent / "policies" / "operation_profiles.json"
 CODE = "OPERATION_PENDING"
@@ -64,7 +70,7 @@ STATE_ENV = "GOVERNANCE_OPERATION_STATE"
 # Operation status vocabulary. Only ``succeeded`` is verification.
 SUCCEEDED, FAILED, CANCELLED = "succeeded", "failed", "cancelled"
 UNKNOWN, ABANDONED = "unknown", "abandoned"
-PENDING = "pending"
+PENDING, START_UNCERTAIN = "pending", "start_uncertain"
 DEADLINE_EXPIRED, BUDGET_EXHAUSTED = "deadline_expired", "budget_exhausted"
 ADAPTER_FAULT, MECHANISM_ERROR = "adapter_fault", "mechanism_error"
 TERMINAL = {SUCCEEDED, FAILED, CANCELLED, UNKNOWN, ABANDONED}
@@ -73,6 +79,7 @@ EXIT = {
     SUCCEEDED: 0,
     FAILED: 10,
     PENDING: 11,
+    START_UNCERTAIN: 13,
     DEADLINE_EXPIRED: 11,
     BUDGET_EXHAUSTED: 11,
     UNKNOWN: 12,
@@ -395,6 +402,7 @@ class Observation:
     state: str
     detail: str = ""
     exit_status: int | None = None
+    evidence: dict = field(default_factory=dict)
 
 
 class Service(Protocol):
@@ -455,6 +463,13 @@ class LocalProcessService:
             )
         self.children[record["id"]] = child
         return {"pid": child.pid}
+
+    def reconcile_start(self, record: dict) -> dict | None:
+        # This path is specific to the reserved operation ID. A missing exit
+        # file provides no proof of whether the wrapper started.
+        if Path(record["artifacts"]["exit_file"]).is_file():
+            return {}
+        return None
 
     def block(self, record: dict, timeout: float) -> Observation:
         child = self.children.get(record["id"])
@@ -528,10 +543,20 @@ class GitHubRunService:
             return Observation(PENDING, str(data.get("status")))
         conclusion = str(data.get("conclusion"))
         if conclusion == "success":
-            if not expected:
-                # Success is verification only for the source commit it binds.
-                return Observation(UNKNOWN, "success without a source-commit binding")
-            return Observation(SUCCEEDED, conclusion)
+            if not re.fullmatch(r"[0-9a-f]{40}", expected):
+                return Observation(
+                    UNKNOWN, "success without a full source-commit binding"
+                )
+            return Observation(
+                SUCCEEDED,
+                conclusion,
+                evidence={
+                    "repository": identity["repository"],
+                    "run_id": str(identity["run_id"]),
+                    "verified_head_sha": expected,
+                    "conclusion": conclusion,
+                },
+            )
         if conclusion == "cancelled":
             return Observation(CANCELLED, conclusion)
         return Observation(FAILED, conclusion)
@@ -564,12 +589,127 @@ def checkout_key(root: Path) -> str:
     return hashlib.sha256(str(Path(root).resolve()).encode()).hexdigest()[:16]
 
 
+@dataclass(frozen=True)
+class Instruction:
+    key: str = "initial"
+    sequence: int = 0
+
+
+INITIAL_INSTRUCTION = Instruction()
+
+
+class PromptJournal:
+    """Recorded host events and one-use handoff to the dispatched CLI."""
+
+    def __init__(self, base: Path):
+        self.directory = base / "user-instructions"
+        self.path = self.directory / "events.json"
+
+    def _read(self) -> dict:
+        try:
+            data = json.loads(self.path.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            return {"latest": 0, "sessions": {}}
+        if type(data["latest"]) is not int or not isinstance(data["sessions"], dict):
+            raise ValueError("invalid prompt journal")
+        return data
+
+    def register(self, session: str, event: str) -> bool:
+        with _storage_lock(self.directory, "events.lock"):
+            data = self._read()
+            row = data["sessions"].setdefault(session, {"events": {}})
+            if event in row["events"]:
+                return False
+            data["latest"] += 1
+            row["current"] = event
+            row["events"][event] = data["latest"]
+            _atomic_write(self.path, data)
+            return True
+
+    def instruction(self, session: str, event: str | None = None) -> Instruction:
+        row = self._read()["sessions"].get(session, {})
+        events = row.get("events", {})
+        event = event if event in events else row.get("current")
+        return Instruction(event, events[event]) if event in events else Instruction()
+
+    def latest(self) -> int:
+        return self._read()["latest"]
+
+    def _ticket(self, argv, cwd) -> Path:
+        call = json.dumps([os.path.realpath(cwd), list(argv)])
+        return self.directory / "admissions" / hashlib.sha256(call.encode()).hexdigest()
+
+    def handoff(self, argv, cwd, instruction: Instruction) -> None:
+        # Bind bare and scoped calls alike so a stale scope cannot replace the
+        # context of a newly observed call with the same argv.
+        path = self._ticket(argv, cwd)
+        with _storage_lock(path.parent, "admissions.lock"):
+            prior = self._read_ticket(path)
+            ambiguous = bool(prior) and (
+                prior["ambiguous"] or prior["key"] != instruction.key
+            )
+            _atomic_write(
+                path,
+                {
+                    "key": instruction.key,
+                    "sequence": instruction.sequence,
+                    "expires": time.time() + 60,
+                    "ambiguous": ambiguous,
+                    "uses": prior.get("uses", 1) + 1 if prior else 1,
+                },
+            )
+
+    @staticmethod
+    def _read_ticket(path: Path) -> dict | None:
+        try:
+            row = json.loads(path.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            return None
+        return row if row["expires"] >= time.time() else None
+
+    def take(self, argv, cwd) -> Instruction:
+        path = self._ticket(argv, cwd)
+        if not path.parent.is_dir():
+            return INITIAL_INSTRUCTION
+        with _storage_lock(path.parent, "admissions.lock"):
+            row = self._read_ticket(path)
+            if row and row.get("uses", 1) > 1:
+                row["uses"] -= 1
+                _atomic_write(path, row)
+            else:
+                path.unlink(missing_ok=True)
+        if not row:
+            return INITIAL_INSTRUCTION
+        if row["ambiguous"]:
+            raise MechanismError(
+                "GUARD_DEGRADED: ambiguous supervisor instruction admission"
+            )
+        return Instruction(row["key"], row["sequence"])
+
+
 class Registry:
     """Durable operation records for one checkout, independent of agent sessions."""
 
     def __init__(self, root: Path, base: Path | None = None):
         self.root = Path(root).resolve()
-        self.dir = (base or state_root()) / checkout_key(self.root)
+        self.base = base or state_root()
+        self.dir = self.base / checkout_key(self.root)
+
+    @classmethod
+    def remote_records(cls, base: Path) -> list[dict]:
+        records = []
+        if base.is_dir():
+            for directory in base.iterdir():
+                if not re.fullmatch(r"[0-9a-f]{16}", directory.name):
+                    continue
+                registry = cls(base, base)
+                registry.dir = directory
+                records.extend(
+                    record
+                    for record in registry.open_records()
+                    if _record_repository(record) or record.get("scope_unknown")
+                )
+        return records
 
     # -- storage
     def _ops(self) -> Path:
@@ -582,39 +722,68 @@ class Registry:
             )
         return self._ops() / f"{op_id}.json"
 
-    @contextlib.contextmanager
     def locked(self):
-        self.dir.mkdir(mode=0o700, parents=True, exist_ok=True)
-        with (self.dir / "registry.lock").open("a") as handle:
-            fcntl.flock(handle, fcntl.LOCK_EX)
-            try:
-                yield
-            finally:
-                fcntl.flock(handle, fcntl.LOCK_UN)
+        return _storage_lock(self.dir, "registry.lock")
+
+    def _read_record(self, path: Path) -> dict:
+        record = json.loads(path.read_text(encoding="utf-8"))
+        if (
+            not isinstance(record, dict)
+            or record.get("id") != path.stem
+            or record.get("status") not in EXIT
+            or not isinstance(record.get("profile"), str)
+            or not isinstance(record.get("identity"), dict)
+            or not isinstance(record.get("artifacts"), dict)
+        ):
+            raise ValueError("invalid operation record")
+        return record
+
+    def _damaged_record(self, path: Path) -> dict:
+        try:
+            scope = self._read_record(path.parent / "guard" / path.name)
+        except (OSError, ValueError, TypeError):
+            scope = {"profile": "unknown", "identity": {}, "artifacts": {}}
+            scope["scope_unknown"] = True
+        return {
+            **scope,
+            "id": path.stem,
+            "status": MECHANISM_ERROR,
+            "reason": "record_unreadable",
+            "detail": "GUARD_DEGRADED: operation record unreadable; recover by ID",
+            "corrupt": True,
+        }
 
     def load(self, op_id: str) -> dict:
+        path = self.path(op_id)
         try:
-            return json.loads(self.path(op_id).read_text(encoding="utf-8"))
+            return self._read_record(path)
         except FileNotFoundError:
-            raise Refused(f"no operation {op_id}", "use an id from `op list`") from None
+            if not (path.parent / "guard" / path.name).exists():
+                raise Refused(
+                    f"no operation {op_id}", "use an id from `op list`"
+                ) from None
+        except (OSError, ValueError, TypeError):
+            pass
+        return self._damaged_record(path)
 
     def save(self, record: dict) -> None:
-        _atomic_write(self.path(record["id"]), record)
+        path = self.path(record["id"])
+        guard = {key: record[key] for key in ("id", "profile", "identity", "artifacts")}
+        guard["status"] = PENDING
+        projection = path.parent / "guard" / path.name
+        try:
+            old_guard = self._read_record(projection)
+        except (OSError, ValueError, TypeError):
+            old_guard = None
+        if old_guard != guard:
+            _atomic_write(projection, guard)
+        _atomic_write(path, record)
 
     def records(self) -> list[dict]:
-        found = []
         directory = self._ops()
-        if not directory.is_dir():
-            return found
-        for path in sorted(directory.glob("op-*.json")):
-            try:
-                found.append(json.loads(path.read_text(encoding="utf-8")))
-            except (OSError, ValueError):
-                # An unreadable record must not hide a pending operation.
-                found.append(
-                    {"id": path.stem, "status": MECHANISM_ERROR, "corrupt": True}
-                )
-        return found
+        paths = {p.name for p in directory.glob("op-*.json")}
+        paths.update(p.name for p in (directory / "guard").glob("op-*.json"))
+        return [self.load(Path(name).stem) for name in sorted(paths)]
 
     def open_records(self) -> list[dict]:
         return [r for r in self.records() if r.get("status") not in TERMINAL]
@@ -649,11 +818,17 @@ class Registry:
 
         return int(self._update_meta(change)["user_epoch"])
 
-    def status_queried(self, op_id: str) -> bool:
-        queries = self.meta().get("status_queries") or {}
-        return queries.get(op_id) == self.user_epoch()
+    def status_queried(self, op_id: str, instruction: Instruction) -> bool:
+        meta = self.meta()
+        if instruction.sequence:
+            return instruction.key in meta.get("instruction_status_queries", {}).get(
+                op_id, []
+            )
+        return meta.get("status_queries", {}).get(op_id) == self.user_epoch()
 
-    def mark_status_queries(self, op_ids: list[str]) -> list[str]:
+    def mark_status_queries(
+        self, op_ids: list[str], instruction: Instruction
+    ) -> list[str]:
         """Record one supervisor status report per operation and user instruction.
 
         Returns the operations already reported under the current instruction.
@@ -661,6 +836,15 @@ class Registry:
         repeated: list[str] = []
 
         def change(meta: dict) -> None:
+            if instruction.sequence:
+                queries = meta.setdefault("instruction_status_queries", {})
+                for op_id in op_ids:
+                    seen = queries.setdefault(op_id, [])
+                    if instruction.key in seen:
+                        repeated.append(op_id)
+                    else:
+                        seen.append(instruction.key)
+                return
             epoch = int(meta.get("user_epoch", 0) or 0)
             queries = meta.setdefault("status_queries", {})
             for op_id in op_ids:
@@ -703,11 +887,32 @@ class Registry:
         return False
 
 
+@contextlib.contextmanager
+def _storage_lock(directory: Path, name: str):
+    directory.mkdir(mode=0o700, parents=True, exist_ok=True)
+    with (directory / name).open("a") as handle:
+        fcntl.flock(handle, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(handle, fcntl.LOCK_UN)
+
+
 def _atomic_write(path: Path, data: Any) -> None:
     path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
     temporary = path.with_suffix(f".{os.getpid()}.tmp")
-    temporary.write_text(json.dumps(data, indent=2, sort_keys=True))
+    with temporary.open("w", encoding="utf-8") as handle:
+        json.dump(data, handle, indent=2, sort_keys=True)
+        handle.flush()
+        os.fsync(handle.fileno())
     os.replace(temporary, path)
+    # Retain the rename and newly created ancestor directory entries.
+    for directory in (path.parent, *path.parent.parents[:2]):
+        fd = os.open(directory, os.O_RDONLY)
+        try:
+            os.fsync(fd)
+        finally:
+            os.close(fd)
 
 
 # ---------------------------------------------------------------- supervisor
@@ -732,6 +937,7 @@ class WaitResult:
     profile_version: dict = field(default_factory=dict)
     enforcement_errors: list[dict] = field(default_factory=list)
     log_tail: list[str] = field(default_factory=list)
+    evidence: dict = field(default_factory=dict)
 
     @property
     def exit_code(self) -> int:
@@ -774,6 +980,7 @@ class WaitResult:
             "detail": self.detail,
             "next_action": self.next_action,
             "log_tail": self.log_tail,
+            "evidence": self.evidence,
         }
 
 
@@ -791,8 +998,11 @@ class Supervisor:
         profiles: dict[str, dict] | None = None,
         state_base: Path | None = None,
         gov: str = "./gov",
+        instruction: Instruction = INITIAL_INSTRUCTION,
     ):
         self.registry = Registry(root, state_base)
+        self.instructions = PromptJournal(self.registry.base)
+        self.instruction = instruction
         self.clock = clock or RealClock()
         if profiles is None:
             profiles = load_profiles()
@@ -812,12 +1022,28 @@ class Supervisor:
                 "do not wait for it with an agent-written loop",
             )
         spec = copy.deepcopy(self.profiles[profile])
+        if isinstance(identity.get("argv"), list):
+            argv, cwd = _local_identity(identity["argv"], identity.get("cwd"))
+            identity = {**identity, "argv": list(argv), "cwd": cwd}
         key = _identity_key(profile, identity)
-        with self.registry.locked():
-            for record in self.registry.open_records():
-                if record.get("corrupt"):
-                    continue
+        remote = bool(identity.get("run_id"))
+        remote_lock = (
+            _storage_lock(self.registry.base, "remote-registration.lock")
+            if remote
+            else contextlib.nullcontext()
+        )
+        with remote_lock, self.registry.locked():
+            pending = (
+                Registry.remote_records(self.registry.base)
+                if remote
+                else self.registry.open_records()
+            )
+            for record in pending:
+                if record.get("scope_unknown"):
+                    _refuse_remote(_damaged_denial(record))
                 if _record_key(record) == key:
+                    if record.get("corrupt"):
+                        _refuse_remote(_damaged_denial(record))
                     raise Refused(
                         f"{record['id']} already tracks this operation "
                         f"({record['status']}); a second submission would duplicate it",
@@ -825,6 +1051,7 @@ class Supervisor:
                         record["id"],
                     )
                 self._refuse_child_probe(record, identity)
+            self._admit_remote_child(identity)
             op_id = "op-" + uuid.uuid4().hex[:12]
             directory = self.registry.dir / "artifacts" / op_id
             record = {
@@ -852,6 +1079,7 @@ class Supervisor:
                 "active_wait": None,
                 "last_wait_epoch": None,
                 "submitted_epoch": self.registry.user_epoch(),
+                "submitted_instruction_sequence": self._instruction_sequence(),
                 "submitted_wall": round(time.time(), 3),
                 "artifacts": {
                     "directory": str(directory),
@@ -866,11 +1094,45 @@ class Supervisor:
             }
             service = self.services.get(profile)
             if hasattr(service, "start"):
+                record.update(
+                    status=START_UNCERTAIN,
+                    reason=START_UNCERTAIN,
+                    detail="service start receipt is unavailable",
+                )
+                self.registry.save(record)
                 try:
-                    record["identity"].update(service.start(record))
-                except OSError as exc:
-                    raise MechanismError(f"could not start operation: {exc}") from exc
+                    receipt = service.start(record)
+                    accepted = self._accepted_start(record, receipt)
+                    self.registry.save(accepted)
+                except OSError:
+                    # The service may have acted even when transport/storage failed.
+                    return record
+                return accepted
             self.registry.save(record)
+        return record
+
+    @staticmethod
+    def _accepted_start(record, receipt) -> dict:
+        return {
+            **record,
+            "identity": {**record["identity"], **receipt},
+            "status": PENDING,
+            "reason": "submitted",
+            "detail": "",
+        }
+
+    def _recover_start(self, record: dict) -> dict:
+        service = self.services.get(record["profile"])
+        reconcile = getattr(service, "reconcile_start", None)
+        if callable(reconcile):
+            try:
+                receipt = reconcile(record)
+            except (OSError, MechanismError):
+                receipt = None
+            if receipt is not None:
+                record = self._accepted_start(record, receipt)
+                self._transition(record, "start_reconciled")
+                self.registry.save(record)
         return record
 
     def _refuse_child_probe(self, record: dict, identity: dict) -> None:
@@ -879,10 +1141,9 @@ class Supervisor:
         Wrapping a probe in a new operation must not escape the restrictions of
         the operation it probes, or acquire a fresh budget for probing it.
         """
-        argv = identity.get("argv")
-        if not isinstance(argv, list) or not argv or _completed_locally(record):
+        child = _child_invocation(identity.get("argv"))
+        if child is None or _completed_locally(record):
             return
-        child = {"tool": "Bash", "command": shlex.join(map(str, argv)), "input": {}}
         denial = _probe(
             record, child, str(identity.get("cwd") or ""), _HookView(self.registry)
         )
@@ -894,11 +1155,41 @@ class Supervisor:
                 denial.operation,
             )
 
+    def _admit_remote_child(self, identity: dict) -> None:
+        child = _child_invocation(identity.get("argv"))
+        if child is None:
+            return
+        cwd = str(identity.get("cwd") or ".")
+        try:
+            decision = command_policy.evaluate_shell(child, cwd)
+        except (OSError, UnicodeError):
+            print("GUARD_DEGRADED: GitHub alias config unreadable", file=sys.stderr)
+            decision = command_policy.evaluate(
+                child, reader=command_policy.script_reader(cwd)
+            )
+        admission = _remote_admission(
+            decision.remote_targets, self.registry.base, cwd, child["command"]
+        )
+        if admission.denial:
+            _refuse_remote(admission.denial)
+        if decision.decision != command_policy.ALLOW:
+            raise Refused(decision.reason, command_policy.ALTERNATIVE)
+        if decision.supervised_remote:
+            raise Refused(
+                "a remote observation needs one standalone supervisor submission",
+                command_policy.ALTERNATIVE,
+            )
+        denial = _RemoteObservations(self.registry.base).admit(
+            admission, self.instruction
+        )
+        if denial is not None:
+            _refuse_remote(denial)
+
     # -- waiting
     def wait(self, op_id: str) -> WaitResult:
         lock_path = self.registry.wait_lock_path(op_id)
         record = self.registry.load(op_id)
-        if record["status"] in TERMINAL:
+        if record["status"] in TERMINAL or record.get("corrupt"):
             return self._result(record, 0.0)
         lock_path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
         with lock_path.open("a") as handle:
@@ -918,8 +1209,12 @@ class Supervisor:
     def _wait_locked(self, op_id: str) -> WaitResult:
         with self.registry.locked():
             record = self.registry.load(op_id)
-            if record["status"] in TERMINAL:
+            if record["status"] in TERMINAL or record.get("corrupt"):
                 return self._result(record, 0.0, waiter=False)
+            if record["status"] == START_UNCERTAIN:
+                record = self._recover_start(record)
+                if record["status"] == START_UNCERTAIN:
+                    return self._result(record, 0.0, waiter=False)
             try:
                 spec = record_spec(record)
             except MechanismError as exc:
@@ -930,13 +1225,25 @@ class Supervisor:
                 self.registry.save(record)
                 return self._result(record, 0.0, waiter=False)
             if record.get("active_wait"):
-                # The previous waiter ended without finishing: its own response
-                # window expired or it was stopped. Same handle, same budget.
-                self._transition(record, R_INTERRUPTED)
-            self._authorize_wait(record, spec)
+                self._recover_interrupted_wait(record)
+            if exhausted := self._authorize_wait(record, spec):
+                self._transition(record, exhausted, status=BUDGET_EXHAUSTED)
+                record.update(
+                    status=BUDGET_EXHAUSTED,
+                    reason=exhausted,
+                    detail="wait budget exhausted; original operation preserved",
+                    active_wait=None,
+                )
+                self.registry.save(record)
+                return self._result(record, 0.0, waiter=False)
             for bucket in (record["consumed"], record["total_consumed"]):
                 bucket["waits"] += 1
             record["last_wait_epoch"] = self.registry.user_epoch()
+            record["last_wait_instruction_sequence"] = max(
+                record.get("last_wait_instruction_sequence", 0),
+                self._instruction_sequence(),
+            )
+            record["last_wait_instruction"] = self.instruction.key
             record["active_wait"] = {"pid": os.getpid(), "started_at": self.clock.now()}
             self.registry.save(record)
         run = _Wait(self, record, spec)
@@ -947,12 +1254,38 @@ class Supervisor:
             status, reason, detail = MECHANISM_ERROR, R_FAILURE, str(exc)
         return self._finish(record, status, reason, detail, run.elapsed())
 
-    def _authorize_wait(self, record: dict, spec: dict) -> None:
+    def _recover_interrupted_wait(self, record: dict) -> None:
+        self._transition(record, R_INTERRUPTED)
+        cadence = record["cadence"]
+        if reserved := cadence.pop("in_flight_interval", None):
+            # The last request may have arrived after its reservation was saved.
+            # With no receipt, wait a full interval from recovery before sending.
+            cadence["next_request_at"] = max(
+                cadence["next_request_at"], self.clock.now() + reserved
+            )
+
+    def _instruction_sequence(self) -> int:
+        return self.instruction.sequence or self.instructions.latest()
+
+    def _fresh_instruction(self, record: dict, prefix: str) -> bool:
+        if self.instruction.sequence:
+            return self.instruction.sequence > max(
+                record.get(f"{prefix}_instruction_sequence", 0),
+                record.get("submitted_instruction_sequence", 0),
+            )
+        prior = record.get(f"{prefix}_epoch")
+        return prior is None or self.registry.user_epoch() > prior
+
+    def _authorize_wait(self, record: dict, spec: dict) -> str | None:
         budget = spec["budget"]
-        last, epoch = record.get("last_wait_epoch"), self.registry.user_epoch()
-        fresh_instruction = last is None or epoch > last
+        fresh_instruction = self._fresh_instruction(record, "last_wait")
         exhausted = budget_exhausted(record, budget)
         stalled = record["status"] in STALLED
+        renewals_spent = record["allotment"] > budget["max_renewals"]
+        if exhausted in {R_REQUESTS, R_WAITS} and (
+            not fresh_instruction or renewals_spent
+        ):
+            return exhausted
         if (stalled or exhausted) and not fresh_instruction:
             raise Refused(
                 f"{record['id']} is {record['status']} "
@@ -962,7 +1295,7 @@ class Supervisor:
                 record["id"],
             )
         if exhausted:
-            if record["allotment"] > budget["max_renewals"]:
+            if renewals_spent:
                 raise Refused(
                     f"{record['id']} has used its budget and all "
                     f"{budget['max_renewals']} renewals",
@@ -977,6 +1310,7 @@ class Supervisor:
         elif stalled:
             record["cadence"]["immediate_pending"] = 0
             self._transition(record, R_RESUMED)
+        return None
 
     def _transition(
         self, record: dict, reason: str, to: str | None = None, **extra
@@ -1026,7 +1360,12 @@ class Supervisor:
                 float(record.get("submitted_wall", 0))
             ),
             next_action=next_action(record, self, waiter=waiter),
-            log_tail=_tail(record),
+            evidence=dict(record.get("result_evidence", {})),
+            log_tail=(
+                []
+                if record.get("corrupt") or record["status"] == START_UNCERTAIN
+                else _tail(record)
+            ),
         )
 
     def abandon(self, op_id: str) -> dict:
@@ -1035,13 +1374,15 @@ class Supervisor:
             record = self.registry.load(op_id)
             if record["status"] in TERMINAL:
                 return record
+            if record.get("corrupt") or record["status"] == START_UNCERTAIN:
+                raise Refused(record["detail"], next_action(record, self), op_id)
             if self.registry.waiter_active(op_id):
                 raise Refused(
                     f"a supervised wait is attached to {op_id}",
                     next_action(record, self, waiter=True),
                     op_id,
                 )
-            if record["submitted_epoch"] >= self.registry.user_epoch():
+            if not self._fresh_instruction(record, "submitted"):
                 raise Refused(
                     f"abandoning {op_id} needs a new user instruction",
                     next_action(record, self),
@@ -1121,6 +1462,8 @@ class _Wait:
             bucket["requests"] += 1
         self.save()  # counted before the call, so an interrupted call still counts
         observation = call(self.record, *args)
+        if observation.evidence:
+            self.record["result_evidence"] = observation.evidence
         self.record["last_state"] = observation.state + (
             f" ({observation.detail})" if observation.detail else ""
         )
@@ -1247,13 +1590,18 @@ class _Wait:
                 self.sleep(delay)
             # Reserve the next slot before requesting, so a waiter stopped during
             # the request cannot let its successor request sooner.
-            cadence["next_request_at"] = self.clock.now() + interval
+            reserved = interval
+            cadence["in_flight_interval"] = reserved
+            cadence["next_request_at"] = self.clock.now() + reserved
             interval = min(
-                interval * float(params["backoff_factor"]),
+                reserved * float(params["backoff_factor"]),
                 float(params["max_interval_seconds"]),
             )
             cadence["interval"] = interval
             observation = self.observe(service.status)
+            cadence.pop("in_flight_interval")
+            cadence["next_request_at"] = self.clock.now() + reserved
+            self.save()
             if observation.state != PENDING:
                 return observation.state, R_COMPLETED, observation.detail
 
@@ -1276,16 +1624,21 @@ def _identity_key(profile: str, identity: dict) -> str:
     """
     argv = identity.get("argv")
     if isinstance(argv, list):
-        cwd = os.path.realpath(str(identity.get("cwd") or "."))
-        stable: list = ["local-process", [str(a) for a in argv], cwd]
+        stable: list = ["local-process", *_local_identity(argv, identity.get("cwd"))]
     elif identity.get("run_id") is not None:
-        repository = str(identity.get("repository") or "").lower()
+        repository = command_policy.repository_identity(
+            str(identity.get("repository") or "")
+        )
         stable = ["github-run", repository, str(identity["run_id"])]
     else:
         stable = [profile, {k: v for k, v in identity.items() if k != "pid"}]
     return hashlib.sha256(
         json.dumps(stable, sort_keys=True, default=str).encode()
     ).hexdigest()
+
+
+def _local_identity(argv, cwd) -> tuple[tuple[str, ...], str]:
+    return tuple(map(str, argv)), os.path.realpath(str(cwd or "."))
 
 
 def _record_key(record: dict) -> str:
@@ -1315,6 +1668,10 @@ def next_action(record: dict, supervisor=None, *, waiter: bool | None = None) ->
     gov = getattr(supervisor, "gov", "./gov")
     op_id = record.get("id", "?")
     status = record.get("status")
+    if record.get("corrupt"):
+        return f"recover the unreadable operation record for {op_id}; preserve its identity"
+    if status == START_UNCERTAIN:
+        return f"report the uncertain start for {op_id}; use `{gov} op wait {op_id}` to reconcile"
     if status in TERMINAL:
         return f"read the final result with `{gov} op result {op_id}`"
     if waiter is None and supervisor is not None:
@@ -1358,7 +1715,12 @@ class Denial:
         )
 
 
-def hook_check(invocation: dict, cwd: str, roots: list[Path]) -> Denial | None:
+def hook_check(
+    invocation: dict,
+    cwd: str,
+    roots: list[Path],
+    instruction: Instruction = INITIAL_INSTRUCTION,
+) -> Denial | None:
     """Refuse an invocation that probes or duplicates a pending managed operation."""
     seen: set[str] = set()
     for root in roots:
@@ -1366,8 +1728,12 @@ def hook_check(invocation: dict, cwd: str, roots: list[Path]) -> Denial | None:
         if str(registry.dir) in seen or not registry.dir.is_dir():
             continue
         seen.add(str(registry.dir))
-        supervisor = _HookView(registry)
+        supervisor = _HookView(registry, instruction)
         for record in registry.open_records():
+            if record.get("corrupt"):
+                print(
+                    f"GUARD_DEGRADED: {record['id']} record_unreadable", file=sys.stderr
+                )
             if _completed_locally(record):
                 continue
             denial = _probe(record, invocation, cwd, supervisor)
@@ -1376,11 +1742,259 @@ def hook_check(invocation: dict, cwd: str, roots: list[Path]) -> Denial | None:
     return None
 
 
-def advance_user_epoch(roots: list[Path]) -> None:
-    for root in roots:
-        registry = Registry(root)
-        if registry.dir.is_dir():
-            registry.advance_user_epoch()
+def _child_invocation(argv) -> dict | None:
+    if isinstance(argv, list) and argv:
+        return {"tool": "Bash", "command": shlex.join(map(str, argv)), "input": {}}
+    return None
+
+
+def _record_repository(record: dict) -> str:
+    identity = record.get("identity", {})
+    return (
+        command_policy.repository_identity(str(identity.get("repository") or ""))
+        if identity.get("run_id")
+        else ""
+    )
+
+
+def _checkout_repository(cwd: str) -> str:
+    configured = os.environ.get("GH_REPO", "")
+    if configured:
+        return configured.removeprefix("github.com/").lower()
+    try:
+        remote = subprocess.run(
+            ["git", "config", "--local", "--get", "remote.origin.url"],
+            cwd=cwd or ".",
+            capture_output=True,
+            text=True,
+            timeout=2,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    match = (
+        REMOTE_URL.fullmatch(remote.stdout.strip()) if remote.returncode == 0 else None
+    )
+    return f"{match['owner']}/{match['name']}".lower() if match else ""
+
+
+def _observation_repository(target: command_policy.RemoteTarget, cwd: str) -> str:
+    repository = command_policy.repository_identity(target.repository)
+    return (
+        _checkout_repository(cwd)
+        if repository in {"", "{owner}/{repo}"}
+        else repository
+    )
+
+
+def _target_matches(identity: dict, target: command_policy.RemoteTarget) -> bool:
+    if target.kind == "run":
+        return str(identity.get("run_id")) == target.value
+    bound = str(identity.get("head_sha") or "").lower()
+    return target.kind == "sha" and bool(
+        target.value == bound
+        or (
+            re.fullmatch(r"[0-9a-f]{7,40}", target.value)
+            and bound.startswith(target.value)
+        )
+    )
+
+
+def _remote_denial(record: dict, reason: str, violation: str) -> Denial:
+    return Denial(
+        record["id"], record["profile"], violation, reason, next_action(record)
+    )
+
+
+def _damaged_denial(record: dict) -> Denial:
+    return _remote_denial(
+        record,
+        "operation scope is unavailable because its record is unreadable",
+        "GUARD_DEGRADED",
+    )
+
+
+def _refuse_remote(denial: Denial) -> None:
+    raise Refused(denial.reason, denial.next_action, denial.operation)
+
+
+@dataclass
+class RemoteAdmission:
+    denial: Denial | None = None
+    broad: dict[str, Denial] = field(default_factory=dict)
+    ordinary: dict[tuple[str, str], Denial] = field(default_factory=dict)
+    replaced_observations: set[str] = field(default_factory=set)
+
+
+def _remote_admission(
+    targets, base: Path, cwd: str, command: str = ""
+) -> RemoteAdmission:
+    """Resolve direct probes and the remote allowances to reserve."""
+    admission = RemoteAdmission()
+    if not targets:
+        return admission
+    pending = Registry.remote_records(base)
+    runs = []
+    for record in pending:
+        if record.get("scope_unknown"):
+            return RemoteAdmission(_damaged_denial(record))
+        runs.append((_record_repository(record), record))
+    for target in targets:
+        repository = _observation_repository(target, cwd)
+        relevant = [(repo, record) for repo, record in runs if repository in {"", repo}]
+        if denial := _admit_target(
+            admission, target, relevant, repository, cwd, command
+        ):
+            return RemoteAdmission(denial)
+    return admission
+
+
+def _admit_target(admission, target, relevant, repository, cwd, command):
+    if target.kind == "broad":
+        for _, record in relevant:
+            if _selects_run(command, record):
+                run_id = record["identity"]["run_id"]
+                return _remote_denial(
+                    record,
+                    f"the call selects run {run_id} from a listing",
+                    "STATUS_PROBE",
+                )
+        if relevant and target.ordinary_listing_key:
+            admission.replaced_observations.add(target.ordinary_listing_key)
+        return _add_broad_targets(admission.broad, relevant)
+    if denial := _direct_target_denial(target, relevant):
+        return denial
+    if target.kind in {"run", "sha"} and target.observe:
+        repo = repository or f"checkout:{os.path.realpath(cwd)}"
+        key = (repo, target.observation())
+        if key in admission.ordinary:
+            return admission.ordinary[key]
+        label = "commit" if target.kind == "sha" else "run"
+        admission.ordinary[key] = Denial(
+            "-",
+            "remote-observation",
+            "REPEATED_STATUS_QUERY",
+            f"{label} {target.value} in {repo} already has an observation in this instruction",
+            command_policy.ALTERNATIVE,
+        )
+        admission.replaced_observations.add(key[1])
+    return None
+
+
+def _direct_target_denial(target, relevant) -> Denial | None:
+    for _, record in relevant:
+        if _target_matches(record["identity"], target):
+            reason = f"the call targets the managed {target.kind} {target.value}"
+            return _remote_denial(record, reason, "STATUS_PROBE")
+    return None
+
+
+def _add_broad_targets(broad, relevant) -> Denial | None:
+    for repo, record in dict(relevant).items():
+        reason = (
+            f"workflow runs in {repo} already have an observation in this instruction"
+        )
+        denial = _remote_denial(record, reason, "REPEATED_STATUS_QUERY")
+        if repo in broad:
+            return denial
+        broad[repo] = denial
+    return None
+
+
+class _RemoteObservations:
+    """Durable repository allowance shared by hook processes and supervisors."""
+
+    def __init__(self, base: Path):
+        self.directory = base / "remote-observations"
+        self.path = self.directory / "instructions.json"
+        self.ordinary_path = self.directory / "targets.json"
+
+    def _read(self, path: Path) -> dict:
+        try:
+            rows = json.loads(path.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            return {}
+        if not isinstance(rows, dict) or any(
+            not isinstance(row, dict)
+            or type(row.get("spent")) is not bool
+            or not isinstance(row.get("instructions", {}), dict)
+            or not isinstance(row.get("targets", {}), dict)
+            for row in rows.values()
+        ):
+            raise ValueError("invalid observation state")
+        return rows
+
+    def admit(
+        self,
+        admission: RemoteAdmission,
+        instruction: Instruction,
+        *,
+        reserve: bool = True,
+    ) -> Denial | None:
+        if admission.denial or not (admission.broad or admission.ordinary):
+            return admission.denial
+        try:
+            with _storage_lock(self.directory, "instructions.lock"):
+                return self._reserve(admission, instruction, reserve)
+        except (OSError, ValueError, TypeError) as exc:
+            raise MechanismError(
+                "GUARD_DEGRADED: remote observation state unavailable"
+            ) from exc
+
+    def _reserve(self, admission, instruction, reserve) -> Denial | None:
+        key = instruction.key
+        rows = self._read(self.path) if admission.broad else {}
+        ordinary = self._read(self.ordinary_path) if admission.ordinary else {}
+        for repo, denial in admission.broad.items():
+            row = rows.get(repo, {})
+            spent = (
+                key in row.get("instructions", {})
+                if instruction.sequence
+                else row.get("spent")
+            )
+            if spent:
+                return denial
+        for (repo, target), denial in admission.ordinary.items():
+            if key in ordinary.get(repo, {}).get("targets", {}).get(target, {}):
+                return denial
+        if reserve:
+            self._save_reservations(admission, instruction, rows, ordinary)
+        return None
+
+    def _save_reservations(self, admission, instruction, rows, ordinary) -> None:
+        for repo in admission.broad:
+            row = rows.setdefault(repo, {"spent": False})
+            if instruction.sequence:
+                row.setdefault("instructions", {})[instruction.key] = True
+            else:
+                row["spent"] = True
+        for repo, target in admission.ordinary:
+            row = ordinary.setdefault(repo, {"spent": False})
+            row.setdefault("targets", {}).setdefault(target, {})[instruction.key] = True
+        if admission.broad:
+            _atomic_write(self.path, rows)
+        if admission.ordinary:
+            _atomic_write(self.ordinary_path, ordinary)
+
+
+def hook_remote_admission(targets, cwd: str, command: str) -> RemoteAdmission:
+    return _remote_admission(targets, state_root(), cwd, command)
+
+
+def hook_reserve_observations(
+    admission: RemoteAdmission, instruction: Instruction, *, reserve: bool
+) -> Denial | None:
+    return _RemoteObservations(state_root()).admit(
+        admission, instruction, reserve=reserve
+    )
+
+
+def wrapped_decision(invocation: dict, cwd: str):
+    """Classify a standalone supervisor module invocation like the gov launcher."""
+    args = supervisor_args(invocation)
+    if args and (child := _child_invocation(command_policy.submitted_child(args))):
+        return command_policy.evaluate_shell(child, cwd)
+    return None
 
 
 def record_enforcement_error(roots: list[Path], detail: str) -> None:
@@ -1392,14 +2006,21 @@ def record_enforcement_error(roots: list[Path], detail: str) -> None:
 
 
 class _HookView:
-    def __init__(self, registry: Registry):
+    def __init__(
+        self, registry: Registry, instruction: Instruction = INITIAL_INSTRUCTION
+    ):
         self.registry, self.gov = registry, "./gov"
+        self.instruction = instruction
 
 
 def _completed_locally(record: dict) -> bool:
     # A finished local process is not "pending": its result is one `op result` away.
     exit_file = record.get("artifacts", {}).get("exit_file")
-    local = isinstance(record.get("identity", {}).get("argv"), list)
+    local = (
+        not record.get("corrupt")
+        and record.get("status") != START_UNCERTAIN
+        and isinstance(record.get("identity", {}).get("argv"), list)
+    )
     return local and bool(exit_file and os.path.exists(exit_file))
 
 
@@ -1413,7 +2034,6 @@ class _Call:
     tokens: frozenset[str]
     cwd: str
     tool: str = ""
-    tool_input: Any = None
     globs: tuple[str, ...] = ()
 
 
@@ -1426,7 +2046,10 @@ def _invocation_texts(invocation: dict) -> list[str]:
         for key in ("file_path", "path", "notebook_path")
         if isinstance(tool_input.get(key), str)
     ]
-    texts += list(_glob_patterns(invocation, ""))
+    if invocation.get("tool") == "Glob":
+        return list(_glob_patterns(invocation, ""))
+    if invocation.get("tool") == "Grep" and not texts:
+        return ["."]
     if str(invocation.get("tool") or "").startswith("mcp__"):
         texts.append(json.dumps(tool_input, sort_keys=True, default=str))
     return texts
@@ -1441,13 +2064,9 @@ def _glob_patterns(invocation: dict, cwd: str) -> tuple[str, ...]:
     if not isinstance(pattern, str) or not pattern:
         return ()
     base = tool_input.get("path")
-    base = base if isinstance(base, str) and base else cwd
-    if base and not os.path.isabs(os.path.expanduser(pattern)):
-        return (os.path.join(base, pattern),)
-    return (os.path.expanduser(pattern),)
-
-
-SUPERVISOR_VALUE_OPTIONS = {"--profile", "--output", "--run-id", "--repo", "--head-sha"}
+    base = os.path.expanduser(base) if isinstance(base, str) and base else "."
+    base = os.path.join(cwd or ".", base)
+    return (os.path.join(base, os.path.expanduser(pattern)),)
 
 
 def _supervisor_args(command: str) -> list[str] | None:
@@ -1489,27 +2108,14 @@ def _supervisor_entry(words: list[str]) -> list[str] | None:
     return rest[1:] if rest[:1] == ["op"] else None
 
 
+def supervisor_args(invocation: dict) -> list[str] | None:
+    command = invocation.get("command")
+    return _supervisor_args(command) if isinstance(command, str) else None
+
+
 def single_supervisor_call(command: str) -> bool:
     """True only for one plain ``gov op`` invocation with no shell composition."""
     return _supervisor_args(command) is not None
-
-
-def _submitted_child(args: list[str]) -> list[str]:
-    """The command a ``run`` or ``submit`` call would start (argparse REMAINDER)."""
-    if args[:1] not in (["run"], ["submit"]):
-        return []
-    index = 1
-    while index < len(args):
-        word = args[index]
-        if word == "--":
-            return args[index + 1 :]
-        if word in SUPERVISOR_VALUE_OPTIONS:
-            index += 2
-        elif word.startswith("-"):
-            index += 1
-        else:
-            return args[index:]
-    return []
 
 
 _CONTINUE = object()
@@ -1530,7 +2136,7 @@ def _supervisor_probe(record, supervisor_call, command, cwd, view, deny):
         )
         return deny(("REDUNDANT_WAIT", reason), waiter=True)
     status_query = action == "list" or (action == "result" and targets_this)
-    if status_query and view.registry.status_queried(record["id"]):
+    if status_query and view.registry.status_queried(record["id"], view.instruction):
         reason = (
             "the supervisor already reported this operation's status for the "
             "current user instruction; repeating the query to detect completion "
@@ -1543,11 +2149,12 @@ def _supervisor_probe(record, supervisor_call, command, cwd, view, deny):
     # The supervisor enforces its own budgets and status-query limit, but the
     # command it would start is an agent command like any other: a probe
     # wrapped in a new operation is still a probe of this one.
-    child = _submitted_child(args)
+    child = command_policy.submitted_child(args)
     if not child:
         return None
-    wrapped = {"tool": "Bash", "command": shlex.join(child), "input": {}}
-    return _probe(record, wrapped, cwd, view)
+    if wrapped := _child_invocation(child):
+        return _probe(record, wrapped, cwd, view)
+    return None
 
 
 def _probe(record: dict, invocation: dict, cwd: str, view) -> Denial | None:
@@ -1572,7 +2179,11 @@ def _probe(record: dict, invocation: dict, cwd: str, view) -> Denial | None:
         if outcome is not _CONTINUE:
             return outcome
         # Composed with other commands: every probe check still applies.
-    if record.get("corrupt"):
+    if record.get("scope_unknown"):
+        if invocation.get("tool") in {"Read", "Grep", "Glob"} or (
+            _tokens(command or "") & {"cat", "tail", "head", "grep", "rg", "ls", "find"}
+        ):
+            return _damaged_denial(record)
         return None
     joined = "\n".join(texts)
     call = _Call(
@@ -1582,7 +2193,6 @@ def _probe(record: dict, invocation: dict, cwd: str, view) -> Denial | None:
         frozenset(_tokens(joined)),
         cwd,
         str(invocation.get("tool") or ""),
-        invocation.get("input") or {},
         _glob_patterns(invocation, cwd),
     )
     for name in view_profile_probes(record):
@@ -1607,9 +2217,25 @@ def _artifact_probe(record: dict, call: _Call) -> tuple[str, str] | None:
     paths = [artifacts.get(key) for key in ("directory", "log", "exit_file")]
     paths += list(artifacts.get("outputs") or [])
     paths = [p for p in paths if p]
-    if _mentions_path(call.texts, call.tokens, paths, call.cwd) or _glob_matches(
-        call.globs, paths
-    ):
+    if call.tool == "Glob":
+        matches = _glob_matches(call.globs, paths)
+    elif call.tool == "Grep":
+        base = Path(call.cwd or ".") / os.path.expanduser(call.texts[0] or ".")
+        scope = base.resolve()
+        resolved_paths = (Path(path).resolve() for path in paths)
+        matches = any(
+            scope.is_relative_to(path) or path.is_relative_to(scope)
+            for path in resolved_paths
+        )
+    else:
+        matches = _mentions_path(call, paths)
+        if not matches and call.command:
+            patterns = [
+                os.path.join(call.cwd or ".", os.path.expanduser(pattern))
+                for pattern in command_policy.shell_glob_patterns(call.command)
+            ]
+            matches = _glob_matches(patterns, paths, directory_scope=True)
+    if matches:
         reason = (
             "reading or testing this operation's log, exit file or declared outputs "
             "before completion is a completion probe"
@@ -1618,59 +2244,13 @@ def _artifact_probe(record: dict, call: _Call) -> tuple[str, str] | None:
     return None
 
 
-def _run_probe(record: dict, call: _Call) -> tuple[str, str] | None:
-    """A query of the run itself, judged by tool, command and argument role.
-
-    A bare number elsewhere (``git log -n 123``, ``--maxfail=123``) is not a
-    reference to run 123.
-    """
-    run_id = record.get("identity", {}).get("run_id")
-    if run_id is None:
-        return None
-    run_id = str(run_id)
-    found = "STATUS_PROBE", f"the call queries run {run_id}"
-    if re.search(rf"/runs/{re.escape(run_id)}(?![\w-])", call.joined):
-        return found  # REST paths and URLs, through gh api, curl or a tool
-    if call.tool.startswith("mcp__"):
-        return found if _mcp_names_run(call.tool, call.tool_input, run_id) else None
-    if call.command is None:
-        return None
-    segments = _command_segments(call.command)
-    listed = any(_gh_run_call(words) == "list" for words in segments)
-    for words in segments:
-        sub = _gh_run_call(words)
-        if sub and sub != "list" and run_id in words[words.index("run") + 1 :]:
-            return found  # gh run view/watch/download/cancel <id>
-    if listed and run_id in call.tokens:
-        return found  # gh run list filtered for this run
-    return None
-
-
-def _gh_run_call(words: list[str]) -> str | None:
-    """The ``gh run`` subcommand a simple command invokes, if any."""
-    for index, word in enumerate(words):
-        if word.rsplit("/", 1)[-1] != "gh":
-            continue
-        rest = words[index + 1 :]
-        while rest and rest[0].startswith("-"):
-            rest = rest[2:] if rest[0] in {"-R", "--repo"} else rest[1:]
-        if rest[:1] == ["run"]:
-            return rest[1] if len(rest) > 1 else "run"
-    return None
-
-
-def _mcp_names_run(tool: str, tool_input: Any, run_id: str) -> bool:
-    run_tool = "run" in tool.lower()
-
-    def walk(value: Any, key: str) -> bool:
-        if isinstance(value, dict):
-            return any(walk(v, str(k)) for k, v in value.items())
-        if isinstance(value, list):
-            return any(walk(v, key) for v in value)
-        named = "run" in key.lower() or (run_tool and key.lower() in {"id", ""})
-        return named and str(value) == run_id
-
-    return walk(tool_input, "")
+def _selects_run(command: str, record: dict) -> bool:
+    run_id = str(record["identity"]["run_id"])
+    return bool(
+        re.search(
+            rf"\|\s*(?:grep|rg)\s+['\"]?{re.escape(run_id)}['\"]?(?=\s|$)", command
+        )
+    )
 
 
 def _command_segments(command: str, depth: int = 0) -> list[list[str]]:
@@ -1687,9 +2267,12 @@ def _command_segments(command: str, depth: int = 0) -> list[list[str]]:
             segments.append([])
             continue
         segments[-1].append(word)
-        if depth < 3 and any(c.isspace() for c in word):
-            segments += _command_segments(word, depth + 1)
-    return [s for s in segments if s]
+    commands = [s for s in segments if s]
+    if depth < 3:
+        for argv in commands[:]:
+            if script := command_policy.shell_script(argv):
+                commands.extend(_command_segments(script, depth + 1))
+    return commands
 
 
 def _handle_probe(record: dict, call: _Call) -> tuple[str, str] | None:
@@ -1704,17 +2287,17 @@ def _duplicate_probe(record: dict, call: _Call) -> tuple[str, str] | None:
         return None
     identity = record.get("identity", {})
     argv = identity.get("argv")
-    same = (
+    try:
+        child_argv = shlex.split(call.command)
+    except ValueError:
+        child_argv = []
+    if (
         isinstance(argv, list)
         and argv
-        and (_normalized(call.command) == _normalized(shlex.join(argv)))
-    )
-    if same:
+        and _local_identity(child_argv, call.cwd)
+        == _local_identity(argv, identity.get("cwd"))
+    ):
         return "DUPLICATE_SUBMISSION", "the command resubmits the pending operation"
-    run_id = identity.get("run_id")
-    rerun = rf"\bgh\s+run\s+rerun\s+{re.escape(str(run_id))}\b"
-    if run_id is not None and re.search(rerun, call.command):
-        return "DUPLICATE_SUBMISSION", "the command reruns the pending run"
     return None
 
 
@@ -1731,7 +2314,6 @@ def _sleep_probe(record: dict, call: _Call) -> tuple[str, str] | None:
 PROBE_CHECKS = {
     "process_id": _process_probe,
     "artifact_path": _artifact_probe,
-    "remote_run_id": _run_probe,
     "handle": _handle_probe,
     "duplicate_submission": _duplicate_probe,
     "synthetic_wait": _sleep_probe,
@@ -1761,33 +2343,53 @@ def _tokens(text: str) -> set[str]:
     return tokens
 
 
-def _mentions_path(texts, tokens, paths, cwd) -> bool:
+def _mentions_path(call: _Call, paths) -> bool:
     resolved = {os.path.realpath(p) for p in paths}
-    for token in tokens:
-        if "/" not in token and "." not in token:
-            continue
-        candidate = os.path.expanduser(token)
-        if not os.path.isabs(candidate):
-            candidate = os.path.join(cwd or ".", candidate)
+    candidates = set(call.texts)
+    if call.command:
+        words = {word for argv in _command_segments(call.command) for word in argv}
+        candidates.update(words)
+        candidates.update(word.partition("=")[2] for word in words if "=" in word)
+    for token in candidates:
+        candidate = os.path.join(call.cwd or ".", os.path.expanduser(token))
         real = os.path.realpath(candidate)
-        for path in resolved:
-            if real == path or real.startswith(path.rstrip("/") + "/"):
-                return True
-    joined = "\n".join(texts)
-    return any(p in joined for p in paths)
-
-
-def _glob_matches(globs, paths) -> bool:
-    """True when a glob pattern would match an artifact (``*`` may cross ``/``)."""
-    if not globs:
-        return False
-    candidates = {p for p in paths} | {os.path.realpath(p) for p in paths}
-    for pattern in globs:
-        variants = {pattern, _real_glob(pattern)}
-        for variant in variants:
-            if any(fnmatch.fnmatchcase(c, variant) for c in candidates):
-                return True
+        if any(
+            real == path or real.startswith(path.rstrip("/") + "/") for path in resolved
+        ):
+            return True
     return False
+
+
+def _glob_matches(globs, paths, *, directory_scope=False) -> bool:
+    return any(
+        _glob_path_match(
+            Path(path).parts,
+            Path(_real_glob(pattern)).parts,
+            descendants=directory_scope and Path(path).is_dir(),
+        )
+        for pattern in globs
+        for path in {p for p in paths} | {os.path.realpath(p) for p in paths}
+    )
+
+
+def _glob_path_match(
+    path: tuple[str, ...], pattern: tuple[str, ...], *, descendants=False
+) -> bool:
+    positions = {0}
+    for part in pattern:
+        if descendants and len(path) in positions:
+            return True
+        if part == "**":
+            positions = set(range(min(positions), len(path) + 1))
+        else:
+            positions = {
+                i + 1
+                for i in positions
+                if i < len(path) and fnmatch.fnmatchcase(path[i], part)
+            }
+        if not positions:
+            return False
+    return len(path) in positions
 
 
 def _real_glob(pattern: str) -> str:
@@ -1795,13 +2397,11 @@ def _real_glob(pattern: str) -> str:
     match = re.search(r"[*?\[]", pattern)
     head = pattern[: match.start()] if match else pattern
     directory = head.rsplit("/", 1)[0] if "/" in head else ""
+    if not match:
+        return os.path.realpath(pattern)
     if not directory:
         return pattern
-    return os.path.realpath(directory) + pattern[len(directory) :]
-
-
-def _normalized(command: str) -> str:
-    return " ".join(command.split())
+    return os.path.realpath(directory).rstrip("/") + pattern[len(directory) :]
 
 
 # ----------------------------------------------------------------------- CLI
@@ -1828,10 +2428,12 @@ def main(argv: list[str] | None = None, root: Path | None = None) -> int:
     sub.add_parser("abandon").add_argument("operation")
     sub.add_parser("list")
     sub.add_parser("profiles")
+    argv = sys.argv[1:] if argv is None else argv
     args = parser.parse_args(argv)
     try:
-        supervisor = Supervisor(args.root)
-    except (OSError, ValueError) as exc:
+        instruction = PromptJournal(state_root()).take(argv, os.getcwd())
+        supervisor = Supervisor(args.root, instruction=instruction)
+    except (OSError, ValueError, MechanismError) as exc:
         _emit({"policy": POLICY_ID, "status": MECHANISM_ERROR, "detail": str(exc)})
         return EXIT[MECHANISM_ERROR]
     try:
@@ -1846,7 +2448,7 @@ def main(argv: list[str] | None = None, root: Path | None = None) -> int:
             }
         )
         return REFUSED_EXIT
-    except MechanismError as exc:
+    except (OSError, MechanismError) as exc:
         _emit({"policy": POLICY_ID, "status": MECHANISM_ERROR, "detail": str(exc)})
         return EXIT[MECHANISM_ERROR]
 
@@ -1859,7 +2461,11 @@ def _dispatch(supervisor: Supervisor, args) -> int:
     if args.action == "list":
         records = registry.records()
         pending = [r["id"] for r in records if r.get("status") not in TERMINAL]
-        repeated = registry.mark_status_queries(pending) if pending else []
+        repeated = (
+            registry.mark_status_queries(pending, supervisor.instruction)
+            if pending
+            else []
+        )
         if repeated:
             raise Refused(
                 "the status of pending operations was already reported for the current "
@@ -1887,7 +2493,7 @@ def _dispatch(supervisor: Supervisor, args) -> int:
                     "next_action": next_action(record, supervisor),
                 }
             )
-            return 0
+            return EXIT[START_UNCERTAIN] if record["status"] == START_UNCERTAIN else 0
         result = supervisor.wait(record["id"])
         _emit(result.as_dict())
         return result.exit_code
@@ -1897,8 +2503,14 @@ def _dispatch(supervisor: Supervisor, args) -> int:
         return result.exit_code
     if args.action == "result":
         record = registry.load(args.operation)
-        if record["status"] not in TERMINAL:
-            repeated = registry.mark_status_queries([args.operation])
+        if (
+            record["status"] not in TERMINAL
+            and record["status"] != START_UNCERTAIN
+            and not record.get("corrupt")
+        ):
+            repeated = registry.mark_status_queries(
+                [args.operation], supervisor.instruction
+            )
             again = " again" if repeated else ""
             raise Refused(
                 f"{args.operation} has not completed; its status was reported{again} "
@@ -1955,7 +2567,4 @@ def _emit(payload: Any) -> None:
 
 
 if __name__ == "__main__":
-    ROOT = Path(__file__).resolve().parents[2]
-    if str(ROOT) not in sys.path:
-        sys.path.insert(0, str(ROOT))
     sys.exit(main())

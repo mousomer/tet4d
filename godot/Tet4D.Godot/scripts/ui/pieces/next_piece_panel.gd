@@ -82,10 +82,6 @@ func set_preview(payload: Dictionary) -> bool:
 	return true
 
 
-func clear_preview() -> void:
-	set_preview({})
-
-
 func set_style_manager(style_manager) -> void:
 	_thumbnail.set_style_manager(style_manager)
 

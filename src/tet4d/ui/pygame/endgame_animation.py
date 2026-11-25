@@ -30,7 +30,6 @@ from tet4d.ui.pygame.locked_cell_explosion.defaults_store import (
 )
 from tet4d.ui.pygame.locked_cell_explosion.model import (
     canonical_endgame_cell_order,
-    select_endgame_live_cells,
     split_endgame_cells,
 )
 from tet4d.ui.pygame.locked_cell_explosion.model import (
@@ -832,21 +831,6 @@ def _cell_artifact_score(
     )
 
 
-def select_endgame_live_locked_cells(
-    *,
-    locked_cells: tuple[SnapshotCell, ...],
-    dimension: int,
-    seed: int,
-    live_fraction: float,
-) -> tuple[SnapshotCell, ...]:
-    return select_endgame_live_cells(
-        locked_cells=tuple(locked_cells),
-        dimension=int(dimension),
-        seed=int(seed),
-        live_fraction=clamp_endgame_live_cell_fraction(live_fraction),
-    )
-
-
 def split_endgame_locked_cells(
     *,
     locked_cells: tuple[SnapshotCell, ...],
@@ -1171,10 +1155,6 @@ def _vec_dot(a: VecN, b: VecN) -> float:
     return sum(left * right for left, right in zip(a, b))
 
 
-def _vec_lerp(a: VecN, b: VecN, progress: float) -> VecN:
-    return tuple(left + ((right - left) * progress) for left, right in zip(a, b))
-
-
 def _vec_len(a: VecN) -> float:
     return math.sqrt(sum(component * component for component in a))
 
@@ -1189,10 +1169,6 @@ def _normalize_or_default(a: VecN, default: VecN) -> VecN:
 def _pad_vec3(value: VecN) -> Vec3:
     padded = tuple(value) + (0.0, 0.0, 0.0)
     return (float(padded[0]), float(padded[1]), float(padded[2]))
-
-
-def _zero_vec(dimension: int) -> VecN:
-    return tuple(0.0 for _ in range(max(0, int(dimension))))
 
 
 def _unit_axis(dimension: int, axis_index: int, *, sign: float = 1.0) -> VecN:
@@ -1256,10 +1232,6 @@ def _smoothstep01(value: float) -> float:
     return clamped * clamped * (3.0 - (2.0 * clamped))
 
 
-def _wrap_phase_radians(value: float) -> float:
-    return float(value % _TAU)
-
-
 def _random_angular_velocity(
     randomizer: random.Random,
     *,
@@ -1278,215 +1250,6 @@ def _random_angular_velocity(
         randomizer.uniform(minimum, maximum) * _random_signed(randomizer),
         randomizer.uniform(minimum, maximum) * _random_signed(randomizer),
     )
-
-
-def _scene_extent_limit(snapshot: EndgameSnapshot) -> float:
-    return max(1.0, (min(snapshot.render_dims) * 0.5) + 1.25)
-
-
-def _clamp_point_to_scene(
-    point: Vec3,
-    *,
-    snapshot: EndgameSnapshot,
-    planar: bool,
-    margin: float,
-) -> Vec3:
-    dims = snapshot.render_dims
-    x = min(float(dims[0]) - 0.5 + margin, max(-0.5 - margin, point[0]))
-    y = min(float(dims[1]) - 0.5 + margin, max(-0.5 - margin, point[1]))
-    if planar:
-        z = 0.0
-    else:
-        z = min(float(dims[2]) - 0.5 + margin, max(-0.5 - margin, point[2]))
-    return (x, y, z)
-
-
-def _field_basis_vectors(
-    *,
-    randomizer: random.Random,
-    direction: VecN,
-) -> tuple[VecN, ...]:
-    dimension = len(direction)
-    if dimension <= 0:
-        return ()
-    basis: list[VecN] = []
-    candidates: list[VecN] = [
-        _normalize_or_default(direction, _unit_axis(dimension, 0)),
-    ]
-    candidates.extend(
-        _random_unit_vector(randomizer, dimension=dimension)
-        for _ in range(dimension * 2)
-    )
-    candidates.extend(
-        _unit_axis(dimension, axis_index) for axis_index in range(dimension)
-    )
-    for candidate in candidates:
-        orthogonal = candidate
-        for existing in basis:
-            orthogonal = _vec_sub(
-                orthogonal,
-                _vec_mul(existing, _vec_dot(orthogonal, existing)),
-            )
-        if _vec_len(orthogonal) <= 1e-6:
-            continue
-        basis.append(
-            _normalize_or_default(
-                orthogonal,
-                _unit_axis(dimension, len(basis) % dimension),
-            )
-        )
-        if len(basis) >= dimension:
-            break
-    while len(basis) < dimension:
-        basis.append(_unit_axis(dimension, len(basis)))
-    return tuple(basis)
-
-
-def _choose_path_family(
-    *,
-    randomizer: random.Random,
-    tuning: EndgameAnimationTuning,
-    planar: bool,
-) -> str:
-    allowed = [
-        (family, weight)
-        for family, weight in tuning.path_family_weights
-        if weight > 0 and (not planar or family != "helix")
-    ]
-    if not allowed:
-        allowed = [("ellipse", 1)]
-    total = sum(weight for _, weight in allowed)
-    roll = randomizer.uniform(0.0, float(total))
-    accumulator = 0.0
-    for family, weight in allowed:
-        accumulator += float(weight)
-        if roll <= accumulator:
-            return family
-    return allowed[-1][0]
-
-
-def _field_anchor_for_cell(
-    cell: SnapshotCell,
-    *,
-    randomizer: random.Random,
-    snapshot: EndgameSnapshot,
-    direction: VecN,
-    tuning: EndgameAnimationTuning,
-) -> VecN:
-    dimension = len(cell.position)
-    bias_toward_source = _vec_lerp(snapshot.board_center, cell.position, 0.42)
-    outward = _vec_mul(
-        direction,
-        randomizer.uniform(0.15, 0.55) * tuning.anchor_spread_radius,
-    )
-    tangent = _vec_mul(
-        _random_unit_vector(randomizer, dimension=dimension),
-        randomizer.uniform(0.0, 0.35) * tuning.anchor_spread_radius,
-    )
-    extents = _field_half_extents(
-        snapshot,
-        tuning=tuning,
-        preset=resolve_endgame_preset_config(snapshot.preset_id, tuning=tuning),
-        dimension=dimension,
-    )
-    return _wrap_point_in_box(
-        _vec_add(bias_toward_source, _vec_add(outward, tangent)),
-        center=snapshot.board_center,
-        extents=extents,
-    )
-
-
-def _field_seconds(
-    *,
-    elapsed_ms: float,
-    tuning: EndgameAnimationTuning,
-    speed_scale: float,
-) -> float:
-    return max(
-        0.0,
-        float(elapsed_ms - tuning.capture_start_ms) / 1000.0,
-    ) * max(0.05, float(speed_scale))
-
-
-def _field_half_extents(
-    snapshot: EndgameSnapshot,
-    *,
-    tuning: EndgameAnimationTuning,
-    preset: EndgamePresetConfig,
-    dimension: int | None = None,
-) -> VecN:
-    target_dimension = (
-        len(snapshot.board_center) if dimension is None else max(1, int(dimension))
-    )
-    scale = max(0.2, float(tuning.field_extent_multiplier * preset.extent_scale))
-    extents: list[float] = []
-    for axis_index in range(target_dimension):
-        if axis_index >= len(snapshot.board_dims):
-            extents.append(0.0)
-            continue
-        extents.append(
-            max(
-                1.0,
-                ((float(snapshot.board_dims[axis_index]) - 1.0) * 0.5 * scale)
-                + tuning.wrap_margin,
-            )
-        )
-    return tuple(extents)
-
-
-def _wrap_local_axis(value: float, extent: float) -> float:
-    if extent <= 0.0:
-        return 0.0
-    span = extent * 2.0
-    wrapped = ((value + extent) % span) - extent
-    return float(wrapped)
-
-
-def _wrap_point_in_box(point: VecN, *, center: VecN, extents: VecN) -> VecN:
-    local = _vec_sub(point, center)
-    return _vec_add(
-        center,
-        tuple(
-            0.0 if extent <= 0.0 else _wrap_local_axis(local[idx], extent)
-            for idx, extent in enumerate(extents)
-        ),
-    )
-
-
-def _reflect_local_axis(value: float, extent: float) -> tuple[float, float]:
-    if extent <= 0.0:
-        return 0.0, 1.0
-    span = extent * 2.0
-    band = math.floor((value + extent) / span)
-    offset = (value + extent) - (band * span)
-    if int(band) % 2 == 0:
-        return float(-extent + offset), 1.0
-    return float(extent - offset), -1.0
-
-
-def _reflect_point_in_box(
-    point: VecN, *, center: VecN, extents: VecN
-) -> tuple[VecN, float]:
-    local = _vec_sub(point, center)
-    reflected: list[float] = []
-    sign = 1.0
-    for axis_index, extent in enumerate(extents):
-        value, axis_sign = _reflect_local_axis(local[axis_index], extent)
-        reflected.append(value)
-        sign *= axis_sign
-    return _vec_add(center, tuple(reflected)), float(sign)
-
-
-def _sphere_radius_limit(
-    snapshot: EndgameSnapshot,
-    *,
-    tuning: EndgameAnimationTuning,
-    preset: EndgamePresetConfig,
-) -> float:
-    extents = _field_half_extents(snapshot, tuning=tuning, preset=preset)
-    candidates = [value for value in extents if value > 0.0]
-    base = min(candidates) if candidates else 1.0
-    return max(0.8, base * max(0.1, preset.sphere_radius_scale))
 
 
 def endgame_preset_registry(
@@ -1559,21 +1322,6 @@ def _burst_rotation_deg(
         0.05, float(speed_scale)
     )
     return _wrapped_rotation_deg(_vec_mul(angular_velocity_deg, travel_seconds))
-
-
-def _relic_capture_progress(
-    *,
-    elapsed_ms: float,
-    tuning: EndgameAnimationTuning,
-) -> float:
-    if elapsed_ms <= tuning.capture_start_ms:
-        return 0.0
-    if tuning.capture_transition_duration_ms <= 0.0:
-        return 1.0
-    return _smoothstep01(
-        (float(elapsed_ms) - tuning.capture_start_ms)
-        / float(tuning.capture_transition_duration_ms)
-    )
 
 
 def _shell_alpha(

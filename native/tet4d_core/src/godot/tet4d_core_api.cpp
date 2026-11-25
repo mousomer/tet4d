@@ -155,7 +155,7 @@ Dictionary piece_preview_dictionary(
 	return result;
 }
 
-Dictionary hard_drop_destination_dictionary(const std::optional<tet4d::core::ActivePiece2D> &piece) {
+Dictionary hard_drop_destination_dictionary(const std::optional<tet4d::core::ActivePiece2D> &piece, int64_t /* dimension */) {
 	Dictionary result;
 	const bool ok = piece.has_value();
 	result["ok"] = ok;
@@ -462,43 +462,19 @@ void Tet4DCoreApi::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_plain_nd_parity_status"), &Tet4DCoreApi::get_plain_nd_parity_status);
 	ClassDB::bind_method(D_METHOD("export_plain_nd_trace_json", "case_id"), &Tet4DCoreApi::export_plain_nd_trace_json);
 	ClassDB::bind_method(D_METHOD("get_plain_nd_required_field_parity", "case_id"), &Tet4DCoreApi::get_plain_nd_required_field_parity);
-	ClassDB::bind_method(D_METHOD("live_2d_configure", "setup"), &Tet4DCoreApi::live_2d_configure);
-	ClassDB::bind_method(D_METHOD("live_2d_configure_checked", "setup"), &Tet4DCoreApi::live_2d_configure_checked);
+	ClassDB::bind_method(D_METHOD("live_configure", "dimension", "setup"), &Tet4DCoreApi::live_configure);
+	ClassDB::bind_method(D_METHOD("live_configure_checked", "dimension", "setup"), &Tet4DCoreApi::live_configure_checked);
 	ClassDB::bind_method(D_METHOD("live_2d_configure_fixture_board", "width", "height"), &Tet4DCoreApi::live_2d_configure_fixture_board);
-	ClassDB::bind_method(D_METHOD("live_2d_reset"), &Tet4DCoreApi::live_2d_reset);
-	ClassDB::bind_method(D_METHOD("live_2d_apply_command", "command"), &Tet4DCoreApi::live_2d_apply_command);
-	ClassDB::bind_method(D_METHOD("live_2d_tick"), &Tet4DCoreApi::live_2d_tick);
-	ClassDB::bind_method(D_METHOD("live_2d_snapshot_json"), &Tet4DCoreApi::live_2d_snapshot_json);
-	ClassDB::bind_method(D_METHOD("live_2d_next_piece_preview"), &Tet4DCoreApi::live_2d_next_piece_preview);
-	ClassDB::bind_method(D_METHOD("live_2d_held_piece_preview"), &Tet4DCoreApi::live_2d_held_piece_preview);
-	ClassDB::bind_method(D_METHOD("live_2d_hold_available"), &Tet4DCoreApi::live_2d_hold_available);
-	ClassDB::bind_method(D_METHOD("live_2d_hard_drop_destination"), &Tet4DCoreApi::live_2d_hard_drop_destination);
-	ClassDB::bind_method(D_METHOD("live_2d_status"), &Tet4DCoreApi::live_2d_status);
-	ClassDB::bind_method(D_METHOD("live_2d_state_hash"), &Tet4DCoreApi::live_2d_state_hash);
-	ClassDB::bind_method(D_METHOD("live_3d_configure", "setup"), &Tet4DCoreApi::live_3d_configure);
-	ClassDB::bind_method(D_METHOD("live_3d_configure_checked", "setup"), &Tet4DCoreApi::live_3d_configure_checked);
-	ClassDB::bind_method(D_METHOD("live_3d_reset"), &Tet4DCoreApi::live_3d_reset);
-	ClassDB::bind_method(D_METHOD("live_3d_apply_command", "command"), &Tet4DCoreApi::live_3d_apply_command);
-	ClassDB::bind_method(D_METHOD("live_3d_tick"), &Tet4DCoreApi::live_3d_tick);
-	ClassDB::bind_method(D_METHOD("live_3d_snapshot_json"), &Tet4DCoreApi::live_3d_snapshot_json);
-	ClassDB::bind_method(D_METHOD("live_3d_next_piece_preview"), &Tet4DCoreApi::live_3d_next_piece_preview);
-	ClassDB::bind_method(D_METHOD("live_3d_held_piece_preview"), &Tet4DCoreApi::live_3d_held_piece_preview);
-	ClassDB::bind_method(D_METHOD("live_3d_hold_available"), &Tet4DCoreApi::live_3d_hold_available);
-	ClassDB::bind_method(D_METHOD("live_3d_hard_drop_destination"), &Tet4DCoreApi::live_3d_hard_drop_destination);
-	ClassDB::bind_method(D_METHOD("live_3d_status"), &Tet4DCoreApi::live_3d_status);
-	ClassDB::bind_method(D_METHOD("live_3d_state_hash"), &Tet4DCoreApi::live_3d_state_hash);
-	ClassDB::bind_method(D_METHOD("live_4d_configure", "setup"), &Tet4DCoreApi::live_4d_configure);
-	ClassDB::bind_method(D_METHOD("live_4d_configure_checked", "setup"), &Tet4DCoreApi::live_4d_configure_checked);
-	ClassDB::bind_method(D_METHOD("live_4d_reset"), &Tet4DCoreApi::live_4d_reset);
-	ClassDB::bind_method(D_METHOD("live_4d_apply_command", "command"), &Tet4DCoreApi::live_4d_apply_command);
-	ClassDB::bind_method(D_METHOD("live_4d_tick"), &Tet4DCoreApi::live_4d_tick);
-	ClassDB::bind_method(D_METHOD("live_4d_snapshot_json"), &Tet4DCoreApi::live_4d_snapshot_json);
-	ClassDB::bind_method(D_METHOD("live_4d_next_piece_preview"), &Tet4DCoreApi::live_4d_next_piece_preview);
-	ClassDB::bind_method(D_METHOD("live_4d_held_piece_preview"), &Tet4DCoreApi::live_4d_held_piece_preview);
-	ClassDB::bind_method(D_METHOD("live_4d_hold_available"), &Tet4DCoreApi::live_4d_hold_available);
-	ClassDB::bind_method(D_METHOD("live_4d_hard_drop_destination"), &Tet4DCoreApi::live_4d_hard_drop_destination);
-	ClassDB::bind_method(D_METHOD("live_4d_status"), &Tet4DCoreApi::live_4d_status);
-	ClassDB::bind_method(D_METHOD("live_4d_state_hash"), &Tet4DCoreApi::live_4d_state_hash);
+	ClassDB::bind_method(D_METHOD("live_reset", "dimension"), &Tet4DCoreApi::live_reset);
+	ClassDB::bind_method(D_METHOD("live_apply_command", "dimension", "command"), &Tet4DCoreApi::live_apply_command);
+	ClassDB::bind_method(D_METHOD("live_tick", "dimension"), &Tet4DCoreApi::live_tick);
+	ClassDB::bind_method(D_METHOD("live_snapshot_json", "dimension"), &Tet4DCoreApi::live_snapshot_json);
+	ClassDB::bind_method(D_METHOD("live_next_piece_preview", "dimension"), &Tet4DCoreApi::live_next_piece_preview);
+	ClassDB::bind_method(D_METHOD("live_held_piece_preview", "dimension"), &Tet4DCoreApi::live_held_piece_preview);
+	ClassDB::bind_method(D_METHOD("live_hold_available", "dimension"), &Tet4DCoreApi::live_hold_available);
+	ClassDB::bind_method(D_METHOD("live_hard_drop_destination", "dimension"), &Tet4DCoreApi::live_hard_drop_destination);
+	ClassDB::bind_method(D_METHOD("live_status", "dimension"), &Tet4DCoreApi::live_status);
+	ClassDB::bind_method(D_METHOD("live_state_hash", "dimension"), &Tet4DCoreApi::live_state_hash);
 }
 
 String Tet4DCoreApi::get_core_version() const {
@@ -1028,161 +1004,82 @@ bool Tet4DCoreApi::get_plain_nd_required_field_parity(const String &case_id) con
 	return tet4d::core::get_plain_nd_required_field_parity(to_std_string(case_id));
 }
 
-bool Tet4DCoreApi::live_2d_configure(const Dictionary &setup) {
-	return bool(live_2d_configure_checked(setup).get("ok", false));
+template <typename Operation>
+auto Tet4DCoreApi::with_live_session(int64_t dimension, Operation operation) const {
+	using Result = decltype(operation(live_2d_session_));
+	switch (dimension) {
+		case 2: return operation(live_2d_session_);
+		case 3: return operation(live_3d_session_);
+		case 4: return operation(live_4d_session_);
+		default: return Result();
+	}
 }
 
-Dictionary Tet4DCoreApi::live_2d_configure_checked(const Dictionary &setup) {
-	return configure_checked(setup, "live_2d", live_2d_session_);
+bool Tet4DCoreApi::live_configure(int64_t dimension, const Dictionary &setup) {
+	return bool(live_configure_checked(dimension, setup).get("ok", false));
+}
+
+Dictionary Tet4DCoreApi::live_configure_checked(int64_t dimension, const Dictionary &setup) {
+	if (dimension < 2 || dimension > 4) {
+		return configuration_error_dictionary("$.dimension", "Live dimensions must be 2, 3, or 4.");
+	}
+	const std::string mode = "live_" + std::to_string(dimension) + "d";
+	return with_live_session(dimension, [&](auto &session) {
+		return configure_checked(setup, mode, session);
+	});
 }
 
 bool Tet4DCoreApi::live_2d_configure_fixture_board(int64_t width, int64_t height) {
 	return live_2d_session_.configure(static_cast<int>(width), static_cast<int>(height));
 }
 
-void Tet4DCoreApi::live_2d_reset() {
-	live_2d_session_.reset();
+void Tet4DCoreApi::live_reset(int64_t dimension) {
+	with_live_session(dimension, [](auto &session) { session.reset(); });
 }
 
-String Tet4DCoreApi::live_2d_apply_command(const String &command) {
-	return to_godot_string(live_2d_session_.apply_command(to_std_string(command)));
+String Tet4DCoreApi::live_apply_command(int64_t dimension, const String &command) {
+	return with_live_session(dimension, [&](auto &session) {
+		return to_godot_string(session.apply_command(to_std_string(command)));
+	});
 }
 
-String Tet4DCoreApi::live_2d_tick() {
-	return to_godot_string(live_2d_session_.tick());
+String Tet4DCoreApi::live_tick(int64_t dimension) {
+	return with_live_session(dimension, [](auto &session) { return to_godot_string(session.tick()); });
 }
 
-String Tet4DCoreApi::live_2d_snapshot_json() const {
-	return to_godot_string(live_2d_session_.snapshot_json());
+String Tet4DCoreApi::live_snapshot_json(int64_t dimension) const {
+	return with_live_session(dimension, [](const auto &session) { return to_godot_string(session.snapshot_json()); });
 }
 
-Dictionary Tet4DCoreApi::live_2d_next_piece_preview() const {
-	return piece_preview_dictionary(
-			live_2d_session_.peek_next_piece_shape(),
-			live_2d_session_.piece_set_id());
+Dictionary Tet4DCoreApi::live_next_piece_preview(int64_t dimension) const {
+	return with_live_session(dimension, [](const auto &session) {
+		return piece_preview_dictionary(session.peek_next_piece_shape(), session.piece_set_id());
+	});
 }
 
-Dictionary Tet4DCoreApi::live_2d_held_piece_preview() const {
-	const auto held = live_2d_session_.held_piece_shape();
-	return held.has_value() ? piece_preview_dictionary(*held, live_2d_session_.piece_set_id()) : Dictionary{};
+Dictionary Tet4DCoreApi::live_held_piece_preview(int64_t dimension) const {
+	return with_live_session(dimension, [](const auto &session) {
+		const auto held = session.held_piece_shape();
+		return held.has_value() ? piece_preview_dictionary(*held, session.piece_set_id()) : Dictionary{};
+	});
 }
 
-bool Tet4DCoreApi::live_2d_hold_available() const {
-	return live_2d_session_.hold_available();
+bool Tet4DCoreApi::live_hold_available(int64_t dimension) const {
+	return with_live_session(dimension, [](const auto &session) { return session.hold_available(); });
 }
 
-Dictionary Tet4DCoreApi::live_2d_hard_drop_destination() const {
-	return hard_drop_destination_dictionary(live_2d_session_.hard_drop_destination());
+Dictionary Tet4DCoreApi::live_hard_drop_destination(int64_t dimension) const {
+	return with_live_session(dimension, [dimension](const auto &session) {
+		return hard_drop_destination_dictionary(session.hard_drop_destination(), static_cast<int>(dimension));
+	});
 }
 
-String Tet4DCoreApi::live_2d_status() const {
-	return to_godot_string(live_2d_session_.status());
+String Tet4DCoreApi::live_status(int64_t dimension) const {
+	return with_live_session(dimension, [](const auto &session) { return to_godot_string(session.status()); });
 }
 
-String Tet4DCoreApi::live_2d_state_hash() const {
-	return to_godot_string(live_2d_session_.state_hash());
-}
-
-bool Tet4DCoreApi::live_3d_configure(const Dictionary &setup) {
-	return bool(live_3d_configure_checked(setup).get("ok", false));
-}
-
-Dictionary Tet4DCoreApi::live_3d_configure_checked(const Dictionary &setup) {
-	return configure_checked(setup, "live_3d", live_3d_session_);
-}
-
-void Tet4DCoreApi::live_3d_reset() {
-	live_3d_session_.reset();
-}
-
-String Tet4DCoreApi::live_3d_apply_command(const String &command) {
-	return to_godot_string(live_3d_session_.apply_command(to_std_string(command)));
-}
-
-String Tet4DCoreApi::live_3d_tick() {
-	return to_godot_string(live_3d_session_.tick());
-}
-
-String Tet4DCoreApi::live_3d_snapshot_json() const {
-	return to_godot_string(live_3d_session_.snapshot_json());
-}
-
-Dictionary Tet4DCoreApi::live_3d_next_piece_preview() const {
-	return piece_preview_dictionary(
-			live_3d_session_.peek_next_piece_shape(),
-			live_3d_session_.piece_set_id());
-}
-
-Dictionary Tet4DCoreApi::live_3d_held_piece_preview() const {
-	const auto held = live_3d_session_.held_piece_shape();
-	return held.has_value() ? piece_preview_dictionary(*held, live_3d_session_.piece_set_id()) : Dictionary{};
-}
-
-bool Tet4DCoreApi::live_3d_hold_available() const {
-	return live_3d_session_.hold_available();
-}
-
-Dictionary Tet4DCoreApi::live_3d_hard_drop_destination() const {
-	return hard_drop_destination_dictionary(live_3d_session_.hard_drop_destination(), 3);
-}
-
-String Tet4DCoreApi::live_3d_status() const {
-	return to_godot_string(live_3d_session_.status());
-}
-
-String Tet4DCoreApi::live_3d_state_hash() const {
-	return to_godot_string(live_3d_session_.state_hash());
-}
-
-bool Tet4DCoreApi::live_4d_configure(const Dictionary &setup) {
-	return bool(live_4d_configure_checked(setup).get("ok", false));
-}
-
-Dictionary Tet4DCoreApi::live_4d_configure_checked(const Dictionary &setup) {
-	return configure_checked(setup, "live_4d", live_4d_session_);
-}
-
-void Tet4DCoreApi::live_4d_reset() {
-	live_4d_session_.reset();
-}
-
-String Tet4DCoreApi::live_4d_apply_command(const String &command) {
-	return to_godot_string(live_4d_session_.apply_command(to_std_string(command)));
-}
-
-String Tet4DCoreApi::live_4d_tick() {
-	return to_godot_string(live_4d_session_.tick());
-}
-
-String Tet4DCoreApi::live_4d_snapshot_json() const {
-	return to_godot_string(live_4d_session_.snapshot_json());
-}
-
-Dictionary Tet4DCoreApi::live_4d_next_piece_preview() const {
-	return piece_preview_dictionary(
-			live_4d_session_.peek_next_piece_shape(),
-			live_4d_session_.piece_set_id());
-}
-
-Dictionary Tet4DCoreApi::live_4d_held_piece_preview() const {
-	const auto held = live_4d_session_.held_piece_shape();
-	return held.has_value() ? piece_preview_dictionary(*held, live_4d_session_.piece_set_id()) : Dictionary{};
-}
-
-bool Tet4DCoreApi::live_4d_hold_available() const {
-	return live_4d_session_.hold_available();
-}
-
-Dictionary Tet4DCoreApi::live_4d_hard_drop_destination() const {
-	return hard_drop_destination_dictionary(live_4d_session_.hard_drop_destination(), 4);
-}
-
-String Tet4DCoreApi::live_4d_status() const {
-	return to_godot_string(live_4d_session_.status());
-}
-
-String Tet4DCoreApi::live_4d_state_hash() const {
-	return to_godot_string(live_4d_session_.state_hash());
+String Tet4DCoreApi::live_state_hash(int64_t dimension) const {
+	return with_live_session(dimension, [](const auto &session) { return to_godot_string(session.state_hash()); });
 }
 
 } // namespace godot

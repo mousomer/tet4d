@@ -2,6 +2,8 @@ extends RefCounted
 
 class_name DesignCaptureStore
 
+const OperationResult = preload("res://scripts/operation_result.gd")
+const StorageDirectory = preload("res://scripts/persistence/storage_directory.gd")
 const DesignValueScript = preload("res://scripts/design_lab/design_value.gd")
 const PersistentFileReplacementScript = preload("res://scripts/persistence/persistent_file_replacement.gd")
 
@@ -18,21 +20,21 @@ func _init(directory: String = DEFAULT_DIRECTORY) -> void:
 
 func capture_arm(image: Image, session: Dictionary, arm: String, build_identity: Dictionary, catalog_version: int) -> Dictionary:
 	if image == null or image.is_empty():
-		return _failure("A rendered comparison image is required.")
+		return OperationResult.failure("A rendered comparison image is required.")
 	if not ["A", "B"].has(arm) or not DesignValueScript.safe_id(str(session.get("session_id", ""))):
-		return _failure("A valid comparison session and arm are required.")
+		return OperationResult.failure("A valid comparison session and arm are required.")
 	var directory := _session_directory(str(session.get("session_id")))
-	var ensure := _ensure_directory(directory)
+	var ensure := StorageDirectory.ensure(directory, "Capture")
 	if not bool(ensure.get("ok", false)):
 		return ensure
 	var image_path := directory.path_join("%s.png" % arm)
 	var temporary_absolute := "%s.tmp" % ProjectSettings.globalize_path(image_path)
 	var save_error := image.save_png(temporary_absolute)
 	if save_error != OK:
-		return _failure("Comparison PNG could not be encoded (error %s)." % save_error)
+		return OperationResult.failure("Comparison PNG could not be encoded (error %s)." % save_error)
 	var replacement := PersistentFileReplacementScript.replace_temporary_file(temporary_absolute, ProjectSettings.globalize_path(image_path))
 	if not bool(replacement.get("ok", false)):
-		return _failure("Comparison PNG could not be installed: %s" % replacement.get("detail", "replacement failed"))
+		return OperationResult.failure("Comparison PNG could not be installed: %s" % replacement.get("detail", "replacement failed"))
 	var metadata := _metadata(session, build_identity, catalog_version)
 	metadata["captured_arms"][arm] = {
 		"file": "%s.png" % arm,
@@ -48,8 +50,8 @@ func capture_arm(image: Image, session: Dictionary, arm: String, build_identity:
 					metadata["captured_arms"][captured_arm] = existing["captured_arms"][captured_arm]
 	var written := PersistentFileReplacementScript.write_text(metadata_path, JSON.stringify(metadata, "  ", true) + "\n", true)
 	if not bool(written.get("ok", false)):
-		return _failure("Capture metadata could not be saved: %s" % written.get("detail", "replacement failed"))
-	return _success({"directory": directory, "image_path": image_path, "metadata_path": metadata_path, "metadata": metadata})
+		return OperationResult.failure("Capture metadata could not be saved: %s" % written.get("detail", "replacement failed"))
+	return OperationResult.success({"directory": directory, "image_path": image_path, "metadata_path": metadata_path, "metadata": metadata})
 
 
 func metadata_for_session(session_id: String) -> Dictionary:
@@ -93,21 +95,3 @@ static func _read_json(path: String) -> Dictionary:
 		return {}
 	var parsed = JSON.parse_string(file.get_as_text())
 	return parsed if parsed is Dictionary else {}
-
-
-static func _ensure_directory(path: String) -> Dictionary:
-	var absolute := ProjectSettings.globalize_path(path)
-	if DirAccess.dir_exists_absolute(absolute):
-		return _success()
-	var error := DirAccess.make_dir_recursive_absolute(absolute)
-	return _success() if error == OK else _failure("Capture directory could not be created (error %s)." % error)
-
-
-static func _success(extra: Dictionary = {}) -> Dictionary:
-	var result := {"ok": true, "error": ""}
-	result.merge(extra, true)
-	return result
-
-
-static func _failure(error: String) -> Dictionary:
-	return {"ok": false, "error": error}

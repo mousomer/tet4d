@@ -42,7 +42,7 @@ func run() -> Array:
 		app._notification(Node.NOTIFICATION_WM_WINDOW_FOCUS_IN)
 		for frame in 3: await tree.process_frame
 		await _check_focused_arrows(tree, app, hud, dimension)
-		var native_before: String = app._live_bridge.call("live_%dd_snapshot_json" % dimension)
+		var native_before: String = app._live_bridge.live_snapshot_json(dimension)
 		var owned: Dictionary = Contract.explorer_profile(dimension)
 		for spec in owned.input_actions:
 			check(str(spec.action).begins_with("explorer_"), "every dispatched action belongs to Explorer")
@@ -151,15 +151,15 @@ func run() -> Array:
 				for event in saved[action]: InputMap.action_add_event(action, event)
 			app._practice_action("view_reset")
 		app._practice_action("retry")
-		check(app._live_bridge.call("live_%dd_snapshot_json" % dimension) == native_before, "%dD all Explorer key/repeat paths leave native gameplay unchanged" % dimension)
+		check(app._live_bridge.live_snapshot_json(dimension) == native_before, "%dD all Explorer key/repeat paths leave native gameplay unchanged" % dimension)
 		check(app.live_handler_calls == 0, "Explorer never invokes any Live keyboard handler")
 		# Explorer rebinding cannot change ordinary Play's action defaults.
 		InputMap.action_erase_events(live_action)
 		for event in saved[live_action]: InputMap.action_add_event(live_action, event)
 		app._practice_action("play")
-		var live_before: String = app._live_bridge.call("live_%dd_snapshot_json" % dimension)
+		var live_before: String = app._live_bridge.live_snapshot_json(dimension)
 		send(app, key(KEY_F9))
-		check(app._live_bridge.call("live_%dd_snapshot_json" % dimension) == live_before, "Explorer-only rebind is inert during ordinary Play")
+		check(app._live_bridge.live_snapshot_json(dimension) == live_before, "Explorer-only rebind is inert during ordinary Play")
 		app.live_handler_calls = 0
 		InputMap.action_erase_events("explorer_move_x_neg")
 		for event in saved.explorer_move_x_neg: InputMap.action_add_event("explorer_move_x_neg", event)
@@ -196,7 +196,7 @@ func run() -> Array:
 
 
 func _check_focused_arrows(tree: SceneTree, app, hud, dimension: int) -> void:
-	var tabs: TabContainer = hud._practice_panel._tabs
+	var tabs: TabContainer = hud._explorer_cockpit.panel._tabs
 	var bar: TabBar = tabs.get_tab_bar()
 	var previous_focus := bar.focus_mode
 	bar.focus_mode = Control.FOCUS_ALL

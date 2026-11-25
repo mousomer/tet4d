@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
+import io
 import json
 import os
 import subprocess
+import tarfile
 import tempfile
 from fnmatch import fnmatch
 from pathlib import Path, PurePosixPath
@@ -282,6 +285,46 @@ def export_release(
     }
 
 
+def archive_release(root: Path, archive: Path) -> str:
+    """Package exactly the declared release files in a deterministic gzip archive."""
+    manifest_bytes = source_bytes(root, "release.json")
+    manifest = json.loads(manifest_bytes)
+    verify_existing_release(root, manifest)
+    prefix = relative_path(manifest["version"])
+    files = {row["source"]: row["mode"] for row in declared_rows(manifest)}
+    files["release.json"] = 0o644
+    archive.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(
+        prefix=".governance-archive-", dir=archive.parent
+    ) as scratch:
+        staged = Path(scratch) / "release.tar.gz"
+        with (
+            staged.open("wb") as raw,
+            gzip.GzipFile(fileobj=raw, filename="", mode="wb", mtime=0) as compressed,
+            tarfile.open(
+                fileobj=compressed, mode="w", format=tarfile.USTAR_FORMAT
+            ) as stream,
+        ):
+            for filename, mode in sorted(files.items()):
+                data = source_bytes(root, filename)
+                entry = tarfile.TarInfo(f"{prefix}/{filename}")
+                entry.mode = mode
+                entry.size = len(data)
+                stream.addfile(entry, io.BytesIO(data))
+        digest = hashlib.sha256(staged.read_bytes()).hexdigest()
+        try:
+            os.link(staged, archive)
+        except FileExistsError:
+            if (
+                archive.is_symlink()
+                or hashlib.sha256(archive.read_bytes()).hexdigest() != digest
+            ):
+                raise ValueError(
+                    "immutable release archive already exists with different bytes"
+                ) from None
+    return digest
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pack", type=Path, required=True)
@@ -290,6 +333,7 @@ def main() -> int:
     parser.add_argument("--version", default="1.2.0")
     parser.add_argument("--verification-root", type=Path)
     parser.add_argument("--distribution-root", type=Path)
+    parser.add_argument("--archive", type=Path)
     args = parser.parse_args()
     try:
         result = export_release(
@@ -300,6 +344,9 @@ def main() -> int:
             verification_root=args.verification_root,
             distribution_root=args.distribution_root,
         )
+        if args.archive:
+            result["archive"] = str(args.archive)
+            result["archive_sha256"] = archive_release(args.output, args.archive)
     except (OSError, ValueError, KeyError, subprocess.TimeoutExpired) as error:
         parser.exit(1, "release export failed: " + str(error) + "\n")
     print(json.dumps(result, indent=2))

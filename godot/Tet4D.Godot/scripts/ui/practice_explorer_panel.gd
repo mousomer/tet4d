@@ -8,7 +8,6 @@ var _tabs: TabContainer
 var _dimension := 0
 var _topology_signature := ""
 var _topologies: OptionButton
-var _topology_host: VBoxContainer
 var _pieces: OptionButton
 var _piece_names: Array = []
 var view_controls_host: VBoxContainer
@@ -27,8 +26,10 @@ func configure(dimension: int) -> void:
 	if _dimension == dimension:
 		return
 	_dimension = dimension
+	var profile := Contract.explorer_profile(dimension)
+	set_meta("shell_chrome", dimension == 2)
 	if _tabs != null:
-		_update_dimension_controls()
+		_update_dimension_controls(profile)
 		return
 	_title = _label("Explorer · %dD" % dimension)
 	_title.theme_type_variation = "AccentLabel"
@@ -38,7 +39,7 @@ func configure(dimension: int) -> void:
 	_button(modes, "2D", "dimension_2")
 	_button(modes, "3D", "dimension_3")
 	_button(modes, "4D", "dimension_4")
-	var session: Dictionary = Contract.explorer_profile(dimension).session
+	var session: Dictionary = profile.session
 	_button(modes, session.play.label, session.play.command)
 	_tabs = TabContainer.new()
 	# The outer cockpit fits measured minimums. A ScrollContainer's zero
@@ -58,14 +59,14 @@ func configure(dimension: int) -> void:
 	_piece_names = []
 	_button(object_page, session.replace.label, session.replace.command)
 	_button(object_page, session.target.label, session.target.command)
-	object_page.add_child(_label("Move piece"))
+	object_page.add_child(_label("Move piece · view-relative"))
 	var moves := GridContainer.new()
 	moves.columns = 2
 	object_page.add_child(moves)
 	for axis in Contract.explorer_profile(4).axes:
 		_button(moves, "−" + str(axis.label).to_upper(), axis.negative_command)
 		_button(moves, "+" + str(axis.label).to_upper(), axis.positive_command)
-	object_page.add_child(_label("Rotate object · quarter turns"))
+	object_page.add_child(_label("Rotate object · view-relative"))
 	var rotations := GridContainer.new()
 	rotations.columns = 2
 	object_page.add_child(rotations)
@@ -77,26 +78,25 @@ func configure(dimension: int) -> void:
 	# Space: what the piece moves through — topology and board size — in every
 	# dimension. 3D/4D list later profiles as visibly unavailable.
 	var space_page := _page("Space")
-	_topology_host = VBoxContainer.new()
-	space_page.add_child(_topology_host)
-	_topology_host.add_child(_label("Topology"))
+	var topology_host := VBoxContainer.new()
+	space_page.add_child(topology_host)
+	topology_host.add_child(_label("Topology"))
 	_topologies = OptionButton.new()
 	_topologies.name = "ExplorerTopologySelector"
 	_topologies.fit_to_longest_item = false
 	_topologies.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	for record in Contract.explorer_profile(2).topologies:
+	for record in profile.topologies:
 		_topologies.add_item(record.label)
 		_topologies.set_item_metadata(_topologies.item_count - 1, record.id)
-		_topologies.set_item_disabled(_topologies.item_count - 1, record.disabled)
 	_topologies.item_selected.connect(func(index): requested.emit("topology_" + str(_topologies.get_item_metadata(index))))
-	_topology_host.add_child(_topologies)
+	topology_host.add_child(_topologies)
 	_topologies.tooltip_text = "Choose a space at any time. Seam-crossed pieces restore their Retry pose when changing space. Sphere and Projective use one square size N."
 	_topology_note = _label("")
 	_topology_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_topology_host.add_child(_topology_note)
+	topology_host.add_child(_topology_note)
 	_space_note = _label("")
 	_space_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_topology_host.add_child(_space_note)
+	topology_host.add_child(_space_note)
 	space_page.add_child(_label("Board size"))
 	var board := GridContainer.new()
 	board.name = "ExplorerBoardSize"
@@ -121,15 +121,15 @@ func configure(dimension: int) -> void:
 	space_page.add_child(_label("Resizing restarts the piece at the centre. Play keeps its own setup."))
 	# Two lines so a refusal reason is never cut off mid-word.
 	_feedback = _readout(2)
-	_update_dimension_controls()
+	_update_dimension_controls(profile)
 
 
-func _update_dimension_controls() -> void:
+func _update_dimension_controls(profile: Dictionary) -> void:
 	_title.text = "Explorer · %dD" % _dimension
-	var profile: Dictionary = Contract.explorer_profile(_dimension)
-	_topology_host.visible = true
+	for page in _tabs.get_children():
+		page.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED if _dimension == 2 or page.name == "View" else ScrollContainer.SCROLL_MODE_AUTO
 	for index in _topologies.item_count:
-		_topologies.set_item_disabled(index, _dimension != 2 and str(_topologies.get_item_metadata(index)) != "bounded")
+		_topologies.set_item_disabled(index, profile.topologies[index].disabled)
 	_space_note.text = "" if profile.capabilities.topology_selector else "%dD Explorer is bounded for now; other spaces are 2D only." % _dimension
 	_space_note.visible = not _space_note.text.is_empty()
 	for axis in _board_rows:
@@ -206,9 +206,9 @@ func update_piece_choices(names: Array, selected: int) -> void:
 func _page(title: String) -> VBoxContainer:
 	var scroll := ScrollContainer.new()
 	scroll.name = title
-	# View is the primary panel: report its static controls to the outer
-	# fit/scroll owner so all six planes are visible before any overflow.
-	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED if title == "View" else ScrollContainer.SCROLL_MODE_AUTO
+	# Report every page to the existing outer fit/scroll owner so menu
+	# controls shrink together before overflow, just like the View page.
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_tabs.add_child(scroll)
 	var box := VBoxContainer.new()

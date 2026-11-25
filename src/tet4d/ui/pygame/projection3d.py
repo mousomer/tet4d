@@ -386,20 +386,6 @@ def _axis_segments_z(
     return segments
 
 
-def _frame_segments(
-    dims: Cell3,
-    project_raw: ProjectRawFn,
-) -> list[Segment2]:
-    frame_segments: list[Segment2] = []
-    projected: list[Point2 | None] = [project_raw(raw) for raw in box_raw_corners(dims)]
-    for a, b in _BOX_EDGES:
-        pa = projected[a]
-        pb = projected[b]
-        if pa is not None and pb is not None:
-            frame_segments.append((pa, pb))
-    return frame_segments
-
-
 def _frame_line_primitives(
     dims: Cell3,
     project_raw: ProjectRawFn,
@@ -571,33 +557,6 @@ def draw_projected_helper_lattice(
 
 def _clip_marks(marks: set[int], max_value: int) -> set[int]:
     return {value for value in marks if 0 <= value <= max_value}
-
-
-def draw_projected_box_edges(
-    surface: pygame.Surface,
-    dims: Cell3,
-    project_raw: ProjectRawFn,
-    transform_raw: TransformRawFn,
-    depth_denominator: DepthDenominatorFn,
-    edge_color: tuple[int, int, int] = (96, 118, 164),
-    edge_width: int = 2,
-) -> None:
-    draw_projected_line_fragments(
-        surface,
-        tuple(
-            ProjectedLineFragment(
-                start=segment.start,
-                end=segment.end,
-                source_type=segment.source_type,
-            )
-            for segment in _frame_line_primitives(
-                dims, project_raw, transform_raw, depth_denominator
-            )
-        ),
-        inner_color=edge_color,
-        frame_color=edge_color,
-        frame_width=edge_width,
-    )
 
 
 def draw_projected_box_shadow(
@@ -859,17 +818,6 @@ def project_helper_lattice_primitives(
         x_marks=_clip_marks(x_marks, dims[0]),
         y_marks=_clip_marks(y_marks, dims[1]),
         z_marks=_clip_marks(z_marks, dims[2]),
-    )
-
-
-def project_box_edge_primitives(
-    dims: Cell3,
-    project_raw: ProjectRawFn,
-    transform_raw: TransformRawFn,
-    depth_denominator: DepthDenominatorFn,
-) -> tuple[ProjectedLinePrimitive, ...]:
-    return tuple(
-        _frame_line_primitives(dims, project_raw, transform_raw, depth_denominator)
     )
 
 

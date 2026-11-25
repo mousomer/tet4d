@@ -235,7 +235,6 @@ class StandaloneExplosionSurfaceState:
     shadow_mode: ShadowMode = ShadowMode.OFF
     trace_enabled: bool = False
     trace_retention_ms: float = EXPLOSION_TRAIL_MAX_LIFETIME_MS
-    trace_retention_input_text: str = ""
     shell_preview_enabled: bool = False
     shell_preview_time_scale: float = 1.0
     shell_preview_elapsed_ms: float = 0.0
@@ -611,10 +610,6 @@ def _normalize_simulation_settings(
             ),
         )
         state.shell_preview_time_scale = float(nearest)
-    if not str(state.trace_retention_input_text).strip():
-        state.trace_retention_input_text = _trace_retention_input_text(
-            state.trace_retention_ms
-        )
 
 
 def _grid_mode_options() -> tuple[GridMode, ...]:
@@ -689,9 +684,6 @@ def _apply_explosion_defaults(
     state.shadow_mode = ShadowMode(str(defaults.shadow_mode))
     state.trace_enabled = bool(defaults.trace_enabled)
     state.trace_retention_ms = float(defaults.trace_retention_ms)
-    state.trace_retention_input_text = _trace_retention_input_text(
-        state.trace_retention_ms
-    )
     state.speed_preset = str(defaults.speed_preset)
     state.w_movement_animation_style = str(defaults.w_movement_animation_style)
     state.endgame_live_cell_fraction = float(defaults.endgame_live_cell_fraction)
@@ -990,9 +982,6 @@ def build_explorer_explosion_surface_state(
         shadow_mode=ShadowMode(str(saved_defaults.shadow_mode)),
         trace_enabled=bool(saved_defaults.trace_enabled),
         trace_retention_ms=float(saved_defaults.trace_retention_ms),
-        trace_retention_input_text=_trace_retention_input_text(
-            float(saved_defaults.trace_retention_ms)
-        ),
         speed_preset=str(speed_preset or saved_defaults.speed_preset),
         w_movement_animation_style=str(saved_defaults.w_movement_animation_style),
         endgame_live_cell_fraction=float(saved_defaults.endgame_live_cell_fraction),
@@ -1134,14 +1123,6 @@ def _numeric_spec_for_row(
     return None
 
 
-def _numeric_row_keys(state: StandaloneExplosionSurfaceState) -> tuple[str, ...]:
-    return tuple(
-        row_key
-        for row_key in _dynamic_row_keys(state)
-        if _numeric_spec_for_row(state, row_key) is not None
-    )
-
-
 def _numeric_value_for_row(
     state: StandaloneExplosionSurfaceState,
     row_key: str,
@@ -1203,9 +1184,6 @@ def _set_numeric_value_for_row(
     clamped = max(spec.minimum, min(spec.maximum, float(value)))
     if row_key == "trace_retention":
         state.trace_retention_ms = clamp_trace_retention_ms(clamped)
-        state.trace_retention_input_text = _trace_retention_input_text(
-            state.trace_retention_ms
-        )
         _apply_live_trace_retention(state)
         return
     if row_key == "endgame_live_cell_fraction":
@@ -1333,29 +1311,6 @@ def _commit_numeric_text_mode(
     state.status_error = False
     _stop_numeric_text_mode(state)
     return True
-
-
-def _commit_trace_retention_input(
-    state: StandaloneExplosionSurfaceState,
-    *,
-    allow_partial: bool = False,
-) -> bool:
-    original_text = _trace_retention_input_text(state.trace_retention_ms)
-    previous_row = state.numeric_text_row_key
-    previous_buffer = state.numeric_text_buffer
-    previous_replace = state.numeric_text_replace_on_type
-    state.numeric_text_row_key = "trace_retention"
-    state.numeric_text_buffer = str(state.trace_retention_input_text).strip()
-    state.numeric_text_replace_on_type = False
-    changed = _commit_numeric_text_mode(state, allow_partial=allow_partial)
-    if allow_partial and not changed:
-        state.numeric_text_row_key = previous_row
-        state.numeric_text_buffer = previous_buffer
-        state.numeric_text_replace_on_type = previous_replace
-        return False
-    if not changed:
-        state.trace_retention_input_text = original_text
-    return changed
 
 
 def _slider_fraction_for_row(

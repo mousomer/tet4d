@@ -2,6 +2,8 @@ extends RefCounted
 
 const TraceSceneRendererScript = preload("res://scripts/rendering/trace_scene_renderer.gd")
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
+const PresentationProfileScript = preload("res://scripts/presentation/presentation_profile.gd")
+const GridDisplayMode = preload("res://scripts/presentation/grid_display_mode.gd")
 const SliceBasis4DScript = preload("res://scripts/presentation/slice_basis_4d.gd")
 const SliceLocalOrientationScript = preload("res://scripts/presentation/slice_local_orientation.gd")
 
@@ -14,7 +16,11 @@ func run() -> Array:
 	var renderer := TraceSceneRendererScript.new()
 	tree.root.add_child(renderer)
 	await tree.process_frame
-	renderer.set_display_mode(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC)
+	var profile = PresentationProfileScript.canonical_defaults().with_overrides({
+		"theme.name": ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC,
+		"display.grid_mode": GridDisplayMode.to_value(GridDisplayMode.Mode.FULL),
+	})
+	renderer.apply_presentation_profile(profile)
 
 	var snapshot := {
 		"case_id": "gameplay_snap_policy",
@@ -103,14 +109,14 @@ func run() -> Array:
 			failures.append("live ghost cell should retain a dedicated outlined presentation role")
 		elif _cell_alpha(ghost_cell) < 0.45 or _cell_alpha(ghost_cell) >= _cell_alpha(active_cell):
 			failures.append("ghost fill should be clearly visible while remaining weaker than active cells")
-		renderer.set_locked_cell_opacity(0.60)
+		renderer.apply_presentation_profile(profile.with_overrides({"settled_cells.opacity": 0.60}))
 		renderer.render_snapshot(live_2d_snapshot)
 		await tree.process_frame
 		var translucent_locked := (renderer.get_node_or_null("CellRoot") as Node).get_child(0) as Node3D
 		var unchanged_active := (renderer.get_node_or_null("CellRoot") as Node).get_child(2) as Node3D
 		if absf(_cell_alpha(translucent_locked) - 0.60) > 0.001 or absf(_cell_alpha(unchanged_active) - 1.0) > 0.001:
 			failures.append("locked-cell opacity must restyle only locked fill without weakening active cells")
-		renderer.set_locked_cell_opacity(ReplayVisuals.presentation_parameter_default("settled_cells.opacity"))
+		renderer.apply_presentation_profile(profile)
 	var grid_root := renderer.get_node_or_null("GridRoot")
 	if grid_root == null or grid_root.get_child_count() != 1:
 		failures.append("live renderer should keep one shared grid renderer")
@@ -122,13 +128,13 @@ func run() -> Array:
 			failures.append("live 2D must never contain filled cell volumes")
 		if live_grid.find_child("SpawnEntryLabel", true, false) != null or _count_presentation_role(live_grid, "board.spawn_entry_cue") != 0:
 			failures.append("live 2D must not draw a spawn-entry cue; spawn is native gameplay state, not board chrome")
-		renderer.set_grid_visible(false)
+		renderer.apply_presentation_profile(profile.with_overrides({"display.grid_mode": GridDisplayMode.to_value(GridDisplayMode.Mode.NONE)}))
 		renderer.render_snapshot(renderer._presentation.snapshot)
 		await tree.process_frame
 		var hidden_grid := (renderer.get_node_or_null("GridRoot") as Node).get_child(0)
 		if _count_presentation_role(hidden_grid, "board.enclosure") != 1 or _count_presentation_role(hidden_grid, "board.grid_edge") != 0:
-			failures.append("legacy grid false must retain enclosure but remove explicit scaffold")
-		renderer.set_grid_visible(true)
+			failures.append("Grid mode None must retain enclosure but remove explicit scaffold")
+		renderer.apply_presentation_profile(profile)
 
 	var live_3d_snapshot := {
 		"case_id": "live_plain_3d",
@@ -402,7 +408,7 @@ func run() -> Array:
 	# the floor lattice and active-slice frame (historically always drawn).
 	for source in [live_2d_snapshot, live_3d_snapshot, live_4d_snapshot]:
 		for mode in [0, 1, 2]:
-			renderer.set_grid_mode(mode)
+			renderer.apply_presentation_profile(profile.with_overrides({"display.grid_mode": GridDisplayMode.to_value(mode)}))
 			renderer.render_snapshot(source)
 			await tree.process_frame
 			var grid = renderer.get_node("GridRoot").get_child(0)
@@ -412,7 +418,7 @@ func run() -> Array:
 					failures.append("Grid mode %s must compose semantic role %s in dimension %s" % [mode, role, source["dimension"]])
 			if renderer.get_node("CellRoot").get_child_count() == 0:
 				failures.append("Grid modes must never suppress gameplay pieces")
-	renderer.set_grid_mode(0)
+	renderer.apply_presentation_profile(profile)
 
 	renderer.clear_presentation()
 	for root_name in ["GridRoot", "CellRoot", "ParticleRoot", "MarkerRoot"]:

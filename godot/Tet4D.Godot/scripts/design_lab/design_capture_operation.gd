@@ -2,6 +2,8 @@ extends RefCounted
 
 # Owns async request lifetime only. Comparison, rendering and storage retain
 # their existing owners and are supplied through bounded public callbacks.
+const OperationResult = preload("res://scripts/operation_result.gd")
+
 var _revision := 0
 var _busy := false
 
@@ -17,15 +19,15 @@ func cancel() -> void:
 
 func run(tree: SceneTree, callbacks: Dictionary, arms: Array, restore: bool, budget: int) -> Dictionary:
 	if _busy:
-		return _failure("A capture is already in progress.")
+		return _capture_failure("A capture is already in progress.")
 	if tree == null or budget <= 0:
-		return _failure("Capture requires a tree and a positive settle budget.")
+		return _capture_failure("Capture requires a tree and a positive settle budget.")
 	for name in ["snapshot", "fingerprint", "activate", "readiness", "image", "store"]:
 		if not (callbacks.get(name, Callable()) as Callable).is_valid():
-			return _failure("Capture callback is unavailable: %s." % name)
+			return _capture_failure("Capture callback is unavailable: %s." % name)
 	var frozen: Dictionary = callbacks.snapshot.call().duplicate(true)
 	if frozen.is_empty():
-		return _failure("Start a comparison before capturing.")
+		return _capture_failure("Start a comparison before capturing.")
 	_revision += 1
 	var revision := _revision
 	_busy = true
@@ -73,10 +75,10 @@ func _settle(tree: SceneTree, callbacks: Dictionary, frozen: Dictionary, arm: St
 	for _frame in range(budget):
 		await tree.process_frame
 		if not _matches(callbacks, frozen, arm, revision):
-			return _failure("Capture cancelled because comparison identity changed.")
+			return _capture_failure("Capture cancelled because comparison identity changed.")
 		var observation: Dictionary = callbacks.readiness.call()
 		if str(observation.get("profile_hash", "")) != str(frozen.get("arms", {}).get(arm, {}).get("snapshot_hash", "")):
-			return _failure("The displayed profile no longer matches the frozen capture arm.")
+			return _capture_failure("The displayed profile no longer matches the frozen capture arm.")
 		var token := str(observation.get("token", ""))
 		if not bool(observation.get("ready", false)) or token.is_empty():
 			previous = ""
@@ -90,7 +92,7 @@ func _settle(tree: SceneTree, callbacks: Dictionary, frozen: Dictionary, arm: St
 			waiting_token = token
 			drawn_frame = int(observation.get("drawn_frame", 0))
 		previous = token
-	return _failure("Capture timed out waiting for stable layout and a matching drawn frame.")
+	return _capture_failure("Capture timed out waiting for stable layout and a matching drawn frame.")
 
 
 func _same_ready(callbacks: Dictionary, token: String, profile_hash: String) -> bool:
@@ -121,5 +123,5 @@ func _matches(callbacks: Dictionary, frozen: Dictionary, arm: String, revision: 
 	return str(callbacks.snapshot.call().get("shown_arm", "")) == arm
 
 
-func _failure(error: String) -> Dictionary:
-	return {"ok": false, "error": error, "captured_arms": []}
+func _capture_failure(error: String) -> Dictionary:
+	return OperationResult.failure(error, {"captured_arms": []})

@@ -27,6 +27,7 @@ import shlex
 import signal
 import sys
 import tempfile
+from dataclasses import replace
 from pathlib import Path
 
 PROMPT_MODE = "prompt" in sys.argv[2:]
@@ -36,7 +37,9 @@ RAW = {"text": ""}
 # Fallback used only when the guard itself fails: block what plainly waits for or
 # probes an operation, allow everything else. Mirrors the launcher's case list.
 FALLBACK_PROBE = re.compile(
-    r"gh\s+run\s+(?:watch|view)|gh\s+pr\s+checks|gh\s+api\s+\S*(?:/runs|status|check)"
+    r"\bgh\b[^;\n]*\brun\s+(?:list|watch|view)|gh\s+pr\s+checks"
+    r"|(?:api\.github\.com/|\bgh\s+api\b)[^;\n]*(?:/runs|status|check)"
+    r"|mcp__[^\s\"]*(?:actions_(?:get|list)|workflow_runs?|commit[^\s\"]*status)"
     r"|(?:^|[\s;&|(\"])watch\s|--watch|--interval|(?:^|[\s;&|(\"])sleep\s+[0-9]"
     r"|tail\s+-[A-Za-z]*[fF]|while\s.*sleep\s|until\s.*;\s*do|ps\s+-p|kill\s+-0"
     r"|(?:^|[\s;&|(\"])pgrep\s"
@@ -96,7 +99,6 @@ MAX_INPUT = 1 << 20
 SHELL_TOOLS = {"Bash", "Monitor", "exec_command", "shell", "local_shell"}
 MCP_STATUS_TOKENS = {"status", "statuses", "checks", "ci", "rollup"}
 MCP_STATUS_PHRASES = ("check_run", "check_suite", "workflow_run", "get_run")
-MAX_SCRIPT = 65536
 STATE_DIR = "workspace-governance-no-polling"
 MAX_STATE_CHANGE_RESETS = 2
 
@@ -114,32 +116,6 @@ def _read_payload() -> dict:
     if not isinstance(payload, dict):
         raise GuardError("hook payload is not an object")
     return payload
-
-
-def gh_aliases() -> dict[str, str]:
-    """Read `aliases:` from the GitHub CLI config without a YAML dependency."""
-    base = os.environ.get("GH_CONFIG_DIR") or os.path.join(
-        os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config"), "gh"
-    )
-    try:
-        text = Path(base, "config.yml").read_text(encoding="utf-8")[:MAX_INPUT]
-    except OSError:
-        return {}
-    aliases: dict[str, str] = {}
-    inside = False
-    for line in text.splitlines():
-        if not line.strip() or line.lstrip().startswith("#"):
-            continue
-        if not line.startswith((" ", "\t")):
-            inside = line.split(":", 1)[0].strip() == "aliases"
-            continue
-        match = re.match(r"\s+([^:\s]+):\s*(.*)$", line) if inside else None
-        if match:
-            value = match.group(2).strip()
-            if len(value) >= 2 and value[0] == value[-1] and value[0] in "'\"":
-                value = value[1:-1]
-            aliases[match.group(1)] = value
-    return aliases
 
 
 def normalize(payload: dict) -> dict:
@@ -160,29 +136,6 @@ def mcp_status_tool(name: str) -> bool:
     return bool(tokens & MCP_STATUS_TOKENS) or any(
         p in last for p in MCP_STATUS_PHRASES
     )
-
-
-def script_reader(cwd: str):
-    """Bounded reader for scripts a command would run, relative to its cwd."""
-
-    def read(path: str) -> str | None:
-        if "$" in path or "\0" in path:
-            return None
-        candidate = Path(os.path.expanduser(path))
-        if not candidate.is_absolute():
-            candidate = Path(cwd or ".") / candidate
-        try:
-            if not candidate.is_file():
-                return None
-            with candidate.open("rb") as stream:
-                data = stream.read(MAX_SCRIPT + 1)
-        except OSError:
-            return None
-        if b"\0" in data[:4096]:
-            return None
-        return data[:MAX_SCRIPT].decode("utf-8", "replace")
-
-    return read
 
 
 def classify(invocation: dict, cwd: str = ""):
@@ -206,17 +159,27 @@ def classify(invocation: dict, cwd: str = ""):
                 f"{tool} invocation without a readable command. "
                 + command_policy.ALTERNATIVE,
             )
-        return command_policy.evaluate(
-            invocation, aliases=gh_aliases(), reader=script_reader(cwd)
-        )
+        return command_policy.evaluate_shell(invocation, cwd)
+    key = ""
     if tool.startswith("mcp__") and mcp_status_tool(tool):
         digest = hashlib.sha256(
             json.dumps(invocation["input"], sort_keys=True, default=str).encode()
         ).hexdigest()[:16]
+        key = f"mcp:{tool}:{digest}"
+    target = command_policy.mcp_remote_target(tool, invocation["input"])
+    if target:
+        if target.kind == "broad":
+            target = replace(target, ordinary_listing_key=key)
+        else:
+            key = target.observation() if target.observe else ""
         return command_policy.Decision(
-            command_policy.ALLOW, observations=(f"mcp:{tool}:{digest}",)
+            command_policy.ALLOW,
+            observations=(key,) if key else (),
+            remote_targets=(target,),
         )
-    return command_policy.Decision(command_policy.ALLOW)
+    return command_policy.Decision(
+        command_policy.ALLOW, observations=(key,) if key else ()
+    )
 
 
 def _state_path(runtime: str, session: str) -> Path:
@@ -339,41 +302,133 @@ def _command_text(invocation: dict) -> str:
     return json.dumps(invocation.get("input") or {}, default=str)
 
 
-def main(argv: list[str]) -> int:
-    runtime = argv[1] if len(argv) > 1 else ""
-    payload = _read_payload()  # first, so a scoped failure can see the call
-    if runtime not in {"claude", "codex"}:
-        raise GuardError("unknown runtime")
-    cwd = str(payload.get("cwd") or os.getcwd())
-    if len(argv) > 2 and argv[2] == "prompt":
-        new_epoch(runtime, payload)
-        from tools.workspace_governance import operation_supervisor
+def _session_key(runtime: str, payload: dict) -> str:
+    return hashlib.sha256(f"{runtime}\0{_session(payload)}".encode()).hexdigest()
 
-        operation_supervisor.advance_user_epoch(checkout_roots(cwd))
-        return 0
-    invocation = normalize(payload)
-    text = _command_text(invocation)
+
+def _event_key(session: str, payload: dict) -> str | None:
+    turn = _turn(payload)
+    return hashlib.sha256(f"{session}\0{turn}".encode()).hexdigest() if turn else None
+
+
+def _prompt(runtime: str, payload: dict, cwd: str) -> int:
+    from tools.workspace_governance import operation_supervisor
+
+    session = _session_key(runtime, payload)
+    event = _event_key(session, payload)
+    journal = operation_supervisor.PromptJournal(operation_supervisor.state_root())
     try:
-        from tools.workspace_governance import operation_supervisor
+        if event and journal.register(session, event):
+            new_epoch(runtime, payload)
+    except (OSError, ValueError, TypeError, KeyError):
+        detail = "GUARD_DEGRADED: could not record user instruction"
+        _keep_enforcement_error(detail)
+        print(detail, file=sys.stderr)
+    return 0
 
-        denial = operation_supervisor.hook_check(invocation, cwd, checkout_roots(cwd))
+
+def _check_tool(runtime: str, payload: dict, cwd: str) -> int:
+    invocation = normalize(payload)
+    workdir = invocation["input"].get("workdir")
+    if isinstance(workdir, str) and workdir:
+        cwd = str((Path(cwd) / Path(workdir).expanduser()).resolve())
+    text = invocation["tool"] + " " + _command_text(invocation)
+    from tools.workspace_governance import operation_supervisor
+
+    try:
+        roots = checkout_roots(cwd)
+        journal = operation_supervisor.PromptJournal(operation_supervisor.state_root())
+        session = _session_key(runtime, payload)
+        try:
+            instruction = journal.instruction(session, _event_key(session, payload))
+        except (OSError, ValueError, TypeError, KeyError):
+            instruction = operation_supervisor.Instruction()
+            print("GUARD_DEGRADED: prompt journal unavailable", file=sys.stderr)
+        denial = operation_supervisor.hook_check(invocation, cwd, roots, instruction)
+        if denial is not None:
+            print(denial.message(), file=sys.stderr)
+            _report_alias_fault(invocation)
+            return 2
+        try:
+            decision, wrapper = _classify_dispatch(invocation, cwd)
+        except Exception as exc:  # noqa: BLE001 - preserve independent probe checks
+            return _classifier_failure(runtime, text, exc)
+        result = _check_dispatch(
+            runtime, payload, cwd, decision, invocation, text, instruction, wrapper
+        )
+        if result == 0 and wrapper:
+            journal.handoff(wrapper, cwd, instruction)
+        return result
+    except operation_supervisor.MechanismError as exc:
+        _keep_enforcement_error(str(exc))
+        return deny("GUARD_DEGRADED", str(exc))
     except Exception as exc:  # noqa: BLE001 - scoped, never blanket
         return scoped_failure(
             runtime, f"operation registry unavailable ({type(exc).__name__})", text
         )
+
+
+def _report_alias_fault(invocation: dict) -> None:
+    """Report the optional configuration fault without opening a denied script."""
+    from tools.workspace_governance import command_policy
+
+    if invocation["tool"] not in SHELL_TOOLS:
+        return
+    try:
+        command_policy.gh_aliases()
+    except (OSError, ValueError) as exc:
+        detail = f"GUARD_DEGRADED: command classifier failed ({type(exc).__name__})"
+        _keep_enforcement_error(detail)
+        print(detail, file=sys.stderr)
+
+
+def _classify_dispatch(invocation: dict, cwd: str):
+    from tools.workspace_governance import operation_supervisor
+
+    decision = classify(invocation, cwd)
+    wrapper = operation_supervisor.supervisor_args(invocation)
+    if wrapper and not decision.supervised_remote:
+        decision = operation_supervisor.wrapped_decision(invocation, cwd) or decision
+    return decision, wrapper
+
+
+def _classifier_failure(runtime: str, text: str, exc: Exception) -> int:
+    detail = f"command classifier failed ({type(exc).__name__})"
+    if re.search(r"\bgh\b", text):
+        _keep_enforcement_error(f"GUARD_DEGRADED: {detail}")
+        return deny("GUARD_DEGRADED", detail)
+    return scoped_failure(runtime, detail, text)
+
+
+def _check_dispatch(
+    runtime: str,
+    payload: dict,
+    cwd: str,
+    decision,
+    invocation,
+    text: str,
+    instruction,
+    wrapper,
+) -> int:
+    from tools.workspace_governance import command_policy, operation_supervisor
+
+    admission = operation_supervisor.hook_remote_admission(
+        decision.remote_targets, cwd, invocation.get("command") or ""
+    )
+    denial = operation_supervisor.hook_reserve_observations(
+        admission, instruction, reserve=False
+    )
     if denial is not None:
         print(denial.message(), file=sys.stderr)
         return 2
-    try:
-        from tools.workspace_governance import command_policy
-
-        decision = classify(invocation, cwd)
-    except Exception as exc:  # noqa: BLE001 - scoped, never blanket
-        return scoped_failure(
-            runtime, f"command classifier failed ({type(exc).__name__})", text
-        )
     if decision.decision != command_policy.ALLOW:
         return deny(decision.violation or "UNDETERMINED_REMOTE", decision.reason)
+    if decision.supervised_remote and not wrapper:
+        return deny(
+            "UNDETERMINED_REMOTE",
+            "a remote observation needs one standalone supervisor submission",
+        )
+    decision = _ordinary_observations(decision, admission)
     try:
         target = repeated(runtime, payload, decision)
     except Exception as exc:  # noqa: BLE001 - bookkeeping must not block the call
@@ -386,7 +441,34 @@ def main(argv: list[str]) -> int:
             f"{target} was already observed this turn without a notification or "
             f"new user instruction. {command_policy.ALTERNATIVE}",
         )
+    if decision.remote_targets and not wrapper:
+        denial = operation_supervisor.hook_reserve_observations(
+            admission, instruction, reserve=True
+        )
+        if denial:
+            print(denial.message(), file=sys.stderr)
+            return 2
     return 0
+
+
+def _ordinary_observations(decision, admission):
+    observations = tuple(
+        key
+        for key in decision.observations
+        if key not in admission.replaced_observations
+    )
+    return replace(decision, observations=observations)
+
+
+def main(argv: list[str]) -> int:
+    runtime = argv[1] if len(argv) > 1 else ""
+    payload = _read_payload()
+    if runtime not in {"claude", "codex"}:
+        raise GuardError("unknown runtime")
+    cwd = str(payload.get("cwd") or os.getcwd())
+    if len(argv) > 2 and argv[2] == "prompt":
+        return _prompt(runtime, payload, cwd)
+    return _check_tool(runtime, payload, cwd)
 
 
 if __name__ == "__main__":

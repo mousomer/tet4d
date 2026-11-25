@@ -16,9 +16,9 @@ func run() -> Array:
 	# Stage 56H decision 11 raised to 10x20.
 	if not bridge.live_2d_configure_fixture_board(RECORDED_2D_BOARD[0], RECORDED_2D_BOARD[1]):
 		failures.append("Stage 41 2D parity case must configure its recorded 6x6 board")
-	_assert_live_case(failures, bridge, _case_2d())
-	_assert_live_case(failures, bridge, _case_3d())
-	_assert_live_case(failures, bridge, _case_4d())
+	_assert_live_case(failures, bridge, 2, _case_2d())
+	_assert_live_case(failures, bridge, 3, _case_3d())
+	_assert_live_case(failures, bridge, 4, _case_4d())
 	return failures
 
 
@@ -41,15 +41,14 @@ func _assert_python_oracle_parity_exports(failures: Array, bridge: RefCounted) -
 			failures.append("Stage 41 Python oracle parity export failed for %s" % case_id)
 
 
-func _assert_live_case(failures: Array, bridge: RefCounted, case_def: Dictionary) -> void:
-	var mode := str(case_def.get("mode", ""))
-	_reset_mode(bridge, mode)
-	_assert_step(failures, case_def, -1, "reset", _snapshot(bridge, mode))
+func _assert_live_case(failures: Array, bridge: RefCounted, dimension: int, case_def: Dictionary) -> void:
+	bridge.live_reset(dimension)
+	_assert_step(failures, case_def, -1, "reset", _snapshot(bridge, dimension))
 	var commands: Array = case_def.get("commands", [])
 	for index in range(commands.size()):
 		var command := str(commands[index])
-		_apply_command(bridge, mode, command)
-		_assert_step(failures, case_def, index, command, _snapshot(bridge, mode))
+		bridge.live_apply_command(dimension, command)
+		_assert_step(failures, case_def, index, command, _snapshot(bridge, dimension))
 
 
 func _assert_step(failures: Array, case_def: Dictionary, action_index: int, action_name: String, snapshot: Dictionary) -> void:
@@ -117,37 +116,9 @@ func _cell_positions(cells: Array) -> Array:
 	return positions
 
 
-func _snapshot(bridge: RefCounted, mode: String) -> Dictionary:
-	var raw := ""
-	match mode:
-		"live_2d":
-			raw = bridge.live_2d_snapshot_json()
-		"live_3d":
-			raw = bridge.live_3d_snapshot_json()
-		"live_4d":
-			raw = bridge.live_4d_snapshot_json()
-	var parsed = JSON.parse_string(raw)
-	return parsed if typeof(parsed) == TYPE_DICTIONARY else {}
-
-
-func _reset_mode(bridge: RefCounted, mode: String) -> void:
-	match mode:
-		"live_2d":
-			bridge.live_2d_reset()
-		"live_3d":
-			bridge.live_3d_reset()
-		"live_4d":
-			bridge.live_4d_reset()
-
-
-func _apply_command(bridge: RefCounted, mode: String, command: String) -> void:
-	match mode:
-		"live_2d":
-			bridge.live_2d_apply_command(command)
-		"live_3d":
-			bridge.live_3d_apply_command(command)
-		"live_4d":
-			bridge.live_4d_apply_command(command)
+func _snapshot(bridge: RefCounted, dimension: int) -> Dictionary:
+	var parsed = JSON.parse_string(bridge.live_snapshot_json(dimension))
+	return parsed if parsed is Dictionary else {}
 
 
 func _case_2d() -> Dictionary:

@@ -22,8 +22,8 @@ func run() -> Array:
 			failures.append("Hidden %s Main Menu render region must not supply fit geometry (screen=%s, size=%s)" % [mode, hud.current_screen(), hud.board_viewport_size()])
 		var play := hud.find_child("CommandCard__Play", true, false) as Button
 		play.pressed.emit()
-		app._live_3d_paused = true
-		app._live_4d_paused = true
+		app._live_modes["live_3d"].paused = true
+		app._live_modes["live_4d"].paused = true
 		if DisplayServer.get_name() != "headless":
 			# Observe the first actual draw as well as eventual settled geometry.
 			await RenderingServer.frame_post_draw
@@ -66,8 +66,8 @@ func run() -> Array:
 			failures.append("%s layout/refit lifecycle mutated native state" % mode)
 		# Restart reuses the running mode/view and still fits the actual region.
 		hud._restart_game_button.pressed.emit()
-		app._live_3d_paused = true
-		app._live_4d_paused = true
+		app._live_modes["live_3d"].paused = true
+		app._live_modes["live_4d"].paused = true
 		await _layout_frames(tree)
 		_check_fit(failures, app, hud, "%s Restart" % mode)
 		var fingerprint: Dictionary = app._design_laboratory_fingerprint()
@@ -104,7 +104,7 @@ func _layout_frames(tree: SceneTree) -> void:
 
 
 func _state_hash(app, mode: String) -> String:
-	return str(app._live_bridge.live_3d_state_hash() if mode == "live_3d" else app._live_bridge.live_4d_state_hash())
+	return str(app._live_bridge.live_state_hash(3) if mode == "live_3d" else app._live_bridge.live_state_hash(4))
 
 
 func _check_fit(failures: Array, app, hud, label: String) -> void:

@@ -509,6 +509,8 @@ Save/load/duplicate/rename/delete/export/import custom topology definitions usin
 
 **T2S:** single-square `S²` and `RP²` construction certification, exact directed pairings and corner resolution, square-only extent admission and rendered aspect ratio, persistent labelled-arrow seam visualisation, board-axis cellwise validity/injectivity/atomic rejection and exact snapshot Undo, legacy sphere/Klein non-aliasing, and manual 2D Explorer crossing inspection. Do not test or promise repaired Euclidean geometry.
 
+**T2S:** single-square `S²` and `RP²` construction certification, exact directed pairings and corner resolution, square-only extent admission and rendered aspect ratio, persistent labelled-arrow seam visualisation, board-axis cellwise validity/injectivity/atomic rejection and exact snapshot Undo, legacy sphere/Klein non-aliasing, and manual 2D Explorer crossing inspection. Do not test or promise repaired Euclidean geometry.
+
 **T3:** 2D visual pairing, orientation preview, draft Apply/Cancel, Undo/Redo, persistence/import compatibility and novice builder tests.
 
 **T4:** 3D/4D signed-frame native transport conformance, Godot input/camera/basis/slice regression, exact scoped authority-transfer record for newly owned dimensions.

@@ -2,6 +2,7 @@ extends RefCounted
 
 class_name DesignPresetResolver
 
+const OperationResult = preload("res://scripts/operation_result.gd")
 const DesignValueScript = preload("res://scripts/design_lab/design_value.gd")
 
 const SOURCE_BUILT_IN := "built_in"
@@ -31,20 +32,20 @@ func resolve(source_kind: String, preset_id: String) -> Dictionary:
 	if source_kind == SOURCE_BUILT_IN and _catalog != null:
 		var loaded: Dictionary = _catalog.style_profile(preset_id)
 		if not bool(loaded.get("ok", false)):
-			return _failure(str(loaded.get("error", "Built-in preset could not be resolved.")))
+			return OperationResult.failure(str(loaded.get("error", "Built-in preset could not be resolved.")))
 		var metadata: Dictionary = loaded.get("record", {})
 		return _resolved(_built_in_descriptor(metadata), loaded.get("profile"))
 	if source_kind == SOURCE_USER and _library != null:
 		var loaded: Dictionary = _library.load_profile(preset_id)
 		if not bool(loaded.get("ok", false)):
-			return _failure(str(loaded.get("error", "User preset could not be resolved.")))
+			return OperationResult.failure(str(loaded.get("error", "User preset could not be resolved.")))
 		return _resolved(_user_descriptor(loaded.get("record", {})), loaded.get("profile"))
-	return _failure("Unknown preset source or identity.")
+	return OperationResult.failure("Unknown preset source or identity.")
 
 
 func duplicate_as_candidate(source_kind: String, preset_id: String, display_name: String = "") -> Dictionary:
 	if _library == null:
-		return _failure("User profile library is unavailable.")
+		return OperationResult.failure("User profile library is unavailable.")
 	var resolved := resolve(source_kind, preset_id)
 	if not bool(resolved.get("ok", false)):
 		return resolved
@@ -57,7 +58,7 @@ func duplicate_as_candidate(source_kind: String, preset_id: String, display_name
 
 func _resolved(descriptor: Dictionary, profile) -> Dictionary:
 	if profile == null or not profile.has_method("contract_conforms") or not profile.contract_conforms():
-		return _failure("Resolved preset does not conform to the canonical registry.")
+		return OperationResult.failure("Resolved preset does not conform to the canonical registry.")
 	var snapshot: Dictionary = profile.snapshot()
 	var version := int(snapshot.get("schema_version", 0))
 	descriptor["preset_version"] = version
@@ -89,7 +90,3 @@ static func _user_descriptor(record: Dictionary) -> Dictionary:
 		"status": "candidate",
 		"read_only": false,
 	}
-
-
-static func _failure(error: String) -> Dictionary:
-	return {"ok": false, "error": error}

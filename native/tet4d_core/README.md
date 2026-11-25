@@ -36,6 +36,12 @@ Python oracle parity tests and exposed to Godot as query helpers only. Live 4D,
 topology, endgame, Python runtime calls, Godot-side gameplay legality, and
 native semantic authority transfers remain deferred.
 
+The plain live sessions share setup validation, piece queue and Hold lifecycle,
+command bookkeeping, and byte-ordered hash payload serialization. The 2D and
+ND state types still supply their own movement, rotation, lock and spawn rules,
+including the distinct tick draw order. Each dimension keeps its existing
+coordinate and active-piece representation in snapshots and hashes.
+
 The native source tree has two layers:
 
 - `src/core/`: plain C++ helpers with no Godot types.
@@ -86,14 +92,21 @@ Allowed Stage 11 parity/smoke API:
 - `export_plain_2d_trace_json(case_id)`
 - `get_plain_2d_required_field_parity(case_id)`
 
-Allowed Stage 12 live plain-2D API:
+Live session API for dimensions 2, 3, and 4:
 
-- `live_2d_reset()`
-- `live_2d_apply_command(command)`
-- `live_2d_tick()`
-- `live_2d_snapshot_json()`
-- `live_2d_status()`
-- `live_2d_state_hash()`
+- `live_configure(dimension, setup)`, `live_configure_checked(dimension, setup)`
+- `live_reset(dimension)`, `live_apply_command(dimension, command)`, `live_tick(dimension)`
+- `live_snapshot_json(dimension)`, `live_status(dimension)`, `live_state_hash(dimension)`
+- `live_next_piece_preview(dimension)`, `live_held_piece_preview(dimension)`, `live_hold_available(dimension)`
+- `live_hard_drop_destination(dimension)`
+
+Each bridge instance owns an independent session for each supported dimension.
+Checked configuration rejects unsupported dimensions and mismatched setup modes.
+Other calls with an unsupported dimension do nothing and return a default value
+for their return type. `live_2d_configure_fixture_board(width, height)` controls
+the unshuffled 2D trace fixture. The bridge keeps existing command, snapshot,
+and trace formats. Build the extension and use the matching Godot scripts
+together because the live method signatures changed.
 
 Allowed Stage 20 plain-ND parity API:
 
@@ -102,15 +115,6 @@ Allowed Stage 20 plain-ND parity API:
 - `get_plain_nd_parity_status()`
 - `export_plain_nd_trace_json(case_id)`
 - `get_plain_nd_required_field_parity(case_id)`
-
-Allowed Stage 22 live plain-3D API:
-
-- `live_3d_reset()`
-- `live_3d_apply_command(command)`
-- `live_3d_tick()`
-- `live_3d_snapshot_json()`
-- `live_3d_status()`
-- `live_3d_state_hash()`
 
 Allowed Stage 39 core geometry query API:
 

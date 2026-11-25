@@ -190,6 +190,10 @@ The repository validator repeats schema, value, and single-owner validation and
 prints the manual promotion checklist. It never writes runtime configuration,
 the built-in catalog, or design authorities.
 
+Capture, evaluation, and export stores share directory creation and the
+`ok`/`error` result constructor. Each store supplies its directory label and
+retains ownership of its record schema and result fields.
+
 ## 9. Platform adapter boundary
 
 The Design Laboratory is one implementation with three distribution targets.

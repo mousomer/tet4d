@@ -306,54 +306,54 @@ func _test_queue_identity_and_update(failures: Array) -> void:
 		var shape: Array = case[2]
 		var mode := "live_%dd" % dimension
 		var setup := _setup(mode, "next_geometry_test", shape, piece_set_id, 1337, 1)
-		var configured: bool = bridge.live_3d_configure(setup) if dimension == 3 else bridge.live_4d_configure(setup)
+		var configured: bool = bridge.live_configure(3, setup) if dimension == 3 else bridge.live_configure(4, setup)
 		if not configured:
 			failures.append("%s queue-identity fixture must configure" % piece_set_id)
 			continue
 		_assert_live_queue_preview(failures, bridge, catalog_by_identity, dimension, piece_set_id, "initial")
-		var initial_snapshot = JSON.parse_string(bridge.live_3d_snapshot_json() if dimension == 3 else bridge.live_4d_snapshot_json())
+		var initial_snapshot = JSON.parse_string(bridge.live_snapshot_json(dimension))
 		var initial_active := str(initial_snapshot.get("current_piece", "")) if initial_snapshot is Dictionary else ""
-		var first_next: Dictionary = bridge.live_3d_next_piece_preview() if dimension == 3 else bridge.live_4d_next_piece_preview()
+		var first_next: Dictionary = bridge.live_next_piece_preview(dimension)
 		if dimension == 3:
-			bridge.live_3d_apply_command("hold")
+			bridge.live_apply_command(3, "hold")
 		else:
-			bridge.live_4d_apply_command("hold")
-		var held: Dictionary = bridge.live_3d_held_piece_preview() if dimension == 3 else bridge.live_4d_held_piece_preview()
-		var available: bool = bridge.live_3d_hold_available() if dimension == 3 else bridge.live_4d_hold_available()
-		var after_hold = JSON.parse_string(bridge.live_3d_snapshot_json() if dimension == 3 else bridge.live_4d_snapshot_json())
+			bridge.live_apply_command(4, "hold")
+		var held: Dictionary = bridge.live_held_piece_preview(dimension)
+		var available: bool = bridge.live_hold_available(dimension)
+		var after_hold = JSON.parse_string(bridge.live_snapshot_json(dimension))
 		if str(held.get("piece_name", "")) != initial_active or not after_hold is Dictionary or str(after_hold.get("current_piece", "")) != str(first_next.get("piece_name", "")) or available:
 			failures.append("%dD %s first Hold transport must synchronize active, HOLD, NEXT, and availability" % [dimension, piece_set_id])
-		var rejected_hash: String = bridge.live_3d_state_hash() if dimension == 3 else bridge.live_4d_state_hash()
+		var rejected_hash: String = bridge.live_state_hash(dimension)
 		if dimension == 3:
-			bridge.live_3d_apply_command("hold")
+			bridge.live_apply_command(3, "hold")
 		else:
-			bridge.live_4d_apply_command("hold")
-		var after_rejected_hash: String = bridge.live_3d_state_hash() if dimension == 3 else bridge.live_4d_state_hash()
+			bridge.live_apply_command(4, "hold")
+		var after_rejected_hash: String = bridge.live_state_hash(dimension)
 		if after_rejected_hash != rejected_hash:
 			failures.append("%dD %s rejected Hold transport must be a deterministic no-op" % [dimension, piece_set_id])
 		if dimension == 3:
-			bridge.live_3d_apply_command("hard_drop")
+			bridge.live_apply_command(3, "hard_drop")
 		else:
-			bridge.live_4d_apply_command("hard_drop")
-		available = bridge.live_3d_hold_available() if dimension == 3 else bridge.live_4d_hold_available()
+			bridge.live_apply_command(4, "hard_drop")
+		available = bridge.live_hold_available(dimension)
 		if not available:
 			failures.append("%dD %s successful lock must reset authoritative Hold availability" % [dimension, piece_set_id])
 		_assert_live_queue_preview(failures, bridge, catalog_by_identity, dimension, piece_set_id, "post-lock")
-		var occupied_next: Dictionary = bridge.live_3d_next_piece_preview() if dimension == 3 else bridge.live_4d_next_piece_preview()
+		var occupied_next: Dictionary = bridge.live_next_piece_preview(dimension)
 		if dimension == 3:
-			bridge.live_3d_apply_command("hold")
+			bridge.live_apply_command(3, "hold")
 		else:
-			bridge.live_4d_apply_command("hold")
-		var next_after_swap: Dictionary = bridge.live_3d_next_piece_preview() if dimension == 3 else bridge.live_4d_next_piece_preview()
+			bridge.live_apply_command(4, "hold")
+		var next_after_swap: Dictionary = bridge.live_next_piece_preview(dimension)
 		if _payload_identity(occupied_next) != _payload_identity(next_after_swap):
 			failures.append("%dD %s occupied Hold transport must not consume NEXT" % [dimension, piece_set_id])
 
 
 func _assert_live_queue_preview(failures: Array, bridge, catalog_by_identity: Dictionary, dimension: int, piece_set_id: String, phase: String) -> void:
-	var before_hash: String = bridge.live_3d_state_hash() if dimension == 3 else bridge.live_4d_state_hash()
-	var snapshot_text: String = bridge.live_3d_snapshot_json() if dimension == 3 else bridge.live_4d_snapshot_json()
-	var preview: Dictionary = bridge.live_3d_next_piece_preview() if dimension == 3 else bridge.live_4d_next_piece_preview()
-	var after_hash: String = bridge.live_3d_state_hash() if dimension == 3 else bridge.live_4d_state_hash()
+	var before_hash: String = bridge.live_state_hash(dimension)
+	var snapshot_text: String = bridge.live_snapshot_json(dimension)
+	var preview: Dictionary = bridge.live_next_piece_preview(dimension)
+	var after_hash: String = bridge.live_state_hash(dimension)
 	var snapshot = JSON.parse_string(snapshot_text)
 	var context := "%dD %s %s NEXT" % [dimension, piece_set_id, phase]
 	if not snapshot is Dictionary:

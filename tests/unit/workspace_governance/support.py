@@ -56,6 +56,12 @@ def build_checkout(root: Path) -> Path:
     for name in ("godot", "native", "src"):
         (root / name).symlink_to(ROOT / name, target_is_directory=True)
     shutil.copytree(ROOT / "tools/governance", root / "tools/governance")
+    # Fresh consumer fixtures need the same versioned hook bindings as a clone.
+    # Copy only these contract files, never private local settings or sessions.
+    for name in (".claude/settings.json", ".codex/hooks.json"):
+        target = root / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(ROOT / name, target)
     # Consumer integration copies only its versioned discovery adapter contract.
     manifest = json.loads((root / "config/governance/project.json").read_text())
     for adapter in manifest.get("skill_adapters", []):

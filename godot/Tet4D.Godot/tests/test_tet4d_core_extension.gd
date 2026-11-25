@@ -61,35 +61,41 @@ func run() -> Array:
 	_assert_live_3d_session(failures, bridge)
 	_assert_live_4d_session(failures, bridge)
 	_assert_landing_query_bridge(failures, bridge)
+	_assert_session_routing(failures, bridge)
 	return failures
+
+
+func _assert_session_routing(failures: Array, bridge: RefCounted) -> void:
+	var before := {}
+	for dimension in [2, 3, 4]:
+		bridge.live_reset(dimension)
+		before[dimension] = bridge.live_state_hash(dimension)
+	bridge.live_apply_command(3, "hard_drop")
+	_assert_equal(failures, bridge.live_state_hash(3) == before[3], false, "3D command changes its own session")
+	for dimension in [2, 4]:
+		_assert_equal(failures, bridge.live_state_hash(dimension), before[dimension], "%dD session isolation" % dimension)
+	var invalid: Dictionary = bridge.live_configure_checked(4294967298, {})
+	_assert_equal(failures, invalid.get("ok"), false, "unsupported dimension is rejected without truncation")
+	_assert_equal(failures, bridge.live_apply_command(4294967298, "hard_drop"), "", "unsupported command dimension returns empty status")
+	_assert_equal(failures, bridge.live_state_hash(2), before[2], "unsupported dimension cannot mutate 2D")
 
 
 func _assert_landing_query_bridge(failures: Array, bridge: RefCounted) -> void:
 	for mode in [2, 3, 4]:
-		if mode == 2:
-			bridge.live_2d_reset()
-		elif mode == 3:
-			bridge.live_3d_reset()
-		else:
-			bridge.live_4d_reset()
-		var before_hash: String = bridge.live_2d_state_hash() if mode == 2 else (bridge.live_3d_state_hash() if mode == 3 else bridge.live_4d_state_hash())
-		var before_snapshot: String = bridge.live_2d_snapshot_json() if mode == 2 else (bridge.live_3d_snapshot_json() if mode == 3 else bridge.live_4d_snapshot_json())
-		var landing: Dictionary = bridge.live_2d_hard_drop_destination() if mode == 2 else (bridge.live_3d_hard_drop_destination() if mode == 3 else bridge.live_4d_hard_drop_destination())
+		bridge.live_reset(mode)
+		var before_hash: String = bridge.live_state_hash(mode)
+		var before_snapshot: String = bridge.live_snapshot_json(mode)
+		var landing: Dictionary = bridge.live_hard_drop_destination(mode)
 		_assert_equal(failures, landing.get("ok"), true, "live %dD landing query ok" % mode)
 		_assert_equal(failures, landing.get("status"), "destination", "live %dD landing query status" % mode)
 		_assert_equal(failures, landing.get("dimension"), mode, "live %dD landing query dimension" % mode)
 		var queried_cells: Array = landing.get("cells", [])
 		for cell in queried_cells:
 			_assert_equal(failures, cell.size(), mode, "live %dD landing coordinate rank" % mode)
-		_assert_equal(failures, bridge.live_2d_state_hash() if mode == 2 else (bridge.live_3d_state_hash() if mode == 3 else bridge.live_4d_state_hash()), before_hash, "live %dD landing hash invariance" % mode)
-		_assert_equal(failures, bridge.live_2d_snapshot_json() if mode == 2 else (bridge.live_3d_snapshot_json() if mode == 3 else bridge.live_4d_snapshot_json()), before_snapshot, "live %dD landing snapshot invariance" % mode)
-		if mode == 2:
-			bridge.live_2d_apply_command("hard_drop")
-		elif mode == 3:
-			bridge.live_3d_apply_command("hard_drop")
-		else:
-			bridge.live_4d_apply_command("hard_drop")
-		var after_json: String = bridge.live_2d_snapshot_json() if mode == 2 else (bridge.live_3d_snapshot_json() if mode == 3 else bridge.live_4d_snapshot_json())
+		_assert_equal(failures, bridge.live_state_hash(mode), before_hash, "live %dD landing hash invariance" % mode)
+		_assert_equal(failures, bridge.live_snapshot_json(mode), before_snapshot, "live %dD landing snapshot invariance" % mode)
+		bridge.live_apply_command(mode, "hard_drop")
+		var after_json: String = bridge.live_snapshot_json(mode)
 		var after = JSON.parse_string(after_json)
 		var locked_positions: Array = []
 		if typeof(after) == TYPE_DICTIONARY:
@@ -281,9 +287,9 @@ func _assert_plain_nd_parity_api(failures: Array, bridge: RefCounted) -> void:
 
 
 func _assert_live_2d_session(failures: Array, bridge: RefCounted) -> void:
-	bridge.live_2d_reset()
-	var initial_hash: String = bridge.live_2d_state_hash()
-	var snapshot = JSON.parse_string(bridge.live_2d_snapshot_json())
+	bridge.live_reset(2)
+	var initial_hash: String = bridge.live_state_hash(2)
+	var snapshot = JSON.parse_string(bridge.live_snapshot_json(2))
 	if typeof(snapshot) != TYPE_DICTIONARY:
 		failures.append("live 2D snapshot should parse as JSON dictionary")
 		return
@@ -296,9 +302,9 @@ func _assert_live_2d_session(failures: Array, bridge: RefCounted) -> void:
 	_assert_equal(failures, snapshot.get("paused", true), false, "live 2D initial paused")
 	if snapshot.get("active_cells", []).is_empty():
 		failures.append("live 2D snapshot should include active cells")
-	var snapshot_before_preview: String = bridge.live_2d_snapshot_json()
-	var status_before_preview: String = bridge.live_2d_status()
-	var preview: Dictionary = bridge.live_2d_next_piece_preview()
+	var snapshot_before_preview: String = bridge.live_snapshot_json(2)
+	var status_before_preview: String = bridge.live_status(2)
+	var preview: Dictionary = bridge.live_next_piece_preview(2)
 	_assert_equal(failures, preview.get("ok"), true, "live 2D preview query status")
 	_assert_equal(failures, preview.get("status"), "piece", "live 2D preview structured status")
 	_assert_equal(failures, preview.get("dimension"), 2, "live 2D preview dimension")
@@ -306,14 +312,14 @@ func _assert_live_2d_session(failures: Array, bridge: RefCounted) -> void:
 	_assert_equal(failures, preview.get("piece_name"), "O", "live 2D preview piece")
 	_assert_equal(failures, preview.get("color_id"), 2, "live 2D preview color")
 	_assert_equal(failures, preview.get("cells", []).size(), 4, "live 2D preview cell count")
-	_assert_equal(failures, bridge.live_2d_state_hash(), initial_hash, "live 2D preview hash invariance")
-	_assert_equal(failures, bridge.live_2d_snapshot_json(), snapshot_before_preview, "live 2D preview snapshot invariance")
-	_assert_equal(failures, bridge.live_2d_status(), status_before_preview, "live 2D preview status invariance")
-	bridge.live_2d_apply_command("soft_drop")
-	if bridge.live_2d_state_hash() == initial_hash:
+	_assert_equal(failures, bridge.live_state_hash(2), initial_hash, "live 2D preview hash invariance")
+	_assert_equal(failures, bridge.live_snapshot_json(2), snapshot_before_preview, "live 2D preview snapshot invariance")
+	_assert_equal(failures, bridge.live_status(2), status_before_preview, "live 2D preview status invariance")
+	bridge.live_apply_command(2, "soft_drop")
+	if bridge.live_state_hash(2) == initial_hash:
 		failures.append("live 2D state hash should change after soft_drop")
-	bridge.live_2d_apply_command("hard_drop")
-	var after_drop = JSON.parse_string(bridge.live_2d_snapshot_json())
+	bridge.live_apply_command(2, "hard_drop")
+	var after_drop = JSON.parse_string(bridge.live_snapshot_json(2))
 	if typeof(after_drop) != TYPE_DICTIONARY:
 		failures.append("live 2D post-drop snapshot should parse as JSON dictionary")
 		return
@@ -328,46 +334,46 @@ func _assert_live_2d_session(failures: Array, bridge: RefCounted) -> void:
 	_assert_equal(failures, after_drop.get("next_piece", ""), "T", "live 2D first post-lock next piece")
 	_assert_equal(failures, after_drop.get("last_command", ""), "hard_drop", "live snapshot exposes last command")
 	_assert_equal(failures, after_drop.get("last_command_status", ""), "accepted", "live snapshot exposes last command status")
-	bridge.live_2d_apply_command("hard_drop")
-	var second_drop = JSON.parse_string(bridge.live_2d_snapshot_json())
+	bridge.live_apply_command(2, "hard_drop")
+	var second_drop = JSON.parse_string(bridge.live_snapshot_json(2))
 	if typeof(second_drop) == TYPE_DICTIONARY:
 		_assert_equal(failures, second_drop.get("current_piece", ""), "T", "live 2D second post-lock piece")
 	else:
 		failures.append("live 2D second post-drop snapshot should parse as JSON dictionary")
-	bridge.live_2d_reset()
-	_assert_equal(failures, bridge.live_2d_state_hash(), initial_hash, "live 2D reset hash")
+	bridge.live_reset(2)
+	_assert_equal(failures, bridge.live_state_hash(2), initial_hash, "live 2D reset hash")
 	var game_over_seen := false
 	for step in range(60):
-		bridge.live_2d_apply_command("hard_drop")
-		var game_over_snapshot = JSON.parse_string(bridge.live_2d_snapshot_json())
+		bridge.live_apply_command(2, "hard_drop")
+		var game_over_snapshot = JSON.parse_string(bridge.live_snapshot_json(2))
 		if typeof(game_over_snapshot) == TYPE_DICTIONARY and bool(game_over_snapshot.get("game_over", false)):
 			game_over_seen = true
 			if str(game_over_snapshot.get("game_over_reason", "")).is_empty():
 				failures.append("live 2D game_over should include a reason")
-			var stopped_hash: String = bridge.live_2d_state_hash()
-			bridge.live_2d_apply_command("move_left")
-			_assert_equal(failures, bridge.live_2d_state_hash(), stopped_hash, "live 2D rejected command hash")
-			if bridge.live_2d_status().find("last_command=rejected:move_left") < 0:
+			var stopped_hash: String = bridge.live_state_hash(2)
+			bridge.live_apply_command(2, "move_left")
+			_assert_equal(failures, bridge.live_state_hash(2), stopped_hash, "live 2D rejected command hash")
+			if bridge.live_status(2).find("last_command=rejected:move_left") < 0:
 				failures.append("live 2D should reject commands after game_over")
-			bridge.live_2d_reset()
-			var reset_snapshot = JSON.parse_string(bridge.live_2d_snapshot_json())
+			bridge.live_reset(2)
+			var reset_snapshot = JSON.parse_string(bridge.live_snapshot_json(2))
 			if typeof(reset_snapshot) == TYPE_DICTIONARY:
 				_assert_equal(failures, reset_snapshot.get("game_over", true), false, "live 2D reset clears game_over")
 				_assert_equal(failures, reset_snapshot.get("game_over_reason", "unexpected"), "", "live 2D reset clears reason")
 			break
 	if not game_over_seen:
 		failures.append("live 2D repeated hard drops should eventually reach native game_over")
-	bridge.live_2d_tick()
-	if bridge.live_2d_status().find("last_command=tick") < 0:
+	bridge.live_tick(2)
+	if bridge.live_status(2).find("last_command=tick") < 0:
 		failures.append("live_2d_tick should update native status")
-	if bridge.live_2d_status().find("next_piece=") < 0:
+	if bridge.live_status(2).find("next_piece=") < 0:
 		failures.append("live_2d_status should expose next piece")
 
 
 func _assert_live_3d_session(failures: Array, bridge: RefCounted) -> void:
-	bridge.live_3d_reset()
-	var initial_hash: String = bridge.live_3d_state_hash()
-	var snapshot = JSON.parse_string(bridge.live_3d_snapshot_json())
+	bridge.live_reset(3)
+	var initial_hash: String = bridge.live_state_hash(3)
+	var snapshot = JSON.parse_string(bridge.live_snapshot_json(3))
 	if typeof(snapshot) != TYPE_DICTIONARY:
 		failures.append("live 3D snapshot should parse as JSON dictionary")
 		return
@@ -380,50 +386,50 @@ func _assert_live_3d_session(failures: Array, bridge: RefCounted) -> void:
 	_assert_equal(failures, snapshot.get("game_over", true), false, "live 3D initial game_over")
 	if snapshot.get("active_cells", []).is_empty():
 		failures.append("live 3D snapshot should include active cells")
-	var preview_hash: String = bridge.live_3d_state_hash()
-	var preview_snapshot: String = bridge.live_3d_snapshot_json()
-	var preview: Dictionary = bridge.live_3d_next_piece_preview()
+	var preview_hash: String = bridge.live_state_hash(3)
+	var preview_snapshot: String = bridge.live_snapshot_json(3)
+	var preview: Dictionary = bridge.live_next_piece_preview(3)
 	_assert_equal(failures, preview.get("status"), "piece", "live 3D preview structured status")
 	_assert_equal(failures, preview.get("dimension"), 3, "live 3D preview dimension")
 	_assert_equal(failures, preview.get("piece_set_id"), "native_3d", "live 3D preview piece set")
 	_assert_equal(failures, preview.get("piece_name"), "O3", "live 3D preview piece")
 	_assert_equal(failures, preview.get("color_id"), 2, "live 3D preview color")
 	_assert_equal(failures, preview.get("cells", []).size(), 4, "live 3D preview cell count")
-	_assert_equal(failures, bridge.live_3d_state_hash(), preview_hash, "live 3D preview hash invariance")
-	_assert_equal(failures, bridge.live_3d_snapshot_json(), preview_snapshot, "live 3D preview snapshot invariance")
-	bridge.live_3d_apply_command("move_x_pos")
-	if bridge.live_3d_state_hash() == initial_hash:
+	_assert_equal(failures, bridge.live_state_hash(3), preview_hash, "live 3D preview hash invariance")
+	_assert_equal(failures, bridge.live_snapshot_json(3), preview_snapshot, "live 3D preview snapshot invariance")
+	bridge.live_apply_command(3, "move_x_pos")
+	if bridge.live_state_hash(3) == initial_hash:
 		failures.append("live 3D state hash should change after X movement")
-	var moved_hash: String = bridge.live_3d_state_hash()
-	bridge.live_3d_apply_command("move_z_pos")
-	if bridge.live_3d_state_hash() == moved_hash:
+	var moved_hash: String = bridge.live_state_hash(3)
+	bridge.live_apply_command(3, "move_z_pos")
+	if bridge.live_state_hash(3) == moved_hash:
 		failures.append("live 3D state hash should change after Z movement")
-	bridge.live_3d_apply_command("rotate_xy_pos")
-	var rotated_xy = JSON.parse_string(bridge.live_3d_snapshot_json())
+	bridge.live_apply_command(3, "rotate_xy_pos")
+	var rotated_xy = JSON.parse_string(bridge.live_snapshot_json(3))
 	if typeof(rotated_xy) == TYPE_DICTIONARY:
 		_assert_equal(failures, rotated_xy.get("last_rotation_plane", ""), "XY", "live 3D XY rotation plane")
 	else:
 		failures.append("live 3D rotated snapshot should parse")
-	bridge.live_3d_reset()
-	bridge.live_3d_apply_command("rotate_xz_pos")
-	var rotated_xz = JSON.parse_string(bridge.live_3d_snapshot_json())
+	bridge.live_reset(3)
+	bridge.live_apply_command(3, "rotate_xz_pos")
+	var rotated_xz = JSON.parse_string(bridge.live_snapshot_json(3))
 	if typeof(rotated_xz) == TYPE_DICTIONARY:
 		_assert_equal(failures, rotated_xz.get("last_rotation_plane", ""), "XZ", "live 3D XZ rotation plane")
 	else:
 		failures.append("live 3D XZ rotated snapshot should parse")
-	bridge.live_3d_reset()
-	bridge.live_3d_apply_command("rotate_yz_pos")
-	var rotated_yz = JSON.parse_string(bridge.live_3d_snapshot_json())
+	bridge.live_reset(3)
+	bridge.live_apply_command(3, "rotate_yz_pos")
+	var rotated_yz = JSON.parse_string(bridge.live_snapshot_json(3))
 	if typeof(rotated_yz) == TYPE_DICTIONARY:
 		_assert_equal(failures, rotated_yz.get("last_rotation_plane", ""), "YZ", "live 3D YZ rotation plane")
 	else:
 		failures.append("live 3D YZ rotated snapshot should parse")
-	bridge.live_3d_reset()
-	bridge.live_3d_apply_command("soft_drop")
-	if bridge.live_3d_state_hash() == initial_hash:
+	bridge.live_reset(3)
+	bridge.live_apply_command(3, "soft_drop")
+	if bridge.live_state_hash(3) == initial_hash:
 		failures.append("live 3D state hash should change after soft_drop")
-	bridge.live_3d_apply_command("hard_drop")
-	var after_drop = JSON.parse_string(bridge.live_3d_snapshot_json())
+	bridge.live_apply_command(3, "hard_drop")
+	var after_drop = JSON.parse_string(bridge.live_snapshot_json(3))
 	if typeof(after_drop) != TYPE_DICTIONARY:
 		failures.append("live 3D post-drop snapshot should parse as JSON dictionary")
 		return
@@ -434,17 +440,17 @@ func _assert_live_3d_session(failures: Array, bridge: RefCounted) -> void:
 	_assert_equal(failures, after_drop.get("last_command_status", ""), "accepted", "live 3D last command status")
 	if after_drop.get("locked_cells", []).is_empty():
 		failures.append("live 3D hard drop should expose locked cells")
-	bridge.live_3d_reset()
-	_assert_equal(failures, bridge.live_3d_state_hash(), initial_hash, "live 3D reset hash")
-	bridge.live_3d_tick()
-	if bridge.live_3d_status().find("last_command=tick") < 0:
+	bridge.live_reset(3)
+	_assert_equal(failures, bridge.live_state_hash(3), initial_hash, "live 3D reset hash")
+	bridge.live_tick(3)
+	if bridge.live_status(3).find("last_command=tick") < 0:
 		failures.append("live_3d_tick should update native status")
 
 
 func _assert_live_4d_session(failures: Array, bridge: RefCounted) -> void:
-	bridge.live_4d_reset()
-	var initial_hash: String = bridge.live_4d_state_hash()
-	var snapshot = JSON.parse_string(bridge.live_4d_snapshot_json())
+	bridge.live_reset(4)
+	var initial_hash: String = bridge.live_state_hash(4)
+	var snapshot = JSON.parse_string(bridge.live_snapshot_json(4))
 	if typeof(snapshot) != TYPE_DICTIONARY:
 		failures.append("live 4D snapshot should parse as JSON dictionary")
 		return
@@ -457,9 +463,9 @@ func _assert_live_4d_session(failures: Array, bridge: RefCounted) -> void:
 	_assert_equal(failures, snapshot.get("next_piece", ""), "STAIR4", "live 4D deterministic next piece")
 	if snapshot.get("active_cells", []).is_empty():
 		failures.append("live 4D snapshot should include active cells")
-	var preview_hash: String = bridge.live_4d_state_hash()
-	var preview_snapshot: String = bridge.live_4d_snapshot_json()
-	var preview: Dictionary = bridge.live_4d_next_piece_preview()
+	var preview_hash: String = bridge.live_state_hash(4)
+	var preview_snapshot: String = bridge.live_snapshot_json(4)
+	var preview: Dictionary = bridge.live_next_piece_preview(4)
 	_assert_equal(failures, preview.get("status"), "piece", "live 4D preview structured status")
 	_assert_equal(failures, preview.get("dimension"), 4, "live 4D preview dimension")
 	_assert_equal(failures, preview.get("piece_set_id"), "standard_4d_5", "live 4D preview piece set")
@@ -467,41 +473,41 @@ func _assert_live_4d_session(failures: Array, bridge: RefCounted) -> void:
 	_assert_equal(failures, preview.get("cells", []).size(), 5, "live 4D preview cell count")
 	for cell in preview.get("cells", []):
 		_assert_equal(failures, cell.size(), 4, "live 4D preview canonical coordinate rank")
-	_assert_equal(failures, bridge.live_4d_state_hash(), preview_hash, "live 4D preview hash invariance")
-	_assert_equal(failures, bridge.live_4d_snapshot_json(), preview_snapshot, "live 4D preview snapshot invariance")
-	bridge.live_4d_apply_command("move_w_pos")
-	if bridge.live_4d_state_hash() == initial_hash:
+	_assert_equal(failures, bridge.live_state_hash(4), preview_hash, "live 4D preview hash invariance")
+	_assert_equal(failures, bridge.live_snapshot_json(4), preview_snapshot, "live 4D preview snapshot invariance")
+	bridge.live_apply_command(4, "move_w_pos")
+	if bridge.live_state_hash(4) == initial_hash:
 		failures.append("live 4D state hash should change after W movement")
-	var moved_w = JSON.parse_string(bridge.live_4d_snapshot_json())
+	var moved_w = JSON.parse_string(bridge.live_snapshot_json(4))
 	if typeof(moved_w) == TYPE_DICTIONARY:
 		_assert_equal(failures, moved_w.get("last_command", ""), "move_w_pos", "live 4D W movement command")
 		_assert_equal(failures, moved_w.get("active_w"), 2, "live 4D active W after W movement")
 	else:
 		failures.append("live 4D W movement snapshot should parse")
-	bridge.live_4d_reset()
-	bridge.live_4d_apply_command("rotate_xw_pos")
-	var rotated_xw = JSON.parse_string(bridge.live_4d_snapshot_json())
+	bridge.live_reset(4)
+	bridge.live_apply_command(4, "rotate_xw_pos")
+	var rotated_xw = JSON.parse_string(bridge.live_snapshot_json(4))
 	if typeof(rotated_xw) == TYPE_DICTIONARY:
 		_assert_equal(failures, rotated_xw.get("last_rotation_plane", ""), "XW", "live 4D XW rotation plane")
 	else:
 		failures.append("live 4D XW rotated snapshot should parse")
-	bridge.live_4d_reset()
-	bridge.live_4d_apply_command("rotate_yw_pos")
-	var rotated_yw = JSON.parse_string(bridge.live_4d_snapshot_json())
+	bridge.live_reset(4)
+	bridge.live_apply_command(4, "rotate_yw_pos")
+	var rotated_yw = JSON.parse_string(bridge.live_snapshot_json(4))
 	if typeof(rotated_yw) == TYPE_DICTIONARY:
 		_assert_equal(failures, rotated_yw.get("last_rotation_plane", ""), "YW", "live 4D YW rotation plane")
 	else:
 		failures.append("live 4D YW rotated snapshot should parse")
-	bridge.live_4d_reset()
-	bridge.live_4d_apply_command("rotate_zw_pos")
-	var rotated_zw = JSON.parse_string(bridge.live_4d_snapshot_json())
+	bridge.live_reset(4)
+	bridge.live_apply_command(4, "rotate_zw_pos")
+	var rotated_zw = JSON.parse_string(bridge.live_snapshot_json(4))
 	if typeof(rotated_zw) == TYPE_DICTIONARY:
 		_assert_equal(failures, rotated_zw.get("last_rotation_plane", ""), "ZW", "live 4D ZW rotation plane")
 	else:
 		failures.append("live 4D ZW rotated snapshot should parse")
-	bridge.live_4d_reset()
-	bridge.live_4d_apply_command("hard_drop")
-	var after_drop = JSON.parse_string(bridge.live_4d_snapshot_json())
+	bridge.live_reset(4)
+	bridge.live_apply_command(4, "hard_drop")
+	var after_drop = JSON.parse_string(bridge.live_snapshot_json(4))
 	if typeof(after_drop) != TYPE_DICTIONARY:
 		failures.append("live 4D post-drop snapshot should parse as JSON dictionary")
 		return
@@ -511,8 +517,8 @@ func _assert_live_4d_session(failures: Array, bridge: RefCounted) -> void:
 	_assert_equal(failures, after_drop.get("last_command_status", ""), "accepted", "live 4D last command status")
 	if after_drop.get("locked_cells", []).is_empty():
 		failures.append("live 4D hard drop should expose locked cells")
-	bridge.live_4d_reset()
-	_assert_equal(failures, bridge.live_4d_state_hash(), initial_hash, "live 4D reset hash")
-	bridge.live_4d_tick()
-	if bridge.live_4d_status().find("last_command=tick") < 0:
+	bridge.live_reset(4)
+	_assert_equal(failures, bridge.live_state_hash(4), initial_hash, "live 4D reset hash")
+	bridge.live_tick(4)
+	if bridge.live_status(4).find("last_command=tick") < 0:
 		failures.append("live_4d_tick should update native status")

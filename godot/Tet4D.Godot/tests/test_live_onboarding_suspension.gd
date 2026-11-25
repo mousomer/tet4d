@@ -38,7 +38,7 @@ func run() -> Array:
 	await tree.process_frame
 	hud._set_onboarding_visible(true)
 	var step_before := str(hud.onboarding_snapshot().get("step_id", ""))
-	app._live_2d_command("move_left")
+	app._live_command("live_2d", "move_left")
 	if step_before == str(hud.onboarding_snapshot().get("step_id", "")):
 		failures.append("accepted tutorial command must still advance 2D onboarding")
 	app._start_configured_live_game(_setup("live_4d"))

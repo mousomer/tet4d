@@ -14,14 +14,14 @@ static func write_text(
 ) -> Dictionary:
 	var destination_absolute := ProjectSettings.globalize_path(destination_path)
 	if _file_exists(destination_absolute, operations) and not allow_overwrite:
-		return _failure("destination already exists; overwrite was not requested", {
+		return _result(false, "destination already exists; overwrite was not requested", {
 			"destination_untouched": true,
 		})
 	var temporary_absolute := "%s%s" % [destination_absolute, TEMPORARY_SUFFIX]
 	var write_error := _write_text_file(temporary_absolute, contents, operations)
 	if write_error != OK:
 		var temporary_cleanup := _remove_if_present(temporary_absolute, operations)
-		return _failure(
+		return _result(false,
 			"temporary write failed with error %s before the destination was modified%s" % [
 				write_error,
 				_cleanup_detail(temporary_cleanup),
@@ -44,13 +44,13 @@ static func replace_temporary_file(
 	var replace_error := _rename_absolute(temporary_path, destination_path, operations)
 	if replace_error == OK:
 		var stale_cleanup := _remove_if_present(backup_path, operations) if destination_existed else OK
-		return _success({
+		return _result(true, "", {
 			"warning": _cleanup_warning("stale backup", stale_cleanup),
 			"replacement": "direct",
 		})
 	if not _file_exists(destination_path, operations):
 		var temporary_cleanup := _remove_if_present(temporary_path, operations)
-		return _failure(
+		return _result(false,
 			"installation failed with error %s before an existing destination was modified%s" % [
 				replace_error,
 				_cleanup_detail(temporary_cleanup),
@@ -63,7 +63,7 @@ static func replace_temporary_file(
 	var stale_backup_cleanup := _remove_if_present(backup_path, operations)
 	if stale_backup_cleanup != OK:
 		_remove_if_present(temporary_path, operations)
-		return _failure(
+		return _result(false,
 			"stale backup cleanup failed with error %s; the previous destination was not modified" % stale_backup_cleanup,
 			{
 				"destination_untouched": true,
@@ -74,7 +74,7 @@ static func replace_temporary_file(
 	var backup_error := _rename_absolute(destination_path, backup_path, operations)
 	if backup_error != OK:
 		var temporary_cleanup := _remove_if_present(temporary_path, operations)
-		return _failure(
+		return _result(false,
 			"the previous destination could not be backed up (error %s) and was not modified%s" % [
 				backup_error,
 				_cleanup_detail(temporary_cleanup),
@@ -87,7 +87,7 @@ static func replace_temporary_file(
 	var install_error := _rename_absolute(temporary_path, destination_path, operations)
 	if install_error == OK:
 		var backup_cleanup := _remove_if_present(backup_path, operations)
-		return _success({
+		return _result(true, "", {
 			"warning": _cleanup_warning("backup", backup_cleanup),
 			"replacement": "backup_then_install",
 			"backup_recoverable": _file_exists(backup_path, operations),
@@ -100,7 +100,7 @@ static func replace_temporary_file(
 		restoration = "copy"
 	var temporary_cleanup := _remove_if_present(temporary_path, operations)
 	if restore_error != OK:
-		return _failure(
+		return _result(false,
 			"installation failed with error %s; restoration by rename and copy failed with error %s; the previous content remains%s at %s%s" % [
 				install_error,
 				restore_error,
@@ -118,7 +118,7 @@ static func replace_temporary_file(
 			}
 		)
 	var backup_cleanup := _remove_if_present(backup_path, operations)
-	return _failure(
+	return _result(false,
 		"installation failed with error %s; the previous content was restored by %s%s%s" % [
 			install_error,
 			restoration,
@@ -184,22 +184,9 @@ static func _cleanup_warning(label: String, error: Error) -> String:
 	return "" if error == OK else "%s cleanup failed with error %s" % [label, error]
 
 
-static func _success(extra: Dictionary = {}) -> Dictionary:
+static func _result(ok: bool, detail: String, extra: Dictionary) -> Dictionary:
 	var result := {
-		"ok": true,
-		"detail": "",
-		"previous_restored": false,
-		"backup_recoverable": false,
-		"backup_path": "",
-		"restoration": "not_required",
-	}
-	result.merge(extra, true)
-	return result
-
-
-static func _failure(detail: String, extra: Dictionary = {}) -> Dictionary:
-	var result := {
-		"ok": false,
+		"ok": ok,
 		"detail": detail,
 		"previous_restored": false,
 		"backup_recoverable": false,

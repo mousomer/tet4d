@@ -112,18 +112,6 @@ def _is_continuous_control_step(step_id: str | None) -> bool:
     return step_id in _OVERLAY_STEP_IDS
 
 
-def _is_translation_step(step_id: str | None) -> bool:
-    if not step_id:
-        return False
-    return step_id.startswith(_MOVE_PREFIX) or step_id in _DROP_STEP_IDS
-
-
-def _is_rotation_step(step_id: str | None) -> bool:
-    if not step_id:
-        return False
-    return step_id.startswith(_ROTATE_PREFIX)
-
-
 def _suppress_board_piece_setup(payload: dict[str, Any]) -> dict[str, Any]:
     if not payload:
         return {}

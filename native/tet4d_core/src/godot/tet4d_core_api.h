@@ -65,48 +65,27 @@ public:
 	String get_plain_nd_parity_status() const;
 	String export_plain_nd_trace_json(const String &case_id) const;
 	bool get_plain_nd_required_field_parity(const String &case_id) const;
-	bool live_2d_configure(const Dictionary &setup);
-	Dictionary live_2d_configure_checked(const Dictionary &setup);
+	bool live_configure(int64_t dimension, const Dictionary &setup);
+	Dictionary live_configure_checked(int64_t dimension, const Dictionary &setup);
 	// Fixture seam: changes only the board of the unconfigured session, keeping its
 	// fixed (unshuffled) piece order, so recorded traces stay independent of the
 	// product default board.
 	bool live_2d_configure_fixture_board(int64_t width, int64_t height);
-	void live_2d_reset();
-	String live_2d_apply_command(const String &command);
-	String live_2d_tick();
-	String live_2d_snapshot_json() const;
-	Dictionary live_2d_next_piece_preview() const;
-	Dictionary live_2d_held_piece_preview() const;
-	bool live_2d_hold_available() const;
-	Dictionary live_2d_hard_drop_destination() const;
-	String live_2d_status() const;
-	String live_2d_state_hash() const;
-	bool live_3d_configure(const Dictionary &setup);
-	Dictionary live_3d_configure_checked(const Dictionary &setup);
-	void live_3d_reset();
-	String live_3d_apply_command(const String &command);
-	String live_3d_tick();
-	String live_3d_snapshot_json() const;
-	Dictionary live_3d_next_piece_preview() const;
-	Dictionary live_3d_held_piece_preview() const;
-	bool live_3d_hold_available() const;
-	Dictionary live_3d_hard_drop_destination() const;
-	String live_3d_status() const;
-	String live_3d_state_hash() const;
-	bool live_4d_configure(const Dictionary &setup);
-	Dictionary live_4d_configure_checked(const Dictionary &setup);
-	void live_4d_reset();
-	String live_4d_apply_command(const String &command);
-	String live_4d_tick();
-	String live_4d_snapshot_json() const;
-	Dictionary live_4d_next_piece_preview() const;
-	Dictionary live_4d_held_piece_preview() const;
-	bool live_4d_hold_available() const;
-	Dictionary live_4d_hard_drop_destination() const;
-	String live_4d_status() const;
-	String live_4d_state_hash() const;
+	void live_reset(int64_t dimension);
+	String live_apply_command(int64_t dimension, const String &command);
+	String live_tick(int64_t dimension);
+	String live_snapshot_json(int64_t dimension) const;
+	Dictionary live_next_piece_preview(int64_t dimension) const;
+	Dictionary live_held_piece_preview(int64_t dimension) const;
+	bool live_hold_available(int64_t dimension) const;
+	Dictionary live_hard_drop_destination(int64_t dimension) const;
+	String live_status(int64_t dimension) const;
+	String live_state_hash(int64_t dimension) const;
 
 private:
+	template <typename Operation>
+	auto with_live_session(int64_t dimension, Operation operation) const;
+
 	std::unique_ptr<tet4d::core::ExplorerPieceRuntime> explorer_runtime_;
 	mutable tet4d::core::Plain2DSession live_2d_session_;
 	mutable tet4d::core::PlainNDSession live_3d_session_{3};

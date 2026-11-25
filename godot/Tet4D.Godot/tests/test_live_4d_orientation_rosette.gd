@@ -21,10 +21,10 @@ func run() -> Array:
 		await tree.process_frame
 		return ["Stage 56A rosette test requires the live app"]
 
-	app._enter_live_4d_mode()
+	app._enter_live_mode("live_4d")
 	await tree.process_frame
-	var native_snapshot: String = app._live_bridge.live_4d_snapshot_json()
-	var native_hash: String = str(app._live_bridge.live_4d_state_hash())
+	var native_snapshot: String = app._live_bridge.live_snapshot_json(4)
+	var native_hash: String = str(app._live_bridge.live_state_hash(4))
 	_assert_live_4d_state(failures, app, "initial")
 
 	for basis_case in [
@@ -60,7 +60,7 @@ func run() -> Array:
 		failures.append("Reset View must restore both authoritative and rosette orientation state")
 	_assert_native_unchanged(failures, app, native_snapshot, native_hash, "Reset View")
 
-	app._enter_live_3d_mode()
+	app._enter_live_mode("live_3d")
 	await tree.process_frame
 	var three_d_snapshot: Dictionary = app._camera_rig.orientation_indicator_snapshot()
 	if str(three_d_snapshot.get("source", "")) != "camera":
@@ -146,5 +146,5 @@ func _opposite(signed_axis: String) -> String:
 
 
 func _assert_native_unchanged(failures: Array, app, snapshot: String, state_hash: String, label: String) -> void:
-	if app._live_bridge.live_4d_snapshot_json() != snapshot or str(app._live_bridge.live_4d_state_hash()) != state_hash:
+	if app._live_bridge.live_snapshot_json(4) != snapshot or str(app._live_bridge.live_state_hash(4)) != state_hash:
 		failures.append("%s must not mutate Live-4D gameplay state" % label)

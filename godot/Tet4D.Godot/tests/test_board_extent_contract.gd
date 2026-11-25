@@ -50,24 +50,24 @@ func run() -> Array:
 		failures.append("W=1 standard_4d_5 must reject through spawn viability")
 	model.set_mode(GameSetupSpecScript.MODE_2D)
 	var setup: Dictionary = model.canonical_session_setup()
-	var good: Dictionary = bridge.live_2d_configure_checked(setup)
+	var good: Dictionary = bridge.live_configure_checked(2, setup)
 	if not bool(good.get("ok", false)) or not (good.get("errors", null) is Array):
 		failures.append("checked native configuration must return structured success")
 	else:
-		var before_hash := bridge.live_2d_state_hash()
+		var before_hash := bridge.live_state_hash(2)
 		for malformed_extent in [true, 6.0, "6"]:
 			var invalid := setup.duplicate(true)
 			invalid["board_shape"] = [malformed_extent, 6]
 			invalid["topology_profile"] = GameSetupSpecScript.bounded_topology_profile([6, 6])
-			var rejected: Dictionary = bridge.live_2d_configure_checked(invalid)
+			var rejected: Dictionary = bridge.live_configure_checked(2, invalid)
 			if bool(rejected.get("ok", true)) or not (rejected.get("errors", []) is Array):
 				failures.append("strict board decoding must reject non-integer extents with an error array")
 			elif (rejected.get("errors", []) as Array).is_empty() or str((rejected.get("errors", [])[0] as Dictionary).get("code", "")) != "invalid_field_type":
 				failures.append("strict board decoding must retain invalid_field_type identity")
 		var missing_topology := setup.duplicate(true)
 		missing_topology.erase("topology_profile")
-		if bool(bridge.live_2d_configure_checked(missing_topology).get("ok", true)):
+		if bool(bridge.live_configure_checked(2, missing_topology).get("ok", true)):
 			failures.append("topology profile must be required for checked configuration")
-		if bridge.live_2d_state_hash() != before_hash:
+		if bridge.live_state_hash(2) != before_hash:
 			failures.append("failed checked configuration must not mutate the live session")
 	return failures

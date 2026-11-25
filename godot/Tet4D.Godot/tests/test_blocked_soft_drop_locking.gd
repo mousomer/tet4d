@@ -106,11 +106,11 @@ func _assert_hard_drop_remains_immediate(failures: Array, app, mode: String) -> 
 func _dispatch_command(app, mode: String, command: String) -> void:
 	match mode:
 		TraceReplayAppScript.MODE_LIVE_2D:
-			app._live_2d_command(command)
+			app._live_command("live_2d", command)
 		TraceReplayAppScript.MODE_LIVE_3D:
-			app._live_3d_command(command)
+			app._live_command("live_3d", command)
 		TraceReplayAppScript.MODE_LIVE_4D:
-			app._live_4d_command(command)
+			app._live_command("live_4d", command)
 
 
 func _soft_drop_action(mode: String) -> String:

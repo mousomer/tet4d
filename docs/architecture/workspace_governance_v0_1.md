@@ -61,7 +61,7 @@ demonstrated.
 
 ## Completion-based execution
 
-Tet4D consumes canonical distribution 1.8.2 / runtime 1.0.2. The pack binds
+Tet4D consumes canonical distribution 1.8.4 / runtime 1.0.4. The pack binds
 `supervised-completion-v3` through its manifest; `gov explain
 execution.completion` supplies provenance. The canonical immutable release owns
 the policy, operation profiles and supervisor; Tet4D owns its verifier and

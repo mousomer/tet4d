@@ -77,7 +77,7 @@ func run() -> Array:
 				keys[("Shift+" if shifted else "") + OS.get_keycode_string(code)] = app.observed.duplicate()
 				app._reset_live_repeat_state()
 		var tabs := {}
-		var panel = hud._practice_panel
+		var panel = hud._explorer_cockpit.panel
 		for tab in panel._tabs.get_tab_count():
 			panel._tabs.current_tab = tab
 			await _frames(tree, 2)

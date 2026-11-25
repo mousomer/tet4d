@@ -739,13 +739,13 @@ class TestEndgameAnimation(unittest.TestCase):
             ),
         )
 
-        selected_a = endgame_animation.select_endgame_live_locked_cells(
+        selected_a = endgame_animation.split_endgame_locked_cells(
             locked_cells=locked_cells,
             dimension=3,
             seed=1337,
             live_fraction=0.03,
         )
-        selected_b = endgame_animation.select_endgame_live_locked_cells(
+        selected_b = endgame_animation.split_endgame_locked_cells(
             locked_cells=tuple(reversed(locked_cells)),
             dimension=3,
             seed=1337,

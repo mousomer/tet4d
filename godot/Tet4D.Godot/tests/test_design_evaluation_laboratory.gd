@@ -219,6 +219,7 @@ func _test_evaluation_capture_export(session, candidate: Dictionary, reference: 
 	for key in ["preset_path", "summary_path", "proposal_path"]:
 		if not FileAccess.file_exists(str(exported.get(key, ""))):
 			failures.append("nomination export must create %s" % key)
+	_assert_directory_failures(failures, session.snapshot(), created["record"], candidate, reference, image, build)
 	var preset: Dictionary = _read_json(str(exported.get("preset_path", "")))
 	if not bool(exporter.conform_preset_document(preset).get("ok", false)):
 		failures.append("exported preset.json must validate against the canonical registry and owner map")
@@ -230,6 +231,27 @@ func _test_evaluation_capture_export(session, candidate: Dictionary, reference: 
 	if not proposal.contains("Review input only") or not proposal.contains("Canonical property changes"):
 		failures.append("DESIGN_PROPOSAL.md must state the promotion boundary and exact canonical changes")
 	return failures
+
+
+func _assert_directory_failures(failures: Array, session: Dictionary, record: Dictionary, candidate: Dictionary, reference: Dictionary, image: Image, build: Dictionary) -> void:
+	var blocked := ROOT.path_join("not_a_directory")
+	var file := FileAccess.open(blocked, FileAccess.WRITE)
+	if file == null:
+		failures.append("directory failure fixture could not create a blocking file")
+		return
+	file.store_string("original")
+	file.close()
+	var results := {
+		"Evaluation": EvaluationStoreScript.new(blocked.path_join("evaluations")).save_record(record),
+		"Capture": CaptureStoreScript.new(blocked).capture_arm(image, session, "A", build, 1),
+		"Design export": ExportBundleScript.new(_registry()).export_candidate(candidate, reference, [record], blocked, build, 1),
+	}
+	for label in results:
+		var result: Dictionary = results[label]
+		if result.size() != 2 or result.get("ok") != false or not str(result.get("error")).begins_with("%s directory could not be created (error " % label):
+			failures.append("%s directory failure must keep its result shape and error message" % label)
+	if FileAccess.get_file_as_string(blocked) != "original":
+		failures.append("directory failure must preserve the blocking file")
 
 
 func _registry():

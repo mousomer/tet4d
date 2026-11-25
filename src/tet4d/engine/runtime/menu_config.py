@@ -175,10 +175,6 @@ def authored_menu_definition(menu_id: str) -> dict[str, Any]:
     return deepcopy(menu)
 
 
-def authored_menu_items(menu_id: str) -> tuple[dict[str, str], ...]:
-    return tuple(authored_menu_definition(menu_id)["items"])
-
-
 def runtime_menu_id_for_item(item_id: str) -> str | None:
     clean_item_id = as_non_empty_string(item_id, path="item_id").lower()
     for menu_id, menu in _structure_payload()["runtime_menus"].items():
@@ -332,23 +328,6 @@ def random_mode_id_from_index(index: int) -> str:
     return mode_ids[safe_index]
 
 
-def random_mode_index_from_id(mode_id: object) -> int:
-    if not isinstance(mode_id, str):
-        return 0
-    normalized = mode_id.strip().lower()
-    mode_ids = random_mode_ids()
-    try:
-        return mode_ids.index(normalized)
-    except ValueError:
-        return 0
-
-
-def random_mode_label_for_index(index: int) -> str:
-    labels = tuple(settings_option_labels()["game_random_mode"])
-    safe_index = max(0, min(len(labels) - 1, int(index)))
-    return labels[safe_index]
-
-
 def kick_level_name_for_index(index: int) -> str:
     names = kick_level_names()
     safe_index = max(0, min(len(names) - 1, int(index)))
@@ -482,18 +461,6 @@ def setup_fields_for_settings(
     if bool(topology_advanced):
         return fields
     return [field for field in fields if field.attr_name != "topology_profile_index"]
-
-
-def keybinding_category_docs() -> dict[str, Any]:
-    from tet4d.engine.ui_logic.keybindings_catalog import (
-        binding_group_docs,
-        binding_scope_order,
-    )
-
-    return {
-        "scope_order": binding_scope_order(),
-        "groups": binding_group_docs(),
-    }
 
 
 def settings_category_docs() -> tuple[dict[str, str], ...]:

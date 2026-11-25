@@ -97,8 +97,8 @@ The registered active surface is the union of human governance and dispatch,
 `config/project/policy_pack.json`, `CURRENT_STATE.md`, `docs/BACKLOG.md`, and
 any explicitly registered active task record. The reviewable human,
 operational, and active-task portion, excluding `docs/BACKLOG.md`, has a binding
-ceiling of 2,500 physical lines. Local guards are 150 lines for root `AGENTS.md`
-and `CURRENT_STATE.md`, 70 for each subtree dispatch, 300 for each canonical
+ceiling of 2,500 physical lines. Local guards are 150 lines for root `AGENTS.md`,
+200 for `CURRENT_STATE.md`, 70 for each subtree dispatch, 300 for each canonical
 owner, and 250 for any active task record. `docs/BACKLOG.md` has no size limit:
 its lines are measured and reported, and open work is retired when it is
 completed or obsolete, never to satisfy a line count. The temporary

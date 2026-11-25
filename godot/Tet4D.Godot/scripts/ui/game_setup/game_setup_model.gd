@@ -43,10 +43,6 @@ func selected_preset_id(mode: String = "") -> String:
 	return GameSetupSpecScript.preset_id_for_shape(target_mode, selected_shape(target_mode))
 
 
-func selected_spec() -> Dictionary:
-	return GameSetupSpecScript.preset(current_mode, selected_preset_id())
-
-
 func selected_shape(mode: String = "") -> Array:
 	var target_mode := current_mode if mode.is_empty() else mode
 	var shape = _draft_entry(target_mode).get("board_shape", [])
@@ -189,12 +185,6 @@ func apply_last_selected(values: Dictionary) -> void:
 		if not is_valid(mode):
 			_drafts[mode] = _default_entry(mode)
 			_validate_mode(mode)
-
-
-func canonical_snapshot() -> Dictionary:
-	var result := canonical_session_setup()
-	result["last_selected"] = last_valid_entries()
-	return result
 
 
 func canonical_session_setup(mode: String = "") -> Dictionary:

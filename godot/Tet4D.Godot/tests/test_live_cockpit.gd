@@ -192,10 +192,10 @@ func _check_production_extraction() -> Array:
 	hud._set_onboarding_visible(false)
 	await tree.process_frame
 	await tree.process_frame
-	app._enter_live_4d_mode()
+	app._enter_live_mode("live_4d")
 	await tree.process_frame
 	await tree.process_frame
-	var hash_before := str(app._live_bridge.live_4d_state_hash())
+	var hash_before := str(app._live_bridge.live_state_hash(4))
 	var layout: Dictionary = hud.layout_contract_snapshot()
 	var cockpit: Dictionary = layout.get("live_cockpit", {})
 	if cockpit.get("slots") != ["Header", "PrimaryBoardSurface", "ControlDeck"] or not cockpit.get("deck_visible", false):
@@ -216,7 +216,7 @@ func _check_production_extraction() -> Array:
 		failures.append("LiveCockpit extraction must show the whole 4D legend and keep the 1600x960 board allocation, got game=%s deck=%s natural=%s" % [game, deck, cockpit.get("deck_natural_height")])
 	if game.intersects(deck):
 		failures.append("LiveCockpit extraction must keep primary board and control deck non-overlapping")
-	if str(app._live_bridge.live_4d_state_hash()) != hash_before:
+	if str(app._live_bridge.live_state_hash(4)) != hash_before:
 		failures.append("LiveCockpit extraction must not mutate deterministic gameplay state")
 	root.queue_free()
 	await tree.process_frame

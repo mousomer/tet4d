@@ -189,7 +189,7 @@ func _assert_hostile_variants(failures: Array, bridge: RefCounted, fixture: Dict
 		diamond = {"left": diamond, "right": diamond}
 	var wide := valid.duplicate(true)
 	wide["extra"] = diamond
-	var hashes := [bridge.live_2d_state_hash(), bridge.live_3d_state_hash(), bridge.live_4d_state_hash()]
+	var hashes := [bridge.live_state_hash(2), bridge.live_state_hash(3), bridge.live_state_hash(4)]
 	for hostile in [cyclic, array_cycle, wide]:
 		var profile_result: Dictionary = bridge.topology_transport_profile(hostile)
 		_assert_equal(failures, profile_result.get("error", {}).get("code"), "resource_limit", "hostile profile bounded")
@@ -199,7 +199,7 @@ func _assert_hostile_variants(failures: Array, bridge: RefCounted, fixture: Dict
 		_assert_equal(failures, query_value.get("error", {}).get("code"), "resource_limit", "hostile query payload bounded")
 	var setup := {"contract_version": 1, "mode": "live_2d", "board_shape": [10, 20], "piece_set_id": "classic", "topology_profile": cyclic}
 	_assert_equal(failures, bridge.validate_live_board_setup(setup).get("ok"), false, "cyclic live setup rejected")
-	_assert_equal(failures, bridge.live_2d_configure(setup), false, "cyclic live configuration rejected")
-	_assert_equal(failures, [bridge.live_2d_state_hash(), bridge.live_3d_state_hash(), bridge.live_4d_state_hash()], hashes, "hostile requests preserve Play sessions")
+	_assert_equal(failures, bridge.live_configure(2, setup), false, "cyclic live configuration rejected")
+	_assert_equal(failures, [bridge.live_state_hash(2), bridge.live_state_hash(3), bridge.live_state_hash(4)], hashes, "hostile requests preserve Play sessions")
 	cyclic.erase("self")
 	looped.clear()

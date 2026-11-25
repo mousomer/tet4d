@@ -17,6 +17,7 @@ class_name DesignExportTransport
 # platform, so an installed application never requires repository access to
 # retrieve a nominated design.
 
+const OperationResult = preload("res://scripts/operation_result.gd")
 const DesignPlatformProfileScript = preload("res://scripts/platform/design_platform_profile.gd")
 
 const ARCHIVE_EXTENSION := ".tet4ddesign.zip"
@@ -43,21 +44,21 @@ func portable_archive(bundle_directory: String, archive_path: String = "") -> Di
 	# wrong tree. Absolute paths remove that ambiguity on every platform.
 	var absolute_source := ProjectSettings.globalize_path(source)
 	if source.is_empty() or not DirAccess.dir_exists_absolute(absolute_source):
-		return _failure("A generated bundle directory is required before it can be shared.")
+		return OperationResult.failure("A generated bundle directory is required before it can be shared.")
 	var members := _collect_members(absolute_source)
 	if members.is_empty():
-		return _failure("The bundle directory contains no files to share.")
+		return OperationResult.failure("The bundle directory contains no files to share.")
 	var destination := archive_path if not archive_path.is_empty() else "%s%s" % [source, ARCHIVE_EXTENSION]
 	var packer := ZIPPacker.new()
 	var open_error := packer.open(ProjectSettings.globalize_path(destination), ZIPPacker.APPEND_CREATE)
 	if open_error != OK:
-		return _failure("Portable design archive could not be created (error %s)." % open_error)
+		return OperationResult.failure("Portable design archive could not be created (error %s)." % open_error)
 	var bundle_name := absolute_source.get_file()
 	for member in members:
 		var handle := FileAccess.open(absolute_source.path_join(str(member)), FileAccess.READ)
 		if handle == null:
 			packer.close()
-			return _failure("Portable design archive could not read %s." % str(member))
+			return OperationResult.failure("Portable design archive could not read %s." % str(member))
 		var bytes := handle.get_buffer(handle.get_length())
 		handle.close()
 		packer.start_file("%s/%s" % [bundle_name, str(member)])
@@ -65,8 +66,8 @@ func portable_archive(bundle_directory: String, archive_path: String = "") -> Di
 		packer.close_file()
 	var close_error := packer.close()
 	if close_error != OK:
-		return _failure("Portable design archive could not be finalised (error %s)." % close_error)
-	return _success({
+		return OperationResult.failure("Portable design archive could not be finalised (error %s)." % close_error)
+	return OperationResult.success({
 		"archive_path": destination,
 		"members": members,
 		"entry_count": members.size(),
@@ -100,7 +101,7 @@ func user_visible_root() -> String:
 
 func publish(bundle_directory: String) -> Dictionary:
 	if not _profile.requires_portable_archive():
-		return _success({
+		return OperationResult.success({
 			"archive_path": "",
 			"plan": share_plan("", bundle_directory),
 		})
@@ -112,7 +113,7 @@ func publish(bundle_directory: String) -> Dictionary:
 	if not bool(visible.get("ok", false)):
 		return visible
 	var published := str(visible.get("archive_path", archive_path))
-	return _success({
+	return OperationResult.success({
 		"archive_path": published,
 		"entry_count": archived.get("entry_count", 0),
 		"plan": share_plan(published, bundle_directory),
@@ -128,7 +129,7 @@ func execute_share(archive_path: String, bundle_directory: String) -> Dictionary
 	var target := str(plan.get("target", ""))
 	if transport == DesignPlatformProfileScript.TRANSPORT_SYSTEM_DOCUMENT_PICKER:
 		if not DisplayServer.has_feature(DisplayServer.FEATURE_NATIVE_DIALOG_FILE):
-			return _failure("This device has no system document picker; the archive is at %s." % target)
+			return OperationResult.failure("This device has no system document picker; the archive is at %s." % target)
 		DisplayServer.file_dialog_show(
 			"Save Tet4D design nomination",
 			target.get_base_dir(),
@@ -138,29 +139,29 @@ func execute_share(archive_path: String, bundle_directory: String) -> Dictionary
 			["*.zip"],
 			Callable()
 		)
-		return _success({"mechanism": transport, "target": target})
+		return OperationResult.success({"mechanism": transport, "target": target})
 	if transport == DesignPlatformProfileScript.TRANSPORT_FILES_APP_DOCUMENTS:
 		# The archive already lives in the file-sharing enabled Documents
 		# directory; no further OS call is needed to make it reachable.
-		return _success({"mechanism": transport, "target": target})
+		return OperationResult.success({"mechanism": transport, "target": target})
 	if OS.has_method("shell_show_in_file_manager"):
 		OS.shell_show_in_file_manager(ProjectSettings.globalize_path(target), true)
-		return _success({"mechanism": transport, "target": target})
+		return OperationResult.success({"mechanism": transport, "target": target})
 	OS.shell_open("file://%s" % ProjectSettings.globalize_path(target))
-	return _success({"mechanism": transport, "target": target})
+	return OperationResult.success({"mechanism": transport, "target": target})
 
 
 func _install_into_user_visible_root(archive_path: String) -> Dictionary:
 	var root := user_visible_root()
 	var absolute_archive := ProjectSettings.globalize_path(archive_path)
 	if root.is_empty() or absolute_archive.get_base_dir() == root.trim_suffix("/"):
-		return _success({"archive_path": archive_path})
+		return OperationResult.success({"archive_path": archive_path})
 	var destination := root.trim_suffix("/").path_join(absolute_archive.get_file())
 	if DirAccess.copy_absolute(absolute_archive, destination) != OK:
 		# A non-writable documents root is not a nomination failure; the caller
 		# still has the application-private archive.
-		return _success({"archive_path": archive_path})
-	return _success({"archive_path": destination})
+		return OperationResult.success({"archive_path": archive_path})
+	return OperationResult.success({"archive_path": destination})
 
 
 # `directory` must already be a globalized absolute path.
@@ -178,13 +179,3 @@ static func _collect_members(directory: String) -> Array:
 	listing.list_dir_end()
 	members.sort()
 	return members
-
-
-static func _success(extra: Dictionary = {}) -> Dictionary:
-	var result := {"ok": true, "error": ""}
-	result.merge(extra, true)
-	return result
-
-
-static func _failure(error: String) -> Dictionary:
-	return {"ok": false, "error": error}

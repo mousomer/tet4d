@@ -2,6 +2,7 @@ extends RefCounted
 
 class_name DesignComparisonSession
 
+const OperationResult = preload("res://scripts/operation_result.gd")
 const DesignValueScript = preload("res://scripts/design_lab/design_value.gd")
 
 const SCHEMA_VERSION := 2
@@ -17,13 +18,13 @@ var _session: Dictionary = {}
 
 func start(scenario: Dictionary, resolved_a: Dictionary, resolved_b: Dictionary, non_style_fingerprint: Dictionary, blind: bool = false) -> Dictionary:
 	if not _valid_scenario(scenario):
-		return _failure("A valid deterministic design scenario is required.")
+		return OperationResult.failure("A valid deterministic design scenario is required.")
 	if not _valid_resolved(resolved_a) or not _valid_resolved(resolved_b):
-		return _failure("Two registry-valid detached presets are required.")
+		return OperationResult.failure("Two registry-valid detached presets are required.")
 	var arm_a := _frozen_preset(resolved_a)
 	var arm_b := _frozen_preset(resolved_b)
 	if arm_a.get("snapshot_hash") == arm_b.get("snapshot_hash"):
-		return _failure("A/B comparison requires two observably different presentation snapshots.")
+		return OperationResult.failure("A/B comparison requires two observably different presentation snapshots.")
 	var seed_material := "%s|%s|%s|%s" % [
 		str(scenario.get("scenario_id", "")),
 		str(arm_a.get("preset_id", "")),
@@ -50,7 +51,7 @@ func start(scenario: Dictionary, resolved_a: Dictionary, resolved_b: Dictionary,
 	preview.set_snapshot("A", _session["arms"]["A"]["presentation_profile"])
 	preview.set_snapshot("B", _session["arms"]["B"]["presentation_profile"])
 	preview.show_side(str(_session["shown_arm"]))
-	return _success({"session": snapshot(), "profile": arm_profile_snapshot(ARM_A)})
+	return OperationResult.success({"session": snapshot(), "profile": arm_profile_snapshot(ARM_A)})
 
 
 func end() -> void:
@@ -64,10 +65,6 @@ func active() -> bool:
 
 func session_id() -> String:
 	return str(_session.get("session_id", "")) if _active else ""
-
-
-func active_arm() -> String:
-	return shown_arm()
 
 
 func shown_arm() -> String:
@@ -84,26 +81,26 @@ func arm_label(arm: String) -> String:
 
 func set_blind(enabled: bool) -> Dictionary:
 	if not _active:
-		return _failure("No comparison session is active.")
+		return OperationResult.failure("No comparison session is active.")
 	_session["blind"] = enabled
-	return _success({"session": snapshot()})
+	return OperationResult.success({"session": snapshot()})
 
 
 func assign(arm: String, resolved: Dictionary, current_non_style_fingerprint: Dictionary) -> Dictionary:
 	if not _active or not ARMS.has(arm):
-		return _failure("Comparison assignment must target A or B.")
+		return OperationResult.failure("Comparison assignment must target A or B.")
 	if not _valid_resolved(resolved):
-		return _failure("A registry-valid detached preset is required for assignment.")
+		return OperationResult.failure("A registry-valid detached preset is required for assignment.")
 	var invariant := verify_non_style_fingerprint(current_non_style_fingerprint)
 	if not bool(invariant.get("ok", false)):
 		return invariant
 	var assigned := _frozen_preset(resolved)
 	var other_arm := ARM_B if arm == ARM_A else ARM_A
 	if assigned.get("snapshot_hash") == _session.get("arms", {}).get(other_arm, {}).get("snapshot_hash"):
-		return _failure("A/B comparison requires two observably different presentation snapshots.")
+		return OperationResult.failure("A/B comparison requires two observably different presentation snapshots.")
 	var previous: Dictionary = _session.get("arms", {}).get(arm, {})
 	if assigned == previous:
-		return _success({
+		return OperationResult.success({
 			"arm": arm,
 			"changed": false,
 			"refresh_shown": shown_arm() == arm,
@@ -116,7 +113,7 @@ func assign(arm: String, resolved: Dictionary, current_non_style_fingerprint: Di
 	_session["session_id"] = _assignment_session_id(arm)
 	_session["blind_labels"] = _blind_labels(str(_session.get("session_id", "")))
 	_session["last_assignment_at_utc"] = DesignValueScript.timestamp_utc()
-	return _success({
+	return OperationResult.success({
 		"arm": arm,
 		"changed": true,
 		"refresh_shown": shown_arm() == arm,
@@ -127,7 +124,7 @@ func assign(arm: String, resolved: Dictionary, current_non_style_fingerprint: Di
 
 func activate(arm: String, current_non_style_fingerprint: Dictionary) -> Dictionary:
 	if not _active or not ARMS.has(arm):
-		return _failure("Comparison arm must be A or B.")
+		return OperationResult.failure("Comparison arm must be A or B.")
 	var invariant := verify_non_style_fingerprint(current_non_style_fingerprint)
 	if not bool(invariant.get("ok", false)):
 		return invariant
@@ -135,7 +132,7 @@ func activate(arm: String, current_non_style_fingerprint: Dictionary) -> Diction
 		_session["toggle_count"] = int(_session.get("toggle_count", 0)) + 1
 	_session["shown_arm"] = arm
 	preview.show_side(arm)
-	return _success({"arm": arm, "profile": arm_profile_snapshot(arm), "session": snapshot()})
+	return OperationResult.success({"arm": arm, "profile": arm_profile_snapshot(arm), "session": snapshot()})
 
 
 func toggle(current_non_style_fingerprint: Dictionary) -> Dictionary:
@@ -148,7 +145,7 @@ func reset_request(current_non_style_fingerprint: Dictionary) -> Dictionary:
 		return invariant
 	_session["shown_arm"] = ARM_A
 	preview.show_side(ARM_A)
-	return _success({
+	return OperationResult.success({
 		"scenario": _session.get("scenario", {}).duplicate(true),
 		"arm": ARM_A,
 		"profile": arm_profile_snapshot(ARM_A),
@@ -157,15 +154,15 @@ func reset_request(current_non_style_fingerprint: Dictionary) -> Dictionary:
 
 func verify_non_style_fingerprint(current: Dictionary) -> Dictionary:
 	if not _active:
-		return _failure("No comparison session is active.")
+		return OperationResult.failure("No comparison session is active.")
 	var expected_hash := str(_session.get("non_style_hash", ""))
 	var actual_hash := DesignValueScript.canonical_hash(current)
 	if actual_hash != expected_hash:
-		return _failure("Comparison stopped because deterministic non-style state changed.", {
+		return OperationResult.failure("Comparison stopped because deterministic non-style state changed.", {
 			"expected_hash": expected_hash,
 			"actual_hash": actual_hash,
 		})
-	return _success()
+	return OperationResult.success()
 
 
 func arm_profile_snapshot(arm: String) -> Dictionary:
@@ -186,26 +183,26 @@ func snapshot() -> Dictionary:
 
 func restore(saved: Dictionary) -> Dictionary:
 	if int(saved.get("session_schema_version", 0)) != SCHEMA_VERSION:
-		return _failure("Comparison session schema is unsupported.")
+		return OperationResult.failure("Comparison session schema is unsupported.")
 	if not DesignValueScript.safe_id(str(saved.get("session_id", ""))) or not _valid_scenario(saved.get("scenario", {})):
-		return _failure("Comparison session identity is invalid.")
+		return OperationResult.failure("Comparison session identity is invalid.")
 	if not ARMS.has(str(saved.get("shown_arm", ""))):
-		return _failure("Comparison shown arm must be A or B.")
+		return OperationResult.failure("Comparison shown arm must be A or B.")
 	var arms = saved.get("arms")
 	if not (arms is Dictionary) or not _valid_frozen(arms.get(ARM_A, {})) or not _valid_frozen(arms.get(ARM_B, {})):
-		return _failure("Comparison assignments are invalid.")
+		return OperationResult.failure("Comparison assignments are invalid.")
 	if arms.get(ARM_A, {}).get("snapshot_hash") == arms.get(ARM_B, {}).get("snapshot_hash"):
-		return _failure("A/B comparison requires two observably different presentation snapshots.")
+		return OperationResult.failure("A/B comparison requires two observably different presentation snapshots.")
 	var fingerprint = saved.get("non_style_fingerprint")
 	if not (fingerprint is Dictionary) or DesignValueScript.canonical_hash(fingerprint) != str(saved.get("non_style_hash", "")):
-		return _failure("Comparison non-style provenance is inconsistent.")
+		return OperationResult.failure("Comparison non-style provenance is inconsistent.")
 	_session = saved.duplicate(true)
 	_session["blind_labels"] = _blind_labels(str(_session.get("session_id", "")))
 	_active = true
 	preview.set_snapshot("A", _session["arms"]["A"]["presentation_profile"])
 	preview.set_snapshot("B", _session["arms"]["B"]["presentation_profile"])
 	preview.show_side(str(_session["shown_arm"]))
-	return _success({
+	return OperationResult.success({
 		"session": snapshot(),
 		"profile": arm_profile_snapshot(shown_arm()),
 	})
@@ -262,15 +259,3 @@ static func _valid_scenario(scenario: Dictionary) -> bool:
 
 static func _valid_resolved(resolved: Dictionary) -> bool:
 	return bool(resolved.get("ok", false)) and resolved.get("snapshot") is Dictionary and not resolved.get("snapshot", {}).is_empty()
-
-
-static func _success(extra: Dictionary = {}) -> Dictionary:
-	var result := {"ok": true, "error": ""}
-	result.merge(extra, true)
-	return result
-
-
-static func _failure(error: String, extra: Dictionary = {}) -> Dictionary:
-	var result := {"ok": false, "error": error}
-	result.merge(extra, true)
-	return result

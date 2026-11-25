@@ -48,8 +48,3 @@ func frame_at(frame_index: int) -> Dictionary:
 		return {}
 	var clamped_index := clampi(frame_index, 0, frames.size() - 1)
 	return frames[clamped_index]
-
-
-func state_hash_at(frame_index: int) -> String:
-	var frame := frame_at(frame_index)
-	return str(frame.get("state_hash", final.get("state_hash", "")))

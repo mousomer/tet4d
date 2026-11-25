@@ -8,11 +8,6 @@ import warnings
 from unittest import mock
 from uuid import uuid4
 
-from tet4d.engine.gameplay.topology import EDGE_BOUNDED, EDGE_WRAP
-from tet4d.engine.gameplay.topology_designer import (
-    GAMEPLAY_MODE_EXPLORER,
-    validate_topology_profile_state,
-)
 from tet4d.engine.runtime import topology_cache as topology_cache_module
 from tet4d.engine.runtime.project_config import (
     explorer_topology_preview_cache_dir_path,
@@ -29,10 +24,6 @@ from tet4d.engine.runtime.topology_cache import (
     topology_cache_usage,
     write_cached_graph_rows,
     write_cached_playability_analysis,
-)
-from tet4d.engine.runtime.topology_explorer_bridge import (
-    explorer_profile_from_legacy_profile,
-    export_explorer_preview_from_legacy_profile,
 )
 from tet4d.engine.runtime.topology_explorer_preview import (
     _PREVIEW_LOCAL_CACHE_VERSION,
@@ -53,6 +44,7 @@ from tet4d.engine.topology_explorer.movement_graph import (
     movement_graph_rows,
 )
 from tet4d.engine.topology_explorer.presets import (
+    axis_wrap_profile,
     mobius_strip_profile_2d,
     sphere_profile_2d,
     swapped_xz_profile_3d,
@@ -70,70 +62,16 @@ class TestTopologyExplorerPreview(unittest.TestCase):
             encoding="utf-8",
         )
 
-    def test_bridge_converts_symmetric_wrap_profile(self) -> None:
-        legacy = validate_topology_profile_state(
-            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
-            dimension=3,
-            gravity_axis=1,
-            topology_mode="bounded",
-            edge_rules=(
-                (EDGE_WRAP, EDGE_WRAP),
-                (EDGE_BOUNDED, EDGE_BOUNDED),
-                (EDGE_BOUNDED, EDGE_BOUNDED),
-            ),
-        )
-        profile = explorer_profile_from_legacy_profile(legacy)
+    def test_preview_compiles_symmetric_wrap_profile(self) -> None:
+        profile = axis_wrap_profile(dimension=3, wrapped_axes=(0,))
         preview = compile_explorer_topology_preview(
             profile,
             dims=(4, 4, 4),
-            source="legacy_edge_rules_bridge",
+            source="axis_wrap",
         )
         self.assertEqual(preview["glue_count"], 1)
         self.assertEqual(preview["movement_graph"]["cell_count"], 64)
         self.assertGreater(preview["movement_graph"]["boundary_traversal_count"], 0)
-
-    def test_bridge_rejects_asymmetric_legacy_profile(self) -> None:
-        legacy = validate_topology_profile_state(
-            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
-            dimension=3,
-            gravity_axis=1,
-            topology_mode="bounded",
-            edge_rules=(
-                (EDGE_WRAP, EDGE_BOUNDED),
-                (EDGE_BOUNDED, EDGE_BOUNDED),
-                (EDGE_BOUNDED, EDGE_BOUNDED),
-            ),
-        )
-        with self.assertRaises(ValueError):
-            explorer_profile_from_legacy_profile(legacy)
-
-    def test_export_preview_from_legacy_profile_bridges_then_exports(self) -> None:
-        legacy = validate_topology_profile_state(
-            gameplay_mode=GAMEPLAY_MODE_EXPLORER,
-            dimension=2,
-            gravity_axis=1,
-            topology_mode="bounded",
-            edge_rules=((EDGE_WRAP, EDGE_WRAP), (EDGE_BOUNDED, EDGE_BOUNDED)),
-        )
-        with mock.patch(
-            "tet4d.engine.runtime.topology_explorer_bridge.export_explorer_topology_preview",
-            return_value=(True, "ok", "preview.json"),
-        ) as export_preview:
-            result = export_explorer_preview_from_legacy_profile(
-                legacy,
-                dims=(8, 8),
-                source="legacy_bridge_test",
-            )
-
-        self.assertEqual(result, (True, "ok", "preview.json"))
-        exported_profile = export_preview.call_args.args[0]
-        self.assertEqual(exported_profile.dimension, 2)
-        self.assertEqual(len(exported_profile.gluings), 1)
-        export_preview.assert_called_once_with(
-            exported_profile,
-            dims=(8, 8),
-            source="legacy_bridge_test",
-        )
 
     def test_preview_reports_orientation_reversing_warning(self) -> None:
         preview = compile_explorer_topology_preview(
@@ -846,24 +784,12 @@ class TestTopologyExplorerPreview(unittest.TestCase):
         )
         root.mkdir(parents=True, exist_ok=False)
         try:
-            legacy = validate_topology_profile_state(
-                gameplay_mode=GAMEPLAY_MODE_EXPLORER,
-                dimension=4,
-                gravity_axis=1,
-                topology_mode="bounded",
-                edge_rules=(
-                    (EDGE_BOUNDED, EDGE_BOUNDED),
-                    (EDGE_WRAP, EDGE_WRAP),
-                    (EDGE_BOUNDED, EDGE_BOUNDED),
-                    (EDGE_BOUNDED, EDGE_BOUNDED),
-                ),
-            )
-            profile = explorer_profile_from_legacy_profile(legacy)
+            profile = axis_wrap_profile(dimension=4, wrapped_axes=(1,))
             dims = explorer_topology_preview_dims(4)
             ok, message, path = export_explorer_topology_preview(
                 profile,
                 dims=dims,
-                source="legacy_edge_rules_bridge",
+                source="axis_wrap",
                 root_dir=root,
             )
             self.assertTrue(ok, message)

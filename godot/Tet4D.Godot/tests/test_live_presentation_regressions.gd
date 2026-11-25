@@ -107,12 +107,12 @@ func _assert_screen_space_drag_and_fit(failures: Array) -> void:
 		failures.append("production app is missing for Live-4D screen-space regression")
 		root.queue_free()
 		return
-	app._enter_live_4d_mode()
+	app._enter_live_mode("live_4d")
 	await tree.process_frame
 	await tree.process_frame
 	var basis_before: Array = app._live_4d_basis.slots()
-	var native_before: String = app._live_bridge.live_4d_snapshot_json()
-	var hash_before := str(app._live_bridge.live_4d_state_hash())
+	var native_before: String = app._live_bridge.live_snapshot_json(4)
+	var hash_before := str(app._live_bridge.live_state_hash(4))
 	app._camera_rig.set_presentation_preferences(1.0, false, 0.0)
 	var right_delta := _drag_probe_delta(app, Vector2(8.0, 0.0))
 	var left_delta := _drag_probe_delta(app, Vector2(-8.0, 0.0))
@@ -135,7 +135,7 @@ func _assert_screen_space_drag_and_fit(failures: Array) -> void:
 	app._fit_view()
 	if app._camera_rig.presentation_snapshot() != first_fit:
 		failures.append("repeated Live-4D Fit must be idempotent")
-	if app._live_4d_basis.slots() != basis_before or app._live_bridge.live_4d_snapshot_json() != native_before or str(app._live_bridge.live_4d_state_hash()) != hash_before:
+	if app._live_4d_basis.slots() != basis_before or app._live_bridge.live_snapshot_json(4) != native_before or str(app._live_bridge.live_state_hash(4)) != hash_before:
 		failures.append("drag and Fit must not change exact B or deterministic gameplay identity")
 	_assert_required_bounds_fit(failures, app)
 	await _assert_fit_aspect_matrix(failures, app._renderer.current_bounds())

@@ -17,8 +17,12 @@ topology selector and board size. 2D exposes every native profile; 3D/4D list
 Bounded with later profiles visibly unavailable. Board size steps within the
 Live board contract and restarts the piece at the centre without changing the
 Play setup; Sphere squares a rectangular board. The lower helper uses the same
-legend structure in every dimension (movement compass, Up/Down, rotation
-glyphs, PRACTICE). Non-bounded movement is owned by the candidate T2A native piece runtime,
+legend structure in every dimension (movement compass, rotation glyphs,
+PRACTICE); only 3D/4D add the separate Up/Down row. 2D projects its camera-relative
+movement intents and rotation axes through the same camera-measured helper path as
+3D/4D. 2D Explorer menus use the shared compact shell typography and control
+padding, with the existing cockpit fit policy handling overflow.
+Non-bounded movement is owned by the candidate T2A native piece runtime,
 including indexed cell identity, atomic rejection and Retry. Switching profiles
 preserves compatible cells and view. Seam-framed/domain poses recover the Retry
 baseline as part of the requested switch, with visible feedback; failed native
@@ -70,9 +74,13 @@ Visible extents, cell projection, inverse mapping and relative object rotation
 follow all four signed basis slots. Ordinary Play retains the +Y-fixed basis.
 Reset View restores the free inspection identity; Play creates a fresh Y-fixed
 session. No object coordinates or native game state change on a view turn.
-Existing dynamic control-frame mappings apply to keyboard object
-intents; explicitly labelled canonical-axis buttons bypass relative mapping.
-Z/X provide deliberate canonical Y up/down movement in every dimension;
+Existing dynamic control-frame mappings apply to all keyboard and clickable
+movement intents, including 2D and Z/X aliases; camera-relative is the Explorer
+default. Keyboard and button rotations in every dimension use the same
+camera-relative rotation mapper. MOVE helpers project the mapped commands;
+ROTATE glyph axes preserve both the axis and sign from that same mapper.
+Keyboard and button rotations flash the same local-plane glyph.
+Z/X provide Y up/down movement in every dimension;
 PageUp/PageDown are retired. All relevant object
 rotation planes remain available. Slice emphasis (active-slice frame, selected
 label and receding neighbours) follows the object as in Play until Slice −/+
@@ -159,7 +167,8 @@ Replace alone claims keyboard input early to prevent a focused GUI button from
 also activating on Space. Pointer and shell shortcuts retain their existing
 owners. Explorer has independent held-key timers, disarmed by focus loss,
 navigation or modal ownership. Keyboard X/Z/W and rotations retain existing
-relative control-frame mapping; canonical panel commands bypass that mapping.
+relative control-frame mapping; movement buttons use that same dispatcher.
+Movement and rotation buttons enter the same relative dispatcher as keyboard input.
 This changes action ownership, not defaults, native sessions, geometry or view
 basis. The Phase 2 compatibility boundary is recorded in
 `docs/plans/explorer_cockpit_unification.md`.

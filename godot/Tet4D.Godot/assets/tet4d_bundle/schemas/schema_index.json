@@ -7,6 +7,21 @@
       "source_path": "config/schema/board_extent_contract.schema.json"
     },
     {
+      "purpose": "explorer topology catalog v1.schema JSON schema",
+      "sha256": "a7813cc1a69e47e80b86a8d060a6474951d6bb971758dd6d41315a446e9d7ddf",
+      "source_path": "config/schema/explorer_topology_catalog_v1.schema.json"
+    },
+    {
+      "purpose": "explorer topology quotients v1.schema JSON schema",
+      "sha256": "60bc2fe7f46081f1d8a8c123462ed7e5ec01b1075d9aee83e84315c00a932bfa",
+      "source_path": "config/schema/explorer_topology_quotients_v1.schema.json"
+    },
+    {
+      "purpose": "explorer topology transport fixtures v1.schema JSON schema",
+      "sha256": "1f4b88213d8ef59bbf6c61f8399239f48ea21028cfc5bdf4f7bd80fa53abb17b",
+      "source_path": "config/schema/explorer_topology_transport_fixtures_v1.schema.json"
+    },
+    {
       "purpose": "help action map.schema JSON schema",
       "sha256": "acb29a4b1b7d1aa7dd7e337e19667a057bee166008319aec88e7b97c6edc54fe",
       "source_path": "config/schema/help_action_map.schema.json"

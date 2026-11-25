@@ -79,10 +79,10 @@ func run() -> Array:
 	if canonical.get("topology_profile", {}).get("dimensions", []) != [5, 10, 4, 1]:
 		failures.append("custom setup topology must derive from the exact editable shape")
 	var bridge = Tet4DCoreBridgeScript.new()
-	if not bool(bridge.live_4d_configure_checked(canonical).get("ok", false)):
+	if not bool(bridge.live_configure_checked(4, canonical).get("ok", false)):
 		failures.append("a native-valid custom W=1 Embedded 3D draft must construct a live session")
 	var live_shape: Array = []
-	var live_snapshot = JSON.parse_string(bridge.live_4d_snapshot_json())
+	var live_snapshot = JSON.parse_string(bridge.live_snapshot_json(4))
 	if live_snapshot is Dictionary:
 		for value in (live_snapshot as Dictionary).get("board_shape", []):
 			live_shape.append(int(value))
@@ -105,6 +105,26 @@ func run() -> Array:
 	loaded = store.load_last_selected(path)
 	if loaded.get(GameSetupSpecScript.MODE_4D, {}).get("board_shape", []) != [5, 10, 4, 1]:
 		failures.append("an invalid draft must never replace the persisted last-valid setup")
+
+	var saved_text := FileAccess.get_file_as_string(path)
+	var absolute_path := ProjectSettings.globalize_path(path)
+	var temporary_path := absolute_path + ".tmp"
+	if DirAccess.make_dir_absolute(temporary_path) != OK:
+		failures.append("could not block the setup staging file for the failed-write test")
+	else:
+		if store.save_last_validated(model, path) or FileAccess.get_file_as_string(path) != saved_text:
+			failures.append("a failed staged save must preserve the complete existing setup")
+		DirAccess.remove_absolute(temporary_path)
+
+	var backup_path := absolute_path + ".bak"
+	if DirAccess.rename_absolute(absolute_path, backup_path) != OK:
+		failures.append("could not simulate interrupted replacement after backup")
+	else:
+		if store.load_last_selected(path) != loaded:
+			failures.append("setup load must recover the last complete document from an interrupted replacement")
+		if not store.save_last_validated(model, path) or store.load_last_selected(path) != loaded:
+			failures.append("setup save must succeed again after interrupted replacement")
+		DirAccess.remove_absolute(backup_path)
 
 	var file := FileAccess.open(path, FileAccess.WRITE)
 	if file != null:

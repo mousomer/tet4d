@@ -98,6 +98,8 @@ func translation_command(intent: String, frame: String) -> String:
 		"move_right": return _move_2d_command(horizontal, 1)
 		"move_x_neg": return _move_command(horizontal, -1)
 		"move_x_pos": return _move_command(horizontal, 1)
+		"move_y_neg": return _move_command(vertical, -1)
+		"move_y_pos": return _move_command(vertical, 1)
 		# Z-negative is the physical Forward/Away intent; depth's positive sign is away.
 		"move_z_neg": return _move_command(depth, 1)
 		"move_z_pos": return _move_command(depth, -1)
@@ -177,19 +179,6 @@ func signed_label(axis: Dictionary) -> String:
 	if index < 0:
 		return "-"
 	return ("+" if int(axis.get("sign", 1)) > 0 else "-") + SliceBasis4DScript.axis_name(index)
-
-
-func opposite_label(axis: Dictionary) -> String:
-	var copy := axis.duplicate()
-	copy["sign"] = -int(copy.get("sign", 1))
-	return signed_label(copy)
-
-
-func relative_plane_annotation(action: String) -> String:
-	var local := _rotation_spec(action)
-	if local.is_empty():
-		return ""
-	return "%s%s" % [SliceBasis4DScript.axis_name(int(axis_for_local(str(local[0]))["axis"])), SliceBasis4DScript.axis_name(int(axis_for_local(str(local[1]))["axis"]))]
 
 
 func _move_command(axis: Dictionary, local_direction: int) -> String:

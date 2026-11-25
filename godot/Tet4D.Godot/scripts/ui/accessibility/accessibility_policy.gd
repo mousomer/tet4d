@@ -28,10 +28,6 @@ func is_high_contrast_enabled() -> bool:
 	return _high_contrast
 
 
-func is_reduced_motion_enabled() -> bool:
-	return _reduced_motion
-
-
 func should_show_help_hints() -> bool:
 	return _show_help_hints
 

@@ -102,10 +102,10 @@ func _assert_held_input_is_cleared(failures: Array, app) -> void:
 
 
 func _assert_game_over_is_not_reclassified(failures: Array, app) -> void:
-	app._live_3d_paused = false
+	app._live_modes["live_3d"].paused = false
 	app._current_snapshot["game_over"] = true
 	app.notification(Node.NOTIFICATION_WM_WINDOW_FOCUS_OUT)
-	if app._live_3d_paused:
+	if app._live_modes["live_3d"].paused:
 		failures.append("focus loss must not convert GAME OVER into PAUSED")
 
 
@@ -133,11 +133,11 @@ func _pause_event() -> InputEventKey:
 func _state_hash(app, mode: String) -> String:
 	match mode:
 		"live_2d":
-			return str(app._live_bridge.live_2d_state_hash())
+			return str(app._live_bridge.live_state_hash(2))
 		"live_3d":
-			return str(app._live_bridge.live_3d_state_hash())
+			return str(app._live_bridge.live_state_hash(3))
 		_:
-			return str(app._live_bridge.live_4d_state_hash())
+			return str(app._live_bridge.live_state_hash(4))
 
 
 func _setup(mode: String) -> Dictionary:

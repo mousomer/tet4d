@@ -32,6 +32,69 @@ const MODE_REPLAY := "replay"
 const MODE_LIVE_2D := "live_2d"
 const MODE_LIVE_3D := "live_3d"
 const MODE_LIVE_4D := "live_4d"
+const LIVE_GAMEPLAY_ACTIONS := {
+	MODE_LIVE_2D: [
+			"live_move_left",
+			"live_2d_move_left",
+			"live_move_right",
+			"live_2d_move_right",
+			"live_rotate_cw",
+			"live_2d_rotate_cw",
+			"live_rotate_ccw",
+			"live_2d_rotate_ccw",
+			"live_soft_drop",
+			"live_2d_soft_drop",
+			"live_hard_drop",
+			"live_2d_hard_drop",
+			"live_hold",
+		],
+	MODE_LIVE_3D: [
+			"live_3d_move_x_neg",
+			"live_3d_move_x_pos",
+			"live_3d_move_z_neg",
+			"live_3d_move_z_pos",
+			"live_3d_soft_drop",
+			"live_hard_drop",
+			"live_3d_hard_drop",
+			"live_hold",
+			"live_3d_rotate_xy_neg",
+			"live_3d_rotate_xy_pos",
+			"live_3d_rotate_xz_neg",
+			"live_3d_rotate_xz_pos",
+			"live_3d_rotate_yz_neg",
+			"live_3d_rotate_yz_pos",
+		],
+	MODE_LIVE_4D: [
+			"live_4d_move_x_neg",
+			"live_4d_move_x_pos",
+			"live_4d_move_z_neg",
+			"live_4d_move_z_pos",
+			"live_4d_move_w_neg",
+			"live_4d_move_w_pos",
+			"live_4d_soft_drop",
+			"live_hard_drop",
+			"live_4d_hard_drop",
+			"live_hold",
+			"live_4d_rotate_xy_neg",
+			"live_4d_rotate_xy_pos",
+			"live_4d_rotate_xz_neg",
+			"live_4d_rotate_xz_pos",
+			"live_4d_rotate_yz_neg",
+			"live_4d_rotate_yz_pos",
+			"live_4d_rotate_xw_neg",
+			"live_4d_rotate_xw_pos",
+			"live_4d_rotate_yw_neg",
+			"live_4d_rotate_yw_pos",
+			"live_4d_rotate_zw_neg",
+			"live_4d_rotate_zw_pos",
+			"view_xw_neg",
+			"view_xw_pos",
+			"view_zw_neg",
+			"view_zw_pos",
+			"view_zx_neg",
+			"view_zx_pos",
+		],
+}
 const DEFAULT_LIVE_GRAVITY_INTERVAL_SECONDS := 0.5
 const LIVE_GRAVITY_INTERVAL_SECONDS := DEFAULT_LIVE_GRAVITY_INTERVAL_SECONDS
 const LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS := 0.22
@@ -54,16 +117,17 @@ var _presentation_layout_guard_active := false
 var _mode := MODE_REPLAY
 var _retained_live_navigation_mode := ""
 var _retained_live_navigation_paused := false
-var _live_2d_paused := false
-var _live_2d_session_started := false
-var _live_3d_paused := false
-var _live_3d_session_started := false
-var _live_3d_last_rotation_label := "none"
-var _live_3d_last_rotation_status := "none"
-var _live_4d_paused := false
-var _live_4d_session_started := false
-var _live_4d_last_rotation_label := "none"
-var _live_4d_last_rotation_status := "none"
+class LiveModeState:
+	var paused := false
+	var session_started := false
+	var last_rotation_label := "none"
+	var last_rotation_status := "none"
+
+var _live_modes := {
+	MODE_LIVE_2D: LiveModeState.new(),
+	MODE_LIVE_3D: LiveModeState.new(),
+	MODE_LIVE_4D: LiveModeState.new(),
+}
 var _live_4d_basis = SliceBasis4DScript.identity()
 var _live_4d_local_orientation = SliceLocalOrientationScript.new()
 # Camera-relative translation is the default in 2D/3D/4D; absolute is an explicit setup preference.
@@ -200,12 +264,7 @@ func _process(delta: float) -> void:
 			_live_tick_accumulator += delta
 			if _live_tick_accumulator >= _live_gravity_interval_seconds:
 				_live_tick_accumulator = 0.0
-				if _mode == MODE_LIVE_4D:
-					_live_4d_command("tick")
-				elif _mode == MODE_LIVE_3D:
-					_live_3d_command("tick")
-				else:
-					_live_2d_command("tick")
+				_live_command(_mode, "tick")
 		return
 	if _current_document == null or not _state.is_playing:
 		return
@@ -365,23 +424,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _practice != null:
 		_handle_explorer_input(event)
 		return
-	if _mode == MODE_LIVE_2D:
-		if _handle_live_2d_input(event):
-			return
-		_handle_camera_input(event)
-		return
-	if _mode == MODE_LIVE_3D:
-		if _handle_live_3d_input(event):
-			return
-		_handle_camera_input(event)
-		return
-	if _mode == MODE_LIVE_4D:
-		if _handle_live_4d_input(event):
-			return
-		_handle_camera_input(event)
+	if _is_live_mode():
+		if not _handle_live_input(event):
+			_handle_camera_input(event)
 		return
 	if event.is_action_pressed("mode_toggle_replay_live"):
-		_enter_live_2d_mode()
+		_enter_live_mode(MODE_LIVE_2D)
 		return
 	if event.is_action_pressed("replay_prev_frame"):
 		_step_frame(-1)
@@ -469,198 +517,53 @@ func _mouse_event_in_game_viewport(event: InputEvent) -> bool:
 	return rect.has_point(event.position)
 
 
-func _handle_live_2d_input(event: InputEvent) -> bool:
+func _handle_live_input(event: InputEvent) -> bool:
 	if event.is_action_pressed("mode_toggle_replay_live"):
-		_start_ordinary_live_mode(MODE_LIVE_3D)
+		if _mode == MODE_LIVE_4D:
+			_enter_replay_mode()
+		else:
+			_start_ordinary_live_mode(MODE_LIVE_3D if _mode == MODE_LIVE_2D else MODE_LIVE_4D)
 		return true
-	if _event_action_pressed(event, ["live_pause", "live_2d_pause"]):
-		_toggle_live_2d_pause()
+	if _mode == MODE_LIVE_4D and _practice == null:
+		if _handle_live_4d_camera_input(event) or _handle_live_4d_basis_input(event):
+			return true
+	if _event_action_pressed(event, ["live_pause", _mode + "_pause"]):
+		_toggle_live_pause(_mode)
 		return true
-	if _event_action_pressed_once(event, ["live_reset"]):
-		_reset_live_2d()
+	var reset_action := "live_reset" if _mode == MODE_LIVE_2D else _mode + "_reset"
+	if _event_action_pressed_once(event, [reset_action]):
+		_reset_live(_mode)
 		return true
-	if event.is_action_pressed("replay_fit_view"):
-		_fit_view()
-		return true
-	if _event_action_pressed_once(event, ["reset"]):
-		_reset_view()
-		return true
-	if event.is_action_pressed("replay_toggle_help"):
-		_hud.toggle_help()
-		return true
-	if event.is_action_pressed("quit"):
-		_return_to_main_menu()
-		return true
-	if _live_2d_paused or _live_snapshot_game_over():
-		return _event_action_pressed(event, _live_gameplay_action_names())
-	if _event_action_pressed_once(event, ["live_move_left", "live_2d_move_left"]):
-		_dispatch_live_2d_control_intent("move_left")
-		return true
-	if _event_action_pressed_once(event, ["live_move_right", "live_2d_move_right"]):
-		_dispatch_live_2d_control_intent("move_right")
-		return true
-	if _event_action_pressed_once(event, ["live_rotate_cw", "live_2d_rotate_cw"]):
-		_dispatch_live_gameplay_command("rotate_cw")
-		return true
-	if _event_action_pressed_once(event, ["live_rotate_ccw", "live_2d_rotate_ccw"]):
-		_dispatch_live_gameplay_command("rotate_ccw")
-		return true
-	if _event_action_pressed_once(event, ["live_soft_drop", "live_2d_soft_drop"]):
-		_dispatch_live_gameplay_command("soft_drop")
-		return true
-	if _event_action_pressed_once(event, ["live_hard_drop", "live_2d_hard_drop"]):
-		_dispatch_live_gameplay_command("hard_drop")
-		return true
-	if _event_action_pressed_once(event, ["live_hold"]):
-		_dispatch_live_gameplay_command("hold")
-		return true
-	return false
-
-
-func _handle_live_3d_input(event: InputEvent) -> bool:
-	if event.is_action_pressed("mode_toggle_replay_live"):
-		_start_ordinary_live_mode(MODE_LIVE_4D)
-		return true
-	if _event_action_pressed(event, ["live_pause", "live_3d_pause"]):
-		_toggle_live_3d_pause()
-		return true
-	if _event_action_pressed_once(event, ["live_3d_reset"]):
-		_reset_live_3d()
-		return true
-	if _event_action_pressed_once(event, ["reset"]):
-		_reset_view()
-		return true
-	if event.is_action_pressed("replay_toggle_help"):
-		_hud.toggle_help()
-		return true
-	if event.is_action_pressed("quit"):
-		_return_to_main_menu()
-		return true
-	if _live_3d_paused or _live_snapshot_game_over():
-		return _event_action_pressed(event, _live_3d_gameplay_action_names())
-	if _event_action_pressed_once(event, ["live_3d_move_x_neg"]):
-		_dispatch_live_3d_control_intent("move_x_neg")
-		return true
-	if _event_action_pressed_once(event, ["live_3d_move_x_pos"]):
-		_dispatch_live_3d_control_intent("move_x_pos")
-		return true
-	if _event_action_pressed_once(event, ["live_3d_move_z_neg"]):
-		_dispatch_live_3d_control_intent("move_z_neg")
-		return true
-	if _event_action_pressed_once(event, ["live_3d_move_z_pos"]):
-		_dispatch_live_3d_control_intent("move_z_pos")
-		return true
-	if _event_action_pressed_once(event, ["live_3d_soft_drop"]):
-		_dispatch_live_3d_gameplay_command("soft_drop")
-		return true
-	if _event_action_pressed_once(event, ["live_hard_drop", "live_3d_hard_drop"]):
-		_dispatch_live_3d_gameplay_command("hard_drop")
-		return true
-	if _event_action_pressed_once(event, ["live_hold"]):
-		_dispatch_live_3d_gameplay_command("hold")
-		return true
-	if _event_action_pressed_once(event, ["live_3d_rotate_xy_neg"]):
-		_dispatch_live_3d_rotation_intent("rotate_xy_neg")
-		return true
-	if _event_action_pressed_once(event, ["live_3d_rotate_xy_pos"]):
-		_dispatch_live_3d_rotation_intent("rotate_xy_pos")
-		return true
-	if _event_action_pressed_once(event, ["live_3d_rotate_xz_neg"]):
-		_dispatch_live_3d_rotation_intent("rotate_xz_neg")
-		return true
-	if _event_action_pressed_once(event, ["live_3d_rotate_xz_pos"]):
-		_dispatch_live_3d_rotation_intent("rotate_xz_pos")
-		return true
-	if _event_action_pressed_once(event, ["live_3d_rotate_yz_neg"]):
-		_dispatch_live_3d_rotation_intent("rotate_yz_neg")
-		return true
-	if _event_action_pressed_once(event, ["live_3d_rotate_yz_pos"]):
-		_dispatch_live_3d_rotation_intent("rotate_yz_pos")
-		return true
-	return false
-
-
-func _handle_live_4d_input(event: InputEvent) -> bool:
-	if event.is_action_pressed("mode_toggle_replay_live"):
-		_enter_replay_mode()
-		return true
-	if _practice == null and _handle_live_4d_camera_input(event):
-		return true
-	if _practice == null and _handle_live_4d_basis_input(event):
-		return true
-	if _event_action_pressed(event, ["live_pause", "live_4d_pause"]):
-		_toggle_live_4d_pause()
-		return true
-	if _event_action_pressed_once(event, ["live_4d_reset"]):
-		_reset_live_4d()
-		return true
-	if _event_is_escape(event):
-		_return_to_main_menu()
-		return true
-	if _live_4d_paused or _live_snapshot_game_over():
-		return _event_action_pressed(event, _live_4d_gameplay_action_names())
-	if _event_action_pressed_once(event, ["live_4d_move_x_neg"]):
-		_dispatch_live_4d_control_intent("move_x_neg")
-		return true
-	if _event_action_pressed_once(event, ["live_4d_move_x_pos"]):
-		_dispatch_live_4d_control_intent("move_x_pos")
-		return true
-	if _event_action_pressed_once(event, ["live_4d_move_z_neg"]):
-		_dispatch_live_4d_control_intent("move_z_neg")
-		return true
-	if _event_action_pressed_once(event, ["live_4d_move_z_pos"]):
-		_dispatch_live_4d_control_intent("move_z_pos")
-		return true
-	if _event_action_pressed_once(event, ["live_4d_move_w_neg"]):
-		_dispatch_live_4d_control_intent("move_w_neg")
-		return true
-	if _event_action_pressed_once(event, ["live_4d_move_w_pos"]):
-		_dispatch_live_4d_control_intent("move_w_pos")
-		return true
-	if _event_action_pressed_once(event, ["live_4d_soft_drop"]):
-		_dispatch_live_4d_gameplay_command("soft_drop")
-		return true
-	if _event_action_pressed_once(event, ["live_hard_drop", "live_4d_hard_drop"]):
-		_dispatch_live_4d_gameplay_command("hard_drop")
-		return true
-	if _event_action_pressed_once(event, ["live_hold"]):
-		_dispatch_live_4d_gameplay_command("hold")
-		return true
-	if _event_action_pressed_once(event, ["live_4d_rotate_xy_neg"]):
-		_dispatch_live_4d_rotation_intent("rotate_xy_neg")
-		return true
-	if _event_action_pressed_once(event, ["live_4d_rotate_xy_pos"]):
-		_dispatch_live_4d_rotation_intent("rotate_xy_pos")
-		return true
-	if _event_action_pressed_once(event, ["live_4d_rotate_xz_neg"]):
-		_dispatch_live_4d_rotation_intent("rotate_xz_neg")
-		return true
-	if _event_action_pressed_once(event, ["live_4d_rotate_xz_pos"]):
-		_dispatch_live_4d_rotation_intent("rotate_xz_pos")
-		return true
-	if _event_action_pressed_once(event, ["live_4d_rotate_yz_neg"]):
-		_dispatch_live_4d_rotation_intent("rotate_yz_neg")
-		return true
-	if _event_action_pressed_once(event, ["live_4d_rotate_yz_pos"]):
-		_dispatch_live_4d_rotation_intent("rotate_yz_pos")
-		return true
-	if _event_action_pressed_once(event, ["live_4d_rotate_xw_neg"]):
-		_dispatch_live_4d_rotation_intent("rotate_xw_neg")
-		return true
-	if _event_action_pressed_once(event, ["live_4d_rotate_xw_pos"]):
-		_dispatch_live_4d_rotation_intent("rotate_xw_pos")
-		return true
-	if _event_action_pressed_once(event, ["live_4d_rotate_yw_neg"]):
-		_dispatch_live_4d_rotation_intent("rotate_yw_neg")
-		return true
-	if _event_action_pressed_once(event, ["live_4d_rotate_yw_pos"]):
-		_dispatch_live_4d_rotation_intent("rotate_yw_pos")
-		return true
-	if _event_action_pressed_once(event, ["live_4d_rotate_zw_neg"]):
-		_dispatch_live_4d_rotation_intent("rotate_zw_neg")
-		return true
-	if _event_action_pressed_once(event, ["live_4d_rotate_zw_pos"]):
-		_dispatch_live_4d_rotation_intent("rotate_zw_pos")
+	if _mode == MODE_LIVE_4D:
+		if _event_is_escape(event):
+			_return_to_main_menu()
+			return true
+	else:
+		if _mode == MODE_LIVE_2D and event.is_action_pressed("replay_fit_view"):
+			_fit_view()
+			return true
+		if _event_action_pressed_once(event, ["reset"]):
+			_reset_view()
+			return true
+		if event.is_action_pressed("replay_toggle_help"):
+			_hud.toggle_help()
+			return true
+		if event.is_action_pressed("quit"):
+			_return_to_main_menu()
+			return true
+	var gameplay_actions: Array = LIVE_GAMEPLAY_ACTIONS[_mode]
+	if _live_mode_paused() or _live_snapshot_game_over():
+		return _event_action_pressed(event, gameplay_actions)
+	for action: String in gameplay_actions:
+		if not action.begins_with("live_") or not _event_action_pressed_once(event, [action]):
+			continue
+		var command := action.trim_prefix(_mode + "_") if action.begins_with(_mode + "_") else action.trim_prefix("live_")
+		if command.begins_with("move_"):
+			_dispatch_live_control_intent(_mode, command)
+		elif _mode != MODE_LIVE_2D and command.begins_with("rotate_"):
+			_dispatch_live_rotation_intent(_mode, command)
+		else:
+			_dispatch_live_command(_mode, command)
 		return true
 	return false
 
@@ -833,7 +736,7 @@ func _wire_hud() -> void:
 	_hud.new_random_game_requested.connect(_start_new_random_game)
 	_hud.replay_mode_requested.connect(_enter_replay_mode)
 	_hud.viewer_requested.connect(_return_to_viewer_from_navigation)
-	_hud.practice_requested.connect(_practice_action)
+	_hud.practice_requested.connect(func(action: String) -> void: _dispatch_explorer_intent({"command": action, "kind": "rotate" if action.begins_with("rotate_") else "move", "relative": action.begins_with("move_") or action.begins_with("rotate_")}))
 	_hud.basis_turn_requested.connect(_apply_live_4d_basis_turn)
 	if _is_designer_product():
 		_hud.design_laboratory_requested.connect(_open_design_laboratory)
@@ -855,16 +758,8 @@ func _load_design_laboratory_scenario(scenario: Dictionary) -> Dictionary:
 		if _mode != str(setup.get("mode", "")):
 			return {"ok": false, "error": "Live design scenario could not start."}
 		for command in scenario.get("commands", []):
-			match _mode:
-				MODE_LIVE_2D:
-					_live_2d_command(str(command))
-				MODE_LIVE_3D:
-					_live_3d_command(str(command))
-				MODE_LIVE_4D:
-					_live_4d_command(str(command))
-		_live_2d_paused = true
-		_live_3d_paused = true
-		_live_4d_paused = true
+			_live_command(_mode, str(command))
+		_set_live_pause_states()
 		_refresh_hud()
 		var live_fingerprint := _design_laboratory_fingerprint()
 		return {
@@ -1090,14 +985,8 @@ func _set_frame(frame_index: int) -> void:
 
 
 func _toggle_play_pause() -> void:
-	if _mode == MODE_LIVE_2D:
-		_toggle_live_2d_pause()
-		return
-	if _mode == MODE_LIVE_3D:
-		_toggle_live_3d_pause()
-		return
-	if _mode == MODE_LIVE_4D:
-		_toggle_live_4d_pause()
+	if _is_live_mode():
+		_toggle_live_pause(_mode)
 		return
 	if _current_document == null:
 		return
@@ -1106,14 +995,8 @@ func _toggle_play_pause() -> void:
 
 
 func _reset_playback() -> void:
-	if _mode == MODE_LIVE_2D:
-		_reset_live_2d()
-		return
-	if _mode == MODE_LIVE_3D:
-		_reset_live_3d()
-		return
-	if _mode == MODE_LIVE_4D:
-		_reset_live_4d()
+	if _is_live_mode():
+		_reset_live(_mode)
 		return
 	_state.reset(_state.is_playing)
 	_playback_accumulator = 0.0
@@ -1192,14 +1075,7 @@ func _refresh_ghost_cache() -> void:
 	if bool(_current_snapshot.get("game_over", false)) or _current_snapshot.get("active_cells", []).is_empty():
 		_ghost_model.clear()
 		return
-	var payload: Dictionary = {}
-	match _mode:
-		MODE_LIVE_2D:
-			payload = _live_bridge.live_2d_hard_drop_destination()
-		MODE_LIVE_3D:
-			payload = _live_bridge.live_3d_hard_drop_destination()
-		MODE_LIVE_4D:
-			payload = _live_bridge.live_4d_hard_drop_destination()
+	var payload: Dictionary = _live_bridge.live_hard_drop_destination(_live_dimension(_mode))
 	_ghost_query_count += 1
 	if not _ghost_model.configure(payload, revision):
 		push_warning("Authoritative ghost destination unavailable; ghost hidden for revision %s." % revision)
@@ -1497,6 +1373,9 @@ func _start_practice(dimension: int) -> void:
 		push_error("Explorer could not initialize a bounded native piece pose")
 		return
 	_practice = candidate
+	# Explorer keys, buttons and glyphs use shared camera-relative frames in every dimension.
+	_translation_frame = ControlFrameMappingScript.FRAME_RELATIVE
+	_rotation_frame = ControlFrameMappingScript.FRAME_RELATIVE
 	if dimension == 4:
 		_live_4d_basis = SliceBasis4DScript.free_inspection()
 		_renderer.set_live_4d_basis(_live_4d_basis, false)
@@ -1511,6 +1390,7 @@ func _practice_hidden_axis() -> int:
 
 
 func _practice_action(action: String) -> void:
+	# Receives mapped board commands; UI movement enters through _dispatch_explorer_intent.
 	if action in ["dimension_2", "dimension_3", "dimension_4"]:
 		var dimension := int(action.get_slice("_", 1))
 		if _practice != null and _practice.dimension() == dimension:
@@ -1633,38 +1513,33 @@ func _refresh_hud() -> void:
 		_refresh_camera_status()
 		return
 	_refresh_control_frame_presentation()
-	if _mode == MODE_LIVE_2D:
-		var game_over := _live_snapshot_game_over()
+	var game_over := false
+	if _is_live_mode():
+		game_over = _live_snapshot_game_over()
+		var dimension := _live_dimension(_mode)
 		if not game_over:
-			_hud.set_next_piece_preview(_live_bridge.live_2d_next_piece_preview())
-		_hud.set_hold_piece_state(_live_bridge.live_2d_held_piece_preview(), _live_bridge.live_2d_hold_available())
+			_hud.set_next_piece_preview(_live_bridge.live_next_piece_preview(dimension))
+		_hud.set_hold_piece_state(_live_bridge.live_held_piece_preview(dimension), _live_bridge.live_hold_available(dimension))
+	if _mode == MODE_LIVE_2D:
 		_hud.set_live_2d_mode(
-			_live_2d_paused,
+			_live_modes[MODE_LIVE_2D].paused,
 			game_over,
 			_live_snapshot_last_command(),
 			_live_snapshot_game_over_reason(),
 			_live_gravity_interval_seconds
 		)
 	elif _mode == MODE_LIVE_3D:
-		var game_over := _live_snapshot_game_over()
-		if not game_over:
-			_hud.set_next_piece_preview(_live_bridge.live_3d_next_piece_preview())
-		_hud.set_hold_piece_state(_live_bridge.live_3d_held_piece_preview(), _live_bridge.live_3d_hold_available())
 		_hud.set_live_3d_mode(
-			_live_3d_paused,
+			_live_modes[MODE_LIVE_3D].paused,
 			game_over,
 			_live_snapshot_last_command(),
 			_live_snapshot_game_over_reason(),
 			_live_gravity_interval_seconds
 		)
 	elif _mode == MODE_LIVE_4D:
-		var game_over := _live_snapshot_game_over()
-		if not game_over:
-			_hud.set_next_piece_preview(_live_bridge.live_4d_next_piece_preview())
-		_hud.set_hold_piece_state(_live_bridge.live_4d_held_piece_preview(), _live_bridge.live_4d_hold_available())
 		_hud.set_live_4d_basis_snapshot(_live_4d_basis_hud_snapshot())
 		_hud.set_live_4d_mode(
-			_live_4d_paused,
+			_live_modes[MODE_LIVE_4D].paused,
 			game_over,
 			_live_snapshot_last_command(),
 			_live_snapshot_game_over_reason(),
@@ -1776,33 +1651,18 @@ func _start_configured_live_game(setup: Dictionary, preserve_current_view: bool 
 	_clear_practice()
 	_sync_control_frames_from_setup()
 	var mode_name := str(setup.get("mode", ""))
-	var configured := false
-	var validation: Dictionary = {}
-	match mode_name:
-		MODE_LIVE_2D:
-			validation = _live_bridge.live_2d_configure_checked(setup)
-			configured = bool(validation.get("ok", false))
-			_live_2d_session_started = configured
-		MODE_LIVE_3D:
-			validation = _live_bridge.live_3d_configure_checked(setup)
-			configured = bool(validation.get("ok", false))
-			_live_3d_session_started = configured
-		MODE_LIVE_4D:
-			validation = _live_bridge.live_4d_configure_checked(setup)
-			configured = bool(validation.get("ok", false))
-			_live_4d_session_started = configured
+	if not _live_modes.has(mode_name):
+		push_error("Unknown live mode: %s" % mode_name)
+		return
+	var validation: Dictionary = _live_bridge.live_configure_checked(_live_dimension(mode_name), setup)
+	var configured := bool(validation.get("ok", false))
+	_live_modes[mode_name].session_started = configured
 	if not configured:
 		push_error("Native live session rejected setup: %s" % str(validation.get("errors", [])))
 		return
 	_active_live_setup = setup.duplicate(true)
 	_live_gravity_interval_seconds = _gravity_interval_for_setup(_active_live_setup)
-	match mode_name:
-		MODE_LIVE_2D:
-			_enter_live_2d_mode(preserve_current_view)
-		MODE_LIVE_3D:
-			_enter_live_3d_mode(preserve_current_view)
-		MODE_LIVE_4D:
-			_enter_live_4d_mode(preserve_current_view)
+	_enter_live_mode(mode_name, preserve_current_view)
 
 
 func _start_ordinary_live_mode(mode_name: String, preserve_current_view: bool = false) -> void:
@@ -1843,45 +1703,18 @@ func _gravity_interval_for_setup(setup: Dictionary) -> float:
 	return float(maxi(min_ms, int(base_ms / speed))) / 1000.0
 
 
-func _enter_live_2d_mode(preserve_current_view: bool = false) -> void:
-	_prepare_live_mode_entry(MODE_LIVE_2D, preserve_current_view)
-	if not _live_2d_session_started:
-		_live_bridge.live_2d_reset()
-		_live_2d_session_started = true
-	_refresh_live_2d_snapshot()
+func _enter_live_mode(mode_name: String, preserve_current_view: bool = false) -> void:
+	_prepare_live_mode_entry(mode_name, preserve_current_view)
+	if not _live_modes[mode_name].session_started:
+		_reset_native_live_session(mode_name)
+	_refresh_live_snapshot(mode_name)
 	if not preserve_current_view:
-		_establish_canonical_view_and_fit(MODE_LIVE_2D)
+		_establish_canonical_view_and_fit(mode_name)
 	_hud.show_replay_viewer()
 	if not preserve_current_view:
 		_fit_view()
-
-
-func _enter_live_3d_mode(preserve_current_view: bool = false) -> void:
-	_prepare_live_mode_entry(MODE_LIVE_3D, preserve_current_view)
-	if not _live_3d_session_started:
-		_live_bridge.live_3d_reset()
-		_live_3d_session_started = true
-	_refresh_live_3d_snapshot()
-	if not preserve_current_view:
-		_establish_canonical_view_and_fit(MODE_LIVE_3D)
-	_hud.show_replay_viewer()
-	if not preserve_current_view:
-		_fit_view()
-	_refresh_live_3d_snapshot()
-
-
-func _enter_live_4d_mode(preserve_current_view: bool = false) -> void:
-	_prepare_live_mode_entry(MODE_LIVE_4D, preserve_current_view)
-	if not _live_4d_session_started:
-		_live_bridge.live_4d_reset()
-		_live_4d_session_started = true
-	_refresh_live_4d_snapshot()
-	if not preserve_current_view:
-		_establish_canonical_view_and_fit(MODE_LIVE_4D)
-	_hud.show_replay_viewer()
-	if not preserve_current_view:
-		_fit_view()
-	_refresh_live_4d_snapshot()
+	if mode_name != MODE_LIVE_2D:
+		_refresh_live_snapshot(mode_name)
 
 
 func _prepare_live_mode_entry(mode_name: String, preserve_current_view: bool = false) -> void:
@@ -1898,9 +1731,7 @@ func _prepare_live_mode_entry(mode_name: String, preserve_current_view: bool = f
 		_current_document = null
 	_hud.set_live_keyboard_capture(true)
 	_clear_live_ui_focus()
-	_live_2d_paused = mode_name != MODE_LIVE_2D
-	_live_3d_paused = mode_name != MODE_LIVE_3D
-	_live_4d_paused = mode_name != MODE_LIVE_4D
+	_set_live_pause_states(mode_name)
 	_live_tick_accumulator = 0.0
 	_reset_live_repeat_state()
 
@@ -1912,9 +1743,7 @@ func _return_to_main_menu() -> void:
 	else:
 		_clear_retained_live_navigation_state()
 	_state.is_playing = false
-	_live_2d_paused = true
-	_live_3d_paused = true
-	_live_4d_paused = true
+	_set_live_pause_states()
 	_reset_live_repeat_state()
 	_hud.set_live_keyboard_capture(false)
 	_clear_ghost_cache()
@@ -1936,36 +1765,18 @@ func _return_to_viewer_from_navigation() -> void:
 		return
 	var retained_pause := _retained_live_navigation_paused
 	_state.is_playing = false
-	_live_2d_paused = retained_pause if _mode == MODE_LIVE_2D else true
-	_live_3d_paused = retained_pause if _mode == MODE_LIVE_3D else true
-	_live_4d_paused = retained_pause if _mode == MODE_LIVE_4D else true
-	match _mode:
-		MODE_LIVE_2D:
-			_live_2d_session_started = true
-		MODE_LIVE_3D:
-			_live_3d_session_started = true
-		MODE_LIVE_4D:
-			_live_4d_session_started = true
+	_set_live_pause_states(_mode, retained_pause)
+	_live_modes[_mode].session_started = true
 	_live_tick_accumulator = 0.0
 	_reset_live_repeat_state()
 	_hud.set_live_keyboard_capture(true)
 	_clear_live_ui_focus()
-	_refresh_current_live_snapshot()
+	_refresh_live_snapshot(_mode)
 	_establish_canonical_view_and_fit(_mode)
 	_hud.show_replay_viewer()
-	_refresh_current_live_snapshot()
+	_refresh_live_snapshot(_mode)
 	_clear_live_ui_focus()
 	_clear_retained_live_navigation_state()
-
-
-func _refresh_current_live_snapshot() -> void:
-	match _mode:
-		MODE_LIVE_2D:
-			_refresh_live_2d_snapshot()
-		MODE_LIVE_3D:
-			_refresh_live_3d_snapshot()
-		MODE_LIVE_4D:
-			_refresh_live_4d_snapshot()
 
 
 func _clear_retained_live_navigation_state() -> void:
@@ -1976,9 +1787,7 @@ func _clear_retained_live_navigation_state() -> void:
 func _change_live_setup(mode_name: String) -> void:
 	_clear_retained_live_navigation_state()
 	_state.is_playing = false
-	_live_2d_paused = true
-	_live_3d_paused = true
-	_live_4d_paused = true
+	_set_live_pause_states()
 	_reset_live_repeat_state()
 	_hud.set_live_keyboard_capture(false)
 	_clear_ghost_cache()
@@ -2001,9 +1810,7 @@ func _enter_replay_mode() -> void:
 	_mode = MODE_REPLAY
 	_clear_ghost_cache()
 	_hud.set_live_keyboard_capture(false)
-	_live_2d_paused = true
-	_live_3d_paused = true
-	_live_4d_paused = true
+	_set_live_pause_states()
 	_reset_live_repeat_state()
 	if _current_document == null:
 		var trace_type := _state.selected_trace_type if not _state.selected_trace_type.is_empty() else STARTUP_TRACE_TYPE
@@ -2023,22 +1830,10 @@ func _clear_live_ui_focus() -> void:
 		focus_owner.release_focus()
 
 
-func _live_2d_command(command: String) -> void:
-	var result := _live_bridge.live_2d_apply_command(command)
+func _live_command(mode_name: String, command: String) -> void:
+	var result: String = _live_bridge.live_apply_command(_live_dimension(mode_name), command)
 	_update_live_drop_timing(command, result)
-	_refresh_live_2d_snapshot()
-
-
-func _live_3d_command(command: String) -> void:
-	var result := _live_bridge.live_3d_apply_command(command)
-	_update_live_drop_timing(command, result)
-	_refresh_live_3d_snapshot()
-
-
-func _live_4d_command(command: String) -> void:
-	var result := _live_bridge.live_4d_apply_command(command)
-	_update_live_drop_timing(command, result)
-	_refresh_live_4d_snapshot()
+	_refresh_live_snapshot(mode_name)
 
 
 func _update_live_drop_timing(command: String, result: String) -> void:
@@ -2046,25 +1841,26 @@ func _update_live_drop_timing(command: String, result: String) -> void:
 		_live_tick_accumulator = 0.0
 
 
-func _dispatch_live_gameplay_command(command: String) -> bool:
-	if _live_2d_paused or _live_snapshot_game_over():
+func _dispatch_live_command(mode_name: String, command: String) -> bool:
+	if _live_modes[mode_name].paused or _live_snapshot_game_over():
 		return false
-	_live_2d_command(command)
+	_live_command(mode_name, command)
 	return true
 
 
-func _dispatch_live_3d_gameplay_command(command: String) -> bool:
-	if _live_3d_paused or _live_snapshot_game_over():
-		return false
-	_live_3d_command(command)
-	return true
+func _dispatch_live_control_intent(mode_name: String, intent: String) -> bool:
+	var mapping = _control_frame_mapping(_live_dimension(mode_name))
+	return _dispatch_live_command(mode_name, mapping.translation_command(intent, _translation_frame))
 
 
-func _dispatch_live_4d_gameplay_command(command: String) -> bool:
-	if _live_4d_paused or _live_snapshot_game_over():
-		return false
-	_live_4d_command(command)
-	return true
+func _dispatch_live_rotation_intent(mode_name: String, intent: String) -> bool:
+	_flash_legend_plane(intent.get_slice("_", 1), false)
+	var mapping = _control_frame_mapping(_live_dimension(mode_name))
+	return _dispatch_live_command(mode_name, mapping.rotation_command(intent, _rotation_frame))
+
+
+func _live_dimension(mode_name: String) -> int:
+	return 2 if mode_name == MODE_LIVE_2D else (3 if mode_name == MODE_LIVE_3D else 4)
 
 
 func _control_frame_mapping(dimension: int):
@@ -2077,11 +1873,7 @@ func _control_frame_mapping(dimension: int):
 	return ControlFrameMappingScript.for_3d(yaw) if dimension == 3 else ControlFrameMappingScript.for_2d(yaw)
 
 
-func _dispatch_live_2d_control_intent(intent: String) -> bool:
-	return _dispatch_live_gameplay_command(_control_frame_mapping(2).translation_command(intent, _translation_frame))
-
-
-# The 3D/4D legend draws where each movement key and rotation axis points on
+# The shared legend draws where each movement key and rotation axis points on
 # screen. Axis names cannot carry that: under view-relative controls the same
 # key keeps its on-screen effect while its board axis changes with the view,
 # so the old labels changed (X -> Z) exactly when nothing changed for the hand.
@@ -2111,12 +1903,12 @@ func _legend_screen_directions(dimension: int) -> Dictionary:
 	for intent in intents:
 		var command := str(mapping.translation_command(intent, _translation_frame))
 		result[intent] = _board_axis_screen_direction(shape, origin, "xyzw".find(command.get_slice("_", 1)), 1 if command.ends_with("_pos") else -1)
-	var relative := dimension > 2 and ControlFrameMappingScript.normalize_frame(_rotation_frame) == ControlFrameMappingScript.FRAME_RELATIVE
+	var relative := ControlFrameMappingScript.normalize_frame(_rotation_frame) == ControlFrameMappingScript.FRAME_RELATIVE
 	for local_index in range(dimension):
 		var label := "xyzw"[local_index]
-		var axis := int(mapping.axis_for_local(label).get("axis", local_index)) if relative else local_index
-		# Up is against gravity (+Y runs down the board).
-		result[label] = _board_axis_screen_direction(shape, origin, axis, -1 if label == "y" else 1)
+		var mapped: Dictionary = mapping.axis_for_local(label) if relative else {"axis": local_index, "sign": 1}
+		# Preserve the same signed axes used by rotation_command; glyph Up opposes +Y.
+		result[label] = _board_axis_screen_direction(shape, origin, int(mapped.axis), int(mapped.sign) * (-1 if label == "y" else 1))
 	return result
 
 
@@ -2152,24 +1944,6 @@ static func _legend_directions_close(a: Dictionary, b: Dictionary) -> bool:
 		if not b.has(key) or (a[key] as Vector2).distance_to(b[key] as Vector2) > 0.02:
 			return false
 	return true
-
-
-func _dispatch_live_3d_control_intent(intent: String) -> bool:
-	return _dispatch_live_3d_gameplay_command(_control_frame_mapping(3).translation_command(intent, _translation_frame))
-
-
-func _dispatch_live_3d_rotation_intent(intent: String) -> bool:
-	_flash_legend_plane(intent.get_slice("_", 1), false)
-	return _dispatch_live_3d_gameplay_command(_control_frame_mapping(3).rotation_command(intent, _rotation_frame))
-
-
-func _dispatch_live_4d_control_intent(intent: String) -> bool:
-	return _dispatch_live_4d_gameplay_command(_control_frame_mapping(4).translation_command(intent, _translation_frame))
-
-
-func _dispatch_live_4d_rotation_intent(intent: String) -> bool:
-	_flash_legend_plane(intent.get_slice("_", 1), false)
-	return _dispatch_live_4d_gameplay_command(_control_frame_mapping(4).rotation_command(intent, _rotation_frame))
 
 
 func _apply_live_4d_basis_turn(plane: String, direction: int) -> void:
@@ -2218,59 +1992,38 @@ func _clear_live_4d_presentation_state(end_session: bool) -> void:
 	if _camera_rig != null:
 		_camera_rig.clear_presentation_state()
 	_clear_ghost_cache()
-	_live_4d_last_rotation_label = "none"
-	_live_4d_last_rotation_status = "none"
+	_live_modes[MODE_LIVE_4D].last_rotation_label = "none"
+	_live_modes[MODE_LIVE_4D].last_rotation_status = "none"
 	if end_session:
-		_live_4d_session_started = false
+		_live_modes[MODE_LIVE_4D].session_started = false
 
 
-func _reset_live_2d() -> void:
-	_live_bridge.live_2d_reset()
-	_live_2d_session_started = true
+func _reset_native_live_session(mode_name: String) -> void:
+	_live_bridge.live_reset(_live_dimension(mode_name))
+	_live_modes[mode_name].session_started = true
+
+
+func _reset_live(mode_name: String) -> void:
+	var live: LiveModeState = _live_modes[mode_name]
+	live.last_rotation_label = "none"
+	live.last_rotation_status = "none"
+	_reset_native_live_session(mode_name)
 	_live_tick_accumulator = 0.0
-	_live_2d_paused = false
+	live.paused = false
 	_reset_live_repeat_state()
-	_refresh_live_2d_snapshot()
+	_refresh_live_snapshot(mode_name)
 
 
-func _reset_live_3d() -> void:
-	_live_3d_last_rotation_label = "none"
-	_live_3d_last_rotation_status = "none"
-	_live_bridge.live_3d_reset()
-	_live_3d_session_started = true
-	_live_tick_accumulator = 0.0
-	_live_3d_paused = false
-	_reset_live_repeat_state()
-	_refresh_live_3d_snapshot()
-
-
-func _reset_live_4d() -> void:
-	_live_4d_last_rotation_label = "none"
-	_live_4d_last_rotation_status = "none"
-	_live_bridge.live_4d_reset()
-	_live_4d_session_started = true
-	_live_tick_accumulator = 0.0
-	_live_4d_paused = false
-	_reset_live_repeat_state()
-	_refresh_live_4d_snapshot()
-
-
-func _toggle_live_2d_pause() -> void:
-	_live_2d_paused = not _live_2d_paused
+func _toggle_live_pause(mode_name: String) -> void:
+	var live: LiveModeState = _live_modes[mode_name]
+	live.paused = not live.paused
 	_reset_live_repeat_state()
 	_refresh_hud()
 
 
-func _toggle_live_3d_pause() -> void:
-	_live_3d_paused = not _live_3d_paused
-	_reset_live_repeat_state()
-	_refresh_hud()
-
-
-func _toggle_live_4d_pause() -> void:
-	_live_4d_paused = not _live_4d_paused
-	_reset_live_repeat_state()
-	_refresh_hud()
+func _set_live_pause_states(active_mode: String = "", active_paused: bool = false) -> void:
+	for mode_name in _live_modes:
+		_live_modes[mode_name].paused = mode_name != active_mode or active_paused
 
 
 func _ensure_live_game_paused_for_focus_loss() -> void:
@@ -2284,192 +2037,38 @@ func _ensure_live_game_paused_for_focus_loss() -> void:
 	# these live pause flags. Focus-in deliberately does not resume gameplay.
 	if not _is_live_mode() or _live_mode_paused() or _live_snapshot_game_over():
 		return
-	match _mode:
-		MODE_LIVE_2D:
-			_live_2d_paused = true
-		MODE_LIVE_3D:
-			_live_3d_paused = true
-		MODE_LIVE_4D:
-			_live_4d_paused = true
+	_live_modes[_mode].paused = true
 	_reset_live_repeat_state()
 	_refresh_hud()
 
 
 func _process_live_input_repeat(delta: float) -> void:
-	if _mode == MODE_LIVE_4D:
-		_process_live_4d_input_repeat(delta)
+	match _mode:
+		MODE_LIVE_2D:
+			_process_live_repeat_pair("move_left", "move_right", ["live_move_left", "live_2d_move_left"], ["live_move_right", "live_2d_move_right"], delta)
+		_:
+			for axis in (["x", "z", "w"] if _mode == MODE_LIVE_4D else ["x", "z"]):
+				var negative := "move_%s_neg" % axis
+				var positive := "move_%s_pos" % axis
+				_process_live_repeat_pair(negative, positive, [_mode + "_" + negative], [_mode + "_" + positive], delta)
+	var soft_drop_actions := ["live_soft_drop", "live_2d_soft_drop"] if _mode == MODE_LIVE_2D else [_mode + "_soft_drop"]
+	_process_live_repeat_action("soft_drop", _any_action_pressed(soft_drop_actions), LIVE_SOFT_DROP_REPEAT_INITIAL_DELAY_SECONDS, LIVE_SOFT_DROP_REPEAT_INTERVAL_SECONDS, delta)
+
+
+func _process_live_repeat_pair(negative: String, positive: String, negative_actions: Array, positive_actions: Array, delta: float) -> void:
+	var negative_held := _any_action_pressed(negative_actions)
+	var positive_held := _any_action_pressed(positive_actions)
+	if negative_held and positive_held:
+		_reset_live_repeat_action(negative)
+		_reset_live_repeat_action(positive)
 		return
-	if _mode == MODE_LIVE_3D:
-		_process_live_3d_input_repeat(delta)
-		return
-	var left_held := _any_action_pressed(["live_move_left", "live_2d_move_left"])
-	var right_held := _any_action_pressed(["live_move_right", "live_2d_move_right"])
-	if left_held and right_held:
-		_reset_live_repeat_action("move_left")
-		_reset_live_repeat_action("move_right")
-	else:
-		_process_live_repeat_action(
-			"move_left",
-			left_held,
-			"move_left",
-			LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS,
-			LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS,
-			delta
-		)
-		_process_live_repeat_action(
-			"move_right",
-			right_held,
-			"move_right",
-			LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS,
-			LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS,
-			delta
-		)
-	_process_live_repeat_action(
-		"soft_drop",
-		_any_action_pressed(["live_soft_drop", "live_2d_soft_drop"]),
-		"soft_drop",
-		LIVE_SOFT_DROP_REPEAT_INITIAL_DELAY_SECONDS,
-		LIVE_SOFT_DROP_REPEAT_INTERVAL_SECONDS,
-		delta
-	)
-
-
-func _process_live_3d_input_repeat(delta: float) -> void:
-	var x_neg_held := _any_action_pressed(["live_3d_move_x_neg"])
-	var x_pos_held := _any_action_pressed(["live_3d_move_x_pos"])
-	if x_neg_held and x_pos_held:
-		_reset_live_repeat_action("move_x_neg")
-		_reset_live_repeat_action("move_x_pos")
-	else:
-		_process_live_repeat_action(
-			"move_x_neg",
-			x_neg_held,
-			"move_x_neg",
-			LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS,
-			LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS,
-			delta
-		)
-		_process_live_repeat_action(
-			"move_x_pos",
-			x_pos_held,
-			"move_x_pos",
-			LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS,
-			LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS,
-			delta
-		)
-	var z_neg_held := _any_action_pressed(["live_3d_move_z_neg"])
-	var z_pos_held := _any_action_pressed(["live_3d_move_z_pos"])
-	if z_neg_held and z_pos_held:
-		_reset_live_repeat_action("move_z_neg")
-		_reset_live_repeat_action("move_z_pos")
-	else:
-		_process_live_repeat_action(
-			"move_z_neg",
-			z_neg_held,
-			"move_z_neg",
-			LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS,
-			LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS,
-			delta
-		)
-		_process_live_repeat_action(
-			"move_z_pos",
-			z_pos_held,
-			"move_z_pos",
-			LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS,
-			LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS,
-			delta
-		)
-	_process_live_repeat_action(
-		"soft_drop",
-		_any_action_pressed(["live_3d_soft_drop"]),
-		"soft_drop",
-		LIVE_SOFT_DROP_REPEAT_INITIAL_DELAY_SECONDS,
-		LIVE_SOFT_DROP_REPEAT_INTERVAL_SECONDS,
-		delta
-	)
-
-
-func _process_live_4d_input_repeat(delta: float) -> void:
-	var x_neg_held := _any_action_pressed(["live_4d_move_x_neg"])
-	var x_pos_held := _any_action_pressed(["live_4d_move_x_pos"])
-	if x_neg_held and x_pos_held:
-		_reset_live_repeat_action("move_x_neg")
-		_reset_live_repeat_action("move_x_pos")
-	else:
-		_process_live_repeat_action(
-			"move_x_neg",
-			x_neg_held,
-			"move_x_neg",
-			LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS,
-			LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS,
-			delta
-		)
-		_process_live_repeat_action(
-			"move_x_pos",
-			x_pos_held,
-			"move_x_pos",
-			LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS,
-			LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS,
-			delta
-		)
-	var z_neg_held := _any_action_pressed(["live_4d_move_z_neg"])
-	var z_pos_held := _any_action_pressed(["live_4d_move_z_pos"])
-	if z_neg_held and z_pos_held:
-		_reset_live_repeat_action("move_z_neg")
-		_reset_live_repeat_action("move_z_pos")
-	else:
-		_process_live_repeat_action(
-			"move_z_neg",
-			z_neg_held,
-			"move_z_neg",
-			LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS,
-			LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS,
-			delta
-		)
-		_process_live_repeat_action(
-			"move_z_pos",
-			z_pos_held,
-			"move_z_pos",
-			LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS,
-			LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS,
-			delta
-		)
-	var w_neg_held := _any_action_pressed(["live_4d_move_w_neg"])
-	var w_pos_held := _any_action_pressed(["live_4d_move_w_pos"])
-	if w_neg_held and w_pos_held:
-		_reset_live_repeat_action("move_w_neg")
-		_reset_live_repeat_action("move_w_pos")
-	else:
-		_process_live_repeat_action(
-			"move_w_neg",
-			w_neg_held,
-			"move_w_neg",
-			LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS,
-			LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS,
-			delta
-		)
-		_process_live_repeat_action(
-			"move_w_pos",
-			w_pos_held,
-			"move_w_pos",
-			LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS,
-			LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS,
-			delta
-		)
-	_process_live_repeat_action(
-		"soft_drop",
-		_any_action_pressed(["live_4d_soft_drop"]),
-		"soft_drop",
-		LIVE_SOFT_DROP_REPEAT_INITIAL_DELAY_SECONDS,
-		LIVE_SOFT_DROP_REPEAT_INTERVAL_SECONDS,
-		delta
-	)
+	_process_live_repeat_action(negative, negative_held, LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS, LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS, delta)
+	_process_live_repeat_action(positive, positive_held, LIVE_HORIZONTAL_REPEAT_INITIAL_DELAY_SECONDS, LIVE_HORIZONTAL_REPEAT_INTERVAL_SECONDS, delta)
 
 
 func _process_live_repeat_action(
 	key: String,
 	held: bool,
-	command: String,
 	initial_delay: float,
 	repeat_interval: float,
 	delta: float
@@ -2487,21 +2086,10 @@ func _process_live_repeat_action(
 		return
 	_live_repeat_elapsed[key] = 0.0
 	_live_repeat_next[key] = repeat_interval
-	if _mode == MODE_LIVE_4D:
-		if command.begins_with("move_") and command not in ["move_up", "move_down"]:
-			_dispatch_live_4d_control_intent(command)
-		else:
-			_dispatch_live_4d_gameplay_command(command)
-	elif _mode == MODE_LIVE_3D:
-		if command.begins_with("move_") and command not in ["move_up", "move_down"]:
-			_dispatch_live_3d_control_intent(command)
-		else:
-			_dispatch_live_3d_gameplay_command(command)
+	if key == "soft_drop":
+		_dispatch_live_command(_mode, key)
 	else:
-		if command in ["move_left", "move_right"]:
-			_dispatch_live_2d_control_intent(command)
-		else:
-			_dispatch_live_gameplay_command(command)
+		_dispatch_live_control_intent(_mode, key)
 
 
 func _reset_live_repeat_state() -> void:
@@ -2518,141 +2106,74 @@ func _reset_live_repeat_action(key: String) -> void:
 
 
 func _live_mode_paused() -> bool:
-	if _mode == MODE_LIVE_4D:
-		return _live_4d_paused
-	return _live_3d_paused if _mode == MODE_LIVE_3D else _live_2d_paused
+	return _is_live_mode() and _live_modes[_mode].paused
 
 
-func _refresh_live_2d_snapshot() -> void:
-	var parsed = JSON.parse_string(_live_bridge.live_2d_snapshot_json())
-	if typeof(parsed) != TYPE_DICTIONARY:
-		_current_snapshot = {
-			"trace_type": "live_2d",
-			"case_id": "live_plain_2d",
-			"dimension": 2,
-			"frame_index": 0,
-			"frame_count": 1,
-			"state_hash": _live_bridge.live_2d_state_hash(),
-			"board_shape": _active_live_setup.get("board_shape", BoardExtentContractV1.canonical_default_shape("live_2d")),
-			"active_cells": [],
-			"locked_cells": [],
-			"probe_markers": [],
-			"event_markers": [],
-			"particles": [],
-			"event_lines": [],
-			"metadata_lines": ["Failed to parse native live snapshot."],
-			"diagnostics_lines": [_live_bridge.live_2d_status()],
-			"energy_lines": [],
-			"game_over": false,
-			"game_over_reason": "",
-			"trace_name": "live_plain_2d",
-			"entity_count": 0,
-			"frame_count_matches_metadata": true,
-			"entity_count_matches_metadata": true,
-		}
-	else:
-		_current_snapshot = parsed
-	_refresh_ghost_cache()
-	_refresh_render()
-	_refresh_hud()
-
-
-func _refresh_live_3d_snapshot() -> void:
-	if _practice != null:
+func _refresh_live_snapshot(mode_name: String) -> void:
+	if mode_name != MODE_LIVE_2D and _practice != null:
 		_refresh_practice_snapshot()
 		return
-	var parsed = JSON.parse_string(_live_bridge.live_3d_snapshot_json())
-	if typeof(parsed) != TYPE_DICTIONARY:
-		_current_snapshot = {
-			"trace_type": "live_3d",
-			"case_id": "live_plain_3d",
-			"dimension": 3,
-			"frame_index": 0,
-			"frame_count": 1,
-			"state_hash": _live_bridge.live_3d_state_hash(),
-			"board_shape": [6, 10, 6],
-			"active_cells": [],
-			"locked_cells": [],
-			"probe_markers": [],
-			"event_markers": [],
-			"particles": [],
-			"event_lines": [],
-			"metadata_lines": ["Failed to parse native live 3D snapshot."],
-			"diagnostics_lines": [_live_bridge.live_3d_status()],
-			"energy_lines": [],
-			"game_over": false,
-			"game_over_reason": "",
-			"trace_name": "live_plain_3d",
-			"entity_count": 0,
-			"frame_count_matches_metadata": true,
-			"entity_count_matches_metadata": true,
-		}
-	else:
+	var dimension := _live_dimension(mode_name)
+	var parsed = JSON.parse_string(_live_bridge.live_snapshot_json(dimension))
+	if parsed is Dictionary:
 		_current_snapshot = parsed
-		_update_live_3d_rotation_feedback(_current_snapshot)
+		if mode_name != MODE_LIVE_2D:
+			_update_live_rotation_feedback(_live_modes[mode_name], _current_snapshot)
+	else:
+		_current_snapshot = _live_snapshot_fallback(
+			mode_name,
+			_live_bridge.live_state_hash(dimension),
+			_live_bridge.live_status(dimension)
+		)
 	_refresh_ghost_cache()
 	_refresh_render()
 	_refresh_hud()
 
 
-func _refresh_live_4d_snapshot() -> void:
-	if _practice != null:
-		_refresh_practice_snapshot()
-		return
-	var parsed = JSON.parse_string(_live_bridge.live_4d_snapshot_json())
-	if typeof(parsed) != TYPE_DICTIONARY:
-		_current_snapshot = {
-			"trace_type": "live_4d",
-			"case_id": "live_plain_4d",
-			"dimension": 4,
-			"frame_index": 0,
-			"frame_count": 1,
-			"state_hash": _live_bridge.live_4d_state_hash(),
-			"board_shape": [5, 10, 4, 4],
-			"active_cells": [],
-			"locked_cells": [],
-			"probe_markers": [],
-			"event_markers": [],
-			"particles": [],
-			"event_lines": [],
-			"metadata_lines": ["Failed to parse native live 4D snapshot."],
-			"diagnostics_lines": [_live_bridge.live_4d_status()],
-			"energy_lines": [],
-			"game_over": false,
-			"game_over_reason": "",
-			"trace_name": "live_plain_4d",
-			"entity_count": 0,
-			"frame_count_matches_metadata": true,
-			"entity_count_matches_metadata": true,
-			"w_slice_count": 4,
-			"active_w": 0,
-		}
-	else:
-		_current_snapshot = parsed
-		_update_live_4d_rotation_feedback(_current_snapshot)
-	_refresh_ghost_cache()
-	_refresh_render()
-	_refresh_hud()
+func _live_snapshot_fallback(mode_name: String, state_hash: String, status: String) -> Dictionary:
+	var dimension := _live_dimension(mode_name)
+	var case_id := "live_plain_%dd" % dimension
+	var shape := BoardExtentContractV1.canonical_default_shape(mode_name)
+	if _active_live_setup.get("mode", mode_name) == mode_name:
+		shape = _active_live_setup.get("board_shape", shape)
+	var detail := "" if dimension == 2 else " %dD" % dimension
+	var snapshot := {
+		"trace_type": mode_name,
+		"case_id": case_id,
+		"dimension": dimension,
+		"frame_index": 0,
+		"frame_count": 1,
+		"state_hash": state_hash,
+		"board_shape": shape.duplicate(),
+		"active_cells": [],
+		"locked_cells": [],
+		"probe_markers": [],
+		"event_markers": [],
+		"particles": [],
+		"event_lines": [],
+		"metadata_lines": ["Failed to parse native live%s snapshot." % detail],
+		"diagnostics_lines": [status],
+		"energy_lines": [],
+		"game_over": false,
+		"game_over_reason": "",
+		"trace_name": case_id,
+		"entity_count": 0,
+		"frame_count_matches_metadata": true,
+		"entity_count_matches_metadata": true,
+	}
+	if dimension == 4:
+		snapshot["w_slice_count"] = int(shape[3])
+		snapshot["active_w"] = 0
+	return snapshot
 
 
-func _update_live_3d_rotation_feedback(snapshot: Dictionary) -> void:
-	var last_command := str(snapshot.get("last_command", ""))
-	var rotation_label := _rotation_label_for_command(last_command)
+func _update_live_rotation_feedback(live: LiveModeState, snapshot: Dictionary) -> void:
+	var rotation_label := _rotation_label_for_command(str(snapshot.get("last_command", "")))
 	if rotation_label != "":
-		_live_3d_last_rotation_label = rotation_label
-		_live_3d_last_rotation_status = str(snapshot.get("last_command_status", "unknown"))
-	snapshot["last_rotation_label"] = _live_3d_last_rotation_label
-	snapshot["last_rotation_status"] = _live_3d_last_rotation_status
-
-
-func _update_live_4d_rotation_feedback(snapshot: Dictionary) -> void:
-	var last_command := str(snapshot.get("last_command", ""))
-	var rotation_label := _rotation_label_for_command(last_command)
-	if rotation_label != "":
-		_live_4d_last_rotation_label = rotation_label
-		_live_4d_last_rotation_status = str(snapshot.get("last_command_status", "unknown"))
-	snapshot["last_rotation_label"] = _live_4d_last_rotation_label
-	snapshot["last_rotation_status"] = _live_4d_last_rotation_status
+		live.last_rotation_label = rotation_label
+		live.last_rotation_status = str(snapshot.get("last_command_status", "unknown"))
+	snapshot["last_rotation_label"] = live.last_rotation_label
+	snapshot["last_rotation_status"] = live.last_rotation_status
 
 
 func _rotation_label_for_command(command: String) -> String:
@@ -2775,11 +2296,11 @@ func _event_key_pressed_once(event: InputEvent, keycodes: Array, unicode_chars: 
 
 func _handle_live_space_hard_drop() -> bool:
 	if _mode == MODE_LIVE_4D:
-		_dispatch_live_4d_gameplay_command("hard_drop")
+		_dispatch_live_command(MODE_LIVE_4D, "hard_drop")
 	elif _mode == MODE_LIVE_3D:
-		_dispatch_live_3d_gameplay_command("hard_drop")
+		_dispatch_live_command(MODE_LIVE_3D, "hard_drop")
 	else:
-		_dispatch_live_gameplay_command("hard_drop")
+		_dispatch_live_command(MODE_LIVE_2D, "hard_drop")
 	return true
 
 
@@ -2807,81 +2328,11 @@ func _track_physical_fallback(event: InputEvent) -> void:
 func _live_repeat_action_names() -> Array:
 	if _practice != null:
 		return LiveInputContractScript.explorer_profile(_practice.dimension()).input_actions.filter(func(spec): return spec.get("repeat", false)).map(func(spec): return spec.action)
-	return _live_gameplay_action_names() + _live_3d_gameplay_action_names() + _live_4d_gameplay_action_names()
-
-
-func _live_gameplay_action_names() -> Array:
-	return [
-		"live_move_left",
-		"live_2d_move_left",
-		"live_move_right",
-		"live_2d_move_right",
-		"live_rotate_cw",
-		"live_2d_rotate_cw",
-		"live_rotate_ccw",
-		"live_2d_rotate_ccw",
-		"live_soft_drop",
-		"live_2d_soft_drop",
-		"live_hard_drop",
-		"live_2d_hard_drop",
-		"live_hold",
-	]
-
-
-func _live_3d_gameplay_action_names() -> Array:
-	return [
-		"live_3d_move_x_neg",
-		"live_3d_move_x_pos",
-		"live_3d_move_z_neg",
-		"live_3d_move_z_pos",
-		"live_3d_soft_drop",
-		"live_hard_drop",
-		"live_3d_hard_drop",
-		"live_hold",
-		"live_3d_rotate_xy_neg",
-		"live_3d_rotate_xy_pos",
-		"live_3d_rotate_xz_neg",
-		"live_3d_rotate_xz_pos",
-		"live_3d_rotate_yz_neg",
-		"live_3d_rotate_yz_pos",
-	]
-
-
-func _live_4d_gameplay_action_names() -> Array:
-	return [
-		"live_4d_move_x_neg",
-		"live_4d_move_x_pos",
-		"live_4d_move_z_neg",
-		"live_4d_move_z_pos",
-		"live_4d_move_w_neg",
-		"live_4d_move_w_pos",
-		"live_4d_soft_drop",
-		"live_hard_drop",
-		"live_4d_hard_drop",
-		"live_hold",
-		"live_4d_rotate_xy_neg",
-		"live_4d_rotate_xy_pos",
-		"live_4d_rotate_xz_neg",
-		"live_4d_rotate_xz_pos",
-		"live_4d_rotate_yz_neg",
-		"live_4d_rotate_yz_pos",
-		"live_4d_rotate_xw_neg",
-		"live_4d_rotate_xw_pos",
-		"live_4d_rotate_yw_neg",
-		"live_4d_rotate_yw_pos",
-		"live_4d_rotate_zw_neg",
-		"live_4d_rotate_zw_pos",
-		"view_xw_neg",
-		"view_xw_pos",
-		"view_zw_neg",
-		"view_zw_pos",
-		"view_zx_neg",
-		"view_zx_pos",
-	]
+	return LIVE_GAMEPLAY_ACTIONS[MODE_LIVE_2D] + LIVE_GAMEPLAY_ACTIONS[MODE_LIVE_3D] + LIVE_GAMEPLAY_ACTIONS[MODE_LIVE_4D]
 
 
 func _is_live_mode() -> bool:
-	return _mode == MODE_LIVE_2D or _mode == MODE_LIVE_3D or _mode == MODE_LIVE_4D
+	return _live_modes.has(_mode)
 
 
 func _is_live_viewer_active() -> bool:

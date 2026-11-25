@@ -23,12 +23,12 @@ func run() -> Array:
 	await tree.process_frame
 	var app = root.get_node("App")
 	var hud = root.get_node("ReplayHud")
-	app._enter_live_2d_mode()
+	app._enter_live_mode("live_2d")
 	# Compare board allocation with guidance hidden; guide layout has separate acceptance.
 	hud._set_onboarding_visible(false)
 	await tree.process_frame
 	await tree.process_frame
-	var hash_before := str(app._live_bridge.live_2d_state_hash())
+	var hash_before := str(app._live_bridge.live_state_hash(2))
 	var layout: Dictionary = hud.layout_contract_snapshot()
 	var cockpit: Dictionary = layout.get("live_cockpit", {})
 	var game_area: Rect2 = layout.get("game_area", Rect2())
@@ -76,15 +76,15 @@ func run() -> Array:
 			failures.append("Live-2D migration must retain input authority action %s" % action_id)
 	hud._apply_hud_density("compact")
 	await tree.process_frame
-	if str(app._live_bridge.live_2d_state_hash()) != hash_before:
+	if str(app._live_bridge.live_state_hash(2)) != hash_before:
 		failures.append("Live-2D cockpit migration must not mutate deterministic gameplay state")
 	# Regression: the board anchor toward the rail was once baked from the
 	# previous mode's viewport aspect, which threw the whole 2D board off-screen
 	# after a 4D -> 2D switch. Every board corner must project into the viewport.
-	app._enter_live_4d_mode()
+	app._enter_live_mode("live_4d")
 	for i in range(6):
 		await tree.process_frame
-	app._enter_live_2d_mode()
+	app._enter_live_mode("live_2d")
 	hud._set_onboarding_visible(false)
 	for i in range(6):
 		await tree.process_frame

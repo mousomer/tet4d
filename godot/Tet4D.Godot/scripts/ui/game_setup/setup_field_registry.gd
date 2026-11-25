@@ -156,22 +156,6 @@ static func section_for_field(mode: String, field_id: String) -> String:
 	return ""
 
 
-static func specs_for_section(mode: String, section: String) -> Array:
-	var specs: Array = []
-	for spec in specs_for_mode(mode):
-		if spec.section() == section:
-			specs.append(spec)
-	return specs
-
-
-static func specs_for_disclosure(mode: String, disclosure: String) -> Array:
-	var specs: Array = []
-	for spec in specs_for_mode(mode):
-		if spec.disclosure() == disclosure:
-			specs.append(spec)
-	return specs
-
-
 static func specs_for_category(mode: String, category: String) -> Array:
 	var specs: Array = []
 	for spec in specs_for_mode(mode):

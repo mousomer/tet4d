@@ -106,7 +106,7 @@ class TestOverlayTransparencyRenderPaths(unittest.TestCase):
         self.assertTrue(active_cells)
         self.assertTrue(all(not is_overlay for *_rest, is_overlay in active_cells))
 
-    def test_front4d_overlay_and_piece_paths_have_distinct_overlay_flags(self) -> None:
+    def test_front4d_tuple_overlay_stays_on_opaque_active_path(self) -> None:
         cfg = GameConfigND(dims=(6, 12, 6, 4), gravity_axis=1, speed_level=1)
         state = frontend_nd_state.create_initial_state(cfg)
         state.current_piece = ActivePieceND.from_shape(
@@ -137,14 +137,14 @@ class TestOverlayTransparencyRenderPaths(unittest.TestCase):
             tuple(tuple(float(axis) for axis in coord) for coord in piece_cells),
             state.current_piece.shape.color_id,
         )
-        overlay_entries = front4d_render._overlay_active_layer_cells(
+        overlay_entries = front4d_render._layer_active_cells(
             state,
             layer_idx,
-            overlay,
             basis,
+            front4d_render._coerce_piece_render_state_4d(overlay),
         )
         self.assertTrue(overlay_entries)
-        self.assertTrue(all(entry[3] for entry in overlay_entries))
+        self.assertEqual(overlay_entries, piece_entries)
 
     def test_front4d_piece_render_state_cells_stay_on_opaque_active_path(self) -> None:
         cfg = GameConfigND(dims=(6, 12, 6, 4), gravity_axis=1, speed_level=1)

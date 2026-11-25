@@ -169,7 +169,7 @@ Must remain in `tools/migration/`:
 - migration trace exporters such as `export_topology_trace.py`,
   `export_gameplay_trace.py`, and `export_endgame_trace.py`
 - bundle tooling such as `export_config_bundle.py`, `compare_config_bundle.py`,
-  `sync_godot_bundle.py`, and `sync_unity_bundle.py`
+  and `sync_godot_bundle.py`
 - migration golden-trace case routing such as `trace_cases.py`
 - migration-specific trace comparison such as `compare_trace.py` and
   `compare_cpp_gameplay_trace.py`, unless a later review separates general

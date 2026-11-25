@@ -23,7 +23,11 @@ done
 scoped() {
   if [ "$mode" = prompt ]; then exit 0; fi
   case "$payload" in
-    *"gh run watch"* | *"gh run view"* | *"gh pr checks"* | *"--watch"* | \
+    *"gh "*"run watch"* | *"gh "*"run view"* | *"gh "*"run list"* | *"gh pr checks"* | \
+    *'"gh"'*'"run"'*'"list"'* | *'"gh"'*'"run"'*'"view"'* | \
+    *"api.github.com/"*"/runs"* | *"api.github.com/"*"/commits/"* | \
+    *"mcp__"*"actions_list"* | *"mcp__"*"actions_get"* | *"mcp__"*"workflow_run"* | \
+    *"mcp__"*"commit"*"status"* | *"--watch"* | \
     *"--interval"* | *"gh api"*"/runs"* | *"gh api"*"status"* | *"watch "* | \
     *"sleep "[0-9]* | *"tail -f"* | *"tail -F"* | *"while "*"sleep "* | \
     *"until "*"; do"* | *"ps -p"* | *"kill -0"* | *"pgrep "*)

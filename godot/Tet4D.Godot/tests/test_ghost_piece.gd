@@ -9,13 +9,7 @@ class FakeBridge:
 	extends RefCounted
 	var query_count := 0
 	var payload := {"ok": true, "status": "destination", "dimension": 2, "piece_name": "O", "color_id": 2, "cells": [[1, 4], [2, 4]]}
-	func live_2d_hard_drop_destination() -> Dictionary:
-		query_count += 1
-		return payload
-	func live_3d_hard_drop_destination() -> Dictionary:
-		query_count += 1
-		return payload
-	func live_4d_hard_drop_destination() -> Dictionary:
+	func live_hard_drop_destination(_dimension: int) -> Dictionary:
 		query_count += 1
 		return payload
 
@@ -245,15 +239,15 @@ func _test_live_4d_lock_spawn_renderer_lifecycle(failures: Array) -> void:
 		root.queue_free()
 		await tree.process_frame
 		return
-	app._enter_live_4d_mode()
-	app._live_4d_paused = true
+	app._enter_live_mode("live_4d")
+	app._live_modes["live_4d"].paused = true
 	_assert_above_board_active_projection(failures, app, "native initial spawn")
 
 	var natural_lock_seen := false
 	for _tick_index in range(32):
 		var locked_before := int(app._current_snapshot.get("locked_cells", []).size())
 		var obsolete_ghosts := _nodes_for_role(app._renderer, "ghost")
-		app._live_4d_command("tick")
+		app._live_command("live_4d", "tick")
 		if app._current_snapshot.get("locked_cells", []).size() > locked_before:
 			natural_lock_seen = true
 			_assert_obsolete_nodes_detached(failures, obsolete_ghosts, "native natural lock")
@@ -268,7 +262,7 @@ func _test_live_4d_lock_spawn_renderer_lifecycle(failures: Array) -> void:
 
 	var hard_drop_obsolete_ghosts := _nodes_for_role(app._renderer, "ghost")
 	var hard_drop_locked_before := int(app._current_snapshot.get("locked_cells", []).size())
-	app._live_4d_command("hard_drop")
+	app._live_command("live_4d", "hard_drop")
 	if app._current_snapshot.get("locked_cells", []).size() <= hard_drop_locked_before:
 		failures.append("Live-4D hard drop must publish its locked piece before renderer assertions")
 	_assert_obsolete_nodes_detached(failures, hard_drop_obsolete_ghosts, "native hard drop")
@@ -278,10 +272,10 @@ func _test_live_4d_lock_spawn_renderer_lifecycle(failures: Array) -> void:
 	if hard_drop_snapshot.get("ghost_cells", []).is_empty():
 		failures.append("native hard drop must publish the new piece's authoritative Ghost")
 
-	var native_snapshot_before_rerender: String = app._live_bridge.live_4d_snapshot_json()
-	var native_hash_before_rerender: String = str(app._live_bridge.live_4d_state_hash())
+	var native_snapshot_before_rerender: String = app._live_bridge.live_snapshot_json(4)
+	var native_hash_before_rerender: String = str(app._live_bridge.live_state_hash(4))
 	app._renderer.render_snapshot(hard_drop_snapshot)
-	if app._live_bridge.live_4d_snapshot_json() != native_snapshot_before_rerender or str(app._live_bridge.live_4d_state_hash()) != native_hash_before_rerender:
+	if app._live_bridge.live_snapshot_json(4) != native_snapshot_before_rerender or str(app._live_bridge.live_state_hash(4)) != native_hash_before_rerender:
 		failures.append("renderer Ghost replacement must not mutate native snapshot or state hash")
 	root.queue_free()
 	await tree.process_frame

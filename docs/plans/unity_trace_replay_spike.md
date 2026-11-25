@@ -1,10 +1,13 @@
 # Unity Trace Replay Spike
 
 Role: migration replay spike  
-Status: active  
-Last updated: 2026-05-05
+Status: retired on 2026-11-18
 
-## Purpose
+Original plan dated 2026-05-05
+
+The project, copied bundle and sync tool were retired. The following records the original Stage 5 experiment. Godot consumes the shared replay bundle today.
+
+## Original purpose
 
 Stage 5 adds a small Unity project that consumes the copied Stage 4 migration
 bundle and replays topology, gameplay, and endgame traces frame-by-frame.

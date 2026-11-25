@@ -132,6 +132,8 @@
       "harnesses without a bound PreToolUse hook",
       "web, browser and subagent tools that do not pass through the bound hook",
       "direct edits to the per-checkout operation registry outside the supervisor",
+      "GitHub queries with unsupported tool schemas, opaque GraphQL, or PR, job or symbolic-ref selectors whose corresponding run and commit are unavailable locally",
+      "repository or workdir changes made inside a shell script when the target cannot be inferred from the invocation workdir or explicit arguments",
       "enforcement errors raised before the hook interpreter starts, which are reported on stderr and in the Claude systemMessage but not recorded in the registry",
       "waiting time of a waiter killed mid-window is accounted only up to its last checkpoint"
     ]

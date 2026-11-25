@@ -11,10 +11,6 @@ static func canonical_hash(value) -> String:
 	return canonical_json(value).sha256_text()
 
 
-static func safe_copy(value):
-	return value.duplicate(true) if value is Array or value is Dictionary else value
-
-
 static func safe_id(value: String, max_length: int = 80) -> bool:
 	if value.is_empty() or value.length() > max_length:
 		return false

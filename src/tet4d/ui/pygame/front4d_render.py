@@ -611,28 +611,6 @@ def _active_layer_cells_from_piece_state(
     return cells
 
 
-def _overlay_active_layer_cells(
-    state: GameStateND,
-    layer_index: int,
-    active_overlay: ActiveOverlay4D,
-    basis: RenderBasis4D,
-) -> list[VisibleLayerCell]:
-    piece_render_state = PieceRenderStateND(
-        presentation_cells=(),
-        active_cells=tuple(
-            tuple(float(value) for value in coord) for coord in active_overlay[0]
-        ),
-        color_id=int(active_overlay[1]),
-        animation_active=False,
-    )
-    return _active_layer_cells_from_piece_state(
-        state,
-        layer_index,
-        piece_render_state,
-        basis,
-    )
-
-
 def _coerce_piece_render_state_4d(
     active_overlay: ActiveOverlay4D | PieceRenderStateND | None,
 ) -> PieceRenderStateND | None:

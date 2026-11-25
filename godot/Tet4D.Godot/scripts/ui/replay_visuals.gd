@@ -40,10 +40,7 @@ const LEFT_PANEL_WIDTH := 210
 const RIGHT_INSPECTOR_WIDTH := 260
 const RIGHT_PANEL_WIDTH := RIGHT_INSPECTOR_WIDTH
 const RIGHT_PANEL_MIN_WIDTH := RIGHT_INSPECTOR_WIDTH
-const RIGHT_PANEL_COMPACT_WIDTH := RIGHT_INSPECTOR_WIDTH
 const GAME_AREA_MIN_WIDTH := 120
-const VIEWPORT_PANEL_MIN_WIDTH := GAME_AREA_MIN_WIDTH
-const VIEWPORT_PANEL_COMPACT_MIN_WIDTH := GAME_AREA_MIN_WIDTH
 const BODY_MIN_HEIGHT := 400
 const LIVE_BODY_MIN_HEIGHT := 240
 # Live 4D draws a wide, short slice row that rarely uses the shared floor's
@@ -54,7 +51,6 @@ const LIVE_SHELL_MIN_HEIGHT := 520
 const BODY_MIN_WIDTH := LEFT_PANEL_WIDTH + GAME_AREA_MIN_WIDTH + RIGHT_PANEL_MIN_WIDTH + (BODY_GAP * 2)
 const SHELL_MIN_WIDTH := BODY_MIN_WIDTH + (OUTER_MARGIN * 2)
 const SHELL_MIN_HEIGHT := TOP_BAR_HEIGHT + BODY_MIN_HEIGHT + TIMELINE_HEIGHT + (OUTER_MARGIN * 2)
-const PANEL_SECTION_GAP := 10
 const CONTROL_GAP := 8
 const TOP_STATUS_PANEL_WIDTH := 300
 const AUTHORITY_PANEL_WIDTH := 280
@@ -73,7 +69,6 @@ const LIVE_LOCKED_CELL_SCALE := 0.82
 const LIVE_CELL_BORDER_DELTA := 0.07
 const LIVE_3D_ACTIVE_CELL_SCALE := 0.90
 const LIVE_3D_LOCKED_CELL_SCALE := 0.90
-const LIVE_3D_CELL_BORDER_DELTA := 0.045
 const LIVE_3D_ACTIVE_CELL_BORDER_DELTA := 0.05
 const LIVE_3D_LOCKED_CELL_BORDER_DELTA := 0.05
 const LIVE_3D_ORIGIN_MARKER_SCALE := 0.18
@@ -81,7 +76,6 @@ const LIVE_GHOST_CELL_SCALE := 0.78
 const LIVE_3D_GHOST_CELL_SCALE := 0.84
 const PARTICLE_SCALE := 0.24
 const EVENT_SCALE := 0.5
-const SLICE_PADDING := 2.0
 const GRID_LINE_THICKNESS := 0.090
 const GRID_INTERNAL_THICKNESS_MULTIPLIER := 0.61
 const GRID_HIGH_CONTRAST_THICKNESS_MULTIPLIER := 1.25
@@ -98,7 +92,6 @@ const W_SLICE_LABEL_PIXEL_SIZE := 0.018
 const W_SLICE_LABEL_OUTLINE_SIZE := 10
 const W_SLICE_LABEL_CHIP_WIDTH := 0.0
 const W_SLICE_LABEL_CHIP_HEIGHT := 0.0
-const W_SLICE_LABEL_CHIP_DEPTH := 0.0
 const W_SLICE_LABEL_VERTICAL_OFFSET := 1.20
 const W_SLICE_LABEL_EDGE_OFFSET := 1.15
 const W_SLICE_LABEL_BOUNDS_PAD := 2.10
@@ -159,16 +152,9 @@ const ROLE_VIEWPORT_FRAME := "viewport_frame"
 
 # Live-board grammar aliases.  The shell palette roles below remain the one
 # source of identity; these names document which product semantics consume it.
-const ROLE_BOARD_BACKGROUND := ROLE_LIVE_BOARD_FILL
 const ROLE_BOARD_GRID := ROLE_LIVE_BOARD_GRID
 const ROLE_BOARD_WIREFRAME := ROLE_BOARD_OUTLINE
-const ROLE_CELL_ACTIVE_FILL := ROLE_ACTIVE_CELL
-const ROLE_CELL_ACTIVE_EDGE := ROLE_LIVE_3D_ACTIVE_OUTLINE
-const ROLE_CELL_LOCKED_FILL := ROLE_LOCKED_CELL
-const ROLE_CELL_LOCKED_EDGE := ROLE_LIVE_3D_LOCKED_OUTLINE
 const ROLE_CELL_GHOST_FILL := ROLE_GHOST_CELL
-const ROLE_CELL_GHOST_EDGE := ROLE_GHOST_CELL
-
 const TRACE_COLOR_PALETTE := [
 	Color(0.78, 0.78, 0.78, 1.0),
 	Color(0.0, 1.0, 1.0, 1.0),
@@ -475,17 +461,6 @@ static func live_board_floor_material(mode: String = DISPLAY_MODE_PLAIN) -> Stan
 	var material := _make_lit_material(_with_alpha(floor_color, 0.18), 0.005, true)
 	material.albedo_color = _with_alpha(floor_color, 0.18)
 	material.cull_mode = BaseMaterial3D.CULL_DISABLED
-	return material
-
-
-static func live_board_floor_grid_material(mode: String = DISPLAY_MODE_PLAIN, high_contrast: bool = false, opacity: float = -1.0) -> StandardMaterial3D:
-	return live_board_grid_material(mode, high_contrast, opacity)
-
-
-static func slice_label_chip_material(mode: String = DISPLAY_MODE_PLAIN) -> StandardMaterial3D:
-	var material := _role_material(ROLE_PANEL_ALT, mode, 0.28)
-	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	material.albedo_color = _with_alpha(color_for_role(ROLE_PANEL_ALT, mode), 0.96)
 	return material
 
 
@@ -825,10 +800,6 @@ static func _shade_color(color: Color, factor: float) -> Color:
 
 static func _with_alpha(color: Color, alpha: float) -> Color:
 	return Color(color.r, color.g, color.b, alpha)
-
-
-static func _html(value: String) -> Color:
-	return Color.html(value)
 
 
 # Accessibility composes after stored/style opacity with subordinate role floors.

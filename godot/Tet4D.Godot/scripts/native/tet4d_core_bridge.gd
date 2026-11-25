@@ -122,154 +122,58 @@ func get_plain_nd_required_field_parity(case_id: String = "gameplay_plain_3d_sho
 	return bool(_api().get_plain_nd_required_field_parity(case_id))
 
 
-func live_2d_configure(setup: Dictionary) -> bool:
-	return bool(live_2d_configure_checked(setup).get("ok", false))
+func live_configure(dimension: int, setup: Dictionary) -> bool:
+	return bool(_api().live_configure(dimension, setup))
 
 
-func live_2d_configure_checked(setup: Dictionary) -> Dictionary:
-	return _api().live_2d_configure_checked(setup)
+func live_configure_checked(dimension: int, setup: Dictionary) -> Dictionary:
+	return _api().live_configure_checked(dimension, setup)
 
 
 # Fixture seam only: resizes the unconfigured session's board while keeping its
-# fixed piece order. Ordinary play configures through live_2d_configure_checked.
+# fixed piece order. Ordinary play configures through live_configure_checked.
 func live_2d_configure_fixture_board(width: int, height: int) -> bool:
 	return bool(_api().live_2d_configure_fixture_board(width, height))
 
 
-func live_2d_reset() -> void:
-	_api().live_2d_reset()
+func live_reset(dimension: int) -> void:
+	_api().live_reset(dimension)
 
 
-func live_2d_apply_command(command: String) -> String:
-	return _api().live_2d_apply_command(command)
+func live_apply_command(dimension: int, command: String) -> String:
+	return _api().live_apply_command(dimension, command)
 
 
-func live_2d_tick() -> String:
-	return _api().live_2d_tick()
+func live_tick(dimension: int) -> String:
+	return _api().live_tick(dimension)
 
 
-func live_2d_snapshot_json() -> String:
-	return _api().live_2d_snapshot_json()
+func live_snapshot_json(dimension: int) -> String:
+	return _api().live_snapshot_json(dimension)
 
 
-func live_2d_next_piece_preview() -> Dictionary:
-	return _api().live_2d_next_piece_preview()
+func live_next_piece_preview(dimension: int) -> Dictionary:
+	return _api().live_next_piece_preview(dimension)
 
 
-func live_2d_held_piece_preview() -> Dictionary:
-	return _api().live_2d_held_piece_preview()
+func live_held_piece_preview(dimension: int) -> Dictionary:
+	return _api().live_held_piece_preview(dimension)
 
 
-func live_2d_hold_available() -> bool:
-	return _api().live_2d_hold_available()
+func live_hold_available(dimension: int) -> bool:
+	return _api().live_hold_available(dimension)
 
 
-func live_2d_hard_drop_destination() -> Dictionary:
-	return _api().live_2d_hard_drop_destination()
+func live_hard_drop_destination(dimension: int) -> Dictionary:
+	return _api().live_hard_drop_destination(dimension)
 
 
-func live_2d_status() -> String:
-	return _api().live_2d_status()
+func live_status(dimension: int) -> String:
+	return _api().live_status(dimension)
 
 
-func live_2d_state_hash() -> String:
-	return _api().live_2d_state_hash()
-
-
-func live_3d_configure(setup: Dictionary) -> bool:
-	return bool(live_3d_configure_checked(setup).get("ok", false))
-
-
-func live_3d_configure_checked(setup: Dictionary) -> Dictionary:
-	return _api().live_3d_configure_checked(setup)
-
-
-func live_3d_reset() -> void:
-	_api().live_3d_reset()
-
-
-func live_3d_apply_command(command: String) -> String:
-	return _api().live_3d_apply_command(command)
-
-
-func live_3d_tick() -> String:
-	return _api().live_3d_tick()
-
-
-func live_3d_snapshot_json() -> String:
-	return _api().live_3d_snapshot_json()
-
-
-func live_3d_next_piece_preview() -> Dictionary:
-	return _api().live_3d_next_piece_preview()
-
-
-func live_3d_held_piece_preview() -> Dictionary:
-	return _api().live_3d_held_piece_preview()
-
-
-func live_3d_hold_available() -> bool:
-	return _api().live_3d_hold_available()
-
-
-func live_3d_hard_drop_destination() -> Dictionary:
-	return _api().live_3d_hard_drop_destination()
-
-
-func live_3d_status() -> String:
-	return _api().live_3d_status()
-
-
-func live_3d_state_hash() -> String:
-	return _api().live_3d_state_hash()
-
-
-func live_4d_configure(setup: Dictionary) -> bool:
-	return bool(live_4d_configure_checked(setup).get("ok", false))
-
-
-func live_4d_configure_checked(setup: Dictionary) -> Dictionary:
-	return _api().live_4d_configure_checked(setup)
-
-
-func live_4d_reset() -> void:
-	_api().live_4d_reset()
-
-
-func live_4d_apply_command(command: String) -> String:
-	return _api().live_4d_apply_command(command)
-
-
-func live_4d_tick() -> String:
-	return _api().live_4d_tick()
-
-
-func live_4d_snapshot_json() -> String:
-	return _api().live_4d_snapshot_json()
-
-
-func live_4d_next_piece_preview() -> Dictionary:
-	return _api().live_4d_next_piece_preview()
-
-
-func live_4d_held_piece_preview() -> Dictionary:
-	return _api().live_4d_held_piece_preview()
-
-
-func live_4d_hold_available() -> bool:
-	return _api().live_4d_hold_available()
-
-
-func live_4d_hard_drop_destination() -> Dictionary:
-	return _api().live_4d_hard_drop_destination()
-
-
-func live_4d_status() -> String:
-	return _api().live_4d_status()
-
-
-func live_4d_state_hash() -> String:
-	return _api().live_4d_state_hash()
+func live_state_hash(dimension: int) -> String:
+	return _api().live_state_hash(dimension)
 
 
 func _api() -> RefCounted:
