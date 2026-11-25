@@ -67,6 +67,15 @@
         "thickness_scale": 1.8,
         "render_priority": 1
       }
+    },
+    "shell": {
+      "radius": {
+        "keycap": 5,
+        "control": 6,
+        "panel": 10,
+        "emphasis": 12
+      },
+      "border_lift": 0.12
     }
   }
 }

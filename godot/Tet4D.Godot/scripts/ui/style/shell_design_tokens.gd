@@ -37,6 +37,9 @@ const RADIUS_CONTROL := 3
 const RADIUS_PANEL := 4
 const RADIUS_EMPHASIS := 6
 
+# Luminous shell skin radii and border lift live in
+# config/graphical_language.json (luminous.shell); see ShellControlStyleApplier.
+
 const PANEL_PADDING := SPACE_4
 const COMPACT_PADDING := SPACE_3
 const PANEL_COMPACT_SIZE := Vector2(1024, 640)

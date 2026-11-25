@@ -5,6 +5,7 @@ const SettingsPanelScript = preload("res://scripts/ui/settings_panel.gd")
 const SettingsRegistryScript = preload("res://scripts/ui/settings/settings_registry.gd")
 const ShellControlStyleApplierScript = preload("res://scripts/ui/style/shell_control_style_applier.gd")
 const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
+const GraphicalLanguageConfigScript = preload("res://scripts/ui/style/graphical_language_config.gd")
 const ShellStyleManagerScript = preload("res://scripts/ui/style/shell_style_manager.gd")
 const ShellStyleRolesScript = preload("res://scripts/ui/style/shell_style_roles.gd")
 
@@ -16,6 +17,7 @@ func run() -> Array:
 		return ["shell style application test requires SceneTree"]
 	var manager = ShellStyleManagerScript.new()
 	failures.append_array(_check_control_hint_palette(manager))
+	failures.append_array(_check_luminous_shell_skin())
 	var panel: Control = SettingsPanelScript.new()
 	panel.set_style_manager(manager)
 	tree.root.add_child(panel)
@@ -45,8 +47,8 @@ func run() -> Array:
 		var unchecked_box := loop_checkbox.get_theme_stylebox("unchecked") as StyleBoxFlat
 		if unchecked_box == null:
 			failures.append("checkbox should receive an unchecked cockpit stylebox")
-		elif unchecked_box.border_color != manager.get_color(ShellStyleRolesScript.GRID_MINOR):
-			failures.append("unchecked checkbox should use grid.minor border")
+		elif unchecked_box.border_color != ShellControlStyleApplierScript.new().border_color_for_role(manager, ShellStyleRolesScript.GRID_MINOR):
+			failures.append("unchecked checkbox should use the grid.minor border role")
 	var speed_group := panel.generated_control("replay.playback_speed") as HBoxContainer
 	var speed_slider: HSlider = null
 	var speed_value_label: Label = null
@@ -294,4 +296,53 @@ func _check_compact_editors(tree: SceneTree, manager) -> Array:
 	designer.queue_free()
 	settings.queue_free()
 	await tree.process_frame
+	return failures
+
+
+# Graphical language P2: the Luminous shell skin changes corners, borders,
+# fills and selection colour only. Content margins (and so layout) match every
+# other theme; Instrument is untouched; High Contrast bypasses the skin.
+func _check_luminous_shell_skin() -> Array:
+	var failures: Array = []
+	var applier = ShellControlStyleApplierScript.new()
+	for case in [["luminous", false], ["plain", false], ["luminous", true]]:
+		var manager = ShellStyleManagerScript.new()
+		manager.set_theme(str(case[0]))
+		manager.set_high_contrast_enabled(bool(case[1]))
+		var skinned := str(case[0]) == "luminous" and not bool(case[1])
+		var label := "%s%s" % [case[0], " + High Contrast" if case[1] else ""]
+		var card := PanelContainer.new()
+		card.name = "NextPiecePanel"
+		card.theme_type_variation = "ViewportFrame"
+		var frame := PanelContainer.new()
+		frame.name = "GameArea"
+		var button := Button.new()
+		var title := Label.new()
+		title.name = "NextPieceTitle"
+		title.theme_type_variation = "AccentLabel"
+		for control in [card, frame, button, title]:
+			applier.apply_to_tree(control, manager)
+		var card_box := card.get_theme_stylebox("panel") as StyleBoxFlat
+		var frame_box := frame.get_theme_stylebox("panel") as StyleBoxFlat
+		var pressed := button.get_theme_stylebox("pressed") as StyleBoxFlat
+		var expected_radius := GraphicalLanguageConfigScript.integer("luminous.shell.radius.panel") if skinned else ShellDesignTokensScript.RADIUS_PANEL
+		if card_box.corner_radius_top_left != expected_radius:
+			failures.append("%s: panel radius should be %d, got %d" % [label, expected_radius, card_box.corner_radius_top_left])
+		if card_box.content_margin_left != ShellDesignTokensScript.COMPACT_PADDING:
+			failures.append("%s: the skin must not change panel content margins" % label)
+		var raw_border: Color = manager.get_color(ShellStyleRolesScript.GRID_MAJOR)
+		if skinned == (card_box.border_color == raw_border):
+			failures.append("%s: cockpit card border should %s" % [label, "be the soft panel border" if skinned else "stay the grid.major role colour"])
+		var card_fill := ShellStyleRolesScript.BACKGROUND_PANEL if skinned else ShellStyleRolesScript.BACKGROUND_BOARD
+		if card_box.bg_color != manager.get_color(card_fill) or frame_box.bg_color != manager.get_color(ShellStyleRolesScript.BACKGROUND_BOARD):
+			failures.append("%s: cockpit cards should use %s and the board frame the board fill" % [label, card_fill])
+		var pressed_fill := ShellStyleRolesScript.ACCENT_SOFT if skinned else ShellStyleRolesScript.ACCENT_PRIMARY
+		var pressed_text := ShellStyleRolesScript.TEXT_PRIMARY if skinned else ShellStyleRolesScript.TEXT_INVERSE
+		if pressed.bg_color != manager.get_color(pressed_fill) or button.get_theme_color("font_pressed_color") != manager.get_color(pressed_text):
+			failures.append("%s: selected buttons should use %s with %s text" % [label, pressed_fill, pressed_text])
+		var title_role := ShellStyleRolesScript.TEXT_PRIMARY if skinned else ShellStyleRolesScript.ACCENT_PRIMARY
+		if title.get_theme_color("font_color") != manager.get_color(title_role):
+			failures.append("%s: section titles should use %s" % [label, title_role])
+		for control in [card, frame, button, title]:
+			control.free()
 	return failures

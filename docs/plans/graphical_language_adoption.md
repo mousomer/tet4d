@@ -106,6 +106,24 @@ describes the older "calm instrument" look.
   `shell_control_style_applier.gd` and the theme `.tres`.
 - Acceptance: side-by-side captures; layout lock test unchanged and green.
 
+**P2 as built (2026-11-24):**
+- The skin lives in `ShellControlStyleApplier._flat_box`, the one place
+  every StyleBox is made. Under `luminous` (and not High Contrast) corner
+  radii step up (panel 4→10, control 3→6, keycap 2→5, emphasis 6→12) and
+  `grid.minor`/`grid.major` borders resolve to a soft border (elevated
+  surface lightened by `luminous.shell.border_lift`). Radii and border lift
+  live in `config/graphical_language.json` (`luminous.shell`). Accent, focus and state
+  borders are unchanged.
+- Cockpit cards that use the `ViewportFrame` variation (NEXT, HOLD, control
+  strips, 4D basis panel) take `background.panel`; `GameArea` keeps the board
+  fill.
+- Selected and pressed buttons use a dark amber fill (`accent.soft`), an amber
+  border and `text.primary`. Section titles are white (`hint.section`
+  `#E6ECF5`; NEXT/HOLD/control titles take `text.primary`).
+- Content margins and font sizes are untouched. `test_locked_shell_layouts.gd`
+  and `test_typography_lock.gd` pass unchanged.
+- Captures: `docs/design/screenshots/graphical_language_p2/`.
+
 ### P3 — Cockpit and menu redesign
 - Depends on Explorer Phase 3 (`docs/plans/explorer_cockpit_unification.md`)
   being merged first, because both edit `live_cockpit.gd`, `replay_hud.gd`

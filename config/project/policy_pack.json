@@ -185,8 +185,8 @@
       "visual_tuning": {
         "config_path": "godot/Tet4D.Godot/config/graphical_language.json",
         "loader_path": "godot/Tet4D.Godot/scripts/ui/style/graphical_language_config.gd",
-        "consumer_paths": ["godot/Tet4D.Godot/scripts/ui/replay_visuals.gd", "godot/Tet4D.Godot/scripts/rendering/cell_renderer.gd"],
-        "loading_consumer_paths": ["godot/Tet4D.Godot/scripts/ui/replay_visuals.gd"],
+        "consumer_paths": ["godot/Tet4D.Godot/scripts/ui/replay_visuals.gd", "godot/Tet4D.Godot/scripts/rendering/cell_renderer.gd", "godot/Tet4D.Godot/scripts/ui/style/shell_control_style_applier.gd", "godot/Tet4D.Godot/scripts/ui/style/shell_design_tokens.gd"],
+        "loading_consumer_paths": ["godot/Tet4D.Godot/scripts/ui/replay_visuals.gd", "godot/Tet4D.Godot/scripts/ui/style/shell_control_style_applier.gd"],
         "forbidden_constant_prefixes": ["LUMINOUS_"],
         "statement": "Graphical-language tuning values (emission, halo, bevel, seam, ghost form, edges, face shades and shell skin radii) live only in the checked-in graphical_language.json and are read through its validated loader; consumer scripts must not declare numeric constants for them."
       }

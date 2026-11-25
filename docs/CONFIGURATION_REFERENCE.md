@@ -2310,10 +2310,10 @@ Parameters:
 - `governance.godot_settings_externalization_contract.statement`: `"Every Godot presentation parameter, its default, exactly-one semanti...` (`string`)
 - `governance.godot_settings_externalization_contract.store_path`: `"godot/Tet4D.Godot/scripts/ui/settings/settings_store.gd"` (`string`)
 - `governance.godot_settings_externalization_contract.visual_tuning.config_path`: `"godot/Tet4D.Godot/config/graphical_language.json"` (`string`)
-- `governance.godot_settings_externalization_contract.visual_tuning.consumer_paths[]`: array[`string`]; examples: `"godot/Tet4D.Godot/scripts/ui/replay_visuals.gd"`, `"godot/Tet4D.Godot/scripts/rendering/cell_renderer.gd"`
+- `governance.godot_settings_externalization_contract.visual_tuning.consumer_paths[]`: array[`string`]; examples: `"godot/Tet4D.Godot/scripts/ui/replay_visuals.gd"`, `"godot/Tet4D.Godot/scripts/rendering/cell_renderer.gd"`, `"godot/Tet4D.Godot/scripts/ui/style/shell_control_style_applier.gd"`
 - `governance.godot_settings_externalization_contract.visual_tuning.forbidden_constant_prefixes[]`: array[`string`]; examples: `"LUMINOUS_"`
 - `governance.godot_settings_externalization_contract.visual_tuning.loader_path`: `"godot/Tet4D.Godot/scripts/ui/style/graphical_language_config.gd"` (`string`)
-- `governance.godot_settings_externalization_contract.visual_tuning.loading_consumer_paths[]`: array[`string`]; examples: `"godot/Tet4D.Godot/scripts/ui/replay_visuals.gd"`
+- `governance.godot_settings_externalization_contract.visual_tuning.loading_consumer_paths[]`: array[`string`]; examples: `"godot/Tet4D.Godot/scripts/ui/replay_visuals.gd"`, `"godot/Tet4D.Godot/scripts/ui/style/shell_control_style_applier.gd"`
 - `governance.godot_settings_externalization_contract.visual_tuning.statement`: `"Graphical-language tuning values (emission, halo, bevel, seam, ghost...` (`string`)
 - `governance.godot_toolchain.assets.linux_x86_64.executable`: `"Godot_v4.7.2-stable_linux.x86_64"` (`string`)
 - `governance.godot_toolchain.assets.linux_x86_64.name`: `"Godot_v4.7.2-stable_linux.x86_64.zip"` (`string`)
@@ -2797,4 +2797,9 @@ Parameters:
 - `luminous.board.locked.face_shades.top`: `1.12` (`float`)
 - `luminous.board.seam.alpha`: `0.85` (`float`)
 - `luminous.board.seam.darken`: `0.35` (`float`)
+- `luminous.shell.border_lift`: `0.12` (`float`)
+- `luminous.shell.radius.control`: `6` (`int`)
+- `luminous.shell.radius.emphasis`: `12` (`int`)
+- `luminous.shell.radius.keycap`: `5` (`int`)
+- `luminous.shell.radius.panel`: `10` (`int`)
 - `schema_version`: `1` (`int`)
