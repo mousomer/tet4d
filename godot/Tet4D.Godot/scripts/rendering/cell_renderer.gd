@@ -13,12 +13,18 @@ func setup(
 	size: float,
 	depth: float = -1.0,
 	border_material: Material = null,
-	border_size: float = 0.0
+	border_size: float = 0.0,
+	bevel: Dictionary = {}
 ) -> void:
 	var cell_depth := size if depth < 0.0 else depth
-	_add_box(Vector3.ZERO, Vector3(size, size, cell_depth), material)
+	# With a bevel the body shrinks to the inner square and the strips tile the
+	# rim, so every pixel of the cell is one layer at the configured opacity.
+	var body := size - 2.0 * size * float(bevel["width"]) if not bevel.is_empty() else size
+	_add_box(Vector3.ZERO, Vector3(body, body, cell_depth), material)
 	if border_material != null and border_size > size:
 		_add_edge_outline(Vector3(border_size, border_size, cell_depth + (border_size - size)), border_size - size, border_material)
+	if not bevel.is_empty():
+		_add_bevel(size, cell_depth, bevel)
 	self.position = position
 
 
@@ -77,6 +83,36 @@ func _add_box(local_position: Vector3, size: Vector3, material: Material) -> voi
 	mesh_instance.material_override = material
 	mesh_instance.position = local_position
 	add_child(mesh_instance)
+
+
+# A camera-facing quad centred on the cell; its material draws the halo.
+func add_halo(material: Material, size: float) -> void:
+	if material == null:
+		return
+	var mesh_instance := MeshInstance3D.new()
+	mesh_instance.name = "Halo"
+	var quad := QuadMesh.new()
+	quad.size = Vector2(size, size)
+	mesh_instance.mesh = quad
+	mesh_instance.material_override = material
+	mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(mesh_instance)
+
+
+# A flat cell's bevel: light strips on the top and left rims, dark strips on
+# the bottom and right, laid on the camera-facing face. The four strips tile
+# the rim without overlapping, so no two coplanar strips fight for depth.
+func _add_bevel(size: float, depth: float, bevel: Dictionary) -> void:
+	var width := size * float(bevel["width"])
+	var thickness := maxf(float(bevel["min_thickness"]), size * float(bevel["thickness"]))
+	var z := depth * 0.5 - thickness * 0.5
+	var half := size * 0.5
+	var light: Material = bevel.get("light")
+	var dark: Material = bevel.get("dark")
+	_add_box(Vector3(0.0, half - width * 0.5, z), Vector3(size, width, thickness), light)
+	_add_box(Vector3(-half + width * 0.5, -width * 0.5, z), Vector3(width, size - width, thickness), light)
+	_add_box(Vector3(width * 0.5, -half + width * 0.5, z), Vector3(size - width, width, thickness), dark)
+	_add_box(Vector3(half - width * 0.5, 0.0, z), Vector3(width, size - width * 2.0, thickness), dark)
 
 
 func _add_exterior_faces(size: float, face_materials: Dictionary) -> void:

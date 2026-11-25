@@ -290,6 +290,53 @@ def _validate_runtime_sources(
                 )
 
 
+def _validate_visual_tuning(
+    root: Path, contract: dict[str, Any], issues: list[str]
+) -> None:
+    """Graphical-language tuning lives in one config file behind one loader."""
+    tuning = contract.get("visual_tuning")
+    if not isinstance(tuning, dict):
+        issues.append("visual tuning contract is missing")
+        return
+    config_path = str(tuning.get("config_path", ""))
+    config = _load_json(root / config_path, issues, "visual tuning config")
+    if config and not isinstance(config.get("luminous"), dict):
+        issues.append(f"{config_path} must declare a luminous section")
+    loader_path = root / str(tuning.get("loader_path", ""))
+    if not loader_path.is_file():
+        issues.append(f"visual tuning loader is missing: {loader_path}")
+        return
+    loader_source = loader_path.read_text(encoding="utf-8")
+    if _expected_resource_path(config_path) not in loader_source:
+        issues.append(
+            f"{tuning.get('loader_path')} must load {_expected_resource_path(config_path)}"
+        )
+    loader_resource = _expected_resource_path(str(tuning.get("loader_path", "")))
+    prefixes = [str(prefix) for prefix in tuning.get("forbidden_constant_prefixes", [])]
+    forbidden = (
+        re.compile(
+            rf"^\s*const\s+((?:{'|'.join(re.escape(p) for p in prefixes)})\w*)\s*:?=\s*[-+0-9.{{\[]",
+            re.MULTILINE,
+        )
+        if prefixes
+        else None
+    )
+    loading = {str(path) for path in tuning.get("loading_consumer_paths", [])}
+    for consumer in tuning.get("consumer_paths", []):
+        consumer_path = root / str(consumer)
+        if not consumer_path.is_file():
+            issues.append(f"visual tuning consumer is missing: {consumer}")
+            continue
+        source = consumer_path.read_text(encoding="utf-8")
+        if forbidden is not None:
+            for match in forbidden.finditer(source):
+                issues.append(
+                    f"{consumer} declares tuning constant {match.group(1)}; move it to {config_path}"
+                )
+        if str(consumer) in loading and loader_resource not in source:
+            issues.append(f"{consumer} must read tuning through {loader_resource}")
+
+
 def validate_repository(root: Path) -> list[str]:
     issues: list[str] = []
     policy_pack = _load_json(root / POLICY_PACK_PATH, issues, "policy pack")
@@ -310,6 +357,7 @@ def validate_repository(root: Path) -> list[str]:
         root, registry, settings_by_id, contract, issues
     )
     _validate_runtime_sources(root, settings_by_id, contract, issues, legacy_migrations)
+    _validate_visual_tuning(root, contract, issues)
     return issues
 
 

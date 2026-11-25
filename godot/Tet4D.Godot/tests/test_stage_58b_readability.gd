@@ -24,8 +24,8 @@ func run() -> Array:
 	var registry = preload("res://scripts/ui/settings/settings_registry.gd").new()
 	registry.load_from_path(registry.REGISTRY_PATH)
 	var catalog := Catalog.new(registry)
-	if catalog.list_styles().size() != 6 or not catalog.diagnostics().is_empty():
-		return ["58B style matrix requires all six healthy built-in styles"]
+	if catalog.list_styles().size() != 7 or not catalog.diagnostics().is_empty():
+		return ["58B style matrix requires all seven healthy built-in styles"]
 	for mode in ["live_3d", "live_4d"]:
 		app._start_configured_live_game(hud.configured_live_setup(mode))
 		app.apply_presentation_profile(Profile.canonical_defaults().with_overrides({"interface.show_onboarding": false}))

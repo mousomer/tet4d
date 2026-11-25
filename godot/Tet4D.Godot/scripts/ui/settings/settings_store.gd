@@ -4,11 +4,22 @@ class_name SettingsStore
 
 const PersistentFileReplacementScript = preload("res://scripts/persistence/persistent_file_replacement.gd")
 
-const SCHEMA_VERSION := 3
-const MIGRATABLE_SCHEMA_VERSIONS := [1, 2, SCHEMA_VERSION]
+const SCHEMA_VERSION := 4
+const MIGRATABLE_SCHEMA_VERSIONS := [1, 2, 3, SCHEMA_VERSION]
+# Schema 4 made Luminous the default theme. Every older file stored the old
+# default "plain" whether or not the player chose it, so pre-4 "plain" loads as
+# "luminous". The target is pinned, not "the current default": a later default
+# change must not alter what a schema 1-3 upgrade receives. A file written at
+# schema 4 or later keeps "plain".
+const THEME_SETTING_ID := "theme.name"
+const PRE_LUMINOUS_DEFAULT_THEME := "plain"
+const LUMINOUS_MIGRATION_THEME := "luminous"
+const LUMINOUS_SCHEMA_VERSION := 4
 const DEFAULT_PATH := "user://shell_settings.json"
 const LEGACY_HINT_SETTING_ID := "controls_help.show_keyboard_hints"
 const HINT_SETTING_ID := "accessibility.show_help_hints"
+# Schema 3 replaced the legacy keyboard-hint setting with the accessibility one.
+const HINT_MIGRATION_SCHEMA_VERSION := 3
 
 var _registry
 var _storage_path := DEFAULT_PATH
@@ -61,7 +72,7 @@ func load_settings() -> void:
 		return
 	var stored: Dictionary = parsed.get("settings")
 	var schema_version := int(schema_value)
-	if schema_version < SCHEMA_VERSION and stored.has(LEGACY_HINT_SETTING_ID):
+	if schema_version < HINT_MIGRATION_SCHEMA_VERSION and stored.has(LEGACY_HINT_SETTING_ID):
 		var hint_spec = _registry.get_spec(HINT_SETTING_ID)
 		var hint_value: Dictionary = hint_spec.validated_value(stored.get(LEGACY_HINT_SETTING_ID)) if hint_spec != null else {}
 		if bool(hint_value.get("ok", false)):
@@ -69,7 +80,7 @@ func load_settings() -> void:
 		else:
 			_diagnostics.append("Invalid legacy keyboard-hint setting replaced by its accessibility default.")
 	for setting_id in stored.keys():
-		if str(setting_id) == LEGACY_HINT_SETTING_ID and schema_version < SCHEMA_VERSION:
+		if str(setting_id) == LEGACY_HINT_SETTING_ID and schema_version < HINT_MIGRATION_SCHEMA_VERSION:
 			continue
 		var spec = _registry.get_spec(str(setting_id))
 		if spec == null or not spec.is_persistent():
@@ -80,8 +91,13 @@ func load_settings() -> void:
 			_persistent_values[spec.id()] = validated.get("value")
 		else:
 			_diagnostics.append("Invalid setting %s replaced by its default." % spec.id())
+	if schema_version < LUMINOUS_SCHEMA_VERSION and str(_persistent_values.get(THEME_SETTING_ID, "")) == PRE_LUMINOUS_DEFAULT_THEME:
+		var theme_spec = _registry.get_spec(THEME_SETTING_ID)
+		if theme_spec != null and bool(theme_spec.validated_value(LUMINOUS_MIGRATION_THEME).get("ok", false)):
+			_persistent_values[THEME_SETTING_ID] = LUMINOUS_MIGRATION_THEME
+			_diagnostics.append("Saved Instrument theme from schema %s moved to the Luminous theme." % schema_version)
 	_load_state = "loaded" if schema_version == SCHEMA_VERSION else "migrated_v%s" % schema_version
-	_diagnostics.push_front("Shell settings loaded." if schema_version == SCHEMA_VERSION else "Shell settings schema %s migrated to schema 3 in memory." % schema_version)
+	_diagnostics.push_front("Shell settings loaded." if schema_version == SCHEMA_VERSION else "Shell settings schema %s migrated to schema %s in memory." % [schema_version, SCHEMA_VERSION])
 
 
 func value(setting_id: String):

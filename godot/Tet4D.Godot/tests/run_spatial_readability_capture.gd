@@ -40,9 +40,9 @@ const GridDisplayMode = preload("res://scripts/presentation/grid_display_mode.gd
 # 1280x720 shell; "large" and "compact" are the regions the live shell gives a
 # 1728x1080 window and the 720x600 small profile.
 const SIZES := {
-	"ref": {3: Vector2i(906, 580), 4: Vector2i(970, 444)},
-	"large": {3: Vector2i(1036, 660), 4: Vector2i(1085, 463)},
-	"compact": {3: Vector2i(740, 418), 4: Vector2i(1010, 264)},
+	"ref": {2: Vector2i(906, 580), 3: Vector2i(906, 580), 4: Vector2i(970, 444)},
+	"large": {2: Vector2i(1036, 660), 3: Vector2i(1036, 660), 4: Vector2i(1085, 463)},
+	"compact": {2: Vector2i(740, 418), 3: Vector2i(740, 418), 4: Vector2i(1010, 264)},
 }
 const GRIDS := ["none", "border", "full"]
 const PROFILE_FIELDS := ["theme.name", "settled_cells.opacity", "active_cells.opacity", "ghost.opacity",
@@ -217,7 +217,9 @@ func _render_case(case: Dictionary) -> void:
 	_renderer.apply_presentation_profile(profile)
 	_renderer.render_snapshot(snapshot_for(case.scene, case.color))
 	_rig.establish_canonical_projection()
-	if case.scene.dim == 3:
+	if case.scene.dim == 2:
+		_rig.establish_outer_view(0.0, 0.0, 0.0, false)
+	elif case.scene.dim == 3:
 		_rig.establish_outer_view(RigScript.LIVE_3D_DISPLAY_YAW_RAD, RigScript.LIVE_3D_DISPLAY_PITCH_RAD, 0.0, false)
 	else:
 		_rig.establish_outer_view(RigScript.LIVE_4D_DISPLAY_YAW_RAD, RigScript.LIVE_4D_DISPLAY_PITCH_RAD, 0.0, true)
@@ -230,17 +232,17 @@ func _render_case(case: Dictionary) -> void:
 	await RenderingServer.frame_post_draw
 
 
-# TraceReplayApp._fit_view() for live 3D/4D.
+# TraceReplayApp._fit_view() for live 2D/3D/4D.
 func _fit(dimension: int) -> void:
 	var bounds: Dictionary = _renderer.current_bounds()
 	var content_boxes: Array = _renderer.current_content_boxes()
 	var margin := RigScript.LIVE_4D_FIT_MARGIN
-	if dimension == 3:
-		margin = RigScript.LIVE_3D_FIT_MARGIN
+	if dimension in [2, 3]:
+		margin = RigScript.LIVE_2D_FIT_MARGIN if dimension == 2 else RigScript.LIVE_3D_FIT_MARGIN
 		var headroom := Vector3(0.0, RigScript.LIVE_2D_SPAWN_HEADROOM_ROWS, 0.0)
 		bounds = {"ok": true, "min": bounds["min"], "max": (bounds["max"] as Vector3) + headroom}
 		content_boxes = [{"min": bounds["min"], "max": bounds["max"]}]
-	_rig.set_fit_horizontal_anchor(1.0 if dimension == 3 else 0.0)
+	_rig.set_fit_horizontal_anchor(1.0 if dimension in [2, 3] else 0.0)
 	_rig.fit_current_bounds(bounds, margin, content_boxes)
 
 
@@ -653,8 +655,17 @@ func scenes() -> Array:
 	result.append({"id": "4d_seven", "dim": 4, "shape": s7, "active": active, "locked": _merge([
 		_fill(s7, 7, 9, 40, 107, active, [3]), _fill(s7, 5, 9, 60, 109, active, [2, 4]),
 		_fill(s7, 7, 9, 35, 113, active, [1, 5]), _fill(s7, 8, 9, 20, 127, active, [0, 6])])})
+	# Live 2D: a 10x20 board, a T piece above a ragged stack.
+	var s2 := [10, 20]
+	active = _piece([[0, 0], [1, 0], [2, 0], [1, 1]], [4, 3])
+	var stack2: Array = []
+	for y in range(14, 20):
+		for x in range(10):
+			if _hash([x, y], 131) % 100 < 78 and not active.has([x, y]):
+				stack2.append([[x, y], 1 + _hash([x, y], 132) % 7])
+	result.append({"id": "2d_stack", "dim": 2, "shape": s2, "active": active, "locked": stack2})
 	# Rows below the piece where the fixture ghost sits on the fixture stack.
-	var ghost_rows := {"3d_fresh": 7, "3d_sparse": 3, "3d_moderate": 2, "3d_dense": 1, "3d_front": 2,
+	var ghost_rows := {"2d_stack": 9, "3d_fresh": 7, "3d_sparse": 3, "3d_moderate": 2, "3d_dense": 1, "3d_front": 2,
 		"3d_behind": 2, "3d_overlap": 5, "4d_fresh": 7, "4d_sparse": 4, "4d_populated": 5, "4d_dense": 1,
 		"4d_neighbours": 3, "4d_spanning": 3, "4d_seven": 3}
 	for scene in result:

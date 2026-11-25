@@ -10,8 +10,8 @@ func run() -> Array:
 	_assert_equal(
 		failures,
 		ReplayVisuals.default_display_mode(),
-		ReplayVisuals.DISPLAY_MODE_PLAIN,
-		"Instrument should be the startup display mode"
+		ReplayVisuals.DISPLAY_MODE_LUMINOUS,
+		"Luminous should be the startup display mode"
 	)
 	_assert_equal(
 		failures,
@@ -35,6 +35,8 @@ func run() -> Array:
 	_assert_theme_loads(failures, ReplayVisuals.DISPLAY_MODE_TRON)
 	_assert_theme_loads(failures, ReplayVisuals.DISPLAY_MODE_PLAIN)
 	_assert_plain_theme_is_visible_choice(failures)
+	_assert_theme_loads(failures, ReplayVisuals.DISPLAY_MODE_LUMINOUS)
+	_assert_luminous_graphical_language(failures)
 	var cyan_active := ReplayVisuals.active_cell_material(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC, 1)
 	var yellow_active := ReplayVisuals.active_cell_material(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC, 2)
 	var gameplay_active := ReplayVisuals.gameplay_active_cell_material(ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC)
@@ -163,6 +165,51 @@ func run() -> Array:
 		0.95
 	)
 	return failures
+
+
+# docs/design/graphical_language/: locked cells keep their hue, only the
+# active piece gets a halo and emission, and other themes are untouched.
+func _assert_luminous_graphical_language(failures: Array) -> void:
+	var luminous := ReplayVisuals.DISPLAY_MODE_LUMINOUS
+	_assert_equal(failures, ReplayVisuals.display_mode_label(luminous), "Luminous", "luminous display label")
+	var piece := ReplayVisuals.TRACE_COLOR_PALETTE[3] as Color
+	var locked_faces: Dictionary = ReplayVisuals.live_3d_locked_face_materials(luminous, 3, 1.0)
+	var front := (locked_faces["front"] as StandardMaterial3D).albedo_color
+	if absf(front.h - piece.h) > 0.02 or front.s < piece.s - 0.02:
+		failures.append("luminous locked faces should keep the piece hue and saturation, got %s for %s" % [front, piece])
+	if (locked_faces["front"] as StandardMaterial3D).albedo_color.a >= 1.0:
+		failures.append("luminous locked faces should be translucent")
+	var locked_2d := ReplayVisuals.live_locked_cell_material(luminous, 3, 1.0).albedo_color
+	_assert_color_close(failures, "luminous 2D locked cell keeps its piece colour", Color(locked_2d.r, locked_2d.g, locked_2d.b), piece)
+	var active_faces: Dictionary = ReplayVisuals.live_3d_active_face_materials(luminous, 3, 1.0)
+	var active_front := active_faces["front"] as StandardMaterial3D
+	if not active_front.emission_enabled or active_front.emission_energy_multiplier <= 0.0 or active_front.albedo_color.get_luminance() > 0.001:
+		failures.append("luminous active faces should be emission-only so their hue ignores the light angle")
+	if ReplayVisuals.live_active_halo_material(luminous, 3) == null:
+		failures.append("luminous active cells should get a halo")
+	if ReplayVisuals.live_cell_bevel_materials(luminous, 3, false).is_empty():
+		failures.append("luminous flat cells should get bevel strips")
+	for active in [false, true]:
+		var body: StandardMaterial3D = ReplayVisuals.live_active_cell_material(luminous, 3, 0.5) if active else ReplayVisuals.live_locked_cell_material(luminous, 3, 0.5)
+		var bevel: Dictionary = ReplayVisuals.live_cell_bevel_materials(luminous, 3, active, 0.5)
+		for strip in ["light", "dark"]:
+			var strip_alpha := (bevel[strip] as StandardMaterial3D).albedo_color.a
+			if absf(strip_alpha - body.albedo_color.a) > 0.001 or absf(strip_alpha - 0.5) > 0.001:
+				failures.append("luminous %s bevel %s strip should follow the cell opacity 0.5, got %s (body %s)" % ["active" if active else "locked", strip, strip_alpha, body.albedo_color.a])
+	var edge := ReplayVisuals.board_edge_material(luminous, 0.3, 0.8)
+	_assert_color_close(failures, "luminous board edges use the bright boundary role", Color(edge.albedo_color.r, edge.albedo_color.g, edge.albedo_color.b), ReplayVisuals.color_for_role(ReplayVisuals.ROLE_BOARD_OUTLINE, luminous))
+	if absf(edge.albedo_color.a - 0.8) > 0.001 or ReplayVisuals.board_edge_thickness_scale(luminous) <= 1.0:
+		failures.append("luminous board edges should follow board.boundary_opacity and draw thicker than the lattice")
+	if edge.depth_draw_mode != BaseMaterial3D.DEPTH_DRAW_DISABLED or edge.render_priority <= active_front.render_priority:
+		failures.append("luminous edges should blend after transparent cells without writing depth")
+	for mode in [ReplayVisuals.DISPLAY_MODE_PLAIN, ReplayVisuals.DISPLAY_MODE_TRON, ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC]:
+		var shared := ReplayVisuals.board_edge_material(mode, 0.3, 0.8)
+		var scaffold := ReplayVisuals.board_scaffold_material(mode, 0.3)
+		if shared.albedo_color != scaffold.albedo_color or ReplayVisuals.board_edge_thickness_scale(mode) != 1.0:
+			failures.append("%s board edges should keep the shared scaffold material and thickness" % mode)
+	for mode in [ReplayVisuals.DISPLAY_MODE_PLAIN, ReplayVisuals.DISPLAY_MODE_TRON, ReplayVisuals.DISPLAY_MODE_DIAGNOSTIC]:
+		if ReplayVisuals.live_active_halo_material(mode, 3) != null or not ReplayVisuals.live_cell_bevel_materials(mode, 3, true).is_empty():
+			failures.append("%s should not get the luminous halo or bevel" % mode)
 
 
 func _assert_theme_loads(failures: Array, display_mode: String) -> void:

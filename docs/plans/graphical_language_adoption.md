@@ -38,8 +38,8 @@ describes the older "calm instrument" look.
   the surface, accent, grid and frame swatches from the spec.
 - Add a built-in style `tet4d_luminous` to
   `config/built_in_style_catalog.json` (theme `luminous`, a lower
-  `settled_cells.opacity`, a glass-level `board.enclosure_opacity`). Make it
-  the default style.
+  `settled_cells.opacity`, a glass-level `board.enclosure_opacity`). The
+  `luminous` theme is the default.
 - Cell materials in `scripts/ui/replay_visuals.gd`, gated on the `luminous`
   theme so the other themes' captures and Designer fingerprints are
   unchanged:
@@ -58,6 +58,45 @@ describes the older "calm instrument" look.
 - Acceptance: captures of 2D, 3D and 4D at 1440×900 from the same seeded
   states, before and after, set next to the concept images. Gameplay and
   replay hashes unchanged. Layout lock test unchanged and green.
+
+**P1 as built (2026-11-24):**
+- Every Luminous tuning value (emission, halo, bevel, seam, ghost, edges,
+  face shades) lives in `godot/Tet4D.Godot/config/graphical_language.json`
+  and is read through `GraphicalLanguageConfig`. Code holds none of them; a
+  missing value is reported and yields NAN. `test_graphical_language_config.gd`
+  validates the shipped file and checks that the renderer uses it.
+- The active-piece glow is a per-cell halo sprite in the piece's own hue,
+  not Environment glow. Godot's glow threshold works on luminance, so it
+  cannot bloom dark hues (purple, blue) without clipping them to another
+  colour. The active piece is emission-only, so its hue doesn't depend on the
+  light angle.
+- Locked cube faces are unshaded; the per-face factors are the shading. This
+  keeps them at or below full brightness and true to hue.
+- 3D/4D locked cells render at 88% of `settled_cells.opacity`. 2D locked
+  cells use the setting as-is, because transparency over a flat dark board
+  only dims them.
+- Everything is gated on the `luminous` theme. The `plain`, `tron` and
+  `diagnostic` materials are unchanged.
+- `luminous` is the default theme (owner decision 2026-11-24, after
+  reviewing the captures). Fresh profiles, reset-to-defaults, invalid
+  settings files and unknown theme IDs all resolve to it. Settings schema 4
+  migrates a pre-4 saved `plain` (the old default, written for everyone) to
+  `luminous`. Saved `tron` and `diagnostic` are kept, and `plain` chosen at
+  schema 4 or later is kept.
+- 4D's existing recession of inactive slices (Stage 58C) still applies.
+- 2D bevel strips carry the same opacity as the cell body. The body is inset
+  to the inner square so strips and body never overlap, and every pixel of a
+  cell is one layer at the configured opacity.
+- Board outer edges in 2D/3D/4D are a bright glass-edge material (thicker,
+  at `board.boundary_opacity`) above the quiet face and interior lattice.
+  Edges depth-test and blend after the cell faces. The windowed
+  `tests/run_board_edge_occlusion_acceptance.gd` checks that an opaque frame
+  stays in front of the slab and that the slab shows through a half-opacity
+  frame. Capture commands require an existing output directory and fail if
+  any screenshot cannot be written.
+- Captures: `docs/design/screenshots/graphical_language_p1/`, taken through
+  normal startup at 1440×900 with registry defaults (no style preset). Same
+  seeded game, default `luminous` versus `plain`.
 
 ### P2 — Shell skin
 - `luminous` panel styling: corner radius, soft border, lift; type scale;

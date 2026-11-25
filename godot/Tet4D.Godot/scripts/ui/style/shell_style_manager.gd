@@ -8,8 +8,8 @@ const ShellStyleRolesScript = preload("res://scripts/ui/style/shell_style_roles.
 signal theme_changed(theme_id: String)
 
 const PALETTE_PATH := "res://config/shell_theme_palettes.json"
-const DEFAULT_THEME_ID := "plain"
-const REQUIRED_THEME_IDS := ["diagnostic", "plain", "tron"]
+const DEFAULT_THEME_ID := "luminous"
+const REQUIRED_THEME_IDS := ["diagnostic", "plain", "tron", "luminous"]
 
 var _palettes: Dictionary = {}
 var _active_theme_id := DEFAULT_THEME_ID

@@ -2,11 +2,17 @@
 
 ## Current post-Stage-54 state
 
-The guarded writer remains at schema 3. The registry currently declares 26
+The guarded writer is at schema 4. Schema 4 (2026-11-24) made `luminous` the
+default theme. Older files stored the old default `plain` whether or not the
+player chose it, so a schema-1/2/3 `theme.name: plain` loads as `luminous`
+(a pinned target, not whatever the default is later).
+Other saved themes are kept. A `plain` saved at schema 4 is a real choice and
+is kept. The migration happens in memory; the file is rewritten at schema 4 on
+the next save. The registry currently declares 26
 presentation parameters: 24 `local_shell` values are serialized, while
 `diagnostics.show_layout_bounds` and the quick-control
 `display.grid_mode` are session-only. Additive registry keys do not require
-a settings-envelope bump: supported schema-1/2/3 documents retain valid known
+a settings-envelope bump: supported schema-1/2/3/4 documents retain valid known
 values and receive current defaults for absent keys.
 
 The schema-1 `PresentationProfile` is an in-memory validated value object, not
@@ -71,9 +77,11 @@ persistence, reset, focus, and semantic whitelist coverage.
 ## Persistence contract
 
 - Storage path: `user://shell_settings.json`.
-- Current schema: JSON object with `schema_version = 3` and a `settings`
+- Current schema: JSON object with `schema_version = 4` and a `settings`
   object. Stage 48 introduced schema 1; Stages 51 and 52 added the field-by-
-  field schema-2/schema-3 migration path.
+  field schema-2/schema-3 migration path. Schema 4 (graphical language P1)
+  maps a schema-1/2/3 `theme.name: plain` to the pinned target `luminous`,
+  independent of later default changes; all other values are kept.
 - Stored keys: only registry entries explicitly marked `persist: true`.
 - Stored values: validated JSON-safe booleans, strings, and numbers.
 - Ordering: persistent registry order, producing deterministic canonical JSON.

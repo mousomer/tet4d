@@ -65,7 +65,7 @@ func run() -> Array:
 	if live_session != {"score": 320, "paused": true, "active_cells": [[1, 2]]}:
 		failures.append("resetting display preferences must not mutate live-session state")
 	var reset_store = StoreScript.new(registry, TEST_PATH)
-	if reset_store.value("theme.name") != "plain" or reset_store.value("interface.show_onboarding") != false:
+	if reset_store.value("theme.name") != "luminous" or reset_store.value("interface.show_onboarding") != false:
 		failures.append("display reset should restore theme while preserving onboarding")
 	if reset_store.value("display.ui_scale") != "large":
 		failures.append("display reset must preserve accessibility-owned UI scale")

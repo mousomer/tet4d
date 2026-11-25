@@ -100,7 +100,7 @@ func run() -> Array:
 	if not partial.reset_categories_to_defaults(["display", "theme", "camera"]):
 		failures.append("display reset should persist canonical category defaults")
 	var reset = StoreScript.new(registry, TEST_PATH)
-	if reset.value("theme.name") != "plain" or reset.value("display.hud_density") != "standard" or reset.value("camera.invert_y") != false:
+	if reset.value("theme.name") != "luminous" or reset.value("display.hud_density") != "standard" or reset.value("camera.invert_y") != false:
 		failures.append("display reset should restore display, theme, and camera defaults")
 	if reset.value("display.ui_scale") != "extra_large":
 		failures.append("display reset must preserve accessibility-owned UI scale")
