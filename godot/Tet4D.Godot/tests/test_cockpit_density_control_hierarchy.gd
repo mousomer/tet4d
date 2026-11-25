@@ -123,14 +123,14 @@ func _check_production_layout() -> Array:
 	await tree.process_frame
 	for mode in ["live_2d", "live_3d", "live_4d"]:
 		match mode:
-			"live_2d": app._enter_live_2d_mode()
-			"live_3d": app._enter_live_3d_mode()
-			"live_4d": app._enter_live_4d_mode()
+			"live_2d": app._enter_live_mode("live_2d")
+			"live_3d": app._enter_live_mode("live_3d")
+			"live_4d": app._enter_live_mode("live_4d")
 		await tree.process_frame
 		await tree.process_frame
 		failures.append_array(_check_primary_surfaces(hud, mode, "normal"))
 
-	app._enter_live_4d_mode()
+	app._enter_live_mode("live_4d")
 	await tree.process_frame
 	await tree.process_frame
 	var layout: Dictionary = hud.layout_contract_snapshot()
@@ -157,9 +157,9 @@ func _check_production_layout() -> Array:
 	# Gravity ticks on a 0.5 s wall clock, and the Designer steps below span
 	# many frames: a slower runner would see a gravity step, not a leak from
 	# presentation. Hold gravity so the hash isolates presentation alone.
-	var was_paused: bool = app._live_4d_paused
-	app._live_4d_paused = true
-	var deterministic_before := str(app._live_bridge.live_4d_state_hash())
+	var was_paused: bool = app._live_modes["live_4d"].paused
+	app._live_modes["live_4d"].paused = true
+	var deterministic_before := str(app._live_bridge.live_state_hash(4))
 	hud._open_presentation_designer()
 	await tree.process_frame
 	await tree.process_frame
@@ -209,9 +209,9 @@ func _check_production_layout() -> Array:
 	await tree.process_frame
 	await tree.process_frame
 	failures.append_array(_check_primary_surfaces(hud, "live_4d", "Designer compact"))
-	if str(app._live_bridge.live_4d_state_hash()) != deterministic_before:
+	if str(app._live_bridge.live_state_hash(4)) != deterministic_before:
 		failures.append("cockpit/Designer presentation must not mutate deterministic Live 4D state")
-	app._live_4d_paused = was_paused
+	app._live_modes["live_4d"].paused = was_paused
 
 	for scale_id in ["large", "extra_large"]:
 		hud._apply_ui_scale(scale_id)

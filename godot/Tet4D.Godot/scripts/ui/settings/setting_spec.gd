@@ -177,10 +177,6 @@ func validated_value(value) -> Dictionary: # tet4d-semantic-boundary: allow diag
 	return result
 
 
-func is_editable() -> bool:
-	return authority() == "godot_shell"
-
-
 static func validate(spec_data: Dictionary, known_categories: Array) -> Array:
 	var failures: Array = []
 	var setting_id := str(spec_data.get("id", ""))

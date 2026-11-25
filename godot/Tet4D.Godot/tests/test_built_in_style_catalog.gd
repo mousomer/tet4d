@@ -489,9 +489,9 @@ func _test_live_integration(registry) -> Array:
 
 	for mode in ["live_2d", "live_3d", "live_4d"]:
 		match mode:
-			"live_2d": app._enter_live_2d_mode()
-			"live_3d": app._enter_live_3d_mode()
-			"live_4d": app._enter_live_4d_mode()
+			"live_2d": app._enter_live_mode("live_2d")
+			"live_3d": app._enter_live_mode("live_3d")
+			"live_4d": app._enter_live_mode("live_4d")
 		await tree.process_frame
 		hud._open_presentation_designer()
 		await tree.process_frame
@@ -522,7 +522,7 @@ func _test_live_integration(registry) -> Array:
 		hud._presentation_designer.hide_preserving_preview()
 		await tree.process_frame
 
-	app._enter_live_4d_mode()
+	app._enter_live_mode("live_4d")
 	await tree.process_frame
 	hud._open_presentation_designer()
 	await tree.process_frame
@@ -542,10 +542,10 @@ func _test_live_integration(registry) -> Array:
 	# slower CI runner an unpaused live gravity tick may legitimately advance the
 	# game between awaited frames and would make this an animation timing test
 	# instead of an isolation test.
-	if not app._live_4d_paused:
-		app._toggle_live_4d_pause()
+	if not app._live_modes["live_4d"].paused:
+		app._toggle_live_pause("live_4d")
 	await tree.process_frame
-	var hash_before := str(app._live_bridge.live_4d_state_hash())
+	var hash_before := str(app._live_bridge.live_state_hash(4))
 	var snapshot_before: Dictionary = app._current_snapshot.duplicate(true)
 	var settings_before: Dictionary = hud._settings_store.deterministic_snapshot()
 	var basis_before: Array = app._live_4d_basis.slots()
@@ -564,7 +564,7 @@ func _test_live_integration(registry) -> Array:
 		failures.append("the Tron built-in style must activate the animated background in production")
 	if tron_snapshot.get("base_color") != app._world_environment.environment.background_color:
 		failures.append("the backdrop base colour must track the resolved world background")
-	if str(app._live_bridge.live_4d_state_hash()) != hash_before or app._current_snapshot != snapshot_before:
+	if str(app._live_bridge.live_state_hash(4)) != hash_before or app._current_snapshot != snapshot_before:
 		failures.append("built-in style application must not touch deterministic gameplay state")
 	if hud._settings_store.deterministic_snapshot() != settings_before:
 		failures.append("applying a built-in style must not rewrite ordinary shell settings")
@@ -579,7 +579,7 @@ func _test_live_integration(registry) -> Array:
 	# HUD through registry-owned density and contrast, so the layout claim is
 	# proven by changing nothing except the three animation parameters.
 	var animation_layout_before: Dictionary = hud.layout_contract_snapshot()
-	var animation_hash_before := str(app._live_bridge.live_4d_state_hash())
+	var animation_hash_before := str(app._live_bridge.live_state_hash(4))
 	var animation_snapshot_before: Dictionary = app._current_snapshot.duplicate(true)
 	var bounds_before: Dictionary = app._renderer.current_bounds()
 	designer_4d.set_parameter_value("environment.background_animation_mode", "none")
@@ -599,7 +599,7 @@ func _test_live_integration(registry) -> Array:
 	for rect_key in ["body", "game_area", "game_viewport"]:
 		if animation_layout_after.get(rect_key) != animation_layout_before.get(rect_key):
 			failures.append("animation-only changes must not move cockpit rect %s" % rect_key)
-	if str(app._live_bridge.live_4d_state_hash()) != animation_hash_before or app._current_snapshot != animation_snapshot_before:
+	if str(app._live_bridge.live_state_hash(4)) != animation_hash_before or app._current_snapshot != animation_snapshot_before:
 		failures.append("animation-only changes and time advancement must not touch deterministic gameplay state")
 	if app._renderer.current_bounds() != bounds_before:
 		failures.append("animation-only changes must not move authoritative board bounds")

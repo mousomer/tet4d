@@ -11,6 +11,7 @@ class_name BuiltInStyleCatalog
 # one settings registry; this owner adds only shipped catalog identity and
 # descriptive metadata.
 
+const OperationResult = preload("res://scripts/operation_result.gd")
 const PresentationProfileScript = preload("res://scripts/presentation/presentation_profile.gd")
 
 const CATALOG_TYPE := "tet4d.built_in_style_catalog"
@@ -48,15 +49,10 @@ func list_styles() -> Array:
 	return records
 
 
-func has_style(style_id: String) -> bool:
-	_ensure_loaded()
-	return _entries_by_id.has(style_id)
-
-
 func style_profile(style_id: String) -> Dictionary:
 	_ensure_loaded()
 	if not _entries_by_id.has(style_id):
-		return _failure("Unknown built-in style.")
+		return OperationResult.failure("Unknown built-in style.")
 	var entry: Dictionary = _entries_by_id.get(style_id)
 	# Rebuilt per call so a caller can never reach the shipped source object.
 	var profile = PresentationProfileScript.from_snapshot(_registry, {
@@ -64,8 +60,8 @@ func style_profile(style_id: String) -> Dictionary:
 		"values": entry.get("values", {}).duplicate(true),
 	})
 	if profile == null or not profile.contract_conforms():
-		return _failure("Built-in style values failed authoritative validation.")
-	return _success({
+		return OperationResult.failure("Built-in style values failed authoritative validation.")
+	return OperationResult.success({
 		"record": _record_for_entry(entry),
 		"profile": profile.detached_copy(),
 	})
@@ -146,33 +142,33 @@ func _ensure_loaded() -> void:
 
 func _validated_entry(raw_entry) -> Dictionary: # tet4d-semantic-boundary: allow diagnostic-presentation
 	if not (raw_entry is Dictionary):
-		return _failure("Built-in style entries must be objects.")
+		return OperationResult.failure("Built-in style entries must be objects.")
 	var entry: Dictionary = raw_entry
 	var style_id := str(entry.get("style_id", ""))
 	if not _safe_style_id(style_id):
-		return _failure("Built-in style identity is invalid or unsafe.")
+		return OperationResult.failure("Built-in style identity is invalid or unsafe.")
 	var display_name := str(entry.get("display_name", "")).strip_edges()
 	if display_name.is_empty() or display_name.length() > MAX_DISPLAY_NAME_LENGTH:
-		return _failure("Built-in style %s has an unusable display name." % style_id)
+		return OperationResult.failure("Built-in style %s has an unusable display name." % style_id)
 	var category := str(entry.get("category", ""))
 	if not STYLE_CATEGORIES.has(category):
-		return _failure("Built-in style %s declares unknown category %s." % [style_id, category])
+		return OperationResult.failure("Built-in style %s declares unknown category %s." % [style_id, category])
 	var snapshot = entry.get("presentation_profile")
 	if not (snapshot is Dictionary):
-		return _failure("Built-in style %s must embed a presentation_profile object." % style_id)
+		return OperationResult.failure("Built-in style %s must embed a presentation_profile object." % style_id)
 	if int(snapshot.get("schema_version", 0)) != PresentationProfileScript.SCHEMA_VERSION:
-		return _failure("Built-in style %s uses an unsupported presentation-profile schema." % style_id)
+		return OperationResult.failure("Built-in style %s uses an unsupported presentation-profile schema." % style_id)
 	var values = snapshot.get("values", {})
 	if not (values is Dictionary):
-		return _failure("Built-in style %s presentation_profile values must be an object." % style_id)
+		return OperationResult.failure("Built-in style %s presentation_profile values must be an object." % style_id)
 	var profile = PresentationProfileScript.from_snapshot(_registry, {
 		"schema_version": PresentationProfileScript.SCHEMA_VERSION,
 		"values": values.duplicate(true),
 	})
 	if profile == null or not profile.contract_conforms():
 		var detail := "; ".join(profile.failures()) if profile != null and profile.has_method("failures") else "invalid profile"
-		return _failure("Built-in style %s failed authoritative validation: %s." % [style_id, detail])
-	return _success({"entry": {
+		return OperationResult.failure("Built-in style %s failed authoritative validation: %s." % [style_id, detail])
+	return OperationResult.success({"entry": {
 		"style_id": style_id,
 		"display_name": display_name,
 		"short_description": str(entry.get("short_description", "")),
@@ -215,13 +211,3 @@ static func _string_array(source) -> Array:
 		for item in source:
 			result.append(str(item))
 	return result
-
-
-func _success(extra: Dictionary = {}) -> Dictionary:
-	var result := {"ok": true, "error": ""}
-	result.merge(extra, true)
-	return result
-
-
-func _failure(message: String) -> Dictionary:
-	return {"ok": false, "error": message}

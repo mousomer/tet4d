@@ -36,14 +36,6 @@ wheelhouse/
 build/
 dist/
 artifacts/installers/
-unity/**/Library/
-unity/**/Temp/
-unity/**/Obj/
-unity/**/Logs/
-unity/**/UserSettings/
-unity/**/.vs/
-unity/**/TestResults*.xml
-unity/**/TestResults/
 godot/**/.godot/
 godot/**/imported/
 godot/**/.import/
@@ -81,6 +73,7 @@ assets/help/rotation_keys.gif
 .policy/
 .claude/*
 !.claude/skills/
+!.claude/settings.json
 .workspace_policy_version.json
 config/project/policy_manifest.json
 context-*.instructions.md

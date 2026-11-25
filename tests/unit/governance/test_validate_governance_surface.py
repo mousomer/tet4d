@@ -189,10 +189,16 @@ def test_canonical_owner_file_ceiling_fails(tmp_path: Path) -> None:
     assert any("ENGINEERING.md: 301 LOC" in message for message in _messages(tmp_path))
 
 
+def test_current_state_at_ceiling_passes(tmp_path: Path) -> None:
+    _fixture(tmp_path)
+    _write(tmp_path / "CURRENT_STATE.md", "line\n" * 200)
+    assert _issues(tmp_path) == []
+
+
 @pytest.mark.parametrize(
     ("rel", "lines", "expected"),
     [
-        ("CURRENT_STATE.md", 151, "150"),
+        ("CURRENT_STATE.md", 201, "200"),
         ("AGENTS.md", 151, "150"),
         ("godot/AGENTS.md", 71, "70"),
         ("native/AGENTS.md", 71, "70"),

@@ -660,10 +660,6 @@ func _on_start_pressed() -> void:
 		_reveal_first_blocking_field()
 
 
-func reveal_problem_control() -> Button:
-	return _reveal_button
-
-
 func _on_reset_sizes_pressed() -> void:
 	_model.reset_sizes()
 	_refresh_from_model()

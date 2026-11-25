@@ -152,14 +152,6 @@ static func compact_savings_bound(root: Node) -> float:
 	return bound
 
 
-static func button_padding(button: Button, padding: float) -> void:
-	for state in ["normal", "hover", "focus", "pressed", "disabled"]:
-		var style := button.get_theme_stylebox(state).duplicate() as StyleBox
-		for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
-			style.set_content_margin(side, padding)
-		button.add_theme_stylebox_override(state, style)
-
-
 static func reflow_row(row: BoxContainer, available_width: float) -> void:
 	var required := 0.0
 	var count := 0

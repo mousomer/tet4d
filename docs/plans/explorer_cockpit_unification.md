@@ -193,17 +193,14 @@ use the same dispatcher and held-repeat lifecycle. Modal input ownership wins. `
 
 ## Phases
 
-Current execution status (2026-11-15, later): Phase 4 items 2–3 (Space tab in
-every dimension, re-baselined lock) and Phase 5 items 1, 2 and 4 (Z/X Y keys,
-PageUp/PageDown retired, Fit on 9, key docs) are implemented in the working
-tree, together with one helper legend structure for 2D/3D/4D and a Space-tab
-board size control. Phase 3 (structure owner extraction) and Phase 5 item 3
-(3D view turns) remain open. Earlier status: Phases 0–2 are implemented and verified in this delivery. Phase 2 has independent Explorer action
-IDs, unified dispatch and held-key lifecycle coverage. Phase 3 structure
-ownership and Phases 4–6 visible changes/documentation/acceptance remain open.
-The measured state above is the pre-refactor baseline, not a claim that the
-accepted key and tab changes have landed. Human `EXPLORER_LEARNING_READY`
-acceptance remains pending independently of these refactors.
+Current execution status: Phase 4 closes the shared View, Piece and Space
+structure and keeps the existing per-dimension placement. Every dimension
+consumes the same topology inventory, with the Explorer descriptor deciding
+which options are enabled. The reviewed Space lock fixture already captures
+this structure and stays in place. Phases 0–3 established the lock, descriptor,
+independent input dispatch and cockpit owner. Phase 5 items 1, 2 and 4 are
+implemented. Phase 5 item 3 (3D view turns) and human
+`EXPLORER_LEARNING_READY` acceptance remain open.
 
 Each phase lands as its own PR. Phases 0–3 are refactors: the key→command
 matrix, tab/scroll state and every rectangle must stay identical. Node
@@ -294,13 +291,15 @@ Exit: Phase 0 matrix unchanged; ordinary Live tests unchanged.
 
 ### Phase 3 — Structure owner (pure refactor)
 
-1. Extract `ExplorerCockpit` (panel + its helper deck rows) from
-   `replay_hud.gd`; the HUD creates it once and places it.
-2. Rename the host so Explorer no longer lives in `_live_4d_state_module`
-   (S3). Placement stays exactly as today.
+1. `ExplorerCockpit` owns the Explorer panel lifecycle and mounts the shared
+   view helper in the existing View tab. The HUD owns deck placement and the
+   shared piece and view controls, so Live and Explorer retain their node identities.
+2. The HUD refers to the existing placement slot as `_piece_state_module`.
+   The scene node name and geometry stay stable for the cockpit lock.
 
 Exit: Phase 0 matrix and all rectangles unchanged at 1280×800, 1280×720,
-1440×900 and a narrow window.
+1440×900 and a narrow window. The headless comparison covered 1280×800,
+1280×720, 1440×900 and 700×480 in all three dimensions and all three tabs.
 
 ### Phase 4 — Unified structure (visible; Q1, Q5)
 
@@ -425,8 +424,8 @@ move, hold/release opposite movement keys, rotate, Retry, replace with Space/P,
 change view and return from Main Menu. Focus another app while holding a move;
 return and confirm the object waits for a fresh press. Check that Space does
 not also activate a focused GUI button. Runtime rebinding remains a test seam;
-this phase adds no user-facing binding editor or saved profiles. Phase 5 key
-changes, the Space tab, 3D view turns and novice learning acceptance stay open.
+this phase adds no user-facing binding editor or saved profiles. 3D view turns
+and novice learning acceptance remain open.
 
 
 ## Arrow-focus correction (2026-11-15)

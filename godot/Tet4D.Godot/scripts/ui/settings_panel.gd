@@ -125,10 +125,6 @@ func reset_accessibility_settings_to_defaults() -> void:
 	apply_initial_settings()
 
 
-func set_diagnostics_visible(visible: bool) -> void:
-	pass
-
-
 func set_display_mode(mode: String) -> void:
 	_update_control("theme.name", ReplayVisuals.normalize_display_mode(mode))
 	if _style_manager != null:

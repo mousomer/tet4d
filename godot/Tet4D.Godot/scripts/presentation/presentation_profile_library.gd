@@ -2,6 +2,8 @@ extends RefCounted
 
 class_name PresentationProfileLibrary
 
+const OperationResult = preload("res://scripts/operation_result.gd")
+const StorageDirectory = preload("res://scripts/persistence/storage_directory.gd")
 const PresentationProfileScript = preload("res://scripts/presentation/presentation_profile.gd")
 const PersistentFileReplacementScript = preload("res://scripts/persistence/persistent_file_replacement.gd")
 
@@ -102,7 +104,7 @@ func load_profile(profile_id: String) -> Dictionary:
 	if not bool(loaded.get("ok", false)):
 		return loaded
 	var artifact: Dictionary = loaded.get("artifact", {})
-	return _success({
+	return OperationResult.success({
 		"record": _record_for_artifact(artifact),
 		"profile": loaded.get("profile").detached_copy(),
 	})
@@ -143,14 +145,14 @@ func delete_profile(profile_id: String) -> Dictionary:
 		return loaded
 	var error := DirAccess.remove_absolute(ProjectSettings.globalize_path(_artifact_path(profile_id)))
 	if error != OK:
-		return _failure("Profile could not be deleted (error %s)." % error)
+		return OperationResult.failure("Profile could not be deleted (error %s)." % error)
 	_mutation_count += 1
-	return _success({"record": _record_for_artifact(loaded.get("artifact", {}))})
+	return OperationResult.success({"record": _record_for_artifact(loaded.get("artifact", {}))})
 
 
 func export_profile(profile_id: String, destination_path: String, allow_overwrite: bool = false) -> Dictionary:
 	if destination_path.strip_edges().is_empty():
-		return _failure("Choose an export destination.")
+		return OperationResult.failure("Choose an export destination.")
 	var loaded := _load_artifact_by_id(profile_id)
 	if not bool(loaded.get("ok", false)):
 		return loaded
@@ -183,28 +185,28 @@ func import_artifact(artifact: Dictionary, requested_name: String = "") -> Dicti
 
 func validate_artifact(artifact: Dictionary) -> Dictionary: # tet4d-semantic-boundary: allow diagnostic-presentation
 	if artifact.is_empty():
-		return _failure("Profile artifact root must be a non-empty object.")
+		return OperationResult.failure("Profile artifact root must be a non-empty object.")
 	if str(artifact.get("artifact_type", "")) != ARTIFACT_TYPE:
-		return _failure("Profile artifact type is unsupported.")
+		return OperationResult.failure("Profile artifact type is unsupported.")
 	if not _exact_version(artifact.get("artifact_schema_version"), ARTIFACT_SCHEMA_VERSION):
-		return _failure("This profile was created by a newer or unsupported artifact format.")
+		return OperationResult.failure("This profile was created by a newer or unsupported artifact format.")
 	var profile_id := str(artifact.get("profile_id", ""))
 	if not _valid_profile_id(profile_id):
-		return _failure("Profile artifact identity is invalid or unsafe.")
+		return OperationResult.failure("Profile artifact identity is invalid or unsafe.")
 	var name_result := _validate_display_name(str(artifact.get("display_name", "")))
 	if not bool(name_result.get("ok", false)):
 		return name_result
 	var profile_snapshot = artifact.get("presentation_profile")
 	if not (profile_snapshot is Dictionary):
-		return _failure("Profile artifact presentation_profile must be an object.")
+		return OperationResult.failure("Profile artifact presentation_profile must be an object.")
 	if not _exact_version(profile_snapshot.get("schema_version"), PresentationProfileScript.SCHEMA_VERSION):
-		return _failure("This profile was created by a newer or unsupported presentation-profile format.")
+		return OperationResult.failure("This profile was created by a newer or unsupported presentation-profile format.")
 	var profile = PresentationProfileScript.from_snapshot(_registry, profile_snapshot)
 	if not _valid_profile(profile):
 		var detail := "; ".join(profile.failures()) if profile != null and profile.has_method("failures") else "invalid profile"
-		return _failure("Profile values failed authoritative validation: %s." % detail)
+		return OperationResult.failure("Profile values failed authoritative validation: %s." % detail)
 	var canonical := _artifact(profile_id, str(name_result.get("display_name")), profile)
-	return _success({"artifact": canonical, "profile": profile.detached_copy()})
+	return OperationResult.success({"artifact": canonical, "profile": profile.detached_copy()})
 
 
 func diagnostics() -> Array:
@@ -225,28 +227,28 @@ func deterministic_snapshot() -> Dictionary:
 
 func _load_artifact_by_id(profile_id: String) -> Dictionary:
 	if not _valid_profile_id(profile_id):
-		return _failure("Profile identity is invalid or unsafe.")
+		return OperationResult.failure("Profile identity is invalid or unsafe.")
 	return _read_artifact(_artifact_path(profile_id))
 
 
 func _read_artifact(path: String) -> Dictionary:
 	if not FileAccess.file_exists(path):
-		return _failure("Profile artifact does not exist.")
+		return OperationResult.failure("Profile artifact does not exist.")
 	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
-		return _failure("Profile artifact could not be read.")
+		return OperationResult.failure("Profile artifact could not be read.")
 	var parser := JSON.new()
 	if parser.parse(file.get_as_text()) != OK:
-		return _failure("Profile artifact JSON is malformed.")
+		return OperationResult.failure("Profile artifact JSON is malformed.")
 	if not (parser.data is Dictionary):
-		return _failure("Profile artifact root must be an object.")
+		return OperationResult.failure("Profile artifact root must be an object.")
 	return validate_artifact(parser.data)
 
 
 func _validated_profile(profile) -> Dictionary: # tet4d-semantic-boundary: allow diagnostic-presentation
 	if not _valid_profile(profile):
-		return _failure("A conforming PresentationProfile is required.")
-	return _success({"profile": profile.detached_copy()})
+		return OperationResult.failure("A conforming PresentationProfile is required.")
+	return OperationResult.success({"profile": profile.detached_copy()})
 
 
 func _validated_available_name(display_name: String, allowed_profile_id: String = "") -> Dictionary: # tet4d-semantic-boundary: allow diagnostic-presentation
@@ -256,22 +258,22 @@ func _validated_available_name(display_name: String, allowed_profile_id: String 
 	var canonical_name := str(result.get("display_name"))
 	for record in list_profiles():
 		if str(record.get("profile_id", "")) != allowed_profile_id and str(record.get("display_name", "")).to_lower() == canonical_name.to_lower():
-			return _failure("A profile named '%s' already exists." % canonical_name)
+			return OperationResult.failure("A profile named '%s' already exists." % canonical_name)
 	return result
 
 
 func _validate_display_name(display_name: String) -> Dictionary: # tet4d-semantic-boundary: allow diagnostic-presentation
 	var canonical := display_name.strip_edges()
 	if canonical.is_empty():
-		return _failure("Profile name cannot be empty.")
+		return OperationResult.failure("Profile name cannot be empty.")
 	if canonical.length() > MAX_DISPLAY_NAME_LENGTH:
-		return _failure("Profile name must be at most %d characters." % MAX_DISPLAY_NAME_LENGTH)
+		return OperationResult.failure("Profile name must be at most %d characters." % MAX_DISPLAY_NAME_LENGTH)
 	if canonical.find("..") >= 0 or canonical.find("/") >= 0 or canonical.find("\\") >= 0 or canonical.find(":") >= 0:
-		return _failure("Profile name cannot contain path or traversal characters.")
+		return OperationResult.failure("Profile name cannot contain path or traversal characters.")
 	for index in range(canonical.length()):
 		if canonical.unicode_at(index) < 32:
-			return _failure("Profile name cannot contain control characters.")
-	return _success({"display_name": canonical})
+			return OperationResult.failure("Profile name cannot contain control characters.")
+	return OperationResult.success({"display_name": canonical})
 
 
 func _artifact(profile_id: String, display_name: String, profile) -> Dictionary:
@@ -315,8 +317,8 @@ func _write_json_file(path: String, payload: Dictionary, allow_overwrite: bool) 
 		_storage_ops
 	)
 	if bool(replacement.get("ok", false)):
-		return _success({"warning": replacement.get("warning", "")})
-	var result := _failure("Profile file could not be saved: %s." % replacement.get("detail", "replacement failed"))
+		return OperationResult.success({"warning": replacement.get("warning", "")})
+	var result := OperationResult.failure("Profile file could not be saved: %s." % replacement.get("detail", "replacement failed"))
 	for key in ["destination_untouched", "previous_restored", "backup_recoverable", "backup_path", "restoration", "write_error", "install_error", "restore_error"]:
 		if replacement.has(key):
 			result[key] = replacement.get(key)
@@ -326,10 +328,7 @@ func _write_json_file(path: String, payload: Dictionary, allow_overwrite: bool) 
 func _ensure_storage_directory() -> Dictionary:
 	if _storage_ops != null and _storage_ops.has_method("ensure_directory"):
 		return _storage_ops.ensure_directory(_storage_directory)
-	if DirAccess.dir_exists_absolute(ProjectSettings.globalize_path(_storage_directory)):
-		return _success()
-	var error := DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(_storage_directory))
-	return _success() if error == OK else _failure("Profile library directory could not be created (error %s)." % error)
+	return StorageDirectory.ensure(_storage_directory, "Profile library")
 
 
 func _next_available_copy_name(source_name: String) -> String:
@@ -386,16 +385,6 @@ func _file_name(profile_id: String) -> String:
 	return "%s%s" % [profile_id, FILE_SUFFIX]
 
 
-func _success(extra: Dictionary = {}) -> Dictionary:
-	var result := {"ok": true, "error": ""}
-	result.merge(extra, true)
-	return result
-
-
 func _success_after_write(extra: Dictionary, write_result: Dictionary) -> Dictionary:
 	extra["warning"] = str(write_result.get("warning", ""))
-	return _success(extra)
-
-
-func _failure(message: String) -> Dictionary:
-	return {"ok": false, "error": message}
+	return OperationResult.success(extra)

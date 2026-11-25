@@ -139,10 +139,10 @@ func _check_production_deck() -> Array:
 	# dismissed onboarding guide must not change this test's native-state oracle.
 	app.set_process(false)
 	var hud = root.get_node("ReplayHud")
-	app._enter_live_4d_mode()
+	app._enter_live_mode("live_4d")
 	await tree.process_frame
 	await tree.process_frame
-	var state_hash := str(app._live_bridge.live_4d_state_hash())
+	var state_hash := str(app._live_bridge.live_state_hash(4))
 	var piece_row_ids: Array = []
 	var view_row_ids: Array = []
 	for density in ["detailed", "standard", "compact"]:
@@ -188,7 +188,7 @@ func _check_production_deck() -> Array:
 			view_row_ids = next_view_ids
 		elif piece_row_ids != next_piece_ids or view_row_ids != next_view_ids:
 			failures.append("%s density must preserve the production semantic row inventory" % density)
-	if str(app._live_bridge.live_4d_state_hash()) != state_hash:
+	if str(app._live_bridge.live_state_hash(4)) != state_hash:
 		failures.append("semantic guidance construction and density changes must not mutate Live-4D state")
 	if not hud._piece_control_strip.find_children("*", "BaseButton", true, false).is_empty() or not hud._live_view_control_strip.find_children("*", "BaseButton", true, false).is_empty():
 		failures.append("production PIECE and VIEW keycaps must remain passive")

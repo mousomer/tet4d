@@ -50,7 +50,6 @@ from .scene_state import (
     TOOL_EDIT,
     TOOL_PROBE,
     WORKSPACE_EDITOR,
-    WORKSPACE_LABELS,
     WORKSPACE_PLAY,
     WORKSPACE_SANDBOX,
     tool_is_edit,
@@ -81,9 +80,6 @@ from .scene_state import (
     current_probe_path as _current_probe_path,
 )
 from .scene_state import (
-    current_probe_trace as _current_probe_trace,
-)
-from .scene_state import (
     ensure_probe_state as _ensure_probe_state,
 )
 from .scene_state import (
@@ -112,15 +108,6 @@ from .scene_state_probe import (
 )
 from .state_ownership import (
     current_sandbox_focus_coord as _current_sandbox_focus_coord,
-)
-from .state_ownership import (
-    current_sandbox_focus_frame as _current_sandbox_focus_frame,
-)
-from .state_ownership import (
-    current_sandbox_focus_path as _current_sandbox_focus_path,
-)
-from .state_ownership import (
-    current_sandbox_focus_trace as _current_sandbox_focus_trace,
 )
 from .transform_editor import draw_transform_editor
 
@@ -375,26 +362,6 @@ def _active_workspace_neighbor_markers(state) -> list[tuple[int, ...]]:
     return []
 
 
-def _active_workspace_trace(state) -> list[str]:
-    if tool_is_sandbox(state.active_tool):
-        if not _sandbox_neighbor_search_enabled(state):
-            return []
-        return _current_sandbox_focus_trace(state)
-    if _active_workspace_name(state) == WORKSPACE_EDITOR and _probe_trace_visible(
-        state
-    ):
-        return _current_probe_trace(state)
-    return []
-
-
-def _active_workspace_probe_frame(
-    state,
-) -> tuple[tuple[int, ...], tuple[int, ...]]:
-    if tool_is_sandbox(state.active_tool):
-        return _current_sandbox_focus_frame(state)
-    return tuple(range(state.dimension)), tuple(1 for _ in range(state.dimension))
-
-
 def _draw_explorer_scene(
     screen: pygame.Surface,
     fonts,
@@ -440,88 +407,6 @@ def _draw_explorer_scene(
     if state.dimension == 4:
         return draw_scene_4d(screen, fonts, view=state.scene_camera, **scene_kwargs)
     return draw_scene_3d(screen, fonts, camera=state.scene_camera, **scene_kwargs)
-
-
-def _workspace_selection_lines(state) -> list[str]:
-    workspace_name = _active_workspace_name(state)
-    workspace_label = WORKSPACE_LABELS[workspace_name]
-    if workspace_name == WORKSPACE_EDITOR:
-        tool_label = (
-            "Edit tool" if _current_editor_tool(state) == TOOL_EDIT else "Probe tool"
-        )
-    elif tool_is_sandbox(state.active_tool):
-        tool_label = "Sandbox controls"
-    else:
-        tool_label = "Play launch"
-    lines = [f"Pane: {PANE_LABELS.get(state.active_pane, state.active_pane)}"]
-    selected_boundary_index = _current_selected_boundary_index(state)
-    if selected_boundary_index is not None:
-        boundary = _explorer_boundaries(state)[selected_boundary_index].label
-        lines.append(f"Selected boundary: {boundary}")
-    if state.hovered_boundary_index is not None:
-        hovered = _explorer_boundaries(state)[state.hovered_boundary_index].label
-        lines.append(f"Hover boundary: {hovered}")
-    selected_glue_id = _current_selected_glue_id(state)
-    if selected_glue_id:
-        lines.append(f"Selected seam: {selected_glue_id}")
-    elif state.hovered_glue_id:
-        lines.append(f"Hover seam: {state.hovered_glue_id}")
-    lines.append(f"Workspace: {workspace_label}")
-    lines.append(f"Tool focus: {tool_label}")
-    return lines
-
-
-def _workspace_camera_lines(state) -> list[str]:
-    if not _uses_general_explorer_editor(state):
-        return []
-    probe_coord = _active_workspace_coord(state)
-    if probe_coord is None:
-        return []
-    pairs = (
-        ((0, 1), (0, 2), (1, 2))
-        if state.dimension == 3
-        else ((0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3))
-    )
-    labels: list[str] = []
-    for axes in pairs:
-        hidden_axes = [axis for axis in range(state.dimension) if axis not in axes]
-        hidden_label = ", ".join(
-            f"{'xyzw'[axis]}={probe_coord[axis]}" for axis in hidden_axes
-        )
-        pair_label = "".join("xyzw"[axis] for axis in axes)
-        labels.append(f"{pair_label}[{hidden_label}]" if hidden_label else pair_label)
-    return ["Projection slices: " + "  ".join(labels)]
-
-
-def _workspace_probe_lines(state) -> list[str]:
-    workspace_name = _active_workspace_name(state)
-    if workspace_name == WORKSPACE_SANDBOX:
-        if not _sandbox_neighbor_search_enabled(state):
-            anchor = _sandbox_anchor_coord(state)
-            lines = ["Sandbox neighbor-search: off"]
-            if anchor is not None:
-                lines.append(f"Sandbox anchor: {list(anchor)}")
-            return lines
-        focus_coord = _current_sandbox_focus_coord(state)
-        lines = [
-            f"Sandbox focus: {list(focus_coord)}",
-            f"Focus steps: {max(0, len(_current_sandbox_focus_path(state)) - 1)}",
-        ]
-        lines.extend(f"  {line}" for line in _current_sandbox_focus_trace(state)[-3:])
-        return lines
-    if workspace_name != WORKSPACE_EDITOR:
-        return []
-    probe_coord = _current_probe_coord(state)
-    if probe_coord is None:
-        return []
-    lines = [
-        f"Editor cell: {list(probe_coord)}",
-        f"Editor trace: {'on' if _probe_trace_visible(state) else 'off'}",
-    ]
-    if _probe_trace_visible(state):
-        lines.append(f"Editor steps: {max(0, len(_current_probe_path(state)) - 1)}")
-        lines.extend(f"  {line}" for line in _active_workspace_trace(state)[-3:])
-    return lines
 
 
 def _workspace_helper_lines(state) -> tuple[str, ...]:

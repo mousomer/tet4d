@@ -1,16 +1,16 @@
 # CURRENT_STATE (Restart Handoff)
-Tet4D uses distribution 1.5.0 / runtime 0.8.0. Run `./gov explain
-execution.completion` to inspect the shared synchronous-execution requirements
-and their source. The architecture contract is
-`docs/architecture/workspace_governance_v0_1.md`. Stage 56H baseline: `0cb30958`.
+Tet4D consumes distribution 1.8.4 / runtime 1.0.4 with supervised completion v3 (Stage 56H baseline: `0cb30958`).
+The unchanged full verifier remains the product gate. `gov op` supervises covered
+long operations with persistent identity/budgets. `./gov explain execution.completion` and
+`docs/architecture/workspace_governance_v0_1.md` own the contract and provenance.
 ## Purpose
 This file contains only the compact state needed to resume staged or
 phase-dependent work. It is not workflow authority, a CI diary, a completed
 stage archive, a task-contract ledger, or a future programme.
 ## Active Focus
 
-Explorer cockpit Phases 0–2 (lock, descriptor and independent input dispatch) are implemented and verified.
-Phases 3–6 remain open under `docs/plans/explorer_cockpit_unification.md`.
+Explorer cockpit Phases 0–4 include the behavior lock, independent input dispatch, and shared View, Piece and Space structure.
+Remaining Phase 5–6 work is tracked under `docs/plans/explorer_cockpit_unification.md`.
 
 Explorer T2A implements the native bounded/cylinder/torus translation candidate and permanent preservation suite described in `docs/architecture/explorer_topology_t2a_native_transport.md`. T1 PRs #172–#176 are the accepted baseline; remaining Correction 4B P2 findings stay deferred. T2B is integrated; the owner-authorized 2D surface candidate adds Möbius/Klein/projective, coherent rotations/Undo and compatibility two-chart S² under `docs/architecture/explorer_surface_runtime.md`. The topology-first amendment selects single-square `sphere_adjacent_positive` and probe semantics for Klein/RP²/S² (RDS §2.5); physical inverse recovery and geometric coherence do not gate translation; destination injectivity remains mandatory. Complete T2/T6 acceptance remains open. Runtime authority has not transferred. See `docs/BACKLOG.md` and `docs/architecture/explorer_topology_t2_transfer_preparation.md`.
 Bounded practice now exposes 2D through the flat live renderer and existing
@@ -54,14 +54,14 @@ No active handoff.
 
 ## Next Acceptance Boundary
 
-Next: land cockpit Phases 0–2, then extract the Phase 3 cockpit owner under the plan.
+Next: continue remaining Explorer cockpit work under the plan while keeping human acceptance separate.
 Bounded MVP novice acceptance and T2 acceptance/authority transfer remain separate open gates.
 Designer text-size review and replay toolbar assessment remain separate; 58B scale stays frozen.
 Stage 58C.7 is owner-accepted with documented tradeoffs; see
 `docs/history/stage_58c_owner_acceptance_2026_11_02.md`. Stage 58D stays separate.
 The Stage 56H human playability checkpoint retains its task contract at
 `docs/tasks/live_4d_cockpit_convergence.md`; Stage 56I polish and the 190/200
-A/B decision remain separate. Governance distribution 1.4.0 / runtime 0.7.0 is active;
+A/B decision remain separate. Governance distribution 1.8.4 / runtime 1.0.4 is installed;
 its rollout and proof limits are recorded in
 `docs/plans/all_repository_governance_rollout.md` and the private fleet audit.
 P1b/P1c/P6 continuation and separate comparison/blocking gates remain required.
@@ -71,10 +71,10 @@ evidence is separate from the retained historical records. Unrecoverable Git met
 and census gaps remain separate acceptance boundaries. IQA product execution stays held at its model-download boundary; RMBG
 verification follows its reviewed temporary-input repair.
 The human session includes direct Play and `2`/`3`/`4` entry, `C` Change Setup,
-and frozen-setup Restart/Play Again under
-`docs/architecture/editable_board_setup_and_persistence.md`.
-Shell readability uses 24/22 px text, a Main Menu that scales to fit (scrolling
-only below its floor), and visible launch Play. Scale: menus 1280×720 pt, tighter axis, 0.75–2×; live/replay 1280×800 pt, 1–2×.
+and frozen-setup Restart/Play Again under `docs/architecture/editable_board_setup_and_persistence.md`.
+The shared native session lifecycle preserves the existing 2D and ND state and trace contracts.
+Shell readability retains compact Settings/Designer typography and accepted fullscreen shortcuts.
+Large-window menus keep normal text size; live/replay retain the 1280×800 pt, 1–2× reference.
 Include resizing, navigation, and guide layout in human acceptance.
 The correction on `claude/stage-56h-gameplay-ergonomics` from `0cb30958`
 requires actual-region fitting, styled legends, orthogonal grid modes, and
@@ -115,13 +115,13 @@ Generated from `tools/governance/check_drift_protection.py` and `config/project/
 Top 8 live Python hotspots by real LOC:
 
 1. `tests/unit/engine/test_topology_lab_menu.py`: `3804` real LOC
-2. `tests/unit/render/test_locked_cell_explosion.py`: `3782` real LOC
-3. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `3194` real LOC
+2. `tests/unit/render/test_locked_cell_explosion.py`: `3783` real LOC
+3. `src/tet4d/ui/pygame/locked_cell_explosion/surface.py`: `3153` real LOC
 4. `tools/governance/validate_project_contracts.py`: `2754` real LOC
-5. `src/tet4d/ui/pygame/front4d_render.py`: `2153` real LOC
-6. `tools/workspace_governance/validators/core.py`: `2106` real LOC
-7. `scripts/arch_metrics.py`: `1899` real LOC
-8. `src/tet4d/ui/pygame/locked_cell_explosion/board_view.py`: `1883` real LOC
+5. `tools/workspace_governance/operation_supervisor.py`: `2222` real LOC
+6. `src/tet4d/ui/pygame/front4d_render.py`: `2133` real LOC
+7. `tools/workspace_governance/validators/core.py`: `2122` real LOC
+8. `scripts/arch_metrics.py`: `1899` real LOC
 
 Thin-wrapper budgets:
 

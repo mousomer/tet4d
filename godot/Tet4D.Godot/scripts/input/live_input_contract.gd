@@ -296,7 +296,7 @@ static func explorer_profile(dimension: int, basis_snapshot: Dictionary = {}, co
 	var axes: Array = []
 	for label in "xyzw".substr(0, dimension):
 		var prefix := "explorer_2d_move_y_" if dimension == 2 and label == "y" else "explorer_move_%s_" % label
-		var axis := {"label": label, "negative_command": "move_%s_neg" % label, "positive_command": "move_%s_pos" % label, "negative_action": prefix + "neg", "positive_action": prefix + "pos", "alias_actions": [], "relative": dimension > 2 and label != "y", "repeat": dimension == 2 or label != "y"}
+		var axis := {"label": label, "negative_command": "move_%s_neg" % label, "positive_command": "move_%s_pos" % label, "negative_action": prefix + "neg", "positive_action": prefix + "pos", "alias_actions": [], "relative": true, "repeat": dimension == 2 or label != "y"}
 		if dimension == 2 and label == "y":
 			axis.alias_actions = ["explorer_move_y_neg", "explorer_move_y_pos"]
 		axes.append(axis)
@@ -304,7 +304,7 @@ static func explorer_profile(dimension: int, basis_snapshot: Dictionary = {}, co
 	for spec in rotation_control_specs("piece"):
 		var label: String = str(spec.plane).to_lower()
 		if (dimension < 4 and "w" in label) or (dimension < 3 and "z" in label): continue
-		planes.append({"label": label, "negative_command": "rotate_%s_neg" % label, "positive_command": "rotate_%s_pos" % label, "negative_action": "explorer_rotate_" + label + "_neg", "positive_action": "explorer_rotate_" + label + "_pos", "relative": dimension > 2})
+		planes.append({"label": label, "negative_command": "rotate_%s_neg" % label, "positive_command": "rotate_%s_pos" % label, "negative_action": "explorer_rotate_" + label + "_neg", "positive_action": "explorer_rotate_" + label + "_pos", "relative": true})
 	var session := {
 		"replace": {"label": "Replace piece", "command": "replace", "action": "explorer_replace_piece"},
 		"target": {"label": "New target", "command": "target", "action": ""},
@@ -324,14 +324,14 @@ static func explorer_profile(dimension: int, basis_snapshot: Dictionary = {}, co
 
 
 static func _explorer_piece_groups(mode: String, axes: Array, planes: Array, session: Dictionary, basis_snapshot: Dictionary, control_frame: Dictionary) -> Array:
-	# One structure for every dimension: planar moves (compass), the vertical
-	# Up/Down pair, rotation planes and the practice session keys. 2D has no
-	# camera, so its axes are always canonical.
+	# One structure for every dimension: planar moves (compass), the spatial
+	# Up/Down pair, rotation planes and the practice session keys. 2D piece
+	# movement uses the shared camera-relative mapping, including aliases.
 	var groups: Array = []
 	var flat := mode == "live_2d"
 	var legacy := control_frame.is_empty()
 	var relative := not flat and str(control_frame.get("translation_frame", "relative")) == "relative"
-	var rotation_relative := not flat and str(control_frame.get("rotation_frame", "relative")) == "relative"
+	var rotation_relative := str(control_frame.get("rotation_frame", "relative")) == "relative"
 	var visible_axes: Array = basis_snapshot.get("visible_axes", ["X", "+Y", "Z"])
 	var axis_values := {"x": str(control_frame.get("horizontal_axis", visible_axes[0] if mode == "live_4d" else "+X")), "z": str(control_frame.get("depth_axis", visible_axes[2] if mode == "live_4d" else "+Z")), "w": str(control_frame.get("slice_axis", basis_snapshot.get("slice_axis", "+W")))}
 	var move_rows: Array = []
@@ -344,10 +344,8 @@ static func _explorer_piece_groups(mode: String, axes: Array, planes: Array, ses
 		move_rows.append([_pair(axis.negative_action, axis.positive_action, " / " if mode == "live_4d" else "/"), text, {"cockpit_direction": direction, "signed_axis": signed_axis}])
 	var y: Dictionary = axes.filter(func(record): return record.label == "y")[0]
 	if flat:
-		# 2D's Y is the screen vertical: W/S sit on the compass, and the shared
-		# Z/X pair keeps the same Up/Down row as 3D/4D.
+		# 2D Y already appears on the compass; no separate Up/Down row.
 		move_rows.append([_pair(y.negative_action, y.positive_action, "/"), "Y− / Y+", {"cockpit_direction": "screen_vertical", "signed_axis": "+Y"}])
-		move_rows.append([_pair(y.alias_actions[0], y.alias_actions[1], "/"), "Y− / Y+", {"cockpit_direction": "vertical", "signed_axis": "+Y"}])
 	else:
 		move_rows.append([_pair(y.negative_action, y.positive_action), "Y− / Y+", {"cockpit_direction": "vertical", "signed_axis": "+Y"}])
 	var rotation_rows: Array = []
@@ -357,7 +355,7 @@ static func _explorer_piece_groups(mode: String, axes: Array, planes: Array, ses
 		if mode == "live_4d": row.append({"operation": str(plane.label).to_upper()})
 		rotation_rows.append(row)
 	var movement_note := "Canonical X/Y axes." if flat else (("Controls follow the current view; Forward recedes and Back approaches." if mode == "live_3d" else "Controls follow the current view.") if relative else ("Canonical X/Z axes." if mode == "live_3d" else "Canonical X/Z/W axes."))
-	var rotation_note := "Canonical XY plane." if flat else (("Planes follow the current view." if rotation_relative else "Canonical XYZ planes.") if mode == "live_3d" else ("Left: CCW · Right: CW" if legacy else ("Left: CCW · Right: CW · Planes follow the current view." if rotation_relative else "Left: CCW · Right: CW · Canonical XY/XZ/YZ/XW/YW/ZW planes.")))
+	var rotation_note := ("Plane follows the current view." if rotation_relative else "Canonical XY plane.") if flat else (("Planes follow the current view." if rotation_relative else "Canonical XYZ planes.") if mode == "live_3d" else ("Left: CCW · Right: CW" if legacy else ("Left: CCW · Right: CW · Planes follow the current view." if rotation_relative else "Left: CCW · Right: CW · Canonical XY/XZ/YZ/XW/YW/ZW planes.")))
 	groups.append({"group": "Piece movement", "cockpit_role": "translate", "note": movement_note, "items": move_rows})
 	groups.append({"group": "Piece rotation", "cockpit_role": "rotate", "note": rotation_note, "items": rotation_rows})
 	groups.append({"group": "Practice", "cockpit_role": "session", "items": [[_display_key(session.replace.action), session.replace.label], [_display_key(session.retry.action), session.retry.label]]})

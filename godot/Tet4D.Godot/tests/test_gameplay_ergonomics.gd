@@ -31,13 +31,13 @@ func run() -> Array:
 			hud._game_setup_model.set_axis_text(0, "invalid")
 			for state in ["playing", "paused", "gameover"]:
 				for path in ["button", "key"]:
-					app.call("_live_%s_command" % mode.trim_prefix("live_"), "hard_drop")
+					app._live_command(mode, "hard_drop")
 					if state == "paused":
-						app.call("_toggle_%s_pause" % mode)
+						app._toggle_live_pause(mode)
 					elif state == "gameover":
 						for drop in range(128):
 							if app._current_snapshot.get("game_over", false): break
-							app.call("_%s_command" % mode, "hard_drop")
+							app._live_command(mode, "hard_drop")
 						if not app._current_snapshot.get("game_over", false):
 							failures.append("%s fixture must reach actual native game over" % mode)
 					if path == "button":
@@ -53,7 +53,7 @@ func run() -> Array:
 			var seed_before = app._current_snapshot.get("effective_seed")
 			if not hud._new_random_game_button.visible:
 				failures.append("%s must expose another game for %s" % [mode, random_mode])
-			app.call("_toggle_%s_pause" % mode)
+			app._toggle_live_pause(mode)
 			hud._new_random_game_button.pressed.emit()
 			_check_running(failures, app, hud, frozen, visual, "%s new game" % mode)
 			var seed_after = app._current_snapshot.get("effective_seed")
@@ -109,7 +109,7 @@ func _check_bindings(failures: Array, app, hud, mode: String) -> void:
 	InputMap.action_add_event(action, rebound)
 	# Re-entering/initializing an app must not append default keys to a binding.
 	app._ensure_input_map()
-	app.call("_toggle_%s_pause" % mode)
+	app._toggle_live_pause(mode)
 	# The same poll used during play must refresh guidance while paused too.
 	hud._process(0.21)
 	var strip: Dictionary = hud._piece_control_strip.deterministic_snapshot()

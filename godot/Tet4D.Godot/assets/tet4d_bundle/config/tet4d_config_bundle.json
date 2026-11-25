@@ -10,6 +10,10 @@
     "audio_defaults": [
       "config/audio/sfx.json"
     ],
+    "config": [
+      "config/governance/project.json",
+      "config/governance/workspace.lock.json"
+    ],
     "gameplay_defaults": [
       "config/gameplay/piece_sets_nd.json",
       "config/gameplay/score_analyzer.json",
@@ -42,6 +46,7 @@
       "config/project/io_paths.json",
       "config/project/policy/manifests/help_assets_manifest.json",
       "config/project/policy/manifests/replay_manifest.json",
+      "config/project/policy/manifests/sanitation_references.json",
       "config/project/policy/manifests/secret_scan.json",
       "config/project/policy_pack.json"
     ],
@@ -57,12 +62,27 @@
       "config/ui/theme.json"
     ]
   },
-  "combined_digest": "0d8173aafd4d3a8855bfa7cbef93cb0683e3906e767810ff5857a4af50b93d09",
+  "combined_digest": "9e5cfc266cfa43cfa0d17c51d9080cf39fc7a2677d72f0ad54b91205c78aa902",
   "schema_files": [
     {
       "purpose": "board extent contract.schema JSON schema",
       "sha256": "e685d207ac0519f792f67039f592b377495313b6d2a3d01a88b50938b12b5057",
       "source_path": "config/schema/board_extent_contract.schema.json"
+    },
+    {
+      "purpose": "explorer topology catalog v1.schema JSON schema",
+      "sha256": "a7813cc1a69e47e80b86a8d060a6474951d6bb971758dd6d41315a446e9d7ddf",
+      "source_path": "config/schema/explorer_topology_catalog_v1.schema.json"
+    },
+    {
+      "purpose": "explorer topology quotients v1.schema JSON schema",
+      "sha256": "60bc2fe7f46081f1d8a8c123462ed7e5ec01b1075d9aee83e84315c00a932bfa",
+      "source_path": "config/schema/explorer_topology_quotients_v1.schema.json"
+    },
+    {
+      "purpose": "explorer topology transport fixtures v1.schema JSON schema",
+      "sha256": "1f4b88213d8ef59bbf6c61f8399239f48ea21028cfc5bdf4f7bd80fa53abb17b",
+      "source_path": "config/schema/explorer_topology_transport_fixtures_v1.schema.json"
     },
     {
       "purpose": "help action map.schema JSON schema",
@@ -115,6 +135,8 @@
     "config/gameplay/piece_sets_nd.json": "f92033f5b00b45f06d46c29a15cb9699e148faf6d11a1eb40e4219119af08242",
     "config/gameplay/score_analyzer.json": "eb720c5a9c7b1b2f7f0dce635a82eecbf62a88559437ee990c6828f42610fe42",
     "config/gameplay/tuning.json": "e239eee4afa6076f7eb53dacb3eaf58854f204c91a3b1265560b13625784c647",
+    "config/governance/project.json": "8c0eb285ade81f9d2d044d882cf4d1def995a6ee58e50badbd9d000d6d2ebae5",
+    "config/governance/workspace.lock.json": "2aab71e9fbe41e8f9a7efe9363f8e095863f1952e8302773aeb9c403a1726762",
     "config/help/action_map.json": "752c469f6ab741fe4dbc570baae008db79ac1f04abbd66e77b0055b544147ff1",
     "config/help/content/runtime_help_content.json": "0fd5cb6001813c51f232dfc7f04c03e2eabca99ce4edf0bcec2382cf8871c585",
     "config/help/icon_map.json": "8d058312c076281af70703e6182fa9c1952cf585dd6c8d8fe23e10e8ebdce362",
@@ -126,15 +148,16 @@
     "config/menu/structure.json": "94a52df1986dcf9194c3704ba6e68c4cb43b53addc9251c3f22707b26b1a6e7a",
     "config/playbot/policy.json": "8b3aa9f093e7123ca7dcbf68d0d4d484fafe7b30c816bbbf9d8141e990ba45ea",
     "config/project/backlog_debt.json": "b5837703b4190a1f7fd149f6ae0f52653282f95663b495a0de2ba1584d329581",
-    "config/project/codex_ci_lanes.json": "1c9a0e45b131b6118572bf5ce111c687ff5e93f911d2d4125620c321d00a7466",
+    "config/project/codex_ci_lanes.json": "caf9c7c1162a2b3149619028d28ad5234ffd24e3cef1d0665eab95840b023695",
     "config/project/constants.json": "40b3fb2f1847a2be04eb0667a1162b44534af3c65984f34dc77b87fa8a7b3a22",
     "config/project/folder_balance_budgets.json": "40be71886ddf09abed928139b9dae1377e3cd7f5d957501508322067481f3247",
     "config/project/format_allowlist.txt": "8cf5def88437d157738243eea6c4ee69cb9c18cc5c8402daa4a66977fa5631c0",
     "config/project/io_paths.json": "c1d3f5a8a5b53f0f73cb0c91bf565bbddb4eaa6691b2031ce5c03a9e61b1d40e",
     "config/project/policy/manifests/help_assets_manifest.json": "f65301e28c585cc61f6662b86b22c491f29b4adce604bf07fedb643cfbdf95e7",
     "config/project/policy/manifests/replay_manifest.json": "04bd5feb7c312f94043585b09eb62d5707075861c13660697f4599b14ae81395",
-    "config/project/policy/manifests/secret_scan.json": "047a6c0cbd75fb8f8ee3874f2193b6b9f3ca618eef34af2a5b8586c6a37d127f",
-    "config/project/policy_pack.json": "da6e2dd66e723d224a65aac5c1e70150ff4e982f744304bb76918fe6399058fd",
+    "config/project/policy/manifests/sanitation_references.json": "5034a7dcbb7c4c3678c6412719d4f5163edb9358b53269524844ebcb8e47f44c",
+    "config/project/policy/manifests/secret_scan.json": "719c0d7f5792df85d3d7a773a90703c1bd9c46b88c101aa072fe5ed3f9c3414c",
+    "config/project/policy_pack.json": "2caec1088236859c08a82e1795e26e5d26735aa55898be84763a514a01ac04e0",
     "config/topology/designer_presets.json": "aa580530ae440285615e6f4d27f168a637efd481dfe688de4580fdfd16957a6a",
     "config/topology/lab_menu.json": "66dca73fdd7d141d6d2d001c1af0da6a5718b5cde6bd01d471502089b468110c",
     "config/tutorial/lessons.json": "54b4c6d166ca55d309d8eeb024a98f7c7c7bb9f6a7444f6170ab35d3cf6538dd",
@@ -1898,6 +1921,1137 @@
       },
       "payload_included": true,
       "sha256": "e239eee4afa6076f7eb53dacb3eaf58854f204c91a3b1265560b13625784c647"
+    },
+    "config/governance/project.json": {
+      "category": "config",
+      "format": "json",
+      "payload": {
+        "artifact_roles": {
+          "docs/architecture/workspace_governance_distribution.md": "governance_treatment",
+          "docs/architecture/workspace_governance_distribution_review.md": "bookkeeping",
+          "docs/plans/all_repository_governance_ledger.json": "bookkeeping",
+          "docs/plans/all_repository_governance_rollout.md": "governance_treatment"
+        },
+        "authorities": [
+          {
+            "authority_id": "engineering",
+            "authority_type": "human",
+            "canonical_governance": true,
+            "exclusive": true,
+            "legacy_key": "engineering_governance",
+            "scope": "engineering-practice",
+            "source": "docs/governance/ENGINEERING.md",
+            "source_type": "file"
+          },
+          {
+            "authority_id": "verification",
+            "authority_type": "human",
+            "canonical_governance": true,
+            "exclusive": true,
+            "legacy_key": "verification_governance",
+            "scope": "verification-evidence",
+            "source": "docs/governance/VERIFICATION.md",
+            "source_type": "file"
+          },
+          {
+            "authority_id": "change-governance",
+            "authority_type": "human",
+            "canonical_governance": true,
+            "exclusive": true,
+            "legacy_key": "change_governance",
+            "scope": "change-governance",
+            "source": "docs/governance/CHANGE_GOVERNANCE.md",
+            "source_type": "file"
+          },
+          {
+            "authority_id": "security-sanitation",
+            "authority_type": "human",
+            "canonical_governance": true,
+            "exclusive": true,
+            "legacy_key": "security_and_sanitation_governance",
+            "scope": "security-sanitation",
+            "source": "docs/governance/SECURITY_AND_SANITATION.md",
+            "source_type": "file"
+          },
+          {
+            "authority_id": "config-generated-data",
+            "authority_type": "human",
+            "canonical_governance": true,
+            "exclusive": true,
+            "legacy_key": "config_and_generated_data_governance",
+            "scope": "config-generated-data",
+            "source": "docs/governance/CONFIG_AND_GENERATED_DATA.md",
+            "source_type": "file"
+          },
+          {
+            "authority_id": "native-and-platform",
+            "authority_type": "human",
+            "canonical_governance": true,
+            "exclusive": true,
+            "legacy_key": "native_and_platform_governance",
+            "scope": "native-platform-policy",
+            "source": "docs/governance/NATIVE_AND_PLATFORM.md",
+            "source_type": "file"
+          },
+          {
+            "authority_id": "authority-transfer",
+            "authority_type": "human",
+            "canonical_governance": false,
+            "exclusive": true,
+            "legacy_key": "authority_transfer_and_establishment_protocol",
+            "scope": "authority-transfer-establishment",
+            "source": "docs/architecture/authority_transfer_protocol.md",
+            "source_type": "file"
+          },
+          {
+            "authority_id": "architecture",
+            "authority_type": "human",
+            "canonical_governance": false,
+            "exclusive": true,
+            "legacy_key": "architecture_contract",
+            "scope": "architecture",
+            "source": "docs/ARCHITECTURE_CONTRACT.md",
+            "source_type": "file"
+          },
+          {
+            "authority_id": "subsystem-ownership",
+            "authority_type": "human",
+            "canonical_governance": false,
+            "exclusive": true,
+            "legacy_key": "subsystem_authority_map",
+            "scope": "subsystem-ownership",
+            "source": "docs/architecture/authority_map.md",
+            "source_type": "file"
+          },
+          {
+            "alias_of": "subsystem-ownership",
+            "authority_id": "godot-runtime",
+            "authority_type": "alias",
+            "canonical_governance": false,
+            "exclusive": false,
+            "scope": "godot-product-shell",
+            "source": "docs/architecture/authority_map.md",
+            "source_type": "alias"
+          },
+          {
+            "authority_id": "product-requirements",
+            "authority_type": "human",
+            "canonical_governance": false,
+            "exclusive": true,
+            "legacy_key": "product_requirements_root",
+            "scope": "product-behaviour",
+            "source": "docs/rds/",
+            "source_type": "directory"
+          },
+          {
+            "authority_id": "professional-product-programme",
+            "authority_type": "human",
+            "canonical_governance": false,
+            "exclusive": true,
+            "legacy_key": "professional_product_programme",
+            "scope": "product-programme",
+            "source": "docs/plans/professional_godot_game_programme.md",
+            "source_type": "file"
+          },
+          {
+            "authority_id": "open-work-backlog",
+            "authority_type": "human",
+            "canonical_governance": false,
+            "exclusive": true,
+            "legacy_key": "open_work_backlog",
+            "scope": "open-work",
+            "source": "docs/BACKLOG.md",
+            "source_type": "file"
+          },
+          {
+            "authority_id": "topology-current-authority",
+            "authority_type": "human",
+            "canonical_governance": false,
+            "exclusive": true,
+            "legacy_key": "topology_current_authority",
+            "scope": "topology-current-state",
+            "source": "docs/architecture/topology_playground_current_authority.md",
+            "source_type": "file"
+          },
+          {
+            "authority_id": "legacy-policy-pack",
+            "authority_type": "compatibility",
+            "canonical_governance": false,
+            "exclusive": true,
+            "legacy_key": "machine_authority",
+            "scope": "unmigrated-machine-policy",
+            "source": "config/project/policy_pack.json",
+            "source_type": "file"
+          },
+          {
+            "authority_id": "python-project-metadata",
+            "authority_type": "project_metadata",
+            "canonical_governance": false,
+            "exclusive": true,
+            "scope": "python-environment-contract",
+            "source": "pyproject.toml",
+            "source_type": "file"
+          }
+        ],
+        "canonical_owner_set": {
+          "authority_ref": "legacy-policy-pack",
+          "json_pointer": "/authority_model/canonical_human_owners"
+        },
+        "environment": {
+          "critical_packages": [
+            "tet4d",
+            "pytest",
+            "ruff",
+            "packaging"
+          ],
+          "dependency_authority": {
+            "authority_ref": "python-project-metadata",
+            "source": "pyproject.toml"
+          },
+          "editable_source": "src/tet4d",
+          "execution_mode": {
+            "default": "installed",
+            "override": "TET4D_ENVIRONMENT_MODE"
+          },
+          "interpreter_override": "TET4D_PYTHON",
+          "package_import": "tet4d",
+          "preferred": ".venv/bin/python",
+          "python_requires": {
+            "authority_ref": "python-project-metadata",
+            "source_field": "project.requires-python"
+          },
+          "route_tools": {
+            "godot": {
+              "candidates": [
+                "godot"
+              ],
+              "override": "GODOT_BIN",
+              "version_args": [
+                "--version"
+              ]
+            }
+          }
+        },
+        "execution": {
+          "default_mode": "FEATURE",
+          "profiles": {
+            "FEATURE": {
+              "exploration": [
+                "owner",
+                "neighboring-contracts",
+                "bounded-architecture-search"
+              ],
+              "final_evidence_rule": "resolved-from-diff-authority-risk",
+              "routes": [
+                "godot_product_shell"
+              ]
+            },
+            "LOCAL_FIX": {
+              "exploration": [
+                "reproduce",
+                "owning-source",
+                "direct-tests"
+              ],
+              "final_evidence_rule": "resolved-from-diff-authority-risk",
+              "routes": [
+                "godot_product_shell"
+              ]
+            },
+            "STRUCTURAL_CHANGE": {
+              "exploration": [
+                "authority-review",
+                "routing-review",
+                "repository-impact",
+                "generated-surfaces"
+              ],
+              "final_evidence_rule": "resolved-from-diff-authority-risk",
+              "routes": [
+                "governance_and_tooling"
+              ]
+            }
+          },
+          "representative_scenarios": [
+            {
+              "id": "small-godot-ui-defect",
+              "match_all": [
+                "small",
+                "godot",
+                "defect"
+              ],
+              "mode": "LOCAL_FIX",
+              "priority": 300,
+              "routes": [
+                "godot_product_shell"
+              ]
+            },
+            {
+              "id": "godot-presentation-feature",
+              "match_all": [
+                "godot",
+                "presentation feature"
+              ],
+              "mode": "FEATURE",
+              "priority": 200,
+              "routes": [
+                "godot_product_shell"
+              ]
+            },
+            {
+              "id": "godot-validation-label-regression",
+              "match_all": [
+                "godot",
+                "validation-label styling"
+              ],
+              "mode": "LOCAL_FIX",
+              "priority": 350,
+              "routes": [
+                "godot_product_shell"
+              ]
+            },
+            {
+              "id": "small-python-defect",
+              "match_all": [
+                "small",
+                "python",
+                "defect"
+              ],
+              "mode": "LOCAL_FIX",
+              "priority": 300,
+              "routes": [
+                "python_reference_engine"
+              ]
+            },
+            {
+              "id": "python-bug-fix",
+              "match_all": [
+                "python bug fix"
+              ],
+              "mode": "LOCAL_FIX",
+              "priority": 350,
+              "routes": [
+                "python_reference_engine"
+              ]
+            },
+            {
+              "id": "reference-engine-work",
+              "match_all": [
+                "reference engine"
+              ],
+              "mode": "FEATURE",
+              "priority": 200,
+              "routes": [
+                "python_reference_engine"
+              ]
+            },
+            {
+              "id": "oracle-work",
+              "match_all": [
+                "oracle"
+              ],
+              "mode": "FEATURE",
+              "priority": 250,
+              "routes": [
+                "python_reference_engine"
+              ]
+            },
+            {
+              "id": "python-work",
+              "match_all": [
+                "python"
+              ],
+              "mode": "FEATURE",
+              "priority": 100,
+              "routes": [
+                "python_reference_engine"
+              ]
+            },
+            {
+              "id": "moderate-feature",
+              "match_all": [
+                "moderate",
+                "feature"
+              ],
+              "mode": "FEATURE",
+              "priority": 90,
+              "routes": [
+                "godot_product_shell"
+              ]
+            },
+            {
+              "id": "cross-layer-change",
+              "match_all": [
+                "cross-layer"
+              ],
+              "mode": "STRUCTURAL_CHANGE",
+              "priority": 400,
+              "routes": [
+                "python_reference_engine",
+                "godot_product_shell",
+                "native_deterministic_core"
+              ]
+            },
+            {
+              "id": "governance-change",
+              "match_all": [
+                "governance",
+                "change"
+              ],
+              "mode": "STRUCTURAL_CHANGE",
+              "priority": 100,
+              "routes": [
+                "governance_and_tooling"
+              ]
+            },
+            {
+              "id": "ci-platform-routing-repair",
+              "match_all": [
+                "ci classification",
+                "platform routing"
+              ],
+              "mode": "STRUCTURAL_CHANGE",
+              "priority": 350,
+              "routes": [
+                "governance_and_tooling",
+                "packaging_and_release"
+              ]
+            },
+            {
+              "id": "product-platform-routing-repair",
+              "match_all": [
+                "product-platform routing",
+                "repair"
+              ],
+              "mode": "STRUCTURAL_CHANGE",
+              "priority": 300,
+              "routes": [
+                "governance_and_tooling",
+                "packaging_and_release"
+              ]
+            },
+            {
+              "id": "packaging-release-change",
+              "match_all": [
+                "packaging",
+                "release"
+              ],
+              "mode": "STRUCTURAL_CHANGE",
+              "priority": 200,
+              "routes": [
+                "packaging_and_release"
+              ]
+            },
+            {
+              "id": "product-planning-change",
+              "match_all": [
+                "product",
+                "planning"
+              ],
+              "mode": "FEATURE",
+              "priority": 200,
+              "routes": [
+                "product_planning"
+              ]
+            },
+            {
+              "id": "topology-explorer-change",
+              "match_all": [
+                "topology",
+                "explorer"
+              ],
+              "mode": "FEATURE",
+              "priority": 250,
+              "routes": [
+                "topology_and_explorer"
+              ]
+            },
+            {
+              "id": "live-4d-rosette-fix",
+              "match_all": [
+                "fix",
+                "live",
+                "4d",
+                "rosette"
+              ],
+              "mode": "LOCAL_FIX",
+              "priority": 350,
+              "routes": [
+                "godot_product_shell"
+              ]
+            },
+            {
+              "id": "godot-shared-contract",
+              "match_all": [
+                "godot",
+                "shared contract"
+              ],
+              "mode": "STRUCTURAL_CHANGE",
+              "priority": 450,
+              "routes": [
+                "godot_product_shell",
+                "python_reference_engine",
+                "native_deterministic_core"
+              ]
+            },
+            {
+              "id": "godot-tree-file-owner",
+              "match_all": [
+                "godot/tet4d.godot/"
+              ],
+              "mode": "FEATURE",
+              "priority": 94,
+              "routes": [
+                "godot_product_shell"
+              ]
+            },
+            {
+              "id": "named-godot-file-owner",
+              "match_all": [
+                " godot/"
+              ],
+              "mode": "FEATURE",
+              "priority": 93,
+              "routes": [
+                "godot_product_shell"
+              ]
+            },
+            {
+              "id": "python-source-file-owner",
+              "match_all": [
+                "src/tet4d/"
+              ],
+              "mode": "FEATURE",
+              "priority": 92,
+              "routes": [
+                "python_reference_engine"
+              ]
+            },
+            {
+              "id": "native-core-file-owner",
+              "match_all": [
+                "native/tet4d_core/"
+              ],
+              "mode": "FEATURE",
+              "priority": 91,
+              "routes": [
+                "native_deterministic_core"
+              ]
+            },
+            {
+              "id": "mixed-owner-python-wording-godot-tree",
+              "match_all": [
+                "python",
+                "godot/tet4d.godot/"
+              ],
+              "mode": "FEATURE",
+              "priority": 364,
+              "routes": [
+                "godot_product_shell",
+                "python_reference_engine",
+                "native_deterministic_core"
+              ]
+            },
+            {
+              "id": "mixed-owner-python-wording-godot-path",
+              "match_all": [
+                "python",
+                " godot/"
+              ],
+              "mode": "FEATURE",
+              "priority": 363,
+              "routes": [
+                "godot_product_shell",
+                "python_reference_engine",
+                "native_deterministic_core"
+              ]
+            },
+            {
+              "id": "mixed-owner-godot-python-source",
+              "match_all": [
+                "godot",
+                "src/tet4d/"
+              ],
+              "mode": "FEATURE",
+              "priority": 362,
+              "routes": [
+                "godot_product_shell",
+                "python_reference_engine",
+                "native_deterministic_core"
+              ]
+            },
+            {
+              "id": "mixed-owner-godot-native-core",
+              "match_all": [
+                "godot",
+                "native/tet4d_core/"
+              ],
+              "mode": "FEATURE",
+              "priority": 361,
+              "routes": [
+                "godot_product_shell",
+                "python_reference_engine",
+                "native_deterministic_core"
+              ]
+            },
+            {
+              "id": "mixed-owner-python-native-core",
+              "match_all": [
+                "python",
+                "native/tet4d_core/"
+              ],
+              "mode": "FEATURE",
+              "priority": 360,
+              "routes": [
+                "godot_product_shell",
+                "python_reference_engine",
+                "native_deterministic_core"
+              ]
+            },
+            {
+              "id": "mixed-owner-python-source-native-core",
+              "match_all": [
+                "src/tet4d/",
+                "native/tet4d_core/"
+              ],
+              "mode": "FEATURE",
+              "priority": 359,
+              "routes": [
+                "godot_product_shell",
+                "python_reference_engine",
+                "native_deterministic_core"
+              ]
+            },
+            {
+              "id": "ci-platform-routing-repair-with-godot-owner",
+              "match_all": [
+                "ci classification",
+                "platform routing",
+                "godot/tet4d.godot/"
+              ],
+              "mode": "STRUCTURAL_CHANGE",
+              "priority": 397,
+              "routes": [
+                "governance_and_tooling",
+                "packaging_and_release",
+                "godot_product_shell"
+              ]
+            },
+            {
+              "id": "ci-platform-routing-repair-with-python-owner",
+              "match_all": [
+                "ci classification",
+                "platform routing",
+                "src/tet4d/"
+              ],
+              "mode": "STRUCTURAL_CHANGE",
+              "priority": 396,
+              "routes": [
+                "governance_and_tooling",
+                "packaging_and_release",
+                "python_reference_engine"
+              ]
+            },
+            {
+              "id": "ci-platform-routing-repair-with-native-owner",
+              "match_all": [
+                "ci classification",
+                "platform routing",
+                "native/tet4d_core/"
+              ],
+              "mode": "STRUCTURAL_CHANGE",
+              "priority": 395,
+              "routes": [
+                "governance_and_tooling",
+                "packaging_and_release",
+                "native_deterministic_core"
+              ]
+            },
+            {
+              "id": "product-platform-routing-repair-with-godot-owner",
+              "match_all": [
+                "product-platform routing",
+                "repair",
+                "godot/tet4d.godot/"
+              ],
+              "mode": "STRUCTURAL_CHANGE",
+              "priority": 394,
+              "routes": [
+                "governance_and_tooling",
+                "packaging_and_release",
+                "godot_product_shell"
+              ]
+            },
+            {
+              "id": "product-platform-routing-repair-with-python-owner",
+              "match_all": [
+                "product-platform routing",
+                "repair",
+                "src/tet4d/"
+              ],
+              "mode": "STRUCTURAL_CHANGE",
+              "priority": 393,
+              "routes": [
+                "governance_and_tooling",
+                "packaging_and_release",
+                "python_reference_engine"
+              ]
+            },
+            {
+              "id": "product-platform-routing-repair-with-native-owner",
+              "match_all": [
+                "product-platform routing",
+                "repair",
+                "native/tet4d_core/"
+              ],
+              "mode": "STRUCTURAL_CHANGE",
+              "priority": 392,
+              "routes": [
+                "governance_and_tooling",
+                "packaging_and_release",
+                "native_deterministic_core"
+              ]
+            },
+            {
+              "id": "topology-explorer-with-godot-owner",
+              "match_all": [
+                "topology",
+                "explorer",
+                "godot/tet4d.godot/"
+              ],
+              "mode": "FEATURE",
+              "priority": 391,
+              "routes": [
+                "topology_and_explorer",
+                "godot_product_shell"
+              ]
+            },
+            {
+              "id": "topology-explorer-with-python-owner",
+              "match_all": [
+                "topology",
+                "explorer",
+                "src/tet4d/"
+              ],
+              "mode": "FEATURE",
+              "priority": 390,
+              "routes": [
+                "topology_and_explorer",
+                "python_reference_engine"
+              ]
+            },
+            {
+              "id": "topology-explorer-with-native-owner",
+              "match_all": [
+                "topology",
+                "explorer",
+                "native/tet4d_core/"
+              ],
+              "mode": "FEATURE",
+              "priority": 389,
+              "routes": [
+                "topology_and_explorer",
+                "native_deterministic_core"
+              ]
+            },
+            {
+              "id": "packaging-release-with-godot-owner",
+              "match_all": [
+                "packaging",
+                "release",
+                "godot/tet4d.godot/"
+              ],
+              "mode": "STRUCTURAL_CHANGE",
+              "priority": 388,
+              "routes": [
+                "packaging_and_release",
+                "godot_product_shell"
+              ]
+            },
+            {
+              "id": "packaging-release-with-python-owner",
+              "match_all": [
+                "packaging",
+                "release",
+                "src/tet4d/"
+              ],
+              "mode": "STRUCTURAL_CHANGE",
+              "priority": 387,
+              "routes": [
+                "packaging_and_release",
+                "python_reference_engine"
+              ]
+            },
+            {
+              "id": "packaging-release-with-native-owner",
+              "match_all": [
+                "packaging",
+                "release",
+                "native/tet4d_core/"
+              ],
+              "mode": "STRUCTURAL_CHANGE",
+              "priority": 386,
+              "routes": [
+                "packaging_and_release",
+                "native_deterministic_core"
+              ]
+            },
+            {
+              "id": "product-planning-with-godot-owner",
+              "match_all": [
+                "product",
+                "planning",
+                "godot/tet4d.godot/"
+              ],
+              "mode": "FEATURE",
+              "priority": 385,
+              "routes": [
+                "product_planning",
+                "godot_product_shell"
+              ]
+            },
+            {
+              "id": "product-planning-with-python-owner",
+              "match_all": [
+                "product",
+                "planning",
+                "src/tet4d/"
+              ],
+              "mode": "FEATURE",
+              "priority": 384,
+              "routes": [
+                "product_planning",
+                "python_reference_engine"
+              ]
+            },
+            {
+              "id": "product-planning-with-native-owner",
+              "match_all": [
+                "product",
+                "planning",
+                "native/tet4d_core/"
+              ],
+              "mode": "FEATURE",
+              "priority": 383,
+              "routes": [
+                "product_planning",
+                "native_deterministic_core"
+              ]
+            },
+            {
+              "id": "governance-with-godot-owner",
+              "match_all": [
+                "governance",
+                "change",
+                "godot/tet4d.godot/"
+              ],
+              "mode": "STRUCTURAL_CHANGE",
+              "priority": 382,
+              "routes": [
+                "governance_and_tooling",
+                "godot_product_shell"
+              ]
+            },
+            {
+              "id": "governance-with-python-owner",
+              "match_all": [
+                "governance",
+                "change",
+                "src/tet4d/"
+              ],
+              "mode": "STRUCTURAL_CHANGE",
+              "priority": 381,
+              "routes": [
+                "governance_and_tooling",
+                "python_reference_engine"
+              ]
+            },
+            {
+              "id": "governance-with-native-owner",
+              "match_all": [
+                "governance",
+                "change",
+                "native/tet4d_core/"
+              ],
+              "mode": "STRUCTURAL_CHANGE",
+              "priority": 380,
+              "routes": [
+                "governance_and_tooling",
+                "native_deterministic_core"
+              ]
+            }
+          ]
+        },
+        "generated_surfaces": [
+          {
+            "check_command": [
+              "{python}",
+              "tools/governance/generate_configuration_reference.py",
+              "--check"
+            ],
+            "kind": "generated_output",
+            "source": "tools/governance/generate_configuration_reference.py",
+            "surface_id": "configuration-reference",
+            "target": "docs/CONFIGURATION_REFERENCE.md",
+            "timeout_seconds": 120
+          },
+          {
+            "check_command": [
+              "{python}",
+              "tools/governance/generate_configuration_reference.py",
+              "--check"
+            ],
+            "kind": "generated_output",
+            "source": "tools/governance/generate_configuration_reference.py",
+            "surface_id": "user-settings-reference",
+            "target": "docs/USER_SETTINGS_REFERENCE.md",
+            "timeout_seconds": 120
+          },
+          {
+            "kind": "compatibility_facade",
+            "source": "config/governance/project.json#/routes",
+            "surface_id": "legacy-route-facade",
+            "target": "config/project/policy_pack.json#/codex_routing/routes",
+            "transform": "authority-legacy-key-route-v1"
+          }
+        ],
+        "project": {
+          "id": "tet4d",
+          "name": "Tet4D"
+        },
+        "required_authorities": [
+          "native-and-platform",
+          "authority-transfer"
+        ],
+        "role_bootstrap": {
+          "bookkeeping": [
+            "docs/BACKLOG.md",
+            "CURRENT_STATE.md"
+          ],
+          "instruction_roots": [
+            "AGENTS.md",
+            "CLAUDE.md",
+            "godot/AGENTS.md",
+            "native/AGENTS.md"
+          ]
+        },
+        "routes": {
+          "godot_product_shell": {
+            "authority_refs": [
+              "product-requirements",
+              "subsystem-ownership",
+              "native-and-platform",
+              "verification",
+              "config-generated-data"
+            ],
+            "dispatch_paths": [
+              "godot/AGENTS.md"
+            ],
+            "environment_tools": [
+              "godot"
+            ],
+            "typical_verification_requirements": [
+              "godot"
+            ]
+          },
+          "governance_and_tooling": {
+            "authority_refs": [
+              "legacy-policy-pack",
+              "change-governance",
+              "verification",
+              "engineering"
+            ],
+            "dispatch_paths": [],
+            "typical_verification_requirements": [
+              "governance_structure"
+            ]
+          },
+          "native_deterministic_core": {
+            "authority_refs": [
+              "subsystem-ownership",
+              "authority-transfer",
+              "native-and-platform",
+              "verification",
+              "security-sanitation",
+              "engineering"
+            ],
+            "dispatch_paths": [
+              "native/AGENTS.md"
+            ],
+            "typical_verification_requirements": [
+              "native",
+              "deterministic"
+            ]
+          },
+          "packaging_and_release": {
+            "authority_refs": [
+              "native-and-platform",
+              "security-sanitation",
+              "verification",
+              "change-governance"
+            ],
+            "dispatch_paths": [
+              "docs/rds/RDS_PACKAGING.md",
+              "docs/RELEASE_CHECKLIST.md"
+            ],
+            "typical_verification_requirements": [
+              "packaging",
+              "platform"
+            ]
+          },
+          "product_planning": {
+            "authority_refs": [
+              "professional-product-programme",
+              "product-requirements",
+              "open-work-backlog",
+              "change-governance",
+              "verification"
+            ],
+            "dispatch_paths": [],
+            "typical_verification_requirements": [
+              "documentation"
+            ]
+          },
+          "python_reference_engine": {
+            "authority_refs": [
+              "architecture",
+              "product-requirements",
+              "subsystem-ownership",
+              "engineering",
+              "verification",
+              "config-generated-data"
+            ],
+            "dispatch_paths": [],
+            "typical_verification_requirements": [
+              "python",
+              "deterministic"
+            ]
+          },
+          "topology_and_explorer": {
+            "authority_refs": [
+              "topology-current-authority",
+              "product-requirements",
+              "subsystem-ownership",
+              "engineering",
+              "native-and-platform",
+              "verification"
+            ],
+            "dispatch_paths": [],
+            "typical_verification_requirements": [
+              "deterministic"
+            ]
+          }
+        },
+        "sanitation": {
+          "bounded_diagnostics": 50,
+          "repository_check": "scripts/check_git_sanitation_repo.sh",
+          "secret_scanner": "tools/governance/scan_secrets.py"
+        },
+        "schema_version": 1,
+        "skill_adapters": [
+          {
+            "name": "governance-context",
+            "path": ".agents/skills/governance-context/SKILL.md",
+            "release_manifest_sha256": "356b35d2b19a38b0335480f2b486570fa6cc49629e6b17209eebea9203dca608",
+            "sha256": "f1c6a3b347f9f94bc32e8d82f3ac018141d4a084489e9fb2dbd2094631a55ecc",
+            "target": "tools/workspace_governance/skills/governance-context/SKILL.md"
+          },
+          {
+            "name": "governance-context",
+            "path": ".claude/skills/governance-context/SKILL.md",
+            "release_manifest_sha256": "356b35d2b19a38b0335480f2b486570fa6cc49629e6b17209eebea9203dca608",
+            "sha256": "f1c6a3b347f9f94bc32e8d82f3ac018141d4a084489e9fb2dbd2094631a55ecc",
+            "target": "tools/workspace_governance/skills/governance-context/SKILL.md"
+          },
+          {
+            "name": "governance-maintenance",
+            "path": ".agents/skills/governance-maintenance/SKILL.md",
+            "release_manifest_sha256": "356b35d2b19a38b0335480f2b486570fa6cc49629e6b17209eebea9203dca608",
+            "sha256": "e7bdc0a09bc90bcd6ef2b2a9b6add03a68bb429208d86dd3dab03e7374a4e03e",
+            "target": "tools/workspace_governance/skills/governance-maintenance/SKILL.md"
+          },
+          {
+            "name": "governance-maintenance",
+            "path": ".claude/skills/governance-maintenance/SKILL.md",
+            "release_manifest_sha256": "356b35d2b19a38b0335480f2b486570fa6cc49629e6b17209eebea9203dca608",
+            "sha256": "e7bdc0a09bc90bcd6ef2b2a9b6add03a68bb429208d86dd3dab03e7374a4e03e",
+            "target": "tools/workspace_governance/skills/governance-maintenance/SKILL.md"
+          }
+        ],
+        "verification": {
+          "canonical": {
+            "authority_ref": "legacy-policy-pack",
+            "json_pointer": "/governance/verification_command"
+          },
+          "full": {
+            "authority_ref": "legacy-policy-pack",
+            "json_pointer": "/governance/godot_toolchain/canonical_commands/full_repository"
+          },
+          "rule": "task + authority + actual diff + risk",
+          "targeted": "./scripts/verify_focus.sh"
+        }
+      },
+      "payload_included": true,
+      "sha256": "8c0eb285ade81f9d2d044d882cf4d1def995a6ee58e50badbd9d000d6d2ebae5"
+    },
+    "config/governance/workspace.lock.json": {
+      "category": "config",
+      "format": "json",
+      "payload": {
+        "content_sha256": "f8c7f2f93b686b84fcfd854998ffda45cc4c3c93c02a776e6cc71dfb9f45db18",
+        "files": [
+          ".ruff.toml",
+          "MANIFEST.json",
+          "VERSION",
+          "__init__.py",
+          "baseline.py",
+          "ci_status.py",
+          "cli/__init__.py",
+          "cli/bootstrap.py",
+          "cli/gov.py",
+          "command_policy.py",
+          "dependency_compatibility.py",
+          "diagnostics.py",
+          "execution_policy.py",
+          "field-usage.json",
+          "fleet.py",
+          "fleet_execution.py",
+          "fleet_support.py",
+          "hook_adapters.py",
+          "hooks/codex_no_polling.rules",
+          "hooks/no_polling.py",
+          "hooks/no_polling.sh",
+          "operation_supervisor.py",
+          "policies/execution.json",
+          "policies/execution.md",
+          "policies/external_checkouts.md",
+          "policies/operation_profiles.json",
+          "policies/ownership.md",
+          "policies/workspace_baseline.md",
+          "release.py",
+          "resolver/__init__.py",
+          "resolver/core.py",
+          "resolver/roles.py",
+          "runtime_floor.py",
+          "sanitation.py",
+          "schemas/project.schema.json",
+          "schemas/telemetry-event.v1.schema.json",
+          "schemas/workspace-local.schema.json",
+          "schemas/workspace.schema.json",
+          "skills/governance-context/SKILL.md",
+          "skills/governance-maintenance/SKILL.md",
+          "synthetic-fixtures/contradictions.json",
+          "telemetry.py",
+          "validators/__init__.py",
+          "validators/core.py"
+        ],
+        "lock_algorithm": "sha256-path-and-content-v1",
+        "pack_name": "workspace-governance",
+        "pack_path": "tools/workspace_governance",
+        "revision": "v1.0-supervised-completion-4",
+        "schema_version": 1,
+        "version": "1.0.4"
+      },
+      "payload_included": true,
+      "sha256": "2aab71e9fbe41e8f9a7efe9363f8e095863f1952e8302773aeb9c403a1726762"
     },
     "config/help/action_map.json": {
       "category": "help_defaults",
@@ -7562,7 +8716,6 @@
           "integration",
           "packaging",
           "platform_macos",
-          "platform_ipados",
           "release_acceptance"
         ],
         "lane_order": [
@@ -7575,14 +8728,14 @@
           "integration",
           "packaging",
           "platform_macos",
-          "platform_ipados",
           "release_acceptance"
         ],
         "manual_requirements": [
           "human_visual",
           "platform_windows",
           "platform_linux",
-          "platform_android"
+          "platform_android",
+          "platform_ipados"
         ],
         "path_classification": {
           "cross_layer_requirements": [
@@ -7672,6 +8825,16 @@
               ]
             },
             {
+              "id": "agent_skills",
+              "patterns": [
+                "tools/agent-skills/**",
+                "tools/artifact-board/**"
+              ],
+              "requirements": [
+                "documentation"
+              ]
+            },
+            {
               "id": "python",
               "patterns": [
                 "front.py",
@@ -7707,6 +8870,15 @@
               ]
             },
             {
+              "id": "live_translation_input_configuration",
+              "patterns": [
+                "config/keybindings/**"
+              ],
+              "requirements": [
+                "godot"
+              ]
+            },
+            {
               "id": "runtime_configuration",
               "patterns": [
                 "config/**"
@@ -7732,6 +8904,17 @@
               "id": "godot",
               "patterns": [
                 "godot/**"
+              ],
+              "requirements": [
+                "godot"
+              ]
+            },
+            {
+              "id": "live_translation_native_boundary",
+              "patterns": [
+                "native/tet4d_core/src/godot/**",
+                "native/tet4d_core/src/core/plain_nd*",
+                "native/tet4d_core/include/tet4d_core/plain_nd*"
               ],
               "requirements": [
                 "godot"
@@ -7847,14 +9030,6 @@
           "abstract_requirement": "platform",
           "description": "Platform verification carries explicit platform identity. The abstract family requirement never stands alone and never resolves to a single default platform.",
           "hosted_lanes": {
-            "platform_ipados": {
-              "build_entrypoint": "packaging/godot/build_ipados.sh",
-              "canonical_command": "ipados_release_export",
-              "lane": "platform_ipados",
-              "packaging_consumer": "legacy_designer_ipados",
-              "platform_id": "ipados",
-              "workflow_job": "platform-ipados"
-            },
             "platform_macos": {
               "build_entrypoint": "packaging/godot/build_macos.sh",
               "canonical_command": "macos_release_export",
@@ -7875,7 +9050,8 @@
           "unhosted_platform_requirements": [
             "platform_windows",
             "platform_linux",
-            "platform_android"
+            "platform_android",
+            "platform_ipados"
           ]
         },
         "requirement_to_lanes": {
@@ -7906,9 +9082,7 @@
           ],
           "platform": [],
           "platform_android": [],
-          "platform_ipados": [
-            "platform_ipados"
-          ],
+          "platform_ipados": [],
           "platform_linux": [],
           "platform_macos": [
             "platform_macos"
@@ -7925,7 +9099,7 @@
         "schema_version": 1
       },
       "payload_included": true,
-      "sha256": "1c9a0e45b131b6118572bf5ce111c687ff5e93f911d2d4125620c321d00a7466"
+      "sha256": "caf9c7c1162a2b3149619028d28ad5234ffd24e3cef1d0665eab95840b023695"
     },
     "config/project/constants.json": {
       "category": "project_governance",
@@ -8432,6 +9606,349 @@
       "payload_included": true,
       "sha256": "04bd5feb7c312f94043585b09eb62d5707075861c13660697f4599b14ae81395"
     },
+    "config/project/policy/manifests/sanitation_references.json": {
+      "category": "project_governance",
+      "format": "json",
+      "payload": {
+        "references": [
+          {
+            "line_sha256": [
+              "a3a664a1ea803f1afb9f463cc79ed85f42ba59bdc32b111744342007fdb84058"
+            ],
+            "path": ".governance/baseline/check_git_sanitation.sh",
+            "reason": "Scanner or bounded diagnostic must recognize the exact prohibited path syntax.",
+            "warning_class": "absolute-unix"
+          },
+          {
+            "line_sha256": [
+              "e13e80828192149dca9dd71901581c1364792f35bbf96f5d79a378ba872c3d62"
+            ],
+            "path": "tools/workspace_governance/validators/core.py",
+            "reason": "Scanner or bounded diagnostic must recognize the exact prohibited path syntax.",
+            "warning_class": "absolute-unix"
+          },
+          {
+            "line_sha256": [
+              "77b705f4a92ba0d9c7924cb2068373d26f450aebe330141b2412af925449d987"
+            ],
+            "path": ".governance/baseline/check_git_sanitation.sh",
+            "reason": "Scanner or bounded diagnostic must recognize the exact prohibited path syntax.",
+            "warning_class": "absolute-windows"
+          },
+          {
+            "line_sha256": [
+              "7a6167b54e1d067d3985f398632de665c975e4d039afd669b0c0fa9ef23f1995"
+            ],
+            "path": "scripts/check_git_sanitation_repo.sh",
+            "reason": "Scanner or bounded diagnostic must recognize the exact prohibited path syntax.",
+            "warning_class": "absolute-windows"
+          },
+          {
+            "line_sha256": [
+              "927e6e9f1dc5202d77c0ad92f6f03d78760a291632e5e9809fed0f05c5813545"
+            ],
+            "path": ".agents/skills/decision-worksheet/SKILL.md",
+            "reason": "Required relative link resolves to the canonical skill inside this repository.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "c2e79d930b7132ca6287c42c1bf74be7af5be50e699cdbc6b906766cbb2dc16d"
+            ],
+            "path": ".agents/skills/governance-context/SKILL.md",
+            "reason": "Required relative link resolves to the canonical skill inside this repository.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "12a325ca234932c1808e751b1dfe838e792c176e2d5d141c4616fe59d93b8046"
+            ],
+            "path": ".agents/skills/governance-maintenance/SKILL.md",
+            "reason": "Required relative link resolves to the canonical skill inside this repository.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "3c6cc8ad64c9b5145095a9784df650d61b653d3c792f8276cef4961a85009b4a"
+            ],
+            "path": ".agents/skills/text-editor/SKILL.md",
+            "reason": "Required relative link resolves to the canonical skill inside this repository.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "38c3c9e652041ac72e2137b88aca4b47876a3ae134d0834df5a22e089a14265f"
+            ],
+            "path": ".agents/skills/video-game-development/SKILL.md",
+            "reason": "Required relative link resolves to the canonical skill inside this repository.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "927e6e9f1dc5202d77c0ad92f6f03d78760a291632e5e9809fed0f05c5813545"
+            ],
+            "path": ".claude/skills/decision-worksheet/SKILL.md",
+            "reason": "Required relative link resolves to the canonical skill inside this repository.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "c2e79d930b7132ca6287c42c1bf74be7af5be50e699cdbc6b906766cbb2dc16d"
+            ],
+            "path": ".claude/skills/governance-context/SKILL.md",
+            "reason": "Required relative link resolves to the canonical skill inside this repository.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "12a325ca234932c1808e751b1dfe838e792c176e2d5d141c4616fe59d93b8046"
+            ],
+            "path": ".claude/skills/governance-maintenance/SKILL.md",
+            "reason": "Required relative link resolves to the canonical skill inside this repository.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "3c6cc8ad64c9b5145095a9784df650d61b653d3c792f8276cef4961a85009b4a"
+            ],
+            "path": ".claude/skills/text-editor/SKILL.md",
+            "reason": "Required relative link resolves to the canonical skill inside this repository.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "38c3c9e652041ac72e2137b88aca4b47876a3ae134d0834df5a22e089a14265f"
+            ],
+            "path": ".claude/skills/video-game-development/SKILL.md",
+            "reason": "Required relative link resolves to the canonical skill inside this repository.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "29cdc5303a8cbbf50999c6445a2b6abaf2fb66c85719c4247d31a5ab0c78ee30",
+              "a48dc4d8c0bcb50b8407d24793a0906507e3799489c6519f4d600d28405e203d"
+            ],
+            "path": ".governance/baseline/check_git_sanitation.sh",
+            "reason": "Scanner or bounded diagnostic must recognize the exact prohibited path syntax.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "10c71b36fb1c5dad9d64c4021398661c49746b4120a59e6e35081ea69001f4be",
+              "88c4ccf1f788b45fc817b2f48a151d05675c8dce067a6c012f09a8609063dc6e",
+              "2b5b5b9c5d7a717fd8b0618923cb3ca161a1bba00b9dc6e1c50c5d91d7701114",
+              "89aeb930507ca9e47cc1da24c5ccb970ff1efa48aff7246b9fa7d630632d1918"
+            ],
+            "path": "godot/Tet4D.Godot/export_presets.cfg",
+            "reason": "Relative build/export or installed application resource path; not user-controlled traversal.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "11a4dca76c58aea9bf4601d6ee17b8fc2a45e15a8423c02f5962ac4cc5dae273"
+            ],
+            "path": "godot/Tet4D.Godot/tests/test_built_in_style_catalog.gd",
+            "reason": "Intentional invalid-path input or warning text in sanitation regression coverage.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "b561d67a8e1ed12a1c5afca49d208bdc67b3c47060c67e0dad2b0049089ae0e0",
+              "033a790fa235794e5faefbc7d05857065e58c840b9a6a16b92f210f6104e4c6d",
+              "b4e62a3025b4b347865b5935ab4cec2f340d2f2d22b1d4bad50e52e64dc21353"
+            ],
+            "path": "godot/Tet4D.Godot/tests/test_presentation_profile_library.gd",
+            "reason": "Intentional invalid-path input or warning text in sanitation regression coverage.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "ad935fe978cfaf9a9731e5877d4f3ddc191985ae389d4647aa99fe445aaac8cd",
+              "542b7f843d67fc5b71264331601874603d760d6517b249a9ae356b0e875594ab",
+              "177df00eeb213aac444061723f5c7014d3a7966ff938301ed9f751da4ebd1c93",
+              "3608481cf5b17c0febff2c567feada08039873ab1b1d380a1011489b7089e089",
+              "3c6061be5c28e2aea3928ade0a5fee35a04a77f54630e1d1b474a1c490e539f7"
+            ],
+            "path": "native/tet4d_core/SConstruct",
+            "reason": "Relative build/export or installed application resource path; not user-controlled traversal.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "cff2d1781e37d935ac24c7eb54afd1781f158d7a4cff3dbfd732f03963af8787",
+              "1778d91039c079b7a261ff3928a345d604f951920af1d5843eee2b73b636762e"
+            ],
+            "path": "packaging/godot/build_android.sh",
+            "reason": "Relative build/export or installed application resource path; not user-controlled traversal.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "cff2d1781e37d935ac24c7eb54afd1781f158d7a4cff3dbfd732f03963af8787",
+              "e2b265626d5199ee3635efab357a2892e819ebf74f3647df2c936c0f0da3ab7d"
+            ],
+            "path": "packaging/godot/build_ipados.sh",
+            "reason": "Relative build/export or installed application resource path; not user-controlled traversal.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "cff2d1781e37d935ac24c7eb54afd1781f158d7a4cff3dbfd732f03963af8787"
+            ],
+            "path": "packaging/godot/build_macos.sh",
+            "reason": "Relative build/export or installed application resource path; not user-controlled traversal.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "cff2d1781e37d935ac24c7eb54afd1781f158d7a4cff3dbfd732f03963af8787",
+              "b70cc3f8fa2fa126365898982892dc44913b4f025e72031dfec2f2e4b555d8e6"
+            ],
+            "path": "packaging/godot/build_windows.sh",
+            "reason": "Relative build/export or installed application resource path; not user-controlled traversal.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "cff2d1781e37d935ac24c7eb54afd1781f158d7a4cff3dbfd732f03963af8787"
+            ],
+            "path": "packaging/godot/smoke_macos.sh",
+            "reason": "Relative build/export or installed application resource path; not user-controlled traversal.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "cff2d1781e37d935ac24c7eb54afd1781f158d7a4cff3dbfd732f03963af8787"
+            ],
+            "path": "packaging/scripts/build_linux.sh",
+            "reason": "Relative build/export or installed application resource path; not user-controlled traversal.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "cff2d1781e37d935ac24c7eb54afd1781f158d7a4cff3dbfd732f03963af8787",
+              "8e65081e7e633795dcd3aa37e8d228fbe171932c80f069c16672f27b10ab6532"
+            ],
+            "path": "packaging/scripts/build_macos.sh",
+            "reason": "Relative build/export or installed application resource path; not user-controlled traversal.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "95af1ceaa2dd88887c703ad3f12e6fbb02371d9077e916bdd75e8be3afb4cdef"
+            ],
+            "path": "tests/unit/engine/test_keybindings.py",
+            "reason": "Intentional invalid-path input or warning text in sanitation regression coverage.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "2b4c9e7e5426ffb9418cfa90d631ae2345960a38e9905265d5bb5f13236467f6"
+            ],
+            "path": "tests/unit/engine/test_product_profiles.py",
+            "reason": "Intentional invalid-path input or warning text in sanitation regression coverage.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "98335ace9b7f03fcace08caf8829ac68a2155c383b53ea569506314e40601644",
+              "5bc0b03f3fad45a539fb8478cc4a8c85457f06629db7eeb438565e955b77bcf9",
+              "460187c05af889d297793c6adee580aabdeda26ced40ca82b51f98f931c25991"
+            ],
+            "path": "tests/unit/engine/test_project_config.py",
+            "reason": "Intentional invalid-path input or warning text in sanitation regression coverage.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "e9a53815e3c99b17111f6bc90218b6a1d20147b43543d029ccba518be9cd8cc6"
+            ],
+            "path": "tests/unit/engine/test_runtime_config.py",
+            "reason": "Intentional invalid-path input or warning text in sanitation regression coverage.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "ac59acaa7000668df38bf101f8ba0ac2d51cef0bfd3ef6f34b8e474dc8db7f97"
+            ],
+            "path": "tests/unit/engine/test_score_analyzer.py",
+            "reason": "Intentional invalid-path input or warning text in sanitation regression coverage.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "bdaff75c319d673a340b0ab45dce8116d4b68beaf746e83d3ed9b676e5334db4"
+            ],
+            "path": "tests/unit/governance/test_check_godot_settings_externalization.py",
+            "reason": "Intentional invalid-path input or warning text in sanitation regression coverage.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "ecc8c216b1d52a587e91f1e4475cc5e0904ec8fb91defd339e6df2aca729bf5f"
+            ],
+            "path": "tests/unit/governance/test_classify_codex_ci_paths.py",
+            "reason": "Intentional invalid-path input or warning text in sanitation regression coverage.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "8897b01beaf67daf579b054772c51b091824919b37fb34e9595f08a80dd8ca3c",
+              "9f779596fb92f654a40fa0dd6471c666d4c5c4c58abf94c907bc1ffd41e75fb1",
+              "c7e8c015daa4c9efd99d30533dca89d17ecb178c8a21fca4dacffbaee670aa94",
+              "fc081a0991d44caaf70bf59801b60331e728e36c4d63df54696c3db11ecc9830"
+            ],
+            "path": "tests/unit/governance/test_governance_validate_project_contracts.py",
+            "reason": "Intentional invalid-path input or warning text in sanitation regression coverage.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "3af916a38d1fe939db715f5599771682161a8bcc5315fcb57c0c02e3883c3f67",
+              "3af916a38d1fe939db715f5599771682161a8bcc5315fcb57c0c02e3883c3f67"
+            ],
+            "path": "tests/unit/governance/test_validate_handoff_lifecycle.py",
+            "reason": "Intentional invalid-path input or warning text in sanitation regression coverage.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "3c3cef89e4e94b11049e5a380110e520975b1e6c37491917695187deae7784dc"
+            ],
+            "path": "tests/unit/workspace_governance/test_native_integration.py",
+            "reason": "Intentional invalid-path input or warning text in sanitation regression coverage.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "309eb40a83889c3ad2f55ecb3442010f835cc5be6e9077a4dc2d2ebed7292882"
+            ],
+            "path": "tools/agent-skills/text-editor/SKILL.md",
+            "reason": "Documented relative JavaScript module-root example.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "4eea72724be42493273b474625bd4bedefef462087044b1cd4d16d0e453486e3"
+            ],
+            "path": "tools/experiments/governance_manifest_quality/measurement.py",
+            "reason": "Validator literal rejects escaping paths before measurement.",
+            "warning_class": "parent-traversal"
+          },
+          {
+            "line_sha256": [
+              "82361480be7878a8873a17bd1c3c8584c3b767539dece8a9aa1e72ca77b1a6ce"
+            ],
+            "path": "tools/workspace_governance/diagnostics.py",
+            "reason": "Scanner or bounded diagnostic must recognize the exact prohibited path syntax.",
+            "warning_class": "parent-traversal"
+          }
+        ],
+        "schema_version": 1
+      },
+      "payload_included": true,
+      "sha256": "5034a7dcbb7c4c3678c6412719d4f5163edb9358b53269524844ebcb8e47f44c"
+    },
     "config/project/policy/manifests/secret_scan.json": {
       "category": "project_governance",
       "format": "json",
@@ -8439,6 +9956,7 @@
         "allowlist": [],
         "exclude_dirs": [
           ".git",
+          ".claude/worktrees",
           ".venv",
           "__pycache__",
           ".pytest_cache",
@@ -8488,14 +10006,14 @@
         "version": 1
       },
       "payload_included": true,
-      "sha256": "047a6c0cbd75fb8f8ee3874f2193b6b9f3ca618eef34af2a5b8586c6a37d127f"
+      "sha256": "719c0d7f5792df85d3d7a773a90703c1bd9c46b88c101aa072fe5ed3f9c3414c"
     },
     "config/project/policy_pack.json": {
       "category": "project_governance",
       "format": "json",
       "payload_included": false,
       "payload_omitted_reason": "Governance policy pack is indexed by digest; source file remains the machine-readable authority.",
-      "sha256": "da6e2dd66e723d224a65aac5c1e70150ff4e982f744304bb76918fe6399058fd"
+      "sha256": "2caec1088236859c08a82e1795e26e5d26735aa55898be84763a514a01ac04e0"
     },
     "config/topology/designer_presets.json": {
       "category": "topology_defaults",

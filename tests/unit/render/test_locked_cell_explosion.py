@@ -2796,29 +2796,30 @@ class TestLockedCellExplosion(unittest.TestCase):
 
     def test_trace_retention_text_input_commits_and_clamps(self) -> None:
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=3)
-        state.trace_retention_input_text = "999.00"
-
-        changed = explosion_launcher._commit_trace_retention_input(state)
-
-        self.assertTrue(changed)
-        self.assertEqual(state.trace_retention_ms, EXPLOSION_TRAIL_RETENTION_MAX_MS)
-        self.assertEqual(
-            state.trace_retention_input_text,
-            f"{EXPLOSION_TRAIL_RETENTION_MAX_MS / 1000.0:.2f}",
+        state.selected_index = explosion_launcher._dynamic_row_keys(state).index(
+            "trace_retention"
         )
+
+        for key in (pygame.K_9, pygame.K_9, pygame.K_9, pygame.K_RETURN):
+            explosion_launcher._handle_launcher_keydown(state, key)
+
+        self.assertEqual(state.trace_retention_ms, EXPLOSION_TRAIL_RETENTION_MAX_MS)
+        self.assertFalse(state.status_error)
 
     def test_trace_retention_text_input_invalid_value_is_safe(self) -> None:
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=3)
         original_ms = state.trace_retention_ms
-        original_text = state.trace_retention_input_text
-        state.trace_retention_input_text = "abc"
+        state.selected_index = explosion_launcher._dynamic_row_keys(state).index(
+            "trace_retention"
+        )
 
-        changed = explosion_launcher._commit_trace_retention_input(state)
+        explosion_launcher._handle_launcher_keydown(state, pygame.K_1)
+        explosion_launcher._handle_launcher_keydown(state, pygame.K_BACKSPACE)
+        explosion_launcher._handle_launcher_keydown(state, pygame.K_RETURN)
 
-        self.assertFalse(changed)
         self.assertEqual(state.trace_retention_ms, original_ms)
-        self.assertEqual(state.trace_retention_input_text, original_text)
         self.assertTrue(state.status_error)
+        self.assertFalse(state.numeric_text_row_key)
 
     def test_seed_numeric_text_entry_commits(self) -> None:
         state = explosion_launcher.build_standalone_explosion_surface_state(dimension=3)

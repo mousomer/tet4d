@@ -2,6 +2,7 @@ extends RefCounted
 
 class_name DesignScenarioCatalog
 
+const OperationResult = preload("res://scripts/operation_result.gd")
 const PresentationProfileScript = preload("res://scripts/presentation/presentation_profile.gd")
 const DesignValueScript = preload("res://scripts/design_lab/design_value.gd")
 const GameSetupSpecScript = preload("res://scripts/ui/game_setup/game_setup_spec.gd")
@@ -38,11 +39,6 @@ func list_scenarios() -> Array:
 	return result
 
 
-func has_scenario(scenario_id: String) -> bool:
-	_ensure_loaded()
-	return _scenarios.has(scenario_id)
-
-
 func scenario(scenario_id: String) -> Dictionary:
 	_ensure_loaded()
 	return _scenarios.get(scenario_id, {}).duplicate(true)
@@ -51,11 +47,11 @@ func scenario(scenario_id: String) -> Dictionary:
 func presentation_profile(scenario_id: String) -> Dictionary:
 	var record := scenario(scenario_id)
 	if record.is_empty():
-		return _failure("Unknown design scenario %s." % scenario_id)
+		return OperationResult.failure("Unknown design scenario %s." % scenario_id)
 	var profile = PresentationProfileScript.from_snapshot(_registry, record.get("presentation_profile", {}))
 	if profile == null or not profile.contract_conforms():
-		return _failure("Scenario presentation profile no longer conforms.")
-	return _success({"profile": profile.detached_copy()})
+		return OperationResult.failure("Scenario presentation profile no longer conforms.")
+	return OperationResult.success({"profile": profile.detached_copy()})
 
 
 func diagnostics() -> Array:
@@ -103,25 +99,25 @@ func _ensure_loaded() -> void:
 
 func _parse_scenario(raw, trace_index: Dictionary) -> Dictionary:
 	if not (raw is Dictionary):
-		return _failure("Design scenario entry must be an object.")
+		return OperationResult.failure("Design scenario entry must be an object.")
 	var scenario_id := str(raw.get("scenario_id", ""))
 	if not DesignValueScript.safe_id(scenario_id):
-		return _failure("Design scenario ID is invalid or unsafe.")
+		return OperationResult.failure("Design scenario ID is invalid or unsafe.")
 	var display_name := str(raw.get("display_name", "")).strip_edges()
 	if display_name.is_empty():
-		return _failure("Design scenario %s requires a display name." % scenario_id)
+		return OperationResult.failure("Design scenario %s requires a display name." % scenario_id)
 	var dimension := int(raw.get("dimension", 0))
 	if dimension < 2 or dimension > 4:
-		return _failure("Design scenario %s dimension is unsupported." % scenario_id)
+		return OperationResult.failure("Design scenario %s dimension is unsupported." % scenario_id)
 	var density := str(raw.get("density", ""))
 	if not DENSITIES.has(density):
-		return _failure("Design scenario %s density is unsupported." % scenario_id)
+		return OperationResult.failure("Design scenario %s density is unsupported." % scenario_id)
 	var snapshot = raw.get("presentation_profile")
 	if not (snapshot is Dictionary):
-		return _failure("Design scenario %s requires a presentation snapshot." % scenario_id)
+		return OperationResult.failure("Design scenario %s requires a presentation snapshot." % scenario_id)
 	var profile = PresentationProfileScript.from_snapshot(_registry, snapshot)
 	if profile == null or not profile.contract_conforms():
-		return _failure("Design scenario %s presentation values are invalid." % scenario_id)
+		return OperationResult.failure("Design scenario %s presentation values are invalid." % scenario_id)
 	var record := {
 		"scenario_id": scenario_id,
 		"display_name": display_name,
@@ -133,7 +129,7 @@ func _parse_scenario(raw, trace_index: Dictionary) -> Dictionary:
 		"presentation_profile": profile.snapshot(),
 	}
 	if not SCENARIO_KINDS.has(record.get("scenario_kind")):
-		return _failure("Design scenario %s kind is unsupported." % scenario_id)
+		return OperationResult.failure("Design scenario %s kind is unsupported." % scenario_id)
 	if record.get("scenario_kind") == "live_session":
 		var live := _parse_live_session(raw, dimension)
 		if not bool(live.get("ok", false)):
@@ -144,7 +140,7 @@ func _parse_scenario(raw, trace_index: Dictionary) -> Dictionary:
 		if not bool(replay.get("ok", false)):
 			return replay
 		record.merge(replay.get("fields", {}), true)
-	return _success({"scenario": record})
+	return OperationResult.success({"scenario": record})
 
 
 func _parse_replay_fixture(raw: Dictionary, trace_index: Dictionary, dimension: int) -> Dictionary:
@@ -152,13 +148,13 @@ func _parse_replay_fixture(raw: Dictionary, trace_index: Dictionary, dimension: 
 	var case_id := str(raw.get("trace_case_id", ""))
 	var trace: Dictionary = trace_index.get("%s:%s" % [family, case_id], {})
 	if not TRACE_FAMILIES.has(family) or trace.is_empty():
-		return _failure("Design scenario references an unknown replay case.")
+		return OperationResult.failure("Design scenario references an unknown replay case.")
 	var frame_index := int(raw.get("frame_index", -1))
 	if frame_index < 0 or frame_index >= int(trace.get("frame_count", 0)):
-		return _failure("Design scenario frame is outside its replay case.")
+		return OperationResult.failure("Design scenario frame is outside its replay case.")
 	if dimension != int(trace.get("dimension", 0)):
-		return _failure("Design scenario dimension disagrees with replay truth.")
-	return _success({"fields": {
+		return OperationResult.failure("Design scenario dimension disagrees with replay truth.")
+	return OperationResult.success({"fields": {
 		"trace_family": family,
 		"trace_case_id": case_id,
 		"frame_index": frame_index,
@@ -170,32 +166,32 @@ func _parse_replay_fixture(raw: Dictionary, trace_index: Dictionary, dimension: 
 func _parse_live_session(raw: Dictionary, dimension: int) -> Dictionary:
 	var setup = raw.get("live_setup")
 	if not (setup is Dictionary):
-		return _failure("Live design scenario requires a canonical setup.")
+		return OperationResult.failure("Live design scenario requires a canonical setup.")
 	var mode := str(setup.get("mode", ""))
 	var expected_mode := "live_%dd" % dimension
 	if mode != expected_mode:
-		return _failure("Live design scenario mode disagrees with its dimension.")
+		return OperationResult.failure("Live design scenario mode disagrees with its dimension.")
 	var shape = setup.get("board_shape")
 	if not (shape is Array):
-		return _failure("Live design scenario board setup is not canonical.")
+		return OperationResult.failure("Live design scenario board setup is not canonical.")
 	var canonical_shape: Array = []
 	for value in shape:
 		canonical_shape.append(int(value))
 	if GameSetupSpecScript.preset_id_for_shape(mode, canonical_shape) != str(setup.get("board_preset_id", "")):
-		return _failure("Live design scenario board setup is not canonical.")
+		return OperationResult.failure("Live design scenario board setup is not canonical.")
 	if not GameSetupSpecScript.is_piece_set_supported(mode, str(setup.get("board_preset_id", "")), str(setup.get("piece_set_id", ""))):
-		return _failure("Live design scenario piece set is unsupported.")
+		return OperationResult.failure("Live design scenario piece set is unsupported.")
 	if str(setup.get("random_mode", "")) != GameSetupSpecScript.RANDOM_MODE_FIXED_SEED or not GameSetupSpecScript.is_valid_seed(setup.get("seed")):
-		return _failure("Live design scenario must use a valid fixed seed.")
+		return OperationResult.failure("Live design scenario must use a valid fixed seed.")
 	if not GameSetupSpecScript.is_valid_speed(setup.get("initial_speed_level")):
-		return _failure("Live design scenario speed is invalid.")
+		return OperationResult.failure("Live design scenario speed is invalid.")
 	var canonical_topology := GameSetupSpecScript.bounded_topology_profile(canonical_shape)
 	if DesignValueScript.canonical_hash(setup.get("topology_profile", {})) != DesignValueScript.canonical_hash(canonical_topology):
-		return _failure("Live design scenario topology must remain the canonical bounded profile.")
+		return OperationResult.failure("Live design scenario topology must remain the canonical bounded profile.")
 	var commands := _string_array(raw.get("commands", []))
 	for command in commands:
 		if not LIVE_COMMANDS.has(command):
-			return _failure("Live design scenario command %s is unsupported." % command)
+			return OperationResult.failure("Live design scenario command %s is unsupported." % command)
 	var canonical_setup: Dictionary = setup.duplicate(true)
 	canonical_setup["schema_version"] = int(setup.get("schema_version", 0))
 	canonical_setup["contract_version"] = int(setup.get("contract_version", 0))
@@ -204,7 +200,7 @@ func _parse_live_session(raw: Dictionary, dimension: int) -> Dictionary:
 	canonical_setup["initial_speed_level"] = int(setup.get("initial_speed_level", 0))
 	canonical_setup["topology_profile"] = canonical_topology
 	var identity := {"setup": canonical_setup, "commands": commands.duplicate()}
-	return _success({"fields": {
+	return OperationResult.success({"fields": {
 		"live_setup": canonical_setup,
 		"commands": commands,
 		"trace_identity_digest": DesignValueScript.canonical_hash(identity),
@@ -241,13 +237,3 @@ static func _string_array(value) -> Array:
 			if not text.is_empty() and not result.has(text):
 				result.append(text)
 	return result
-
-
-static func _success(extra: Dictionary = {}) -> Dictionary:
-	var result := {"ok": true, "error": ""}
-	result.merge(extra, true)
-	return result
-
-
-static func _failure(error: String) -> Dictionary:
-	return {"ok": false, "error": error}

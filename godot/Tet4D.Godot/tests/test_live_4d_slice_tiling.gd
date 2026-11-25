@@ -33,7 +33,7 @@ func run() -> Array:
 			if layout.projected_board_scale + 0.0001 < float(layout.candidate_snapshot(columns).get("projected_board_scale", 0.0)):
 				failures.append("%d-slice runtime must maximize cell scale at %s" % [count, viewport_size])
 		var before: Dictionary = layout.snapshot()
-		app._refresh_live_4d_snapshot()
+		app._refresh_live_snapshot("live_4d")
 		await tree.process_frame
 		if app._renderer._presentation.projection.mapper.layer_layout.snapshot() != before:
 			failures.append("%d-slice runtime layout must not depend on active-piece activity" % count)

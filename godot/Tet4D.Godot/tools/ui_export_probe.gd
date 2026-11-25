@@ -22,7 +22,7 @@ func _capture() -> void:
 	await process_frame
 	var app := root.get_node("App")
 	for mode in ["2d", "3d", "4d"]:
-		app.call("_enter_live_%s_mode" % mode)
+		app._enter_live_mode("live_" + mode)
 		await process_frame
 		await process_frame
 		var payload := {"probe": "godot_runtime_v2", "implementation": "godot", "mode": mode, "capture_state": "plain_initial", "source": "res://scenes/trace_replay.tscn live shell", "viewport": [int(root.get_viewport_rect().size.x), int(root.get_viewport_rect().size.y)], "root": _export_control(root)}

@@ -253,13 +253,13 @@ func _check_window_shortcut() -> Array:
 	event.keycode = KEY_ENTER
 	event.physical_keycode = KEY_ENTER
 	event.alt_pressed = true
-	app._enter_live_4d_mode()
-	var hash_before := str(app._live_bridge.live_4d_state_hash())
+	app._enter_live_mode("live_4d")
+	var hash_before := str(app._live_bridge.live_state_hash(4))
 	event.pressed = true
 	app._input(event)
 	if hud._settings_store.value("display.window_mode") != "windowed":
 		failures.append("Alt+Enter must leave fullscreen during live gameplay")
-	if str(app._live_bridge.live_4d_state_hash()) != hash_before:
+	if str(app._live_bridge.live_state_hash(4)) != hash_before:
 		failures.append("window mode shortcut must not mutate gameplay")
 	var reopened = StoreScript.new(_shortcut_registry(), TEST_PATH)
 	if reopened.value("display.window_mode") != "windowed":

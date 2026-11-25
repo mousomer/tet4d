@@ -202,6 +202,9 @@ def _record(
 def main(argv: list[str] | None = None) -> int:
     started = time.monotonic()
     original_argv = list(sys.argv[1:] if argv is None else argv)
+    delegated = _operation_command(original_argv)
+    if delegated is not None:
+        return delegated
     raw_argv = list(original_argv)
     as_json = "--json" in raw_argv
     raw_argv = [item for item in raw_argv if item != "--json"]
@@ -238,10 +241,21 @@ def main(argv: list[str] | None = None) -> int:
     env_parser.add_argument("--allow-missing-interpreter", action="store_true")
     telemetry_parser = sub.add_parser("telemetry")
     telemetry_parser.add_argument("telemetry_action", choices=("status", "selftest"))
+    ci_parser = sub.add_parser(
+        "ci-status", help="one-shot pull-request CI status; never waits or polls"
+    )
+    ci_parser.add_argument("pr", type=int)
+    ci_parser.add_argument("--repo", help="OWNER/NAME; default from remote.origin")
+    ci_parser.add_argument("--require", action="append", default=[])
+    ci_parser.add_argument("--allow-zero", action="store_true")
+    ci_parser.add_argument("--use-observed-set", action="store_true")
+    ci_parser.add_argument("--sha", help="expected PR head SHA")
     args = parser.parse_args(raw_argv)
     args.json = as_json or args.json
     root = args.root.resolve()
     observed: dict[str, Any] = {"diagnostics": [], "resolution": None}
+    if args.command == "ci-status":
+        return _ci_status_command(root, args)
     status = _dispatch(args, root, explain, observed)
     if args.command == "telemetry":
         return status
@@ -253,6 +267,34 @@ def main(argv: list[str] | None = None) -> int:
         # visible to their callers.
         print(f"gov: telemetry not recorded ({type(exc).__name__})", file=sys.stderr)
     return status
+
+
+def _operation_command(argv: list[str]) -> int | None:
+    """``gov [--root R] op ...``: supervised managed operations (no telemetry)."""
+    head = argv[:2] if argv[:1] == ["--root"] else []
+    rest = argv[len(head) :]
+    if rest[:1] != ["op"]:
+        return None
+    from tools.workspace_governance import operation_supervisor
+
+    root = Path(head[1]).resolve() if head else Path.cwd().resolve()
+    return operation_supervisor.main(rest[1:], root=root)
+
+
+def _ci_status_command(root: Path, args: argparse.Namespace) -> int:
+    from tools.workspace_governance.ci_status import ci_status
+
+    result = ci_status(
+        root,
+        args.pr,
+        repo=args.repo,
+        require=args.require,
+        allow_zero=args.allow_zero,
+        expected_sha=args.sha,
+        use_observed_set=args.use_observed_set,
+    )
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return int(result["exit_code"])
 
 
 def _telemetry_command(resolver, root, args):

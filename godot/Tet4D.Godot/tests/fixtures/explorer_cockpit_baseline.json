@@ -230,21 +230,6 @@
 			},
 			{
 				"action_ids": [
-					"explorer_move_down",
-					"explorer_move_up"
-				],
-				"item": [
-					"Z/X",
-					"Y− / Y+",
-					{
-						"cockpit_direction": "vertical",
-						"signed_axis": "+Y"
-					}
-				],
-				"role": "translate"
-			},
-			{
-				"action_ids": [
 					"live_3d_rotate_xy_neg",
 					"live_3d_rotate_xy_pos"
 				],
@@ -559,11 +544,6 @@
 						""
 					],
 					[
-						"./TabContainer_0/Piece/_v_scroll",
-						"VScrollBar",
-						""
-					],
-					[
 						"./ScrollContainer_0",
 						"ScrollContainer",
 						""
@@ -822,11 +802,6 @@
 					[
 						"./TabContainer_0/Space/VBoxContainer_0/Label_1",
 						"Label",
-						""
-					],
-					[
-						"./TabContainer_0/Space/_v_scroll",
-						"VScrollBar",
 						""
 					],
 					[
@@ -3203,7 +3178,7 @@
 					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_4": {
 						"action": "",
 						"commands": [
-							"move_z_neg"
+							"move_z_pos"
 						],
 						"disabled": false,
 						"text": "−Z"
@@ -3211,7 +3186,7 @@
 					"./TabContainer_0/Piece/VBoxContainer_0/GridContainer_0/Button_5": {
 						"action": "",
 						"commands": [
-							"move_z_pos"
+							"move_z_neg"
 						],
 						"disabled": false,
 						"text": "+Z"

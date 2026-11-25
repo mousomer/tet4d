@@ -18,16 +18,11 @@ from .pieces2d import PIECE_SET_2D_OPTIONS, piece_set_2d_label
 from .pieces_nd import piece_set_label, piece_set_options_for_dimension
 from .speed_curve import gravity_interval_ms
 from .topology import (
-    TOPOLOGY_MODE_OPTIONS,
     map_overlay_cells,
-    topology_mode_from_index,
-    topology_mode_label,
 )
 from .topology_designer import (
     designer_profile_label_for_index,
     designer_profiles_for_dimension,
-    export_resolved_topology_profile,
-    resolve_topology_designer_selection,
 )
 
 
@@ -39,61 +34,12 @@ def map_overlay_cells_gameplay(*args: Any, **kwargs: Any) -> Any:
     return map_overlay_cells(*args, **kwargs)
 
 
-def topology_mode_from_index_runtime(index: int) -> str:
-    return str(topology_mode_from_index(index))
-
-
-def topology_mode_label_runtime(mode: str | None) -> str:
-    return str(topology_mode_label(mode))
-
-
-def topology_mode_options_runtime() -> tuple[str, ...]:
-    return tuple(str(option) for option in TOPOLOGY_MODE_OPTIONS)
-
-
 def topology_designer_profiles_runtime(dimension: int):
     return designer_profiles_for_dimension(dimension)
 
 
 def topology_designer_profile_label_runtime(dimension: int, index: int) -> str:
     return str(designer_profile_label_for_index(dimension, index))
-
-
-def topology_designer_resolve_runtime(
-    *,
-    dimension: int,
-    gravity_axis: int,
-    topology_mode: str,
-    topology_advanced: bool,
-    profile_index: int,
-    gameplay_mode: str | None = None,
-):
-    return resolve_topology_designer_selection(
-        dimension=dimension,
-        gravity_axis=gravity_axis,
-        topology_mode=topology_mode,
-        topology_advanced=topology_advanced,
-        profile_index=profile_index,
-        gameplay_mode=gameplay_mode,
-    )
-
-
-def topology_designer_export_runtime(
-    *,
-    dimension: int,
-    gravity_axis: int,
-    topology_mode: str,
-    topology_advanced: bool,
-    profile_index: int,
-    gameplay_mode: str | None = None,
-):
-    return export_resolved_topology_profile(
-        dimension=dimension,
-        gravity_axis=gravity_axis,
-        topology_mode=topology_mode,
-        topology_advanced=topology_advanced,
-        profile_index=profile_index,
-    )
 
 
 def piece_set_2d_options_gameplay() -> tuple[str, ...]:

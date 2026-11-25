@@ -141,7 +141,7 @@ func _open_live_4d(tree: SceneTree, scene: PackedScene, catalog, look: Dictionar
 	hud._set_onboarding_visible(false)
 	hud.set_display_mode(str(look["theme"]))
 	hud.apply_presentation_profile(hud.presentation_profile().with_style_of(catalog.style_profile(str(look["style"])).get("profile")))
-	root.get_node("App")._enter_live_4d_mode()
+	root.get_node("App")._enter_live_mode("live_4d")
 	# Live entry may reopen the guide from persisted settings; normal play hides it.
 	hud._set_onboarding_visible(bool(look.get("guide", false)))
 	await _settle(tree, hud)
@@ -289,9 +289,9 @@ func _check_viewport_case(tree: SceneTree, scene: PackedScene, viewport_case: Di
 	hud._apply_responsive_layout()
 	for mode in ["2D", "3D", "4D"]:
 		match mode:
-			"2D": app._enter_live_2d_mode()
-			"3D": app._enter_live_3d_mode()
-			"4D": app._enter_live_4d_mode()
+			"2D": app._enter_live_mode("live_2d")
+			"3D": app._enter_live_mode("live_3d")
+			"4D": app._enter_live_mode("live_4d")
 		await tree.process_frame
 		await tree.process_frame
 		# A windowed run takes the breakpoint from the real window, not this

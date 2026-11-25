@@ -10,7 +10,7 @@
   "bundle_version": 1,
   "config": {
     "bundle_path": "config/tet4d_config_bundle.json",
-    "combined_digest": "0d8173aafd4d3a8855bfa7cbef93cb0683e3906e767810ff5857a4af50b93d09",
+    "combined_digest": "9e5cfc266cfa43cfa0d17c51d9080cf39fc7a2677d72f0ad54b91205c78aa902",
     "files": [
       {
         "category": "audio_defaults",
@@ -31,6 +31,16 @@
         "category": "gameplay_defaults",
         "path": "config/gameplay/tuning.json",
         "sha256": "e239eee4afa6076f7eb53dacb3eaf58854f204c91a3b1265560b13625784c647"
+      },
+      {
+        "category": "config",
+        "path": "config/governance/project.json",
+        "sha256": "8c0eb285ade81f9d2d044d882cf4d1def995a6ee58e50badbd9d000d6d2ebae5"
+      },
+      {
+        "category": "config",
+        "path": "config/governance/workspace.lock.json",
+        "sha256": "2aab71e9fbe41e8f9a7efe9363f8e095863f1952e8302773aeb9c403a1726762"
       },
       {
         "category": "help_defaults",
@@ -90,7 +100,7 @@
       {
         "category": "project_governance",
         "path": "config/project/codex_ci_lanes.json",
-        "sha256": "1c9a0e45b131b6118572bf5ce111c687ff5e93f911d2d4125620c321d00a7466"
+        "sha256": "caf9c7c1162a2b3149619028d28ad5234ffd24e3cef1d0665eab95840b023695"
       },
       {
         "category": "project_governance",
@@ -124,13 +134,18 @@
       },
       {
         "category": "project_governance",
+        "path": "config/project/policy/manifests/sanitation_references.json",
+        "sha256": "5034a7dcbb7c4c3678c6412719d4f5163edb9358b53269524844ebcb8e47f44c"
+      },
+      {
+        "category": "project_governance",
         "path": "config/project/policy/manifests/secret_scan.json",
-        "sha256": "047a6c0cbd75fb8f8ee3874f2193b6b9f3ca618eef34af2a5b8586c6a37d127f"
+        "sha256": "719c0d7f5792df85d3d7a773a90703c1bd9c46b88c101aa072fe5ed3f9c3414c"
       },
       {
         "category": "project_governance",
         "path": "config/project/policy_pack.json",
-        "sha256": "da6e2dd66e723d224a65aac5c1e70150ff4e982f744304bb76918fe6399058fd"
+        "sha256": "2caec1088236859c08a82e1795e26e5d26735aa55898be84763a514a01ac04e0"
       },
       {
         "category": "topology_defaults",
@@ -164,37 +179,37 @@
       {
         "purpose": "Current migration and handoff state.",
         "role": "restart_handoff",
-        "sha256": "f26d8b94157c36d1e6ee9e81c3e5ae84684f0cd519c0cc09998f51fa76c14527",
+        "sha256": "5fc9680d0012346ab8a2f5542ce2f79383e1f0af37aadc94a006cc797bea7915",
         "source_path": "CURRENT_STATE.md"
       },
       {
         "purpose": "Active migration follow-up tracker.",
         "role": "backlog",
-        "sha256": "2b0b290998b315228fa27a6be1b95d87c9ecf605df0a5fb3a52a29875f8e4cff",
+        "sha256": "86bc45ffd9dd23e5a91a0c584a53bc45237e64f84c61a559c91c193786ee9a43",
         "source_path": "docs/BACKLOG.md"
       },
       {
         "purpose": "Generated package layout and source-of-truth inventory.",
         "role": "project_structure",
-        "sha256": "f0e3c1a6df04e81960c7c7ce782d022147abd14575747db19339f6cf85e6b729",
+        "sha256": "b2679cd16c4661f209ec5f3b1c059057cf9e91008aeacf56034c3856981b6e29",
         "source_path": "docs/PROJECT_STRUCTURE.md"
       },
       {
         "purpose": "Shared topology/gameplay/endgame product requirements.",
         "role": "product_requirements",
-        "sha256": "f4b1f5f02c228395d1e5afb9bbda4fdc43bc4fcc8a8912e589d86dc34ed9c860",
+        "sha256": "dccbe85baab8379f7367753eff91da62428c81592eb5b8e9cd67b730684c2784",
         "source_path": "docs/rds/RDS_TETRIS_GENERAL.md"
       },
       {
         "purpose": "Menu/config authority for launcher, settings, and keybindings.",
         "role": "menu_requirements",
-        "sha256": "aabecf5ef1f18d1090cfb3a1d6ca631eacfd5ebc9ae7ce23974b8dffcb99381a",
+        "sha256": "6efc419abcb7c931791068345be0ec5a5c4651221778d4a060a39eee281acc04",
         "source_path": "docs/rds/RDS_MENU_STRUCTURE.md"
       },
       {
         "purpose": "Frozen topology lab semantics and migration boundary.",
         "role": "topology_authority",
-        "sha256": "f7655e458ff9ccd95466a3d827c16fd88303624862130a587b30ccd3096890c6",
+        "sha256": "f6c1c18d29bb82200e3de775b2950fdccc43264abd0d8b4618572ee104d321f8",
         "source_path": "docs/architecture/topology_playground_current_authority.md"
       },
       {
@@ -212,7 +227,7 @@
       {
         "purpose": "Stage 4 generated config bundle and packaging boundary contract.",
         "role": "migration_bundle_authority",
-        "sha256": "2b60c8727c6111edff667370f88998510592506c30b990b5c45297d9c27593a7",
+        "sha256": "b0cefd4badfd754e8b1f23e57e48a9b08b4cc18941041bea3dc5dc2c10c1501d",
         "source_path": "docs/plans/migration_config_bundle.md"
       },
       {
@@ -224,7 +239,7 @@
       {
         "purpose": "Stage 7+ Godot shell and native core-port ordering authority.",
         "role": "godot_core_port_authority",
-        "sha256": "e3a5c9189806402273db6c0467fcd339dbfb3d67dce341260a4116ae0f238ae6",
+        "sha256": "7a1d0414640a2a86ed30f7957d0e29fca9d5927c0f6bd79975d510908a06852d",
         "source_path": "docs/plans/godot_core_port_plan.md"
       },
       {
@@ -267,6 +282,21 @@
         "purpose": "board extent contract.schema JSON schema",
         "sha256": "e685d207ac0519f792f67039f592b377495313b6d2a3d01a88b50938b12b5057",
         "source_path": "config/schema/board_extent_contract.schema.json"
+      },
+      {
+        "purpose": "explorer topology catalog v1.schema JSON schema",
+        "sha256": "a7813cc1a69e47e80b86a8d060a6474951d6bb971758dd6d41315a446e9d7ddf",
+        "source_path": "config/schema/explorer_topology_catalog_v1.schema.json"
+      },
+      {
+        "purpose": "explorer topology quotients v1.schema JSON schema",
+        "sha256": "60bc2fe7f46081f1d8a8c123462ed7e5ec01b1075d9aee83e84315c00a932bfa",
+        "source_path": "config/schema/explorer_topology_quotients_v1.schema.json"
+      },
+      {
+        "purpose": "explorer topology transport fixtures v1.schema JSON schema",
+        "sha256": "1f4b88213d8ef59bbf6c61f8399239f48ea21028cfc5bdf4f7bd80fa53abb17b",
+        "source_path": "config/schema/explorer_topology_transport_fixtures_v1.schema.json"
       },
       {
         "purpose": "help action map.schema JSON schema",

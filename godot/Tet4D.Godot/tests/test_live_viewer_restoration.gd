@@ -132,8 +132,8 @@ func _assert_live_return(
 
 
 func _assert_paused_live_return(tree: SceneTree, app, hud, failures: Array) -> void:
-	app._live_4d_paused = true
-	app._refresh_live_4d_snapshot()
+	app._live_modes["live_4d"].paused = true
+	app._refresh_live_snapshot("live_4d")
 	var native_before := _native_surface(app, "live_4d")
 	app._return_to_main_menu()
 	await tree.process_frame
@@ -142,7 +142,7 @@ func _assert_paused_live_return(tree: SceneTree, app, hud, failures: Array) -> v
 	await _click_text(tree, hud, "Viewer", failures)
 	await tree.process_frame
 	await tree.process_frame
-	if not app._live_4d_paused:
+	if not app._live_modes["live_4d"].paused:
 		failures.append("live_4d Viewer return must preserve a pre-navigation paused state")
 	if _native_surface(app, "live_4d") != native_before:
 		failures.append("paused live_4d Viewer return must preserve gameplay truth")
@@ -194,51 +194,51 @@ func _native_surface(app, mode: String) -> Dictionary:
 	match mode:
 		"live_2d":
 			return {
-				"hash": bridge.live_2d_state_hash(),
-				"snapshot": JSON.parse_string(bridge.live_2d_snapshot_json()),
-				"next": bridge.live_2d_next_piece_preview(),
-				"hold": bridge.live_2d_held_piece_preview(),
-				"hold_available": bridge.live_2d_hold_available(),
-				"ghost": bridge.live_2d_hard_drop_destination(),
+				"hash": bridge.live_state_hash(2),
+				"snapshot": JSON.parse_string(bridge.live_snapshot_json(2)),
+				"next": bridge.live_next_piece_preview(2),
+				"hold": bridge.live_held_piece_preview(2),
+				"hold_available": bridge.live_hold_available(2),
+				"ghost": bridge.live_hard_drop_destination(2),
 			}
 		"live_3d":
 			return {
-				"hash": bridge.live_3d_state_hash(),
-				"snapshot": JSON.parse_string(bridge.live_3d_snapshot_json()),
-				"next": bridge.live_3d_next_piece_preview(),
-				"hold": bridge.live_3d_held_piece_preview(),
-				"hold_available": bridge.live_3d_hold_available(),
-				"ghost": bridge.live_3d_hard_drop_destination(),
+				"hash": bridge.live_state_hash(3),
+				"snapshot": JSON.parse_string(bridge.live_snapshot_json(3)),
+				"next": bridge.live_next_piece_preview(3),
+				"hold": bridge.live_held_piece_preview(3),
+				"hold_available": bridge.live_hold_available(3),
+				"ghost": bridge.live_hard_drop_destination(3),
 			}
 		_:
 			return {
-				"hash": bridge.live_4d_state_hash(),
-				"snapshot": JSON.parse_string(bridge.live_4d_snapshot_json()),
-				"next": bridge.live_4d_next_piece_preview(),
-				"hold": bridge.live_4d_held_piece_preview(),
-				"hold_available": bridge.live_4d_hold_available(),
-				"ghost": bridge.live_4d_hard_drop_destination(),
+				"hash": bridge.live_state_hash(4),
+				"snapshot": JSON.parse_string(bridge.live_snapshot_json(4)),
+				"next": bridge.live_next_piece_preview(4),
+				"hold": bridge.live_held_piece_preview(4),
+				"hold_available": bridge.live_hold_available(4),
+				"ghost": bridge.live_hard_drop_destination(4),
 			}
 
 
 func _dispatch_hold(app, mode: String) -> void:
 	match mode:
 		"live_2d":
-			app._live_2d_command("hold")
+			app._live_command("live_2d", "hold")
 		"live_3d":
-			app._live_3d_command("hold")
+			app._live_command("live_3d", "hold")
 		_:
-			app._live_4d_command("hold")
+			app._live_command("live_4d", "hold")
 
 
 func _session_started(app, mode: String) -> bool:
 	match mode:
 		"live_2d":
-			return app._live_2d_session_started
+			return app._live_modes["live_2d"].session_started
 		"live_3d":
-			return app._live_3d_session_started
+			return app._live_modes["live_3d"].session_started
 		_:
-			return app._live_4d_session_started
+			return app._live_modes["live_4d"].session_started
 
 
 func _setup(mode: String, shape: Array) -> Dictionary:

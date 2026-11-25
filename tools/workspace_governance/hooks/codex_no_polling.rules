@@ -1,0 +1,7 @@
+# workspace-governance managed: NO_AUTONOMOUS_POLLING defense in depth for Codex.
+# Install as ~/.codex/rules/workspace-governance-no-polling.rules (separate from
+# hand-maintained rules). Prefix rules cannot match a flag after a positional
+# argument (`gh pr checks 176 --watch`); the trusted PreToolUse hook covers that.
+prefix_rule(pattern=["gh", "run", "watch"], decision="forbidden", justification="NO_AUTONOMOUS_POLLING: gh run watch polls. Make one `gh run view RUN --json status,conclusion` request, report PENDING_EXTERNAL and stop.")
+prefix_rule(pattern=["gh", "pr", "checks", ["--watch", "-i", "--interval", "--fail-fast"]], decision="forbidden", justification="NO_AUTONOMOUS_POLLING: watch/interval mode polls. Make one `gh pr checks N --json name,state,bucket` request, report PENDING_EXTERNAL and stop.")
+prefix_rule(pattern=["watch"], decision="forbidden", justification="NO_AUTONOMOUS_POLLING: watch(1) repeats a command. Observe once and stop.")

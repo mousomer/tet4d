@@ -49,9 +49,9 @@ static func check_compass_matches_moves(app, hud, tree: SceneTree, dimension: in
 			continue
 		var before := active_centroid(app)
 		if dimension >= 4:
-			app._dispatch_live_4d_control_intent(intent)
+			app._dispatch_live_control_intent("live_4d", intent)
 		else:
-			app._dispatch_live_3d_control_intent(intent)
+			app._dispatch_live_control_intent("live_3d", intent)
 		var moved := active_centroid(app) - before
 		if moved.length() < 1.0:
 			failures.append("%s piece did not move for %s, so its arrow could not be checked" % [label, intent])

@@ -1,7 +1,7 @@
 #include "tet4d_core/plain_nd_session.hpp"
 
-#include "tet4d_core/board_extent_contract.hpp"
-#include "tet4d_core/generated/board_extent_contract_v1.hpp"
+#include "plain_session_serialization.hpp"
+#include "plain_session_setup.hpp"
 #include "tet4d_core/plain_piece_catalog.hpp"
 #include "tet4d_core/sha256.hpp"
 
@@ -11,131 +11,14 @@
 namespace tet4d::core {
 namespace {
 
-std::string bool_json(bool value) {
-	return value ? "true" : "false";
-}
-
-std::string coord_json(const CoordND &coord) {
-	std::ostringstream out;
-	out << "[";
-	for (std::size_t index = 0; index < coord.values.size(); ++index) {
-		if (index != 0) {
-			out << ",";
-		}
-		out << coord.values[index];
-	}
-	out << "]";
-	return out.str();
-}
-
-std::string coords_json(const std::vector<CoordND> &coords) {
-	std::ostringstream out;
-	out << "[";
-	for (std::size_t index = 0; index < coords.size(); ++index) {
-		if (index != 0) {
-			out << ",";
-		}
-		out << coord_json(coords[index]);
-	}
-	out << "]";
-	return out.str();
-}
-
-std::string int_array_json(const std::vector<int> &items) {
-	std::ostringstream out;
-	out << "[";
-	for (std::size_t index = 0; index < items.size(); ++index) {
-		if (index != 0) {
-			out << ",";
-		}
-		out << items[index];
-	}
-	out << "]";
-	return out.str();
-}
-
-std::string active_piece_json(const std::optional<ActivePieceND> &piece) {
-	if (!piece.has_value()) {
-		return "null";
-	}
-	std::ostringstream out;
-	out << "{\"cells\":" << coords_json(piece->cells())
-		<< ",\"color_id\":" << piece->shape.color_id
-		<< ",\"last_rotation_plane\":";
-	if (piece->last_rotation_plane.has_value()) {
-		out << int_array_json(*piece->last_rotation_plane);
-	} else {
-		out << "null";
-	}
-	out << ",\"last_rotation_steps\":" << piece->last_rotation_steps
-		<< ",\"pos\":" << coord_json(piece->pos)
-		<< ",\"rel_blocks\":" << coords_json(piece->rel_blocks)
-		<< ",\"shape\":\"" << piece->shape.name << "\"}";
-	return out.str();
-}
-
-std::string held_piece_json(const std::optional<PieceShapeND> &piece) {
-	if (!piece.has_value()) {
-		return "null";
-	}
-	std::ostringstream out;
-	out << "{\"blocks\":" << coords_json(piece->blocks)
-		<< ",\"color_id\":" << piece->color_id
-		<< ",\"shape\":\"" << piece->name << "\"}";
-	return out.str();
-}
-
-std::string locked_cells_json(const BoardND &board) {
-	std::ostringstream out;
-	out << "[";
-	std::size_t index = 0;
-	for (const auto &[coord, value] : board.cells()) {
-		if (index != 0) {
-			out << ",";
-		}
-		out << "{\"coord\":" << coord_json(coord) << ",\"value\":" << value << "}";
-		++index;
-	}
-	out << "]";
-	return out.str();
-}
-
-std::string render_cells_json(const std::vector<CoordND> &coords, int color_id, bool locked) {
-	std::ostringstream out;
-	out << "[";
-	for (std::size_t index = 0; index < coords.size(); ++index) {
-		if (index != 0) {
-			out << ",";
-		}
-		out << "{\"color_id\":" << color_id
-			<< ",\"label\":\"" << (locked ? "Locked" : "Active") << "\""
-			<< ",\"locked\":" << bool_json(locked)
-			<< ",\"position\":" << coord_json(coords[index]) << "}";
-	}
-	out << "]";
-	return out.str();
-}
-
-std::string render_locked_cells_json(const BoardND &board) {
-	std::ostringstream out;
-	out << "[";
-	std::size_t index = 0;
-	for (const auto &[coord, value] : board.cells()) {
-		if (index != 0) {
-			out << ",";
-		}
-		out << "{\"color_id\":" << value
-			<< ",\"label\":\"Locked\""
-			<< ",\"locked\":true"
-			<< ",\"position\":" << coord_json(coord) << "}";
-		++index;
-	}
-	out << "]";
-	return out.str();
-}
+using detail::bool_json;
+using detail::CommandOutcome;
+using detail::held_piece_json;
+using detail::render_cells_json;
+using detail::render_locked_cells_json;
 
 std::string board_shape_json(const BoardShapeND &shape) {
-	return int_array_json(shape.dims);
+	return detail::int_array_json(shape.dims);
 }
 
 std::string rotation_plane_name(const std::optional<ActivePieceND> &piece) {
@@ -186,72 +69,6 @@ int active_w_index(const std::optional<ActivePieceND> &piece) {
 	return piece->pos.values[3];
 }
 
-std::string hash_payload_json(
-		const GameStateND &state,
-		const BoardShapeND &shape,
-		const PlainGameSetup &setup,
-		const std::vector<PieceShapeND> &piece_bag,
-		std::size_t next_piece_index,
-		std::size_t rng_words_consumed,
-		const std::optional<PieceShapeND> &held_piece,
-		bool hold_available,
-		bool include_hold) {
-	std::ostringstream out;
-	out << "{\"active_piece\":" << active_piece_json(state.active_piece)
-		<< ",\"board_shape\":" << board_shape_json(shape)
-		<< ",\"dimension\":" << shape.dimension()
-		<< ",\"effective_seed\":" << setup.effective_seed
-		<< ",\"game_over\":" << bool_json(state.game_over)
-		<< ",\"game_over_reason\":\"" << state.game_over_reason << "\""
-		<< ",\"initial_speed_level\":" << setup.initial_speed_level
-		<< ",\"lines\":" << state.lines
-		<< ",\"locked_cells\":" << locked_cells_json(state.board)
-		<< ",\"next_piece_index\":" << next_piece_index
-		<< ",\"piece_bag\":[";
-	for (std::size_t index = 0; index < piece_bag.size(); ++index) {
-		if (index != 0) {
-			out << ",";
-		}
-		out << "\"" << piece_bag[index].name << "\"";
-	}
-	out << "]";
-	if (include_hold) {
-		out << ",\"held_piece\":" << held_piece_json(held_piece)
-			<< ",\"hold_available\":" << bool_json(hold_available);
-	}
-	out
-		<< ",\"piece_set_id\":\"" << setup.piece_set_id << "\""
-		<< ",\"random_mode\":\"" << setup.random_mode << "\""
-		<< ",\"rng_words_consumed\":" << rng_words_consumed
-		<< ",\"score\":" << state.score << "}";
-	return out.str();
-}
-
-std::string legacy_hash_payload_json(
-		const GameStateND &state,
-		const BoardShapeND &shape,
-		std::size_t next_piece_index,
-		const std::optional<PieceShapeND> &held_piece,
-		bool hold_available,
-		bool include_hold) {
-	std::ostringstream out;
-	out << "{\"active_piece\":" << active_piece_json(state.active_piece)
-		<< ",\"board_shape\":" << board_shape_json(shape)
-		<< ",\"dimension\":" << shape.dimension()
-		<< ",\"game_over\":" << bool_json(state.game_over)
-		<< ",\"game_over_reason\":\"" << state.game_over_reason << "\"";
-	if (include_hold) {
-		out << ",\"held_piece\":" << held_piece_json(held_piece)
-			<< ",\"hold_available\":" << bool_json(hold_available);
-	}
-	out
-		<< ",\"lines\":" << state.lines
-		<< ",\"locked_cells\":" << locked_cells_json(state.board)
-		<< ",\"next_piece_index\":" << next_piece_index
-		<< ",\"score\":" << state.score << "}";
-	return out.str();
-}
-
 } // namespace
 
 PlainNDSession::PlainNDSession(int dimension) :
@@ -261,13 +78,11 @@ PlainNDSession::PlainNDSession(int dimension) :
 }
 
 PlainNDSession::PlainNDSession(int dimension, BoardShapeND board_shape) :
-		dimension_(dimension),
-		board_shape_(std::move(board_shape)),
-		setup_({
+		PlainSessionLifecycle({
 			PLAIN_SETUP_SCHEMA_VERSION,
 			dimension == 4 ? "live_4d" : "live_3d",
 			"standard",
-			board_shape_.dims,
+			board_shape.dims,
 			dimension == 4 ? "standard_4d_5" : "native_3d",
 			RANDOM_MODE_FIXED_SEED,
 			1337,
@@ -275,7 +90,8 @@ PlainNDSession::PlainNDSession(int dimension, BoardShapeND board_shape) :
 			1,
 			false,
 		}),
-		rng_(static_cast<std::uint32_t>(setup_.effective_seed)),
+		dimension_(dimension),
+		board_shape_(std::move(board_shape)),
 		state_(board_shape_, 1),
 		piece_sequence_(legacy_live_piece_sequence_for_dimension(dimension)) {
 	reset();
@@ -301,41 +117,13 @@ bool PlainNDSession::configure(const BoardShapeND &board_shape) {
 }
 
 bool PlainNDSession::configure(const PlainGameSetup &requested_setup) {
-	const std::string expected_mode = dimension_ == 4 ? "live_4d" : "live_3d";
-	const BoardShapeND shape{requested_setup.board_shape};
-	if (requested_setup.schema_version != PLAIN_SETUP_SCHEMA_VERSION ||
-			requested_setup.mode != expected_mode ||
-			!is_valid_plain_random_mode(requested_setup.random_mode) ||
-			!is_valid_plain_speed(requested_setup.initial_speed_level)) {
+	const std::string expected_mode = live_trace_type(dimension_);
+	auto validated = detail::prepare_setup(requested_setup, expected_mode);
+	if (!validated.has_value()) {
 		return false;
 	}
-	BoardExtentValidationRequest extent_request;
-	extent_request.contract_version = generated::BOARD_EXTENT_CONTRACT_VERSION;
-	extent_request.mode = expected_mode;
-	extent_request.board_shape.reserve(shape.dims.size());
-	for (const int extent : shape.dims) {
-		extent_request.board_shape.push_back(extent);
-	}
-	extent_request.piece_set_id = requested_setup.piece_set_id;
-	extent_request.topology_profile = bounded_topology_profile_for_shape(shape.dims);
-	if (!validate_live_board_setup(extent_request).ok) {
-		return false;
-	}
-	if (requested_setup.random_mode == RANDOM_MODE_FIXED_SEED &&
-			(!requested_setup.configured_seed.has_value() ||
-			 !is_valid_plain_seed(*requested_setup.configured_seed))) {
-		return false;
-	}
-	PlainGameSetup validated = requested_setup;
-	validated.shuffle_bag = true;
-	if (validated.random_mode == RANDOM_MODE_TRUE_RANDOM) {
-		validated.configured_seed.reset();
-		validated.effective_seed = generate_effective_seed();
-	} else {
-		validated.effective_seed = *validated.configured_seed;
-	}
-	board_shape_ = shape;
-	setup_ = std::move(validated);
+	board_shape_ = BoardShapeND{validated->board_shape};
+	setup_ = std::move(*validated);
 	reset();
 	return true;
 }
@@ -345,28 +133,14 @@ void PlainNDSession::reset() {
 	piece_sequence_ = setup_.shuffle_bag ?
 			plain_piece_catalog_nd(dimension_, setup_.piece_set_id) :
 			legacy_live_piece_sequence_for_dimension(dimension_);
-	piece_bag_.clear();
-	next_piece_index_ = 0;
-	rng_.seed(static_cast<std::uint32_t>(setup_.effective_seed));
-	held_piece_.reset();
-	hold_available_ = true;
-	spawn_next_piece();
-	last_command_ = "reset";
-	last_command_status_ = "reset";
-	command_count_ = 0;
+	reset_lifecycle([this] { spawn_next_piece(); });
 }
 
 std::string PlainNDSession::apply_command(const std::string &command) {
-	if (command == "reset") {
-		reset();
-		return command_status(command);
-	}
-	if (state_.game_over) {
-		last_command_ = "rejected:" + command;
-		last_command_status_ = "rejected";
-		return command_status(command);
-	}
+	return route_command(*this, command, state_.game_over, [&] { return play_command(command); });
+}
 
+CommandOutcome PlainNDSession::play_command(const std::string &command) {
 	bool accepted = true;
 	if (command == "move_x_neg") {
 		accepted = state_.try_move_axis(0, -1);
@@ -407,51 +181,34 @@ std::string PlainNDSession::apply_command(const std::string &command) {
 	} else if (command == "soft_drop") {
 		accepted = state_.try_soft_drop();
 	} else if (command == "hold") {
-		accepted = apply_hold();
+		accepted = hold(state_, [this] { return draw_next_piece_shape(); });
 	} else if (command == "hard_drop") {
 		state_.post_lock_spawn_shape = draw_next_piece_shape();
 		GameStepperND::apply(state_, {"hard_drop", GameCommandKindND::HardDrop, 0, 0});
 		accepted = true;
 		hold_available_ = !state_.game_over && state_.active_piece.has_value();
-	} else if (command == "tick") {
-		tick();
-		return command_status(command);
 	} else {
-		last_command_ = "unsupported:" + command;
-		last_command_status_ = "unsupported";
-		return command_status(command);
+		return CommandOutcome::Unsupported;
 	}
-
-	last_command_ = command;
-	last_command_status_ = accepted ? "accepted" : "rejected";
-	++command_count_;
-	return command_status(command);
+	return accepted ? CommandOutcome::Accepted : CommandOutcome::Rejected;
 }
 
 std::string PlainNDSession::tick() {
-	if (!state_.game_over) {
-		const bool moved = state_.try_soft_drop();
-		if (!moved) {
-			state_.post_lock_spawn_shape = draw_next_piece_shape();
-			state_.lock_current_piece();
-			if (!state_.game_over && state_.post_lock_spawn_shape.has_value()) {
-				state_.spawn_piece(*state_.post_lock_spawn_shape);
-			}
-			hold_available_ = !state_.game_over && state_.active_piece.has_value();
+	tick_lifecycle(state_, [this] {
+		state_.post_lock_spawn_shape = draw_next_piece_shape();
+		state_.lock_current_piece();
+		if (!state_.game_over && state_.post_lock_spawn_shape.has_value()) {
+			state_.spawn_piece(*state_.post_lock_spawn_shape);
 		}
-	}
-	last_command_ = "tick";
-	last_command_status_ = state_.game_over ? "game_over" : "accepted";
-	++command_count_;
-	return command_status("tick");
+	});
+	return command_status(*this, "tick");
 }
 
 std::string PlainNDSession::snapshot_json() const {
 	const std::string hash = state_hash();
 	const std::string active_cells = render_cells_json(
 		state_.active_cells(),
-		state_.active_piece.has_value() ? state_.active_piece->shape.color_id : 0,
-		false
+		state_.active_piece.has_value() ? state_.active_piece->shape.color_id : 0
 	);
 	const std::string locked_cells = render_locked_cells_json(state_.board);
 	const int entity_count = static_cast<int>(state_.active_cells().size() + state_.board.cells().size());
@@ -541,61 +298,29 @@ std::string PlainNDSession::snapshot_json() const {
 }
 
 std::string PlainNDSession::status() const {
-	const int w_slice_count = dimension_ >= 4 && board_shape_.dims.size() > 3 ? board_shape_.dims[3] : 1;
-	std::ostringstream out;
-	out << live_case_id(dimension_) << " score=" << state_.score
-		<< " lines=" << state_.lines
-		<< " current_piece=" << current_piece_name()
-		<< " next_piece=" << next_piece_name()
-		<< " held_piece=" << (held_piece_.has_value() ? held_piece_->name : "empty")
-		<< " hold_available=" << bool_json(hold_available())
-		<< " piece_set=" << setup_.piece_set_id
-		<< " random_mode=" << setup_.random_mode
-		<< " effective_seed=" << setup_.effective_seed
-		<< " initial_speed_level=" << setup_.initial_speed_level
-		<< " last_rotation_plane=" << rotation_plane_name(state_.active_piece)
-		<< " active_w=" << active_w_index(state_.active_piece)
-		<< " w_slices=" << w_slice_count
-		<< " game_over=" << bool_json(state_.game_over)
-		<< " game_over_reason=" << state_.game_over_reason
-		<< " paused=false"
-		<< " last_command=" << last_command_
-		<< " last_command_status=" << last_command_status_;
-	return out.str();
+	return detail::session_status(live_case_id(dimension_), state_, setup_, current_piece_name(), next_piece_name(),
+			held_piece_, hold_available(), last_command_, last_command_status_, [this](std::ostream &out) {
+				const int w_slice_count = dimension_ >= 4 && board_shape_.dims.size() > 3 ? board_shape_.dims[3] : 1;
+				out << " last_rotation_plane=" << rotation_plane_name(state_.active_piece)
+					<< " active_w=" << active_w_index(state_.active_piece)
+					<< " w_slices=" << w_slice_count;
+			});
 }
 
 std::string PlainNDSession::state_hash() const {
 	const bool include_hold = held_piece_.has_value() || !hold_available_;
+	const std::string shape = board_shape_json(board_shape_);
 	if (!setup_.shuffle_bag) {
-		return sha256_hex(legacy_hash_payload_json(state_, board_shape_, next_piece_index_, held_piece_, hold_available_, include_hold));
+		return sha256_hex(detail::legacy_hash_payload_json(
+				state_, shape, board_shape_.dimension(), next_piece_index_, held_piece_, hold_available_, include_hold));
 	}
-	return sha256_hex(hash_payload_json(
-		state_,
-		board_shape_,
-		setup_,
-		piece_bag_,
-		next_piece_index_,
-		rng_.words_consumed(),
-		held_piece_,
-		hold_available_,
-		include_hold
-	));
+	return sha256_hex(detail::hash_payload_json(
+			state_, shape, board_shape_.dimension(), setup_, piece_bag_, next_piece_index_,
+			rng_.words_consumed(), held_piece_, hold_available_, include_hold));
 }
 
 PieceShapeND PlainNDSession::peek_next_piece_shape() const {
-	if (piece_sequence_.empty()) {
-		return {};
-	}
-	if (!setup_.shuffle_bag) {
-		return piece_sequence_[next_piece_index_ % piece_sequence_.size()];
-	}
-	if (!piece_bag_.empty()) {
-		return piece_bag_.back();
-	}
-	PythonRandom preview_rng = rng_;
-	const std::vector<PieceShapeND> preview_bag =
-			build_shuffled_piece_bag(piece_sequence_, preview_rng);
-	return preview_bag.back();
+	return peek_piece(piece_sequence_);
 }
 
 std::optional<PieceShapeND> PlainNDSession::held_piece_shape() const {
@@ -603,7 +328,7 @@ std::optional<PieceShapeND> PlainNDSession::held_piece_shape() const {
 }
 
 bool PlainNDSession::hold_available() const {
-	return hold_available_ && !state_.game_over && state_.active_piece.has_value();
+	return can_hold(state_);
 }
 
 std::optional<ActivePieceND> PlainNDSession::hard_drop_destination() const {
@@ -614,41 +339,12 @@ const std::string &PlainNDSession::piece_set_id() const {
 	return setup_.piece_set_id;
 }
 
-void PlainNDSession::refill_piece_bag() {
-	piece_bag_ = build_shuffled_piece_bag(piece_sequence_, rng_);
-}
-
 PieceShapeND PlainNDSession::draw_next_piece_shape() {
-	if (piece_sequence_.empty()) {
-		return trace_shape_3d();
-	}
-	if (setup_.shuffle_bag) {
-		if (piece_bag_.empty()) {
-			refill_piece_bag();
-		}
-		PieceShapeND shape = piece_bag_.back();
-		piece_bag_.pop_back();
-		return shape;
-	}
-	const PieceShapeND shape = piece_sequence_[next_piece_index_ % piece_sequence_.size()];
-	++next_piece_index_;
-	return shape;
+	return piece_sequence_.empty() ? trace_shape_3d() : draw_piece(piece_sequence_);
 }
 
 void PlainNDSession::spawn_next_piece() {
 	state_.spawn_piece(draw_next_piece_shape());
-}
-
-bool PlainNDSession::apply_hold() {
-	if (!hold_available()) {
-		return false;
-	}
-	const PieceShapeND outgoing = state_.active_piece->shape;
-	const PieceShapeND incoming = held_piece_.has_value() ? *held_piece_ : draw_next_piece_shape();
-	held_piece_ = outgoing;
-	hold_available_ = false;
-	state_.spawn_piece(incoming);
-	return true;
 }
 
 std::string PlainNDSession::current_piece_name() const {
@@ -659,32 +355,12 @@ std::string PlainNDSession::current_piece_name() const {
 }
 
 std::string PlainNDSession::next_piece_name() const {
-	if (piece_sequence_.empty()) {
-		return "none";
-	}
-	if (setup_.shuffle_bag) {
-		return piece_bag_.empty() ? "pending_bag" : piece_bag_.back().name;
-	}
-	return piece_sequence_[next_piece_index_ % piece_sequence_.size()].name;
-}
-
-std::string PlainNDSession::command_status(const std::string &command) const {
-	std::ostringstream out;
-	out << "command=" << command << " " << status();
-	return out.str();
+	return next_name(piece_sequence_);
 }
 
 bool is_supported_live_nd_board_shape(int dimension, const BoardShapeND &board_shape) {
-	BoardExtentValidationRequest request;
-	request.contract_version = generated::BOARD_EXTENT_CONTRACT_VERSION;
-	request.mode = dimension == 3 ? "live_3d" : (dimension == 4 ? "live_4d" : "");
-	request.board_shape.reserve(board_shape.dims.size());
-	for (const int extent : board_shape.dims) {
-		request.board_shape.push_back(extent);
-	}
-	request.piece_set_id = dimension == 4 ? "standard_4d_5" : "native_3d";
-	request.topology_profile = bounded_topology_profile_for_shape(board_shape.dims);
-	return validate_live_board_setup(request).ok;
+	const std::string mode = dimension == 3 ? "live_3d" : (dimension == 4 ? "live_4d" : "");
+	return detail::has_valid_extent(mode, board_shape.dims, dimension == 4 ? "standard_4d_5" : "native_3d");
 }
 
 bool is_supported_live_nd_piece_set(int dimension, const std::string &piece_set_id) {

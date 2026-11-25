@@ -653,14 +653,14 @@ func _test_live_integration(registry) -> Array:
 		return ["profile-library integration requires ReplayHud and TraceReplayApp"]
 	var library = LibraryScript.new(registry, INTEGRATION_DIRECTORY)
 	hud._presentation_designer.configure(registry, library)
-	app._enter_live_4d_mode()
+	app._enter_live_mode("live_4d")
 	await tree.process_frame
 	hud._open_presentation_designer()
 	await tree.process_frame
 	var designer = hud._presentation_designer
 	var game_before: Dictionary = app._current_snapshot.duplicate(true)
 	var setup_before: Dictionary = app._active_live_setup.duplicate(true)
-	var state_hash_before := str(app._live_bridge.live_4d_state_hash())
+	var state_hash_before := str(app._live_bridge.live_state_hash(4))
 	var settings_before: Dictionary = hud._settings_store.deterministic_snapshot()
 	var basis_before: Array = app._live_4d_basis.slots()
 	var orientation_before: Dictionary = app._live_4d_local_orientation.snapshot()
@@ -674,7 +674,7 @@ func _test_live_integration(registry) -> Array:
 	if not bool(designer.load_saved_profile(stored_id).get("ok", false)):
 		failures.append("production Designer should load a named profile through its bounded apply seam")
 	await tree.process_frame
-	if app._current_snapshot != game_before or app._active_live_setup != setup_before or str(app._live_bridge.live_4d_state_hash()) != state_hash_before:
+	if app._current_snapshot != game_before or app._active_live_setup != setup_before or str(app._live_bridge.live_state_hash(4)) != state_hash_before:
 		failures.append("profile save/edit/load must preserve deterministic game snapshot, setup, and state hash")
 	if hud._settings_store.deterministic_snapshot() != settings_before:
 		failures.append("named profile lifecycle must not rewrite ordinary shell settings")

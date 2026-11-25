@@ -17,6 +17,7 @@ const NextPiecePanelScript = preload("res://scripts/ui/pieces/next_piece_panel.g
 const HoldPiecePanelScript = preload("res://scripts/ui/pieces/hold_piece_panel.gd")
 const LivePieceControlStripScript = preload("res://scripts/ui/live_piece_control_strip.gd")
 const LiveViewControlStripScript = preload("res://scripts/ui/live_view_control_strip.gd")
+const ExplorerCockpitScript = preload("res://scripts/ui/explorer_cockpit.gd")
 const LiveCockpitScript = preload("res://scripts/ui/live_cockpit.gd")
 const SettingsRegistryScript = preload("res://scripts/ui/settings/settings_registry.gd")
 const SettingsStoreScript = preload("res://scripts/ui/settings/settings_store.gd")
@@ -146,8 +147,7 @@ var _designer_button: Button
 var _design_menu_header: Control
 var _design_lab_button: Button
 var _main_menu_focus_order: Array[Control] = []
-var _practice_panel
-var _practice_active := false
+var _explorer_cockpit := ExplorerCockpitScript.new()
 # The main menu's fit-to-window box and its last decision inputs.
 var _main_menu_fit
 var _main_menu_fit_room := Vector2.ZERO
@@ -245,13 +245,10 @@ var _piece_preview_row: GridContainer
 var _piece_control_strip: PanelContainer
 var _live_view_control_strip: PanelContainer
 var _live_cockpit
-const DESIGN_RESOLUTION_MIN_WIDTH := ShellViewportLayout.DESIGN_MINIMUM.x
-const DESIGN_RESOLUTION_MIN_HEIGHT := ShellViewportLayout.DESIGN_MINIMUM.y
 # Menus scale with their opening size on both axes; live/replay preserves the
 # taller reference canvas required by the gameplay rails and Designer chrome.
 const MENU_REFERENCE_SIZE := ShellViewportLayout.MENU_REFERENCE
 const DESIGN_REFERENCE_SIZE := ShellViewportLayout.LIVE_REFERENCE
-const MAX_WINDOW_UI_SCALE := ShellViewportLayout.MAX_WINDOW_SCALE
 # Menu text may shrink with a smaller window only down to the RDS 18 px
 # readable-body target; below it the logical canvas grows and menus reflow.
 const MENU_READABLE_BODY_POINTS := 18.0
@@ -260,7 +257,7 @@ const MIN_MENU_WINDOW_SCALE := MENU_READABLE_BODY_POINTS / ShellDesignTokensScri
 var _live_4d_deck: VBoxContainer
 var _live_4d_piece_module: VBoxContainer
 var _live_4d_view_module: VBoxContainer
-var _live_4d_state_module: VBoxContainer
+var _piece_state_module: VBoxContainer
 var _basis_panel: PanelContainer
 var _basis_indicator_label: Label
 var _live_4d_basis_snapshot: Dictionary = {
@@ -801,11 +798,11 @@ func _configure_live_cockpit_mode(mode: String) -> void:
 			_hud_density,
 			mode,
 			LiveInputContractScript,
-			LiveViewControlStripScript.LAYOUT_WIDE if mode == GameSetupSpecScript.MODE_4D and not _practice_active else LiveViewControlStripScript.LAYOUT_GRID,
-			_practice_active
+			LiveViewControlStripScript.LAYOUT_WIDE if mode == GameSetupSpecScript.MODE_4D and not _explorer_cockpit.active else LiveViewControlStripScript.LAYOUT_GRID,
+			_explorer_cockpit.active
 		)
-		_live_view_control_strip.set_detached_layout(_practice_active)
-		_live_view_control_strip.set_fit_to_content(_practice_active)
+		_live_view_control_strip.set_detached_layout(_explorer_cockpit.active)
+		_live_view_control_strip.set_fit_to_content(_explorer_cockpit.active)
 		_style_applier.apply_to_tree(_live_view_control_strip, _style_manager)
 	_update_camera_guidance(mode)
 	if _inspector_hint_panel != null:
@@ -825,32 +822,12 @@ func set_practice_view_basis(snapshot: Dictionary) -> void:
 
 
 func set_practice_state(dimension: int, feedback: String = "", pieces: Array = [], selected_piece: int = -1, topology: String = "bounded", board: Array = [], board_minima: Array = [], board_maxima: Array = []) -> void:
-	var active := dimension in [2, 3, 4]
-	if active and _practice_active and _practice_panel != null and _practice_panel.dimension() == dimension:
-		_practice_panel.update_state(feedback)
-		_practice_panel.update_piece_choices(pieces, selected_piece)
-		_practice_panel.update_topology(topology)
-		_practice_panel.update_board(board, board_minima, board_maxima)
+	if not _explorer_cockpit.update_panel(
+		_piece_state_module, dimension, feedback, pieces, selected_piece,
+		topology, board, board_minima, board_maxima, _prepare_explorer_panel
+	):
 		return
-	_practice_active = active
-	if active and _practice_panel == null:
-		_practice_panel = preload("res://scripts/ui/practice_explorer_panel.gd").new()
-		_practice_panel.name = "PracticeExplorerPanel"
-		_practice_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		_live_4d_state_module.add_child(_practice_panel)
-		_practice_panel.requested.connect(func(action: String) -> void: practice_requested.emit(action))
-	if _practice_panel != null:
-		_practice_panel.visible = active
-		if active:
-			_practice_panel.configure(dimension)
-			_practice_panel.update_state(feedback)
-			_practice_panel.update_piece_choices(pieces, selected_piece)
-			_practice_panel.update_topology(topology)
-			_practice_panel.update_board(board, board_minima, board_maxima)
-			# Practice controls are created after the viewer's initial capture
-			# pass. Apply the same focus policy so clicks cannot steal move keys.
-			_set_focus_mode_recursive(_practice_panel, Control.FOCUS_NONE)
-			_style_applier.apply_to_tree(_practice_panel, _style_manager)
+	var active := _explorer_cockpit.active
 	# The lower helper deck stays in Explorer: its piece half carries the
 	# practice-specific translation, rotation, Z/X and Retry rows.
 	_live_4d_piece_module.visible = true
@@ -858,17 +835,11 @@ func set_practice_state(dimension: int, feedback: String = "", pieces: Array = [
 		_live_4d_view_module.visible = false
 		_refresh_piece_control_strip()
 		_live_view_control_strip.configure(_live_4d_basis_snapshot, _control_frame_snapshot, _hud_density, _active_live_mode, LiveInputContractScript, LiveViewControlStripScript.LAYOUT_GRID, true)
-		if _live_view_control_strip.get_parent() != _practice_panel.view_controls_host:
-			_live_view_control_strip.reparent(_practice_panel.view_controls_host, false)
-		_live_view_control_strip.set_detached_layout(true)
-		_live_view_control_strip.set_fit_to_content(true)
+		_explorer_cockpit.place_view_helper(_live_view_control_strip, _live_4d_view_module)
 		_style_applier.apply_to_tree(_piece_control_strip, _style_manager)
 		_style_applier.apply_to_tree(_live_view_control_strip, _style_manager)
 	else:
-		if _live_view_control_strip.get_parent() != _live_4d_view_module:
-			_live_view_control_strip.reparent(_live_4d_view_module, false)
-		_live_view_control_strip.set_detached_layout(false)
-		_live_view_control_strip.set_fit_to_content(false)
+		_explorer_cockpit.place_view_helper(_live_view_control_strip, _live_4d_view_module)
 	_piece_control_strip.visible = true
 	_piece_preview_row.visible = not active
 	_play_button.disabled = active
@@ -881,6 +852,12 @@ func set_practice_state(dimension: int, feedback: String = "", pieces: Array = [
 		_top_state_badge_label.text = "PRACTICE"
 
 
+func _prepare_explorer_panel(panel: Control) -> void:
+	# New Explorer controls use the viewer's keyboard capture policy.
+	_set_focus_mode_recursive(panel, Control.FOCUS_NONE)
+	_style_applier.apply_to_tree(panel, _style_manager)
+
+
 func _refresh_piece_control_strip() -> void:
 	if _piece_control_strip == null or _active_live_mode.is_empty():
 		return
@@ -891,7 +868,7 @@ func _refresh_piece_control_strip() -> void:
 		_hud_density,
 		LiveInputContractScript,
 		_piece_legend_layout(),
-		_practice_active
+		_explorer_cockpit.active
 	)
 	if rebuilt and is_inside_tree():
 		_style_applier.apply_to_tree(_piece_control_strip, _style_manager)
@@ -944,7 +921,7 @@ func _set_live_4d_deck_active(active: bool) -> void:
 	if _live_4d_deck == null:
 		return
 	_live_4d_piece_module.visible = true
-	_live_4d_view_module.visible = not _practice_active and (not side_rail or not _live_cockpit.designer_panels().is_empty())
+	_live_4d_view_module.visible = not _explorer_cockpit.active and (not side_rail or not _live_cockpit.designer_panels().is_empty())
 	var placement := LiveCockpitScript.PLACEMENT_BELOW
 	if side_rail:
 		placement = LiveCockpitScript.PLACEMENT_SIDE
@@ -953,10 +930,10 @@ func _set_live_4d_deck_active(active: bool) -> void:
 	_live_cockpit.set_deck_placement(placement)
 	if active:
 		_piece_control_strip.reparent(_live_4d_piece_module, false)
-		var view_host: Node = _practice_panel.view_controls_host if _practice_active and _practice_panel != null else _live_4d_view_module
+		var view_host := _explorer_cockpit.view_host(_live_4d_view_module)
 		if _live_view_control_strip.get_parent() != view_host:
 			_live_view_control_strip.reparent(view_host, false)
-		_piece_preview_row.reparent(_live_4d_state_module, false)
+		_piece_preview_row.reparent(_piece_state_module, false)
 		if _onboarding_panel != null and _onboarding_panel.get_parent() != _live_cockpit.header_slot:
 			_onboarding_panel.reparent(_live_cockpit.header_slot, false)
 		_right_scroll.visible = false
@@ -1406,7 +1383,7 @@ func layout_contract_snapshot() -> Dictionary:
 		"live_cockpit": _live_cockpit.deterministic_snapshot() if _live_cockpit != null else {},
 		"piece_module_rect": _control_rect(_live_4d_piece_module),
 		"view_module_rect": _control_rect(_live_4d_view_module),
-		"piece_state_module_rect": _control_rect(_live_4d_state_module),
+		"piece_state_module_rect": _control_rect(_piece_state_module),
 		"view_control_strip": _live_view_control_strip.deterministic_snapshot() if _live_view_control_strip != null else {},
 		"current_screen": _current_screen,
 		"bottom_bar_visible": _bottom_panel.visible if _bottom_panel != null else false,
@@ -2096,10 +2073,6 @@ func _status_badge_text(state_label: String, reason: String) -> String:
 	return "[ RUNNING ]"
 
 
-static func game_over_reason_label(reason: String) -> String:
-	return _game_over_reason_label(reason)
-
-
 static func _game_over_reason_label(reason: String) -> String:
 	var normalized := reason.strip_edges()
 	match normalized:
@@ -2209,11 +2182,11 @@ func _apply_hud_density(density: String) -> void:
 			_hud_density,
 			_active_live_mode,
 			LiveInputContractScript,
-			LiveViewControlStripScript.LAYOUT_WIDE if _active_live_mode == GameSetupSpecScript.MODE_4D and not _practice_active else LiveViewControlStripScript.LAYOUT_GRID,
-			_practice_active
+			LiveViewControlStripScript.LAYOUT_WIDE if _active_live_mode == GameSetupSpecScript.MODE_4D and not _explorer_cockpit.active else LiveViewControlStripScript.LAYOUT_GRID,
+			_explorer_cockpit.active
 		)
-		_live_view_control_strip.set_detached_layout(_practice_active)
-		_live_view_control_strip.set_fit_to_content(_practice_active)
+		_live_view_control_strip.set_detached_layout(_explorer_cockpit.active)
+		_live_view_control_strip.set_fit_to_content(_explorer_cockpit.active)
 		_style_applier.apply_to_tree(_live_view_control_strip, _style_manager)
 	_set_live_inspector_density(_bottom_panel != null and not _bottom_panel.visible)
 	_update_live_view_action_labels()
@@ -2871,7 +2844,8 @@ func _build_layout() -> void:
 	_live_4d_deck = _live_cockpit.control_deck
 	_live_4d_piece_module = _live_cockpit.piece_controls
 	_live_4d_view_module = _live_cockpit.view_controls
-	_live_4d_state_module = _live_cockpit.piece_state
+	_piece_state_module = _live_cockpit.piece_state
+	_explorer_cockpit.requested.connect(func(action: String) -> void: practice_requested.emit(action))
 
 	var bottom_panel := PanelContainer.new()
 	_bottom_panel = bottom_panel
@@ -3850,10 +3824,6 @@ func _sync_design_resolution() -> void:
 # recomputed from the reference on every resize, never from the prior scale.
 static func menu_window_scale(window_points: Vector2) -> float:
 	return ShellViewportLayout.window_scale(window_points, MENU_REFERENCE_SIZE, MIN_MENU_WINDOW_SCALE, 1.0)
-
-
-func _window_ui_scale(points: Vector2) -> float:
-	return window_ui_scale(points) if _current_screen == SCREEN_VIEWER else menu_window_scale(points)
 
 
 # How much the shell is magnified for a window of this size in points: 1.0 up

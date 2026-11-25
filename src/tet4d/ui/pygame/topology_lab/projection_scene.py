@@ -150,20 +150,6 @@ def _draw_grid(
         )
 
 
-def _coord_matches_slice(
-    coord: Sequence[int],
-    *,
-    dimension: int,
-    axes: tuple[int, int],
-    selected_coord: Sequence[int],
-    slab_radius: int,
-) -> bool:
-    for axis in projection_hidden_axes(dimension, axes):
-        if abs(int(coord[axis]) - int(selected_coord[axis])) > int(slab_radius):
-            return False
-    return True
-
-
 def _full_coord_for_panel_cell(
     *,
     axes: tuple[int, int],
@@ -617,37 +603,6 @@ def _selected_projection_coord(
     if probe_coord is not None and len(probe_coord) == dimension:
         return tuple(int(value) for value in probe_coord)
     return tuple(0 for _ in range(dimension))
-
-
-def _draw_projection_heading(
-    surface: pygame.Surface,
-    fonts,
-    *,
-    area: pygame.Rect,
-    dimension: int,
-    selected_coord: tuple[int, ...],
-) -> None:
-    title = draw_fitted_text_line(
-        surface,
-        font=fonts.hint_font,
-        text=f"{dimension}D synchronized projections",
-        color=_TEXT,
-        max_width=area.width - 12,
-        x=area.x,
-        y=area.y - fonts.hint_font.get_height() - 4,
-    )
-    draw_fitted_text_line(
-        surface,
-        font=fonts.hint_font,
-        text=(
-            f"Selected {list(selected_coord)}  hidden slices stay explicit "
-            "in every panel"
-        ),
-        color=_MUTED,
-        max_width=max(40, area.width - title.get_width() - 22),
-        x=area.x + title.get_width() + 10,
-        y=area.y - fonts.hint_font.get_height() - 4,
-    )
 
 
 def _boundary_pill_items(

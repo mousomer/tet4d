@@ -25,7 +25,7 @@ func run() -> Array:
 	await tree.process_frame
 	var app = root.get_node("App")
 	var hud = root.get_node("ReplayHud")
-	app._enter_live_4d_mode()
+	app._enter_live_mode("live_4d")
 	hud._set_onboarding_visible(false)
 	for i in range(4):
 		await tree.process_frame
@@ -76,8 +76,8 @@ func run() -> Array:
 	# with real XW turns and alternating inspection yaw. Scale-first layouts
 	# can retain one row through every basis turn, so basis turns alone no
 	# longer guarantee a left/right reversal. Never inject legend directions.
-	app._live_4d_paused = true
-	var hash_before := str(app._live_bridge.live_4d_state_hash())
+	app._live_modes["live_4d"].paused = true
+	var hash_before := str(app._live_bridge.live_state_hash(4))
 	var reversed_before: bool = hud._piece_control_strip.deterministic_snapshot()["slice_keys_reversed"]
 	var reversals := 0
 	for turn in range(8):
@@ -102,7 +102,7 @@ func run() -> Array:
 			failures.append("Live-4D slice arrows must follow the published screen direction")
 	if reversals < 2:
 		failures.append("Live-4D rebuild regression must exercise repeated slice-direction reversals")
-	if str(app._live_bridge.live_4d_state_hash()) != hash_before:
+	if str(app._live_bridge.live_state_hash(4)) != hash_before:
 		failures.append("Live-4D view turns and legend reconstruction must not mutate gameplay")
 	# The row of the plane just used lights up.
 	if not hud._piece_control_strip.flash_plane("XW") or not hud._live_view_control_strip.flash_plane("ZW"):
@@ -121,7 +121,7 @@ func _check_preview_refresh_fit(app, hud, tree: SceneTree) -> Array:
 	tree.root.min_size = Vector2i.ZERO
 	tree.root.size = Vector2i(1280, 720)
 	tree.root.content_scale_size = tree.root.size
-	app._enter_live_4d_mode()
+	app._enter_live_mode("live_4d")
 	hud._set_onboarding_visible(false)
 	# Disable automatic gravity so only the commands below advance gameplay.
 	app.set_process(false)
@@ -133,9 +133,9 @@ func _check_preview_refresh_fit(app, hud, tree: SceneTree) -> Array:
 		failures.append("hard-drop regression must start with a settled scaled 4D side column")
 	var gaps_before: Array = _preview_gaps(hud)
 	for drop in range(2):
-		var hash_before := str(app._live_bridge.live_4d_state_hash())
-		app._live_4d_paused = false
-		if not app._dispatch_live_4d_gameplay_command("hard_drop") or str(app._live_bridge.live_4d_state_hash()) == hash_before:
+		var hash_before := str(app._live_bridge.live_state_hash(4))
+		app._live_modes["live_4d"].paused = false
+		if not app._dispatch_live_command("live_4d", "hard_drop") or str(app._live_bridge.live_state_hash(4)) == hash_before:
 			failures.append("hard-drop regression must advance the native session")
 		if _preview_gaps(hud) != gaps_before:
 			failures.append("hard drop must preserve NEXT/HOLD's cockpit-compacted gaps")

@@ -31,15 +31,16 @@ func run() -> Array:
 	_check(app._practice != null and app._mode == "live_4d", "main-menu E enters 4D Explorer")
 	await _check_2d_access(tree, app, hud)
 	await _check_surface_ui(tree, app, hud)
+	await _check_shared_space_tab(tree, app, hud)
 	for dimension in [3, 4]:
-		var previous_panel = hud._practice_panel
+		var previous_panel = hud._explorer_cockpit.panel
 		previous_panel._tabs.current_tab = 0
 		var previous_tabs_id: int = previous_panel._tabs.get_instance_id()
 		app._practice_action("dimension_%d" % dimension)
 		await tree.process_frame
 		await tree.process_frame
-		_check(hud._practice_panel._tabs.get_instance_id() == previous_tabs_id and hud._practice_panel._tabs.current_tab == 0, "%dD dimension switch retains the actual Explorer tabs and selection" % dimension)
-		hud._practice_panel._tabs.current_tab = 0
+		_check(hud._explorer_cockpit.panel._tabs.get_instance_id() == previous_tabs_id and hud._explorer_cockpit.panel._tabs.current_tab == 0, "%dD dimension switch retains the actual Explorer tabs and selection" % dimension)
+		hud._explorer_cockpit.panel._tabs.current_tab = 0
 		app._fit_view()
 		var model = app._practice
 		_check(model != null and model.dimension() == dimension, "%dD practice initialized" % dimension)
@@ -47,14 +48,14 @@ func run() -> Array:
 		var hash_before := _native_hash(app, dimension)
 		app._process(120.0)
 		_check(model.cells == initial and _native_hash(app, dimension) == hash_before, "%dD elapsed time cannot move, lock or advance native state" % dimension)
-		_check(hud._practice_panel._tabs.get_tab_count() == 3 and hud._practice_panel._tabs.get_child(0).name == "View" and hud._practice_panel._tabs.get_child(1).name == "Piece" and hud._practice_panel._tabs.get_child(2).name == "Space", "%dD Explorer tabs are View | Piece | Space in every dimension" % dimension)
+		_check(hud._explorer_cockpit.panel._tabs.get_tab_count() == 3 and hud._explorer_cockpit.panel._tabs.get_child(0).name == "View" and hud._explorer_cockpit.panel._tabs.get_child(1).name == "Piece" and hud._explorer_cockpit.panel._tabs.get_child(2).name == "Space", "%dD Explorer tabs are View | Piece | Space in every dimension" % dimension)
 		var panel_text := ""
-		for label in hud._practice_panel.find_children("*", "Label", true, false):
+		for label in hud._explorer_cockpit.panel.find_children("*", "Label", true, false):
 			panel_text += label.text + "\n"
 		_check(not panel_text.contains("Coordinates") and not panel_text.contains("Selected cell") and not panel_text.contains("Local view yaw"), "%dD Explorer omits raw debug readouts" % dimension)
-		_check(hud._practice_panel.visible and not hud._piece_preview_row.visible, "%dD practice controls replace ordinary object controls" % dimension)
+		_check(hud._explorer_cockpit.panel.visible and not hud._piece_preview_row.visible, "%dD practice controls replace ordinary object controls" % dimension)
 		_check(app._current_snapshot.probe_markers.is_empty(), "%dD entry draws no target or slice dot" % dimension)
-		var target_buttons: Array = hud._practice_panel.find_children("*", "Button", true, false).filter(func(button): return button.get_meta("practice_action", "") == "target")
+		var target_buttons: Array = hud._explorer_cockpit.panel.find_children("*", "Button", true, false).filter(func(button): return button.get_meta("practice_action", "") == "target")
 		_check(target_buttons.size() == 1, "%dD Piece page offers New target" % dimension)
 		if target_buttons.size() == 1:
 			target_buttons[0].pressed.emit()
@@ -64,7 +65,7 @@ func run() -> Array:
 		var active_nodes: Array = app._renderer._cell_root.get_children().filter(func(node): return node.get_meta("presentation_role", "") == "active")
 		_check(active_nodes.size() > 1 and active_nodes[0].get_child_count() == active_nodes[1].get_child_count(), "%dD Explorer does not draw a separate origin dot on its first object cell" % dimension)
 		_check(hud._piece_control_strip.is_visible_in_tree() and hud._live_view_control_strip.is_visible_in_tree(), "%dD object helper and unified VIEW helper remain accessible" % dimension)
-		_check(hud._live_view_control_strip.get_parent() == hud._practice_panel.view_controls_host and not hud._live_4d_view_module.visible, "%dD VIEW helper is mounted once with the clickable controls, without a lower duplicate" % dimension)
+		_check(hud._live_view_control_strip.get_parent() == hud._explorer_cockpit.panel.view_controls_host and not hud._live_4d_view_module.visible, "%dD VIEW helper is mounted once with the clickable controls, without a lower duplicate" % dimension)
 		_check(hud._live_view_control_strip.get_combined_minimum_size().y >= hud._live_view_control_strip._groups_box.get_combined_minimum_size().y, "%dD full view helper reports its complete content height to cockpit fitting" % dimension)
 		var piece_help: Dictionary = hud._piece_control_strip.deterministic_snapshot()
 		_check(not piece_help.roles.has("drop") and not piece_help.roles.has("hold"), "%dD practice helper omits unsupported drop and hold" % dimension)
@@ -75,16 +76,16 @@ func run() -> Array:
 		_check(view_help.roles.has("view_pointer") and view_help.roles.has("view_framing"), "%dD full view helper includes gestures and framing" % dimension)
 		if dimension == 4:
 			_check(view_help.roles.has("view_exact") and view_help.roles.has("view_orient"), "4D full helper includes basis and slice orientation")
-		for button in hud._practice_panel.find_children("*", "Button", true, false):
+		for button in hud._explorer_cockpit.panel.find_children("*", "Button", true, false):
 			_check(button.focus_mode == Control.FOCUS_NONE, "%dD dynamically created controls preserve the live keyboard capture policy" % dimension)
 		for tab in range(3):
-			hud._practice_panel._tabs.current_tab = tab
+			hud._explorer_cockpit.panel._tabs.current_tab = tab
 			await tree.process_frame
 			await tree.process_frame
-			var page: ScrollContainer = hud._practice_panel._tabs.get_child(tab)
+			var page: ScrollContainer = hud._explorer_cockpit.panel._tabs.get_child(tab)
 			_check(page.size.y > 0 and page.size.x > 0, "%dD tab %d has usable content geometry" % [dimension, tab])
-			_check(hud._practice_panel.get_global_rect().end.x <= tree.root.get_visible_rect().end.x + 1.0, "%dD tab %d stays inside logical viewport width: panel=%s viewport=%s" % [dimension, tab, hud._practice_panel.get_global_rect(), tree.root.get_visible_rect()])
-		hud._practice_panel._tabs.current_tab = 0
+			_check(hud._explorer_cockpit.panel.get_global_rect().end.x <= tree.root.get_visible_rect().end.x + 1.0, "%dD tab %d stays inside logical viewport width: panel=%s viewport=%s" % [dimension, tab, hud._explorer_cockpit.panel.get_global_rect(), tree.root.get_visible_rect()])
+		hud._explorer_cockpit.panel._tabs.current_tab = 0
 		app._ensure_live_game_paused_for_focus_loss()
 		_check(not app._live_mode_paused(), "%dD gravity-free practice does not become stuck paused after focus loss" % dimension)
 		var before: Array = model.cells.duplicate(true)
@@ -128,6 +129,41 @@ func run() -> Array:
 		event.pressed = true
 		app._unhandled_input(event)
 		_check(model.cells == oracle.cells, "%dD keyboard camera-relative displacement matches native query" % dimension)
+		app._publish_legend_screen_directions()
+		var helper_directions: Dictionary = app._legend_screen_directions(dimension)
+		var helper_shape: Array = app._renderer.presented_board_shape()
+		var helper_origin: Array = helper_shape.map(func(extent): return floori(float(extent) * 0.5))
+		for axis in "xyzw".substr(0, dimension):
+			var mapped_axis: Dictionary = app._control_frame_mapping(dimension).axis_for_local(axis)
+			_check(helper_directions[axis] == app._board_axis_screen_direction(helper_shape, helper_origin, mapped_axis.axis, mapped_axis.sign * (-1 if axis == "y" else 1)), "%dD ROTATE helper preserves mapped %s axis/sign" % [dimension, axis])
+		for intent in helper_directions:
+			if not intent.begins_with("move_"): continue
+			var mapped_move: String = app._control_frame_mapping(dimension).translation_command(intent, "relative")
+			_check(helper_directions[intent] == app._board_axis_screen_direction(helper_shape, helper_origin, "xyzw".find(mapped_move.get_slice("_", 1)), 1 if mapped_move.ends_with("pos") else -1), "%dD MOVE helper matches dispatched %s" % [dimension, intent])
+		_check(hud._piece_control_strip._glyphs.all(func(glyph): return app._legend_directions_close(glyph.directions(), helper_directions)), "%dD every piece glyph consumes shared projected directions" % dimension)
+		var remapped := false
+		for plane in InputContract.explorer_profile(dimension).rotation_planes:
+			for sign in ["neg", "pos"]:
+				var command: String = plane["negative_command" if sign == "neg" else "positive_command"]
+				var mapped: String = app._control_frame_mapping(dimension).rotation_command(command, "relative")
+				remapped = remapped or mapped != command
+				model.retry()
+				model.command(mapped)
+				var expected_rotation: Array = model.cells.duplicate(true)
+				for button in [false, true]:
+					var glyph = hud._piece_control_strip._glyphs.filter(func(candidate): return candidate.plane_name() == str(plane.label).to_upper())[0]
+					var flashes := int(glyph.get_parent().get_meta("legend_flash_count", 0))
+					model.retry()
+					if button:
+						hud._explorer_cockpit.panel._dimensional_controls.filter(func(control): return control.get_meta("practice_action") == command)[0].pressed.emit()
+					else:
+						var rotation_event := InputEventAction.new()
+						rotation_event.action = plane["negative_action" if sign == "neg" else "positive_action"]
+						rotation_event.pressed = true
+						app._unhandled_input(rotation_event)
+					_check(model.cells == expected_rotation, "%dD %s button=%s uses shared camera-relative rotation" % [dimension, command, button])
+					_check(int(glyph.get_parent().get_meta("legend_flash_count", 0)) == flashes + 1, "%dD keyboard/button rotation flashes its local helper plane" % dimension)
+		_check(remapped, "%dD rotation coverage exercises a changed camera/basis mapping" % dimension)
 		before = model.cells.duplicate(true)
 		if dimension == 4:
 			var basis: Array = app._live_4d_basis.slots()
@@ -162,7 +198,7 @@ func run() -> Array:
 		_check(app._practice == model and model.cells == initial, "%dD menu return retains detached practice" % dimension)
 		app._practice_action("play")
 		_check(not hud._live_view_control_strip.deterministic_snapshot().practice and hud._live_view_control_strip.get_parent() == hud._live_4d_view_module, "%dD Play restores the ordinary passive VIEW component" % dimension)
-		_check(app._practice == null and not hud._practice_panel.visible and hud._piece_preview_row.visible, "%dD Play restores ordinary controls" % dimension)
+		_check(app._practice == null and not hud._explorer_cockpit.panel.visible and hud._piece_preview_row.visible, "%dD Play restores ordinary controls" % dimension)
 		if dimension == 4:
 			_check(not app._live_4d_basis._free_inspection and int(app._live_4d_basis.slots()[1]) == 2, "Play restores the Y-fixed gameplay basis")
 		_check(hud._piece_control_strip.deterministic_snapshot().roles.has("drop"), "%dD Play restores normal drop helper" % dimension)
@@ -260,11 +296,11 @@ func _model_contract(bridge, dimension: int) -> void:
 
 
 func _native_hash(app, dimension: int) -> String:
-	return app._live_bridge.live_3d_state_hash() if dimension == 3 else app._live_bridge.live_4d_state_hash()
+	return app._live_bridge.live_state_hash(dimension)
 
 
 func _check_stable_panel(tree: SceneTree, app, hud, dimension: int) -> void:
-	var panel = hud._practice_panel
+	var panel = hud._explorer_cockpit.panel
 	var dimension_controls: Array = panel.find_children("*", "BaseButton", true, false).map(func(node): return node.get_instance_id())
 	panel._tabs.current_tab = 0
 	panel.configure(4 if dimension == 3 else 3)
@@ -289,7 +325,7 @@ func _check_stable_panel(tree: SceneTree, app, hud, dimension: int) -> void:
 		event.pressed = true
 		app._unhandled_input(event)
 		await tree.process_frame
-		_check(hud._practice_panel.get_instance_id() == panel_id and panel._tabs.current_tab == 1, "%dD movement preserves Explorer panel identity and selected tab" % dimension)
+		_check(hud._explorer_cockpit.panel.get_instance_id() == panel_id and panel._tabs.current_tab == 1, "%dD movement preserves Explorer panel identity and selected tab" % dimension)
 		_check(scroll.scroll_vertical == position, "%dD movement preserves side-panel scroll position" % dimension)
 	_check(events.theme == 0 and events.reparent == 0, "%dD movement neither restyles the panel nor reparents helper controls" % dimension)
 	_check(button_ids == panel.find_children("*", "Button", true, false).map(func(button): return button.get_instance_id()), "%dD movement preserves every Explorer button" % dimension)
@@ -309,7 +345,7 @@ func _check_view_and_replacement(tree: SceneTree, app, hud, dimension: int) -> v
 	var original_target: Array = model.target.duplicate()
 	var original_cell: int = model.selected_cell
 	var hash_before := _native_hash(app, dimension)
-	var panel = hud._practice_panel
+	var panel = hud._explorer_cockpit.panel
 	var dimension_controls: Array = panel.find_children("*", "BaseButton", true, false).map(func(node): return node.get_instance_id())
 	panel._tabs.current_tab = 0
 	panel.configure(4 if dimension == 3 else 3)
@@ -398,7 +434,7 @@ func _check_layout_stability(tree: SceneTree, app, hud, dimension: int) -> void:
 	var original_piece: int = app._practice.selected_piece
 	var original_target: Array = app._practice.target.duplicate()
 	var original_neighbors: bool = app._practice_neighbors
-	var panel = hud._practice_panel
+	var panel = hud._explorer_cockpit.panel
 	var cockpit = hud._live_cockpit
 	for window_size in [Vector2i(1280, 800), Vector2i(1280, 720), Vector2i(1024, 720)]:
 		tree.root.size = window_size
@@ -467,7 +503,7 @@ func _check_layout_stability(tree: SceneTree, app, hud, dimension: int) -> void:
 
 func _layout_snapshot(hud) -> Dictionary:
 	var cockpit = hud._live_cockpit
-	var panel = hud._practice_panel
+	var panel = hud._explorer_cockpit.panel
 	var scroll: ScrollContainer = panel._tabs.get_child(panel._tabs.current_tab)
 	return {
 		"panel": panel.get_global_rect(), "board": hud._game_viewport_container.get_global_rect(),
@@ -493,7 +529,7 @@ func _same_layout(before: Dictionary, after: Dictionary) -> bool:
 
 
 func _check_y_view_controls(tree: SceneTree, app, hud) -> void:
-	var panel = hud._practice_panel
+	var panel = hud._explorer_cockpit.panel
 	panel._tabs.current_tab = 0
 	var model = app._practice
 	var cells: Array = model.cells.duplicate(true)
@@ -508,6 +544,8 @@ func _check_y_view_controls(tree: SceneTree, app, hud) -> void:
 		plus.pressed.emit()
 		await tree.process_frame
 		_check(app._live_4d_basis.slots() == expected[plane], "%s button rotates the view in its exact plane" % plane.to_upper())
+		var vertical := "move_%s_%s" % ["xyzw"[absi(int(expected[plane][1])) - 1], "pos" if int(expected[plane][1]) > 0 else "neg"]
+		_check(app._control_frame_mapping(4).translation_command("move_y_pos", "relative") == vertical, "%s Y movement follows the signed view basis" % plane.to_upper())
 		_check(model.cells == cells and _native_hash(app, 4) == hash_before, "%s view turn never rotates the piece or advances gameplay" % plane.to_upper())
 		_check(app._control_frame_mapping(4).axis_for_local("y").axis == absi(int(expected[plane][1])) - 1, "%s relative object rotations follow the displayed vertical axis" % plane.to_upper())
 		_check(app._camera_rig._orientation_basis_snapshot.visible_axes[1] == app._live_4d_basis.indicator_snapshot().visible_axes[1], "%s camera axis indicator follows the turned vertical slot" % plane.to_upper())
@@ -520,7 +558,7 @@ func _check_y_view_controls(tree: SceneTree, app, hud) -> void:
 
 
 func _check_unified_view_controls(tree: SceneTree, app, hud, dimension: int) -> void:
-	var panel = hud._practice_panel
+	var panel = hud._explorer_cockpit.panel
 	panel._tabs.current_tab = 0
 	var hash_before := _native_hash(app, dimension)
 	var cells: Array = app._practice.cells.duplicate(true)
@@ -595,7 +633,7 @@ func _check_unified_view_controls(tree: SceneTree, app, hud, dimension: int) -> 
 
 
 func _check_2d_access(tree: SceneTree, app, hud) -> void:
-	var panel = hud._practice_panel
+	var panel = hud._explorer_cockpit.panel
 	var buttons: Array = panel.find_children("*", "Button", true, false)
 	var two_d: Array = buttons.filter(func(button): return button.get_meta("practice_action", "") == "dimension_2")
 	_check(two_d.size() == 1, "Explorer visibly offers 2D")
@@ -609,8 +647,8 @@ func _check_2d_access(tree: SceneTree, app, hud) -> void:
 		return
 	var model = app._practice
 	var initial: Array = model.cells.duplicate(true)
-	var native_before: String = app._live_bridge.live_2d_snapshot_json()
-	_check(panel == hud._practice_panel and panel.is_visible_in_tree(), "2D retains visible Explorer panel")
+	var native_before: String = app._live_bridge.live_snapshot_json(2)
+	_check(panel == hud._explorer_cockpit.panel and panel.is_visible_in_tree(), "2D retains visible Explorer panel")
 	_check(model.piece_names().size() == 7, "2D exposes seven native classic pieces")
 	for button in buttons:
 		var action: String = button.get_meta("practice_action", "")
@@ -692,7 +730,7 @@ func _check_2d_access(tree: SceneTree, app, hud) -> void:
 	_check(model.selected_piece >= 0, "2D replacement uses native catalogue")
 	app._practice_action("view_reset")
 	app._practice_action("view_fit")
-	_check(app._live_bridge.live_2d_snapshot_json() == native_before, "2D actions preserve complete native gameplay session")
+	_check(app._live_bridge.live_snapshot_json(2) == native_before, "2D actions preserve complete native gameplay session")
 	app._return_to_main_menu()
 	app._practice_action("dimension_2")
 	_check(app._practice == model and app._is_live_viewer_active(), "2D menu return retains practice")
@@ -702,9 +740,34 @@ func _check_2d_access(tree: SceneTree, app, hud) -> void:
 	await tree.process_frame
 
 
+func _check_shared_space_tab(tree: SceneTree, app, hud) -> void:
+	var panel = hud._explorer_cockpit.panel
+	var tabs: TabContainer = panel._tabs
+	var selector: OptionButton = panel._topologies
+	var space: Control = tabs.get_child(2)
+	var previous_dimension: int = panel.dimension()
+	var previous_tab := tabs.current_tab
+	tabs.current_tab = 2
+	for dimension in [2, 3, 4, 2]:
+		app._practice_action("dimension_%d" % dimension)
+		await tree.process_frame
+		_check(panel == hud._explorer_cockpit.panel and tabs.current_tab == 2, "%dD switch retains the Explorer panel and selected Space tab" % dimension)
+		_check(panel._topologies == selector and space.is_ancestor_of(selector) and selector.is_visible_in_tree(), "%dD Space owns the same visible topology selector" % dimension)
+		_check(not panel.view_controls_host.is_ancestor_of(selector), "%dD View contains no topology selector" % dimension)
+		var selectable: Array[String] = []
+		for index in selector.item_count:
+			if not selector.is_item_disabled(index):
+				selectable.append(str(selector.get_item_metadata(index)))
+		var expected := ["bounded", "cylinder_x", "cylinder_y", "torus", "mobius", "klein", "projective", "sphere_adjacent_positive"] if dimension == 2 else ["bounded"]
+		_check(selectable == expected, "%dD Space enables exactly its supported topology options" % dimension)
+		_check(panel._space_note.visible == (dimension > 2), "%dD Space explains the bounded-only availability where applicable" % dimension)
+	app._practice_action("dimension_%d" % previous_dimension)
+	tabs.current_tab = previous_tab
+
+
 func _check_2d_stability_and_topologies(tree: SceneTree, app, hud) -> void:
 	var model = app._practice
-	var panel = hud._practice_panel
+	var panel = hud._explorer_cockpit.panel
 	for window_size in [Vector2i(1280, 800), Vector2i(1280, 720)]:
 		tree.root.size = window_size
 		panel._tabs.current_tab = 1
@@ -712,6 +775,15 @@ func _check_2d_stability_and_topologies(tree: SceneTree, app, hud) -> void:
 			await tree.process_frame
 			if frame > 30 and hud._live_cockpit.fit_settled():
 				break
+		for tab in range(panel._tabs.get_tab_count()):
+			panel._tabs.current_tab = tab
+			for frame in 90:
+				await tree.process_frame
+			var page: ScrollContainer = panel._tabs.get_child(tab)
+			_check(not page.get_v_scroll_bar().visible and not hud._live_cockpit.deck_scroll.get_v_scroll_bar().visible, "2D %s tab fits at %s without scrolling" % [page.name, window_size])
+		panel._tabs.current_tab = 1
+		for frame in 90:
+			await tree.process_frame
 		var nodes: Array = panel.find_children("*", "", true, false).map(func(node): return node.get_instance_id())
 		var helpers: Array = hud._piece_control_strip.find_children("*", "", true, false).map(func(node): return node.get_instance_id())
 		var before := _layout_snapshot(hud)
@@ -797,7 +869,7 @@ func _check_2d_stability_and_topologies(tree: SceneTree, app, hud) -> void:
 # keeps the topology; Sphere squares a rectangular board instead of refusing.
 func _check_board_resize_and_sphere(tree: SceneTree, app, hud) -> void:
 	var model = app._practice
-	var panel = hud._practice_panel
+	var panel = hud._explorer_cockpit.panel
 	app._practice_action("topology_bounded")
 	var shape: Array = model.board_shape()
 	app._practice_action("board_x_pos")
@@ -837,12 +909,60 @@ func _check_board_resize_and_sphere(tree: SceneTree, app, hud) -> void:
 	_check(panel._board_rows.x[0].text == "X" and panel._board_rows.y[0].visible, "leaving square surfaces restores independent extents")
 	app._practice.resize_board(shape)
 	app._refresh_practice_snapshot()
-	# The 2D helper uses the 3D/4D legend: compass, Up/Down row, rotation glyph.
+	# The 2D helper reuses the spatial legend without duplicate Up/Down.
 	var strip = hud._piece_control_strip
 	var legend: Dictionary = strip.deterministic_snapshot()
 	var compass: Dictionary = legend.get("compass_keys", {})
 	_check(compass.get("move_x_neg", "") == "A" and compass.get("move_y_neg", "") == "W", "2D helper draws the shared movement compass")
 	_check(legend.get("spatial", false) and legend.get("plane_glyphs", []).size() == 1, "2D helper draws the shared rotation glyph")
+	_check(legend.rows.filter(func(row): return row.semantic.get("cockpit_direction", "") == "vertical").is_empty(), "2D compass has no duplicate Up/Down row")
+	_check(panel._pieces.get_theme_font_size("font_size") == preload("res://scripts/ui/style/shell_design_tokens.gd").FONT_CHROME_BODY, "Explorer menu reuses compact shell typography")
+	app._publish_legend_screen_directions()
+	var directions_before: Dictionary = strip.deterministic_snapshot().screen_directions
+	app._camera_rig.nudge_yaw(PI)
+	app._camera_rig._process(10.0)
+	app._publish_legend_screen_directions()
+	var directions_after: Dictionary = strip.deterministic_snapshot().screen_directions
+	_check(directions_before.move_x_pos.dot(directions_after.move_x_pos) > 0.99, "2D camera-relative MOVE arrow retains its screen direction after a half-turn")
+	_check(directions_after.x.dot(app._board_axis_screen_direction(model.board_shape(), [2, 2], 0, -1)) > 0.99, "2D ROTATE helper preserves the reversed camera-relative X sign")
+	_check(directions_after.move_x_pos.dot(app._board_axis_screen_direction(model.board_shape(), [2, 2], 0, -1)) > 0.99, "2D MOVE projects the same camera-relative command as input")
+	for action in ["explorer_move_x_pos", "explorer_move_x_neg", "explorer_2d_move_y_pos", "explorer_2d_move_y_neg", "explorer_move_y_pos", "explorer_move_y_neg"]:
+		model.retry()
+		var before: Array = model.cells.duplicate(true)
+		var event := InputEventAction.new()
+		event.action = action
+		event.pressed = true
+		app._unhandled_input(event)
+		var axis := 0 if "_x_" in action else 1
+		var sign := (1 if action.ends_with("pos") else -1) * (-1 if axis == 0 else 1)
+		_check(model.cells[0][axis] == before[0][axis] + sign, "2D camera-relative keyboard displacement: " + action)
+	model.retry()
+	var before_click: Array = model.cells.duplicate(true)
+	panel._dimensional_controls.filter(func(button): return button.get_meta("practice_action") == "move_x_pos")[0].pressed.emit()
+	_check(model.cells[0][0] == before_click[0][0] - 1, "2D clickable movement shares camera-relative keyboard dispatch")
+	_check(strip._glyphs.all(func(glyph): return glyph.directions() == directions_after), "2D movement and animated rotation glyphs consume the same projected directions")
+	for yaw in [0.0, PI]:
+		app._practice_action("view_reset")
+		app._camera_rig.nudge_yaw(yaw)
+		app._camera_rig._process(10.0)
+		app._publish_legend_screen_directions()
+		for sign in ["neg", "pos"]:
+			var command: String = "rotate_xy_" + sign
+			model.retry()
+			model.command("rotate_xy_" + (sign if yaw == 0.0 else ("neg" if sign == "pos" else "pos")))
+			var expected_rotation: Array = model.cells.duplicate(true)
+			for button in [false, true]:
+				model.retry()
+				if button:
+					panel._dimensional_controls.filter(func(control): return control.get_meta("practice_action") == command)[0].pressed.emit()
+				else:
+					var event := InputEventKey.new()
+					event.keycode = KEY_T if sign == "pos" else KEY_R
+					event.pressed = true
+					app._unhandled_input(event)
+				_check(model.cells == expected_rotation, "2D %s yaw=%s button=%s matches native camera-relative rotation" % [command, yaw, button])
+		_check(strip._glyphs.all(func(glyph): return glyph.directions() == app._legend_screen_directions(2)), "2D rotation glyphs share the mapped camera axes")
+	app._practice_action("view_reset")
 
 
 func _check_native_candidate_adapter() -> void:
@@ -864,8 +984,8 @@ func _check_native_candidate_adapter() -> void:
 func _check_surface_ui(tree: SceneTree, app, hud) -> void:
 	app._start_practice(2)
 	await tree.process_frame
-	var native_before: String = app._live_bridge.live_2d_snapshot_json()
-	var panel = hud._practice_panel
+	var native_before: String = app._live_bridge.live_snapshot_json(2)
+	var panel = hud._explorer_cockpit.panel
 	for preset in ["mobius", "klein", "projective", "sphere_double_2d"]:
 		app._practice_action("retry")
 		app._practice_action("topology_" + preset)
@@ -887,7 +1007,7 @@ func _check_surface_ui(tree: SceneTree, app, hud) -> void:
 				_check(charts.labels[0].position != charts.labels[1].position and charts.labels[0].position.y > 0, "chart labels use continuous positions above each chart")
 		app._practice_action("move_x_neg")
 		app._practice_action("undo")
-		_check(app._live_bridge.live_2d_snapshot_json() == native_before, "surface actions leave native gameplay session unchanged")
+		_check(app._live_bridge.live_snapshot_json(2) == native_before, "surface actions leave native gameplay session unchanged")
 		app._practice_action("retry")
 	app._practice_action("play")
 	for frame in 3: await tree.process_frame

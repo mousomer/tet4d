@@ -537,18 +537,6 @@ def _pause_quit_event(state: _PauseState) -> bool:
     return True
 
 
-def _pause_menu_keydown(
-    state: _PauseState,
-    *,
-    key: int,
-    stack_depth: int,
-    on_escape_back: Callable[[], None] | None = None,
-) -> bool:
-    if int(key) == pygame.K_ESCAPE and int(stack_depth) <= 1:
-        return _pause_root_escape(state, on_escape_back=on_escape_back)
-    return False
-
-
 def run_pause_menu(
     screen: pygame.Surface,
     fonts,

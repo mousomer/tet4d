@@ -29,7 +29,6 @@ from .menu_settings.store import (
     mode_settings_view,
     normalize_active_profile_name,
     sanitize_and_save_payload,
-    save_payload,
     save_payload_section,
 )
 from .project_config import menu_settings_file_path, state_dir_path
@@ -69,10 +68,6 @@ def _load_payload() -> dict[str, Any]:
         base_default_payload=_BASE_DEFAULTS,
         defaults=_RUNTIME_DEFAULTS,
     )
-
-
-def _save_payload(payload: dict[str, Any]) -> tuple[bool, str]:
-    return save_payload(STATE_FILE, payload)
 
 
 def _sanitize_and_save_payload(payload: dict[str, Any]) -> tuple[bool, str]:

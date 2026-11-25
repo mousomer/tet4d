@@ -16,10 +16,10 @@ func run() -> Array:
 	var test_settings_path := "user://test_designer_geometry_%s.json" % OS.get_process_id()
 	hud._settings_store._storage_path = test_settings_path
 	for mode in ["live_3d", "live_4d"]:
-		if mode == "live_3d": app._enter_live_3d_mode()
-		else: app._enter_live_4d_mode()
-		app._live_3d_paused = true
-		app._live_4d_paused = true
+		if mode == "live_3d": app._enter_live_mode("live_3d")
+		else: app._enter_live_mode("live_4d")
+		app._live_modes["live_3d"].paused = true
+		app._live_modes["live_4d"].paused = true
 		await probe._layout_frames(tree)
 		var hash_before := probe._state_hash(app, mode)
 		hud._open_presentation_designer()

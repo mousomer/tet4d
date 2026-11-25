@@ -61,25 +61,40 @@ demonstrated.
 
 ## Completion-based execution
 
-Distribution 1.5.0 / runtime 0.8.0 binds the shared completion policy through
-`tools/workspace_governance/MANIFEST.json`. `gov explain execution.completion`
-returns its requirements, source and content hash. Missing or weakened bindings
-fail pack validation. The canonical policy is
-`tools/workspace_governance/policies/execution.md`; the two shared governance
-skills reference that same owner.
+Tet4D consumes canonical distribution 1.8.1 / runtime 1.0.1. The pack binds
+`supervised-completion-v3` through its manifest; `gov explain
+execution.completion` supplies provenance. The canonical immutable release owns
+the policy, operation profiles and supervisor; Tet4D owns its verifier and
+product semantics. Discovery adapters and fleet metadata identify the reviewed
+release, and missing or weakened bindings fail validation.
 
-Tests and scripts wait for exit. Remote CI uses one blocking watch or completion
-notification for the exact run and commit. Tool yields resume the same invocation;
-agent-driven status/log polling, duplicate watches and automatic redispatch of
-unknown work are prohibited. Internal process checks and a blocking watch's
-internal service requests remain implementation details of the waiting tool.
-All parallel children must finish and retain their failure outcomes.
+Covered long operations are submitted once through `gov op`. The supervisor
+selects the first available mechanism from the declared profile, owns any
+explicitly authorized adapter polling and preserves identity, cadence and budgets
+across waits. Response-window expiry continues the same handle; mechanism errors,
+deadline or budget exhaustion remain explicit and never count as verification.
+Agents do not implement status/log/process polling loops or select weaker
+completion mechanisms. Unmanaged remote state retains single-observation
+`PENDING_EXTERNAL` behavior. This installs the declared profiles; it does not
+claim live enforcement on an untrusted desktop adapter.
 
-The contract is distributed independently of optional Harness Observatory.
-Validation proves binding/integrity; synthetic trace tests prove checker behavior.
-Neither proves unobserved agent compliance or enables deferred telemetry.
-Guarded fleet receipts retain preimages; read-only and blocked entries remain
-outside installer scope. Consumer product acceptance requires the full verifier.
+The pack merges narrowly owned operation/polling hook entries into Claude and
+Codex project configuration, preserving unrelated keys. Guard failures and
+denials affect the offending wait/probe only; independent work remains possible.
+Native trust, runtime support and platform coverage remain separate acceptance
+duties. The current coverage declaration and runtime-specific limits live in the
+installed operation profiles and shared execution policy, not a second Tet4D
+rule set. Consumer fixtures copy versioned hook bindings, profiles and supervisor
+with the pack; missing or weakened bindings must reject governance.
+Runtime 1.0.1 uses standard integer parsing for process exit-status files so
+consumer reuse validation remains enforced; malformed status remains unknown.
+
+The exact native verifier graph and environment are preserved. The product
+policy authority is excluded from installer-owned content and remains enforced
+by the project's validators. Read-only/blocked locations and telemetry decisions
+retain their prior boundaries. Fresh product evidence must identify the migrated
+consumer snapshot; saved plans or structural gates cannot substitute for it.
+Private guarded receipts retain preimages and refuse rollback over later edits.
 
 ## Environment contract
 

@@ -153,7 +153,7 @@ func _test_live_app_integration() -> Array:
 		tree.root.content_scale_size = original_content_scale_size
 		tree.root.size = original_size
 		return ["Presentation Designer integration requires ReplayHud and TraceReplayApp"]
-	app._enter_live_2d_mode()
+	app._enter_live_mode("live_2d")
 	await tree.process_frame
 	var designer = hud._presentation_designer
 	var store_before: Dictionary = hud._settings_store.deterministic_snapshot()
@@ -193,12 +193,12 @@ func _test_live_app_integration() -> Array:
 	if hud._live_cockpit.designer_panels().size() != 4 or hud._right_scroll.is_visible_in_tree():
 		failures.append("shared live guidance must remain reachable in detached panels while the legacy inspector stays retired")
 
-	var full_owned_hash := str(app._live_bridge.live_2d_state_hash())
+	var full_owned_hash := str(app._live_bridge.live_state_hash(2))
 	var blocked_drop := InputEventAction.new()
 	blocked_drop.action = "live_2d_hard_drop"
 	blocked_drop.pressed = true
 	app._unhandled_input(blocked_drop)
-	if str(app._live_bridge.live_2d_state_hash()) != full_owned_hash:
+	if str(app._live_bridge.live_state_hash(2)) != full_owned_hash:
 		failures.append("full Designer keyboard focus must suppress gameplay commands")
 
 	if not designer.capture_reference():
@@ -274,12 +274,12 @@ func _test_live_app_integration() -> Array:
 	app._input(compact_wheel)
 	if app._camera_rig.presentation_snapshot() != camera_compact_before:
 		failures.append("pointer input over the compact Designer must not leak into camera controls")
-	var compact_game_hash := str(app._live_bridge.live_2d_state_hash())
+	var compact_game_hash := str(app._live_bridge.live_state_hash(2))
 	var resumed_drop := InputEventAction.new()
 	resumed_drop.action = "live_2d_hard_drop"
 	resumed_drop.pressed = true
 	app._unhandled_input(resumed_drop)
-	if str(app._live_bridge.live_2d_state_hash()) == compact_game_hash:
+	if str(app._live_bridge.live_state_hash(2)) == compact_game_hash:
 		failures.append("ordinary gameplay commands should resume when the Designer is compact")
 	designer.hide_preserving_preview()
 	if designer.state() != DesignerScript.STATE_HIDDEN or hud.live_interaction_owns_input():
@@ -311,7 +311,7 @@ func _test_live_app_integration() -> Array:
 	# B is a frozen comparison now. Return explicitly to CURRENT DESIGN before
 	# checking that ordinary appearance edits preserve the settled camera pose.
 	designer.keep_working_and_hide()
-	app._enter_live_4d_mode()
+	app._enter_live_mode("live_4d")
 	await tree.process_frame
 	hud._open_presentation_designer()
 	for _frame in range(6):

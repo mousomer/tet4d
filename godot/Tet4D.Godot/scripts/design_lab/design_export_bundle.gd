@@ -2,6 +2,8 @@ extends RefCounted
 
 class_name DesignExportBundle
 
+const OperationResult = preload("res://scripts/operation_result.gd")
+const StorageDirectory = preload("res://scripts/persistence/storage_directory.gd")
 const DesignValueScript = preload("res://scripts/design_lab/design_value.gd")
 const PresentationProfileScript = preload("res://scripts/presentation/presentation_profile.gd")
 const PersistentFileReplacementScript = preload("res://scripts/persistence/persistent_file_replacement.gd")
@@ -25,9 +27,9 @@ func export_candidate(resolved_candidate: Dictionary, reference: Dictionary, eva
 	var descriptor: Dictionary = resolved_candidate.get("descriptor", {})
 	var preset_id := str(descriptor.get("preset_id", ""))
 	if destination_root.strip_edges().is_empty():
-		return _failure("Choose a design export destination.")
+		return OperationResult.failure("Choose a design export destination.")
 	var export_directory := destination_root.trim_suffix("/").path_join(preset_id)
-	var ensure := _ensure_directory(export_directory)
+	var ensure := StorageDirectory.ensure(export_directory, "Design export")
 	if not bool(ensure.get("ok", false)):
 		return ensure
 	var preset := _preset_document(resolved_candidate, build_identity)
@@ -41,8 +43,8 @@ func export_candidate(resolved_candidate: Dictionary, reference: Dictionary, eva
 		var path := export_directory.path_join(str(output[0]))
 		var written := PersistentFileReplacementScript.write_text(path, str(output[1]), true)
 		if not bool(written.get("ok", false)):
-			return _failure("Design export failed for %s: %s" % [output[0], written.get("detail", "replacement failed")])
-	return _success({
+			return OperationResult.failure("Design export failed for %s: %s" % [output[0], written.get("detail", "replacement failed")])
+	return OperationResult.success({
 		"directory": export_directory,
 		"preset_path": export_directory.path_join("preset.json"),
 		"summary_path": export_directory.path_join("comparison_summary.json"),
@@ -52,34 +54,34 @@ func export_candidate(resolved_candidate: Dictionary, reference: Dictionary, eva
 
 func conform_preset_document(document: Dictionary) -> Dictionary:
 	if _registry == null:
-		return _failure("Canonical settings registry is required.")
+		return OperationResult.failure("Canonical settings registry is required.")
 	if str(document.get("preset_type", "")) != PRESET_TYPE or int(document.get("preset_schema_version", 0)) != PRESET_SCHEMA_VERSION:
-		return _failure("Design preset envelope is unsupported.")
+		return OperationResult.failure("Design preset envelope is unsupported.")
 	if not DesignValueScript.safe_id(str(document.get("preset_id", ""))):
-		return _failure("Design preset identity is invalid or unsafe.")
+		return OperationResult.failure("Design preset identity is invalid or unsafe.")
 	var snapshot := {
 		"schema_version": int(document.get("presentation_profile_schema_version", 0)),
 		"values": document.get("properties", {}).duplicate(true) if document.get("properties") is Dictionary else {},
 	}
 	var profile = PresentationProfileScript.from_snapshot(_registry, snapshot)
 	if profile == null or not profile.contract_conforms():
-		return _failure("Design preset properties fail canonical registry validation.")
+		return OperationResult.failure("Design preset properties fail canonical registry validation.")
 	var owners = document.get("semantic_owners")
 	if not (owners is Dictionary) or owners.size() != profile.values().size():
-		return _failure("Design preset semantic-owner map is incomplete.")
+		return OperationResult.failure("Design preset semantic-owner map is incomplete.")
 	for property_id in profile.values().keys():
 		var spec = _registry.get_spec(property_id)
 		if spec == null or str(owners.get(property_id, "")) != spec.semantic_owner():
-			return _failure("Design preset semantic owner mismatch for %s." % property_id)
-	return _success({"profile": profile.detached_copy()})
+			return OperationResult.failure("Design preset semantic owner mismatch for %s." % property_id)
+	return OperationResult.success({"profile": profile.detached_copy()})
 
 
 func _conform_resolved_candidate(resolved: Dictionary) -> Dictionary:
 	if not bool(resolved.get("ok", false)) or not (resolved.get("snapshot") is Dictionary):
-		return _failure("A resolved registry-valid design candidate is required.")
+		return OperationResult.failure("A resolved registry-valid design candidate is required.")
 	var descriptor: Dictionary = resolved.get("descriptor", {})
 	if not DesignValueScript.safe_id(str(descriptor.get("preset_id", ""))):
-		return _failure("Candidate identity is invalid or unsafe.")
+		return OperationResult.failure("Candidate identity is invalid or unsafe.")
 	var document := _preset_document(resolved, {})
 	return conform_preset_document(document)
 
@@ -207,21 +209,3 @@ static func _unique_scenario_ids(records: Array) -> Array:
 			result.append(scenario_id)
 	result.sort()
 	return result
-
-
-static func _ensure_directory(path: String) -> Dictionary:
-	var absolute := ProjectSettings.globalize_path(path)
-	if DirAccess.dir_exists_absolute(absolute):
-		return _success()
-	var error := DirAccess.make_dir_recursive_absolute(absolute)
-	return _success() if error == OK else _failure("Design export directory could not be created (error %s)." % error)
-
-
-static func _success(extra: Dictionary = {}) -> Dictionary:
-	var result := {"ok": true, "error": ""}
-	result.merge(extra, true)
-	return result
-
-
-static func _failure(error: String) -> Dictionary:
-	return {"ok": false, "error": error}

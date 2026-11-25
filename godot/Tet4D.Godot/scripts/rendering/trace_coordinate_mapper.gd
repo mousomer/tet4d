@@ -108,10 +108,6 @@ func centered_local_point(visible_coordinates: Array) -> Vector3:
 	return _local_geometry.point_position(_local_coordinate_3d(visible_coordinates))
 
 
-func centered_local_cell(visible_coordinates: Array, allow_above_board_y: bool = false) -> Vector3:
-	return _local_geometry.cell_position(_local_coordinate_3d(visible_coordinates), allow_above_board_y)
-
-
 func _local_coordinate_3d(visible_coordinates: Array) -> Array:
 	var local_coordinate := visible_coordinates.duplicate()
 	while local_coordinate.size() < 3:
@@ -121,10 +117,6 @@ func _local_coordinate_3d(visible_coordinates: Array) -> Array:
 
 func compose_anchored_point(centered_local_point_value: Vector3, anchor: Vector3) -> Vector3:
 	return centered_local_point_value + anchor
-
-
-func w_offset(w_index: float) -> float:
-	return slice_anchor(int(round(w_index))).x
 
 
 func slice_anchor(layer_index: int) -> Vector3:

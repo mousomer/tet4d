@@ -301,12 +301,12 @@ func _open_designer(tree: SceneTree, hud):
 
 func _enter(tree: SceneTree, app, mode_name: String) -> void:
 	match mode_name:
-		"live_2d": app._enter_live_2d_mode()
-		"live_3d": app._enter_live_3d_mode()
-		_: app._enter_live_4d_mode()
-	app._live_2d_paused = true
-	app._live_3d_paused = true
-	app._live_4d_paused = true
+		"live_2d": app._enter_live_mode("live_2d")
+		"live_3d": app._enter_live_mode("live_3d")
+		_: app._enter_live_mode("live_4d")
+	app._live_modes["live_2d"].paused = true
+	app._live_modes["live_3d"].paused = true
+	app._live_modes["live_4d"].paused = true
 	await _frames(tree, 6)
 
 
@@ -331,7 +331,7 @@ func _test_native_refresh_cache(failures: Array, tree: SceneTree, app, hud) -> v
 	var grid = app._renderer.get_node("GridRoot").get_child(0)
 	var generation: int = grid.scaffold_generation
 	var state_hash := str(app._current_snapshot.get("state_hash", ""))
-	app._live_3d_command("soft_drop")
+	app._live_command("live_3d", "soft_drop")
 	await _frames(tree, 2)
 	if str(app._current_snapshot.get("state_hash", "")) == state_hash:
 		failures.append("cache regression requires an actual authoritative piece move")

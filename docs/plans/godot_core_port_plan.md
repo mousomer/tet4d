@@ -55,7 +55,7 @@ The engine choice is therefore driven by shell ergonomics:
 - good separation between GDScript shell code and a native deterministic core;
 - enough rendering capability for readable 2D/3D/4D board presentation.
 
-Unity remains a useful Stage 5 comparison artifact, but Godot is the preferred
+Unity served as the Stage 5 comparison and has since been retired. Godot is the preferred
 product shell direction after Stage 6/6b, subject to manual visual acceptance.
 
 ## 3. Why Not Python Runtime

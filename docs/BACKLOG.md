@@ -1,6 +1,6 @@
 # Tet4D Open Work
 
-Updated: 2026-11-15
+Updated: 2026-11-17
 Scope: active work, explicit deferrals, and near-term acceptance boundaries.
 
 Completed chronology is recoverable from Git, merged PRs, CI, and
@@ -27,6 +27,36 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
   facts)
 
 ## Active Work
+
+- [x] Adopt canonical governance distribution 1.8.4 / runtime 1.0.4 for Tet4D through the guarded registry and installer.
+- [x] Extract the Explorer cockpit owner in Phase 3. Compare all visible control rectangles across the four reference layouts.
+
+- [x] Share Godot operation result construction and storage directory creation across presentation and Design Lab.
+
+- [x] Share plain native session lifecycle and hash serialization while preserving the dimension-specific gameplay and trace contract.
+
+- [x] Consolidate Godot native live-session bindings across dimensions. Keep the plain 2D and ND core paths and their trace contracts.
+
+- [x] Share Godot live-mode lifecycle, command and snapshot routing. Preserve configured board extents on snapshot parse errors and save validated setup through shared file replacement.
+
+- [x] Remove confirmed unused code and superseded test-only adapters. Cover pause routing, overlay rendering, numeric editing, presentation profiles, and Explorer storage and export through their current paths. The Unity replay spike is retired.
+
+- [x] Install canonical distribution 1.8.1 / runtime 1.0.1 through guarded
+  direct-checkout receipts. The unchanged full product verifier gates acceptance;
+  supervised completion v3 uses profile-owned operation handling.
+- [ ] Preserve fleet audit gaps, desktop hook trust and live Claude/Codex
+  enforcement as separate acceptance duties; repository installation and tests
+  do not establish these claims.
+
+- [x] Align shared MOVE projections and signed ROTATE helper axes with camera-relative dispatch in every Explorer dimension; mapped-vector, signed-axis and per-input flash regressions plus full repository verification pass.
+
+- [x] Unify camera-relative rotation defaults and keyboard/button mapping across all Explorer dimensions. Every 3D/4D plane/sign passes keyboard/button native-pose checks after camera/basis changes; Explorer, cockpit lock and full repository verification pass.
+
+- [x] Route 2D Explorer keyboard/button rotations and glyph directions through the shared camera-relative mapper; front/back keyboard/button regressions, cockpit lock and full repository verification pass.
+
+- [x] Repair Explorer camera-relative movement: remove the 2D descriptor/helper bypasses, route clickable moves through the shared dispatcher, and map Y through the existing signed vertical axis; retain explicit rotation-plane controls. Explorer/cockpit, 322-case Live translation regression and full repository verification pass.
+
+- [x] Repair Explorer 2D using shared compact menu sizing and camera-projected MOVE/ROTATE helpers; remove duplicate Up/Down guidance while retaining Z/X keyboard aliases. Automated Explorer fit, cockpit lock and full Godot verification pass; owner visual acceptance remains pending.
 
 - [x] Adopt shared completion policy (distribution 1.5.0 / runtime 0.8.0): manifest binding, resolver provenance, canonical skills and regression protection; preserve fleet exclusions and deferred telemetry.
 
@@ -116,7 +146,7 @@ documentation/priority decision, not approval to deploy a study or backend.
 - [x] P1T / T1 Session 3 design: `docs/architecture/explorer_topology_catalog_certification_contract.md` owns identities, catalog/status schema and independent quotient evidence; `tests/fixtures/explorer_topology/` owns the representative data and transport specifications; `docs/architecture/explorer_topology_t2_transfer_preparation.md` owns the nonterminal bounded transfer package. No runtime or certification promotion.
 - [x] P1T / T1 Correction 4A: owner accepted PR #176's stable-ID pivot correction and authorized integration of #172 → #173 → #174 → #175 → #176 on 2026-11-06. Independent adversarial review findings are reconciled for this merge: P1 resolved; remaining P2 issues explicitly deferred as nonblocking. No new schema refactor or review cycle is required for this integration. T1 mathematical regression evidence only; runtime conformance remains unrun.
 - [ ] P1T / T1 Correction 4B — deferred, nonblocking P2: legacy sphere-like catalog label/status, reachable L-tromino collision evidence, enumeration evidence claims and bounded schema/data duplication findings from PR #175 review. Owner accepted these deferrals for stack integration; no profile-meaning or historical-golden changes implied.
-- [ ] Explorer cockpit unification: Phases 0–2 are implemented and verified in this Explorer delivery (behavior lock, shared descriptor, Explorer-owned actions, unified dispatch and independent held-key lifecycle). Focused key/rebinding/repeat/GUI/Play-isolation evidence passes against the reviewed baseline fixture. Follow `docs/plans/explorer_cockpit_unification.md` for Phase 3 cockpit extraction, Phase 4 Space tab and Phase 5 keys/3D basis; those phases and human acceptance remain open.
+- [ ] Explorer cockpit unification: Phases 0–2 are implemented and verified in this Explorer delivery (behavior lock, shared descriptor, Explorer-owned actions, unified dispatch and independent held-key lifecycle). Focused key/rebinding/repeat/GUI/Play-isolation evidence passes against the reviewed baseline fixture. Phases 3–4 complete the cockpit owner and shared View, Piece and Space structure. Follow `docs/plans/explorer_cockpit_unification.md` for the remaining visible changes and human acceptance.
 - [x] 2D Explorer interaction follow-up: shared 3D-subset X/Y bindings and R/T rotation; piece-only refresh; primary topology selector with candidate native cylinder/torus translation and the then-unavailable twisted seams/non-bounded rotation. The successor surface slice implements those capabilities; terminal transfer remains open.
 - [x] Bounded Explorer dimension access: expose 2D alongside 3D/4D using the existing flat renderer, native classic catalogue and bounded geometry queries; retain gravity-free input and Retry/Play isolation. T2 topology presets and authority transfer remain separate open work.
 - [ ] P1T / T2 implementation acceptance: T2A/T2B translation remains the baseline. The owner-authorized 2D surface slice (`docs/architecture/explorer_surface_runtime.md`) adds native Möbius/Klein and experimental projective transport, coherent rotations, recorded Undo, native neighbors and the compatibility two-chart S² preset. RDS §2.5 brings the single-square positive adjacent-edge Sphere into normal selection and removes rigidity/physical-inverse traversal gates while retaining destination injectivity. Full T2B/T2C acceptance, external state serialization, mathematical certification review, human acceptance and terminal scoped transfer remain open. AE-0056 establishes only the new closed disk-double mechanics; inherited transfer remains open. General multi-domain T6 and S³/S⁴ remain separate. Historical Python comparisons and legacy sphere IDs are preserved.
@@ -337,9 +367,10 @@ as edge-state files and records their distinct operational roles. Backlog is
 conditional routed open-work authority; current-state is restart/staged-handoff
 context. Raw size is descriptive rather than a task-quality penalty. The
 backlog has no size limit: it is measured and reported, and items leave it when
-completed or obsolete. `CURRENT_STATE.md` keeps its 150-line handoff-usability
-guard. Claims about actual agent-context pressure still need real task
-trajectories with resolver and bounded-read evidence.
+completed or obsolete. `CURRENT_STATE.md` has a 200-line handoff-usability
+guard to leave room for restart details. Claims about actual agent-context
+pressure still need real task trajectories with resolver and bounded-read
+evidence.
 
 The PR118-baseline migration-bundle check separately reproduces stale generated metadata,
 including the old `da6e2dd6...` policy digest. Regeneration also adds governance
@@ -737,6 +768,16 @@ receives the same board-axis action; enforce defined/injective/atomic results.
   removals. Focused checks and pinned Godot gate passed; fresh post-migration
   full-verifier evidence is recorded in the typography integration note.
 - [ ] T2S human square/aspect/seam comprehension and formal T2 transfer remain open.
+
+### Shared no-polling governance migration
+
+- [x] Install the owner-allowlisted distribution 1.6.2 / runtime 0.9.2 bindings
+  with the unchanged native verifier and environment. Preserve current product
+  work, mutable product authorities, telemetry decisions, external/blocked
+  locations and execution holds. Product acceptance requires fresh snapshot-bound
+  full-verifier evidence, retained separately from installation receipts.
+- [ ] Review native hook trust and live runtime enforcement on each supported
+  harness; installed configuration and synthetic checks cannot establish it.
 
 ### Explorer topology selection recovery (2026-11-16)
 

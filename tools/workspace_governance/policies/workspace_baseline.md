@@ -39,4 +39,12 @@ gates. Any scan, adoption or product-verification gap stays explicit.
 
 ## Execution completion
 
-All consumer work follows [Completion-based execution](execution.md). The pack manifest binds its machine contract; `execution.completion` supplies the resolved policy and provenance. Local verification waits for exit, remote CI uses one blocking watch or notification, and tool yields resume the same invocation. Agent-driven status and log-tail polling are prohibited.
+All consumer work follows [Completion-based execution without autonomous polling](execution.md). The pack manifest binds its machine contract; `execution.completion` supplies the resolved policy and provenance. Local verification waits for exit. Remote state is observed once, only when the declared gate requires it; pending is reported as `PENDING_EXTERNAL` and ends the observation. Watch and interval modes, sleep loops and repeated status requests are prohibited and are blocked before execution by the pack-managed PreToolUse guard.
+
+## Bounded sanitation evidence
+
+The portable scanner checks known patterns in Git-visible bounded text.
+Binary data, non-regular entries, symlinks and oversized inputs remain explicit
+exclusions. Unreadable required text prevents acceptance. Clean bounded text
+cannot establish repository-wide absence of secrets. Public scanner diagnostics
+carry fixed reasons, rule identifiers and line numbers without input names.

@@ -161,12 +161,6 @@ def kinetic_energy_formula_text_for_particles(
     return f"K = {energy:.2f} = 1/2 [{' + '.join(weighted_terms)}]"
 
 
-def weighted_speed_sq_sum_text_for_particles(
-    particles: list[ExplosionParticle] | tuple[ExplosionParticle, ...],
-) -> str:
-    return f"Σ(m_i||v_i||^2) = {velocity_norm_sq_sum_for_particles(particles, weighted_by_mass=True):.2f}"
-
-
 def _normalize(value, *, default):
     length = _vec_len(value)
     if length <= _EPSILON:
@@ -423,10 +417,6 @@ def _diagnostics_event(
             message=str(message),
         )
     )
-
-
-def _k_for_particle(particle: ExplosionParticle) -> float:
-    return 0.5 * float(particle.collision_mass) * _speed_sq_for_particle(particle)
 
 
 def _finish_without_contact(

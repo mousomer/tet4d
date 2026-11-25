@@ -82,7 +82,16 @@ displayed.
 ## Persistence schema 3
 
 `user://game_setup.json` is separate from shell preferences. Schema 3 writes
-only model-produced last-valid entries, one per mode:
+only model-produced last-valid entries, one per mode. The current schema is 4.
+The setup store installs each complete document with the shared persistent-file
+replacement helper. When replacement was interrupted after moving the prior
+document aside, loading can read its backup if the primary is absent.
+
+Live 2D, 3D, and 4D use the same snapshot error path. An unreadable native
+snapshot displays the active setup's configured shape, with the board extent
+contract default used when there is no active shape for that mode.
+
+The schema 3 wire format was:
 
 ```json
 {

@@ -78,38 +78,6 @@ func set_display_mode(display_mode: String) -> void:
 	_apply_parameter_override("theme.name", ReplayVisuals.normalize_display_mode(display_mode))
 
 
-func set_show_w_labels(visible: bool) -> void:
-	_apply_parameter_override("display.show_w_labels", visible)
-
-
-func set_projection_strength(value: float) -> void:
-	_apply_parameter_override("display.projection_strength", value)
-
-
-func set_board_detail(detail: String) -> void:
-	_apply_parameter_override("display.board_detail", detail)
-
-
-func set_grid_visible(visible: bool) -> void:
-	set_grid_mode(GridDisplayMode.Mode.FULL if visible else GridDisplayMode.Mode.NONE)
-
-
-func set_grid_mode(mode: int) -> void:
-	_apply_parameter_override("display.grid_mode", GridDisplayMode.to_value(mode))
-
-
-func set_locked_cell_opacity(opacity: float) -> void:
-	_apply_parameter_override("settled_cells.opacity", opacity)
-
-
-func set_accessibility_policy(high_contrast: bool, reduced_motion: bool) -> void:
-	var candidate = _presentation_profile.with_overrides({
-		"accessibility.high_contrast": high_contrast,
-		"accessibility.reduced_motion": reduced_motion,
-	})
-	apply_presentation_profile(candidate)
-
-
 func apply_presentation_profile(profile) -> bool:
 	if profile == null or not profile.has_method("contract_conforms") or not profile.contract_conforms():
 		return false

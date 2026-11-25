@@ -213,11 +213,11 @@ func _reset_view_event() -> InputEventKey:
 func _live_state_hash(app, mode: String) -> String:
 	match mode:
 		"live_2d":
-			return str(app._live_bridge.live_2d_state_hash())
+			return str(app._live_bridge.live_state_hash(2))
 		"live_3d":
-			return str(app._live_bridge.live_3d_state_hash())
+			return str(app._live_bridge.live_state_hash(3))
 		_:
-			return str(app._live_bridge.live_4d_state_hash())
+			return str(app._live_bridge.live_state_hash(4))
 
 
 func _setup(mode: String, shape: Array) -> Dictionary:

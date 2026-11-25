@@ -308,8 +308,8 @@ Parameters:
 - `skill_adapters[]`: array[`object`]
 - `skill_adapters[].name`: varies (`string`); examples: `"governance-context"`, `"governance-maintenance"`
 - `skill_adapters[].path`: varies (`string`); examples: `".agents/skills/governance-context/SKILL.md"`, `".claude/skills/governance-context/SKILL.md"`, `".agents/skills/governance-maintenance/SKILL.md"`
-- `skill_adapters[].release_manifest_sha256`: varies (`string`); examples: `"6c33dab0886b5698de5919c01d4a1ff2881b86de944e87e31e1185af781c1ef5"`
-- `skill_adapters[].sha256`: varies (`string`); examples: `"57c87c3968f057be8dc4d1b3fa11c0478fc9c1cbe10cdb931e80a846726174f7"`, `"967efb9cf22ad8a2c75d1515b432a68de98c3b3c1189ce7acf3dded18de88a75"`
+- `skill_adapters[].release_manifest_sha256`: varies (`string`); examples: `"356b35d2b19a38b0335480f2b486570fa6cc49629e6b17209eebea9203dca608"`
+- `skill_adapters[].sha256`: varies (`string`); examples: `"f1c6a3b347f9f94bc32e8d82f3ac018141d4a084489e9fb2dbd2094631a55ecc"`, `"e7bdc0a09bc90bcd6ef2b2a9b6add03a68bb429208d86dd3dab03e7374a4e03e"`
 - `skill_adapters[].target`: varies (`string`); examples: `"tools/workspace_governance/skills/governance-context/SKILL.md"`, `"tools/workspace_governance/skills/governance-maintenance/SKILL.md"`
 - `verification.canonical.authority_ref`: `"legacy-policy-pack"` (`string`)
 - `verification.canonical.json_pointer`: `"/governance/verification_command"` (`string`)
@@ -321,14 +321,14 @@ Parameters:
 ### `config/governance/workspace.lock.json`
 Top-level keys: `content_sha256`, `files`, `lock_algorithm`, `pack_name`, `pack_path`, `revision`, `schema_version`, `version`
 Parameters:
-- `content_sha256`: `"8625e240efd4546bcd2949a0c781f832b58f51015a73503771d38e70bc280537"` (`string`)
+- `content_sha256`: `"f8c7f2f93b686b84fcfd854998ffda45cc4c3c93c02a776e6cc71dfb9f45db18"` (`string`)
 - `files[]`: array[`string`]; examples: `".ruff.toml"`, `"MANIFEST.json"`, `"VERSION"`
 - `lock_algorithm`: `"sha256-path-and-content-v1"` (`string`)
 - `pack_name`: `"workspace-governance"` (`string`)
 - `pack_path`: `"tools/workspace_governance"` (`string`)
-- `revision`: `"v0.8-synchronous-completion-1"` (`string`)
+- `revision`: `"v1.0-supervised-completion-4"` (`string`)
 - `schema_version`: `1` (`int`)
-- `version`: `"0.8.0"` (`string`)
+- `version`: `"1.0.4"` (`string`)
 
 ### `config/help/action_map.json`
 Top-level keys: `action_topics`, `default_topic`, `version`
@@ -2461,7 +2461,7 @@ Parameters:
 - `governance_surface.machine_policy_byte_limits.hard_ceiling`: `98304` (`int`)
 - `governance_surface.machine_policy_byte_limits.status`: `"temporary_provisional_operational_ceiling"` (`string`)
 - `governance_surface.per_file_limits.AGENTS.md`: `150` (`int`)
-- `governance_surface.per_file_limits.CURRENT_STATE.md`: `150` (`int`)
+- `governance_surface.per_file_limits.CURRENT_STATE.md`: `200` (`int`)
 - `governance_surface.per_file_limits.docs/governance/CHANGE_GOVERNANCE.md`: `300` (`int`)
 - `governance_surface.per_file_limits.docs/governance/CONFIG_AND_GENERATED_DATA.md`: `300` (`int`)
 - `governance_surface.per_file_limits.docs/governance/ENGINEERING.md`: `300` (`int`)

@@ -54,13 +54,17 @@ Launch the game bootstrap using the supported Godot executable:
 ```
 
 Open Main Menu → Explorer or press `E` on the Main Menu. Choose 2D/3D/4D in
-the practice rail. In 2D, use left/right and the usual rotation bindings;
-W/S or Up/Down move Y, A/D or Left/Right move X; R/T rotate XY and
-Backspace retries, sharing the 3D action inventory. PageUp/PageDown do not move
-the 2D piece. The View page offers bounded, X/Y cylinders and torus profiles;
-verify seam crossing, wrapped-axis inverse, unwrapped walls, exact Retry and
-atomic rejection of an incompatible switch. Möbius/Klein and non-bounded
-rotations remain visibly unavailable. Movement must preserve panel node IDs,
+the cockpit. Check View | Piece | Space in that order in all three
+dimensions. The topology selector and board sizing belong to Space. In 3D
+and 4D, Bounded is the only selectable topology and the panel explains why
+the other choices are disabled. Switch dimensions while on Space and verify
+the tab and controls stay in place and 2D options become available again.
+
+In 2D, use Z/X, W/S or Up/Down for Y, A/D or Left/Right for X, R/T for
+XY rotation and Backspace for Retry. PageUp/PageDown are retired. Try bounded,
+X/Y cylinders, torus, Möbius, Klein, Projective and Sphere from Space. Verify
+seam crossing, wrapped-axis inverse, unwrapped walls, exact Retry and atomic
+rejection of incompatible switches. Movement must preserve panel node IDs,
 selected tab, scroll, rectangles and fit scale through intermediate frames. Verify the
 flat board, all seven classic pieces, Retry, menu return and fresh Play.
 2D has no orbit, basis, slice, Z-axis or W-axis controls. Entry and slice selection draw no automatic dots; New
@@ -72,8 +76,7 @@ clickable and show bindings for all six exact planes, look, zoom, framing and
 slice inspection; Piece contains selection, replacement, Retry and canonical object
 controls. The lower helper deck stays, showing Explorer translation, rotation,
 Z/X and Retry rows; cell/neighbor/angle readouts are hidden.
-Z moves up and X moves down on compact keyboards; PageUp/PageDown remain
-aliases. Repeated movement must preserve panel controls, the selected tab and
+Z moves up and X moves down on compact keyboards in every dimension. Repeated movement must preserve panel controls, the selected tab and
 scroll position, updating only changed readouts.
 The same invariants apply to camera/basis changes, Reset/Fit View and piece
 replacement. Use the piece selector for direct native-catalog choice or

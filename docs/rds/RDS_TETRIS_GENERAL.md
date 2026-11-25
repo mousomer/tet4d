@@ -278,24 +278,14 @@ it does not transfer semantic authority or redefine Play drop/lock policy.
    authority remains in the documented RDS/plans/governance files.
 4. Bundle JSON must be deterministic, repo-relative, digest-backed, and free of
    timestamps, local absolute paths, memory reprs, and object identities.
-5. Unity/Godot replay spikes should consume the bundle as input data before
+5. The Godot replay shell should consume the bundle as input data before
    implementing independent topology transport, gameplay drop/lock, or endgame
    simulation. Engine scene or inspector defaults must not replace the Python
    and config authorities.
 
-### 3.2e Unity replay spike rules
+### 3.2e Retired Unity replay spike
 
-1. Stage 5 Unity replay lives under `unity/Tet4D.Unity/` and consumes only the
-   copied bundle under `Assets/StreamingAssets/tet4d_bundle/` at runtime.
-2. Unity may parse traces, extract renderable snapshots, render frame data,
-   browse cases, and display diagnostics/config metadata.
-3. Unity must not call Python at runtime, read repo-root `migration/exported_bundle/`
-   directly, or scrape `src/`, `config/`, `tools/`, `tests/`, or `docs/` at runtime.
-4. Unity must not implement gameplay rules, topology transport, score/lock
-   logic, or endgame particle simulation semantics in C# for this stage.
-5. Inspector, prefab, ScriptableObject, and scene values may control replay
-   presentation only. They must not become gameplay, topology, config, or
-   endgame semantic authority.
+The Stage 5 experiment is recorded in `docs/plans/unity_trace_replay_spike.md`. Godot owns the maintained replay shell.
 
 ### 3.2f Godot replay spike rules
 
@@ -933,7 +923,7 @@ Add optional geometry profiles where board adjacency is not strict cartesian gri
 
 1. A new exploratory kernel now exists under `src/tet4d/engine/topology_explorer/` for general boundary gluings, signed-permutation transforms, boundary-crossing movement, and movement-graph compilation.
 2. Live Explorer gameplay/runtime for 2D, 3D, and 4D now routes through that gluing engine; Normal Game remains on the legacy bounded/wrap/invert topology path.
-3. Runtime-owned explorer profile storage and preview export now exist under `src/tet4d/engine/runtime/topology_explorer_store.py`, `src/tet4d/engine/runtime/topology_explorer_bridge.py`, and `src/tet4d/engine/runtime/topology_explorer_preview.py`.
+3. Runtime-owned explorer profile storage and preview export now exist under `src/tet4d/engine/runtime/topology_explorer_store.py` and `src/tet4d/engine/runtime/topology_explorer_preview.py`. Preview export accepts canonical Explorer profiles. The legacy profile store continues to read and write v1 edge rules.
 4. Explorer 2D, Explorer 3D, and Explorer 4D Topology Lab now edit general gluing profiles directly through those runtime owners and use the graphical explorer scene as the primary spatial frontend, with boundary-card selection, tangent transform controls, basis-arrow overlays, and engine-backed probe traversal supporting live seam editing inside that scene-first shell.
 5. Explorer preset libraries now keep sphere-like transport presets available alongside quotient presets for 2D/3D/4D, but must classify them honestly: clean quotient families, advanced quotient families, sphere-like / compactified transport heuristics, and experimental transport must remain visibly separate, and labels/descriptions must not present sphere-like heuristics as clean quotient spaces. Legality remains engine-owned in `src/tet4d/engine/topology_explorer/glue_validate.py`, not UI-owned.
 6. The legacy bridge remains only for non-advanced explorer setup/export compatibility and future deletion once those paths stop depending on legacy edge-rule conversion.

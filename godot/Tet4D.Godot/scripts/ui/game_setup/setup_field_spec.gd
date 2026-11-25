@@ -135,10 +135,6 @@ func session_key() -> String:
 	return str(data.get("session_key", ""))
 
 
-func is_always_visible() -> bool:
-	return disclosure() == DISCLOSURE_ORDINARY
-
-
 func visible_when() -> Dictionary:
 	var condition = data.get("visible_when", {})
 	return (condition as Dictionary).duplicate(true) if condition is Dictionary else {}

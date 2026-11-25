@@ -3,8 +3,50 @@
 // Material-rigidity helper and randomized rigidity suite are intentionally retired:
 // superseded_forward_explorer by the free-cellwise translation amendment.
 // Surface-specific conformance runs against production proposals and serialized commits.
+inline void tutorial_domino_sequences() {
+    using namespace explorer_test;
+    using Pose = std::array<CoordND, 2>;
+    using Trace = std::array<Pose, 3>;
+    const auto pose = [](int ax, int ay, int bx, int by) -> Pose {
+        return {CoordND{{ax, ay}}, CoordND{{bx, by}}};
+    };
+    const Trace sphere_up{pose(1, 0, 0, 1), pose(1, 1, 0, 2), pose(2, 1, 1, 2)};
+    const Trace projective_up{pose(3, 2, 0, 1), pose(3, 3, 0, 2), pose(0, 0, 1, 2)};
+    const Trace sphere_rotate{sphere_up[0], pose(1, 0, 2, 0), pose(2, 0, 3, 0)};
+    const Trace projective_rotate{projective_up[0], pose(3, 2, 3, 3), pose(0, 1, 0, 0)};
+    for (const auto& fixture : reviewed_cellwise_sequences()) {
+        const bool sphere = fixture.id == "sphere_up_twice";
+        auto piece = make_piece({{{0, 0}}, {{1, 0}}}, 4, 4, false);
+        piece.profile.seams = fixture.profile.seams;
+        for (auto& cell : piece.cells) cell.coordinate.values[1] = 1;
+        for (const bool rotate : {false, true}) {
+            context = fixture.id + (rotate ? " tutorial CCW" : " tutorial Up");
+            const auto& expected = rotate ? (sphere ? sphere_rotate : projective_rotate)
+                                          : (sphere ? sphere_up : projective_up);
+            ExplorerPieceRuntime runtime({0, piece, piece, {}});
+            const std::array<MoveStepQuery, 3> actions{{{0, -1}, {1, 1}, {0, 1}}};
+            for (std::size_t i = 0; i < actions.size(); ++i) {
+                const auto before = runtime.snapshot();
+                // Cartesian CCW is (dx, dy) -> (-dy, dx), native sign -1.
+                const auto result = rotate && i == 1
+                    ? propose_piece_rotation(before.piece, before.revision, -1)
+                    : propose_piece_translation(before.piece, before.revision, actions[i]);
+                require(result.candidate.has_value(), "tutorial command accepted");
+                commit(runtime, *result.candidate);
+                const auto after = runtime.snapshot();
+                for (std::size_t cell = 0; cell < expected[i].size(); ++cell) {
+                    require(after.piece.cells[cell].id == static_cast<std::int64_t>(cell) &&
+                                after.piece.cells[cell].coordinate == expected[i][cell],
+                            "tutorial committed pose matches by cell identity");
+                }
+            }
+        }
+    }
+}
+
 inline void surface_cases() {
     using namespace explorer_test;
+    tutorial_domino_sequences();
     for (const auto& fixture : reviewed_cellwise_sequences()) {
         context = fixture.id;
         auto piece = make_piece({{{0, 0}}}, 8, 8, false);

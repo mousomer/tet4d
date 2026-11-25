@@ -2,6 +2,8 @@ extends RefCounted
 
 class_name GameSetupStore
 
+const PersistentFileReplacementScript = preload("res://scripts/persistence/persistent_file_replacement.gd")
+
 const SCHEMA_VERSION := 4
 const LEGACY_SCHEMA_VERSIONS := [1, 2, 3]
 const DEFAULT_PATH := "user://game_setup.json"
@@ -11,7 +13,7 @@ const GameSetupSpecScript = preload("res://scripts/ui/game_setup/game_setup_spec
 func load_last_selected(path: String = DEFAULT_PATH) -> Dictionary:
 	var defaults := _defaults()
 	if not FileAccess.file_exists(path):
-		return defaults
+		path += PersistentFileReplacementScript.BACKUP_SUFFIX
 	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
 		return defaults
@@ -45,11 +47,9 @@ func _write(entries: Dictionary, path: String) -> bool:
 	for mode in GameSetupSpecScript.modes():
 		if not _is_current_entry(entries.get(mode, {})):
 			return false
-	var file := FileAccess.open(path, FileAccess.WRITE)
-	if file == null:
-		return false
-	file.store_string(JSON.stringify({"schema_version": SCHEMA_VERSION, "last_selected": entries}, "  ", true) + "\n")
-	return file.get_error() == OK
+	var contents := JSON.stringify({"schema_version": SCHEMA_VERSION, "last_selected": entries}, "  ", true) + "\n"
+	var replacement := PersistentFileReplacementScript.write_text(path, contents)
+	return bool(replacement.get("ok", false))
 
 
 func _defaults() -> Dictionary:

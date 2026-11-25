@@ -255,10 +255,6 @@ def _handle_capture_input(
     return False
 
 
-def _action_exit(_state: KeybindingsMenuState, _rows: list[BindingRow]) -> bool:
-    return True
-
-
 def _action_row_up(state: KeybindingsMenuState, rows: list[BindingRow]) -> bool:
     _cycle_binding(state, rows, -1)
     return False

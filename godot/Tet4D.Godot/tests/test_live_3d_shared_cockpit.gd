@@ -28,10 +28,10 @@ func run() -> Array:
 	# acceptance. Live 3D has no presentation-profile layout guard.
 	hud._set_onboarding_visible(false)
 	await tree.process_frame
-	app._enter_live_3d_mode()
+	app._enter_live_mode("live_3d")
 	for i in range(4):
 		await tree.process_frame
-	var hash_before := str(app._live_bridge.live_3d_state_hash())
+	var hash_before := str(app._live_bridge.live_state_hash(3))
 	var layout: Dictionary = hud.layout_contract_snapshot()
 	var cockpit: Dictionary = layout.get("live_cockpit", {})
 	var game_area: Rect2 = layout.get("game_area", Rect2())
@@ -90,15 +90,15 @@ func run() -> Array:
 	for action_id in ["live_3d_move_x_neg", "live_3d_move_x_pos", "live_3d_rotate_xy_neg", "live_3d_rotate_yz_pos", "live_3d_soft_drop", "live_3d_hard_drop"]:
 		if not LiveInputContractScript.action_specs().has(action_id):
 			failures.append("Live-3D migration must retain input authority action %s" % action_id)
-	app._live_3d_paused = true
-	hash_before = str(app._live_bridge.live_3d_state_hash())
+	app._live_modes["live_3d"].paused = true
+	hash_before = str(app._live_bridge.live_state_hash(3))
 	hud._apply_hud_density("compact")
 	await tree.process_frame
-	if str(app._live_bridge.live_3d_state_hash()) != hash_before:
+	if str(app._live_bridge.live_state_hash(3)) != hash_before:
 		failures.append("Live-3D compact density must not mutate deterministic gameplay state")
 	hud._apply_hud_density("standard")
 	await tree.process_frame
-	if str(app._live_bridge.live_3d_state_hash()) != hash_before:
+	if str(app._live_bridge.live_state_hash(3)) != hash_before:
 		failures.append("Live-3D cockpit density changes must not mutate deterministic gameplay state")
 	root.queue_free()
 	await tree.process_frame

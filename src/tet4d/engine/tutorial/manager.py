@@ -165,9 +165,6 @@ class TutorialManager:
             return
         self._predicate_values[key] = bool(value)
 
-    def clear_predicates(self) -> None:
-        self._predicate_values.clear()
-
     def completion_ready(self) -> bool:
         if not self.is_running():
             return False
