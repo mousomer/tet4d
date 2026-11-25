@@ -111,7 +111,8 @@ describes the older "calm instrument" look.
   every StyleBox is made. Under `luminous` (and not High Contrast) corner
   radii step up (panel 4→10, control 3→6, keycap 2→5, emphasis 6→12) and
   `grid.minor`/`grid.major` borders resolve to a soft border (elevated
-  surface lightened by `LUMINOUS_BORDER_LIFT`). Accent, focus and state
+  surface lightened by `luminous.shell.border_lift`). Radii and border lift
+  live in `config/graphical_language.json` (`luminous.shell`). Accent, focus and state
   borders are unchanged.
 - Cockpit cards that use the `ViewportFrame` variation (NEXT, HOLD, control
   strips, 4D basis panel) take `background.panel`; `GameArea` keeps the board

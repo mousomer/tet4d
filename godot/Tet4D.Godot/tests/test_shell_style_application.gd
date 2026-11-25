@@ -5,6 +5,7 @@ const SettingsPanelScript = preload("res://scripts/ui/settings_panel.gd")
 const SettingsRegistryScript = preload("res://scripts/ui/settings/settings_registry.gd")
 const ShellControlStyleApplierScript = preload("res://scripts/ui/style/shell_control_style_applier.gd")
 const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
+const GraphicalLanguageConfigScript = preload("res://scripts/ui/style/graphical_language_config.gd")
 const ShellStyleManagerScript = preload("res://scripts/ui/style/shell_style_manager.gd")
 const ShellStyleRolesScript = preload("res://scripts/ui/style/shell_style_roles.gd")
 
@@ -324,7 +325,7 @@ func _check_luminous_shell_skin() -> Array:
 		var card_box := card.get_theme_stylebox("panel") as StyleBoxFlat
 		var frame_box := frame.get_theme_stylebox("panel") as StyleBoxFlat
 		var pressed := button.get_theme_stylebox("pressed") as StyleBoxFlat
-		var expected_radius := ShellDesignTokensScript.LUMINOUS_RADIUS_PANEL if skinned else ShellDesignTokensScript.RADIUS_PANEL
+		var expected_radius := GraphicalLanguageConfigScript.integer("luminous.shell.radius.panel") if skinned else ShellDesignTokensScript.RADIUS_PANEL
 		if card_box.corner_radius_top_left != expected_radius:
 			failures.append("%s: panel radius should be %d, got %d" % [label, expected_radius, card_box.corner_radius_top_left])
 		if card_box.content_margin_left != ShellDesignTokensScript.COMPACT_PADDING:

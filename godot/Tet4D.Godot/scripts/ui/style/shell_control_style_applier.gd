@@ -4,6 +4,7 @@ class_name ShellControlStyleApplier
 
 const ShellStyleRolesScript = preload("res://scripts/ui/style/shell_style_roles.gd")
 const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
+const GraphicalLanguageConfigScript = preload("res://scripts/ui/style/graphical_language_config.gd")
 const SECTION_TITLE_NAMES := ["ControlSectionTitle", "PieceControlTitle", "ViewControlTitle", "NextPieceTitle", "HoldPieceTitle"]
 
 
@@ -294,13 +295,13 @@ func _radius(style_manager, radius: int) -> int:
 		return radius
 	match radius:
 		ShellDesignTokensScript.RADIUS_KEYCAP:
-			return ShellDesignTokensScript.LUMINOUS_RADIUS_KEYCAP
+			return GraphicalLanguageConfigScript.integer("luminous.shell.radius.keycap")
 		ShellDesignTokensScript.RADIUS_CONTROL:
-			return ShellDesignTokensScript.LUMINOUS_RADIUS_CONTROL
+			return GraphicalLanguageConfigScript.integer("luminous.shell.radius.control")
 		ShellDesignTokensScript.RADIUS_PANEL:
-			return ShellDesignTokensScript.LUMINOUS_RADIUS_PANEL
+			return GraphicalLanguageConfigScript.integer("luminous.shell.radius.panel")
 		ShellDesignTokensScript.RADIUS_EMPHASIS:
-			return ShellDesignTokensScript.LUMINOUS_RADIUS_EMPHASIS
+			return GraphicalLanguageConfigScript.integer("luminous.shell.radius.emphasis")
 	return radius
 
 
@@ -314,7 +315,7 @@ func border_color_for_role(style_manager, border_role: String) -> Color:
 # instead, as in the concepts; accent, focus and state borders are unchanged.
 func _border_color(style_manager, border_role: String) -> Color:
 	if _uses_luminous_skin(style_manager) and border_role in [ShellStyleRolesScript.GRID_MINOR, ShellStyleRolesScript.GRID_MAJOR]:
-		return style_manager.get_color(ShellStyleRolesScript.BACKGROUND_ELEVATED).lightened(ShellDesignTokensScript.LUMINOUS_BORDER_LIFT)
+		return style_manager.get_color(ShellStyleRolesScript.BACKGROUND_ELEVATED).lightened(GraphicalLanguageConfigScript.number("luminous.shell.border_lift"))
 	return style_manager.get_color(border_role)
 
 

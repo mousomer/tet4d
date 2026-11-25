@@ -34,6 +34,11 @@ const REQUIRED_NUMBERS := [
 	"luminous.board.edges.emission",
 	"luminous.board.edges.thickness_scale",
 	"luminous.board.edges.render_priority",
+	"luminous.shell.radius.keycap",
+	"luminous.shell.radius.control",
+	"luminous.shell.radius.panel",
+	"luminous.shell.radius.emphasis",
+	"luminous.shell.border_lift",
 ]
 const REQUIRED_SHADE_TABLES := [
 	"luminous.board.active.face_shades",
