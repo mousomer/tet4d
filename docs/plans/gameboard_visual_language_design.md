@@ -7,6 +7,11 @@ Supersedes: ad hoc Live 3D readability notes in Stage 22b/22c
 Stage: 22d design authority
 Last updated: 2026-08-30
 
+> **2026-11-24:** cell colour, material, glow and glass-volume targets now come
+> from `docs/design/graphical_language/README.md`. Its P1 phase updates this
+> grammar where they conflict (locked cells keep their hue, the active piece
+> glows). Camera, axis, orientation and slice rules here are unchanged.
+
 ## 1. Decision Summary
 
 Stage 22d is design-only. It defines the gameboard visual grammar and does not

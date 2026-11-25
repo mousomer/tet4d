@@ -1461,6 +1461,11 @@ contracts and correct renderer semantics. A structural redesign of an accepted
 layout requires an explicit product decision and new human evidence. Close
 confirmed defects through bounded PRs, not a blanket UI rewrite.
 
+The owner made that product decision on 2026-11-23/24: the graphical-language
+adoption in `graphical_language_adoption.md` (board skin, shell skin, then the
+cockpit and menu redesign) is the P2 work of this section. It reopens the
+2026-10-25 layout lock for that redesign only.
+
 ### 9.2 Experimental assessment before data-schema implementation
 
 Define the testable claim and distinguish learned controls from spatial
