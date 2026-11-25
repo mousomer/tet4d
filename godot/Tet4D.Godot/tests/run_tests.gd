@@ -11,6 +11,7 @@ const TEST_SCRIPTS := [
 	"res://tests/test_presentation_designer.gd",
 	"res://tests/test_current_design_state.gd",
 	"res://tests/test_persistent_file_replacement.gd",
+	"res://tests/test_e4_journal_qa.gd",
 	"res://tests/test_presentation_profile_library.gd",
 	"res://tests/test_built_in_style_catalog.gd",
 	"res://tests/test_design_evaluation_laboratory.gd",
@@ -126,7 +127,7 @@ func _run_all() -> void:
 	var shard := int(shard_text) if not shard_text.is_empty() else 0
 	var count := int(count_text) if not count_text.is_empty() else 1
 	var group := OS.get_environment("TET4D_GODOT_TEST_GROUP")
-	if (not shard_text.is_empty() and not shard_text.is_valid_int()) or (not count_text.is_empty() and not count_text.is_valid_int()) or count < 1 or count > TEST_SCRIPTS.size() or shard < 0 or shard >= count or group not in ["", "explorer"]:
+	if (not shard_text.is_empty() and not shard_text.is_valid_int()) or (not count_text.is_empty() and not count_text.is_valid_int()) or count < 1 or count > TEST_SCRIPTS.size() or shard < 0 or shard >= count or group not in ["", "explorer", "e4_journal"]:
 		push_error("Invalid Godot test selection")
 		quit(1)
 		return
@@ -135,6 +136,9 @@ func _run_all() -> void:
 		var path: String = TEST_SCRIPTS[index]
 		if group == "explorer":
 			if "explorer" in path or "typography_lock" in path:
+				selected.append(path)
+		elif group == "e4_journal":
+			if path.ends_with("/test_e4_journal_qa.gd"):
 				selected.append(path)
 		elif index % count == shard:
 			selected.append(path)

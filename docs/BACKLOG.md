@@ -159,6 +159,9 @@ documentation/priority decision, not approval to deploy a study or backend.
   [Client journal and sync defaults](plans/e4_client_journal_and_sync.md)
   are approved and exercised by a synthetic recovery and audit-count slice.
   Godot integration, identity-provider integration and deployment remain open.
+  The [first Godot slice](plans/e4_godot_first_slice.md) adds a test-only QA
+  flow for capture, restart and verified synthetic delivery. Interactive
+  owner QA, loopback PostgreSQL and release-platform durability remain open.
 - [ ] P4: implement pseudonymous research identity, optional player accounts,
   local event buffering, versioned storage, idempotent ingestion, privacy,
   export/deletion and independent session reconstruction. The non-technical
