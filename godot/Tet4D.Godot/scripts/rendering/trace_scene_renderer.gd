@@ -391,11 +391,11 @@ func presented_board_shape() -> Array:
 
 # Render-effective per-slice boxes, transformed exactly as current_bounds()
 # transforms the collection AABB so both describe the same rendered geometry.
-func current_content_boxes() -> Array:
+func current_content_boxes(include_fit_padding: bool = true) -> Array:
 	if not _last_bounds.get("ok", false) or _presentation == null:
 		return []
 	var boxes: Array = []
-	for box in _presentation.content_slice_boxes():
+	for box in _presentation.content_slice_boxes(include_fit_padding):
 		boxes.append({
 			"min": (box.get("min", Vector3.ZERO) as Vector3) * scale + position,
 			"max": (box.get("max", Vector3.ZERO) as Vector3) * scale + position,

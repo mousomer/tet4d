@@ -1045,6 +1045,8 @@ func configure_design_laboratory(callbacks: Dictionary) -> bool:
 func set_design_affordances_enabled(enabled: bool) -> void:
 	_design_affordances_enabled = enabled
 	_piece_control_strip.set_meta("shell_chrome", not enabled)
+	_next_piece_panel.set_show_piece_id(enabled)
+	_hold_piece_panel.set_show_piece_id(enabled)
 	for control in [_design_menu_header, _design_lab_button, _designer_button]:
 		if control != null:
 			(control as Control).visible = enabled
@@ -1724,7 +1726,11 @@ func _emit_runtime_parameter_change(setting_id: String, value) -> void:
 
 
 func set_waiting_to_start(waiting: bool) -> void:
+	if _waiting_to_start == waiting:
+		return
 	_waiting_to_start = waiting
+	_restart_game_button.set_meta("semantic_role", "action_button" if waiting else "")
+	_style_applier.apply_to_tree(_restart_game_button, _style_manager)
 
 
 func _update_live_status_strip(mode_label: String, state_label: String, reason: String, mode: String) -> void:
@@ -1742,7 +1748,7 @@ func _update_live_status_strip(mode_label: String, state_label: String, reason: 
 		_restart_game_button.text = "Play Again" if state_label == "Game Over" else "Restart Game"
 		_restart_game_button.tooltip_text = "Start the same setup again immediately" if state_label == "Game Over" else "Restart the current game with the same setup"
 		if _waiting_to_start:
-			_restart_game_button.text = "Start"
+			_restart_game_button.text = "Start · Enter"
 			_restart_game_button.tooltip_text = "Start the game"
 
 

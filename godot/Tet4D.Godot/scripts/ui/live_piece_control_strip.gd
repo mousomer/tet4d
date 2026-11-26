@@ -316,7 +316,7 @@ func _new_groups_box(layout: String) -> Container:
 		var flow := HFlowContainer.new()
 		flow.name = "PieceControlGroups"
 		flow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		flow.add_theme_constant_override("h_separation", ShellDesignTokensScript.SPACE_4)
+		flow.add_theme_constant_override("h_separation", ShellDesignTokensScript.SPACE_1 if layout == LAYOUT_COMPACT else ShellDesignTokensScript.SPACE_4)
 		flow.add_theme_constant_override("v_separation", ShellDesignTokensScript.SPACE_2)
 		return flow
 	var box: BoxContainer = VBoxContainer.new() if layout == LAYOUT_RAIL else HBoxContainer.new()

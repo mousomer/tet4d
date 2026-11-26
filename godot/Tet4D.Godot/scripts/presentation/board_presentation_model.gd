@@ -43,8 +43,8 @@ func current_bounds() -> Dictionary:
 	return projection.bounds
 
 
-func content_slice_boxes() -> Array:
-	return projection.content_slice_boxes()
+func content_slice_boxes(include_fit_padding: bool = true) -> Array:
+	return projection.content_slice_boxes(include_fit_padding)
 
 
 func render_world_position(coordinates: Array) -> Vector3:

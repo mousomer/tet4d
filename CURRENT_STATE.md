@@ -15,7 +15,9 @@ Explore view and dimension on return, and explicit Start in Play. The launch
 slice is implemented on `codex/graphical-language-p3` from `graphical-design`.
 P3 keeps the approved Concept A cockpit as the default and offers Concept B
 with header stats and side controls. Both keep separate W slices. P3 review follow-up covers board allocation,
-legend visibility and full-size capture evidence.
+legend visibility and full-size capture evidence. The layout lock measures
+well outlines separately from camera-fit padding. Review is open on the
+compact Play legend versus the earlier compass and rotation glyphs.
 Explorer cockpit Phases 0–2 (lock, descriptor and independent input dispatch) are implemented and verified. CI work remains isolated in PR #185. 2D keyboard movement uses the shared mapper; tests pin camera-relative defaults and rear-view relative/absolute dispatch. Manual screen review remains pending.
 Owner debug reconnection uses compact 2D shell chrome and shared projected helper directions, omits the duplicate vertical row, and adds no functions; focused checks pass. Phases 3–6 and human visual acceptance remain open under `docs/plans/explorer_cockpit_unification.md`.
 Explorer T2A implements the native bounded/cylinder/torus translation candidate and permanent preservation suite described in `docs/architecture/explorer_topology_t2a_native_transport.md`. T1 PRs #172–#176 are the accepted baseline; remaining Correction 4B P2 findings stay deferred. T2B is integrated; the owner-authorized 2D surface candidate adds Möbius/Klein/projective, coherent rotations/Undo and compatibility two-chart S² under `docs/architecture/explorer_surface_runtime.md`. The topology-first amendment selects single-square `sphere_adjacent_positive` and probe semantics for Klein/RP²/S² (RDS §2.5); physical inverse recovery and geometric coherence do not gate translation; destination injectivity remains mandatory. Complete T2/T6 acceptance remains open. Runtime authority has not transferred. See `docs/BACKLOG.md` and `docs/architecture/explorer_topology_t2_transfer_preparation.md`.

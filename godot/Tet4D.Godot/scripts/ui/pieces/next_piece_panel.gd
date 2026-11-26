@@ -82,6 +82,11 @@ func set_preview(payload: Dictionary) -> bool:
 	return true
 
 
+func set_show_piece_id(enabled: bool) -> void:
+	_piece_label.visible = enabled
+	_thumbnail.set_show_slice_offsets(enabled)
+
+
 func set_style_manager(style_manager) -> void:
 	_thumbnail.set_style_manager(style_manager)
 

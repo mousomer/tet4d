@@ -5,10 +5,10 @@ extends RefCounted
 
 
 # On-screen height of the fitted content boxes, in viewport pixels.
-static func projected_content_height(app) -> float:
+static func projected_content_height(app, include_fit_padding: bool = true) -> float:
 	var low := INF
 	var high := -INF
-	for box in app._renderer.current_content_boxes():
+	for box in app._renderer.current_content_boxes(include_fit_padding):
 		var minimum: Vector3 = box.get("min", Vector3.ZERO)
 		var maximum: Vector3 = box.get("max", Vector3.ZERO)
 		for x in [minimum.x, maximum.x]:

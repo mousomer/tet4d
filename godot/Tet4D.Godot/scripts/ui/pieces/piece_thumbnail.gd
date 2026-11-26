@@ -21,6 +21,7 @@ var _style_manager
 var _geometry_revision := 0
 var _style_revision := 0
 var _compact_cockpit := false
+var _show_slice_offsets := true
 
 
 func _init() -> void:
@@ -48,6 +49,11 @@ func clear() -> void:
 func set_compact_cockpit(enabled: bool) -> void:
 	_compact_cockpit = enabled
 	_apply_minimum_height()
+	queue_redraw()
+
+
+func set_show_slice_offsets(enabled: bool) -> void:
+	_show_slice_offsets = enabled
 	queue_redraw()
 
 
@@ -107,12 +113,15 @@ func renderer_plan(target_size: Vector2) -> Dictionary:
 			Vector2(width, content.size.y)
 		)
 		var drawing_rect := group_rect.grow(-5.0)
-		if not str(group.get("label", "")).is_empty():
+		var group_label := str(group.get("label", ""))
+		if not group_label.is_empty() and not _show_slice_offsets:
+			group_label = "Layer %d" % (int(group.get("slice_coordinate", 0)) + 1)
+		if not group_label.is_empty():
 			drawing_rect.position.y += LABEL_HEIGHT
 			drawing_rect.size.y -= LABEL_HEIGHT
 		group_plans.append({
 			"slice_coordinate": int(group.get("slice_coordinate", 0)),
-			"label": str(group.get("label", "")),
+			"label": group_label,
 			"cells": group.get("cells", []).duplicate(true),
 			"rect": group_rect,
 			"drawing_rect": drawing_rect,

@@ -26,7 +26,7 @@ func run() -> Array:
 		var hash_before: String = game_app._live_bridge.live_state_hash(2)
 		game_app._process(60.0)
 		game_app._dispatch_live_command(game_app.MODE_LIVE_2D, "hard_drop")
-		if not game_app._live_mode_paused() or game_hud._restart_game_button.text != "Start":
+		if not game_app._live_mode_paused() or game_hud._restart_game_button.text != "Start · Enter" or game_hud._restart_game_button.get_meta("semantic_role", "") != "action_button":
 			failures.append("fresh Play must show Start on the ready board")
 		if game_app._live_bridge.live_state_hash(2) != hash_before:
 			failures.append("gravity and piece actions must wait for Start")
@@ -101,6 +101,8 @@ func _assert_p3_cockpit(hud, dimension: int, failures: Array) -> void:
 		failures.append("%dD Play must use the P3 navigation" % dimension)
 	if not hud._cockpit_dimensions[dimension - 2].button_pressed:
 		failures.append("%dD Play must show its selected dimension" % dimension)
+	if hud._next_piece_panel._piece_label.visible or hud._hold_piece_panel._piece_label.visible:
+		failures.append("%dD Play must hide internal piece IDs" % dimension)
 	if not hud._cockpit_stats.visible or hud._piece_preview_row.columns != 1:
 		failures.append("%dD Play must share stacked previews and stats" % dimension)
 	if not hud._cockpit_footer.visible or not hud._cockpit_status.text.begins_with("Active: Play %dD" % dimension):

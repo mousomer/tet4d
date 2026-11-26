@@ -142,7 +142,7 @@ func slice_corners(layer_index: int) -> Array:
 # so it renders level, which makes the union's extreme corners phantom - no
 # geometry occupies leftmost-X together with topmost-Y. Fitting the union
 # therefore solves for a span the render never draws.
-func content_slice_boxes() -> Array:
+func content_slice_boxes(include_fit_padding: bool = true) -> Array:
 	if board_shape.is_empty():
 		return []
 	var layer_count := mapper.current_layer_count() if dimension >= 4 else 1
@@ -153,7 +153,7 @@ func content_slice_boxes() -> Array:
 			continue
 		var box_min: Vector3 = layer_bounds.get("min", Vector3.ZERO)
 		var box_max: Vector3 = layer_bounds.get("max", Vector3.ZERO)
-		if dimension >= 4:
+		if dimension >= 4 and include_fit_padding:
 			# Each slice carries its own W label below and to the near edge, and
 			# active pieces rise above the board. Padding PER SLICE keeps those
 			# attachments on screen without recreating the phantom corners that
