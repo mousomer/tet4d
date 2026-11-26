@@ -118,6 +118,12 @@ func _check_p3_game(tree: SceneTree) -> Array:
 				var header_stats: bool = layout == "concept_b"
 				if (hud._cockpit_stats.get_parent() == hud._live_cockpit.header_slot) != header_stats:
 					failures.append("%s must keep stats in its chosen location" % name)
+				if hud._cockpit_mode_title.is_visible_in_tree() != header_stats or (header_stats and not hud._cockpit_mode_title.text.begins_with("%sD" % mode[5])):
+					failures.append("%s must title header stats with the mode, and only there" % name)
+				if hud._cockpit_stat_dividers.size() != 2 or not hud._cockpit_stat_dividers.all(func(divider: ColorRect) -> bool: return divider.is_visible_in_tree() and hud._cockpit_stats.is_ancestor_of(divider)):
+					failures.append("%s must divide the three stats" % name)
+				if not hud._hold_piece_panel._thumbnail._show_empty_slot:
+					failures.append("%s must keep the empty HOLD slot visible" % name)
 				if header_stats:
 					if legend.position.x < board.end.x - 1.0:
 						failures.append("%s must keep controls beside the board" % name)

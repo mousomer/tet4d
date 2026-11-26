@@ -96,7 +96,7 @@ func set_hold_state(payload: Dictionary, available: bool) -> bool:
 
 func _render_state() -> void:
 	if _status_inline:
-		_status_label.text = "Ready" if _available else "Used"
+		_status_label.text = "Free" if _available else "Used"
 	else:
 		_status_label.text = "Available · C" if _available else "Used until lock"
 	modulate = Color.WHITE if _available else Color(0.78, 0.78, 0.78, 1.0)
@@ -111,6 +111,10 @@ func set_status_inline(enabled: bool) -> void:
 	_status_inline = enabled
 	PiecePreviewLayoutScript.set_status_inline(_status_label, _piece_label.get_parent(), _content, enabled)
 	_render_state()
+
+
+func set_show_empty_slot(enabled: bool) -> void:
+	_thumbnail.set_show_empty_slot(enabled)
 
 
 func set_show_piece_id(enabled: bool) -> void:
