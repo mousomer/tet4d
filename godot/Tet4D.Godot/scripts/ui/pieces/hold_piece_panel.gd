@@ -96,7 +96,7 @@ func set_hold_state(payload: Dictionary, available: bool) -> bool:
 
 func _render_state() -> void:
 	if _status_inline:
-		_status_label.text = "Available" if _available else "Used"
+		_status_label.text = "Ready" if _available else "Used"
 	else:
 		_status_label.text = "Available · C" if _available else "Used until lock"
 	modulate = Color.WHITE if _available else Color(0.78, 0.78, 0.78, 1.0)

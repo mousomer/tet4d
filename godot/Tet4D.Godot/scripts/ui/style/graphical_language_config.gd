@@ -12,6 +12,11 @@ const FACE_KEYS := ["base", "top", "front", "right", "left", "back", "bottom"]
 # A gradient needs a start and an end stop.
 const MIN_GRADIENT_STOPS := 2
 const REQUIRED_NUMBERS := [
+	"cockpit.inline_arrow.size",
+	"cockpit.inline_arrow.span_factor",
+	"cockpit.inline_arrow.line_width",
+	"cockpit.compass_arrow_length",
+	"cockpit.plane_glyph_size",
 	"luminous.board.active.whiten",
 	"luminous.board.active.cell_emission",
 	"luminous.board.active.face_emission",

@@ -280,7 +280,8 @@ func _add_slice_label(
 ) -> void:
 	var label := Label3D.new()
 	label.name = "SliceLabel_%d" % layer_index
-	label.text = "%s %d" % [axis_label, semantic_coordinate + 1]
+	var display_axis := "W" if axis_label == "+W" else axis_label
+	label.text = "%s slice %d" % [display_axis, semantic_coordinate + 1]
 	label.set_meta("display_mode", display_mode)
 	label.set_meta("slice_axis", axis_label)
 	label.set_meta("semantic_coordinate", semantic_coordinate)

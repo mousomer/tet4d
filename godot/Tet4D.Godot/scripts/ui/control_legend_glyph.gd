@@ -14,12 +14,11 @@ class_name ControlLegendGlyph
 
 const KIND_COMPASS := "compass"
 const KIND_INLINE_ARROW := "inline_arrow"
-const INLINE_ARROW_SIZE := 24.0
+const GraphicalLanguageConfigScript = preload("res://scripts/ui/style/graphical_language_config.gd")
 const KIND_PLANE := "plane"
-const COMPASS_ARROW := 34.0
-const PLANE_SIZE := 30.0
 
 var kind := KIND_PLANE
+var _glyph_extent := 0.0
 # Compass: [{"intent": String, "key": String}] in display order.
 var compass_keys: Array = []
 var movement_intent := ""
@@ -35,7 +34,8 @@ static func compass(keys: Array, color_source_factory: Callable) -> ControlLegen
 	glyph.name = "LegendCompass"
 	glyph.kind = KIND_COMPASS
 	glyph.compass_keys = keys.duplicate(true)
-	glyph.custom_minimum_size = Vector2(COMPASS_ARROW * 2.0 + 84.0, COMPASS_ARROW * 2.0 + 64.0)
+	glyph._glyph_extent = GraphicalLanguageConfigScript.number("cockpit.compass_arrow_length")
+	glyph.custom_minimum_size = Vector2.ONE * (glyph._glyph_extent * 2.0) + Vector2(84.0, 64.0)
 	for entry in keys:
 		var cap: Label = color_source_factory.call(str(entry["key"]))
 		glyph._keycaps[str(entry["intent"])] = cap
@@ -51,7 +51,7 @@ static func inline_arrow(intent: String, color_source: Label) -> ControlLegendGl
 	glyph.kind = KIND_INLINE_ARROW
 	glyph.movement_intent = intent
 	glyph._color_source = color_source
-	glyph.custom_minimum_size = Vector2.ONE * INLINE_ARROW_SIZE
+	glyph.custom_minimum_size = Vector2.ONE * GraphicalLanguageConfigScript.number("cockpit.inline_arrow.size")
 	return glyph
 
 
@@ -60,7 +60,8 @@ static func plane(axes: Array, color_source: Label) -> ControlLegendGlyph:
 	glyph.name = "LegendPlaneGlyph"
 	glyph.kind = KIND_PLANE
 	glyph.plane_axes = axes.duplicate()
-	glyph.custom_minimum_size = Vector2(PLANE_SIZE + 8.0, PLANE_SIZE)
+	glyph._glyph_extent = GraphicalLanguageConfigScript.number("cockpit.plane_glyph_size")
+	glyph.custom_minimum_size = Vector2(glyph._glyph_extent + 8.0, glyph._glyph_extent)
 	glyph._color_source = color_source
 	return glyph
 
@@ -96,7 +97,7 @@ func _place_keycaps() -> void:
 		var cap_size := cap.get_combined_minimum_size()
 		cap.size = cap_size
 		# Past the arrow tip, pushed out by half the cap so it never covers the arrow.
-		var reach := COMPASS_ARROW + 6.0 + 0.5 * absf(direction.x) * cap_size.x + 0.5 * absf(direction.y) * cap_size.y
+		var reach := _glyph_extent + 6.0 + 0.5 * absf(direction.x) * cap_size.x + 0.5 * absf(direction.y) * cap_size.y
 		cap.position = center + direction * reach - cap_size * 0.5
 
 
@@ -110,8 +111,8 @@ func _draw() -> void:
 		var direction: Vector2 = _directions.get(movement_intent, Vector2.ZERO)
 		if direction != Vector2.ZERO:
 			var center := size * 0.5
-			var half_span := direction * (INLINE_ARROW_SIZE * 0.32)
-			_arrow(center - half_span, center + half_span, lit, 2.0)
+			var half_span := direction * (custom_minimum_size.x * GraphicalLanguageConfigScript.number("cockpit.inline_arrow.span_factor"))
+			_arrow(center - half_span, center + half_span, lit, GraphicalLanguageConfigScript.number("cockpit.inline_arrow.line_width"))
 		return
 	if kind == KIND_COMPASS:
 		var center := size * 0.5
@@ -119,11 +120,11 @@ func _draw() -> void:
 		for intent in _keycaps:
 			var direction: Vector2 = _directions.get(intent, Vector2.ZERO)
 			if direction != Vector2.ZERO:
-				_arrow(center, center + direction * COMPASS_ARROW, lit, 2.5)
+				_arrow(center, center + direction * _glyph_extent, lit, 2.5)
 		return
 	var dim := Color(lit, 0.28)
-	var center := Vector2(PLANE_SIZE * 0.5, PLANE_SIZE * 0.5)
-	var reach := PLANE_SIZE * 0.42
+	var center := Vector2(_glyph_extent * 0.5, _glyph_extent * 0.5)
+	var reach := _glyph_extent * 0.42
 	for axis in ["x", "y", "z"]:
 		var direction: Vector2 = _directions.get(axis, Vector2.ZERO)
 		if direction == Vector2.ZERO:
@@ -135,7 +136,7 @@ func _draw() -> void:
 		# W has no screen direction of its own: it is the row of slice boards.
 		var on: bool = "w" in plane_axes
 		for index in range(3):
-			var box := Rect2(Vector2(PLANE_SIZE + 1.0, 6.0 + float(index) * 7.0), Vector2(6.0, 5.0))
+			var box := Rect2(Vector2(_glyph_extent + 1.0, 6.0 + float(index) * 7.0), Vector2(6.0, 5.0))
 			if on:
 				draw_rect(box, lit, true)
 			else:

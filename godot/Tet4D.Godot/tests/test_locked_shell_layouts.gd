@@ -132,6 +132,12 @@ func _check_p3_game(tree: SceneTree) -> Array:
 					var deck: ScrollContainer = hud._live_cockpit.deck_scroll
 					if deck.get_v_scroll_bar().visible or deck.get_h_scroll_bar().visible or hud._live_cockpit.deck_fit.fit_scale < 0.99:
 						failures.append("%s must show the complete legend at its standard scale" % name)
+					if header_stats and mode != "live_2d":
+						for caption: Label in [hud._next_piece_panel._status_label, hud._hold_piece_panel._status_label]:
+							var font := caption.get_theme_font("font")
+							var required_width := font.get_string_size(caption.text, HORIZONTAL_ALIGNMENT_LEFT, -1, caption.get_theme_font_size("font_size")).x
+							if caption.size.x + 1.0 < required_width:
+								failures.append("%s clips the preview caption %s" % [name, caption.text])
 					if not header_stats and mode in ["live_2d", "live_3d"]:
 						var controls: HFlowContainer = hud._piece_control_strip._groups_box
 						if controls.get_line_count() != 1:

@@ -256,6 +256,7 @@ var _onboarding_model = LiveOnboardingModelScript.new()
 var _onboarding_panel: PanelContainer
 var _next_piece_panel: PanelContainer
 var _hold_piece_panel: PanelContainer
+var _inline_preview_details := false
 var _piece_preview_row: GridContainer
 var _piece_control_strip: PanelContainer
 var _live_view_control_strip: PanelContainer
@@ -945,6 +946,9 @@ func _set_live_4d_deck_active(active: bool) -> void:
 		var inline_details := side_rail and not _design_affordances_enabled and not stack_previews
 		_next_piece_panel.set_status_inline(inline_details)
 		_hold_piece_panel.set_status_inline(inline_details)
+		if inline_details != _inline_preview_details:
+			_inline_preview_details = inline_details
+			_style_applier.apply_to_tree(_piece_preview_row, _style_manager)
 	_apply_shell_minimums(active, side_rail or split)
 	if _live_4d_deck == null:
 		return

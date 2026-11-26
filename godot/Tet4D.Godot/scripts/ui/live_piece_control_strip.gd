@@ -217,6 +217,7 @@ func _rebuild() -> void:
 				var row := _legend_row(semantic, 0.0)
 				if role == "translate":
 					_add_inline_movement_arrows(row, semantic["semantic"])
+				row.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_1)
 				row.size_flags_horizontal = Control.SIZE_FILL
 				(row.get_node("LegendOperation") as Label).size_flags_horizontal = Control.SIZE_FILL
 				_groups_box.add_child(row)
@@ -337,7 +338,7 @@ func _new_groups_box(layout: String) -> Container:
 		var flow := HFlowContainer.new()
 		flow.name = "PieceControlGroups"
 		flow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		flow.add_theme_constant_override("h_separation", ShellDesignTokensScript.SPACE_1 if layout == LAYOUT_COMPACT else ShellDesignTokensScript.SPACE_4)
+		flow.add_theme_constant_override("h_separation", ShellDesignTokensScript.SPACE_3 if layout == LAYOUT_COMPACT else ShellDesignTokensScript.SPACE_4)
 		flow.add_theme_constant_override("v_separation", ShellDesignTokensScript.SPACE_2)
 		return flow
 	var box: BoxContainer = VBoxContainer.new() if layout == LAYOUT_RAIL else HBoxContainer.new()

@@ -161,6 +161,9 @@ describes the older "calm instrument" look.
   grouped legend with MOVE compass and rotation-plane glyphs and labels for B. Concept B pairs NEXT and HOLD
   across one row in 3D/4D to fit the legend at standard scale.
   Full-size ready and seeded midgame captures show both layout choices.
+  Caption checks cover paired preview cards, and inline arrow sizing lives
+  in graphical-language config. Canonical labels read W slice 1, W slice 2,
+  and so on. Other basis orientations retain their signed axis.
   Smaller windows may scroll the helper deck.
 - Retire the `plain` and `tron` themes; keep `diagnostic` and High Contrast.
 

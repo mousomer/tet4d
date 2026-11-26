@@ -263,8 +263,8 @@ func run() -> Array:
 			if child is Label3D and child.has_meta("slice_axis"):
 				slice_label_count += 1
 				var label := child as Label3D
-				if label.text.find("ACTIVE") != -1:
-					failures.append("slice labels should contain only signed semantic identity")
+				if label.text != "W slice %d" % (int(label.get_meta("semantic_coordinate", -1)) + 1):
+					failures.append("canonical slice labels must show the player-facing W slice number")
 				var selected := bool(label.get_meta("selected_slice", false))
 				var expected_font_size := ReplayVisuals.W_SLICE_LABEL_SELECTED_FONT_SIZE if selected else ReplayVisuals.W_SLICE_LABEL_FONT_SIZE
 				if label.font_size != expected_font_size or absf(label.pixel_size - ReplayVisuals.W_SLICE_LABEL_PIXEL_SIZE) > 0.0001:

@@ -1,6 +1,15 @@
 {
   "schema_version": 1,
   "description": "Tuning values for the owner graphical language (docs/design/graphical_language/README.md). Code reads every number from here through GraphicalLanguageConfig; none is hard-coded.",
+  "cockpit": {
+    "inline_arrow": {
+      "size": 24.0,
+      "span_factor": 0.32,
+      "line_width": 2.0
+    },
+    "compass_arrow_length": 34.0,
+    "plane_glyph_size": 30.0
+  },
   "luminous": {
     "board": {
       "active": {

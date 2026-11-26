@@ -45,6 +45,7 @@ static func set_status_inline(label: Label, header: Container, body: Container, 
 	if label.get_parent() == target:
 		return
 	label.reparent(target, false)
+	label.set_meta("shell_chrome", enabled)
 	label.autowrap_mode = TextServer.AUTOWRAP_OFF if enabled else TextServer.AUTOWRAP_WORD_SMART
 	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS if enabled else TextServer.OVERRUN_NO_TRIMMING
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if enabled else HORIZONTAL_ALIGNMENT_CENTER
