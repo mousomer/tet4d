@@ -14,8 +14,10 @@ Prepared: 2026-11-24
   hue at higher transparency; overall closer to the images than to the
   current game.
 - 4D stays a W-slice matrix. The tesseract and projection views are deferred.
-- Layout: concept A (right column plus controls footer) with concept B's
-  status line in the footer.
+- Layout: Concept A is the default (right column and controls footer).
+  Concept B is selectable (header stats and side controls). Both use the
+  status footer and the separate W-slice matrix. The layout preference is
+  independent of color theme.
 - The 2026-10-25 cockpit and Main Menu layout lock is reopened for this
   redesign. `test_locked_shell_layouts.gd` is re-baselined in the same PR
   that changes the layout (P3), never earlier and never weakened.
@@ -144,10 +146,10 @@ describes the older "calm instrument" look.
   groups. Dimensions differ only in which groups and labels the descriptors
   provide.
 - Present windowed 2D, 3D and 4D comparisons for owner review before changing
-  the layout lock. The game viewer uses the shared cockpit with a stacked right
-  column and full-width controls and status footer. The Designer retains its
-  editing layout. On narrow windows, the existing deck fallback keeps the
-  controls and piece panels reachable.
+  the layout lock. Concept A uses the stacked right column and full-width
+  controls footer. Concept B uses the same previews with header stats and a
+  scrollable controls rail. Both keep the status footer. The Designer retains
+  its editing layout. On narrow windows, A uses the existing deck fallback.
 - Re-baseline `test_locked_shell_layouts.gd` in this PR with the
   owner-accepted rectangles, keeping its reachability, no-clipping, focus and
   small-window checks.

@@ -103,6 +103,14 @@ language above. The tesseract (all-W overlay) and projection views in
 concept C's "4D View" selector are deferred to a later stage. They are not
 part of this adoption.
 
+## Cockpit layout choices
+
+**Concept A** is the default. NEXT, HOLD and stats stack at the right,
+and the controls sit in the footer. **Concept B** moves the stats into
+the header and places the control legend beside the board. Both layouts
+use the same status footer and the separate W-slice matrix in 4D.
+Choose the layout under Settings → Display → Cockpit Layout.
+
 ## Launch screen
 
 Open directly into the cockpit. A fresh profile opens Play · 2D.

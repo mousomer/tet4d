@@ -141,6 +141,8 @@ var _cockpit_play: Button
 var _cockpit_explore: Button
 var _cockpit_dimensions: Array[Button] = []
 var _cockpit_stats: PanelContainer
+var _cockpit_stat_row: BoxContainer
+var _cockpit_layout := "concept_a"
 var _cockpit_stat_labels: Array[Label] = []
 var _cockpit_clears_title: Label
 var _cockpit_view: Button
@@ -917,14 +919,16 @@ func _apply_shell_minimums(live: bool, side_rail := false) -> void:
 # drops VIEW: Fit View stays a header button, and mouse orbit is unlabelled
 # muscle memory, so its rows would only push the key legend down.
 func _uses_side_rail() -> bool:
-	return _design_affordances_enabled and _active_live_mode in [GameSetupSpecScript.MODE_2D, GameSetupSpecScript.MODE_3D]
+	if not _design_affordances_enabled:
+		return _cockpit_layout == "concept_b"
+	return _active_live_mode in [GameSetupSpecScript.MODE_2D, GameSetupSpecScript.MODE_3D]
 
 
 func _piece_legend_layout() -> String:
-	if not _design_affordances_enabled:
-		return LivePieceControlStripScript.LAYOUT_WIDE
 	if _uses_side_rail():
 		return LivePieceControlStripScript.LAYOUT_RAIL
+	if not _design_affordances_enabled:
+		return LivePieceControlStripScript.LAYOUT_WIDE
 	if _active_live_mode == GameSetupSpecScript.MODE_4D:
 		return LivePieceControlStripScript.LAYOUT_WIDE
 	return LivePieceControlStripScript.LAYOUT_DECK
@@ -932,9 +936,9 @@ func _piece_legend_layout() -> String:
 
 func _set_live_4d_deck_active(active: bool) -> void:
 	var side_rail := active and _uses_side_rail()
-	var split := active and (not _design_affordances_enabled or _active_live_mode == GameSetupSpecScript.MODE_4D)
+	var split := active and not side_rail and (not _design_affordances_enabled or _active_live_mode == GameSetupSpecScript.MODE_4D)
 	if _piece_preview_row != null:
-		_piece_preview_row.columns = 1 if split else 2
+		_piece_preview_row.columns = 1 if split or not _design_affordances_enabled else 2
 	_apply_shell_minimums(active, side_rail or split)
 	if _live_4d_deck == null:
 		return
@@ -1550,6 +1554,7 @@ func apply_shell_settings() -> void:
 		return
 	_applying_initial_settings = true
 	_settings_panel.apply_initial_settings()
+	_apply_cockpit_layout(str(_settings_store.value("display.cockpit_layout")))
 	_applying_initial_settings = false
 	_shell_settings_applied = true
 	presentation_profile_changed.emit(_profile_from_store())
@@ -1620,6 +1625,9 @@ func presentation_preferences_snapshot() -> Dictionary:
 func _wire_settings_panel(panel: SettingsPanel) -> void:
 	panel.setting_changed.connect(func(setting_id: String, value) -> void:
 		_sync_setting_controls(panel, setting_id)
+		if setting_id == "display.cockpit_layout":
+			_apply_cockpit_layout(str(value))
+			return
 		if not _applying_initial_settings:
 			_emit_runtime_parameter_change(setting_id, value)
 	)
@@ -1679,6 +1687,7 @@ func _wire_settings_panel(panel: SettingsPanel) -> void:
 	)
 	panel.settings_reset.connect(func() -> void:
 		_sync_all_setting_controls(panel)
+		_apply_cockpit_layout(str(_settings_store.value("display.cockpit_layout")))
 		presentation_profile_changed.emit(_profile_from_store())
 	)
 
@@ -3171,11 +3180,14 @@ func _build_game_cockpit_chrome(outer: VBoxContainer) -> void:
 	_cockpit_stats = PanelContainer.new()
 	_cockpit_stats.name = "CockpitStats"
 	_cockpit_stats.theme_type_variation = "ViewportFrame"
-	var stats := VBoxContainer.new()
+	var stats := BoxContainer.new()
+	stats.vertical = true
+	_cockpit_stat_row = stats
 	stats.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_2)
 	_cockpit_stats.add_child(stats)
 	for title in ["Score", "Lines", "Level"]:
 		var stat := VBoxContainer.new()
+		stat.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		stat.add_theme_constant_override("separation", 0)
 		stats.add_child(stat)
 		var caption := Label.new()
@@ -3242,6 +3254,24 @@ func _set_game_cockpit_visible(visible_in_game: bool) -> void:
 		if button.get_parent() != host:
 			button.reparent(host, false)
 	_update_cockpit_navigation()
+
+
+func _apply_cockpit_layout(layout: String) -> void:
+	var chosen := "concept_b" if layout == "concept_b" else "concept_a"
+	if chosen == _cockpit_layout:
+		return
+	_cockpit_layout = chosen
+	var header_stats := chosen == "concept_b" and not _design_affordances_enabled
+	var target: Control = _live_cockpit.header_slot if header_stats else _piece_state_module
+	if _cockpit_stats.get_parent() != target:
+		_cockpit_stats.reparent(target, false)
+		if header_stats:
+			target.move_child(_cockpit_stats, _cockpit_nav.get_index() + 1)
+	_cockpit_stat_row.vertical = not header_stats
+	if not _active_live_mode.is_empty():
+		_refresh_piece_control_strip()
+		_set_live_4d_deck_active(true)
+		_apply_responsive_layout()
 
 
 func _update_cockpit_navigation() -> void:

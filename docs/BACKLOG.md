@@ -33,8 +33,8 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 - Graphical language P3: implement direct cockpit launch with Play · 2D
   defaults, last Play/Explore view and dimension, and explicit Start in Play.
-  Review the 2D, 3D and 4D cockpit comparisons before re-baselining the
-  layout lock. Adoption and remaining scope are defined in
+  Lock the approved Concept A cockpit and cover the selectable Concept B
+  layout, with separate W slices in both. Adoption and remaining scope are defined in
   `docs/plans/graphical_language_adoption.md`.
 
 - Explorer 2D relative movement: reconnect horizontal keyboard intents and

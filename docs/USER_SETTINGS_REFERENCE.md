@@ -362,6 +362,7 @@ These Godot-owned presentation preferences are declared in `godot/Tet4D.Godot/co
 - `display.window_mode`: default `"windowed"`; enum; options: windowed, fullscreen
 - `display.windowed_size`: default `[1280, 720]`; size; min [634, 660]; max [16384, 16384]
 - `display.hud_density`: default `"standard"`; enum; options: compact, standard, detailed
+- `display.cockpit_layout`: default `"concept_a"`; enum; options: concept_a, concept_b
 - `display.board_detail`: default `"standard"`; enum; options: minimal, standard, full
 - `ghost.enabled`: default `true`; bool
 - `settled_cells.opacity`: default `0.75`; float

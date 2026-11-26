@@ -73,9 +73,63 @@ func run() -> Array:
 	failures.append_array(_check_4d_small(hud))
 	instance.queue_free()
 	await tree.process_frame
+	failures.append_array(await _check_p3_game(tree))
 	tree.root.size = original_size
 	tree.root.content_scale_size = original_scale
 	tree.root.min_size = original_minimum
+	return failures
+
+
+# P3 game lock. The Designer checks above preserve its established authoring
+# layout. The game shares the board, footer and controls across both choices.
+func _check_p3_game(tree: SceneTree) -> Array:
+	var failures: Array = []
+	var instance := (load("res://scenes/game_bootstrap.tscn") as PackedScene).instantiate()
+	var app = instance.get_node("App")
+	var hud = instance.get_node("ReplayHud")
+	var settings_directory := DirAccess.create_temp("tet4d-p3-layouts")
+	app._launch_view_path = settings_directory.get_current_dir().path_join("launch.cfg")
+	tree.root.add_child(instance)
+	await _frames(tree, 10)
+	app.set_process(false)
+	hud._settings_store._storage_path = settings_directory.get_current_dir().path_join("settings.json")
+	hud._set_onboarding_visible(false)
+	hud._apply_ui_scale("standard")
+	for size in SIZES + [SMALL_4D]:
+		tree.root.size = size
+		tree.root.content_scale_size = size
+		for layout in ["concept_a", "concept_b"]:
+			hud._settings_screen_panel._on_control_value_changed("display.cockpit_layout", layout)
+			for mode in ["live_2d", "live_3d", "live_4d"]:
+				app._start_configured_live_game(hud.configured_live_setup(mode))
+				await _frames(tree, 10)
+				await _settle_cockpit(tree, hud._live_cockpit)
+				var name := "%s %s at %s" % [layout, mode, size]
+				var board: Rect2 = hud._game_area.get_global_rect()
+				var header: Rect2 = hud._cockpit_nav.get_global_rect()
+				var footer: Rect2 = hud._cockpit_footer.get_global_rect()
+				var legend: Rect2 = hud._live_cockpit.control_deck.get_global_rect()
+				var viewport: Rect2 = hud.get_viewport_rect().grow(1.0)
+				if not (viewport.encloses(board) and viewport.encloses(header) and viewport.encloses(footer) and viewport.encloses(legend)):
+					failures.append("%s must keep the board, navigation, controls and status inside the window" % name)
+				if header.end.y > board.position.y + 1.0 or footer.position.y < board.end.y - 1.0:
+					failures.append("%s must keep navigation above the board and status below it" % name)
+				var header_stats: bool = layout == "concept_b"
+				if (hud._cockpit_stats.get_parent() == hud._live_cockpit.header_slot) != header_stats:
+					failures.append("%s must keep stats in its chosen location" % name)
+				if header_stats:
+					if legend.position.x < board.end.x - 1.0:
+						failures.append("%s must keep controls beside the board" % name)
+				elif legend.position.y < board.end.y - 1.0:
+					failures.append("%s must keep controls below the board" % name)
+				if hud._piece_preview_row.columns != 1 or not hud._piece_preview_row.is_visible_in_tree():
+					failures.append("%s must keep stacked NEXT and HOLD reachable" % name)
+	var reloaded = hud._settings_store.get_script().new(hud._settings_registry, hud._settings_store._storage_path)
+	reloaded.load_settings()
+	if reloaded.value("display.cockpit_layout") != "concept_b":
+		failures.append("the selected layout must survive reloading Display settings")
+	instance.queue_free()
+	await tree.process_frame
 	return failures
 
 
