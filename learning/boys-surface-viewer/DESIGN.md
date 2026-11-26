@@ -1,6 +1,6 @@
 # Boy's surface viewer: design
 
-The viewer is one self-contained HTML file (`boys-surface-viewer.html`, about 1,600 lines). It
+The viewer is one self-contained HTML file (`boys-surface-viewer.html`, about 1,650 lines). It
 combines inline CSS, the WebGL2 renderer in plain JavaScript, and two embedded, compressed data
 fields (the slimming flow and the membrane map). It has no build step, makes no network requests and has no dependencies, so the file can be
 opened locally or hosted as is.
@@ -34,7 +34,7 @@ The surface is the **Bryant–Kusner parametrization** on the closed unit disk
   form **X = H·|d|² / |H|²**, where d = w⁶ + √5·w³ − 1 and H is g multiplied by |d|². This form
   stays finite at the three zeros of *d* inside the disk, which all map to the triple point.
 - The family parameter *c* (the "−c" in the third component) is fixed at **c = 0.95**. The
-  embedded slimming field (§2.3) was computed for that member of the family.
+  embedded slimming field (§2.4) was computed for that member of the family.
 - The mesh is a polar grid of 129 × 721 vertices. Normals come from central differences, with the
   angle wrapping and one-sided differences at the rim seam.
 
@@ -46,7 +46,7 @@ on the surface. The edge and corner paint in §4 relies on this.
 Every shape control acts on **space** (ℝ³), never on the surface's parameter domain. The chain,
 applied per vertex in this order:
 
-1. **Slimming:** the flow of an embedded smooth velocity field (§2.3) for time *t* = slider value,
+1. **Slimming:** the flow of an embedded smooth velocity field (§2.4) for time *t* = slider value,
    integrated with RK4 (10 steps) and cached per slider value.
 2. **Lobe width:** a rotation about the symmetry axis whose angle depends on the azimuth through a
    threefold term (Im z³-type).
@@ -55,14 +55,44 @@ applied per vertex in this order:
 5. **Twist:** a rotation about the symmetry axis that grows linearly with height.
 
 The flow in step 1 is a diffeomorphism of ℝ³, so it preserves the immersion exactly. Steps 2–5
-are smooth maps of space. They keep the immersion while they stay invertible, which held across the
-slider ranges in testing but is not proven in general. Deforming space rather than the surface
-means no slider can tear the surface or change where it meets itself.
+are one smooth map of space. Composing an immersion with a local diffeomorphism gives an immersion,
+so the surface stays immersed wherever that map's Jacobian determinant stays positive.
+[`tools/fold_check.py`](tools/fold_check.py) checks this numerically.
+- It ports the page's flow and map line for line, and reads the flow field from the page itself.
+- It evaluates det J at all 93,000 mesh vertices, for 5 values of each of the five shape sliders
+  across their full ranges: 3,125 combinations.
+- The determinant never reaches zero. Its minimum is **0.028**, at the most compressed corner
+  (length 0.5, width 0.4, thickness 0.2). It is small there only because space is squashed.
+
+The determinant is checked on a grid of slider values, not proven for every value in between. It
+moves smoothly and its margins stay well clear of zero.
+
+This is a local check. It shows no slider folds the surface, but not that the map is one-to-one on
+the whole surface. Deforming space rather than the surface means no slider can tear the surface. The
+membrane and self-intersection data assume the self-intersections stay where they are (§4.4).
 
 The three lobe tips are found on the flowed surface. One is chosen in a fixed 120° window, so the
 lobe colours never jump as the sliders move.
 
-### 2.3 The slimming field
+### 2.3 Gluing the square (the Glue slider)
+
+The **Glue** slider replays the construction of
+[the square-to-Boy's-surface sequence](../projective-plane-sequence/) on the live surface:
+- **At glue g ≥ 0.15:** the mesh shows the image of the sub-disk |*w*| ≤ *s*(g) of the finished
+  surface. *s* grows smoothly from 0.22 to 1, so every intermediate state is a genuine piece of
+  Boy's surface. The square still maps onto the whole piece by Fong's map, so its grid, edges and
+  four corners are all visible throughout.
+- **Below 0.15:** the flat square blends into the first piece. It is laid in the piece's
+  best-fitting plane, by a least-squares map from the disk coordinates.
+- **Cost:** the piece is read off the full surface by radial interpolation along the polar mesh, so
+  moving the slider never re-runs the slimming flow. A rebuild takes about 15–30 ms, smooth enough
+  for the ▶ button, which animates the gluing in about 7 s.
+- **Data on the piece:** the membrane and curve lookups scale their disk point by *s*, so membranes
+  and self-intersections appear only once the piece contains them. The triple point marker appears
+  once *s* passes the triple point's preimage radius, 0.726. Until the last moment the four corners
+  are four separate points; at g = 1 they merge into two.
+
+### 2.4 The slimming field
 
 **Problem:** in the classic surface the lobe interiors are inflated like balloons, while the slits
 from outside into the central cavity are hairlines.
@@ -257,7 +287,7 @@ including the view.
 ## 6. Testing
 
 [`tools/check_viewer.py`](tools/check_viewer.py) runs the checks below in headless Chrome with
-SwiftShader, so no GPU is needed. It runs 21 checks and exits non-zero on any failure.
+SwiftShader, so no GPU is needed. It runs 24 checks and exits non-zero on any failure.
 
 The page exposes a small hook, `window.__boy`, with these members:
 - `set(params)` and `pose({rotX, rotY, spin, panX, panY})` change parameters and the view.
@@ -270,6 +300,8 @@ It covers:
   it after a reload, Reset, the panel toggle and the H key.
 - **Rendering:** each visual switch (membranes, self-intersections, grid, glued edges) changes the
   image.
+- **Gluing:** the Glue slider goes from the flat square through a piece to the surface. The triple
+  point appears only once the piece contains it, and ▶ completes the gluing.
 - **Moving the shape:** right-drag moves it, and double-click recentres it.
 - **Corner gluing:** the antipodal corner pairs land on identical 3D positions, and the three preimages
   of the triple point meet.
@@ -280,7 +312,7 @@ It covers:
 
 ## 7. Known limitations and next steps
 
-- **Gap widening:** the slits are still hairlines (§2.3). The planned method works on the surface,
+- **Gap widening:** the slits are still hairlines (§2.4). The planned method works on the surface,
   not the voxel grid:
   1. Find pairs of points that are close in space but far apart in the domain, with near-parallel
      facing normals. That condition excludes the genuine self-crossings, which must stay.
@@ -307,3 +339,4 @@ It covers:
 | v12–v13 | Inner-sheet cutaway based on visibility from outside. Superseded: the cut tore the tubes (§4.4). |
 | v14 | Membranes removed along the self-intersection curves, as in a Klein bottle. Per-pixel cut, rim ring, `tools/membranes.py`. |
 | v15 | Self-intersection curve and triple point toggle. Light outline on the black corner. Committed browser checks (`tools/check_viewer.py`). |
+| v16 | Glue slider and ▶: the square-to-Boy's construction on the live surface. Numerical fold check of the shape controls (`tools/fold_check.py`). |

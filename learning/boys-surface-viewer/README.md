@@ -14,7 +14,8 @@ self-contained file with no network access and no dependencies.
 - Double-click to recentre. **H**, or the round button at the top right, hides the panel.
 
 **Panel**
-- **Shape:** presets, lobe length / width / thickness, interior slimming, twist.
+- **Shape:** Glue (with ▶ to play it), presets, lobe length / width / thickness, interior slimming,
+  twist.
 - **Lines:** membranes (see below), square or polar parameter grid, the glued edges of the square, its
   corner points, and the self-intersection curve with its triple point.
 - **Material:** glass opacity, clarity, frost, gloss, rim depth, and the lobe colours.
@@ -33,6 +34,13 @@ dark ring marks the rim of each hole. Set **Membranes** to *Shown* to see the co
 
 ![Membranes shown (left) and removed (right), at low opacity](membranes.png)
 
+**Gluing.** The *Glue* slider (or ▶) plays the construction of the
+[square-to-Boy's-surface sequence](../projective-plane-sequence/) live. The flat square with its
+grid bends and wraps onto a growing piece of the surface, until its edges meet in pairs and close
+it up.
+
+![The Glue slider from 0 to 1](gluing.png)
+
 **Self-intersections.** Tick *Self-Intersections* to draw where the surface passes through itself: three
 loops (gold) that all meet at the triple point (gold disc).
 
@@ -43,5 +51,7 @@ How it works, and why it is built this way: [DESIGN.md](DESIGN.md).
 **Tools**
 - [`tools/membranes.py`](tools/membranes.py) regenerates the page's embedded membrane and curve
   data. It needs numpy and scipy.
-- [`tools/check_viewer.py`](tools/check_viewer.py) runs 21 browser checks headless. It needs
+- [`tools/fold_check.py`](tools/fold_check.py) confirms that no setting of the shape sliders folds
+  the surface. It needs numpy and scipy.
+- [`tools/check_viewer.py`](tools/check_viewer.py) runs 24 browser checks headless. It needs
   playwright, pillow and numpy.

@@ -10,6 +10,7 @@ Checks:
   - the panel: presets and Custom detection, every menu and toggle, collapsing a section survives a
     reload, Reset restores the defaults, the panel toggle and the H key;
   - rendering: each visual switch (membranes, self-intersections, grid, glued edges) changes the image;
+  - gluing: the glue slider goes from the flat square to the surface, and the play button completes it;
   - interaction: right-drag moves the shape, double-click recentres it;
   - geometry: antipodal corners and the three preimages of the triple point land on the same 3D point.
 """
@@ -107,7 +108,7 @@ async def run(chrome, page):
             "Reset restores the defaults",
             await ev(
                 "(() => { const P = window.__boy.P; return P.membranes === 'removed' && P.gridType === 'square'"
-                " && P.edges && P.corners && !P.curves && P.axis === 'sym'; })()"
+                " && P.edges && P.corners && !P.curves && P.axis === 'sym' && P.glue === 1; })()"
             )
             and await pg.eval_on_selector("#preset", "e => e.value") == "reference",
         )
@@ -156,6 +157,32 @@ async def run(chrome, page):
             await ev(f"window.__boy.set({off})")
             check(f"render changes: {name}", changed(img, base))
 
+        await ev("window.__boy.set({glue: 0})")
+        flat = await shot(pg)
+        await ev("window.__boy.set({glue: 0.5})")
+        half = await shot(pg)
+        await ev("window.__boy.set({glue: 1})")
+        full = await shot(pg)
+        check(
+            "glue slider: flat square, piece and surface differ",
+            changed(flat, half) and changed(half, full),
+        )
+        nopiece = await ev(
+            "window.__boy.set({glue: 0.3}); window.__boy.renderNow(); tripleVerts() === null"
+        )
+        await ev("window.__boy.set({glue: 1})")
+        check("no triple point until the piece contains it", nopiece)
+        await ev(
+            "document.getElementById('ui').classList.remove('hidden'); window.__boy.set({glue: 0})"
+        )
+        await pg.click("#glue-play")
+        await pg.wait_for_function("window.__boy.P.glue >= 1", timeout=60000)
+        check(
+            "play button glues the square up to the finished surface",
+            await ev("window.__boy.P.glue") == 1,
+        )
+        await ev("document.getElementById('ui').classList.add('hidden')")
+
         bar(7, steps, "interaction: move and recentre")
         await pg.mouse.move(400, 400)
         await pg.mouse.down(button="right")
@@ -174,7 +201,7 @@ async def run(chrome, page):
               const at = (i, j) => { const v = 3 * (i * ROW + j); return [posData[v], posData[v + 1], posData[v + 2]]; };
               const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
               const c = [dist(at(NR, NT / 8), at(NR, 5 * NT / 8)), dist(at(NR, 3 * NT / 8), at(NR, 7 * NT / 8))];
-              const t = TRIPLE_VERTS.map((v) => [posData[v], posData[v + 1], posData[v + 2]]);
+              const t = tripleVerts().map((v) => [posData[v], posData[v + 1], posData[v + 2]]);
               return { corners: Math.max(...c), triple: Math.max(dist(t[0], t[1]), dist(t[1], t[2]), dist(t[0], t[2])) };
             })()"""
         )
