@@ -31,6 +31,9 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ## Active Work
 
+- P3 review: recover board height, lock standard-window legend visibility,
+  and retain full-size Ready and seeded midgame evidence for both layouts.
+
 - Graphical language P3: implement direct cockpit launch with Play · 2D
   defaults, last Play/Explore view and dimension, and explicit Start in Play.
   Lock the approved Concept A cockpit and cover the selectable Concept B

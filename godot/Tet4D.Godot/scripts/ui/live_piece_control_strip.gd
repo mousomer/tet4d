@@ -15,6 +15,7 @@ const ControlLegendGlyphScript = preload("res://scripts/ui/control_legend_glyph.
 const LAYOUT_DECK := "deck"
 const LAYOUT_RAIL := "rail"
 const LAYOUT_WIDE := "wide"
+const LAYOUT_COMPACT := "compact"
 # Under view-relative controls the plane letters name screen directions
 # (x sideways, y up, z depth, w the slice row), so a turn is named by what it
 # mixes, and its glyph lights those directions. The letters stay as a tag.
@@ -89,7 +90,7 @@ func configure(mode: String, basis_snapshot: Dictionary = {}, control_frame: Dic
 	_requested_layout = layout
 	if _detached_layout and layout == LAYOUT_WIDE:
 		layout = LAYOUT_RAIL
-	var legend := layout in [LAYOUT_RAIL, LAYOUT_WIDE]
+	var legend := layout != LAYOUT_DECK
 	var groups: Array = authority.play_legend_groups(mode, basis_snapshot, control_frame) if legend else authority.piece_control_groups(mode, basis_snapshot, control_frame)
 	if practice:
 		groups = authority.explorer_profile(int(mode.trim_prefix("live_").trim_suffix("d")), basis_snapshot, control_frame).piece_groups
@@ -208,6 +209,16 @@ func _rebuild() -> void:
 		child.queue_free()
 	_glyphs.clear()
 	_resort_host.call_deferred()
+	if _layout == LAYOUT_COMPACT:
+		for group in _groups:
+			var role := str(group.get("cockpit_role", ""))
+			for item in _merged_items(group.get("items", [])):
+				var row := _legend_row(_semantic_row(role, item), 0.0)
+				row.size_flags_horizontal = Control.SIZE_FILL
+				(row.get_node("LegendOperation") as Label).size_flags_horizontal = Control.SIZE_FILL
+				_groups_box.add_child(row)
+		rebuilt.emit()
+		return
 	if _layout in [LAYOUT_RAIL, LAYOUT_WIDE]:
 		_rebuild_rail()
 		rebuilt.emit()
@@ -280,7 +291,7 @@ func _slice_positive_points_left() -> bool:
 
 
 func _set_layout(layout: String) -> void:
-	var next_layout := layout if layout in [LAYOUT_RAIL, LAYOUT_WIDE] else LAYOUT_DECK
+	var next_layout := layout if layout in [LAYOUT_RAIL, LAYOUT_WIDE, LAYOUT_COMPACT] else LAYOUT_DECK
 	_title.visible = next_layout == LAYOUT_DECK
 	if next_layout == _layout:
 		return
@@ -288,9 +299,9 @@ func _set_layout(layout: String) -> void:
 	# The rail and the 4D deck both scroll as a whole, so the legend must report
 	# its true height: a nested auto-scroll reports none, which left the deck
 	# sizing to a guess and the legend scrolling even when it had room.
-	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED if _layout in [LAYOUT_RAIL, LAYOUT_WIDE] else ScrollContainer.SCROLL_MODE_AUTO
+	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO if _layout == LAYOUT_DECK else ScrollContainer.SCROLL_MODE_DISABLED
 	for side in ["top", "bottom"]:
-		_margin.add_theme_constant_override("margin_%s" % side, 2 if _layout == LAYOUT_RAIL else 6)
+		_margin.add_theme_constant_override("margin_%s" % side, 2 if _layout in [LAYOUT_RAIL, LAYOUT_COMPACT] else 6)
 	var parent := _groups_box.get_parent()
 	parent.remove_child(_groups_box)
 	_groups_box.queue_free()
@@ -299,7 +310,7 @@ func _set_layout(layout: String) -> void:
 
 
 func _new_groups_box(layout: String) -> Container:
-	if layout == LAYOUT_WIDE:
+	if layout in [LAYOUT_WIDE, LAYOUT_COMPACT]:
 		# Sections wrap onto another line in a narrow window rather than forcing
 		# the deck wider than the window.
 		var flow := HFlowContainer.new()

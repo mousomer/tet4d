@@ -122,6 +122,14 @@ func _check_p3_game(tree: SceneTree) -> Array:
 						failures.append("%s must keep controls beside the board" % name)
 				elif legend.position.y < board.end.y - 1.0:
 					failures.append("%s must keep controls below the board" % name)
+				if size == SIZES[0]:
+					var minimums := {"live_2d": 0.66, "live_3d": 0.67, "live_4d": 0.45} if header_stats else {"live_2d": 0.72, "live_3d": 0.72, "live_4d": 0.47}
+					var projected: Vector2 = app._camera_rig.drawn_content_size(hud.board_viewport_size().y)
+					if projected.y < float(size.y) * float(minimums[mode]):
+						failures.append("%s projected board is too short: %.1f px" % [name, projected.y])
+					var deck: ScrollContainer = hud._live_cockpit.deck_scroll
+					if deck.get_v_scroll_bar().visible or deck.get_h_scroll_bar().visible or hud._live_cockpit.deck_fit.fit_scale < 0.99:
+						failures.append("%s must show the complete legend at its standard scale" % name)
 				if hud._piece_preview_row.columns != 1 or not hud._piece_preview_row.is_visible_in_tree():
 					failures.append("%s must keep stacked NEXT and HOLD reachable" % name)
 	var reloaded = hud._settings_store.get_script().new(hud._settings_registry, hud._settings_store._storage_path)

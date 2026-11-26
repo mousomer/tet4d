@@ -925,6 +925,8 @@ func _uses_side_rail() -> bool:
 
 
 func _piece_legend_layout() -> String:
+	if not _design_affordances_enabled and not _explorer_cockpit.active:
+		return LivePieceControlStripScript.LAYOUT_COMPACT
 	if _uses_side_rail():
 		return LivePieceControlStripScript.LAYOUT_RAIL
 	if not _design_affordances_enabled:

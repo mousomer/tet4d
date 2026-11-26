@@ -1,13 +1,18 @@
 # P3 cockpit layout comparisons
 
-Each windowed comparison shows Concept A on the left and Concept B on the
-right. Both runs use the Luminous theme, seed 1337, and the same scripted
-moves and drops within each dimension. Source captures were taken at
-2880 × 1800 backing pixels on a Retina display.
+Windowed captures use the Luminous theme, seed 1337 and the same six drops,
+one Hold and three gravity ticks for each layout. The game-state hashes
+match between layouts in every dimension. The originals are 2880 × 1800
+backing pixels at a 1440 × 900 Retina window. The comparisons show
+Concept A on the left and Concept B on the right.
 
-- [2D](layouts-2d.png)
-- [3D](layouts-3d.png)
-- [4D](layouts-4d.png)
+| State | Comparison | Concept A original | Concept B original |
+| --- | --- | --- | --- |
+| Ready | [Pair](layouts-ready.png) | [Full size](concept-a-ready.png) | [Full size](concept-b-ready.png) |
+| 2D | [Pair](layouts-2d.png) | [Full size](concept-a-2d.png) | [Full size](concept-b-2d.png) |
+| 3D | [Pair](layouts-3d.png) | [Full size](concept-a-3d.png) | [Full size](concept-b-3d.png) |
+| 4D | [Pair](layouts-4d.png) | [Full size](concept-a-4d.png) | [Full size](concept-b-4d.png) |
 
-The owner approved both layouts, with Concept A as the default.
-Both layouts keep separate W slices in 4D.
+The owner approved both cockpit arrangements, with Concept A as the default
+and separate W slices in both. These captures include the narrower controls
+legend added after that review.

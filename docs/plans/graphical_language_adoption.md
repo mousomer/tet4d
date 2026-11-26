@@ -155,6 +155,9 @@ describes the older "calm instrument" look.
 - Re-baseline `test_locked_shell_layouts.gd` in this PR with the
   owner-accepted rectangles, keeping its reachability, no-clipping, focus and
   small-window checks.
+- P3 review checks cover projected board height and complete legends at the
+  standard capture window. Full-size ready and seeded midgame captures show
+  both layout choices. Smaller windows may scroll the helper deck.
 - Retire the `plain` and `tron` themes; keep `diagnostic` and High Contrast.
 
 ### P4 — 4D views (deferred)
