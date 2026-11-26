@@ -486,7 +486,8 @@ class ProjectivePlane(Surface):
     name, title = "projective-plane", "projective plane (Boy's surface)"
     chi, gluing = 1, "both pairs flipped (a b a b)"
     alpha_min, fade_from, cam_end = 0.48, 0.5, (-58.0, 25.0)
-    edges: ClassVar = [(TOP, BLUE), (BOTTOM, BLUE), (LEFT, ORANGE), (RIGHT, ORANGE)]
+    # edge a (top/bottom) orange, edge b (left/right) blue: as in the 14-stage sequence and the viewer
+    edges: ClassVar = [(TOP, ORANGE), (BOTTOM, ORANGE), (LEFT, BLUE), (RIGHT, BLUE)]
     corner_classes: ClassVar = {
         "TR": "white",
         "BL": "white",
@@ -715,10 +716,10 @@ def overview(out):
             ("right", ORANGE, (1, 1), (1, -1), False),
         ],
         "projective-plane": [
-            ("top", BLUE, (-1, 1), (1, 1), True),
-            ("bottom", BLUE, (1, -1), (-1, -1), True),
-            ("left", ORANGE, (-1, -1), (-1, 1), False),
-            ("right", ORANGE, (1, 1), (1, -1), False),
+            ("top", ORANGE, (-1, 1), (1, 1), False),
+            ("bottom", ORANGE, (1, -1), (-1, -1), False),
+            ("left", BLUE, (-1, -1), (-1, 1), True),
+            ("right", BLUE, (1, 1), (1, -1), True),
         ],
     }
     names = {
