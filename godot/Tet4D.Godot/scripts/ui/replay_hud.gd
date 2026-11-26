@@ -10,6 +10,7 @@ const SettingsPanelScript = preload("res://scripts/ui/settings_panel.gd")
 const ShellStyleManagerScript = preload("res://scripts/ui/style/shell_style_manager.gd")
 const ShellControlStyleApplierScript = preload("res://scripts/ui/style/shell_control_style_applier.gd")
 const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
+const GraphicalLanguageConfigScript = preload("res://scripts/ui/style/graphical_language_config.gd")
 const ShellStyleRolesScript = preload("res://scripts/ui/style/shell_style_roles.gd")
 const LiveOnboardingModelScript = preload("res://scripts/ui/onboarding/live_onboarding_model.gd")
 const LiveOnboardingPanelScript = preload("res://scripts/ui/onboarding/live_onboarding_panel.gd")
@@ -3265,6 +3266,13 @@ func _set_game_cockpit_visible(visible_in_game: bool) -> void:
 	_cockpit_nav.visible = visible_in_game
 	_cockpit_footer.visible = visible_in_game
 	_top_bar.visible = not visible_in_game
+	if visible_in_game != _game_area.has_meta("cockpit_frame_padding"):
+		if visible_in_game:
+			_game_area.set_meta("cockpit_frame_padding", GraphicalLanguageConfigScript.integer("cockpit.board.frame_padding"))
+		else:
+			_game_area.remove_meta("cockpit_frame_padding")
+		if _style_manager != null:
+			_style_applier.apply_panel(_game_area, _style_manager)
 	var host: Container = _cockpit_actions if visible_in_game else _legacy_actions
 	for button in [_restart_game_button, _new_random_game_button, _change_setup_button]:
 		if button.get_parent() != host:

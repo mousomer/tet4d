@@ -12,6 +12,7 @@ const STARTUP_CASE_CANDIDATES := [
 ]
 const REPLAY_BASE_FPS := 4.0
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
+const GraphicalLanguageConfigScript = preload("res://scripts/ui/style/graphical_language_config.gd")
 const TraceSceneRendererScript = preload("res://scripts/rendering/trace_scene_renderer.gd")
 const CameraRigScript = preload("res://scripts/rendering/camera_rig.gd")
 const AnimatedBackgroundScript = preload("res://scripts/rendering/animated_background.gd")
@@ -1164,6 +1165,9 @@ func _fit_view() -> void:
 	var content_boxes := _renderer.current_content_boxes()
 	if _mode in [MODE_LIVE_2D, MODE_LIVE_3D]:
 		margin = CameraRigScript.LIVE_2D_FIT_MARGIN if _mode == MODE_LIVE_2D else CameraRigScript.LIVE_3D_FIT_MARGIN
+		# The game cockpit trades 2D clearance for board; the Designer keeps its fit.
+		if _mode == MODE_LIVE_2D and not _is_designer_product():
+			margin = GraphicalLanguageConfigScript.number("cockpit.board.fit_margin_2d")
 		# The spawning piece is drawn above the board (world +Y is board-up), so
 		# those rows are content too; fitting only the board would clip it.
 		var headroom := Vector3(0.0, CameraRigScript.LIVE_2D_SPAWN_HEADROOM_ROWS, 0.0)

@@ -17,6 +17,8 @@ const REQUIRED_NUMBERS := [
 	"cockpit.inline_arrow.line_width",
 	"cockpit.compass_arrow_length",
 	"cockpit.plane_glyph_size",
+	"cockpit.board.frame_padding",
+	"cockpit.board.fit_margin_2d",
 	"luminous.board.active.whiten",
 	"luminous.board.active.cell_emission",
 	"luminous.board.active.face_emission",
