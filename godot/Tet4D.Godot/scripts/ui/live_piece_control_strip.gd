@@ -214,7 +214,8 @@ func _rebuild() -> void:
 			var role := str(group.get("cockpit_role", ""))
 			for item in _merged_items(group.get("items", [])):
 				var semantic := _semantic_row(role, item)
-				var row := _legend_row(semantic, 0.0)
+				var spatial_rotation := role == "rotate" and _mode in ["live_3d", "live_4d"]
+				var row := _rotation_row(semantic, 0.0) if spatial_rotation else _legend_row(semantic, 0.0)
 				if role == "translate":
 					_add_inline_movement_arrows(row, semantic["semantic"])
 				row.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_1)
@@ -530,13 +531,20 @@ func _legend_row(semantic: Dictionary, key_column: float, tag := "") -> HBoxCont
 
 func _rotation_row(semantic: Dictionary, key_column: float) -> HBoxContainer:
 	var plane := _rotation_plane(semantic)
-	# Plane names stay as a reference tag where the rail has room for them.
-	var row := _legend_row(semantic, key_column, "" if _layout == LAYOUT_WIDE else plane)
+	var inline := _layout == LAYOUT_COMPACT
+	# The compact footer uses the plane as its short label and keeps the verb on hover.
+	var row := _legend_row(semantic, key_column, plane if _layout == LAYOUT_RAIL else "")
+	if inline:
+		var operation := row.get_node("LegendOperation") as Label
+		row.mouse_filter = Control.MOUSE_FILTER_PASS
+		row.tooltip_text = "%s · %s" % [operation.text, plane]
+		operation.text = plane
 	var keys := row.get_node("LegendKeys")
-	var glyph := ControlLegendGlyphScript.plane(Array(plane.to_lower().split("")), keys.get_child(0) as Label)
+	var glyph := ControlLegendGlyphScript.plane(Array(plane.to_lower().split("")), keys.get_child(0) as Label, inline, not inline or _mode == "live_4d")
 	glyph.name = "LegendPlaneGlyph__%s" % plane
 	row.add_child(glyph)
 	row.move_child(glyph, 1)
+	glyph.set_directions(_screen_directions)
 	_glyphs.append(glyph)
 	return row
 

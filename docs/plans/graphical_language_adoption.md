@@ -157,7 +157,8 @@ describes the older "calm instrument" look.
   small-window checks.
 - P3 review checks cover the projected well outline without spawn headroom
   and complete legends at the standard capture window. The owner confirmed
-  compact footer controls with inline directional arrows for A and the
+  compact footer controls with inline movement arrows and rotation-plane
+  glyphs for A and the
   grouped legend with MOVE compass and rotation-plane glyphs and labels for B. Concept B pairs NEXT and HOLD
   across one row in 3D/4D to fit the legend at standard scale.
   Full-size ready and seeded midgame captures show both layout choices.

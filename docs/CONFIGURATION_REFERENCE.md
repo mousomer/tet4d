@@ -2769,6 +2769,7 @@ Parameters:
 - `cockpit.inline_arrow.line_width`: `2.0` (`float`)
 - `cockpit.inline_arrow.size`: `24.0` (`float`)
 - `cockpit.inline_arrow.span_factor`: `0.32` (`float`)
+- `cockpit.inline_plane_glyph_size`: `21.0` (`float`)
 - `cockpit.plane_glyph_size`: `30.0` (`float`)
 - `cockpit.stat_divider_thickness`: `1.0` (`float`)
 - `description`: `"Tuning values for the owner graphical language (docs/design/graphica...` (`string`)

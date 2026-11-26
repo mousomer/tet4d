@@ -17,6 +17,7 @@ const REQUIRED_NUMBERS := [
 	"cockpit.inline_arrow.line_width",
 	"cockpit.compass_arrow_length",
 	"cockpit.plane_glyph_size",
+	"cockpit.inline_plane_glyph_size",
 	"cockpit.empty_slot.dash_length",
 	"cockpit.empty_slot.dash_width",
 	"cockpit.stat_divider_thickness",

@@ -19,6 +19,8 @@ const KIND_PLANE := "plane"
 
 var kind := KIND_PLANE
 var _glyph_extent := 0.0
+var _plane_marker_scale := 1.0
+var _show_w_marker := true
 # Compass: [{"intent": String, "key": String}] in display order.
 var compass_keys: Array = []
 var movement_intent := ""
@@ -55,13 +57,17 @@ static func inline_arrow(intent: String, color_source: Label) -> ControlLegendGl
 	return glyph
 
 
-static func plane(axes: Array, color_source: Label) -> ControlLegendGlyph:
+static func plane(axes: Array, color_source: Label, inline: bool = false, include_w: bool = true) -> ControlLegendGlyph:
 	var glyph := ControlLegendGlyph.new()
 	glyph.name = "LegendPlaneGlyph"
 	glyph.kind = KIND_PLANE
 	glyph.plane_axes = axes.duplicate()
-	glyph._glyph_extent = GraphicalLanguageConfigScript.number("cockpit.plane_glyph_size")
-	glyph.custom_minimum_size = Vector2(glyph._glyph_extent + 8.0, glyph._glyph_extent)
+	var standard_size := GraphicalLanguageConfigScript.number("cockpit.plane_glyph_size")
+	glyph._glyph_extent = GraphicalLanguageConfigScript.number("cockpit.inline_plane_glyph_size") if inline else standard_size
+	glyph._plane_marker_scale = glyph._glyph_extent / standard_size
+	glyph._show_w_marker = include_w
+	var marker_width := 8.0 * glyph._plane_marker_scale if include_w else 0.0
+	glyph.custom_minimum_size = Vector2(glyph._glyph_extent + marker_width, glyph._glyph_extent)
 	glyph._color_source = color_source
 	return glyph
 
@@ -123,7 +129,8 @@ func _draw() -> void:
 				_arrow(center, center + direction * _glyph_extent, lit, 2.5)
 		return
 	var dim := Color(lit, 0.28)
-	var center := Vector2(_glyph_extent * 0.5, _glyph_extent * 0.5)
+	var vertical_offset := (size.y - _glyph_extent) * 0.5 if _plane_marker_scale != 1.0 else 0.0
+	var center := Vector2(_glyph_extent * 0.5, _glyph_extent * 0.5 + vertical_offset)
 	var reach := _glyph_extent * 0.42
 	for axis in ["x", "y", "z"]:
 		var direction: Vector2 = _directions.get(axis, Vector2.ZERO)
@@ -132,11 +139,14 @@ func _draw() -> void:
 		var on: bool = axis in plane_axes
 		# Rotations have no single direction here, so lit axes are two-sided lines.
 		draw_line(center - direction * reach, center + direction * reach, lit if on else dim, 3.0 if on else 1.5, true)
-	if _directions.has("w"):
+	if _show_w_marker and _directions.has("w"):
 		# W has no screen direction of its own: it is the row of slice boards.
 		var on: bool = "w" in plane_axes
 		for index in range(3):
-			var box := Rect2(Vector2(_glyph_extent + 1.0, 6.0 + float(index) * 7.0), Vector2(6.0, 5.0))
+			var box := Rect2(
+				Vector2(_glyph_extent + _plane_marker_scale, vertical_offset + (6.0 + float(index) * 7.0) * _plane_marker_scale),
+				Vector2(6.0, 5.0) * _plane_marker_scale
+			)
 			if on:
 				draw_rect(box, lit, true)
 			else:

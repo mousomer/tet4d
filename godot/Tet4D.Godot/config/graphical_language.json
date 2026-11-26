@@ -9,6 +9,7 @@
     },
     "compass_arrow_length": 34.0,
     "plane_glyph_size": 30.0,
+    "inline_plane_glyph_size": 21.0,
     "empty_slot": {
       "dash_length": 22.0,
       "dash_width": 2.0

@@ -171,6 +171,17 @@ func _check_p3_game(tree: SceneTree) -> Array:
 						for arrow in arrows:
 							if arrow.directions().get(arrow.movement_intent, Vector2.ZERO) == Vector2.ZERO:
 								failures.append("%s is missing a direction for %s" % [name, arrow.movement_intent])
+						var rotation_glyphs := controls.find_children("LegendPlaneGlyph__*", "Control", true, false)
+						if rotation_glyphs.size() != expected_planes:
+							failures.append("%s must provide one footer glyph per rotation pair" % name)
+						var rotation_groups := {}
+						for glyph in rotation_glyphs:
+							var group := glyph.get_parent()
+							var key_group := group.get_node("LegendKeys")
+							var plane_label := group.get_node("LegendOperation") as Label
+							if group.get_parent() != hud._piece_control_strip._groups_box or rotation_groups.has(group) or key_group.get_child_count() != 2 or plane_label.text != glyph.plane_name():
+								failures.append("%s must keep each rotation pair, glyph and plane label in one group" % name)
+							rotation_groups[group] = true
 	var reloaded = hud._settings_store.get_script().new(hud._settings_registry, hud._settings_store._storage_path)
 	reloaded.load_settings()
 	if reloaded.value("display.cockpit_layout") != "concept_b":

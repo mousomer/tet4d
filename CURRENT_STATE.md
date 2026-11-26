@@ -17,7 +17,8 @@ P3 keeps the approved Concept A cockpit as the default and offers Concept B
 with header stats and side controls. Both keep separate W slices. P3 review follow-up covers board allocation,
 legend visibility and full-size capture evidence. The layout lock measures
 well outlines separately from camera-fit padding. The owner directed
-compact footer controls with inline movement arrows for A and grouped
+compact footer controls with inline movement arrows and rotation-plane
+glyphs for A and grouped
 spatial controls for B. Follow-up covers preview captions, compact-footer
 spacing and player-facing W-slice labels. The latest review integrates the
 larger wells, empty HOLD slot and Concept B stats header. Tighter W gutters

@@ -44,15 +44,21 @@ func _go() -> void:
 		app.set_process(false)
 		for i in 6: await process_frame
 		var plan: Array = PLAN_2D if mode == "live_2d" else PLAN_ND
+		# Capture uses canonical board commands so window focus and camera fit
+		# cannot change the seeded state between layouts.
+		var command := Callable(app, "_live_command" if p3 else "_dispatch_live_command")
+		var movement := command if p3 else Callable(app, "_dispatch_live_control_intent")
 		for step in (plan.slice(0, 6) if p3 else plan):
 			for n in int(step[1]):
-				app._dispatch_live_control_intent(mode, step[0])
-			app._dispatch_live_command(mode, "hard_drop")
+				movement.call(mode, step[0])
+			command.call(mode, "hard_drop")
 			await process_frame
 		if p3:
-			app._dispatch_live_command(mode, "hold")
+			command.call(mode, "hold")
 			for i in 3:
-				app._dispatch_live_command(mode, "tick")
+				command.call(mode, "tick")
+			app._set_live_pause_states(mode)
+			app._refresh_hud()
 			print(mode, " state hash=", app._live_bridge.live_state_hash(app._live_dimension(mode)))
 		for i in 30: await process_frame
 		app._publish_legend_screen_directions()
