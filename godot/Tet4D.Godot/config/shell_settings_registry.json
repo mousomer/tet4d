@@ -109,7 +109,7 @@
       ],
       "semantic_owner": "HUD_PRESENTATION",
       "accessibility_classification": "accessibility_composable",
-      "runtime_applicability": ["live_2d", "live_3d", "live_4d"],
+      "runtime_applicability": ["shell"],
       "authority": "godot_shell",
       "persistence": "local_shell",
       "persist": true

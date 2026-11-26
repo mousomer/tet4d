@@ -299,14 +299,14 @@
 			"Button|ResetAccessibilitySettingsButton|SettingsContent||18|Open Sans SemiBold|600|chrome": 1,
 			"Button|ResetDisplaySettingsButton|SettingsContent||18|Open Sans SemiBold|600|chrome": 1,
 			"Label|SectionHeader|SettingsContent|AccentLabel|16|Open Sans SemiBold|600|chrome": 7,
-			"Label|SettingDescription|VBoxContainer|DimLabel|16|Open Sans SemiBold|600|chrome": 27,
-			"Label|SettingLabel|VBoxContainer|SecondaryLabel|16|Open Sans SemiBold|600|chrome": 27,
+			"Label|SettingDescription|VBoxContainer|DimLabel|16|Open Sans SemiBold|600|chrome": 28,
+			"Label|SettingLabel|VBoxContainer|SecondaryLabel|16|Open Sans SemiBold|600|chrome": 28,
 			"Label|SettingsPersistenceStatus|SettingsIntro|DimLabel|16|Open Sans SemiBold|600|chrome": 1,
 			"Label|SettingsScreenTitle|HFlowContainer|AccentLabel|24|Open Sans SemiBold|600|chrome": 1,
 			"Label|SettingsSubtitle|SettingsIntro|DimLabel|16|Open Sans SemiBold|600|chrome": 1,
 			"Label|SettingsTitle|SettingsIntro|AccentLabel|24|Open Sans SemiBold|600|chrome": 1,
 			"Label|ValueLabel|SettingControl||16|Open Sans SemiBold|600|chrome": 10,
-			"OptionButton|SettingControl|SettingRowContent||18|Open Sans SemiBold|600|chrome": 8
+			"OptionButton|SettingControl|SettingRowContent||18|Open Sans SemiBold|600|chrome": 9
 		},
 		"1280x720/setup_live_2d": {
 			"Button|BackButton|SecondaryActions||24|Open Sans SemiBold|600|": 1,
@@ -615,14 +615,14 @@
 			"Button|ResetAccessibilitySettingsButton|SettingsContent||18|Open Sans SemiBold|600|chrome": 1,
 			"Button|ResetDisplaySettingsButton|SettingsContent||18|Open Sans SemiBold|600|chrome": 1,
 			"Label|SectionHeader|SettingsContent|AccentLabel|16|Open Sans SemiBold|600|chrome": 7,
-			"Label|SettingDescription|VBoxContainer|DimLabel|16|Open Sans SemiBold|600|chrome": 27,
-			"Label|SettingLabel|VBoxContainer|SecondaryLabel|16|Open Sans SemiBold|600|chrome": 27,
+			"Label|SettingDescription|VBoxContainer|DimLabel|16|Open Sans SemiBold|600|chrome": 28,
+			"Label|SettingLabel|VBoxContainer|SecondaryLabel|16|Open Sans SemiBold|600|chrome": 28,
 			"Label|SettingsPersistenceStatus|SettingsIntro|DimLabel|16|Open Sans SemiBold|600|chrome": 1,
 			"Label|SettingsScreenTitle|HFlowContainer|AccentLabel|24|Open Sans SemiBold|600|chrome": 1,
 			"Label|SettingsSubtitle|SettingsIntro|DimLabel|16|Open Sans SemiBold|600|chrome": 1,
 			"Label|SettingsTitle|SettingsIntro|AccentLabel|24|Open Sans SemiBold|600|chrome": 1,
 			"Label|ValueLabel|SettingControl||16|Open Sans SemiBold|600|chrome": 10,
-			"OptionButton|SettingControl|SettingRowContent||18|Open Sans SemiBold|600|chrome": 8
+			"OptionButton|SettingControl|SettingRowContent||18|Open Sans SemiBold|600|chrome": 9
 		},
 		"1280x800/setup_live_2d": {
 			"Button|BackButton|SecondaryActions||24|Open Sans SemiBold|600|": 1,
