@@ -1,8 +1,8 @@
 # Boy's surface viewer: design
 
-The viewer is one self-contained HTML file (`boys-surface-viewer.html`, about 1,650 lines). It
-combines inline CSS, the WebGL2 renderer in plain JavaScript, and two embedded, compressed data
-fields (the slimming flow and the membrane map). It has no build step, makes no network requests and has no dependencies, so the file can be
+The viewer is one self-contained HTML file (`boys-surface-viewer.html`, about 1,700 lines, 290 KB). It
+combines inline CSS, the WebGL2 renderer in plain JavaScript, and three embedded, compressed data
+fields (the slimming flow, the membrane map and the gap map). It has no build step, makes no network requests and has no dependencies, so the file can be
 opened locally or hosted as is.
 
 ## 1. Goals
@@ -111,8 +111,8 @@ from outside into the central cavity are hairlines.
 **Status:**
 - **Thinning works.** At slider value 1 the lobe interiors are clearly slimmer. The slider stops
   at 1.3, because ripples from the field's grid show beyond that.
-- **Opening does not work yet.** The slits are about 0.06 units wide, roughly one voxel, so the
-  field cannot resolve them. Widening the gaps to tube width needs a different method (§7).
+- **Opening barely works.** The slits are about 0.06 units wide, roughly one voxel, so the field
+  cannot resolve them. The Gap Width control (§2.5) does this job instead.
 
 **Reproducibility.** [`tools/slimming_field.py`](tools/slimming_field.py) builds the field from
 scratch in about two minutes, and `--embed` rewrites the page. It regenerates the embedded field byte
@@ -126,6 +126,51 @@ for byte.
   pixels shift slightly at edges.
 - **From v17 on,** the committed recipe defines the field. The fold check (§2.2) and the browser
   checks pass with it.
+
+### 2.5 Gap Width
+
+**Problem:** the slits between the tubes and the central area are hairlines, about 0.074 wide at the
+median. The tubes are about 0.26 across.
+
+**Ruled out: pushing the surface directly.** A first prototype pushed each slit's two walls apart,
+as a displacement stored per point of the disk. It failed for three reasons:
+- **The slits hug the self-intersection curve.** Freezing a buffer around the curve, to keep it in
+  place, also froze most of each slit.
+- **Collisions:** pushed walls collided with other sheets.
+- **Shape dependence:** a displacement computed on the default shape created new contacts at other
+  slimming values.
+
+**The approach that works: a map of space.** Like every other shape control, the gap is a map of
+space, x ↦ x + g·Δ(x), applied after slimming. Built by
+[`tools/gap_field.py`](tools/gap_field.py), in about eight minutes:
+1. **Slit walls:** on the slimmed surface, pairs of points under 0.10 apart, far apart on the disk,
+   with facing normals, away from the self-intersection curve. There are 6,068 pairs.
+2. **Stretchers:** 589 of them along the slits' mid-surface, one per 0.025 cell. Each sits at the
+   mean midpoint and points across the slit (the dominant eigenvector of the pair directions).
+3. **The velocity field** V(x) = A Σₖ gₖ(x) ((x − mₖ)·nₖ) nₖ / (Σₖ gₖ + 0.05) · min(1, Σₖ gₖ/0.5):
+   - The gₖ are anisotropic Gaussians, 0.10 across a slit and 0.07 along it.
+   - V stretches space across each slit.
+   - It is quadratic in nₖ, so the normals' signs don't matter.
+   - Being analytic, it resolves slits far thinner than any voxel grid.
+4. **Δ** is the time-1 flow of V minus the identity, with A = 1.4. It is sampled on a 96³ grid
+   around the surface and is zero away from the slits, so it packs to 123 KB. The slits open from a
+   median width of 0.074 to 0.26.
+
+**Why it is safe.**
+- **A true map of space:** det(I + g ∇Δ) > 0 holds for g from 0.05 to 1 over the whole grid, with
+  minimum 0.045 on the packed 8-bit grid. So x + gΔ(x) is a map of space at every slider value.
+- **No new crossings, on any shape.** Because it is a map of space, the surface gains no new
+  self-intersections, and the self-intersection curve stays on the same disk points.
+- **Shared data stays exact:** the membrane and curve data, the glue slider and the fold check all
+  remain valid.
+- **Checked numerically:** with the viewer's interpolation, the surface stays an immersion and gains
+  no new contacts at slimming 0, 0.65, 1 and 1.3, each at half and full gap. The one exception is a
+  single near-touch at maximum slimming and full gap.
+- **The fold check includes it:** the gap at 0 and 1, across all the other sliders.
+
+**Presets:** *Classic* sets the gap to 0; *Reference look* and *Slim tubes* set it to 1.
+
+**Cost:** at full strength, nearby sheets crease gently (§7).
 
 ## 3. Rendering
 
@@ -296,7 +341,7 @@ including the view.
 ## 6. Testing
 
 [`tools/check_viewer.py`](tools/check_viewer.py) runs the checks below in headless Chrome with
-SwiftShader, so no GPU is needed. It runs 24 checks and exits non-zero on any failure.
+SwiftShader, so no GPU is needed. It runs 26 checks and exits non-zero on any failure.
 
 The page exposes a small hook, `window.__boy`, with these members:
 - `set(params)` and `pose({rotX, rotY, spin, panX, panY})` change parameters and the view.
@@ -321,14 +366,11 @@ It covers:
 
 ## 7. Known limitations and next steps
 
-- **Gap widening:** the slits are still hairlines (§2.4). The planned method works on the surface,
-  not the voxel grid:
-  1. Find pairs of points that are close in space but far apart in the domain, with near-parallel
-     facing normals. That condition excludes the genuine self-crossings, which must stay.
-  2. Push each pair apart toward tube width.
-  3. Smooth the push on the disk while respecting the antipodal seam.
-  4. Apply it in small steps, checking after each that the surface still never folds or pinches.
-  5. Expose it as a Gap Width slider.
+- **Wrinkles at full Gap Width:** stretching slits that hug the self-intersection curve to about four
+  times their width leaves gentle creases on nearby sheets, and the glued-edge paint breaks up where
+  the stretch is strongest. Wider, smoother stretchers did not help and thinned the determinant
+  margin (§2.5). A cleaner result would need a different construction, for example moving the
+  self-intersection curve too and recomputing the membrane data for each gap value.
 - **Membrane rings near the triple point:** the smoothing rounds the cut slightly where the three
   curves meet.
 - **Blog version:** the CodePen panes used for embedding on a blog were made from an earlier
@@ -350,3 +392,4 @@ It covers:
 | v15 | Self-intersection curve and triple point toggle. Light outline on the black corner. Committed browser checks (`tools/check_viewer.py`). |
 | v16 | Glue slider and ▶: the square-to-Boy's construction on the live surface. Numerical fold check of the shape controls (`tools/fold_check.py`). |
 | v17 | Slimming field rebuilt by a committed, reproducible generator (`tools/slimming_field.py`), visually identical to v16. |
+| v18 | Gap Width: an analytic map of space that opens the slits to about the tubes' width (`tools/gap_field.py`). Fold check and browser checks extended. |

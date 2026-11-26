@@ -31,7 +31,10 @@ ARGS = [
     "--enable-unsafe-swiftshader",
     "--ignore-gpu-blocklist",
 ]
-READY = "window.__boy !== undefined && window.__boy.stats.flowReady && window.__boy.stats.membraneReady"
+READY = (
+    "window.__boy !== undefined && window.__boy.stats.flowReady && window.__boy.stats.membraneReady"
+    " && window.__boy.stats.gapReady"
+)
 
 results = []
 
@@ -82,6 +85,8 @@ async def run(chrome, page):
             "preset Slim tubes sets slimming 1.3",
             await ev("window.__boy.P.slim") == 1.3,
         )
+        await pg.select_option("#preset", "classic")
+        check("preset Classic sets gap width 0", await ev("window.__boy.P.gap") == 0)
         await pg.fill("#len", "1.1")
         await pg.dispatch_event("#len", "input")
         check(
@@ -108,7 +113,7 @@ async def run(chrome, page):
             "Reset restores the defaults",
             await ev(
                 "(() => { const P = window.__boy.P; return P.membranes === 'removed' && P.gridType === 'square'"
-                " && P.edges && P.corners && !P.curves && P.axis === 'sym' && P.glue === 1; })()"
+                " && P.edges && P.corners && !P.curves && P.axis === 'sym' && P.glue === 1 && P.gap === 1; })()"
             )
             and await pg.eval_on_selector("#preset", "e => e.value") == "reference",
         )
@@ -151,6 +156,7 @@ async def run(chrome, page):
                 "{edges: false, corners: false}",
                 "{edges: true, corners: true}",
             ),
+            ("gap width 0", "{gap: 0}", "{gap: 1}"),
         ):
             await ev(f"window.__boy.set({on})")
             img = await shot(pg)

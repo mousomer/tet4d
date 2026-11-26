@@ -4,11 +4,13 @@ Usage:  python fold_check.py [--page VIEWER.html] [--steps N]
 
 Requires numpy and scipy.
 
-The viewer's shape chain is (1) the flow of the embedded slimming field, then (2) one map of space for
-lobe width, length, thickness and twist. The flow is a diffeomorphism by construction. The map in (2)
+The viewer's shape chain is (1) the flow of the embedded slimming field, (2) the gap map
+x -> x + g Delta(x), then (3) one map of space for lobe width, length, thickness and twist. The flow is a
+diffeomorphism by construction. For (2) this tool checks det(I + g grad Delta) > 0 on its whole grid for
+g in [0.05, 1]. The map in (3)
 keeps the surface an immersion wherever its Jacobian determinant stays positive, because composing an
 immersion with a local diffeomorphism gives an immersion. This tool evaluates det J of the map (2) at
-every vertex of the viewer's mesh, after the flow, for a grid of slider values covering each slider's
+every vertex of the viewer's mesh, after the flow and the gap map, for a grid of slider values covering each slider's
 full range. It reports the smallest determinant per slider and overall, and exits non-zero if the
 determinant reaches zero (a fold) anywhere.
 
@@ -40,6 +42,7 @@ RANGES = {  # slider ranges, as in the page's panel
     "twist": (-4.0, 4.0),
     "slim": (0.0, 1.3),
 }
+GAP_VALUES = (0.0, 1.0)
 
 
 def bar(i, n, label):
@@ -70,6 +73,38 @@ def read_flow(page):
     )
     G = meta["G"]
     return q.reshape(G, G, G, 3) * meta["scale"], np.array(meta["lo"]), meta["h"]
+
+
+def read_gap(page):
+    html = page.read_text(encoding="utf-8")
+    meta = json.loads(re.search(r"const GAP = (\{.*?\});", html).group(1))
+    G = meta["G"]
+    q = np.frombuffer(zlib.decompress(base64.b64decode(meta["data"])), np.int8).astype(
+        np.float64
+    )
+    return q.reshape(G, G, G, 3) * meta["scale"], np.array(meta["lo"]), meta["h"]
+
+
+def gap_map(P, gap, g):
+    """x + g Delta(x), trilinear, zero outside the grid (as in the page)."""
+    D, lo, h = gap
+    G = D.shape[0]
+    f = ((P - lo) / h).T
+    inside = np.all((f >= 0) & (f <= G - 1), axis=0)
+    d = np.stack(
+        [
+            ndimage.map_coordinates(D[..., a], f, order=1, mode="nearest")
+            for a in range(3)
+        ],
+        -1,
+    )
+    return P + g * d * inside[:, None]
+
+
+def gap_det_min(gap):
+    D, _, h = gap
+    J = np.stack([np.stack(np.gradient(D[..., c], h), -1) for c in range(3)], -2)
+    return min(np.linalg.det(np.eye(3) + g * J).min() for g in np.linspace(0.05, 1, 20))
 
 
 def flow(P, field, t, steps=10):
@@ -156,38 +191,50 @@ def main():
     )
     a = ap.parse_args()
     field = read_flow(Path(a.page))
+    gap = read_gap(Path(a.page))
+    gdet = gap_det_min(gap)
+    print(f"gap map: det(I + g grad Delta) min over g in [0.05, 1] = {gdet:.4f}")
     r = np.repeat(np.arange(NR + 1) / NR, NT + 1)
     t = np.tile(2 * np.pi * np.arange(NT + 1) / NT, NR + 1)
     base = bk(r * np.exp(1j * t))
     vals = {k: np.linspace(lo, hi, a.steps) for k, (lo, hi) in RANGES.items()}
     flowed = {}
     for i, sl in enumerate(vals["slim"]):
-        flowed[sl] = flow(base, field, sl)
-        bar(i + 1, len(vals["slim"]), "slimming flow")
+        f = flow(base, field, sl)
+        for g in GAP_VALUES:
+            flowed[(sl, g)] = gap_map(f, gap, g)
+        bar(i + 1, len(vals["slim"]), "slimming flow + gap map")
+    vals["gap"] = np.array(GAP_VALUES)
     keys = ["len", "wid", "thk", "twist"]
-    combos = list(itertools.product(*[vals[k] for k in keys], vals["slim"]))
-    worst = {k: {v: np.inf for v in vals[k]} for k in [*keys, "slim"]}
+    combos = list(
+        itertools.product(*[vals[k] for k in keys], vals["slim"], vals["gap"])
+    )
+    worst = {k: {v: np.inf for v in vals[k]} for k in [*keys, "slim", "gap"]}
     overall = (np.inf, None)
-    for n, (ln, wd, th, tw, sl) in enumerate(combos):
+    for n, (ln, wd, th, tw, sl, gp) in enumerate(combos):
         s = {"len": ln, "wid": wd, "thk": th, "twist": tw}
-        B = flowed[sl]
+        B = flowed[(sl, gp)]
         det = jac_det(B, params(B, r, s)).min()
-        for k, v in (*zip(keys, (ln, wd, th, tw), strict=True), ("slim", sl)):
+        for k, v in (
+            *zip(keys, (ln, wd, th, tw), strict=True),
+            ("slim", sl),
+            ("gap", gp),
+        ):
             worst[k][v] = min(worst[k][v], det)
         if det < overall[0]:
-            overall = (det, {**s, "slim": sl})
+            overall = (det, {**s, "slim": sl, "gap": gp})
         if (n + 1) % 125 == 0 or n + 1 == len(combos):
             bar(n + 1, len(combos), "slider combinations")
     print(
         "smallest det J of the shape map over the surface, worst case across the other sliders:"
     )
-    for k in [*keys, "slim"]:
+    for k in [*keys, "slim", "gap"]:
         row = "  ".join(f"{v:+.2f}:{d:.3f}" for v, d in worst[k].items())
         print(f"  {k:>5}  {row}")
     det, at = overall
     at_s = ", ".join(f"{k}={v:.2f}" for k, v in at.items())
     print(f"overall minimum det J = {det:.4f} at {at_s}")
-    if det <= 0:
+    if det <= 0 or gdet <= 0:
         print(
             "FOLD: the shape map is not a local diffeomorphism somewhere on the surface"
         )

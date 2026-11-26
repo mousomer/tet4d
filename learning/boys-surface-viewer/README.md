@@ -15,7 +15,7 @@ self-contained file with no network access and no dependencies.
 
 **Panel**
 - **Shape:** Glue (with ▶ to play it), presets, lobe length / width / thickness, interior slimming,
-  twist.
+  gap width, twist.
 - **Lines:** membranes (see below), square or polar parameter grid, the glued edges of the square, its
   corner points, and the self-intersection curve with its triple point.
 - **Material:** glass opacity, clarity, frost, gloss, rim depth, and the lobe colours.
@@ -41,6 +41,11 @@ it up.
 
 ![The Glue slider from 0 to 1](gluing.png)
 
+**Gap width.** The narrow slits between the tubes and the central area open to about the tubes' width
+(Gap Width 1, the default). Set it to 0 for the classic hairline slits.
+
+![Gap Width 0 and 1, at normal and at low opacity](gaps.png)
+
 **Self-intersections.** Tick *Self-Intersections* to draw where the surface passes through itself: three
 loops (gold) that all meet at the triple point (gold disc).
 
@@ -51,9 +56,11 @@ How it works, and why it is built this way: [DESIGN.md](DESIGN.md).
 **Tools**
 - [`tools/slimming_field.py`](tools/slimming_field.py) regenerates the page's embedded slimming
   field (about two minutes). It needs numpy and scipy.
+- [`tools/gap_field.py`](tools/gap_field.py) regenerates the page's embedded gap map (about eight
+  minutes). It needs numpy and scipy.
 - [`tools/membranes.py`](tools/membranes.py) regenerates the page's embedded membrane and curve
   data. It needs numpy and scipy.
 - [`tools/fold_check.py`](tools/fold_check.py) confirms that no setting of the shape sliders folds
   the surface. It needs numpy and scipy.
-- [`tools/check_viewer.py`](tools/check_viewer.py) runs 24 browser checks headless. It needs
+- [`tools/check_viewer.py`](tools/check_viewer.py) runs 26 browser checks headless. It needs
   playwright, pillow and numpy.
