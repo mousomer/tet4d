@@ -145,8 +145,10 @@ describes the older "calm instrument" look.
   existing `LiveCockpit`, `CockpitLayoutPolicy` and `LiveInputContract`
   groups. Dimensions differ only in which groups and labels the descriptors
   provide.
-- Present windowed 2D, 3D and 4D comparisons for owner review before changing
-  the layout lock. Concept A uses the stacked right column and full-width
+- The owner approved both layouts on 2026-11-26 and confirmed Concept A as
+  the default. Windowed comparisons for all three dimensions are in
+  `docs/design/screenshots/graphical_language_p3/`.
+  Concept A uses the stacked right column and full-width
   controls footer. Concept B uses the same previews with header stats and a
   scrollable controls rail. Both keep the status footer. The Designer retains
   its editing layout. On narrow windows, A uses the existing deck fallback.
