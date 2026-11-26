@@ -49,6 +49,8 @@ loops (gold) that all meet at the triple point (gold disc).
 How it works, and why it is built this way: [DESIGN.md](DESIGN.md).
 
 **Tools**
+- [`tools/slimming_field.py`](tools/slimming_field.py) regenerates the page's embedded slimming
+  field (about two minutes). It needs numpy and scipy.
 - [`tools/membranes.py`](tools/membranes.py) regenerates the page's embedded membrane and curve
   data. It needs numpy and scipy.
 - [`tools/fold_check.py`](tools/fold_check.py) confirms that no setting of the shape sliders folds

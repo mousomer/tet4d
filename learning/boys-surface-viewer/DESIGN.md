@@ -114,9 +114,18 @@ from outside into the central cavity are hairlines.
 - **Opening does not work yet.** The slits are about 0.06 units wide, roughly one voxel, so the
   field cannot resolve them. Widening the gaps to tube width needs a different method (§7).
 
-The offline generator was a set of exploratory scripts, and its final smoothing pass was never
-kept as a script. So the embedded field is the reference artefact, and this section records how it
-was made.
+**Reproducibility.** [`tools/slimming_field.py`](tools/slimming_field.py) builds the field from
+scratch in about two minutes, and `--embed` rewrites the page. It regenerates the embedded field byte
+for byte.
+- **The original field can't be rebuilt.** The field first shipped in v9 came from exploratory
+  scripts whose last smoothing pass was never saved. Fitting the pipeline's settings to it
+  recovered it only approximately.
+- **The committed recipe is the closest fit:** blur 4.0 voxels, interior gain 1.08, gap speed
+  0.135. Its surface differs from the original by at most 0.019 at slimming 1 and 0.031 at 1.3, on
+  an object about 2.6 wide. Rendered side by side, the two are indistinguishable by eye; about 3% of
+  pixels shift slightly at edges.
+- **From v17 on,** the committed recipe defines the field. The fold check (§2.2) and the browser
+  checks pass with it.
 
 ## 3. Rendering
 
@@ -340,3 +349,4 @@ It covers:
 | v14 | Membranes removed along the self-intersection curves, as in a Klein bottle. Per-pixel cut, rim ring, `tools/membranes.py`. |
 | v15 | Self-intersection curve and triple point toggle. Light outline on the black corner. Committed browser checks (`tools/check_viewer.py`). |
 | v16 | Glue slider and ▶: the square-to-Boy's construction on the live surface. Numerical fold check of the shape controls (`tools/fold_check.py`). |
+| v17 | Slimming field rebuilt by a committed, reproducible generator (`tools/slimming_field.py`), visually identical to v16. |
