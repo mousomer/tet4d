@@ -4,6 +4,7 @@ class_name PieceThumbnail
 
 const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 const ShellStyleRolesScript = preload("res://scripts/ui/style/shell_style_roles.gd")
+const GraphicalLanguageConfigScript = preload("res://scripts/ui/style/graphical_language_config.gd")
 
 const LABEL_HEIGHT := 18.0
 const GROUP_GAP := 8.0
@@ -22,6 +23,7 @@ var _geometry_revision := 0
 var _style_revision := 0
 var _compact_cockpit := false
 var _show_slice_offsets := true
+var _show_empty_slot := false
 
 
 func _init() -> void:
@@ -54,6 +56,13 @@ func set_compact_cockpit(enabled: bool) -> void:
 
 func set_show_slice_offsets(enabled: bool) -> void:
 	_show_slice_offsets = enabled
+	queue_redraw()
+
+
+# The game cockpit keeps an empty preview's frame, marked with a dash, so the
+# card reads as a slot instead of a blank.
+func set_show_empty_slot(enabled: bool) -> void:
+	_show_empty_slot = enabled
 	queue_redraw()
 
 
@@ -90,6 +99,12 @@ func _notification(what: int) -> void:
 
 func _draw() -> void:
 	if _model == null or not _model.is_available():
+		if _show_empty_slot:
+			var slot := Rect2(Vector2.ZERO, size).grow(-OUTER_PAD)
+			draw_rect(slot, _role_color(ShellStyleRolesScript.BACKGROUND_BOARD, Color(0.04, 0.05, 0.07, 1.0)), true)
+			draw_rect(slot, _role_color(ShellStyleRolesScript.GRID_MINOR, Color(0.35, 0.4, 0.48, 1.0)), false, 1.0)
+			var half_dash := Vector2(GraphicalLanguageConfigScript.number("cockpit.empty_slot.dash_length") * 0.5, 0.0)
+			draw_line(slot.get_center() - half_dash, slot.get_center() + half_dash, _role_color(ShellStyleRolesScript.TEXT_SECONDARY, Color(0.6, 0.65, 0.72, 1.0)), GraphicalLanguageConfigScript.number("cockpit.empty_slot.dash_width"))
 		return
 	var plan: Dictionary = renderer_plan(size)
 	for group_plan in plan.get("groups", []):

@@ -8,7 +8,19 @@
       "line_width": 2.0
     },
     "compass_arrow_length": 34.0,
-    "plane_glyph_size": 30.0
+    "plane_glyph_size": 30.0,
+    "empty_slot": {
+      "dash_length": 22.0,
+      "dash_width": 2.0
+    },
+    "stat_divider_thickness": 1.0,
+    "board": {
+      "frame_padding": 4.0,
+      "fit_margin_2d": 1.02,
+      "fit_margin_3d": 1.0,
+      "slice_gutter_scale": 0.5,
+      "slice_label_side_pad": 0.8
+    }
   },
   "luminous": {
     "board": {

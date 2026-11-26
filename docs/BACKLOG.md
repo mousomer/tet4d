@@ -34,7 +34,8 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 - P3 review: recover board height, lock standard-window legend visibility,
   highlight Start and retain full-size Ready and seeded midgame evidence for
   both layouts, with inline movement arrows in A and the grouped legend in B.
-  Assess the 4D slice allocation separately from the well-outline floors.
+  Preserve live-only tighter W spacing and the 1280 × 720 3D allocation
+  floor when integrating the reviewed cockpit refinements.
 
 - Graphical language P3: implement direct cockpit launch with Play · 2D
   defaults, last Play/Explore view and dimension, and explicit Start in Play.

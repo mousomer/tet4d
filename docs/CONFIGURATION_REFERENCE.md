@@ -2758,11 +2758,19 @@ Parameters:
 ### `godot/Tet4D.Godot/config/graphical_language.json`
 Top-level keys: `cockpit`, `description`, `luminous`, `schema_version`
 Parameters:
+- `cockpit.board.fit_margin_2d`: `1.02` (`float`)
+- `cockpit.board.fit_margin_3d`: `1.0` (`float`)
+- `cockpit.board.frame_padding`: `4.0` (`float`)
+- `cockpit.board.slice_gutter_scale`: `0.5` (`float`)
+- `cockpit.board.slice_label_side_pad`: `0.8` (`float`)
 - `cockpit.compass_arrow_length`: `34.0` (`float`)
+- `cockpit.empty_slot.dash_length`: `22.0` (`float`)
+- `cockpit.empty_slot.dash_width`: `2.0` (`float`)
 - `cockpit.inline_arrow.line_width`: `2.0` (`float`)
 - `cockpit.inline_arrow.size`: `24.0` (`float`)
 - `cockpit.inline_arrow.span_factor`: `0.32` (`float`)
 - `cockpit.plane_glyph_size`: `30.0` (`float`)
+- `cockpit.stat_divider_thickness`: `1.0` (`float`)
 - `description`: `"Tuning values for the owner graphical language (docs/design/graphica...` (`string`)
 - `luminous.board.active.cell_emission`: `0.85` (`float`)
 - `luminous.board.active.edge_emission`: `0.7` (`float`)

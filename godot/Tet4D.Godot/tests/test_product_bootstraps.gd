@@ -2,6 +2,8 @@ extends RefCounted
 
 const GAME_SCENE := preload("res://scenes/game_bootstrap.tscn")
 const DESIGNER_SCENE := preload("res://scenes/designer_bootstrap.tscn")
+const GraphicalLanguageConfigScript = preload("res://scripts/ui/style/graphical_language_config.gd")
+const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 
 
 func run() -> Array:
@@ -59,6 +61,19 @@ func run() -> Array:
 	game_hud = game_root.get_node("ReplayHud")
 	game_hud._cockpit_dimensions[2].pressed.emit()
 	_assert_p3_cockpit(game_hud, 4, failures)
+	var live_gap: float = game_app._renderer._presentation.projection.mapper.layer_layout.horizontal_gap
+	game_app._enter_replay_mode()
+	var replay_gap: float = game_app._renderer._presentation.projection.mapper.layer_layout.horizontal_gap
+	var gutter_scale := GraphicalLanguageConfigScript.number("cockpit.board.slice_gutter_scale")
+	var replay_side_pad: float = game_app._renderer._presentation.projection.mapper.label_side_pad
+	if game_app._renderer.presented_board_shape().size() != 4 or not is_equal_approx(live_gap, replay_gap * gutter_scale):
+		failures.append("4D replay must restore the canonical slice gutter after live Play")
+	if not is_equal_approx(replay_side_pad, ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD):
+		failures.append("4D replay must restore canonical fit clearance beside the slices")
+	game_hud.live_4d_requested.emit()
+	var reopened_gap: float = game_app._renderer._presentation.projection.mapper.layer_layout.horizontal_gap
+	if not is_equal_approx(live_gap, reopened_gap):
+		failures.append("returning to live 4D must restore the tighter slice gutter")
 	game_hud._cockpit_explore.pressed.emit()
 	if not game_hud._cockpit_explore.button_pressed or game_hud._cockpit_stats.visible:
 		failures.append("Explorer must reuse cockpit navigation and replace the Play stats")

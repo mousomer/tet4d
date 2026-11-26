@@ -164,6 +164,9 @@ describes the older "calm instrument" look.
   Caption checks cover paired preview cards, and inline arrow sizing lives
   in graphical-language config. Canonical labels read W slice 1, W slice 2,
   and so on. Other basis orientations retain their signed axis.
+  The game gives more space to the well and narrows the live 4D slice gutters.
+  Replay keeps canonical spacing. The 3D well retains the Stage 58B
+  allocation floor at 1280 × 720.
   Smaller windows may scroll the helper deck.
 - Retire the `plain` and `tron` themes; keep `diagnostic` and High Contrast.
 

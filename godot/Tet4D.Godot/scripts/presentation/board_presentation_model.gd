@@ -39,6 +39,12 @@ func configure(source_snapshot: Dictionary, basis = null, orientation = null, sp
 	)
 
 
+# Takes effect at the next configure(). The defaults are the canonical spacing.
+func set_slice_spacing(gutter_scale: float, label_side_pad: float) -> void:
+	projection.mapper.layer_layout.gutter_scale = gutter_scale
+	projection.mapper.label_side_pad = label_side_pad
+
+
 func current_bounds() -> Dictionary:
 	return projection.bounds
 

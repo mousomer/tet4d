@@ -41,7 +41,7 @@ func _configure_canonical_fit_scoring() -> void:
 	# Canonical L=identity keeps allocation stable during rotation. Use the same
 	# fitted camera and required attachments as content_slice_boxes()/Fit.
 	var extent: Vector3 = local["max"] - local["min"]
-	extent += Vector3(2.0 * ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD, ReplayVisuals.W_SLICE_LABEL_VERTICAL_BOUNDS_PAD + ReplayVisuals.ABOVE_BOARD_ACTIVE_BOUNDS_PAD, 2.0 * ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD)
+	extent += Vector3(2.0 * mapper.label_side_pad, ReplayVisuals.W_SLICE_LABEL_VERTICAL_BOUNDS_PAD + ReplayVisuals.ABOVE_BOARD_ACTIVE_BOUNDS_PAD, 2.0 * mapper.label_side_pad)
 	var camera_basis := CameraRigScript._fit_camera_basis(CameraRigScript.LIVE_4D_DISPLAY_YAW_RAD, CameraRigScript.LIVE_4D_DISPLAY_PITCH_RAD, 0.0)
 	var projected_extent := Vector2(camera_basis.x.abs().dot(extent), camera_basis.y.abs().dot(extent))
 	var layout = mapper.layer_layout
@@ -159,14 +159,14 @@ func content_slice_boxes(include_fit_padding: bool = true) -> Array:
 			# attachments on screen without recreating the phantom corners that
 			# padding the collection AABB produces.
 			box_min = Vector3(
-				box_min.x - ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD,
+				box_min.x - mapper.label_side_pad,
 				box_min.y - ReplayVisuals.W_SLICE_LABEL_VERTICAL_BOUNDS_PAD,
-				box_min.z - ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
+				box_min.z - mapper.label_side_pad
 			)
 			box_max = Vector3(
-				box_max.x + ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD,
+				box_max.x + mapper.label_side_pad,
 				box_max.y + ReplayVisuals.ABOVE_BOARD_ACTIVE_BOUNDS_PAD,
-				box_max.z + ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
+				box_max.z + mapper.label_side_pad
 			)
 		boxes.append({"min": box_min, "max": box_max})
 	return boxes
@@ -196,10 +196,10 @@ func _collection_bounds() -> Dictionary:
 			maxf(max_world.z, layer_max.z)
 		)
 	if dimension >= 4:
-		min_world.x -= ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
+		min_world.x -= mapper.label_side_pad
 		min_world.y -= ReplayVisuals.W_SLICE_LABEL_VERTICAL_BOUNDS_PAD
-		min_world.z -= ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
-		max_world.x += ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
+		min_world.z -= mapper.label_side_pad
+		max_world.x += mapper.label_side_pad
 		max_world.y += ReplayVisuals.ABOVE_BOARD_ACTIVE_BOUNDS_PAD
-		max_world.z += ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
+		max_world.z += mapper.label_side_pad
 	return {"ok": true, "min": min_world, "max": max_world}

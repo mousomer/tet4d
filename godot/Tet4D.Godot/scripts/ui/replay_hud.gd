@@ -10,6 +10,7 @@ const SettingsPanelScript = preload("res://scripts/ui/settings_panel.gd")
 const ShellStyleManagerScript = preload("res://scripts/ui/style/shell_style_manager.gd")
 const ShellControlStyleApplierScript = preload("res://scripts/ui/style/shell_control_style_applier.gd")
 const ShellDesignTokensScript = preload("res://scripts/ui/style/shell_design_tokens.gd")
+const GraphicalLanguageConfigScript = preload("res://scripts/ui/style/graphical_language_config.gd")
 const ShellStyleRolesScript = preload("res://scripts/ui/style/shell_style_roles.gd")
 const LiveOnboardingModelScript = preload("res://scripts/ui/onboarding/live_onboarding_model.gd")
 const LiveOnboardingPanelScript = preload("res://scripts/ui/onboarding/live_onboarding_panel.gd")
@@ -145,6 +146,8 @@ var _cockpit_stat_row: BoxContainer
 var _cockpit_layout := "concept_a"
 var _cockpit_stat_labels: Array[Label] = []
 var _cockpit_clears_title: Label
+var _cockpit_mode_title: Label
+var _cockpit_stat_dividers: Array[ColorRect] = []
 var _cockpit_view: Button
 var _viewport_inner: MarginContainer
 var _viewer_nav: VBoxContainer
@@ -1817,6 +1820,7 @@ func _update_live_gameplay_summary(snapshot: Dictionary, mode_label: String, pau
 		_cockpit_clears_title.text = clear_name
 		_cockpit_stat_labels[1].text = str(int(snapshot.get("lines", 0)))
 		_cockpit_stat_labels[2].text = str(int(snapshot.get("initial_speed_level", 1)))
+		_cockpit_mode_title.text = "%dD · %s" % [dimension, GameSetupSpecScript.format_shape(snapshot.get("board_shape", []))]
 	_last_live_summary_snapshot = snapshot
 	_last_live_mode_label = mode_label
 	if _summary_label != null:
@@ -2444,6 +2448,9 @@ func _build_layout() -> void:
 	outer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	outer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	outer.custom_minimum_size = ReplayVisuals.supported_shell_minimum_size()
+	# The cockpit and its status row stack here. A theme's own box spacing must
+	# not take height from the board, so the gap is fixed across themes.
+	outer.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_1)
 	_viewer_screen.add_child(outer)
 	_live_cockpit = LiveCockpitScript.new()
 	outer.add_child(_live_cockpit)
@@ -3201,7 +3208,20 @@ func _build_game_cockpit_chrome(outer: VBoxContainer) -> void:
 	_cockpit_stat_row = stats
 	stats.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_2)
 	_cockpit_stats.add_child(stats)
+	_cockpit_mode_title = Label.new()
+	_cockpit_mode_title.name = "CockpitModeTitle"
+	_cockpit_mode_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_cockpit_mode_title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_cockpit_mode_title.hide()
+	stats.add_child(_cockpit_mode_title)
 	for title in ["Score", "Lines", "Level"]:
+		if title != "Score":
+			var divider := ColorRect.new()
+			divider.name = "CockpitStatDivider"
+			divider.custom_minimum_size = Vector2.ONE * GraphicalLanguageConfigScript.number("cockpit.stat_divider_thickness")
+			divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			stats.add_child(divider)
+			_cockpit_stat_dividers.append(divider)
 		var stat := VBoxContainer.new()
 		stat.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		stat.add_theme_constant_override("separation", 0)
@@ -3265,6 +3285,13 @@ func _set_game_cockpit_visible(visible_in_game: bool) -> void:
 	_cockpit_nav.visible = visible_in_game
 	_cockpit_footer.visible = visible_in_game
 	_top_bar.visible = not visible_in_game
+	if visible_in_game != _game_area.has_meta("cockpit_frame_padding"):
+		if visible_in_game:
+			_game_area.set_meta("cockpit_frame_padding", GraphicalLanguageConfigScript.integer("cockpit.board.frame_padding"))
+		else:
+			_game_area.remove_meta("cockpit_frame_padding")
+		if _style_manager != null:
+			_style_applier.apply_panel(_game_area, _style_manager)
 	var host: Container = _cockpit_actions if visible_in_game else _legacy_actions
 	for button in [_restart_game_button, _new_random_game_button, _change_setup_button]:
 		if button.get_parent() != host:
@@ -3284,6 +3311,7 @@ func _apply_cockpit_layout(layout: String) -> void:
 		if header_stats:
 			target.move_child(_cockpit_stats, _cockpit_nav.get_index() + 1)
 	_cockpit_stat_row.vertical = not header_stats
+	_cockpit_mode_title.visible = header_stats
 	if not _active_live_mode.is_empty():
 		_refresh_piece_control_strip()
 		_set_live_4d_deck_active(true)
@@ -3291,6 +3319,9 @@ func _apply_cockpit_layout(layout: String) -> void:
 
 
 func _update_cockpit_navigation() -> void:
+	for divider in _cockpit_stat_dividers:
+		divider.color = _style_manager.get_color(ShellStyleRolesScript.GRID_MINOR)
+	_hold_piece_panel.set_show_empty_slot(_cockpit_nav.visible)
 	_cockpit_stats.visible = _cockpit_nav.visible and not _explorer_cockpit.active
 	_cockpit_view.visible = _cockpit_stats.visible and _active_live_mode == GameSetupSpecScript.MODE_4D
 	_cockpit_play.set_pressed_no_signal(not _explorer_cockpit.active)

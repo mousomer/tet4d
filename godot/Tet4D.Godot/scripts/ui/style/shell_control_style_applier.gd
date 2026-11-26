@@ -43,6 +43,9 @@ func apply_panel(panel: Control, style_manager, elevated: bool = false) -> void:
 	var padding := ShellDesignTokensScript.CONTROL_PADDING if panel.name in ["LivePieceControlStrip", "LiveViewControlStrip"] else ShellDesignTokensScript.COMPACT_PADDING
 	if _is_shell_chrome(panel):
 		padding = ShellDesignTokensScript.CHROME_CONTROL_PADDING
+	# The game cockpit gives the board frame's padding to the board itself.
+	if panel.has_meta("cockpit_frame_padding"):
+		padding = int(panel.get_meta("cockpit_frame_padding"))
 	var style := _panel_box(style_manager, background_role, border_role, padding)
 	panel.add_theme_stylebox_override("panel", style)
 	panel.set_meta("shell_style_theme_id", style_manager.get_theme_id())
