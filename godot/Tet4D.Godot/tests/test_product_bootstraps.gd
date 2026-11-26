@@ -9,7 +9,9 @@ func run() -> Array:
 	var tree := Engine.get_main_loop() as SceneTree
 	if tree == null:
 		return ["product bootstrap test requires a SceneTree"]
+	var launch_path := "user://test_product_bootstrap_launch_%d.cfg" % Time.get_ticks_usec()
 	var game_root := GAME_SCENE.instantiate()
+	game_root.get_node("App")._launch_view_path = launch_path
 	tree.root.add_child(game_root)
 	for _index in range(4):
 		await tree.process_frame
@@ -19,10 +21,54 @@ func run() -> Array:
 	elif game_app._is_designer_product() or game_app._mode != game_app.MODE_LIVE_2D:
 		failures.append("game bootstrap must enter playable Live 2D without Designer initialization")
 	var game_hud = game_root.get_node_or_null("ReplayHud")
-	if game_hud != null:
+	if game_app != null and game_hud != null:
+		var hash_before: String = game_app._live_bridge.live_state_hash(2)
+		game_app._process(60.0)
+		game_app._dispatch_live_command(game_app.MODE_LIVE_2D, "hard_drop")
+		if not game_app._live_mode_paused() or game_hud._restart_game_button.text != "Start":
+			failures.append("fresh Play must show Start on the ready board")
+		if game_app._live_bridge.live_state_hash(2) != hash_before:
+			failures.append("gravity and piece actions must wait for Start")
+		if not game_hud._restart_game_button.is_visible_in_tree():
+			failures.append("Start must be visible in the cockpit")
+		game_hud.live_3d_requested.emit()
+		if not game_app._waiting_to_start or not game_app._live_mode_paused():
+			failures.append("changing dimension must preserve the initial Start gate")
+		game_hud._restart_game_button.pressed.emit()
+		if game_app._live_mode_paused() or game_app._waiting_to_start:
+			failures.append("Start must release the launch gate")
 		_assert_game_hides_design_affordances(game_hud, failures)
 	game_root.queue_free()
 	await tree.process_frame
+
+	game_root = GAME_SCENE.instantiate()
+	game_root.get_node("App")._launch_view_path = launch_path
+	tree.root.add_child(game_root)
+	for _index in range(4):
+		await tree.process_frame
+	game_app = game_root.get_node("App")
+	if game_app._mode != game_app.MODE_LIVE_3D or not game_app._waiting_to_start:
+		failures.append("a returning Play profile must restore its dimension and wait for Start")
+	var accept := InputEventAction.new()
+	accept.action = "ui_accept"
+	accept.pressed = true
+	if not game_app._handle_live_input(accept) or game_app._waiting_to_start:
+		failures.append("the standard keyboard/controller accept action must Start Play")
+	game_root.get_node("ReplayHud").practice_requested.emit("dimension_4")
+	game_root.queue_free()
+	await tree.process_frame
+
+	game_root = GAME_SCENE.instantiate()
+	game_root.get_node("App")._launch_view_path = launch_path
+	tree.root.add_child(game_root)
+	for _index in range(4):
+		await tree.process_frame
+	game_app = game_root.get_node("App")
+	if game_app._practice == null or game_app._practice.dimension() != 4 or game_app._waiting_to_start:
+		failures.append("a returning Explore profile must open its dimension ready to explore")
+	game_root.queue_free()
+	await tree.process_frame
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(launch_path))
 
 	var designer_root := DESIGNER_SCENE.instantiate()
 	tree.root.add_child(designer_root)

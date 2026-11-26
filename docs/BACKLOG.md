@@ -31,6 +31,11 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ## Active Work
 
+- Graphical language P3: implement direct cockpit launch with Play · 2D
+  defaults, last Play/Explore view and dimension, and explicit Start in Play.
+  Complete the cockpit redesign and obtain layout acceptance as scoped in
+  `docs/plans/graphical_language_adoption.md`.
+
 - Explorer 2D relative movement: reconnect horizontal keyboard intents and
   their helper directions to the existing shared control-frame mapper. Preserve
   native board-coordinate transport and explicit absolute-frame preferences. Pin

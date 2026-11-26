@@ -123,6 +123,7 @@ var _settings_screen_panel: SettingsPanel
 var _play_button: Button
 var _reset_button: Button
 var _restart_game_button: Button
+var _waiting_to_start := false
 var _new_random_game_button: Button
 var _change_setup_button: Button
 var _quit_button: Button
@@ -550,7 +551,7 @@ func set_snapshot(snapshot: Dictionary, diagnostics_visible: bool) -> void:
 			_update_live_status_strip(mode_label, state_label, reason, trace_type)
 			_update_live_gameplay_summary(snapshot, mode_label, paused)
 			if _new_random_game_button != null:
-				_new_random_game_button.visible = true
+				_new_random_game_button.visible = not _waiting_to_start
 				_new_random_game_button.text = "New Random Game" if str(snapshot.get("random_mode", "")) == GameSetupSpecScript.RANDOM_MODE_TRUE_RANDOM else "New Game"
 			_trace_integrity_label.text = _format_live_inspector_text(
 				mode_label,
@@ -1688,6 +1689,10 @@ func _emit_runtime_parameter_change(setting_id: String, value) -> void:
 		presentation_profile_changed.emit(presentation_profile().with_overrides({setting_id: value}))
 
 
+func set_waiting_to_start(waiting: bool) -> void:
+	_waiting_to_start = waiting
+
+
 func _update_live_status_strip(mode_label: String, state_label: String, reason: String, mode: String) -> void:
 	if _bundle_status_label != null:
 		_bundle_status_label.text = "TET4D"
@@ -1702,11 +1707,16 @@ func _update_live_status_strip(mode_label: String, state_label: String, reason: 
 		_restart_game_button.visible = not _active_live_mode.is_empty()
 		_restart_game_button.text = "Play Again" if state_label == "Game Over" else "Restart Game"
 		_restart_game_button.tooltip_text = "Start the same setup again immediately" if state_label == "Game Over" else "Restart the current game with the same setup"
+		if _waiting_to_start:
+			_restart_game_button.text = "Start"
+			_restart_game_button.tooltip_text = "Start the game"
 
 
 # Pause flags come from the app; the guide is HUD-owned and suspends elapsed
 # time (onboarding_suspends_live_gameplay), so "Running" must exclude it too.
 func _live_state_label(game_over: bool, paused: bool) -> String:
+	if _waiting_to_start:
+		return "Ready"
 	if game_over:
 		return "Game Over"
 	if paused:
@@ -1753,6 +1763,9 @@ func _update_live_gameplay_summary(snapshot: Dictionary, mode_label: String, pau
 	_last_live_summary_snapshot = snapshot
 	_last_live_mode_label = mode_label
 	if _summary_label != null:
+		if _waiting_to_start:
+			_summary_label.text = "Play · %dD" % int(snapshot.get("dimension", 2))
+			return
 		_summary_label.text = live_gameplay_summary_text(
 			snapshot,
 			mode_label,
@@ -1974,6 +1987,8 @@ func set_live_4d_basis_snapshot(snapshot: Dictionary) -> void:
 func _render_onboarding() -> void:
 	if _onboarding_panel != null:
 		_onboarding_panel.render(_onboarding_model.snapshot())
+		if _waiting_to_start:
+			_onboarding_panel.hide()
 	_refresh_live_state_display()
 
 
@@ -2066,6 +2081,8 @@ func _move_right_column_child(node: Node, index: int) -> void:
 func _status_badge_text(state_label: String, reason: String) -> String:
 	if state_label == "Game Over":
 		return "[ GAME OVER ] %s" % _game_over_reason_label(reason)
+	if state_label == "Ready":
+		return "[ READY ]"
 	if state_label == "Paused":
 		return "[ PAUSED ]"
 	if state_label == "Guide":

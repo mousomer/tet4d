@@ -27,6 +27,7 @@ const ShellPresentationPreferencesScript = preload("res://scripts/ui/settings/sh
 const DesignValueScript = preload("res://scripts/design_lab/design_value.gd")
 const PhysicalKeyFallbackScript = preload("res://scripts/input/physical_key_fallback.gd")
 const DesignPlatformProfileScript = preload("res://scripts/platform/design_platform_profile.gd")
+const PersistentFileReplacementScript = preload("res://scripts/persistence/persistent_file_replacement.gd")
 
 const MODE_REPLAY := "replay"
 const MODE_LIVE_2D := "live_2d"
@@ -117,6 +118,8 @@ var _presentation_layout_guard_active := false
 var _mode := MODE_REPLAY
 var _retained_live_navigation_mode := ""
 var _retained_live_navigation_paused := false
+var _launch_view_path := "user://launch_view.cfg"
+var _waiting_to_start := false
 class LiveModeState:
 	var paused := false
 	var session_started := false
@@ -234,7 +237,36 @@ func _deferred_ready() -> void:
 	_hud.apply_shell_settings()
 	_load_bundle()
 	if not _is_designer_product():
-		_start_ordinary_live_mode(MODE_LIVE_2D)
+		_open_launch_view()
+
+
+func _open_launch_view() -> void:
+	var selection := ConfigFile.new()
+	var view := "play"
+	var mode_name := MODE_LIVE_2D
+	if selection.load(_launch_view_path) == OK:
+		var saved_view = selection.get_value("launch", "view", "")
+		var saved_mode = selection.get_value("launch", "mode", "")
+		if saved_view in ["play", "explore"] and _live_modes.has(saved_mode):
+			view = saved_view
+			mode_name = saved_mode
+	if view == "explore":
+		_start_practice(_live_dimension(mode_name), false)
+		if _practice != null:
+			return
+		mode_name = MODE_LIVE_2D
+	_start_ordinary_live_mode(mode_name, false, true)
+
+
+func _remember_launch_view(view: String) -> void:
+	if _is_designer_product():
+		return
+	var selection := ConfigFile.new()
+	selection.set_value("launch", "view", view)
+	selection.set_value("launch", "mode", _mode)
+	var result := PersistentFileReplacementScript.write_text(_launch_view_path, selection.encode_to_text(), true)
+	if not bool(result.get("ok", false)):
+		push_warning("Could not save the last cockpit view: %s" % result.get("detail", ""))
 
 
 func _is_designer_product() -> bool:
@@ -317,7 +349,7 @@ func _input(event: InputEvent) -> void:
 		_handle_camera_input(event)
 		get_viewport().set_input_as_handled()
 		return
-	if _is_live_mode() and _event_is_space_pressed_once(event):
+	if _is_live_mode() and not _waiting_to_start and _event_is_space_pressed_once(event):
 		if _practice != null:
 			if _explorer_window_focused and _event_action_pressed_once(event, ["explorer_replace_piece"]):
 				_practice_action("replace")
@@ -359,7 +391,7 @@ func _handle_explorer_input(event: InputEvent) -> bool:
 		return true
 	if _event_action_pressed_once(event, ["mode_toggle_replay_live"]):
 		if _mode == MODE_LIVE_4D: _enter_replay_mode()
-		else: _start_ordinary_live_mode(MODE_LIVE_3D if _mode == MODE_LIVE_2D else MODE_LIVE_4D)
+		else: _select_play_dimension(MODE_LIVE_3D if _mode == MODE_LIVE_2D else MODE_LIVE_4D)
 		return true
 	if _event_is_escape(event):
 		_return_to_main_menu()
@@ -430,6 +462,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.is_action_pressed("mode_toggle_replay_live"):
 		_enter_live_mode(MODE_LIVE_2D)
+		_remember_launch_view("play")
 		return
 	if event.is_action_pressed("replay_prev_frame"):
 		_step_frame(-1)
@@ -518,11 +551,14 @@ func _mouse_event_in_game_viewport(event: InputEvent) -> bool:
 
 
 func _handle_live_input(event: InputEvent) -> bool:
+	if _waiting_to_start and _event_action_pressed_once(event, ["ui_accept"]):
+		_reset_playback()
+		return true
 	if event.is_action_pressed("mode_toggle_replay_live"):
 		if _mode == MODE_LIVE_4D:
 			_enter_replay_mode()
 		else:
-			_start_ordinary_live_mode(MODE_LIVE_3D if _mode == MODE_LIVE_2D else MODE_LIVE_4D)
+			_select_play_dimension(MODE_LIVE_3D if _mode == MODE_LIVE_2D else MODE_LIVE_4D)
 		return true
 	if _mode == MODE_LIVE_4D and _practice == null:
 		if _handle_live_4d_camera_input(event) or _handle_live_4d_basis_input(event):
@@ -722,16 +758,13 @@ func _wire_hud() -> void:
 	_hud.reset_view_requested.connect(_reset_view)
 	_hud.quit_requested.connect(_quit_application)
 	_hud.main_menu_requested.connect(_return_to_main_menu)
-	_hud.live_2d_requested.connect(func() -> void:
-		_start_ordinary_live_mode(MODE_LIVE_2D)
+	_hud.live_2d_requested.connect(_select_play_dimension.bind(MODE_LIVE_2D))
+	_hud.live_3d_requested.connect(_select_play_dimension.bind(MODE_LIVE_3D))
+	_hud.live_4d_requested.connect(_select_play_dimension.bind(MODE_LIVE_4D))
+	_hud.live_game_start_requested.connect(func(setup: Dictionary) -> void:
+		if _start_configured_live_game(setup):
+			_remember_launch_view("play")
 	)
-	_hud.live_3d_requested.connect(func() -> void:
-		_start_ordinary_live_mode(MODE_LIVE_3D)
-	)
-	_hud.live_4d_requested.connect(func() -> void:
-		_start_ordinary_live_mode(MODE_LIVE_4D)
-	)
-	_hud.live_game_start_requested.connect(_start_configured_live_game)
 	_hud.change_setup_requested.connect(_change_live_setup)
 	_hud.new_random_game_requested.connect(_start_new_random_game)
 	_hud.replay_mode_requested.connect(_enter_replay_mode)
@@ -996,7 +1029,14 @@ func _toggle_play_pause() -> void:
 
 func _reset_playback() -> void:
 	if _is_live_mode():
-		_reset_live(_mode)
+		if _waiting_to_start:
+			_waiting_to_start = false
+			_set_live_pause_states(_mode)
+			_clear_live_ui_focus()
+			_reset_live_repeat_state()
+			_refresh_hud()
+		else:
+			_reset_live(_mode)
 		return
 	_state.reset(_state.is_playing)
 	_playback_accumulator = 0.0
@@ -1364,10 +1404,11 @@ func _clear_practice() -> void:
 		_hud.set_practice_state(0)
 
 
-func _start_practice(dimension: int) -> void:
+func _start_practice(dimension: int, remember_view: bool = true) -> void:
 	var mode_name: String = {2: MODE_LIVE_2D, 3: MODE_LIVE_3D, 4: MODE_LIVE_4D}[dimension]
 	var setup: Dictionary = _hud.configured_live_setup(mode_name).duplicate(true)
-	_start_configured_live_game(setup)
+	if not _start_configured_live_game(setup):
+		return
 	var candidate = preload("res://scripts/presentation/practice_explorer.gd").new(_live_bridge)
 	if not candidate.begin(_current_snapshot):
 		push_error("Explorer could not initialize a bounded native piece pose")
@@ -1383,6 +1424,8 @@ func _start_practice(dimension: int) -> void:
 	_reset_live_repeat_state()
 	_refresh_practice_snapshot()
 	_fit_view()
+	if remember_view:
+		_remember_launch_view("explore")
 
 
 func _practice_hidden_axis() -> int:
@@ -1512,6 +1555,7 @@ func _refresh_hud() -> void:
 		# here restyles/reparents the side panel on every object command.
 		_refresh_camera_status()
 		return
+	_hud.set_waiting_to_start(_waiting_to_start)
 	_refresh_control_frame_presentation()
 	var game_over := false
 	if _is_live_mode():
@@ -1647,36 +1691,52 @@ func _bundle_case_count() -> int:
 	return total
 
 
-func _start_configured_live_game(setup: Dictionary, preserve_current_view: bool = false) -> void:
+func _start_configured_live_game(
+	setup: Dictionary,
+	preserve_current_view: bool = false,
+	wait_for_start: bool = false
+) -> bool:
 	_clear_practice()
 	_sync_control_frames_from_setup()
 	var mode_name := str(setup.get("mode", ""))
 	if not _live_modes.has(mode_name):
 		push_error("Unknown live mode: %s" % mode_name)
-		return
+		return false
 	var validation: Dictionary = _live_bridge.live_configure_checked(_live_dimension(mode_name), setup)
 	var configured := bool(validation.get("ok", false))
 	_live_modes[mode_name].session_started = configured
 	if not configured:
 		push_error("Native live session rejected setup: %s" % str(validation.get("errors", [])))
-		return
+		return false
 	_active_live_setup = setup.duplicate(true)
 	_live_gravity_interval_seconds = _gravity_interval_for_setup(_active_live_setup)
-	_enter_live_mode(mode_name, preserve_current_view)
+	_enter_live_mode(mode_name, preserve_current_view, wait_for_start)
+	return true
 
 
-func _start_ordinary_live_mode(mode_name: String, preserve_current_view: bool = false) -> void:
+func _select_play_dimension(mode_name: String) -> void:
+	if _start_ordinary_live_mode(mode_name, false, _waiting_to_start):
+		_remember_launch_view("play")
+
+
+func _start_ordinary_live_mode(
+	mode_name: String,
+	preserve_current_view: bool = false,
+	wait_for_start: bool = false
+) -> bool:
 	if _hud == null or not _hud.has_method("configured_live_setup"):
 		push_error("Ordinary live entry requires the configured game setup provider")
-		return
+		return false
 	var setup = _hud.configured_live_setup(mode_name)
 	if not (setup is Dictionary) or str(setup.get("mode", "")) != mode_name:
 		push_error("Ordinary live entry has no valid setup for %s" % mode_name)
-		return
-	_start_configured_live_game((setup as Dictionary).duplicate(true), preserve_current_view)
+		return false
+	return _start_configured_live_game((setup as Dictionary).duplicate(true), preserve_current_view, wait_for_start)
 
 
 func _start_new_random_game() -> void:
+	if _waiting_to_start:
+		return
 	if _practice != null:
 		_practice_action("retry")
 		return
@@ -1703,8 +1763,10 @@ func _gravity_interval_for_setup(setup: Dictionary) -> float:
 	return float(maxi(min_ms, int(base_ms / speed))) / 1000.0
 
 
-func _enter_live_mode(mode_name: String, preserve_current_view: bool = false) -> void:
+func _enter_live_mode(mode_name: String, preserve_current_view: bool = false, wait_for_start: bool = false) -> void:
 	_prepare_live_mode_entry(mode_name, preserve_current_view)
+	_waiting_to_start = wait_for_start
+	_set_live_pause_states(mode_name, wait_for_start)
 	if not _live_modes[mode_name].session_started:
 		_reset_native_live_session(mode_name)
 	_refresh_live_snapshot(mode_name)
@@ -1718,6 +1780,7 @@ func _enter_live_mode(mode_name: String, preserve_current_view: bool = false) ->
 
 
 func _prepare_live_mode_entry(mode_name: String, preserve_current_view: bool = false) -> void:
+	_waiting_to_start = false
 	_clear_retained_live_navigation_state()
 	if not preserve_current_view or _mode != mode_name:
 		if _mode == MODE_LIVE_4D:
@@ -1731,7 +1794,6 @@ func _prepare_live_mode_entry(mode_name: String, preserve_current_view: bool = f
 		_current_document = null
 	_hud.set_live_keyboard_capture(true)
 	_clear_live_ui_focus()
-	_set_live_pause_states(mode_name)
 	_live_tick_accumulator = 0.0
 	_reset_live_repeat_state()
 
@@ -1801,6 +1863,7 @@ func _change_live_setup(mode_name: String) -> void:
 
 
 func _enter_replay_mode() -> void:
+	_waiting_to_start = false
 	_clear_practice()
 	_clear_retained_live_navigation_state()
 	if _mode == MODE_LIVE_4D:
@@ -2004,6 +2067,8 @@ func _reset_native_live_session(mode_name: String) -> void:
 
 
 func _reset_live(mode_name: String) -> void:
+	if _waiting_to_start:
+		return
 	var live: LiveModeState = _live_modes[mode_name]
 	live.last_rotation_label = "none"
 	live.last_rotation_status = "none"
@@ -2015,6 +2080,8 @@ func _reset_live(mode_name: String) -> void:
 
 
 func _toggle_live_pause(mode_name: String) -> void:
+	if _waiting_to_start:
+		return
 	var live: LiveModeState = _live_modes[mode_name]
 	live.paused = not live.paused
 	_reset_live_repeat_state()

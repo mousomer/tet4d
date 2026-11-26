@@ -128,7 +128,13 @@ describes the older "calm instrument" look.
 - Depends on Explorer Phase 3 (`docs/plans/explorer_cockpit_unification.md`)
   being merged first, because both edit `live_cockpit.gd`, `replay_hud.gd`
   and `practice_explorer_panel.gd`.
-- Depends on the owner's main-menu decision (open item in the spec).
+- Launch decision (owner approved 2026-11-26): open directly into the
+  cockpit. A fresh profile opens Play · 2D. Later launches restore the
+  last Play or Explore view and its dimension. Play opens ready and waits
+  for Start before gravity or piece actions begin. Restore the selection
+  only, without restoring a previous run.
+- First implementation slice: launch routing, selection persistence and
+  Start. The cockpit layout and its visual acceptance follow within P3.
 - Top bar (brand, Play / Explore / Settings / Help, 2D/3D/4D group); right
   column with NEXT, HOLD and stats; footer with the controls legend and the
   status line; the board as large as the window allows.
