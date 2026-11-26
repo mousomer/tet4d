@@ -1172,7 +1172,7 @@ func _fit_view() -> void:
 	elif _mode == MODE_LIVE_4D:
 		margin = CameraRigScript.LIVE_4D_FIT_MARGIN
 	# Live 2D and 3D show their key legend in a rail on the right.
-	_camera_rig.set_fit_horizontal_anchor(1.0 if _mode in [MODE_LIVE_2D, MODE_LIVE_3D] else 0.0)
+	_camera_rig.set_fit_horizontal_anchor(1.0 if _is_designer_product() and _mode in [MODE_LIVE_2D, MODE_LIVE_3D] else 0.0)
 	_camera_rig.fit_current_bounds(bounds, margin, content_boxes)
 	if _hud != null:
 		_hud.set_board_content_aspect(_camera_rig.fitted_board_aspect())

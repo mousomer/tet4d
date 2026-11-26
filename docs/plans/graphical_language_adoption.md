@@ -143,6 +143,11 @@ describes the older "calm instrument" look.
   existing `LiveCockpit`, `CockpitLayoutPolicy` and `LiveInputContract`
   groups. Dimensions differ only in which groups and labels the descriptors
   provide.
+- Present windowed 2D, 3D and 4D comparisons for owner review before changing
+  the layout lock. The game viewer uses the shared cockpit with a stacked right
+  column and full-width controls and status footer. The Designer retains its
+  editing layout. On narrow windows, the existing deck fallback keeps the
+  controls and piece panels reachable.
 - Re-baseline `test_locked_shell_layouts.gd` in this PR with the
   owner-accepted rectangles, keeping its reachability, no-clipping, focus and
   small-window checks.

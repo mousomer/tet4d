@@ -132,6 +132,18 @@ var _mode_hint_strip: VBoxContainer
 var _viewport_title: Label
 var _viewport_hint: Label
 var _top_bar: BoxContainer
+var _cockpit_nav: PanelContainer
+var _cockpit_footer: PanelContainer
+var _cockpit_status: Label
+var _cockpit_actions: HBoxContainer
+var _legacy_actions: HFlowContainer
+var _cockpit_play: Button
+var _cockpit_explore: Button
+var _cockpit_dimensions: Array[Button] = []
+var _cockpit_stats: PanelContainer
+var _cockpit_stat_labels: Array[Label] = []
+var _cockpit_clears_title: Label
+var _cockpit_view: Button
 var _viewport_inner: MarginContainer
 var _viewer_nav: VBoxContainer
 var _viewer_nav_label: Label
@@ -851,6 +863,9 @@ func set_practice_state(dimension: int, feedback: String = "", pieces: Array = [
 		_set_onboarding_visible(false)
 		_summary_label.text = "Explorer · %dD Sandbox · no gravity · Play starts a fresh game" % dimension
 		_top_state_badge_label.text = "PRACTICE"
+	_update_cockpit_navigation()
+	if active:
+		_cockpit_status.text = "Active: Explore %dD · Sandbox · No gravity" % dimension
 
 
 func _prepare_explorer_panel(panel: Control) -> void:
@@ -902,10 +917,12 @@ func _apply_shell_minimums(live: bool, side_rail := false) -> void:
 # drops VIEW: Fit View stays a header button, and mouse orbit is unlabelled
 # muscle memory, so its rows would only push the key legend down.
 func _uses_side_rail() -> bool:
-	return _active_live_mode in [GameSetupSpecScript.MODE_2D, GameSetupSpecScript.MODE_3D]
+	return _design_affordances_enabled and _active_live_mode in [GameSetupSpecScript.MODE_2D, GameSetupSpecScript.MODE_3D]
 
 
 func _piece_legend_layout() -> String:
+	if not _design_affordances_enabled:
+		return LivePieceControlStripScript.LAYOUT_WIDE
 	if _uses_side_rail():
 		return LivePieceControlStripScript.LAYOUT_RAIL
 	if _active_live_mode == GameSetupSpecScript.MODE_4D:
@@ -915,26 +932,31 @@ func _piece_legend_layout() -> String:
 
 func _set_live_4d_deck_active(active: bool) -> void:
 	var side_rail := active and _uses_side_rail()
-	var split := active and _active_live_mode == GameSetupSpecScript.MODE_4D
+	var split := active and (not _design_affordances_enabled or _active_live_mode == GameSetupSpecScript.MODE_4D)
 	if _piece_preview_row != null:
 		_piece_preview_row.columns = 1 if split else 2
 	_apply_shell_minimums(active, side_rail or split)
 	if _live_4d_deck == null:
 		return
 	_live_4d_piece_module.visible = true
-	_live_4d_view_module.visible = not _explorer_cockpit.active and (not side_rail or not _live_cockpit.designer_panels().is_empty())
+	_live_4d_view_module.visible = not _explorer_cockpit.active and (
+		(not side_rail or not _live_cockpit.designer_panels().is_empty()) if _design_affordances_enabled
+		else _active_live_mode == GameSetupSpecScript.MODE_4D and _cockpit_view.button_pressed
+	)
 	var placement := LiveCockpitScript.PLACEMENT_BELOW
 	if side_rail:
 		placement = LiveCockpitScript.PLACEMENT_SIDE
 	elif split:
 		placement = LiveCockpitScript.PLACEMENT_SPLIT
-	_live_cockpit.set_deck_placement(placement)
+	_live_cockpit.set_deck_placement(placement, not _design_affordances_enabled)
 	if active:
 		_piece_control_strip.reparent(_live_4d_piece_module, false)
 		var view_host := _explorer_cockpit.view_host(_live_4d_view_module)
 		if _live_view_control_strip.get_parent() != view_host:
 			_live_view_control_strip.reparent(view_host, false)
-		_piece_preview_row.reparent(_piece_state_module, false)
+		if _piece_preview_row.get_parent() != _piece_state_module:
+			_piece_preview_row.reparent(_piece_state_module, false)
+			_piece_state_module.move_child(_piece_preview_row, 0)
 		if _onboarding_panel != null and _onboarding_panel.get_parent() != _live_cockpit.header_slot:
 			_onboarding_panel.reparent(_live_cockpit.header_slot, false)
 		_right_scroll.visible = false
@@ -1016,6 +1038,7 @@ func configure_design_laboratory(callbacks: Dictionary) -> bool:
 
 func set_design_affordances_enabled(enabled: bool) -> void:
 	_design_affordances_enabled = enabled
+	_piece_control_strip.set_meta("shell_chrome", not enabled)
 	for control in [_design_menu_header, _design_lab_button, _designer_button]:
 		if control != null:
 			(control as Control).visible = enabled
@@ -1760,6 +1783,15 @@ func _refresh_live_state_display() -> void:
 
 
 func _update_live_gameplay_summary(snapshot: Dictionary, mode_label: String, paused: bool) -> void:
+	if _cockpit_footer.visible and not _explorer_cockpit.active:
+		var dimension := int(snapshot.get("dimension", 2))
+		var clear_name: String = {2: "Lines", 3: "Planes", 4: "Hyperplanes"}.get(dimension, "Clears")
+		var state := _live_state_label(bool(snapshot.get("game_over", false)), paused)
+		_cockpit_status.text = "Active: Play %dD · %s · Objective: Clear %s" % [dimension, state, clear_name.to_lower()]
+		_cockpit_stat_labels[0].text = str(int(snapshot.get("score", 0)))
+		_cockpit_clears_title.text = clear_name
+		_cockpit_stat_labels[1].text = str(int(snapshot.get("lines", 0)))
+		_cockpit_stat_labels[2].text = str(int(snapshot.get("initial_speed_level", 1)))
 	_last_live_summary_snapshot = snapshot
 	_last_live_mode_label = mode_label
 	if _summary_label != null:
@@ -1879,6 +1911,7 @@ static func _live_feedback_short(snapshot: Dictionary, paused: bool, guide_open:
 
 
 func _set_live_declutter_mode(live_mode: bool) -> void:
+	_set_game_cockpit_visible(live_mode and not _design_affordances_enabled)
 	if _top_bar != null:
 		_top_bar.custom_minimum_size.y = ReplayVisuals.LIVE_TOP_BAR_HEIGHT if live_mode else ReplayVisuals.TOP_BAR_HEIGHT
 	if _viewport_inner != null:
@@ -2396,6 +2429,7 @@ func _build_layout() -> void:
 	top_bar.custom_minimum_size = Vector2(0, ReplayVisuals.TOP_BAR_HEIGHT)
 	top_bar.add_theme_constant_override("separation", ReplayVisuals.PANEL_GAP)
 	_live_cockpit.header_slot.add_child(top_bar)
+	_build_game_cockpit_chrome(outer)
 	top_bar.minimum_size_changed.connect(func() -> void: call_deferred("_apply_responsive_layout"))
 
 	var viewer_nav := VBoxContainer.new()
@@ -2605,6 +2639,7 @@ func _build_layout() -> void:
 	)
 	live_actions.add_child(_change_setup_button)
 	top_summary_box.add_child(live_actions)
+	_legacy_actions = live_actions
 
 	_authority_panel = PanelContainer.new()
 	_authority_panel.name = "AuthorityPanel"
@@ -3095,6 +3130,127 @@ func _make_menu_surface(screen: Control, scroll_name: String) -> PanelContainer:
 					child.add_theme_constant_override("margin_%s" % side, padding)
 	)
 	return panel
+
+
+func _build_game_cockpit_chrome(outer: VBoxContainer) -> void:
+	_cockpit_nav = PanelContainer.new()
+	_cockpit_nav.name = "CockpitNavigation"
+	_cockpit_nav.theme_type_variation = "ViewportFrame"
+	_cockpit_nav.set_meta("shell_chrome", true)
+	_cockpit_nav.hide()
+	_live_cockpit.header_slot.add_child(_cockpit_nav)
+	var nav := HFlowContainer.new()
+	nav.add_theme_constant_override("h_separation", ShellDesignTokensScript.SPACE_2)
+	_cockpit_nav.add_child(nav)
+	var brand := Label.new()
+	brand.name = "CockpitBrandTitle"
+	brand.text = "Tet4D"
+	brand.theme_type_variation = "AccentLabel"
+	nav.add_child(brand)
+	_cockpit_play = _cockpit_button(nav, "Play", func() -> void:
+		if _explorer_cockpit.active:
+			_request_cockpit_dimension(_active_live_mode.trim_prefix("live_").trim_suffix("d").to_int(), false))
+	_cockpit_explore = _cockpit_button(nav, "Explore", func() -> void:
+		if not _explorer_cockpit.active:
+			_request_cockpit_dimension(_active_live_mode.trim_prefix("live_").trim_suffix("d").to_int(), true))
+	_cockpit_button(nav, "Settings", _open_cockpit_screen.bind(SCREEN_SETTINGS))
+	_cockpit_button(nav, "Help", _open_cockpit_screen.bind(SCREEN_CONTROLS))
+	var gap := Control.new()
+	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	nav.add_child(gap)
+	var dimensions := HBoxContainer.new()
+	nav.add_child(dimensions)
+	for dimension in [2, 3, 4]:
+		var button := _cockpit_button(dimensions, "%dD" % dimension, func() -> void:
+			_request_cockpit_dimension(dimension, _explorer_cockpit.active))
+		_cockpit_dimensions.append(button)
+	for button in [_cockpit_play, _cockpit_explore] + _cockpit_dimensions:
+		button.toggle_mode = true
+
+	_cockpit_stats = PanelContainer.new()
+	_cockpit_stats.name = "CockpitStats"
+	_cockpit_stats.theme_type_variation = "ViewportFrame"
+	var stats := VBoxContainer.new()
+	stats.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_2)
+	_cockpit_stats.add_child(stats)
+	for title in ["Score", "Lines", "Level"]:
+		var stat := VBoxContainer.new()
+		stat.add_theme_constant_override("separation", 0)
+		stats.add_child(stat)
+		var caption := Label.new()
+		caption.text = title
+		caption.theme_type_variation = "SecondaryLabel"
+		stat.add_child(caption)
+		if title == "Lines":
+			_cockpit_clears_title = caption
+		var value := Label.new()
+		value.name = "CockpitStatTitle"
+		value.text = "0"
+		stat.add_child(value)
+		_cockpit_stat_labels.append(value)
+	_live_cockpit.piece_state.add_child(_cockpit_stats)
+	_cockpit_stats.hide()
+
+	_cockpit_footer = PanelContainer.new()
+	_cockpit_footer.name = "CockpitStatusFooter"
+	_cockpit_footer.theme_type_variation = "ViewportFrame"
+	_cockpit_footer.set_meta("shell_chrome", true)
+	_cockpit_footer.hide()
+	outer.add_child(_cockpit_footer)
+	var footer := HFlowContainer.new()
+	_cockpit_footer.add_child(footer)
+	_cockpit_status = Label.new()
+	_cockpit_status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_cockpit_status.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	footer.add_child(_cockpit_status)
+	_cockpit_actions = HBoxContainer.new()
+	footer.add_child(_cockpit_actions)
+	_cockpit_view = _cockpit_button(_cockpit_actions, "View", func() -> void:
+		_live_4d_view_module.visible = _cockpit_view.button_pressed)
+	_cockpit_view.toggle_mode = true
+
+
+func _cockpit_button(parent: Container, label: String, action: Callable) -> Button:
+	var button := Button.new()
+	button.text = label
+	button.pressed.connect(action)
+	parent.add_child(button)
+	return button
+
+
+func _open_cockpit_screen(screen: String) -> void:
+	main_menu_requested.emit()
+	show_screen(screen)
+
+
+func _request_cockpit_dimension(dimension: int, explore: bool) -> void:
+	if explore:
+		practice_requested.emit("dimension_%d" % dimension)
+	elif _explorer_cockpit.active or _active_live_mode != "live_%dd" % dimension:
+		var play_signals := {2: live_2d_requested, 3: live_3d_requested, 4: live_4d_requested}
+		play_signals[dimension].emit()
+	_update_cockpit_navigation()
+
+
+func _set_game_cockpit_visible(visible_in_game: bool) -> void:
+	_cockpit_nav.visible = visible_in_game
+	_cockpit_footer.visible = visible_in_game
+	_top_bar.visible = not visible_in_game
+	var host: Container = _cockpit_actions if visible_in_game else _legacy_actions
+	for button in [_restart_game_button, _new_random_game_button, _change_setup_button]:
+		if button.get_parent() != host:
+			button.reparent(host, false)
+	_update_cockpit_navigation()
+
+
+func _update_cockpit_navigation() -> void:
+	_cockpit_stats.visible = _cockpit_nav.visible and not _explorer_cockpit.active
+	_cockpit_view.visible = _cockpit_stats.visible and _active_live_mode == GameSetupSpecScript.MODE_4D
+	_cockpit_play.set_pressed_no_signal(not _explorer_cockpit.active)
+	_cockpit_explore.set_pressed_no_signal(_explorer_cockpit.active)
+	for index in range(_cockpit_dimensions.size()):
+		_cockpit_dimensions[index].set_pressed_no_signal(_active_live_mode == "live_%dd" % (index + 2))
 
 
 func _build_main_menu_screen(screen: Control) -> void:
@@ -3722,7 +3878,7 @@ func _apply_responsive_layout() -> void:
 	_apply_shell_extents()
 	_apply_safe_area_insets()
 	call_deferred("_fit_main_menu")
-	if _top_bar != null:
+	if _top_bar != null and _top_bar.visible:
 		var available_width := maxf(0.0, _usable_overlay_rect(float(ReplayVisuals.OUTER_MARGIN)).size.x)
 		_top_bar.custom_minimum_size.x = available_width
 		ResponsivePanelPolicy.reflow_row(_top_bar, available_width)
