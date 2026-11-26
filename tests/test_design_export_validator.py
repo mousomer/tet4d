@@ -77,6 +77,18 @@ def test_valid_bundle_resolves_every_property_and_owner(tmp_path: Path) -> None:
     assert result["evaluation_count"] == 1
 
 
+def test_layout_preference_is_optional_in_older_exports(tmp_path: Path) -> None:
+    bundle = _bundle(tmp_path)
+    path = bundle / "preset.json"
+    preset = json.loads(path.read_text(encoding="utf-8"))
+    for key in ("properties", "semantic_owners"):
+        del preset[key]["display.cockpit_layout"]
+    path.write_text(json.dumps(preset), encoding="utf-8")
+
+    result = _module().validate_bundle(bundle, REGISTRY_PATH)
+    assert result["property_count"] == 32
+
+
 @pytest.mark.parametrize(
     "mutation", ["unknown_property", "wrong_owner", "out_of_range"]
 )

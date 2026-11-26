@@ -109,7 +109,8 @@ part of this adoption.
 and the controls sit in the footer. **Concept B** moves the stats into
 the header and places the control legend beside the board. Both layouts
 use the same status footer and the separate W-slice matrix in 4D.
-Choose the layout under Settings → Display → Cockpit Layout.
+Choose the layout under Settings → Display → Cockpit Layout. The choice is
+saved locally. Older design exports can omit the layout preference.
 
 ## Launch screen
 
