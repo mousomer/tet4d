@@ -34,12 +34,32 @@ dark ring marks the rim of each hole. Set **Membranes** to *Shown* to see the co
 
 ![Membranes shown (left) and removed (right), at low opacity](membranes.png)
 
-**Gluing.** The *Glue* slider (or ▶) plays the construction of the
-[square-to-Boy's-surface sequence](../projective-plane-sequence/) live. The flat square with its
-grid bends and wraps onto a growing piece of the surface, until its edges meet in pairs and close
-it up.
+**Gluing.** The *Glue* slider (or ▶) stretches the flat square into Boy's surface, continuously,
+and you can rotate it at any moment. The whole square, its grid, its four edges and its corners are
+there all along:
+- The centre of the square bulges into the three lobes.
+- The edges lift off and wrap round into the slits.
+- Each orange edge comes alongside the other orange one, and each blue alongside the other blue,
+  until they meet at 1.
+- Equal slider steps make equally large changes.
 
-![The Glue slider from 0 to 1](gluing.png)
+![The Glue slider from 0 to 1, front and back, edges emphasised](gluing.png)
+
+Animations: [front](gluing/gluing_front.webp), [back](gluing/gluing_back.webp).
+
+Every in-between moment, from any angle, can be rendered with
+[`tools/render_gluing.py`](tools/render_gluing.py):
+
+```
+python tools/render_gluing.py                                  # 13 steps, front and back (the image above)
+python tools/render_gluing.py --glue 0:1:61 --view front --anim  # 61 steps and an animated WebP
+python tools/render_gluing.py --glue 0.25,0.3,0.35             # chosen moments
+python tools/render_gluing.py --view 30,20 --view -30,200      # any view: tilt,turn in degrees
+python tools/render_gluing.py --style glass --set '{"gap": 0}' # the viewer's look, other settings
+```
+
+The default *edges* style makes the glass nearly clear, with a faint grid and thick edges and
+corners.
 
 **Gap width.** The narrow slits between the tubes and the central area open to about the tubes' width
 (Gap Width 1, the default). Set it to 0 for the classic hairline slits.
@@ -62,5 +82,7 @@ How it works, and why it is built this way: [DESIGN.md](DESIGN.md).
   data. It needs numpy and scipy.
 - [`tools/fold_check.py`](tools/fold_check.py) confirms that no setting of the shape sliders folds
   the surface. It needs numpy and scipy.
+- [`tools/render_gluing.py`](tools/render_gluing.py) renders the gluing at any glue values and view
+  angles (frames, strip, animated WebP). It needs playwright and pillow.
 - [`tools/check_viewer.py`](tools/check_viewer.py) runs 26 browser checks headless. It needs
   playwright, pillow and numpy.

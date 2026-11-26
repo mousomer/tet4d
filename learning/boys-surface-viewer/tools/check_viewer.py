@@ -10,7 +10,7 @@ Checks:
   - the panel: presets and Custom detection, every menu and toggle, collapsing a section survives a
     reload, Reset restores the defaults, the panel toggle and the H key;
   - rendering: each visual switch (membranes, self-intersections, grid, glued edges) changes the image;
-  - gluing: the glue slider goes from the flat square to the surface, and the play button completes it;
+  - gluing: the glue slider stretches the flat square into the surface, and the play button completes it;
   - interaction: right-drag moves the shape, double-click recentres it;
   - geometry: antipodal corners and the three preimages of the triple point land on the same 3D point.
 """
@@ -177,7 +177,10 @@ async def run(chrome, page):
             "window.__boy.set({glue: 0.3}); window.__boy.renderNow(); tripleVerts() === null"
         )
         await ev("window.__boy.set({glue: 1})")
-        check("no triple point until the piece contains it", nopiece)
+        check(
+            "no triple point (nor membranes, nor curve) until the square is glued",
+            nopiece,
+        )
         await ev(
             "document.getElementById('ui').classList.remove('hidden'); window.__boy.set({glue: 0})"
         )

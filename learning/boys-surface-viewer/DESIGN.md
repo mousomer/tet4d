@@ -76,21 +76,44 @@ lobe colours never jump as the sliders move.
 
 ### 2.3 Gluing the square (the Glue slider)
 
-The **Glue** slider replays the construction of
-[the square-to-Boy's-surface sequence](../projective-plane-sequence/) on the live surface:
-- **At glue g ≥ 0.15:** the mesh shows the image of the sub-disk |*w*| ≤ *s*(g) of the finished
-  surface. *s* grows smoothly from 0.22 to 1, so every intermediate state is a genuine piece of
-  Boy's surface. The square still maps onto the whole piece by Fong's map, so its grid, edges and
-  four corners are all visible throughout.
-- **Below 0.15:** the flat square blends into the first piece. It is laid in the piece's
-  best-fitting plane, by a least-squares map from the disk coordinates.
-- **Cost:** the piece is read off the full surface by radial interpolation along the polar mesh, so
-  moving the slider never re-runs the slimming flow. A rebuild takes about 15–30 ms, smooth enough
-  for the ▶ button, which animates the gluing in about 7 s.
-- **Data on the piece:** the membrane and curve lookups scale their disk point by *s*, so membranes
-  and self-intersections appear only once the piece contains them. The triple point marker appears
-  once *s* passes the triple point's preimage radius, 0.726. Until the last moment the four corners
-  are four separate points; at g = 1 they merge into two.
+The **Glue** slider stretches the flat square into Boy's surface. The whole square, its grid, its four
+edges and its corners are present at every value, and the edges meet in pairs only at the end. You
+can rotate the shape and change the material at any point.
+
+**Construction.** Write S(w) for the finished surface (after every shape control) and F(w) for the
+flat square:
+- **The flat square:** F(w) = m + (x − x̄) A₀ + (y − ȳ) A₁, where (x, y) are the square
+  coordinates of the disk point w (the inverse Fong map, §4.1). The plane map A is the least-squares
+  fit of the finished surface against the square coordinates. So the square starts in the surface's
+  best-fitting plane, at the surface's size, and keeps its orientation as the shape sliders change.
+- **The stretch:** X(w, t) = (1 − b) F(w) + b S(w), with b = smoothstep(1.6 t − 0.6 |w|).
+  - The centre of the square (|w| = 0) moves first, over t ∈ [0, 0.625].
+  - The edges (|w| = 1) move last, over t ∈ [0.375, 1].
+  - So the lobes bulge out of the square, the edges lift off and wrap round, and the two copies of
+    each edge meet exactly at t = 1.
+
+**Even pacing.** Moving every point at the same rate looked wrong: little happens for a long stretch
+of the slider, then the edges wrap round in a jump.
+- The viewer measures the distance the surface travels: the arc length of the motion,
+  Σᵥ |∂b/∂t| · |S(w) − F(w)|, summed on every 7th vertex at 200 values of t.
+- It then re-times the slider so that g ∈ [0, 1] is that distance's fraction.
+- Equal slider steps therefore make equally large changes. It's recomputed whenever the shape
+  changes.
+
+**What exists only once glued.** The membranes, the self-intersection curve and the triple point
+belong to the finished surface, so they are drawn only at g = 1. Until then the four corners are four
+separate points; at g = 1 they merge into two.
+
+**Cost:** about 20–40 ms per rebuild, smooth enough for the ▶ button, which plays the gluing in
+about 7 s.
+
+**Rendering any moment.** [`tools/render_gluing.py`](tools/render_gluing.py) renders any glue values
+from any view angles, using the viewer page itself in headless Chrome, so frames match it exactly.
+It writes single frames, a labelled strip and optional animations. See the README for examples.
+
+**History.** Until v18 the slider *grew* the square instead. It showed the image of a growing
+sub-disk of the finished surface, the construction of the learning sequences, with the square
+rescaled to fit. That reads as expanding, not stretching, so v19 replaced it.
 
 ### 2.4 The slimming field
 
@@ -354,8 +377,8 @@ It covers:
   it after a reload, Reset, the panel toggle and the H key.
 - **Rendering:** each visual switch (membranes, self-intersections, grid, glued edges) changes the
   image.
-- **Gluing:** the Glue slider goes from the flat square through a piece to the surface. The triple
-  point appears only once the piece contains it, and ▶ completes the gluing.
+- **Gluing:** the Glue slider stretches the flat square into the surface. The membranes, the curve
+  and the triple point appear only once it is glued, and ▶ completes the gluing.
 - **Moving the shape:** right-drag moves it, and double-click recentres it.
 - **Corner gluing:** the antipodal corner pairs land on identical 3D positions, and the three preimages
   of the triple point meet.
@@ -393,3 +416,4 @@ It covers:
 | v16 | Glue slider and ▶: the square-to-Boy's construction on the live surface. Numerical fold check of the shape controls (`tools/fold_check.py`). |
 | v17 | Slimming field rebuilt by a committed, reproducible generator (`tools/slimming_field.py`), visually identical to v16. |
 | v18 | Gap Width: an analytic map of space that opens the slits to about the tubes' width (`tools/gap_field.py`). Fold check and browser checks extended. |
+| v19 | Glue slider stretches the whole square into the surface (centre first, edges last), evenly paced by arc length. `tools/render_gluing.py` renders any glue values from any view. |
