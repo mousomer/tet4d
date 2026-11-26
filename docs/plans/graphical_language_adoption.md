@@ -158,7 +158,9 @@ describes the older "calm instrument" look.
 - P3 review checks cover the projected well outline without spawn headroom
   and complete legends at the standard capture window. The owner confirmed
   compact footer controls with inline movement arrows and rotation-plane
-  glyphs for A and the
+  glyphs for A. Stack each spatial key pair vertically beside its cue. During Play,
+  give the board full brightness, then the helper, previews and finally chrome.
+  Preserve full contrast in accessibility mode. Use the
   grouped legend with MOVE compass and rotation-plane glyphs and labels for B. Concept B pairs NEXT and HOLD
   across one row in 3D/4D to fit the legend at standard scale.
   Full-size ready and seeded midgame captures show both layout choices.

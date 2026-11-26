@@ -16,7 +16,8 @@ Concept A on the left and Concept B on the right.
 The owner approved both cockpit arrangements, with Concept A as the default
 and separate W slices in both. Concept A keeps the compact footer with inline
 arrows beside the spatial movement keys and rotation glyphs beside each
-paired binding. Concept B shows the grouped spatial
+vertically stacked pair. During Play the well has full brightness, followed by
+the helper, previews and shell chrome. Concept B shows the grouped spatial
 legend in the side rail, with NEXT and HOLD paired above it in 3D and 4D.
 
 [Concept A 3D at 1280 × 720](concept-a-3d-1280x720.png) shows the opening

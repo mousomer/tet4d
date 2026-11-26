@@ -18,7 +18,7 @@ with header stats and side controls. Both keep separate W slices. P3 review foll
 legend visibility and full-size capture evidence. The layout lock measures
 well outlines separately from camera-fit padding. The owner directed
 compact footer controls with inline movement arrows and rotation-plane
-glyphs for A and grouped
+glyphs for A, vertical spatial key pairs, board-first Play brightness and grouped
 spatial controls for B. Follow-up covers preview captions, compact-footer
 spacing and player-facing W-slice labels. The latest review integrates the
 larger wells, empty HOLD slot and Concept B stats header. Tighter W gutters

@@ -152,6 +152,8 @@ func _check_p3_game(tree: SceneTree) -> Array:
 				if hud._piece_preview_row.columns != preview_columns or not hud._piece_preview_row.is_visible_in_tree():
 					failures.append("%s must keep NEXT and HOLD reachable in the preview row" % name)
 				var controls: Control = hud._piece_control_strip
+				if not (hud._game_area.modulate.r > controls.modulate.r and controls.modulate.r > hud._piece_preview_row.modulate.r and hud._piece_preview_row.modulate.r > hud._cockpit_footer.modulate.r):
+					failures.append("%s must prioritize board, helper, previews and chrome in order" % name)
 				var compass := controls.find_child("LegendCompass", true, false)
 				var expected_planes := 6 if mode == "live_4d" else 3
 				if header_stats and mode != "live_2d":
@@ -169,6 +171,10 @@ func _check_p3_game(tree: SceneTree) -> Array:
 						if arrows.size() != arrow_count:
 							failures.append("%s must show an arrow beside each spatial movement key" % name)
 						for arrow in arrows:
+							var direction_row := arrow.get_parent()
+							var pair := direction_row.get_parent() as BoxContainer
+							if pair == null or not pair.vertical or pair.get_child_count() != 2 or not direction_row.get_child(0) is Label:
+								failures.append("%s must stack both movement keys with their own arrows" % name)
 							if arrow.directions().get(arrow.movement_intent, Vector2.ZERO) == Vector2.ZERO:
 								failures.append("%s is missing a direction for %s" % [name, arrow.movement_intent])
 						var rotation_glyphs := controls.find_children("LegendPlaneGlyph__*", "Control", true, false)
@@ -179,7 +185,7 @@ func _check_p3_game(tree: SceneTree) -> Array:
 							var group := glyph.get_parent()
 							var key_group := group.get_node("LegendKeys")
 							var plane_label := group.get_node("LegendOperation") as Label
-							if group.get_parent() != hud._piece_control_strip._groups_box or rotation_groups.has(group) or key_group.get_child_count() != 2 or plane_label.text != glyph.plane_name():
+							if group.get_parent() != hud._piece_control_strip._groups_box or rotation_groups.has(group) or not key_group.vertical or key_group.get_child_count() != 2 or plane_label.text != glyph.plane_name():
 								failures.append("%s must keep each rotation pair, glyph and plane label in one group" % name)
 							rotation_groups[group] = true
 	var reloaded = hud._settings_store.get_script().new(hud._settings_registry, hud._settings_store._storage_path)

@@ -43,17 +43,17 @@ static func row(operation: String, binding: String, role: String, density: Strin
 # column so the eye can scan straight down them; the operation is secondary
 # text and never wraps, because a wrapped "clock / wise" cannot be read at a
 # glance.
-static func key_first_row(operation: String, binding: String, role: String, key_column_width: float, tag := "") -> HBoxContainer:
+static func key_first_row(operation: String, binding: String, role: String, key_column_width: float, tag := "", stacked := false) -> HBoxContainer:
 	var result := HBoxContainer.new()
 	result.name = "LegendRow__%s" % role
 	result.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	result.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	result.add_theme_constant_override("separation", Tokens.SPACE_3)
-	var keys := HBoxContainer.new()
+	var keys: BoxContainer = VBoxContainer.new() if stacked else HBoxContainer.new()
 	keys.name = "LegendKeys"
 	keys.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	keys.custom_minimum_size.x = key_column_width
-	keys.add_theme_constant_override("separation", 4)
+	keys.add_theme_constant_override("separation", 0 if stacked else 4)
 	var glyphs: Array[String] = []
 	var letters: Array[String] = []
 	for label in binding_labels(binding):
@@ -63,6 +63,8 @@ static func key_first_row(operation: String, binding: String, role: String, key_
 	glyphs.append_array(letters)
 	for label in glyphs:
 		var cap := keycap(label)
+		if stacked:
+			cap.set_meta("stacked_keycap", true)
 		# A uniform minimum keeps single letters square-ish, so a row of caps
 		# reads as keys rather than as a word.
 		cap.custom_minimum_size.x = float(Tokens.FONT_CONTROL_HINT) * 1.4

@@ -12,6 +12,9 @@ const FACE_KEYS := ["base", "top", "front", "right", "left", "back", "bottom"]
 # A gradient needs a start and an end stop.
 const MIN_GRADIENT_STOPS := 2
 const REQUIRED_NUMBERS := [
+	"cockpit.brightness.helper",
+	"cockpit.brightness.preview",
+	"cockpit.brightness.chrome",
 	"cockpit.inline_arrow.size",
 	"cockpit.inline_arrow.span_factor",
 	"cockpit.inline_arrow.line_width",

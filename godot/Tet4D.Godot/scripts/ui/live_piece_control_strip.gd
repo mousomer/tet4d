@@ -215,7 +215,8 @@ func _rebuild() -> void:
 			for item in _merged_items(group.get("items", [])):
 				var semantic := _semantic_row(role, item)
 				var spatial_rotation := role == "rotate" and _mode in ["live_3d", "live_4d"]
-				var row := _rotation_row(semantic, 0.0) if spatial_rotation else _legend_row(semantic, 0.0)
+				var stack_moves := role == "translate" and _mode in ["live_3d", "live_4d"]
+				var row := _rotation_row(semantic, 0.0) if spatial_rotation else _legend_row(semantic, 0.0, "", stack_moves)
 				if role == "translate":
 					_add_inline_movement_arrows(row, semantic["semantic"])
 				row.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_1)
@@ -255,7 +256,7 @@ func _rebuild() -> void:
 
 func _add_inline_movement_arrows(row: HBoxContainer, metadata: Dictionary) -> void:
 	var intents: Array = MOVE_INTENTS.get(str(metadata.get("cockpit_direction", "")), [])
-	var keys := row.get_node("LegendKeys") as HBoxContainer
+	var keys := row.get_node("LegendKeys") as BoxContainer
 	if intents.size() != 2 or keys.get_child_count() != 2:
 		# 2D already shows the arrow keys alongside the letter aliases.
 		return
@@ -263,8 +264,10 @@ func _add_inline_movement_arrows(row: HBoxContainer, metadata: Dictionary) -> vo
 	for index in range(intents.size()):
 		var cap := caps[index] as Label
 		var glyph := ControlLegendGlyphScript.inline_arrow(str(intents[index]), cap)
-		keys.add_child(glyph)
-		keys.move_child(glyph, cap.get_index() + 1)
+		var direction_row := HBoxContainer.new()
+		keys.add_child(direction_row)
+		cap.reparent(direction_row, false)
+		direction_row.add_child(glyph)
 		glyph.set_directions(_screen_directions)
 		_glyphs.append(glyph)
 	if metadata.get("cockpit_direction") != "slice":
@@ -523,8 +526,8 @@ func _compact_rows(rows: Array) -> HFlowContainer:
 
 
 # Spatial legends size to their words: a trimmed verb would leave only the key.
-func _legend_row(semantic: Dictionary, key_column: float, tag := "") -> HBoxContainer:
-	var row := PassiveControlComponentsScript.key_first_row(str(semantic["operation"]), str(semantic["binding"]), str(semantic["role"]), key_column, tag)
+func _legend_row(semantic: Dictionary, key_column: float, tag := "", stacked := false) -> HBoxContainer:
+	var row := PassiveControlComponentsScript.key_first_row(str(semantic["operation"]), str(semantic["binding"]), str(semantic["role"]), key_column, tag, stacked)
 	(row.get_node("LegendOperation") as Label).text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 	return row
 
@@ -533,7 +536,7 @@ func _rotation_row(semantic: Dictionary, key_column: float) -> HBoxContainer:
 	var plane := _rotation_plane(semantic)
 	var inline := _layout == LAYOUT_COMPACT
 	# The compact footer uses the plane as its short label and keeps the verb on hover.
-	var row := _legend_row(semantic, key_column, plane if _layout == LAYOUT_RAIL else "")
+	var row := _legend_row(semantic, key_column, plane if _layout == LAYOUT_RAIL else "", inline)
 	if inline:
 		var operation := row.get_node("LegendOperation") as Label
 		row.mouse_filter = Control.MOUSE_FILTER_PASS

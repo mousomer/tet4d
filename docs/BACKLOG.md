@@ -33,7 +33,7 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 - P3 review: recover board height, lock standard-window legend visibility,
   highlight Start and retain full-size Ready and seeded midgame evidence for
-  both layouts, with inline movement and rotation glyphs in A and the
+  both layouts, with vertical spatial key pairs and inline glyphs in A, board-first brightness, and the
   grouped legend in B.
   Preserve live-only tighter W spacing and the 1280 × 720 3D allocation
   floor when integrating the reviewed cockpit refinements.

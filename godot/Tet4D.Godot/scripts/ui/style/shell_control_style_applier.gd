@@ -141,7 +141,11 @@ func _apply_label(label: Label, style_manager) -> void:
 		label.add_theme_font_size_override("font_size", _font_size(label, maxi(label.get_theme_font_size("font_size"), ShellDesignTokensScript.FONT_SUPPORTING)))
 	if label.theme_type_variation == "KeycapLabel":
 		label.add_theme_font_size_override("font_size", _font_size(label, ShellDesignTokensScript.FONT_CONTROL_HINT))
-		label.add_theme_stylebox_override("normal", _keycap_box(style_manager))
+		var box := _keycap_box(style_manager)
+		if label.has_meta("stacked_keycap"):
+			box.content_margin_top = ShellDesignTokensScript.BORDER_STANDARD
+			box.content_margin_bottom = ShellDesignTokensScript.BORDER_STANDARD
+		label.add_theme_stylebox_override("normal", box)
 	elif label.name.find("StatusBadge") >= 0:
 		var badge_border := ShellStyleRolesScript.ACCENT_PRIMARY
 		match label.theme_type_variation:

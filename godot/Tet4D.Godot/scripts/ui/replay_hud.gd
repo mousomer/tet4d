@@ -847,6 +847,8 @@ func set_practice_state(dimension: int, feedback: String = "", pieces: Array = [
 	):
 		return
 	var active := _explorer_cockpit.active
+	_apply_cockpit_brightness()
+	_apply_cockpit_padding(not _active_live_mode.is_empty())
 	# The lower helper deck stays in Explorer: its piece half carries the
 	# practice-specific translation, rotation, Z/X and Retry rows.
 	_live_4d_piece_module.visible = true
@@ -1114,15 +1116,21 @@ func design_laboratory_snapshot() -> Dictionary:
 
 # Handheld adaptation is expressed only as outer margin. The cockpit hierarchy
 # is identical on every platform, so a tablet never gains its own layout.
+func _uses_stacked_footer() -> bool:
+	return _cockpit_nav != null and _cockpit_nav.visible and _cockpit_layout == "concept_a" and not _explorer_cockpit.active and _active_live_mode in ["live_3d", "live_4d"]
+
+
 func _apply_safe_area_insets() -> void:
 	if _shell_root_margin == null:
 		return
+	var compact_play := _current_screen == SCREEN_VIEWER and _uses_stacked_footer()
 	var insets := ShellViewportLayout.local_insets(safe_area_insets(), _ui_scale_factor)
 	# Margins are in this HUD's local units, which the UI scale magnifies.
 	for side in ["left", "top", "right", "bottom"]:
+		var margin := ShellDesignTokensScript.SPACE_1 if compact_play and side in ["top", "bottom"] else ReplayVisuals.OUTER_MARGIN
 		_shell_root_margin.add_theme_constant_override(
 			"margin_%s" % side,
-			ReplayVisuals.OUTER_MARGIN + int(ceilf(float(insets.get(side, 0))))
+			margin + int(ceilf(float(insets.get(side, 0))))
 		)
 
 
@@ -1270,6 +1278,7 @@ func show_screen(screen_name: String) -> void:
 	):
 		_screen_last_focus[_current_screen] = focus_owner
 	_current_screen = screen_name if _screens.has(screen_name) else SCREEN_MAIN_MENU
+	_apply_safe_area_insets()
 	for key in _screens.keys():
 		var screen := _screens.get(key) as Control
 		if screen != null:
@@ -1617,6 +1626,7 @@ func apply_presentation_profile(profile, restore_geometry: bool = false) -> bool
 	_apply_ui_scale(str(profile.value("display.ui_scale")))
 	_apply_hud_density(str(profile.value("display.hud_density")))
 	_style_manager.set_high_contrast_enabled(_accessibility_policy.is_high_contrast_enabled())
+	_apply_cockpit_brightness()
 	_apply_shell_style()
 	_set_keyboard_hints_visible(_keyboard_hints_visible)
 	_set_onboarding_visible(bool(profile.value("interface.show_onboarding")))
@@ -1939,13 +1949,22 @@ static func _live_feedback_short(snapshot: Dictionary, paused: bool, guide_open:
 	return "GUIDE" if guide_open else "PLAYING"
 
 
+func _apply_cockpit_padding(live_mode: bool) -> void:
+	_apply_safe_area_insets()
+	if _viewport_inner != null:
+		var padding := ReplayVisuals.LIVE_VIEWPORT_FRAME_PADDING if live_mode else ReplayVisuals.VIEWPORT_FRAME_PADDING
+		# The game frame already supplies the well padding.
+		if _uses_stacked_footer():
+			padding = 0
+		for edge in ["left", "top", "right", "bottom"]:
+			_viewport_inner.add_theme_constant_override("margin_" + edge, padding)
+
+
 func _set_live_declutter_mode(live_mode: bool) -> void:
 	_set_game_cockpit_visible(live_mode and not _design_affordances_enabled)
+	_apply_cockpit_padding(live_mode)
 	if _top_bar != null:
 		_top_bar.custom_minimum_size.y = ReplayVisuals.LIVE_TOP_BAR_HEIGHT if live_mode else ReplayVisuals.TOP_BAR_HEIGHT
-	if _viewport_inner != null:
-		for edge in ["left", "top", "right", "bottom"]:
-			_viewport_inner.add_theme_constant_override("margin_" + edge, ReplayVisuals.LIVE_VIEWPORT_FRAME_PADDING if live_mode else ReplayVisuals.VIEWPORT_FRAME_PADDING)
 	if _viewer_nav != null:
 		_viewer_nav.custom_minimum_size = Vector2(430 if live_mode else 270, ReplayVisuals.LIVE_TOP_BAR_HEIGHT if live_mode else ReplayVisuals.TOP_BAR_HEIGHT)
 	if _viewer_nav_label != null:
@@ -2224,6 +2243,7 @@ func _apply_accessibility_settings() -> void:
 	)
 	_keyboard_hints_visible = _accessibility_policy.should_show_help_hints()
 	_style_manager.set_high_contrast_enabled(_accessibility_policy.is_high_contrast_enabled())
+	_apply_cockpit_brightness()
 	_apply_shell_style()
 	_set_keyboard_hints_visible(_keyboard_hints_visible)
 	var snapshot := _accessibility_policy.deterministic_snapshot()
@@ -3281,9 +3301,25 @@ func _request_cockpit_dimension(dimension: int, explore: bool) -> void:
 	_update_cockpit_navigation()
 
 
+func _apply_cockpit_brightness() -> void:
+	if _cockpit_nav == null:
+		return
+	var live_play := _cockpit_nav.visible and not _explorer_cockpit.active and not _accessibility_policy.is_high_contrast_enabled()
+	var tiers := {
+		"helper": [_piece_control_strip],
+		"preview": [_piece_preview_row],
+		"chrome": [_cockpit_nav, _cockpit_stats, _cockpit_footer],
+	}
+	for tier in tiers:
+		var value := GraphicalLanguageConfigScript.number("cockpit.brightness.%s" % tier) if live_play else 1.0
+		for surface in tiers[tier]:
+			surface.modulate = Color(value, value, value)
+
+
 func _set_game_cockpit_visible(visible_in_game: bool) -> void:
 	_cockpit_nav.visible = visible_in_game
 	_cockpit_footer.visible = visible_in_game
+	_apply_cockpit_brightness()
 	_top_bar.visible = not visible_in_game
 	if visible_in_game != _game_area.has_meta("cockpit_frame_padding"):
 		if visible_in_game:
@@ -3304,6 +3340,7 @@ func _apply_cockpit_layout(layout: String) -> void:
 	if chosen == _cockpit_layout:
 		return
 	_cockpit_layout = chosen
+	_apply_cockpit_padding(not _active_live_mode.is_empty())
 	var header_stats := chosen == "concept_b" and not _design_affordances_enabled
 	var target: Control = _live_cockpit.header_slot if header_stats else _piece_state_module
 	if _cockpit_stats.get_parent() != target:
