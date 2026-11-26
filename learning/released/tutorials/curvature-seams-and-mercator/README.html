@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chapter 2 — Curvature, Seam Traversal, and Mercator Maps · Tet4D Learning</title>
+  <link rel="stylesheet" href="../../release.css">
+</head>
+<body>
+  <header class="site-header"><a href="../../index.html">Tet4D Learning</a></header>
+  <main><h1 id="chapter-2--curvature-seam-traversal-and-mercator-maps">Chapter 2
+— Curvature, Seam Traversal, and Mercator Maps</h1>
+<p><a href="chapter_02_curvature_seams_and_mercator.html">Read Chapter
+2</a> or <a href="../README.html">return to the tutorial index</a>.</p>
+<p>This chapter distinguishes the topology of a quotient from the metric
+on it, the coordinate atlas used to display it, and the discrete
+movement operator. It derives the cone-angle defects of Tet4D’s
+single-square sphere, explores seam direction changes, and derives
+spherical Mercator projection and its distortion.</p>
+<h2 id="interactive-earth-on-the-s²-square">Interactive Earth on the S²
+square</h2>
+<p>Get the repository checkout and open
+<code>learning/tutorials/curvature-seams-and-mercator/interactive-earth/index.html</code>
+in a browser. Keep the adjacent JavaScript, CSS and generated land mask
+together. The <a href="interactive-earth/index.html">HTML link</a> on
+GitHub shows the source. See the <a
+href="interactive-earth/README.html">demo guide and dataset
+attribution</a>.</p>
+<h2 id="reproducible-python-laboratory">Reproducible Python
+laboratory</h2>
+<ul>
+<li><code>curvature_mercator_lab.py</code> — vertex equivalence, cone
+defects, discrete Gauss–Bonnet checks, illustrative sphere seam
+mappings, three educational Left maps, Mercator projection and
+scale.</li>
+<li><code>test_curvature_mercator_lab.py</code> — 20 standard-library
+regression tests.</li>
+</ul>
+<p>From the repository root:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="va">PY</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="ex">./scripts/resolve_python_env.sh</span><span class="va">)</span><span class="st">&quot;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;</span><span class="va">$PY</span><span class="st">&quot;</span> learning/tutorials/curvature-seams-and-mercator/curvature_mercator_lab.py</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;</span><span class="va">$PY</span><span class="st">&quot;</span> <span class="at">-m</span> unittest discover <span class="at">-s</span> learning/tutorials/curvature-seams-and-mercator <span class="at">-p</span> <span class="st">&#39;test_curvature_mercator_lab.py&#39;</span> <span class="at">-v</span></span></code></pre></div>
+<p>The independent script requires Python 3.10+ and no third-party
+packages. Expected totals are: sphere <code>χ=2</code>, angular defect
+<code>4π</code>; projective plane <code>χ=1</code>, defect
+<code>2π</code>; torus and Klein bottle <code>χ=0</code>, defect
+zero.</p>
+<p><strong>Limits:</strong> The lab assumes its four named complete
+square-pairing examples already satisfy the local vertex-link tests. It
+does not prove manifold status for arbitrary user-entered gluing data.
+The continuous seam examples are local planar unfoldings. The Left
+examples model one board command on three specified square
+presentations.</p>
+<h2 id="regenerate-the-seam-animations">Regenerate the seam
+animations</h2>
+<p>The chapter includes the GIFs and a static transcript. To regenerate
+the GIFs, install Pillow in a Python 3.9+ environment and make DejaVu
+Sans or Arial (regular and bold) available. From the repository root,
+run:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="va">PY</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="ex">./scripts/resolve_python_env.sh</span><span class="va">)</span><span class="st">&quot;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> learning/tutorials/curvature-seams-and-mercator/animations</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;</span><span class="va">$PY</span><span class="st">&quot;</span> animate_seams.py <span class="at">--out</span> .</span></code></pre></div>
+<p><a href="animations/animate_seams.py">animate_seams.py</a> renders
+the two matched boards using the educational paths and quotient
+neighbors in <a href="animations/seam_paths.py">seam_paths.py</a>. Each
+translation uses 40 eased samples at 25 fps. The piece rotation shows
+the native-verified before and after poses. The chapter lab tests
+independently check the coordinates, bonds and collision.</p>
+<p>From the repository root, `./scripts/test_godot_tet4d_core.sh
+–explorer-piece-conformance` checks both domino sequences through the
+native Explorer proposal and commit path.</p>
+</main>
+</body>
+</html>

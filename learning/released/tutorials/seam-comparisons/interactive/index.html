@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Compare transported frames, board commands, and seam bonds on Tet4D square boards.">
+  <title>Can you come home mirrored? · Tet4D</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="seam_comparison.js" defer></script>
+  <script src="domino_traces.js" defer></script>
+  <script src="board_rules.js" defer></script>
+  <script src="controls_and_bonds.js" defer></script>
+  <script src="benchmark.js" defer></script>
+</head>
+<body>
+  <main>
+    <a class="lesson" href="../chapter_03_seam_comparisons.html">Tet4D / Lesson 03</a>
+    <h1>Can you come home mirrored?</h1>
+    <p class="intro">Take the same five steps on both boards. Watch the arrows as the tokens cross from the left edge to the bottom.</p>
+
+    <p class="part-link"><a href="#controls-and-bonds">Go to Part 2 · Controls and seam bonds</a> <a href="#benchmark">Go to Part 3 · 8 × 8 benchmark</a></p>
+    <section class="experiment" aria-label="Synchronized seam comparison">
+      <div class="transport">
+        <div class="controls">
+          <button id="previous" type="button" disabled>Previous step</button>
+          <button id="next" type="button">Next step</button>
+          <button id="reset" type="button" disabled>Reset</button>
+        </div>
+        <p class="sequence" aria-label="Loop commands: Left, Left, Left, Up, Up">
+          <span data-command>←</span><span data-command>←</span><span data-command>←</span><span data-command>↑</span><span data-command>↑</span>
+        </p>
+      </div>
+      <p id="progress" role="status"></p>
+      <div class="boards">
+        <article class="board">
+          <h2><span>A</span> Sphere</h2>
+          <p class="seam">Left to bottom · matching order</p>
+          <canvas width="740" height="740" id="board-a" aria-hidden="true"></canvas>
+          <p id="frame-a" class="frame"></p>
+        </article>
+        <article class="board">
+          <h2><span>B</span> Projective plane</h2>
+          <p class="seam">Left to bottom · reversed order</p>
+          <canvas width="740" height="740" id="board-b" aria-hidden="true"></canvas>
+          <p id="frame-b" class="frame"></p>
+        </article>
+      </div>
+      <p class="legend"><span class="red">● Red arrow</span> <span class="blue">● Blue arrow</span> <span class="ghost">Faint arrows mark the starting frame.</span></p>
+      <p id="observation">Predict how the two frames will look after they come home.</p>
+    </section>
+
+    <section id="controls-and-bonds" aria-labelledby="part-two">
+      <h2 id="part-two">Same commands, different returns</h2>
+      <p class="intro">Start at (4, 1) on every board. Press Right, then predict where Left will take each token.</p>
+      <div class="experiment">
+        <div class="controls">
+          <button id="compare-right" type="button">Right</button>
+          <button id="compare-left" type="button" disabled>Left</button>
+          <button id="compare-reset" type="button" disabled>Reset comparison</button>
+        </div>
+        <p id="compare-status" role="status"></p>
+        <div class="boards comparison-boards">
+          <article class="board">
+            <h3><span>A</span> Sphere</h3>
+            <p class="seam">Right joins top</p>
+            <canvas width="740" height="740" id="compare-a" aria-hidden="true"></canvas>
+            <p id="position-a" class="frame"></p>
+          </article>
+          <article class="board">
+            <h3><span>B</span> Projective plane</h3>
+            <p class="seam">Right joins top</p>
+            <canvas width="740" height="740" id="compare-b" aria-hidden="true"></canvas>
+            <p id="position-b" class="frame"></p>
+          </article>
+          <article class="board">
+            <h3><span>C</span> Projective plane</h3>
+            <p class="seam">Right joins left</p>
+            <canvas width="740" height="740" id="compare-c" aria-hidden="true"></canvas>
+            <p id="position-c" class="frame"></p>
+          </article>
+        </div>
+      </div>
+
+      <h3 class="domino-heading">Can Up break a domino?</h3>
+      <div class="experiment domino">
+        <div>
+          <p class="intro">On C, the right and left edges join in reverse order. The gold line marks one shared edge in two places.</p>
+          <div class="controls">
+            <button id="domino-up" type="button">Up</button>
+            <button id="domino-reset" type="button" disabled>Reset domino</button>
+          </div>
+          <p id="domino-status" role="status"></p>
+        </div>
+        <article class="board">
+          <h3><span>C</span> Projective plane</h3>
+          <canvas width="740" height="740" id="domino-board" aria-hidden="true"></canvas>
+          <p id="domino-position" class="frame"></p>
+        </article>
+      </div>
+
+      <h3 id="domino-sequences" class="domino-heading">The same domino on A, B and C</h3>
+      <div class="experiment" id="domino-playground" tabindex="0" aria-labelledby="domino-sequences">
+        <p class="intro">Use the direction buttons or focus this panel and press the arrow keys. Choose a replay from the dropdown to step through a recorded sequence. A gold line marks a shared edge, including bonds that cross a seam.</p>
+        <div class="sequence-picker">
+          <label for="domino-sequence">Sequence</label>
+          <select id="domino-sequence">
+            <option value="free" selected>Free movement</option>
+            <option value="LUR">Left → Up → Right</option>
+            <option value="LTR">Left → Clockwise turn → Right</option>
+            <option value="LR">Left → Right</option>
+            <option value="LUL">Left → Up → Left</option>
+            <option value="LDLRL">Left, Down, Left, Right, Left</option>
+          </select>
+        </div>
+        <div class="controls">
+          <div id="domino-replay-controls" hidden>
+            <button id="sequence-previous" type="button" disabled>Previous move</button>
+            <button id="sequence-next" type="button">Next move</button>
+          </div>
+          <div id="domino-free-controls">
+            <button type="button" data-domino-direction="L" aria-keyshortcuts="ArrowLeft"><span aria-hidden="true">←</span> Left</button>
+            <button type="button" data-domino-direction="R" aria-keyshortcuts="ArrowRight"><span aria-hidden="true">→</span> Right</button>
+            <button type="button" data-domino-direction="U" aria-keyshortcuts="ArrowUp"><span aria-hidden="true">↑</span> Up</button>
+            <button type="button" data-domino-direction="D" aria-keyshortcuts="ArrowDown"><span aria-hidden="true">↓</span> Down</button>
+          </div>
+          <button id="sequence-reset" type="button" disabled>Reset free movement</button>
+        </div>
+        <p id="sequence-progress" role="status"></p>
+        <div class="boards comparison-boards">
+          <article class="board">
+            <h3><span>A</span> Sphere</h3>
+            <p class="seam">LB+ · RT+</p>
+            <canvas width="740" height="740" id="sequence-board-a" aria-hidden="true"></canvas>
+            <p id="sequence-bond-a" class="bond-state"></p>
+            <p id="sequence-cells-a" class="frame"></p>
+          </article>
+          <article class="board">
+            <h3><span>B</span> Projective plane</h3>
+            <p class="seam">LB− · RT+</p>
+            <canvas width="740" height="740" id="sequence-board-b" aria-hidden="true"></canvas>
+            <p id="sequence-bond-b" class="bond-state"></p>
+            <p id="sequence-cells-b" class="frame"></p>
+          </article>
+          <article class="board">
+            <h3><span>C</span> Projective plane</h3>
+            <p class="seam">LR− · BT−</p>
+            <canvas width="740" height="740" id="sequence-board-c" aria-hidden="true"></canvas>
+            <p id="sequence-bond-c" class="bond-state"></p>
+            <p id="sequence-cells-c" class="frame"></p>
+          </article>
+        </div>
+      </div>
+    </section>
+    <section id="benchmark" aria-labelledby="benchmark-heading">
+      <h2 id="benchmark-heading">Give “worse” a denominator</h2>
+      <p class="intro">Compare the 8 × 8 benchmark on all three boards. The fractions show how many trials had the selected outcome.</p>
+      <div class="experiment">
+        <div class="sequence-picker">
+          <label for="benchmark-metric">Benchmark outcome</label>
+          <select id="benchmark-metric">
+            <option>Opposite key fails to return</option>
+            <option>First command blocked</option>
+            <option>Second command blocked</option>
+            <option>Second command succeeds and loses a bond</option>
+          </select>
+        </div>
+        <p id="benchmark-sample" class="benchmark-note"></p>
+        <table class="benchmark-table">
+          <thead><tr><th scope="col">Board</th><th scope="col">Count</th><th scope="col">Rate</th></tr></thead>
+          <tbody id="benchmark-counts"></tbody>
+        </table>
+      </div>
+
+      <h3 class="domino-heading">Inspect a move</h3>
+      <div class="experiment">
+        <div class="sequence-picker">
+          <label for="benchmark-example">Example</label>
+          <select id="benchmark-example">
+            <option value="block">A · Left is blocked</option>
+            <option value="loss">C · Left, then Up breaks a bond</option>
+          </select>
+        </div>
+        <div class="controls">
+          <button id="benchmark-previous" type="button" disabled>Previous stage</button>
+          <button id="benchmark-next" type="button">Next stage</button>
+          <button id="benchmark-reset" type="button" disabled>Reset example</button>
+        </div>
+        <p id="benchmark-status" class="benchmark-note" role="status"></p>
+        <div class="boards">
+          <article class="board">
+            <h3 id="benchmark-source-title">Before the command</h3>
+            <canvas width="740" height="740" id="benchmark-source" aria-hidden="true"></canvas>
+            <p id="benchmark-source-cells" class="frame"></p>
+          </article>
+          <article class="board">
+            <h3 id="benchmark-target-title">Board state</h3>
+            <canvas width="740" height="740" id="benchmark-target" aria-hidden="true"></canvas>
+            <p id="benchmark-target-cells" class="frame"></p>
+          </article>
+        </div>
+      </div>
+    </section>
+    <noscript><p>Enable JavaScript to step through the interactive boards.</p></noscript>
+  </main>
+</body>
+</html>

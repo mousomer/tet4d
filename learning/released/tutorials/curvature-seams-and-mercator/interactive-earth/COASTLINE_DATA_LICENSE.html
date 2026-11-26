@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Third-party coastline data: GSHHG · Tet4D Learning</title>
+  <link rel="stylesheet" href="../../../release.css">
+</head>
+<body>
+  <header class="site-header"><a href="../../../index.html">Tet4D Learning</a></header>
+  <main><h1 id="third-party-coastline-data-gshhg">Third-party coastline data:
+GSHHG</h1>
+<p>The derived land/water mask in
+<code>gshhg_landmask.generated.js</code> comes from
+<strong>GSHHG</strong> (Global Self-consistent, Hierarchical,
+High-resolution Geography Database), authored by <strong>Paul
+Wessel</strong> and <strong>Walter H. F. Smith</strong>, distributed
+with Matplotlib Basemap’s <code>basemap-data</code> package
+(low-resolution layer).</p>
+<p>The GSHHG dataset and the derived mask remain under
+<strong>LGPL-3.0-or-later</strong>; they are third-party data and are
+<strong>not relicensed under the repository’s PolyForm Noncommercial
+licence</strong>. See <a
+href="https://www.soest.hawaii.edu/wessel/gshhg/">the source dataset and
+licence notice</a>, <a
+href="https://pypi.org/project/basemap-data/">basemap-data terms</a>,
+and <a href="https://www.gnu.org/licenses/lgpl-3.0.html">LGPL-3.0
+text</a> (with <a
+href="https://www.gnu.org/licenses/gpl-3.0.html">GPL-3.0</a>,
+incorporated by reference).</p>
+<p>The generated mask is a 720×360 rasterization of that dataset; use
+<code>generate_landmask.py</code> to rebuild it from a local Basemap
+installation (the demo itself needs no Basemap installation).</p>
+<p>Geographic colour and polar colouring are illustrative; no measured
+terrain or elevation data is claimed.</p>
+</main>
+</body>
+</html>
