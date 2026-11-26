@@ -39,12 +39,8 @@ func _go() -> void:
 		var plan: Array = PLAN_2D if mode == "live_2d" else PLAN_ND
 		for step in plan:
 			for n in int(step[1]):
-				if mode == "live_2d": app._dispatch_live_2d_control_intent(step[0])
-				elif mode == "live_3d": app._dispatch_live_3d_control_intent(step[0])
-				else: app._dispatch_live_4d_control_intent(step[0])
-			if mode == "live_2d": app._dispatch_live_gameplay_command("hard_drop")
-			elif mode == "live_3d": app._dispatch_live_3d_gameplay_command("hard_drop")
-			else: app._dispatch_live_4d_gameplay_command("hard_drop")
+				app._dispatch_live_control_intent(mode, step[0])
+			app._dispatch_live_command(mode, "hard_drop")
 			await process_frame
 		for i in 30: await process_frame
 		await RenderingServer.frame_post_draw
