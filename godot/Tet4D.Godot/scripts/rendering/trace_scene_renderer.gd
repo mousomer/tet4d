@@ -35,6 +35,8 @@ var _last_case_id := ""
 var _last_frame_index := -1
 var _particle_trails: Dictionary = {}
 var _presentation := BoardPresentationModelScript.new()
+var _slice_gutter_scale := 1.0
+var _slice_label_side_pad := ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
 var _last_bounds: Dictionary = {"ok": false}
 var _live_4d_basis = SliceBasis4DScript.identity()
 var _live_4d_local_orientation = SliceLocalOrientationScript.new()
@@ -162,6 +164,12 @@ func live_4d_basis_snapshot() -> Dictionary:
 	return snapshot
 
 
+# The game cockpit draws 4D slices closer together than the canonical spacing.
+func set_slice_spacing(gutter_scale: float, label_side_pad: float) -> void:
+	_slice_gutter_scale = gutter_scale
+	_slice_label_side_pad = label_side_pad
+
+
 func render_snapshot(snapshot: Dictionary) -> void:
 	render_interpolated_snapshot(snapshot, {}, 0.0)
 
@@ -177,6 +185,7 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 	_last_frame_index = frame_index
 
 	var presentation_basis = _live_4d_basis if str(snapshot.get("trace_type", "")) == "live_4d" else null
+	_presentation.set_slice_spacing(_slice_gutter_scale, _slice_label_side_pad)
 	_presentation.configure(
 		snapshot,
 		presentation_basis,

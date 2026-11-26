@@ -19,6 +19,8 @@ const REQUIRED_NUMBERS := [
 	"cockpit.plane_glyph_size",
 	"cockpit.board.frame_padding",
 	"cockpit.board.fit_margin_2d",
+	"cockpit.board.slice_gutter_scale",
+	"cockpit.board.slice_label_side_pad",
 	"luminous.board.active.whiten",
 	"luminous.board.active.cell_emission",
 	"luminous.board.active.face_emission",

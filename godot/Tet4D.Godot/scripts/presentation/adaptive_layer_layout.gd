@@ -19,6 +19,9 @@ var rows := 1
 var tile_width := 1.0
 var tile_height := 1.0
 var horizontal_gap := 2.0
+# The game cockpit narrows the gutter between slices; 1.0 is the canonical
+# geometry-derived gap every other host keeps.
+var gutter_scale := 1.0
 var vertical_gap := 2.0
 var screen_row_y_per_world_x := 0.0
 var viewport_size := DEFAULT_VIEWPORT_SIZE
@@ -47,7 +50,7 @@ func configure(
 	tile_width = supported_envelope.x
 	tile_height = supported_envelope.y
 	# Geometry-derived gaps are canonical; the legacy profile multiplier is inert.
-	horizontal_gap = clampf(tile_width * HORIZONTAL_GUTTER_RATIO, MIN_SLICE_GUTTER, MAX_SLICE_GUTTER)
+	horizontal_gap = clampf(tile_width * HORIZONTAL_GUTTER_RATIO, MIN_SLICE_GUTTER, MAX_SLICE_GUTTER) * gutter_scale
 	vertical_gap = clampf(tile_height * VERTICAL_GUTTER_RATIO, MIN_VERTICAL_SLICE_GUTTER, MAX_VERTICAL_SLICE_GUTTER)
 	screen_row_y_per_world_x = screen_row_slope
 	viewport_size = available_viewport_size if available_viewport_size.x > 0.0 and available_viewport_size.y > 0.0 else Vector2(maxf(viewport_aspect, 0.5) * DEFAULT_VIEWPORT_SIZE.y, DEFAULT_VIEWPORT_SIZE.y)

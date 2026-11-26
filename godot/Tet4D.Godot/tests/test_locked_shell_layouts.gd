@@ -125,7 +125,7 @@ func _check_p3_game(tree: SceneTree) -> Array:
 					failures.append("%s must keep controls below the board" % name)
 				if size == SIZES[0]:
 					# Outline floors at the reference window, excluding camera-fit padding.
-					var minimums := {"live_2d": 0.65, "live_3d": 0.61, "live_4d": 0.34} if header_stats else {"live_2d": 0.70, "live_3d": 0.66, "live_4d": 0.35}
+					var minimums := {"live_2d": 0.65, "live_3d": 0.61, "live_4d": 0.42} if header_stats else {"live_2d": 0.70, "live_3d": 0.66, "live_4d": 0.44}
 					var outline_height := DirectionProbe.projected_content_height(app, false)
 					if outline_height < float(size.y) * float(minimums[mode]):
 						failures.append("%s projected well outline is too short: %.1f px" % [name, outline_height])

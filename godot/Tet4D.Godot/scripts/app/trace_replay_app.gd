@@ -232,6 +232,8 @@ func _deferred_ready() -> void:
 		"build_identity": Callable(self, "_design_laboratory_build_identity"),
 	}):
 		push_error("Design Laboratory could not be configured")
+	if not _is_designer_product():
+		_renderer.set_slice_spacing(GraphicalLanguageConfigScript.number("cockpit.board.slice_gutter_scale"), GraphicalLanguageConfigScript.number("cockpit.board.slice_label_side_pad"))
 	_renderer.set_display_mode(_state.display_mode)
 	_apply_world_palette(_state.display_mode)
 	_hud.set_display_mode(_state.display_mode)

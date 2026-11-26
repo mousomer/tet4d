@@ -12,6 +12,8 @@ var _board_shape: Array = []
 var _visible_board_shape: Array = []
 var _basis = SliceBasis4DScript.identity()
 var layer_layout = AdaptiveLayerLayoutScript.new()
+# Fit clearance beside the outer slices. The game cockpit sets a smaller one.
+var label_side_pad := ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
 var _local_geometry = LocalBoardPresentationGeometryScript.new()
 
 
@@ -170,12 +172,12 @@ func board_bounds(board_shape: Array, dimension: int, basis = null) -> Dictionar
 		min_pos = Vector3(minf(min_pos.x, layer_min.x), minf(min_pos.y, layer_min.y), minf(min_pos.z, layer_min.z))
 		max_pos = Vector3(maxf(max_pos.x, layer_max.x), maxf(max_pos.y, layer_max.y), maxf(max_pos.z, layer_max.z))
 	if dimension >= 4:
-		min_pos.x -= ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
+		min_pos.x -= label_side_pad
 		min_pos.y -= ReplayVisuals.W_SLICE_LABEL_VERTICAL_BOUNDS_PAD
-		min_pos.z -= ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
-		max_pos.x += ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
+		min_pos.z -= label_side_pad
+		max_pos.x += label_side_pad
 		max_pos.y += ReplayVisuals.ABOVE_BOARD_ACTIVE_BOUNDS_PAD
-		max_pos.z += ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
+		max_pos.z += label_side_pad
 	return {"ok": true, "min": min_pos, "max": max_pos}
 
 

@@ -11,7 +11,9 @@
     "plane_glyph_size": 30.0,
     "board": {
       "frame_padding": 4.0,
-      "fit_margin_2d": 1.02
+      "fit_margin_2d": 1.02,
+      "slice_gutter_scale": 0.5,
+      "slice_label_side_pad": 0.8
     }
   },
   "luminous": {
