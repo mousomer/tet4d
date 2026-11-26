@@ -136,8 +136,19 @@ func _check_p3_game(tree: SceneTree) -> Array:
 						var controls: HFlowContainer = hud._piece_control_strip._groups_box
 						if controls.get_line_count() != 1:
 							failures.append("%s must keep the controls on one row" % name)
-				if hud._piece_preview_row.columns != 1 or not hud._piece_preview_row.is_visible_in_tree():
-					failures.append("%s must keep stacked NEXT and HOLD reachable" % name)
+				var preview_columns := 2 if header_stats and mode != "live_2d" else 1
+				if hud._piece_preview_row.columns != preview_columns or not hud._piece_preview_row.is_visible_in_tree():
+					failures.append("%s must keep NEXT and HOLD reachable in the preview row" % name)
+				var controls: Control = hud._piece_control_strip
+				var compass := controls.find_child("LegendCompass", true, false)
+				var expected_planes := 6 if mode == "live_4d" else 3
+				if header_stats and mode != "live_2d":
+					if compass == null or controls.find_children("ControlSectionTitle", "Label", true, false).size() != 3:
+						failures.append("%s must show the MOVE compass and all three group headings" % name)
+					if controls.find_children("LegendPlaneGlyph__*", "Control", true, false).size() != expected_planes or controls.find_children("LegendTag", "Label", true, false).size() != expected_planes:
+						failures.append("%s must show a glyph and plane label for every rotation pair" % name)
+				elif not header_stats and compass != null:
+					failures.append("%s must retain the compact footer legend" % name)
 	var reloaded = hud._settings_store.get_script().new(hud._settings_registry, hud._settings_store._storage_path)
 	reloaded.load_settings()
 	if reloaded.value("display.cockpit_layout") != "concept_b":

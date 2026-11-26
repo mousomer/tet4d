@@ -32,7 +32,8 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 ## Active Work
 
 - P3 review: recover board height, lock standard-window legend visibility,
-  highlight Start and retain full-size Ready and seeded midgame evidence for both layouts.
+  highlight Start and retain full-size Ready and seeded midgame evidence for
+  both layouts, including the grouped spatial legend in Concept B.
 
 - Graphical language P3: implement direct cockpit launch with Play · 2D
   defaults, last Play/Explore view and dimension, and explicit Start in Play.

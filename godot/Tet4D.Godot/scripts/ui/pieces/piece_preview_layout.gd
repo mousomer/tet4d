@@ -40,6 +40,17 @@ static func apply_compact(
 	thumbnail.set_compact_cockpit(true)
 
 
+static func set_status_inline(label: Label, header: Container, body: Container, enabled: bool) -> void:
+	var target := header if enabled else body
+	if label.get_parent() == target:
+		return
+	label.reparent(target, false)
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF if enabled else TextServer.AUTOWRAP_WORD_SMART
+	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS if enabled else TextServer.OVERRUN_NO_TRIMMING
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if enabled else HORIZONTAL_ALIGNMENT_CENTER
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL if enabled else Control.SIZE_FILL
+
+
 # The longest built-in piece name. Sizing to it instead of the current piece
 # keeps a host from changing width every time a new piece arrives.
 const PIECE_NAME_REFERENCE := "RIBBON8_B"

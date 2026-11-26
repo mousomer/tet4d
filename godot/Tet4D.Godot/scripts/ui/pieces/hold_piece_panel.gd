@@ -10,6 +10,7 @@ var _model = PieceThumbnailModelScript.new()
 var _thumbnail
 var _piece_label: Label
 var _status_label: Label
+var _status_inline := false
 var _preview_signature := ""
 var _available := true
 var _margin: MarginContainer
@@ -94,11 +95,22 @@ func set_hold_state(payload: Dictionary, available: bool) -> bool:
 
 
 func _render_state() -> void:
-	_status_label.text = "Available · C" if _available else "Used until lock"
+	if _status_inline:
+		_status_label.text = "Available" if _available else "Used"
+	else:
+		_status_label.text = "Available · C" if _available else "Used until lock"
 	modulate = Color.WHITE if _available else Color(0.78, 0.78, 0.78, 1.0)
 	if not _model.is_available() and _piece_label.text != "—":
 		_piece_label.text = "EMPTY"
 		_piece_label.tooltip_text = ""
+
+
+func set_status_inline(enabled: bool) -> void:
+	if _status_inline == enabled:
+		return
+	_status_inline = enabled
+	PiecePreviewLayoutScript.set_status_inline(_status_label, _piece_label.get_parent(), _content, enabled)
+	_render_state()
 
 
 func set_show_piece_id(enabled: bool) -> void:

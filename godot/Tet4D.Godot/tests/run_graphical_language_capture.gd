@@ -55,6 +55,7 @@ func _go() -> void:
 				app._dispatch_live_command(mode, "tick")
 			print(mode, " state hash=", app._live_bridge.live_state_hash(app._live_dimension(mode)))
 		for i in 30: await process_frame
+		app._publish_legend_screen_directions()
 		await RenderingServer.frame_post_draw
 		var path := out.path_join(mode + ".png")
 		var save_error := root.get_texture().get_image().save_png(path)

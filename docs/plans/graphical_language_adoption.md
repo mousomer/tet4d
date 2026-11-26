@@ -156,8 +156,10 @@ describes the older "calm instrument" look.
   owner-accepted rectangles, keeping its reachability, no-clipping, focus and
   small-window checks.
 - P3 review checks cover the projected well outline without spawn headroom
-  and complete legends at the standard capture window. The compact Play
-  legend is pending owner review for its compass and rotation glyph changes.
+  and complete legends at the standard capture window. The owner confirmed
+  compact footer controls for A and the grouped legend with MOVE compass and
+  rotation-plane glyphs and labels for B. Concept B pairs NEXT and HOLD
+  across one row in 3D/4D to fit the legend at standard scale.
   Full-size ready and seeded midgame captures show both layout choices.
   Smaller windows may scroll the helper deck.
 - Retire the `plain` and `tron` themes; keep `diagnostic` and High Contrast.

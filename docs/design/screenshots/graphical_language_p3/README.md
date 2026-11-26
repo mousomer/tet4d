@@ -14,5 +14,5 @@ Concept A on the left and Concept B on the right.
 | 4D | [Pair](layouts-4d.png) | [Full size](concept-a-4d.png) | [Full size](concept-b-4d.png) |
 
 The owner approved both cockpit arrangements, with Concept A as the default
-and separate W slices in both. These captures include the narrower controls
-legend added after that review.
+and separate W slices in both. Concept A keeps the compact footer. Concept B shows the grouped spatial
+legend in the side rail, with NEXT and HOLD paired above it in 3D and 4D.

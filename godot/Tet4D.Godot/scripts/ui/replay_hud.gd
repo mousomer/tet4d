@@ -925,10 +925,10 @@ func _uses_side_rail() -> bool:
 
 
 func _piece_legend_layout() -> String:
-	if not _design_affordances_enabled and not _explorer_cockpit.active:
-		return LivePieceControlStripScript.LAYOUT_COMPACT
 	if _uses_side_rail():
 		return LivePieceControlStripScript.LAYOUT_RAIL
+	if not _design_affordances_enabled and not _explorer_cockpit.active:
+		return LivePieceControlStripScript.LAYOUT_COMPACT
 	if not _design_affordances_enabled:
 		return LivePieceControlStripScript.LAYOUT_WIDE
 	if _active_live_mode == GameSetupSpecScript.MODE_4D:
@@ -940,7 +940,11 @@ func _set_live_4d_deck_active(active: bool) -> void:
 	var side_rail := active and _uses_side_rail()
 	var split := active and not side_rail and (not _design_affordances_enabled or _active_live_mode == GameSetupSpecScript.MODE_4D)
 	if _piece_preview_row != null:
-		_piece_preview_row.columns = 1 if split or not _design_affordances_enabled else 2
+		var stack_previews := split or (not _design_affordances_enabled and _active_live_mode == GameSetupSpecScript.MODE_2D)
+		_piece_preview_row.columns = 1 if stack_previews else 2
+		var inline_details := side_rail and not _design_affordances_enabled and not stack_previews
+		_next_piece_panel.set_status_inline(inline_details)
+		_hold_piece_panel.set_status_inline(inline_details)
 	_apply_shell_minimums(active, side_rail or split)
 	if _live_4d_deck == null:
 		return

@@ -371,13 +371,14 @@ func _build_spatial_legend(rows_by_role: Dictionary) -> void:
 	# The wide deck wraps whole sections instead: a flow nested in a flow only
 	# ever gets its minimum width, so it would always wrap.
 	var wide := _layout == LAYOUT_WIDE
+	var game_rail := _layout == LAYOUT_RAIL and not _practice and bool(get_meta("shell_chrome", false))
 	var move_body: Container = HBoxContainer.new() if wide else HFlowContainer.new()
 	move_body.name = "LegendMoveBody"
 	move_body.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if wide:
 		move_body.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_3)
 	else:
-		move_body.add_theme_constant_override("h_separation", ShellDesignTokensScript.SPACE_3)
+		move_body.add_theme_constant_override("h_separation", ShellDesignTokensScript.SPACE_1 if game_rail else ShellDesignTokensScript.SPACE_3)
 		move_body.add_theme_constant_override("v_separation", ShellDesignTokensScript.SPACE_1)
 	move.add_child(move_body)
 	var compass_keys: Array = []
@@ -413,7 +414,7 @@ func _build_spatial_legend(rows_by_role: Dictionary) -> void:
 			vertical["operation"] = "Up / Down"
 			move_column.add_child(_legend_row(vertical, cap_width * 2.0))
 	for semantic in rows_by_role.get("drop", []):
-		move_column.add_child(_legend_row(semantic, cap_width * 2.0))
+		move_column.add_child(_legend_row(semantic, 0.0 if game_rail else cap_width * 2.0))
 	_groups_box.add_child(move)
 
 	var rotate := PassiveControlComponentsScript.section("ROTATE", "rotate", _density)
