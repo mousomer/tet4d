@@ -213,7 +213,10 @@ func _rebuild() -> void:
 		for group in _groups:
 			var role := str(group.get("cockpit_role", ""))
 			for item in _merged_items(group.get("items", [])):
-				var row := _legend_row(_semantic_row(role, item), 0.0)
+				var semantic := _semantic_row(role, item)
+				var row := _legend_row(semantic, 0.0)
+				if role == "translate":
+					_add_inline_movement_arrows(row, semantic["semantic"])
 				row.size_flags_horizontal = Control.SIZE_FILL
 				(row.get_node("LegendOperation") as Label).size_flags_horizontal = Control.SIZE_FILL
 				_groups_box.add_child(row)
@@ -246,6 +249,24 @@ func _rebuild() -> void:
 		_groups_box.add_child(section)
 
 	rebuilt.emit()
+
+
+func _add_inline_movement_arrows(row: HBoxContainer, metadata: Dictionary) -> void:
+	var intents: Array = MOVE_INTENTS.get(str(metadata.get("cockpit_direction", "")), [])
+	var keys := row.get_node("LegendKeys") as HBoxContainer
+	if intents.size() != 2 or keys.get_child_count() != 2:
+		# 2D already shows the arrow keys alongside the letter aliases.
+		return
+	var caps := keys.get_children()
+	for index in range(intents.size()):
+		var cap := caps[index] as Label
+		var glyph := ControlLegendGlyphScript.inline_arrow(str(intents[index]), cap)
+		keys.add_child(glyph)
+		keys.move_child(glyph, cap.get_index() + 1)
+		glyph.set_directions(_screen_directions)
+		_glyphs.append(glyph)
+	if metadata.get("cockpit_direction") != "slice":
+		row.get_node("LegendOperation").hide()
 
 
 # New rows measure at the default theme until the host styles them, so a rail

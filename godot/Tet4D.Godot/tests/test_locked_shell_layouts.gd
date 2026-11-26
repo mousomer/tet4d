@@ -147,8 +147,18 @@ func _check_p3_game(tree: SceneTree) -> Array:
 						failures.append("%s must show the MOVE compass and all three group headings" % name)
 					if controls.find_children("LegendPlaneGlyph__*", "Control", true, false).size() != expected_planes or controls.find_children("LegendTag", "Label", true, false).size() != expected_planes:
 						failures.append("%s must show a glyph and plane label for every rotation pair" % name)
-				elif not header_stats and compass != null:
-					failures.append("%s must retain the compact footer legend" % name)
+				elif not header_stats:
+					if compass != null:
+						failures.append("%s must retain the compact footer legend" % name)
+					if mode != "live_2d":
+						app._publish_legend_screen_directions()
+						var arrow_count := 6 if mode == "live_4d" else 4
+						var arrows := controls.find_children("LegendInlineArrow__*", "Control", true, false)
+						if arrows.size() != arrow_count:
+							failures.append("%s must show an arrow beside each spatial movement key" % name)
+						for arrow in arrows:
+							if arrow.directions().get(arrow.movement_intent, Vector2.ZERO) == Vector2.ZERO:
+								failures.append("%s is missing a direction for %s" % [name, arrow.movement_intent])
 	var reloaded = hud._settings_store.get_script().new(hud._settings_registry, hud._settings_store._storage_path)
 	reloaded.load_settings()
 	if reloaded.value("display.cockpit_layout") != "concept_b":

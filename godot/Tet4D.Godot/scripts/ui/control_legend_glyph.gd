@@ -13,6 +13,8 @@ class_name ControlLegendGlyph
 #   slice-row marker for W, with the two directions a rotation mixes lit.
 
 const KIND_COMPASS := "compass"
+const KIND_INLINE_ARROW := "inline_arrow"
+const INLINE_ARROW_SIZE := 24.0
 const KIND_PLANE := "plane"
 const COMPASS_ARROW := 34.0
 const PLANE_SIZE := 30.0
@@ -20,6 +22,7 @@ const PLANE_SIZE := 30.0
 var kind := KIND_PLANE
 # Compass: [{"intent": String, "key": String}] in display order.
 var compass_keys: Array = []
+var movement_intent := ""
 # Plane: lowercase local axes the rotation mixes, e.g. ["x", "w"].
 var plane_axes: Array = []
 var _directions: Dictionary = {}
@@ -39,6 +42,16 @@ static func compass(keys: Array, color_source_factory: Callable) -> ControlLegen
 		glyph.add_child(cap)
 		if glyph._color_source == null:
 			glyph._color_source = cap
+	return glyph
+
+
+static func inline_arrow(intent: String, color_source: Label) -> ControlLegendGlyph:
+	var glyph := ControlLegendGlyph.new()
+	glyph.name = "LegendInlineArrow__%s" % intent
+	glyph.kind = KIND_INLINE_ARROW
+	glyph.movement_intent = intent
+	glyph._color_source = color_source
+	glyph.custom_minimum_size = Vector2.ONE * INLINE_ARROW_SIZE
 	return glyph
 
 
@@ -93,6 +106,13 @@ func _lit_color() -> Color:
 
 func _draw() -> void:
 	var lit := _lit_color()
+	if kind == KIND_INLINE_ARROW:
+		var direction: Vector2 = _directions.get(movement_intent, Vector2.ZERO)
+		if direction != Vector2.ZERO:
+			var center := size * 0.5
+			var half_span := direction * (INLINE_ARROW_SIZE * 0.32)
+			_arrow(center - half_span, center + half_span, lit, 2.0)
+		return
 	if kind == KIND_COMPASS:
 		var center := size * 0.5
 		draw_circle(center, 3.0, lit)
