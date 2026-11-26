@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.mp4
+**/frames/
+*frames.zip
+six-square-gluings.zip
+/rebuilt/
