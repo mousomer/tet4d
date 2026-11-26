@@ -2448,6 +2448,9 @@ func _build_layout() -> void:
 	outer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	outer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	outer.custom_minimum_size = ReplayVisuals.supported_shell_minimum_size()
+	# The cockpit and its status row stack here. A theme's own box spacing must
+	# not take height from the board, so the gap is fixed across themes.
+	outer.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_1)
 	_viewer_screen.add_child(outer)
 	_live_cockpit = LiveCockpitScript.new()
 	outer.add_child(_live_cockpit)

@@ -38,10 +38,12 @@ func run() -> Array:
 		# 2D/3D rail grows into width the right-anchored, height-limited board
 		# leaves unused, which narrows the viewport but not what the player sees.
 		var geometry: Vector2 = app._camera_rig.drawn_content_size(hud.board_viewport_size().y)
-		# Shares of the window the accepted boards draw at 1280x720 (3D 0.194,
-		# 4D 0.340), less a small tolerance. Live 4D shows its whole legend at
-		# this opening window, which outranks a larger 4D target.
-		var required_area := 0.18 if mode == "live_3d" else 0.32
+		# Shares of the window the boards draw at 1280x720, less a small
+		# tolerance. Live 4D shows its whole legend at this opening window,
+		# which outranks a larger 4D target. The P3 game cockpit (owner-approved
+		# 2026-11-26) stacks the controls legend and status row under the board,
+		# so 3D draws 0.168 where the side-rail layout drew 0.194; 4D draws 0.465.
+		var required_area := 0.16 if mode == "live_3d" else 0.32
 		if geometry.x * geometry.y / (1280 * 720) < required_area:
 			failures.append("%s must retain the reclaimed gameplay allocation, drew %s" % [mode, geometry])
 		# The rail sits beside the 3D board: if the fit stopped being set by the
