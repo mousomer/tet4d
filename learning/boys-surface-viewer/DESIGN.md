@@ -1,6 +1,6 @@
 # Boy's surface viewer: design
 
-The viewer is one self-contained HTML file (`boys-surface-viewer.html`, about 1,500 lines). It
+The viewer is one self-contained HTML file (`boys-surface-viewer.html`, about 1,600 lines). It
 combines inline CSS, the WebGL2 renderer in plain JavaScript, and two embedded, compressed data
 fields (the slimming flow and the membrane map). It has no build step, makes no network requests and has no dependencies, so the file can be
 opened locally or hosted as is.
@@ -196,12 +196,35 @@ avoids this. It also keeps the tubes continuous, which is the point of the conve
 - The shape sliders deform space, so the curve stays on the same disk points, and the cut is right
   at every slider setting.
 
-### 4.5 Colour conventions
+### 4.5 Self-intersection curve and triple point
+
+The *Self-Intersections* toggle (off by default) draws the self-intersection curve in gold. It is
+painted on every sheet that passes through it, so it stays visible whichever sheets the membrane
+setting removes. A gold disc marks the triple point.
+
+- **Data:** `tools/membranes.py` also stores the distance on the disk to the curve. This is a second
+  channel of the same 512² texture, capped at 0.02 disk units and about 24 KB.
+- **Constant line width on screen.**
+  - The disk-units-per-pixel scale used for the edges (§4.2) measures stretch in the *radial*
+    direction. That is right for the rim, but the curve runs across the disk at every angle.
+  - So the line width uses the stretch *across the line*. The field's direction on the disk comes
+    from texture taps two texels apart. It is combined with the smooth screen-space derivative of
+    the disk point: |(∂w/∂x · n, ∂w/∂y · n)|.
+  - That keeps the width constant at any viewing angle. With the radial scale, the line bloated into
+    wedges wherever the surface is seen edge-on.
+  - It is not taken from the 8-bit field's own slope, which is too coarse and gave a speckled outline.
+- **The triple point** is the image of the three zeros of d inside the disk:
+  w = r₃^(1/3)·e^(2πik/3), with r₃ = (3 − √5)/2. The marker sits at the average of the nearest
+  mesh vertex for each zero, and the test checks that the three agree to mesh resolution.
+- **The ring:** when the curve is shown, it replaces the dark ring at the membrane holes, since it
+  marks the same rim.
+
+### 4.6 Colour conventions
 
 Edge *a* (top and bottom) is orange, edge *b* (left and right) is blue, and the corners are white
-for (1, 1) and black for (1, −1). These follow the 14-stage projective-plane sequence, so the
-viewer matches that sequence's final frame. The shared `surface_sequences.py` script colours
-top/bottom blue instead. Bringing the two into line is an open item (§7).
+for (1, 1) and black for (1, −1). These follow the 14-stage projective-plane sequence, and the shared
+`surface_sequences.py` now uses the same convention, so all of them match. The black corner has a
+light outline so it stays visible on dark glass.
 
 ## 5. Interaction and panel
 
@@ -233,20 +256,27 @@ including the view.
 
 ## 6. Testing
 
+[`tools/check_viewer.py`](tools/check_viewer.py) runs the checks below in headless Chrome with
+SwiftShader, so no GPU is needed. It runs 21 checks and exits non-zero on any failure.
+
 The page exposes a small hook, `window.__boy`, with these members:
 - `set(params)` and `pose({rotX, rotY, spin, panX, panY})` change parameters and the view.
 - `renderNow()` draws a frame immediately.
 - `stats` and `internals()` expose frame and geometry state for inspection.
 
-Checks were run with headless Chrome (Playwright, SwiftShader WebGL):
+It covers:
 - **Shader compilation:** checked with no console errors.
-- **Panel:** presets and Custom detection, the membranes menu, grid type, edge and corner toggles,
-  collapsing a section and remembering it after a reload, Reset, the panel toggle and the H key.
+- **Panel:** presets and Custom detection, every menu and toggle, collapsing a section and remembering
+  it after a reload, Reset, the panel toggle and the H key.
+- **Rendering:** each visual switch (membranes, self-intersections, grid, glued edges) changes the
+  image.
 - **Moving the shape:** right-drag moves it, and double-click recentres it.
-- **Corner gluing:** the antipodal corner pairs land on identical 3D positions.
+- **Corner gluing:** the antipodal corner pairs land on identical 3D positions, and the three preimages
+  of the triple point meet.
 - **Membranes:** `tools/membranes.py` reports 4 regions, and three discs bounded only by the curve.
   It regenerates the embedded field identically, byte for byte.
-- **Images:** screenshots of the default view and of each line mode were inspected.
+- **Images:** screenshots of the default view and of each line mode were inspected by eye during
+  development. These visual checks are not part of the script.
 
 ## 7. Known limitations and next steps
 
@@ -258,8 +288,6 @@ Checks were run with headless Chrome (Playwright, SwiftShader WebGL):
   3. Smooth the push on the disk while respecting the antipodal seam.
   4. Apply it in small steps, checking after each that the surface still never folds or pinches.
   5. Expose it as a Gap Width slider.
-- **Black corner contrast:** the black corner is dark on dark glass. A light outline would help.
-- **Edge colour conventions** differ between the two sequence scripts (§4.5).
 - **Membrane rings near the triple point:** the smoothing rounds the cut slightly where the three
   curves meet.
 - **Blog version:** the CodePen panes used for embedding on a blog were made from an earlier
@@ -278,3 +306,4 @@ Checks were run with headless Chrome (Playwright, SwiftShader WebGL):
 | v11 | Collapsible sections, shape presets, square/polar grid controls, glued edges and corner points. |
 | v12–v13 | Inner-sheet cutaway based on visibility from outside. Superseded: the cut tore the tubes (§4.4). |
 | v14 | Membranes removed along the self-intersection curves, as in a Klein bottle. Per-pixel cut, rim ring, `tools/membranes.py`. |
+| v15 | Self-intersection curve and triple point toggle. Light outline on the black corner. Committed browser checks (`tools/check_viewer.py`). |

@@ -1,4 +1,4 @@
-"""Membrane field for the Boy's surface viewer.
+"""Membrane and self-intersection fields for the Boy's surface viewer.
 
 Usage:  python membranes.py [out.json]            write the field (default: membrane_field.json)
         python membranes.py --embed VIEWER.html   rewrite the viewer's embedded MEMBRANE constant
@@ -16,7 +16,8 @@ Steps:
   2. mark points that have a far-away (in the disk) partner at the same place in space: the curve;
   3. label the regions between the curves, gluing across the rim (w ~ -w);
   4. check the three small regions are discs bounded only by the curve;
-  5. signed distance to their boundary (+ inside), smoothed, sampled to 512^2, uint8, zlib + base64.
+  5. signed distance to their boundary (+ inside), smoothed, sampled to 512^2, uint8, zlib + base64;
+  6. distance to the self-intersection curve itself, same grid: the viewer draws the curve from it.
 """
 
 import base64
@@ -33,6 +34,9 @@ C = 0.95  # Bryant-Kusner family member used by the viewer
 G = 900  # analysis grid over [-1, 1]^2
 S = 512  # output texture size
 CLAMP = 0.04  # signed distance range stored, in disk units
+CURVE_CLAMP = (
+    0.02  # distance-to-curve range stored: only the neighbourhood of the line matters
+)
 
 
 def bar(i, n, label):
@@ -87,7 +91,7 @@ def curve_mask(U, V, inside):
         bar(ci + 1, len(chunks), "self-intersection curve")
     band = np.zeros(U.shape, bool)
     band[inside] = near
-    return ndimage.binary_dilation(band, iterations=1) & inside
+    return ndimage.binary_dilation(band, iterations=1) & inside, band
 
 
 def regions(U, V, inside, band):
@@ -116,7 +120,7 @@ def main():
     g = (np.arange(G) + 0.5) / G * 2 - 1
     U, V = np.meshgrid(g, g, indexing="xy")
     inside = U**2 + V**2 <= 1
-    band = curve_mask(U, V, inside)
+    band, curve = curve_mask(U, V, inside)
     lab = regions(U, V, inside, band)
     ids, cnt = np.unique(lab[lab > 0], return_counts=True)
     print(f"regions between the curves: {len(ids)} (expected 4)")
@@ -145,11 +149,23 @@ def main():
     q = np.clip(
         np.round(128 + np.clip(sds, -CLAMP, CLAMP) / CLAMP * 127), 0, 255
     ).astype(np.uint8)
+    # distance to the curve itself (the marked points form a line one or two pixels thick)
+    dc = ndimage.gaussian_filter(ndimage.distance_transform_edt(~curve) * h, 1.5)
+    dcs = ndimage.map_coordinates(dc, [YY, XX], order=1, mode="nearest")
+    qc = np.clip(
+        np.round(np.clip(dcs, 0, CURVE_CLAMP) / CURVE_CLAMP * 255), 0, 255
+    ).astype(np.uint8)
     return {
         "S": S,
         "clamp": CLAMP,
-        "data": base64.b64encode(zlib.compress(q.tobytes(), 9)).decode(),
+        "data": encode(q),
+        "curve": encode(qc),
+        "curveClamp": CURVE_CLAMP,
     }
+
+
+def encode(a):
+    return base64.b64encode(zlib.compress(a.tobytes(), 9)).decode()
 
 
 if __name__ == "__main__":
