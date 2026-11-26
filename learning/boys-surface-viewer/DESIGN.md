@@ -1,8 +1,8 @@
 # Boy's surface viewer: design
 
-The viewer is one self-contained HTML file (`boys-surface-viewer.html`, about 1,400 lines). It
-combines inline CSS, the WebGL2 renderer in plain JavaScript, and one embedded, compressed data
-field. It has no build step, makes no network requests and has no dependencies, so the file can be
+The viewer is one self-contained HTML file (`boys-surface-viewer.html`, about 1,500 lines). It
+combines inline CSS, the WebGL2 renderer in plain JavaScript, and two embedded, compressed data
+fields (the slimming flow and the membrane map). It has no build step, makes no network requests and has no dependencies, so the file can be
 opened locally or hosted as is.
 
 ## 1. Goals
@@ -18,6 +18,9 @@ opened locally or hosted as is.
 4. **A link to the learning sequences.** Show on the finished surface the same square grid, glued
    edges and corner points that [the square-to-Boy's-surface sequence](../projective-plane-sequence/)
    builds step by step.
+5. **A clear view down the tubes.** Draw the three pass-throughs the way a glass Klein bottle shows
+   its neck passing through the wall: the tube continues, and the small disc of wall it passes
+   through is removed (§4.4).
 
 ## 2. Geometry
 
@@ -159,7 +162,41 @@ clipped to a sliver. So each corner is drawn as a disc of **fixed radius in 3D**
 corner's world position. That position is the deformed rim vertex at 45° (white) or 135° (black),
 passed in as a uniform every frame. This works from every viewpoint, at every slider setting.
 
-### 4.4 Colour conventions
+### 4.4 Membranes (pass-throughs drawn as in a Klein bottle)
+
+**The convention.** In the usual model of a Klein bottle, the neck passes through the wall. The tube
+stays whole, and the small disc of wall it passes through is removed, leaving a hole with the tube
+running through it. The viewer draws Boy's surface the same way. The **Membranes** menu offers
+*Removed* (the default), *Faded* (a faint ghost) and *Shown* (the complete surface). In *Removed*
+mode the floor shadow drops the membranes too.
+
+**Which discs.** The self-intersection curve of Boy's surface is three loops through the triple
+point. On the parameter disk, with the antipodal rim points identified, its preimage has 3 vertices
+(the triple point's preimages) and 6 arcs. Since χ(ℝP²) = 1 = V − E + F, the disk splits into exactly
+**F = 4 regions**: one big region (the outer skin and the tube walls) and three small ones.
+[`tools/membranes.py`](tools/membranes.py) finds the curve numerically:
+1. Sample the surface on a 900² grid over the disk.
+2. Mark grid points with a partner far away on the disk at the same place in space.
+3. Label the regions between the marked curves, joining across the rim.
+4. Check that each small region is a single disc, with no holes, whose whole boundary lies on the
+   curve. All three pass, so these are the membranes.
+
+**An earlier attempt that tore.** v12–v13 instead removed every sheet that rays from outside could
+not reach. Because the big region is both outer skin and tube wall, that boundary is not a curve of
+the surface: the cut wandered and tore the tubes. Cutting only along the self-intersection curve
+avoids this. It also keeps the tubes continuous, which is the point of the convention.
+
+**Exact cut.**
+- The field is stored as a **signed distance** on the disk to the membranes' boundary (positive
+  inside). It is lightly smoothed to remove the pixel staircase, sampled to 512², and stored as
+  8-bit, zlib + base64 (about 15 KB).
+- The fragment shader reads it **per pixel** from the fragment's disk point and discards membrane
+  fragments. The cut therefore lies on the self-intersection curve, independent of the mesh.
+- A dark ring, about 2 pixels wide, is drawn just outside the cut: the rim of the hole.
+- The shape sliders deform space, so the curve stays on the same disk points, and the cut is right
+  at every slider setting.
+
+### 4.5 Colour conventions
 
 Edge *a* (top and bottom) is orange, edge *b* (left and right) is blue, and the corners are white
 for (1, 1) and black for (1, −1). These follow the 14-stage projective-plane sequence, so the
@@ -203,10 +240,12 @@ The page exposes a small hook, `window.__boy`, with these members:
 
 Checks were run with headless Chrome (Playwright, SwiftShader WebGL):
 - **Shader compilation:** checked with no console errors.
-- **Panel:** presets and Custom detection, grid type, edge and corner toggles, collapsing a section
-  and remembering it after a reload, Reset, the panel toggle and the H key.
+- **Panel:** presets and Custom detection, the membranes menu, grid type, edge and corner toggles,
+  collapsing a section and remembering it after a reload, Reset, the panel toggle and the H key.
 - **Moving the shape:** right-drag moves it, and double-click recentres it.
 - **Corner gluing:** the antipodal corner pairs land on identical 3D positions.
+- **Membranes:** `tools/membranes.py` reports 4 regions, and three discs bounded only by the curve.
+  It regenerates the embedded field identically, byte for byte.
 - **Images:** screenshots of the default view and of each line mode were inspected.
 
 ## 7. Known limitations and next steps
@@ -220,9 +259,12 @@ Checks were run with headless Chrome (Playwright, SwiftShader WebGL):
   4. Apply it in small steps, checking after each that the surface still never folds or pinches.
   5. Expose it as a Gap Width slider.
 - **Black corner contrast:** the black corner is dark on dark glass. A light outline would help.
-- **Edge colour conventions** differ between the two sequence scripts (§4.4).
+- **Edge colour conventions** differ between the two sequence scripts (§4.5).
+- **Membrane rings near the triple point:** the smoothing rounds the cut slightly where the three
+  curves meet.
 - **Blog version:** the CodePen panes used for embedding on a blog were made from an earlier
-  version. They lack slimming, the panel toggle, moving the shape and the line controls.
+  version. They lack slimming, the panel toggle, moving the shape, the line controls and the
+  membranes.
 
 ## 8. Version history
 
@@ -234,3 +276,5 @@ Checks were run with headless Chrome (Playwright, SwiftShader WebGL):
 | v9 | Lobe Slimming as the flow of an embedded field. |
 | v10 | Panel toggle button. Moving the shape (lens shift), two-finger move and pinch, double-click recentre. |
 | v11 | Collapsible sections, shape presets, square/polar grid controls, glued edges and corner points. |
+| v12–v13 | Inner-sheet cutaway based on visibility from outside. Superseded: the cut tore the tubes (§4.4). |
+| v14 | Membranes removed along the self-intersection curves, as in a Klein bottle. Per-pixel cut, rim ring, `tools/membranes.py`. |

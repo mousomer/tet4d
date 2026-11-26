@@ -168,6 +168,14 @@
   <details class="sec" id="sec-lines" open>
     <summary>Lines</summary>
     <div class="row">
+      <span title="Each of the three tubes passes through the surface. As in the usual drawing of a Klein bottle, the small disc of surface that the tube passes through (a membrane, bounded by the self-intersection curve) can be removed, so the tube continues. Only Shown is the complete surface.">Membranes</span>
+      <select id="membranes">
+        <option value="removed">Removed</option>
+        <option value="faded">Faded</option>
+        <option value="shown">Shown</option>
+      </select>
+    </div>
+    <div class="row">
       <span title="Square: the grid of the flat square the surface is glued from. Polar: rings and spokes of the parameter disk.">Grid</span>
       <select id="gridType">
         <option value="square">Square</option>
@@ -246,6 +254,7 @@ const DEFAULTS = {
   len: 1.3, wid: 0.92, thk: 1.0, slim: 1.0, twist: 1.6,
   opa: 0.55, clar: 0.7, frost: 0.65, gloss: 0.65, edge: 0.85,
   spin: 0.4, axis: "sym", shadow: 0.32,
+  membranes: "removed",
   gridType: "square", gridN: 8, gridW: 1.2, gridS: 0.45,
   edges: true, corners: true, edgeW: 3.0,
   c1: "#6e32c9", c2: "#b8253c", c3: "#159674", c0: "#efd2c4",
@@ -261,7 +270,7 @@ const SHAPE_KEYS = new Set(["len", "wid", "thk", "slim", "twist"]);
 function resetView() { rotX = 0; rotY = 0; spinAngle = 0; camDist = CAM_DIST0; panX = 0; panY = 0; }
 const COLOR_KEYS = ["c0", "c1", "c2", "c3", "ea", "eb"];
 const CHECK_KEYS = ["edges", "corners"];
-const SELECT_KEYS = ["axis", "gridType"];
+const SELECT_KEYS = ["axis", "gridType", "membranes"];
 const P = { ...DEFAULTS };
 let geoDirty = true;
 let frameDirty = true;
@@ -392,6 +401,35 @@ for (let i = 0; i <= NR; i++) {
     uvs[2 * v + 1] = j / NT;
   }
 }
+// ---------------------------------------------------------------------
+// Membranes. The self-intersection curve of Boy's surface is three loops through the triple point; along
+// each, a tube passes through a wall. As in the usual drawing of a Klein bottle, the small disc of wall
+// the tube passes through can be removed so the tube continues. On the parameter disk those discs are the
+// three small regions bounded entirely by self-intersection arcs. This field is the signed distance
+// (disk units, + inside a membrane) to their boundary, sampled per pixel so the cut lies on the curves.
+// Every shape control deforms space, so the curves stay on the same disk points at every slider setting.
+// ---------------------------------------------------------------------
+const MEMBRANE = {"S": 512, "clamp": 0.04, "data": "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"};
+const MEMBRANE_UNIT = 7;   // texture unit kept for this field (the passes bind units 0..3)
+let membraneReady = false;
+async function loadMembranes() {
+  const bin = Uint8Array.from(atob(MEMBRANE.data), (ch) => ch.charCodeAt(0));
+  const stream = new Blob([bin]).stream().pipeThrough(new DecompressionStream("deflate"));
+  const q = new Uint8Array(await new Response(stream).arrayBuffer());
+  const tex = gl.createTexture();
+  gl.activeTexture(gl.TEXTURE0 + MEMBRANE_UNIT);
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8, MEMBRANE.S, MEMBRANE.S, 0, gl.RED, gl.UNSIGNED_BYTE, q);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.activeTexture(gl.TEXTURE0);
+  membraneReady = true;
+  frameDirty = true;
+}
+
 // Square coordinates: inverse of Fong's elliptical map (square -> disk) used by the learning sequences,
 // so the Square grid and the glued edges are exactly the flat square's grid and boundary.
 const sqs = new Float32Array(NV * 2);
@@ -572,6 +610,16 @@ function buildBoy() {
 // =====================================================================
 // Shaders
 // =====================================================================
+// Membrane field lookup: signed distance (disk units, + inside a membrane) at this fragment's disk point.
+const MEMBRANE_GLSL = `
+uniform sampler2D uMembrane;
+uniform float uMemClamp;
+float membraneSD(vec2 uv) {   // uv = (r, theta / 2 pi)
+  float a = 6.28318530718 * uv.y;
+  vec2 w = uv.x * vec2(cos(a), sin(a));
+  return (texture(uMembrane, 0.5 * (w + 1.0)).r * 255.0 - 128.0) / 127.0 * uMemClamp;
+}`;
+
 const VS_MESH = `#version 300 es
 precision highp float;
 layout(location = 0) in vec3 aPos;
@@ -636,6 +684,8 @@ in vec3 vNrm;
 in vec2 vCol;
 in vec2 vUV;
 in vec2 vSq;
+uniform int uMemMode;                  // 0 shown, 1 faded, 2 removed
+${MEMBRANE_GLSL}
 uniform sampler2D uPrevDepth;
 uniform int uPeel;
 uniform vec3 uCamPos;
@@ -662,6 +712,8 @@ vec3 envRad(vec3 R) {
   return env;
 }
 void main() {
+  float msd = uMemMode > 0 ? membraneSD(vUV) : -1.0;
+  if (uMemMode == 2 && msd > 0.0) discard;
   if (uPeel == 1 && gl_FragCoord.z <= texelFetch(uPrevDepth, ivec2(gl_FragCoord.xy), 0).r) discard;
   vec3 V = normalize(uCamPos - vPos);
   vec3 N = normalize(vNrm);
@@ -736,6 +788,19 @@ void main() {
       trn *= 1.0 - cov;
     }
   }
+  if (uMemMode > 0) {
+    // dark ring along the cut, on the wall side: the rim of the hole the tube passes through
+    float fw = max(fwidth(msd), 1e-6);
+    float e = -msd / fw;                                   // pixels outside the membrane
+    float ring = (1.0 - smoothstep(1.6, 2.8, e)) * step(-0.5, e) * 0.85;
+    rad = mix(rad, vec3(0.05), ring);
+    trn *= 1.0 - ring;
+    if (uMemMode == 1) {   // faded: the membrane keeps a faint ghost of its shading
+      float k = mix(1.0, 0.12, smoothstep(-fw, fw, msd));
+      rad *= k;
+      trn = mix(vec3(1.0), trn, k);
+    }
+  }
   oRad = vec4(rad, 1.0);
   oTrn = vec4(trn, 1.0);
 }`;
@@ -746,9 +811,13 @@ in vec3 vPos;
 in vec3 vNrm;
 in vec2 vCol;
 in vec2 vUV;
+uniform int uMemMode;
+${MEMBRANE_GLSL}
 out vec4 o;
 ${MATERIAL}
 void main() {
+  float msd = uMemMode > 0 ? membraneSD(vUV) : -1.0;
+  if (uMemMode == 2 && msd > 0.0) discard;
   float c = clamp(abs(normalize(vNrm).y), 1e-3, 1.0);
   float edge;
   vec3 tint = materialTint(vCol, edge);
@@ -758,6 +827,7 @@ void main() {
   float scat = 1.0 - exp(-uScatter * dens * path);
   float F = fresnel(c);
   o = vec4((1.0 - F) * (1.0 - F) * tau * (1.0 - 0.6 * scat), 1.0);
+  if (uMemMode == 1 && msd > 0.0) o = mix(vec4(1.0), o, 0.12);
 }`;
 
 const FS_BG = `#version 300 es
@@ -1019,6 +1089,8 @@ function drawQuad() {
 
 // Render targets
 const SHADOW_RES = 256;
+const MEMBRANE_MODE = { shown: 0, faded: 1, removed: 2 };
+const memU = () => ({ uMemMode: membraneReady ? MEMBRANE_MODE[P.membranes] : 0, uMembrane: MEMBRANE_UNIT, uMemClamp: MEMBRANE.clamp });
 const INNER_LAYERS = 8;   // depth-peeled layers behind the front surface
 let RT = null;
 let W = 1, H = 1;
@@ -1214,7 +1286,7 @@ function renderFrame() {
   gl.clear(gl.COLOR_BUFFER_BIT);
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.ZERO, gl.SRC_COLOR);
-  use(progShadow, { ...mat, uModel: model, uVP: SHADOW_VP });
+  use(progShadow, { ...mat, uModel: model, uVP: SHADOW_VP, ...memU() });
   drawMesh();
   gl.disable(gl.BLEND);
   const shSigma = SHADOW_RES * 0.04;
@@ -1237,6 +1309,7 @@ function renderFrame() {
 
   // 3) Depth peeling: front layer, then INNER_LAYERS composited front-to-back
   const meshU = { ...mat, ...LIGHTS, uModel: model, uVP: cam.vp, uCamPos: cam.eye, uPrevDepth: 0,
+    ...memU(),
     uGridType: { off: 0, square: 1, polar: 2 }[P.gridType], uGridN: P.gridN, uGridW: P.gridW, uGridS: P.gridS,
     uEdges: P.edges ? 1 : 0, uCorners: P.corners ? 1 : 0, uEdgeW: P.edgeW,
     uEdgeA: hexToLinear(P.ea), uEdgeB: hexToLinear(P.eb),
@@ -1414,12 +1487,13 @@ resetView();
 syncUI();
 bindUI();
 loadFlow().catch((e) => console.error("flow field failed to load:", e));
+loadMembranes().catch((e) => console.error("membrane field failed to load:", e));
 resize();
 requestAnimationFrame(loop);
 
 // Small hook for automated checks (harmless in normal use)
 window.__boy = {
-  P, gl, get stats() { return { frameCount, lastFrameMs, buildMs, W, H, renderScale, floatRT: HAS_FLOAT_RT, flowReady: !!flowV }; },
+  P, gl, get stats() { return { frameCount, lastFrameMs, buildMs, W, H, renderScale, floatRT: HAS_FLOAT_RT, flowReady: !!flowV, membraneReady }; },
   set(obj) { Object.assign(P, obj); syncUI(); if (Object.keys(obj).some((k) => SHAPE_KEYS.has(k))) geoDirty = true; frameDirty = true; },
   pose(o) {
     if ("rotX" in o) rotX = o.rotX; if ("rotY" in o) rotY = o.rotY; if ("spin" in o) spinAngle = o.spin;
