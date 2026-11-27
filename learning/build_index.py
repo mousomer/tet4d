@@ -34,8 +34,13 @@ def render():
         f"Branch: **`{b['name']}`**"
         + (" (locked)" if b.get("locked") else "")
         + f". {b['policy']}"
-        + (f" {b['protection']}" if b.get("protection") else "")
         + " See [the lock](README.md#the-lock).",
+        "",
+        *(f"- **Protection ({k}).** {v}" for k, v in b.get("protection", {}).items()),
+        "",
+        "Flow, from a source change to a release ([CI and CD](README.md#ci-and-cd)):",
+        "",
+        *(f"{i}. {s}" for i, s in enumerate(MANIFEST["flow"]["steps"], 1)),
         "",
         "Each component below lists its entry page, the scripts that generate it, its docs and its checks.",
         "Commands run from the repository root; `$PY` is `$(./scripts/resolve_python_env.sh)`. The browser",

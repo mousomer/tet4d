@@ -7,7 +7,7 @@
     python3 learning/gate.py --any-branch    # allow a detached checkout (CI)
 
 The learning branch never touches the game: a change may only add or edit files under the
-folders in LEARNING_OWNED. The game's CI, packaging and verifier do not run here.
+folders in manifest.json flow.owned_paths. The game's CI, packaging and verifier do not run here.
 """
 
 import argparse
@@ -20,17 +20,22 @@ from pathlib import Path
 LEARNING = Path(__file__).resolve().parent
 ROOT = LEARNING.parent
 VIEWERS = LEARNING / "tutorials/gluing-and-topologies/square-gluings/viewers"
+MANIFEST = json.loads((LEARNING / "manifest.json").read_text(encoding="utf-8"))
 # Folders a learning change may touch: the material, and the branch's own CI/CD and hooks.
-LEARNING_OWNED = ("learning/", ".github/", ".githooks/")
+LEARNING_OWNED = tuple(MANIFEST["flow"]["owned_paths"])
 
 
 def git(*args):
-    return subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True, check=False)
+    return subprocess.run(
+        ["git", *args], cwd=ROOT, capture_output=True, text=True, check=False
+    )
 
 
 def check_scope(base):
     if git("rev-parse", "--verify", "--quiet", base).returncode != 0:
-        raise SystemExit(f"Base {base} not found: fetch it (git fetch origin learning) or pass --base.")
+        raise SystemExit(
+            f"Base {base} not found: fetch it (git fetch origin learning) or pass --base."
+        )
     changed = git("diff", "--name-only", f"{base}...HEAD").stdout.split()
     outside = [path for path in changed if not path.startswith(LEARNING_OWNED)]
     if outside:
@@ -43,17 +48,21 @@ def check_scope(base):
 
 
 def check_pandoc():
-    reference = json.loads((LEARNING / "manifest.json").read_text())["release"]["pandoc"]["reference"]
+    reference = MANIFEST["release"]["pandoc"]["reference"]
     found = subprocess.check_output(["pandoc", "--version"], text=True).splitlines()[0]
     if found != f"pandoc {reference}":
-        raise SystemExit(f"Expected Pandoc {reference} to rebuild the offline edition, saw {found}.")
+        raise SystemExit(
+            f"Expected Pandoc {reference} to rebuild the offline edition, saw {found}."
+        )
     print(f"  {found}")
 
 
 def check_rebuild():
-    output = json.loads((LEARNING / "manifest.json").read_text())["release"]["output"]
+    output = MANIFEST["release"]["output"]
     subprocess.run([sys.executable, "learning/build_release.py"], cwd=ROOT, check=True)
-    drift = git("status", "--porcelain", "--untracked-files=all", "--", f"learning/{output}").stdout
+    drift = git(
+        "status", "--porcelain", "--untracked-files=all", "--", f"learning/{output}"
+    ).stdout
     if drift:
         print(drift)
         raise SystemExit(
@@ -69,9 +78,15 @@ def run(*command, cwd=ROOT):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--full", action="store_true", help="also rebuild and run the browser checks")
-    parser.add_argument("--base", default="origin/learning", help="ref the change is compared with")
-    parser.add_argument("--any-branch", action="store_true", help="allow a detached checkout")
+    parser.add_argument(
+        "--full", action="store_true", help="also rebuild and run the browser checks"
+    )
+    parser.add_argument(
+        "--base", default="origin/learning", help="ref the change is compared with"
+    )
+    parser.add_argument(
+        "--any-branch", action="store_true", help="allow a detached checkout"
+    )
     parser.add_argument("--chrome", help="Chrome executable for the viewer checks")
     args = parser.parse_args()
 

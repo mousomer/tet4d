@@ -89,9 +89,11 @@ def main():
         bar = "#" * index + "-" * (len(steps) - index)
         print(f"[{bar}] {index}/{len(steps)} {label}", flush=True)
         subprocess.run(command, cwd=cwd, env=env, check=True)
-    print(
-        "Push learning-surfaces, open a PR into learning, merge with a merge commit, and tag learning-vN."
-    )
+    print("Next (manifest.json flow.steps):")
+    for line in json.loads((LEARNING / "manifest.json").read_text())["flow"]["steps"][
+        2:
+    ]:
+        print(f"  - {line}")
 
 
 if __name__ == "__main__":

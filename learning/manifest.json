@@ -6,9 +6,34 @@
     "work_branches": [
       "learning-surfaces"
     ],
-    "policy": "The learning material lives on the learning branch, which is never merged into master. Changes arrive by pull request from a work branch (learning-surfaces); master holds none of it.",
-    "protection": "GitHub branch protection on learning: changes only through pull requests that pass the CI required gate of learning.yml, no force pushes, no deletion. A tag ruleset keeps learning-v* tags from being moved or deleted.",
+    "policy": "The learning material lives on the learning branch, which is never merged into master; master holds none of it. Changes arrive by pull request from a work branch (learning-surfaces).",
+    "protection": {
+      "branch": "learning: pull requests only, the CI required gate must pass, admins included (enforce_admins), no force pushes, no deletion.",
+      "tags": "Ruleset 'Protect learning release tags': learning-v* tags cannot be moved or deleted, admins included.",
+      "master": "On master, CI rejects pull requests that add or change files under learning/; removals are allowed."
+    },
     "base": "391ca2ae"
+  },
+  "flow": {
+    "owned_paths": [
+      "learning/",
+      ".github/",
+      ".githooks/"
+    ],
+    "owned_paths_note": "A change on this branch may only touch these folders: the material and the branch's own CI/CD and hooks. Game changes go to master.",
+    "gate": "gate.py",
+    "pre_push": ".githooks/pre-push",
+    "ci": ".github/workflows/learning.yml",
+    "required_check": "CI required gate",
+    "cd": ".github/workflows/learning-release.yml",
+    "tag_pattern": "learning-v*",
+    "steps": [
+      "Commit the source changes on learning-surfaces; the pre-push hook runs the fast gate (gate.py).",
+      "Run release_cycle.py --pandoc-dir <pandoc-3.9-directory>: it rebuilds the offline edition, runs the checks and commits the rebuild at the new source_ref.",
+      "Push learning-surfaces and open a pull request into learning; learning.yml runs gate.py --full and reports the CI required gate.",
+      "Merge with a merge commit, never squash: the offline edition links to commits in this history.",
+      "Tag the merge commit learning-vN and push the tag; learning-release.yml verifies the edition and publishes the zip on a GitHub release that is never marked Latest (the game keeps Latest)."
+    ]
   },
   "release": {
     "output": "released",

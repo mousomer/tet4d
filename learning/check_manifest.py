@@ -21,6 +21,7 @@ from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 LEARNING = Path(__file__).resolve().parent
+ROOT = LEARNING.parent
 sys.path.insert(0, str(LEARNING))
 import build_release  # reads the same manifest
 
@@ -89,6 +90,47 @@ def check_branch(any_branch):
         "branch base is an ancestor of HEAD",
         git("merge-base", "--is-ancestor", b["base"], "HEAD").returncode == 0,
         b["base"],
+    )
+
+
+def check_flow():
+    flow = MANIFEST["flow"]
+    protection = MANIFEST["branch"].get("protection", {})
+    check(
+        "branch protection is recorded for the branch, its tags and master",
+        isinstance(protection, dict)
+        and {"branch", "tags", "master"} <= set(protection),
+    )
+    paths = {key: ROOT / flow[key] for key in ("pre_push", "ci", "cd")}
+    paths["gate"] = LEARNING / flow["gate"]
+    missing = [str(p.relative_to(ROOT)) for p in paths.values() if not p.is_file()]
+    check(
+        "flow: gate, pre-push hook, CI and CD files exist",
+        not missing,
+        ", ".join(missing),
+    )
+    if missing:
+        return
+    text = {key: path.read_text(encoding="utf-8") for key, path in paths.items()}
+    check(
+        "flow: pre-push hook runs the gate",
+        f"learning/{flow['gate']}" in text["pre_push"],
+    )
+    check(
+        "flow: CI runs the full gate and reports the required check",
+        f"learning/{flow['gate']} --full" in text["ci"]
+        and f"name: {flow['required_check']}" in text["ci"],
+        flow["required_check"],
+    )
+    check(
+        "flow: CD runs on the release tags and never takes Latest",
+        f'"{flow["tag_pattern"]}"' in text["cd"] and "--latest=false" in text["cd"],
+        flow["tag_pattern"],
+    )
+    game_ci = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+    check(
+        "flow: the game's CI skips pull requests into this branch",
+        f"branches-ignore:\n      - {MANIFEST['branch']['name']}" in game_ci,
     )
 
 
@@ -203,6 +245,7 @@ def main():
     any_branch = "--any-branch" in sys.argv[1:]
     parts = [
         ("branch", lambda: check_branch(any_branch)),
+        ("flow", check_flow),
         ("components", check_components),
         ("docs", check_docs),
         ("release", check_release),
