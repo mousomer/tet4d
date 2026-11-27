@@ -178,15 +178,16 @@ Offline browser edition of everything above, with MathML equations and an embedd
 
 - **Folder:** [`released/`](released)
 - **Entry:** [index.html](released/index.html)
-- **Generators:** [`build_release.py`](build_release.py)
+- **Generators:** [`build_release.py`](build_release.py), [`release_cycle.py`](release_cycle.py)
 - **Docs:** [`README.md`](README.md)
-- **Checks:** [`smoke_embed.py`](smoke_embed.py), [`check_manifest.py`](check_manifest.py)
+- **Checks:** [`smoke_embed.py`](smoke_embed.py), [`check_manifest.py`](check_manifest.py), [`check_viewers.py`](tutorials/gluing-and-topologies/square-gluings/viewers/tools/check_viewers.py)
 - **Origin:** builder moved here from PRs #208 and #209 (removed there in 38896fad, 2696be2a); extended on this branch
 
 ```sh
 PATH=<folder with pandoc 3.9>:$PATH python3 learning/build_release.py --lock
 python3 learning/smoke_embed.py
 python3 learning/check_manifest.py
+"$(./scripts/resolve_python_env.sh)" learning/release_cycle.py --pandoc-dir <pandoc-3.9-directory>
 ```
 
 ## Keeping it consistent

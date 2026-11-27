@@ -226,19 +226,22 @@
       "path": "released",
       "entry": "released/index.html",
       "generators": [
-        "build_release.py"
+        "build_release.py",
+        "release_cycle.py"
       ],
       "docs": [
         "README.md"
       ],
       "checks": [
         "smoke_embed.py",
-        "check_manifest.py"
+        "check_manifest.py",
+        "tutorials/gluing-and-topologies/square-gluings/viewers/tools/check_viewers.py"
       ],
       "run": [
         "PATH=<folder with pandoc 3.9>:$PATH python3 learning/build_release.py --lock",
         "python3 learning/smoke_embed.py",
-        "python3 learning/check_manifest.py"
+        "python3 learning/check_manifest.py",
+        "\"$(./scripts/resolve_python_env.sh)\" learning/release_cycle.py --pandoc-dir <pandoc-3.9-directory>"
       ],
       "origin": "builder moved here from PRs #208 and #209 (removed there in 38896fad, 2696be2a); extended on this branch"
     }
