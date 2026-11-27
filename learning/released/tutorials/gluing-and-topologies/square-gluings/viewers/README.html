@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Square gluing viewers · Tet4D Learning</title>
+  <link rel="stylesheet" href="../../../../release.css">
+</head>
+<body>
+  <header class="site-header"><a href="../../../../index.html">Tet4D Learning</a></header>
+  <main><h1 id="square-gluing-viewers">Square gluing viewers</h1>
+<p>Interactive versions of the tutorial’s six square gluings, plus the
+classic glass Klein bottle and Boy’s surface exactly as in the Boy’s
+surface viewer. Each page glues one square into its closed surface; <a
+href="index.html">index.html</a> is the menu.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Page</th>
+<th>Word</th>
+<th>Result</th>
+<th>Cone points</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="sphere.html">sphere.html</a></td>
+<td>a b b⁻¹ a⁻¹</td>
+<td>sphere, χ = 2</td>
+<td>A (90°), B=D (180°), C (90°)</td>
+</tr>
+<tr>
+<td><a href="rp2-adjacent.html">rp2-adjacent.html</a></td>
+<td>a b b a⁻¹</td>
+<td>projective plane, χ = 1</td>
+<td>A (90°), B=C=D (270°)</td>
+</tr>
+<tr>
+<td><a href="rp2-opposite.html">rp2-opposite.html</a></td>
+<td>a b a b</td>
+<td>projective plane, χ = 1</td>
+<td>A=C, B=D (180° each)</td>
+</tr>
+<tr>
+<td><a href="torus.html">torus.html</a></td>
+<td>a b a⁻¹ b⁻¹</td>
+<td>torus, χ = 0</td>
+<td>none (360°)</td>
+</tr>
+<tr>
+<td><a href="klein-adjacent.html">klein-adjacent.html</a></td>
+<td>a b b a</td>
+<td>Klein bottle, χ = 0</td>
+<td>none (360°)</td>
+</tr>
+<tr>
+<td><a href="klein-opposite.html">klein-opposite.html</a></td>
+<td>a b a⁻¹ b</td>
+<td>Klein bottle, χ = 0</td>
+<td>none (360°)</td>
+</tr>
+<tr>
+<td><a href="klein-bottle.html">klein-bottle.html</a></td>
+<td>a b a⁻¹ b</td>
+<td>Klein bottle (the glass bottle), χ = 0</td>
+<td>none (360°)</td>
+</tr>
+<tr>
+<td><a href="rp2-boy.html">rp2-boy.html</a></td>
+<td>a b a b</td>
+<td>Boy’s surface (Bryant–Kusner), χ = 1</td>
+<td>none: smooth (A=C, B=D at 180°)</td>
+</tr>
+</tbody>
+</table>
+<p>Each page is one self-contained HTML file (WebGL2, no network). Open
+it in a browser.</p>
+<h2 id="controls">Controls</h2>
+<ul>
+<li><strong>Glue</strong>: 0 is the flat square, 1 the closed surface. ▶
+plays from wherever the slider is; Space plays or pauses.</li>
+<li><strong>Duration</strong>: seconds for a full run, 3–30. Playback
+follows the clock, so a run takes this long at any frame rate.</li>
+<li><strong>Step</strong>: the size of one step for the step buttons and
+the ← → keys.</li>
+<li><strong>Motion</strong>:
+<ul>
+<li><em>Two stages</em> (default) is the tutorial’s construction: the
+orange edges a close first, then the cyan edges b.</li>
+<li><em>One stretch</em> moves every point at once from the flat square
+to its place on the surface, centre first and edges last, so all edges
+meet at the end.</li>
+</ul></li>
+<li><strong>Cone Points</strong> (sphere and both projective planes):
+<ul>
+<li><em>On</em>: corners whose angles sum to less than 360° stay sharp
+tips, as in the tutorial.</li>
+<li><em>Off</em>: the same gluing, smoothed. The sphere becomes round
+and the projective planes become the smooth Boy’s surface.</li>
+<li>The torus and Klein bottles have no cone point (their four corners
+meet at 360°), so the switch is disabled there.</li>
+</ul></li>
+<li><strong>Shape</strong> (Boy’s surface page): Length, Width,
+Protrusion and Twist, with presets, as in the Boy’s surface viewer
+(where Protrusion is called Thickness). They change the finished
+surface, so the run is re-paced when they change.</li>
+<li><strong>Lines</strong>: the square’s grid, the edges, the arrows,
+the corner discs and the corner labels.</li>
+<li><strong>Material</strong> and <strong>Scene</strong>: the glass, a
+turntable, the floor shadow.</li>
+<li><strong>View</strong>: drag to rotate, right-drag or Shift-drag to
+move, scroll to zoom, double-click to recentre. H hides the panel. Reset
+restores everything, including the view.</li>
+<li><strong>Link parameters</strong>:
+<code>?glue=0.5&amp;motion=stretch&amp;cones=0&amp;play=0</code> open a
+page at a given state. A page opened without <code>glue</code> plays
+once on load.</li>
+</ul>
+<h2 id="what-the-pages-show">What the pages show</h2>
+<p>The pages follow the tutorial’s conventions:</p>
+<ul>
+<li><strong>Corners</strong>: A–D run clockwise from the upper
+left.</li>
+<li><strong>Edges</strong>: edge a is orange and edge b is cyan, and
+each word is read clockwise.</li>
+<li><strong>Arrows</strong>: one arrow sits at the middle of each edge.
+The two sheets meeting at an edge each paint their own half of the band
+and of the arrow. On the flat square you see half-arrows; once two edges
+meet, the halves join into one band and one whole arrow.</li>
+<li><strong>Corner discs</strong>: each corner gets a disc coloured by
+the point it becomes, so corners that will meet share a colour.</li>
+<li><strong>Labels</strong> follow the corners and merge (B=D) once
+their edges are glued. When every edge at a point is glued, the label
+shows the angle sum: 90° per corner, a cone below 360°, “smoothed” with
+cone points off.</li>
+<li><strong>Status</strong>: the panel tracks what the glued square is
+at each moment.
+<ul>
+<li>Each seam: open, closing (with its progress), or glued.</li>
+<li>The space’s name, from disk through cylinder or Möbius band to the
+closed surface.</li>
+<li>χ = V − E + F, with F = 1, E = 1 per glued pair and 2 per open pair,
+and V = the corner classes.</li>
+<li>Orientability: a glued pair with the same exponent reverses
+orientation.</li>
+<li>The number of boundary circles.</li>
+</ul></li>
+</ul>
+<h2 id="how-it-works">How it works</h2>
+<ul>
+<li><strong><a href="src/surfaces.js">src/surfaces.js</a></strong>: the
+eight surfaces.
+<ul>
+<li>Each module is a line-for-line port of the tutorial’s Python
+homotopy in <a href="https://github.com/mousomer/tet4d/tree/978feea0a5887ff74e01ead000d285ece56b6c36/learning/tutorials/gluing-and-topologies/square-gluings/rebuild">../rebuild/</a>:
+<code>tet4d_sphere_revised.py</code>, <code>directboy.py</code>,
+<code>orp.py</code>, <code>torus_direct.py</code>,
+<code>klein_direct.py</code>, <code>opklein.py</code>.</li>
+<li>A module evaluates <code>point(X, Y, params(t), cone)</code> on the
+square [−1, 1]², along with its stage schedule (<code>fold</code> closes
+a, <code>puff</code> closes b), its edge pairing and its home pose.</li>
+<li>The cone factor scales the cone-tip bumps of the two projective
+planes. On the sphere it blends the pillow toward a round sphere.</li>
+<li>The projective planes’ finished Boy surface (the expensive part) is
+cached per cone setting.</li>
+</ul></li>
+<li><strong><a href="src/template.html">src/template.html</a></strong>:
+the engine.
+<ul>
+<li>It reuses the <a
+href="../../../../boys-surface-viewer/README.html">Boy’s surface
+viewer</a> renderer unchanged: depth-peeled glass, frost, studio
+lighting, coloured floor shadow, FXAA.</li>
+<li>On top of that it adds a 241 × 241 square mesh, painting in square
+coordinates, the motion and pacing, seam welding, the topology readout,
+the labels and the playback controls.</li>
+<li>Once a seam closes, its two sides are welded: shared positions,
+averaged normals.</li>
+</ul></li>
+<li><strong>Pacing</strong>: the slider is re-timed by how far the
+surface travels (70%) and by schedule time (30%). Equal slider steps
+make similar amounts of change, and the short pause between the two
+stages stays visible.</li>
+<li><strong>Scale</strong>: fixed for a whole run, chosen from the
+largest extent over the run. The surface never “breathes”; on the sphere
+this means the flat diamond is larger than the finished pillow.</li>
+<li><strong>The glass bottle</strong> (<a
+href="klein-bottle.html">klein-bottle.html</a>) is this repo’s own
+construction; the tutorial has no glass-bottle version. It has three
+stages:
+<ol type="1">
+<li>The square rolls into a cylinder (orange a), as on the torus
+page.</li>
+<li>The cylinder stands up and takes the shape of a bulb and a
+neck.</li>
+<li>The neck’s open end travels along the bottle’s core: up, over, down
+outside, through the wall and down inside. It flares to meet the bulb’s
+bottom rim from inside (cyan b), while the bulb’s half of the square
+stays put.</li>
+</ol>
+The finished bottle is a tube around a periodic cubic B-spline core with
+a B-spline radius. The core has a cusp at the join: its control polygon
+is symmetric there, so the core arrives going down and leaves going up.
+That flip of the tube’s direction is the Klein identification (−1, Y) ~
+(1, −Y), and because the radius keeps growing through the join, the
+surface is smooth there.</li>
+<li><strong>Boy’s surface</strong> (<a
+href="rp2-boy.html">rp2-boy.html</a>) ends on exactly the surface of the
+<a href="../../../../boys-surface-viewer/README.html">Boy’s surface
+viewer</a>.
+<ul>
+<li>The surface is Bryant–Kusner with c = 0.95, at w = Fong’s elliptical
+map of the square (the viewer’s Square grid). The boundary of that disk
+is glued antipodally, which is the word a b a b.</li>
+<li>The shape sliders are the viewer’s map of space about the 3-fold
+axis: radial stretch, angular lobe width, axial stretch and a twist
+growing with height. Every setting is still an immersion.</li>
+<li>The colours are the viewer’s lobe colours, and the home pose is its
+view from the pole side.</li>
+<li>The two stages are a staged stretch: each point moves straight from
+a flat square to its place on the surface, arriving at T(X, Y) = 0.35 (1
+− ab) + 0.65 (1 − b) a, with a = 1 − Y² and b = 1 − X².
+<ul>
+<li>The centre arrives first.</li>
+<li>The top and bottom edges arrive together at T = 0.35. The first
+stage ends there, as a Möbius band.</li>
+<li>The left and right edges arrive last, closing the surface.</li>
+</ul></li>
+<li>The flat square lies in the least-squares plane of the surface,
+scaled to the surface’s size, so it stretches rather than inflates.</li>
+<li>Slimming and Gap Width are not included. They are fields computed
+for the viewer’s mesh, and could be ported the same way.</li>
+</ul></li>
+<li><strong><a href="build.py">build.py</a></strong>: inlines the
+modules into the template and writes the pages and the menu. It also
+holds the menu’s table, which the checks compare with the modules.</li>
+</ul>
+<h2 id="rebuild-render-check">Rebuild, render, check</h2>
+<p>From the repository root:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="va">PY</span><span class="op">=</span><span class="va">$(</span><span class="ex">./scripts/resolve_python_env.sh</span><span class="va">)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="va">$PY</span> learning/tutorials/gluing-and-topologies/square-gluings/viewers/build.py   <span class="co"># pages + menu</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> learning/tutorials/gluing-and-topologies/square-gluings/viewers</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> tools/render_gluing.py <span class="at">--surface</span> all <span class="at">--glue</span> 0:1:25 <span class="at">--anim</span>     <span class="co"># frames, strips, animated WebP</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> tools/render_gluing.py <span class="at">--surface</span> sphere <span class="at">--cones</span> both <span class="at">--view</span> home <span class="at">--view</span> 30,60</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> tools/render_gluing.py <span class="at">--thumbs</span>                                <span class="co"># img/&lt;id&gt;.webp for the menu (not kept in git)</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> tools/check_viewers.py                                         <span class="co"># browser checks for all pages</span></span></code></pre></div>
+<p>The two tools need playwright and pillow, with playwright’s Chromium
+or <code>--chrome /path/to/chrome</code>.</p>
+<h3 id="render_gluingpy">render_gluing.py</h3>
+<p>It renders any glue values (<code>START:END:COUNT</code> or a list)
+from any views:</p>
+<ul>
+<li><strong>Views</strong> are named (home, back, top, side) or given as
+tilt,turn in degrees, added to the page’s default view.</li>
+<li><strong>Settings</strong>: either motion (<code>--motion</code>),
+and with, without or both cone settings (<code>--cones</code>).</li>
+<li><strong>Output</strong>: per surface and setting, the PNG frames, a
+strip, and with <code>--anim</code> an animated WebP per view.</li>
+</ul>
+<h3 id="check_viewerspy">check_viewers.py</h3>
+<p>It checks each page:</p>
+<ul>
+<li>It loads with WebGL2 and no page errors.</li>
+<li>Its title, word and cone switch match <code>build.py</code>.</li>
+<li><strong>Seams</strong>: the module’s seams close exactly at the end
+(relative gap below 10⁻⁶, measured at 1001 points per seam, with and
+without cones). The square starts flat.</li>
+<li><strong>Stages</strong>: in two-stage motion seam a closes before
+seam b, and a closed seam stays closed.</li>
+<li><strong>Endpoints</strong>: glue 0 is a disk. Glue 1 is the expected
+surface, with the right corner classes, χ and orientability, in both
+motions and both cone settings.</li>
+<li><strong>Painting</strong>: edges and arrows paint visible
+pixels.</li>
+<li><strong>Playback</strong>: a run takes its set duration. The step
+buttons step by the set size, and link parameters are read.</li>
+</ul>
+<p>It also checks that the menu links every page and that its cards work
+without the thumbnails, which are generated and not kept in the
+repository.</p>
+<h2 id="limits">Limits</h2>
+<ul>
+<li><strong>Labels</strong> are drawn over the surface, so a label stays
+visible even when its corner is behind a sheet.</li>
+<li><strong>Speed</strong>: software rendering (no GPU) runs at a few
+frames per second. Playback keeps its duration but skips frames.</li>
+</ul>
+</main>
+</body>
+</html>

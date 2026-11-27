@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Boy&#x27;s surface viewer · Tet4D Learning</title>
+  <link rel="stylesheet" href="../release.css">
+</head>
+<body>
+  <header class="site-header"><a href="../index.html">Tet4D Learning</a></header>
+  <main><h1 id="boys-surface-viewer">Boy’s surface viewer</h1>
+<p>An interactive WebGL2 viewer of Boy’s surface, the Bryant–Kusner
+immersion of the real projective plane ℝP² in ℝ³, rendered as frosted
+coloured glass.</p>
+<figure>
+<img src="viewer.png" alt="The viewer with its control panel" />
+<figcaption aria-hidden="true">The viewer with its control
+panel</figcaption>
+</figure>
+<p>Open <a
+href="boys-surface-viewer.html"><code>boys-surface-viewer.html</code></a>
+in a browser. It is a single self-contained file with no network access
+and no dependencies.</p>
+<p><strong>Controls</strong> - Drag to rotate. Right-drag, Shift-drag or
+middle-drag to move the shape around the canvas. - Scroll to zoom. On
+touch screens, use two fingers to move and pinch to zoom. - Double-click
+to recentre. <strong>H</strong>, or the round button at the top right,
+hides the panel.</p>
+<p><strong>Panel</strong> - <strong>Shape:</strong> Glue (with ▶ to play
+it), presets, lobe length / width / thickness, interior slimming, gap
+width, twist. - <strong>Lines:</strong> membranes (see below), square or
+polar parameter grid, the glued edges of the square, its corner points,
+and the self-intersection curve with its triple point. -
+<strong>Material:</strong> glass opacity, clarity, frost, gloss, rim
+depth, and the lobe colours. - <strong>Scene:</strong> spin, spin axis,
+floor shadow.</p>
+<p>The <strong>Square</strong> grid and the <strong>glued edges</strong>
+are the same square, grid and edge colours as the last frame of <a
+href="https://github.com/mousomer/tet4d/tree/978feea0a5887ff74e01ead000d285ece56b6c36/learning/projective-plane-sequence">the square-to-Boy’s-surface
+sequence</a>. Here they are shown on the finished surface, which you can
+turn and look through.</p>
+<figure>
+<img src="edges-and-corners.png" alt="Glued edges and corner points" />
+<figcaption aria-hidden="true">Glued edges and corner
+points</figcaption>
+</figure>
+<p><strong>Membranes.</strong> Each of the three tubes passes through
+the surface. The usual glass Klein bottle shows its neck passing through
+a hole in the wall. In the same way, the viewer removes by default the
+small disc of surface each tube passes through. These discs are bounded
+by the self-intersection curve, and a dark ring marks the rim of each
+hole. Set <strong>Membranes</strong> to <em>Shown</em> to see the
+complete surface.</p>
+<figure>
+<img src="membranes.png"
+alt="Membranes shown (left) and removed (right), at low opacity" />
+<figcaption aria-hidden="true">Membranes shown (left) and removed
+(right), at low opacity</figcaption>
+</figure>
+<p><strong>Gluing.</strong> The <em>Glue</em> slider (or ▶) stretches
+the flat square into Boy’s surface, continuously, and you can rotate it
+at any moment. The whole square, its grid, its four edges and its
+corners are there all along: - The centre of the square bulges into the
+three lobes. - The edges lift off and wrap round into the slits. - Each
+orange edge comes alongside the other orange one, and each blue
+alongside the other blue, until they meet at 1. - Equal slider steps
+make equally large changes.</p>
+<figure>
+<img src="gluing.png"
+alt="The Glue slider from 0 to 1, front and back, edges emphasised" />
+<figcaption aria-hidden="true">The Glue slider from 0 to 1, front and
+back, edges emphasised</figcaption>
+</figure>
+<p>Animations: <a href="gluing/gluing_front.webp">front</a>, <a
+href="gluing/gluing_back.webp">back</a>.</p>
+<p>Every in-between moment, from any angle, can be rendered with <a
+href="tools/render_gluing.py"><code>tools/render_gluing.py</code></a>:</p>
+<pre><code>python tools/render_gluing.py                                  # 13 steps, front and back (the image above)
+python tools/render_gluing.py --glue 0:1:61 --view front --anim  # 61 steps and an animated WebP
+python tools/render_gluing.py --glue 0.25,0.3,0.35             # chosen moments
+python tools/render_gluing.py --view 30,20 --view -30,200      # any view: tilt,turn in degrees
+python tools/render_gluing.py --style glass --set &#39;{&quot;gap&quot;: 0}&#39; # the viewer&#39;s look, other settings</code></pre>
+<p>The default <em>edges</em> style makes the glass nearly clear, with a
+faint grid and thick edges and corners.</p>
+<p><strong>Gap width.</strong> The narrow slits between the tubes and
+the central area open to about the tubes’ width (Gap Width 1, the
+default). Set it to 0 for the classic hairline slits.</p>
+<figure>
+<img src="gaps.png"
+alt="Gap Width 0 and 1, at normal and at low opacity" />
+<figcaption aria-hidden="true">Gap Width 0 and 1, at normal and at low
+opacity</figcaption>
+</figure>
+<p><strong>Self-intersections.</strong> Tick <em>Self-Intersections</em>
+to draw where the surface passes through itself: three loops (gold) that
+all meet at the triple point (gold disc).</p>
+<figure>
+<img src="self-intersections.png"
+alt="The self-intersection curve and the triple point" />
+<figcaption aria-hidden="true">The self-intersection curve and the
+triple point</figcaption>
+</figure>
+<p>How it works, and why it is built this way: <a
+href="DESIGN.html">DESIGN.md</a>.</p>
+<p><strong>Tools</strong> - <a
+href="tools/slimming_field.py"><code>tools/slimming_field.py</code></a>
+regenerates the page’s embedded slimming field (about two minutes). It
+needs numpy and scipy. - <a
+href="tools/gap_field.py"><code>tools/gap_field.py</code></a>
+regenerates the page’s embedded gap map (about eight minutes). It needs
+numpy and scipy. - <a
+href="tools/membranes.py"><code>tools/membranes.py</code></a>
+regenerates the page’s embedded membrane and curve data. It needs numpy
+and scipy. - <a
+href="tools/fold_check.py"><code>tools/fold_check.py</code></a> confirms
+that no setting of the shape sliders folds the surface. It needs numpy
+and scipy. - <a
+href="tools/render_gluing.py"><code>tools/render_gluing.py</code></a>
+renders the gluing at any glue values and view angles (frames, strip,
+animated WebP). It needs playwright and pillow. - <a
+href="tools/check_viewer.py"><code>tools/check_viewer.py</code></a> runs
+26 browser checks headless. It needs playwright, pillow and numpy.</p>
+</main>
+</body>
+</html>

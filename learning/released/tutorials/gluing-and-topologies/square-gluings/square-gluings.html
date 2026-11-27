@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Adjacent-edge square gluings: sphere and real projective plane · Tet4D Learning</title>
+  <link rel="stylesheet" href="../../../release.css">
+</head>
+<body>
+  <header class="site-header"><a href="../../../index.html">Tet4D Learning</a></header>
+  <main><h1
+id="adjacent-edge-square-gluings-sphere-and-real-projective-plane">Adjacent-edge
+square gluings: sphere and real projective plane</h1>
+<p>Start with corners A, B, C, D clockwise from the upper left. Orange
+identifies the top and left edges. Cyan identifies the right and bottom
+edges. Read every arrow as an edge parameter: corresponding arrow tails,
+midpoints and heads meet. Each row below gives the two directed copies
+of each seam.</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Orange</th>
+<th>Cyan</th>
+<th>Clockwise boundary word</th>
+<th>Final corner classes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sphere</td>
+<td>A→B and A→D</td>
+<td>B→C and D→C</td>
+<td>a b b⁻¹ a⁻¹</td>
+<td>A, B+D, C</td>
+</tr>
+<tr>
+<td>Real projective plane</td>
+<td>A→B and A→D</td>
+<td>B→C and C→D</td>
+<td>a b b a⁻¹</td>
+<td>A, B+C+D</td>
+</tr>
+</tbody>
+</table>
+<h2 id="sphere">Sphere</h2>
+<p>The orange seam merges B with D. The two remaining cyan edges then
+run from this merged point to C. Closing them preserves A, B+D and C as
+three distinct points. Each original corner supplies 90° of intrinsic
+angle: A and C each have 90°, and B+D has 180°. The quotient has three
+vertices, two edges and one face, giving Euler characteristic 2. Both
+identifications reverse the boundary traversal, so the closed surface is
+orientable.</p>
+<p>The prototype folds along AC and rounds the two triangular patches
+into a pillow. Its three tips are part of the mesh. Their slopes are
+stylized, and the labels give intrinsic angles in the original square.
+<a
+href="REBUILD.html?output=sphere-revised/adjacent-edge-sphere.mp4">Build
+animation</a> · <a
+href="https://github.com/mousomer/tet4d/blob/978feea0a5887ff74e01ead000d285ece56b6c36/learning/tutorials/gluing-and-topologies/square-gluings/sphere-revised/adjacent-edge-sphere-stills.zip">Numbered
+stills</a> · <a href="sphere-revised/rotate-sphere.html">Rotatable
+model</a> · <a href="viewers/sphere.html">Interactive gluing</a></p>
+<h2 id="real-projective-plane-rp²">Real projective plane (RP²)</h2>
+<p>The orange seam again merges B and D. Reversing the second cyan arrow
+changes the result: each of B and D now meets C. The closed quotient has
+one 90° corner at A and one 270° corner at B+C+D. Two vertices, two
+edges and one face give Euler characteristic 1. The cyan identification
+preserves the boundary traversal, making the surface nonorientable.</p>
+<p>In the direct-curl animation each point keeps its distance from A as
+the orange edges meet. A becomes the apex of the resulting cone. The
+cyan rim then closes, and the B+C+D apex forms. The final model uses a
+Boy’s surface immersion modified locally at the two corner classes to
+produce visible cone tips. In the reset view A points left and B+C+D
+points right. The three apparent openings come from the immersed sheets.
+At the central triple crossing, three distinct neighborhoods occupy the
+same displayed position. Only the orange and cyan edge maps identify
+points of the original square.</p>
+<p><a href="REBUILD.html?output=direct-curl/boys-surface.mp4">Build
+direct-curl animation</a> · <a href="https://github.com/mousomer/tet4d/blob/978feea0a5887ff74e01ead000d285ece56b6c36/learning/tutorials/gluing-and-topologies/square-gluings/direct-curl/stills.zip">Numbered
+stills</a> · <a href="direct-curl/rotate.html">Rotatable model</a> · <a
+href="viewers/rp2-adjacent.html">Interactive gluing</a></p>
+</main>
+</body>
+</html>

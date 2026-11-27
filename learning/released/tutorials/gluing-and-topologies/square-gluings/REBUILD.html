@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rebuilding the six square gluings · Tet4D Learning</title>
+  <link rel="stylesheet" href="../../../release.css">
+</head>
+<body>
+  <header class="site-header"><a href="../../../index.html">Tet4D Learning</a></header>
+  <main><h1 id="rebuilding-the-six-square-gluings">Rebuilding the six square
+gluings</h1>
+<p>Run these commands from this <strong>square-gluings</strong> folder.
+The complete build renders 3,144 PNG frames, selects 96 numbered key
+stills, encodes six H.264 movies at 24 fps and generates six standalone
+HTML viewers from the final meshes. Each construction gets its own
+full-frame and key-still ZIP. The output includes the collection index
+and construction notes.</p>
+<h2 id="apple-silicon-mac">Apple silicon Mac</h2>
+<p>The pinned dependencies (NumPy, Pillow, and imageio-ffmpeg with an
+FFmpeg executable) install from PyPI. On macOS, install Apple Command
+Line Tools for the C compiler and SDK.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3.14</span> <span class="at">-m</span> venv .venv</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">.venv/bin/python</span> <span class="at">-m</span> pip install <span class="at">-r</span> rebuild/requirements.txt</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">.venv/bin/python</span> rebuild/build.py <span class="at">--output</span> /tmp/tet4d-square-gluings</span></code></pre></div>
+<p>Open <strong>/tmp/tet4d-square-gluings/index.html</strong> after the
+command finishes. Use a new or empty output directory for each run.
+Reserve approximately 2 GB of free space in the output location. The
+movies are silent. A different FFmpeg build, font or numerical library
+can change encoded bytes or raster pixels.</p>
+<h2 id="reproducing-the-original-mp4-bytes">Reproducing the original MP4
+bytes</h2>
+<p>On the tested Apple silicon Mac, the bundled encoder reproduced all
+decoded video frames. For byte-identical MP4 containers as well, the
+original Homebrew FFmpeg 9.0.2 build with libx264 reproduced all six
+reference SHA-256 hashes. With that encoder on your path, use a fresh
+output directory:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="va">IMAGEIO_FFMPEG_EXE</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$(</span><span class="bu">command</span> <span class="at">-v</span> ffmpeg<span class="va">)</span><span class="st">&quot;</span> <span class="ex">.venv/bin/python</span> rebuild/build.py <span class="at">--output</span> /tmp/tet4d-original-encoder</span></code></pre></div>
+<h2 id="building-one-construction">Building one construction</h2>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">.venv/bin/python</span> rebuild/build.py <span class="at">--only</span> opposite-rp2 <span class="at">--output</span> /tmp/tet4d-rp2-test <span class="at">--jobs</span> 4</span></code></pre></div>
+<p>The available names are <strong>sphere-revised</strong> (adjacent
+sphere), <strong>direct-curl</strong> (adjacent RP²),
+<strong>adjacent-klein</strong>, <strong>opposite-torus</strong>,
+<strong>opposite-klein</strong> and <strong>opposite-rp2</strong>. A
+single-construction run writes its media and viewer under the named
+subfolder. The complete index is produced by the all-six build.</p>
+<h2 id="other-environments-and-fonts">Other environments and fonts</h2>
+<p>On Linux, provide a C compiler with shared-library support. Set
+<code>CC</code> to its executable if needed. The build compiles the
+included rasterizer into a temporary directory. For an external
+H.264-enabled FFmpeg, set <code>IMAGEIO_FFMPEG_EXE</code> to its
+executable path.</p>
+<p>On macOS the renderer uses the system Arial Unicode font when
+available. Elsewhere it requests DejaVu Sans. Set
+<code>GLUING_FONT</code> to the path of an installed TrueType font
+supporting the arrow, diamond and degree glyphs to override this. System
+fonts, Python, the OS SDK and the C compiler are host prerequisites.</p>
+<h2 id="source-layout">Source layout</h2>
+<ul>
+<li><strong>rebuild/build.py</strong> selects the recipe, renders the
+frames in batches, picks the numbered stills, encodes the movie and
+packages the image sequences.</li>
+<li><strong>rebuild/viewer.py</strong> evaluates the final geometry,
+builds the mesh, labels, seams and crossing data, and inserts them into
+the matching HTML/JavaScript source under
+<strong>rebuild/templates/</strong>.</li>
+<li><strong>rebuild/tet4d_sphere_revised.py</strong>,
+<strong>directboy.py</strong>, <strong>klein_direct.py</strong>,
+<strong>torus_direct.py</strong>, <strong>opklein.py</strong> and
+<strong>orp.py</strong> contain the parameterizations and animation
+renderers. The opposite-edge RP² renderer shares the Boy’s surface
+parameterization in <strong>directboy.py</strong>.</li>
+<li><strong>rebuild/raster.c</strong> composites translucent triangle
+fragments in depth order. The sphere uses a Pillow renderer.</li>
+<li><strong>rebuild/requirements.txt</strong> pins the three Python
+dependencies.</li>
+</ul>
+</main>
+</body>
+</html>

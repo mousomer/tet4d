@@ -10,7 +10,7 @@
     "output": "released",
     "builder": "build_release.py",
     "smoke_test": "smoke_embed.py",
-    "source_ref": "PENDING",
+    "source_ref": "978feea0a5887ff74e01ead000d285ece56b6c36",
     "source_ref_note": "Commit on this branch that the offline edition links to for files it does not copy (zips, rebuild guides on GitHub). Set by build_release.py --lock to the commit being released from.",
     "include": [
       "tutorials",
@@ -29,9 +29,18 @@
       "kind": "tutorial",
       "path": "tutorials/gluing-and-topologies",
       "entry": "tutorials/gluing-and-topologies/chapter_01_gluing_and_topologies.md",
-      "generators": ["tutorials/gluing-and-topologies/square_gluings.py", "tutorials/gluing-and-topologies/01_enumerate.py", "tutorials/gluing-and-topologies/02_d4_orbits.py", "tutorials/gluing-and-topologies/03_classify.py"],
-      "docs": ["tutorials/gluing-and-topologies/README.md"],
-      "checks": ["tutorials/gluing-and-topologies/test_square_gluings.py"],
+      "generators": [
+        "tutorials/gluing-and-topologies/square_gluings.py",
+        "tutorials/gluing-and-topologies/01_enumerate.py",
+        "tutorials/gluing-and-topologies/02_d4_orbits.py",
+        "tutorials/gluing-and-topologies/03_classify.py"
+      ],
+      "docs": [
+        "tutorials/gluing-and-topologies/README.md"
+      ],
+      "checks": [
+        "tutorials/gluing-and-topologies/test_square_gluings.py"
+      ],
       "origin": "master (PR #192)"
     },
     {
@@ -40,8 +49,13 @@
       "kind": "tutorial",
       "path": "tutorials/gluing-and-topologies/square-gluings",
       "entry": "tutorials/gluing-and-topologies/square-gluings/index.html",
-      "generators": ["tutorials/gluing-and-topologies/square-gluings/rebuild/build.py"],
-      "docs": ["tutorials/gluing-and-topologies/square-gluings/square-gluings.md", "tutorials/gluing-and-topologies/square-gluings/REBUILD.md"],
+      "generators": [
+        "tutorials/gluing-and-topologies/square-gluings/rebuild/build.py"
+      ],
+      "docs": [
+        "tutorials/gluing-and-topologies/square-gluings/square-gluings.md",
+        "tutorials/gluing-and-topologies/square-gluings/REBUILD.md"
+      ],
       "checks": [],
       "origin": "commit 70a0ab9f (branches graphical-design, codex/graphical-language-p3, claude/p3-cockpit-build; open PRs #208, #209)"
     },
@@ -51,9 +65,16 @@
       "kind": "viewer",
       "path": "tutorials/gluing-and-topologies/square-gluings/viewers",
       "entry": "tutorials/gluing-and-topologies/square-gluings/viewers/index.html",
-      "generators": ["tutorials/gluing-and-topologies/square-gluings/viewers/build.py", "tutorials/gluing-and-topologies/square-gluings/viewers/tools/render_gluing.py"],
-      "docs": ["tutorials/gluing-and-topologies/square-gluings/viewers/README.md"],
-      "checks": ["tutorials/gluing-and-topologies/square-gluings/viewers/tools/check_viewers.py"],
+      "generators": [
+        "tutorials/gluing-and-topologies/square-gluings/viewers/build.py",
+        "tutorials/gluing-and-topologies/square-gluings/viewers/tools/render_gluing.py"
+      ],
+      "docs": [
+        "tutorials/gluing-and-topologies/square-gluings/viewers/README.md"
+      ],
+      "checks": [
+        "tutorials/gluing-and-topologies/square-gluings/viewers/tools/check_viewers.py"
+      ],
       "origin": "learning-surfaces only (commits b617d06f, d3f714f3)"
     },
     {
@@ -62,9 +83,16 @@
       "kind": "tutorial",
       "path": "tutorials/curvature-seams-and-mercator",
       "entry": "tutorials/curvature-seams-and-mercator/chapter_02_curvature_seams_and_mercator.md",
-      "generators": ["tutorials/curvature-seams-and-mercator/curvature_mercator_lab.py"],
-      "docs": ["tutorials/curvature-seams-and-mercator/README.md", "tutorials/curvature-seams-and-mercator/interactive-earth/README.md"],
-      "checks": ["tutorials/curvature-seams-and-mercator/test_curvature_mercator_lab.py"],
+      "generators": [
+        "tutorials/curvature-seams-and-mercator/curvature_mercator_lab.py"
+      ],
+      "docs": [
+        "tutorials/curvature-seams-and-mercator/README.md",
+        "tutorials/curvature-seams-and-mercator/interactive-earth/README.md"
+      ],
+      "checks": [
+        "tutorials/curvature-seams-and-mercator/test_curvature_mercator_lab.py"
+      ],
       "origin": "master (PR #192); updated on claude/p3-cockpit-build"
     },
     {
@@ -75,7 +103,9 @@
       "entry": "tutorials/seam-comparisons/chapter_03_seam_comparisons.md",
       "generators": [],
       "docs": [],
-      "checks": ["tutorials/seam-comparisons/domino-comparisons/verify_native.cpp"],
+      "checks": [
+        "tutorials/seam-comparisons/domino-comparisons/verify_native.cpp"
+      ],
       "origin": "claude/p3-cockpit-build (open PRs #208, #209)"
     },
     {
@@ -84,9 +114,20 @@
       "kind": "viewer",
       "path": "boys-surface-viewer",
       "entry": "boys-surface-viewer/boys-surface-viewer.html",
-      "generators": ["boys-surface-viewer/tools/membranes.py", "boys-surface-viewer/tools/slimming_field.py", "boys-surface-viewer/tools/gap_field.py", "boys-surface-viewer/tools/render_gluing.py"],
-      "docs": ["boys-surface-viewer/README.md", "boys-surface-viewer/DESIGN.md"],
-      "checks": ["boys-surface-viewer/tools/check_viewer.py", "boys-surface-viewer/tools/fold_check.py"],
+      "generators": [
+        "boys-surface-viewer/tools/membranes.py",
+        "boys-surface-viewer/tools/slimming_field.py",
+        "boys-surface-viewer/tools/gap_field.py",
+        "boys-surface-viewer/tools/render_gluing.py"
+      ],
+      "docs": [
+        "boys-surface-viewer/README.md",
+        "boys-surface-viewer/DESIGN.md"
+      ],
+      "checks": [
+        "boys-surface-viewer/tools/check_viewer.py",
+        "boys-surface-viewer/tools/fold_check.py"
+      ],
       "origin": "PR #207 (closed, superseded by this branch)"
     },
     {
@@ -95,8 +136,12 @@
       "kind": "sequence",
       "path": "projective-plane-sequence",
       "entry": "projective-plane-sequence/README.md",
-      "generators": ["projective-plane-sequence/projective_plane_sequence.py"],
-      "docs": ["projective-plane-sequence/README.md"],
+      "generators": [
+        "projective-plane-sequence/projective_plane_sequence.py"
+      ],
+      "docs": [
+        "projective-plane-sequence/README.md"
+      ],
       "checks": [],
       "origin": "PR #205 (closed, superseded by this branch)"
     },
@@ -106,9 +151,18 @@
       "kind": "sequence",
       "path": "surface-sequences",
       "entry": "surface-sequences/README.md",
-      "generators": ["surface-sequences/surface_sequences.py"],
-      "docs": ["surface-sequences/README.md", "sphere-sequence/README.md", "torus-sequence/README.md", "klein-bottle-sequence/README.md"],
-      "checks": ["surface-sequences/surface_sequences.py"],
+      "generators": [
+        "surface-sequences/surface_sequences.py"
+      ],
+      "docs": [
+        "surface-sequences/README.md",
+        "sphere-sequence/README.md",
+        "torus-sequence/README.md",
+        "klein-bottle-sequence/README.md"
+      ],
+      "checks": [
+        "surface-sequences/surface_sequences.py"
+      ],
       "origin": "PR #206 (closed, superseded by this branch)"
     },
     {
@@ -117,9 +171,16 @@
       "kind": "release",
       "path": "released",
       "entry": "released/index.html",
-      "generators": ["build_release.py"],
-      "docs": ["README.md"],
-      "checks": ["smoke_embed.py", "check_manifest.py"],
+      "generators": [
+        "build_release.py"
+      ],
+      "docs": [
+        "README.md"
+      ],
+      "checks": [
+        "smoke_embed.py",
+        "check_manifest.py"
+      ],
       "origin": "claude/p3-cockpit-build (open PRs #208, #209); extended on this branch"
     }
   ]
