@@ -195,7 +195,7 @@ python3 learning/check_manifest.py
 
 - [`manifest.json`](manifest.json) is the source of this index; `python3 learning/build_index.py` rewrites it.
 - The offline edition (`released/`) covers `tutorials/`, `boys-surface-viewer/`, `surface-sequences/`, `projective-plane-sequence/`, `sphere-sequence/`, `torus-sequence/`, `klein-bottle-sequence/` and links
-  files it does not copy to GitHub at commit `a1c2e302`.
+  files it does not copy to GitHub at commit `e0a1496a`.
 - `python3 learning/check_manifest.py` checks the branch lock, every listed file, the links in every doc,
   that this index is current, and that the offline edition matches its sources.
 - [`SECURITY.md`](SECURITY.md) records the security review of this material and how to repeat it.
