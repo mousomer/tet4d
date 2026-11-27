@@ -1,0 +1,126 @@
+{
+  "schema": "tet4d-learning-manifest/v1",
+  "branch": {
+    "name": "learning-surfaces",
+    "locked": true,
+    "policy": "The learning material lives on this branch and is not merged into master. Changes to learning/ are committed here; master keeps only what it already had (chapters 1 and 2, the interactive Earth).",
+    "base": "391ca2ae"
+  },
+  "release": {
+    "output": "released",
+    "builder": "build_release.py",
+    "smoke_test": "smoke_embed.py",
+    "source_ref": "PENDING",
+    "source_ref_note": "Commit on this branch that the offline edition links to for files it does not copy (zips, rebuild guides on GitHub). Set by build_release.py --lock to the commit being released from.",
+    "include": [
+      "tutorials",
+      "boys-surface-viewer",
+      "surface-sequences",
+      "projective-plane-sequence",
+      "sphere-sequence",
+      "torus-sequence",
+      "klein-bottle-sequence"
+    ]
+  },
+  "components": [
+    {
+      "id": "chapter-1",
+      "title": "Chapter 1 · Gluing edges and recognizing topological surfaces",
+      "kind": "tutorial",
+      "path": "tutorials/gluing-and-topologies",
+      "entry": "tutorials/gluing-and-topologies/chapter_01_gluing_and_topologies.md",
+      "generators": ["tutorials/gluing-and-topologies/square_gluings.py", "tutorials/gluing-and-topologies/01_enumerate.py", "tutorials/gluing-and-topologies/02_d4_orbits.py", "tutorials/gluing-and-topologies/03_classify.py"],
+      "docs": ["tutorials/gluing-and-topologies/README.md"],
+      "checks": ["tutorials/gluing-and-topologies/test_square_gluings.py"],
+      "origin": "master (PR #192)"
+    },
+    {
+      "id": "square-gluings",
+      "title": "Six square gluings (illustrated constructions)",
+      "kind": "tutorial",
+      "path": "tutorials/gluing-and-topologies/square-gluings",
+      "entry": "tutorials/gluing-and-topologies/square-gluings/index.html",
+      "generators": ["tutorials/gluing-and-topologies/square-gluings/rebuild/build.py"],
+      "docs": ["tutorials/gluing-and-topologies/square-gluings/square-gluings.md", "tutorials/gluing-and-topologies/square-gluings/REBUILD.md"],
+      "checks": [],
+      "origin": "commit 70a0ab9f (branches graphical-design, codex/graphical-language-p3, claude/p3-cockpit-build; open PRs #208, #209)"
+    },
+    {
+      "id": "square-gluing-viewers",
+      "title": "Square gluing viewers (interactive)",
+      "kind": "viewer",
+      "path": "tutorials/gluing-and-topologies/square-gluings/viewers",
+      "entry": "tutorials/gluing-and-topologies/square-gluings/viewers/index.html",
+      "generators": ["tutorials/gluing-and-topologies/square-gluings/viewers/build.py", "tutorials/gluing-and-topologies/square-gluings/viewers/tools/render_gluing.py"],
+      "docs": ["tutorials/gluing-and-topologies/square-gluings/viewers/README.md"],
+      "checks": ["tutorials/gluing-and-topologies/square-gluings/viewers/tools/check_viewers.py"],
+      "origin": "learning-surfaces only (commits b617d06f, d3f714f3)"
+    },
+    {
+      "id": "chapter-2",
+      "title": "Chapter 2 · Curvature, seams and Mercator maps",
+      "kind": "tutorial",
+      "path": "tutorials/curvature-seams-and-mercator",
+      "entry": "tutorials/curvature-seams-and-mercator/chapter_02_curvature_seams_and_mercator.md",
+      "generators": ["tutorials/curvature-seams-and-mercator/curvature_mercator_lab.py"],
+      "docs": ["tutorials/curvature-seams-and-mercator/README.md", "tutorials/curvature-seams-and-mercator/interactive-earth/README.md"],
+      "checks": ["tutorials/curvature-seams-and-mercator/test_curvature_mercator_lab.py"],
+      "origin": "master (PR #192); updated on claude/p3-cockpit-build"
+    },
+    {
+      "id": "chapter-3",
+      "title": "Lesson 03 · Can you come home mirrored?",
+      "kind": "tutorial",
+      "path": "tutorials/seam-comparisons",
+      "entry": "tutorials/seam-comparisons/chapter_03_seam_comparisons.md",
+      "generators": [],
+      "docs": [],
+      "checks": ["tutorials/seam-comparisons/domino-comparisons/verify_native.cpp"],
+      "origin": "claude/p3-cockpit-build (open PRs #208, #209)"
+    },
+    {
+      "id": "boys-surface-viewer",
+      "title": "Boy's surface viewer",
+      "kind": "viewer",
+      "path": "boys-surface-viewer",
+      "entry": "boys-surface-viewer/boys-surface-viewer.html",
+      "generators": ["boys-surface-viewer/tools/membranes.py", "boys-surface-viewer/tools/slimming_field.py", "boys-surface-viewer/tools/gap_field.py", "boys-surface-viewer/tools/render_gluing.py"],
+      "docs": ["boys-surface-viewer/README.md", "boys-surface-viewer/DESIGN.md"],
+      "checks": ["boys-surface-viewer/tools/check_viewer.py", "boys-surface-viewer/tools/fold_check.py"],
+      "origin": "PR #207 (closed, superseded by this branch)"
+    },
+    {
+      "id": "projective-plane-sequence",
+      "title": "From a square to Boy's surface (sequence)",
+      "kind": "sequence",
+      "path": "projective-plane-sequence",
+      "entry": "projective-plane-sequence/README.md",
+      "generators": ["projective-plane-sequence/projective_plane_sequence.py"],
+      "docs": ["projective-plane-sequence/README.md"],
+      "checks": [],
+      "origin": "PR #205 (closed, superseded by this branch)"
+    },
+    {
+      "id": "surface-sequences",
+      "title": "Gluing a square into closed surfaces (sequences)",
+      "kind": "sequence",
+      "path": "surface-sequences",
+      "entry": "surface-sequences/README.md",
+      "generators": ["surface-sequences/surface_sequences.py"],
+      "docs": ["surface-sequences/README.md", "sphere-sequence/README.md", "torus-sequence/README.md", "klein-bottle-sequence/README.md"],
+      "checks": ["surface-sequences/surface_sequences.py"],
+      "origin": "PR #206 (closed, superseded by this branch)"
+    },
+    {
+      "id": "release",
+      "title": "Offline browser edition",
+      "kind": "release",
+      "path": "released",
+      "entry": "released/index.html",
+      "generators": ["build_release.py"],
+      "docs": ["README.md"],
+      "checks": ["smoke_embed.py", "check_manifest.py"],
+      "origin": "claude/p3-cockpit-build (open PRs #208, #209); extended on this branch"
+    }
+  ]
+}

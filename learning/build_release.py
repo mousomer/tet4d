@@ -1,8 +1,17 @@
-"""Render the standalone learning pack with Pandoc and offline MathML."""
+"""Render the standalone learning pack with Pandoc and offline MathML.
 
+The pack covers the directories listed in manifest.json (release.include). Files it does not copy
+(archives, folders) link to GitHub at release.source_ref, a commit on the locked learning branch.
+
+    python3 learning/build_release.py          # rebuild learning/released
+    python3 learning/build_release.py --lock   # first pin release.source_ref to HEAD, then rebuild
+"""
+
+import json
 import re
 import shutil
 import subprocess
+import sys
 from html import escape, unescape
 from os.path import relpath
 from pathlib import Path
@@ -10,10 +19,29 @@ from urllib.parse import urlsplit, urlunsplit
 
 LEARNING = Path(__file__).resolve().parent
 REPOSITORY = LEARNING.parent
-RELEASE = LEARNING / "released"
-SOURCE_REF = "ef98d1100ddd53bb07ac15872a982ac0f864ef81"
+MANIFEST_PATH = LEARNING / "manifest.json"
+MANIFEST = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+RELEASE = LEARNING / MANIFEST["release"]["output"]
+INCLUDE = MANIFEST["release"]["include"]
+SOURCE_REF = MANIFEST["release"]["source_ref"]
 SOURCE_URL = f"https://github.com/mousomer/tet4d/blob/{SOURCE_REF}/"
-ASSET_TYPES = {".cpp", ".css", ".gif", ".html", ".js", ".md", ".py", ".svg", ".txt"}
+TREE_URL = f"https://github.com/mousomer/tet4d/tree/{SOURCE_REF}/"
+ASSET_TYPES = {
+    ".cpp",
+    ".css",
+    ".gif",
+    ".html",
+    ".jpg",
+    ".js",
+    ".md",
+    ".png",
+    ".py",
+    ".svg",
+    ".txt",
+    ".webp",
+}
+# Pages copied as they are: builder templates whose links are filled in later, and very large pages.
+VERBATIM = ("rebuild/templates/", "viewers/src/")
 ATTRIBUTE = re.compile(r'(?P<attribute>\b(?:href|src)=")(?P<target>[^"]*)')
 FIXTURE = REPOSITORY / "tests/fixtures/explorer_topology/transport_v1.json"
 
@@ -26,6 +54,8 @@ def target_for(source, destination, reference, paths):
     if path in paths:
         local = Path(relpath(paths[path], destination.parent)).as_posix()
         return escape(urlunsplit(("", "", local, url.query, url.fragment)), quote=True)
+    if path.is_dir():  # folders (e.g. stages/) open on GitHub
+        return escape(TREE_URL + path.relative_to(REPOSITORY).as_posix(), quote=True)
     if not path.is_file():
         raise FileNotFoundError(f"{source.name}: missing asset {reference}")
     online = SOURCE_URL + path.relative_to(REPOSITORY).as_posix()
@@ -66,7 +96,7 @@ def render_markdown(source):
             "pandoc",
             "--from=markdown+gfm_auto_identifiers",
             "--to=html5",
-            "--math-method=mathml",
+            "--mathml",
             "--fail-if-warnings",
             f"--lua-filter={LEARNING / 'display_equations.lua'}",
             str(source),
@@ -81,13 +111,15 @@ def render_markdown(source):
     return rendered
 
 
-def build():
-    if not shutil.which("pandoc"):
-        raise SystemExit("Pandoc is required to rebuild learning/released.")
+def release_paths():
+    """Source file -> released file, for every file the pack carries."""
     paths = {
         source: RELEASE / source.relative_to(LEARNING)
-        for source in sorted((LEARNING / "tutorials").rglob("*"))
-        if source.is_file() and source.suffix in ASSET_TYPES
+        for folder in INCLUDE
+        for source in sorted((LEARNING / folder).rglob("*"))
+        if source.is_file()
+        and source.suffix in ASSET_TYPES
+        and "__pycache__" not in source.parts
     }
     paths.update(
         {
@@ -105,8 +137,47 @@ def build():
         }
     )
     paths[FIXTURE] = RELEASE / "references" / FIXTURE.name
+    return paths
 
-    RELEASE.mkdir(exist_ok=True)
+
+def lock():
+    """Pin release.source_ref to HEAD (the commit the online links point at)."""
+    head = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=LEARNING,
+        check=True,
+        stdout=subprocess.PIPE,
+        text=True,
+    ).stdout.strip()
+    dirty = subprocess.run(
+        ["git", "status", "--porcelain", "--", *INCLUDE],
+        cwd=LEARNING,
+        check=True,
+        stdout=subprocess.PIPE,
+        text=True,
+    ).stdout
+    if dirty.strip():
+        raise SystemExit(
+            "Commit the included folders first: the release links to the commit it is built from."
+        )
+    MANIFEST["release"]["source_ref"] = head
+    MANIFEST_PATH.write_text(
+        json.dumps(MANIFEST, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+    return head
+
+
+def build():
+    if not shutil.which("pandoc"):
+        raise SystemExit("Pandoc is required to rebuild learning/released.")
+    if SOURCE_REF == "PENDING":
+        raise SystemExit(
+            "manifest.json has no release.source_ref yet: run with --lock."
+        )
+    paths = release_paths()
+    if RELEASE.exists():  # stale files from earlier builds would otherwise linger
+        shutil.rmtree(RELEASE)
+    RELEASE.mkdir()
     shutil.copyfile(LEARNING / "release.css", RELEASE / "release.css")
     shutil.copyfile(LEARNING / "tet4d-learning.js", RELEASE / "tet4d-learning.js")
     (RELEASE / "embed.html").write_text(
@@ -128,7 +199,9 @@ def build():
             body = rewrite_links(render_markdown(source), source, destination, paths)
             root = "../" * len(destination.parent.relative_to(RELEASE).parts)
             destination.write_text(page(title, body, root), encoding="utf-8")
-        elif source.suffix == ".html":
+        elif source.suffix == ".html" and not any(
+            v in source.as_posix() for v in VERBATIM
+        ):
             html = source.read_text(encoding="utf-8")
             destination.write_text(
                 rewrite_links(html, source, destination, paths), encoding="utf-8"
@@ -138,4 +211,8 @@ def build():
 
 
 if __name__ == "__main__":
+    if "--lock" in sys.argv[1:]:
+        SOURCE_REF = lock()
+        SOURCE_URL = f"https://github.com/mousomer/tet4d/blob/{SOURCE_REF}/"
+        TREE_URL = f"https://github.com/mousomer/tet4d/tree/{SOURCE_REF}/"
     build()

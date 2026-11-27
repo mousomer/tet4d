@@ -1,6 +1,6 @@
 # Tet4D tutorials
 
-1. [Gluing Edges and Recognizing Topological Surfaces](gluing-and-topologies/chapter_01_gluing_and_topologies.md) — a self-contained introduction to 2D edge identifications, square symmetries, quotient invariants, and Python verification.
+1. [Gluing Edges and Recognizing Topological Surfaces](gluing-and-topologies/chapter_01_gluing_and_topologies.md) — a self-contained introduction to 2D edge identifications, square symmetries, quotient invariants, and Python verification. Companion pages: [six square gluings](gluing-and-topologies/square-gluings/index.html) built step by step, and [interactive gluing viewers](gluing-and-topologies/square-gluings/viewers/index.html).
 
 2. [Curvature, Seam Traversal, and Mercator Maps](curvature-seams-and-mercator/chapter_02_curvature_seams_and_mercator.md) — Gaussian curvature, Gauss–Bonnet, piecewise-flat cone singularities, parallel transport, cartographic distortion, and Python checks.
 
