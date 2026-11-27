@@ -32,6 +32,8 @@ and the offline edition. [SECURITY.md](SECURITY.md) records the security review 
 
 ## Offline edition
 
+After committing the sources on `learning-surfaces`, run `"$(./scripts/resolve_python_env.sh)" learning/release_cycle.py --pandoc-dir /path/to/pandoc-3.9` to rebuild, verify, and commit the offline edition.
+
 - [Offline browser edition](released/index.html) — open this file in a browser, or copy the entire `released/`
   folder to another device. It carries the tutorials, the viewers and the sequences listed in the manifest.
   Rebuild with `python3 learning/build_release.py` from the repository root. It needs Pandoc 3.1 or newer;
