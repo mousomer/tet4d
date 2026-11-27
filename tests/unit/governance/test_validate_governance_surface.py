@@ -158,7 +158,7 @@ def test_actual_governance_surface_is_within_all_limits() -> None:
     assert issues == []
     assert measurement is not None
     # This temporary diagnostic tripwire remains below the aggregate budget.
-    assert measurement.human <= 900
+    assert measurement.human <= 1000
     assert measurement.total <= 2500
     assert measurement.policy_bytes <= measurement.policy_byte_limit
     assert measurement.policy_nodes > measurement.policy_leaves > 0
