@@ -29,10 +29,10 @@
     <label><input type="checkbox" checked> Show glued seams</label>
   </footer><footer>
 <label>Palette <input id="hue" type="range" min="0" max="360" value="0"></label>
-<label>Opacity <input id="opacity" type="range" min="8" max="100" value="40"></label>
+<label>Opacity <input id="opacity" type="range" min="8" max="100" value="52"></label>
 <label>Lighting <input id="light" type="range" min="-100" max="100" value="-35"></label>
-<label><input id="section" type="checkbox" checked> Cone labels</label><label>Separate crossing sheets <input id="separate" type="range" min="0" max="100" value="0"></label></footer>
-  <p class="hint" id="angles">Each reversed edge pairing matches A to C and B to D. Each corner pair contributes 180°. Orange and cyan trace the glued edges. Move Separate crossing sheets to watch the three white rings separate at the triple crossing.</p>
+<label><input id="section" type="checkbox"> Cone labels</label><label>Separate crossing sheets <input id="separate" type="range" min="0" max="100" value="0"></label></footer>
+  <p class="hint" id="angles">Each reversed edge pairing matches A to C and B to D. Each corner pair contributes 180°. Orange and cyan trace the glued edges. Use Separate crossing sheets to explore how the translucent layers pass through one another.</p>
 </main>
 <script>
 'use strict';
@@ -42,7 +42,7 @@ const ctx = canvas.getContext('2d');
 const [section,opacity,light,hue]=['section','opacity','light','hue'].map(id=>document.getElementById(id));
 const reset = document.querySelector('button');
 const trace = document.querySelector('input');
-const home = { yaw: -.14, pitch: .10 };
+const home = { yaw: -0.06, pitch: 0.06 };
 let {yaw, pitch} = home;
 let drag = null;
 let pending = false;
@@ -91,12 +91,12 @@ function draw() {
     ctx.lineJoin = 'round';
     path(ids);
     if (!dashed) {
-      ctx.lineWidth = 6;
+      ctx.lineWidth = 3;
       ctx.strokeStyle = '#233449';
       ctx.stroke();
     }
     ctx.strokeStyle = color;
-    ctx.lineWidth = dashed ? 2 : 3.5;
+    ctx.lineWidth = dashed ? 2 : 1.7;
     ctx.stroke();
     ctx.setLineDash([]);
   }
@@ -115,6 +115,8 @@ function draw() {
   for(const [a,b,c,,illumination] of sorted) {
     const angle=Math.atan2(points[a][1]+points[b][1]+points[c][1],points[a][0]+points[b][0]+points[c][0])+palette;
     const faceColor=[0,2.1,4.2].map(v=>Math.min(255,(135+118*Math.cos(angle-v))*(.35+.8*illumination)+45*illumination**12));
+    const relief = Math.max(0,Math.min(1,((screen[a][2]+screen[b][2]+screen[c][2])/3*1+1.25)/1.6));
+    for (let k=0;k<3;k++) faceColor[k]*=.32+.68*relief;
     for(const id of [a,b,c]) {
       for(let k=0;k<3;k++)rgb[id][k]+=faceColor[k];
       rgb[id][3]++;
@@ -167,11 +169,6 @@ function draw() {
     ctx.globalAlpha = 1;
   }
 
-  for(const id of mesh.crossings){
-    const [x,y]=screen[id];
-    ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);
-    ctx.strokeStyle="white";ctx.lineWidth=2;ctx.stroke();
-  }
   const used = [];
   ctx.font = '14px system-ui';
   ctx.textAlign = 'center';
@@ -231,7 +228,7 @@ canvas.addEventListener('keydown', event => {
   event.preventDefault();
   rotate(...delta);
 });
-reset.addEventListener('click', () => { ({yaw,pitch}=home); requestDraw(); });
+reset.addEventListener('click', () => { ({yaw,pitch}=home); trace.checked=true; section.checked=false; separation.value=0; requestDraw(); });
 trace.addEventListener('change', requestDraw);
 for (const id of ['section','opacity','light','hue']) document.getElementById(id).addEventListener('input',requestDraw);
 new ResizeObserver(requestDraw).observe(canvas);
