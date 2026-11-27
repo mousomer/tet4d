@@ -251,7 +251,7 @@ def _cpp_mode(mode: Mapping[str, object]) -> str:
     padded_numbers = lambda values: values + [0] * (4 - len(values))
     padded_axes = lambda values: values + [""] * (4 - len(values))
     return (
-        f'\t{{"{mode_id}", {rank}, {{{_cpp_string_values(padded_axes(axes))}}}, '
+        f'    {{"{mode_id}", {rank}, {{{_cpp_string_values(padded_axes(axes))}}}, '
         f"{{{_cpp_values(padded_numbers(minima))}}}, "
         f"{{{_cpp_values(padded_numbers(maxima))}}}, "
         f'{{{_cpp_values(padded_numbers(default))}}}, {maximum_cells}, "{topology_kind}"}},'
@@ -271,22 +271,26 @@ def render_cpp(payload: Mapping[str, object]) -> str:
 namespace tet4d::core::generated {{
 
 struct BoardExtentModeSpec {{
-\tstd::string_view id;
-\tstd::int64_t rank;
-\tstd::array<std::string_view, 4> axis_order;
-\tstd::array<std::int64_t, 4> axis_minima;
-\tstd::array<std::int64_t, 4> axis_maxima;
-\tstd::array<std::int64_t, 4> canonical_default_shape;
-\tstd::int64_t native_maximum_cells;
-\tstd::string_view supported_topology_kind;
+    std::string_view id;
+    std::int64_t rank;
+    std::array<std::string_view, 4> axis_order;
+    std::array<std::int64_t, 4> axis_minima;
+    std::array<std::int64_t, 4> axis_maxima;
+    std::array<std::int64_t, 4> canonical_default_shape;
+    std::int64_t native_maximum_cells;
+    std::string_view supported_topology_kind;
 }};
 
 inline constexpr std::string_view BOARD_EXTENT_CONTRACT_NAME = "{payload["contract"]}";
 inline constexpr std::int64_t BOARD_EXTENT_CONTRACT_VERSION = {payload["contract_version"]};
-inline constexpr std::string_view BOARD_EXTENT_CONTRACT_FINGERPRINT = "{contract_fingerprint(payload)}";
+inline constexpr std::string_view BOARD_EXTENT_CONTRACT_FINGERPRINT =
+    "{contract_fingerprint(payload)}";
+// One row per mode keeps the table reviewable; clang-format would split every field.
+// clang-format off
 inline constexpr std::array<BoardExtentModeSpec, {len(modes)}> BOARD_EXTENT_MODE_SPECS{{{{
 {chr(10).join(_cpp_mode(mode) for mode in modes)}
 }}}};
+// clang-format on
 
 }} // namespace tet4d::core::generated
 '''

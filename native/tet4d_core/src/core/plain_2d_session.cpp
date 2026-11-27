@@ -13,555 +13,488 @@ namespace tet4d::core {
 namespace {
 
 std::string bool_json(bool value) {
-	return value ? "true" : "false";
+    return value ? "true" : "false";
 }
 
-const std::vector<PieceShape2D> &live_piece_sequence() {
-	return plain_piece_catalog_2d("classic");
+const std::vector<PieceShape2D>& live_piece_sequence() {
+    return plain_piece_catalog_2d("classic");
 }
 
-std::string coord_json(const Coord2D &coord) {
-	std::ostringstream out;
-	out << "[" << coord.x << "," << coord.y << "]";
-	return out.str();
+std::string coord_json(const Coord2D& coord) {
+    std::ostringstream out;
+    out << "[" << coord.x << "," << coord.y << "]";
+    return out.str();
 }
 
-std::string coords_json(const std::vector<Coord2D> &coords) {
-	std::ostringstream out;
-	out << "[";
-	for (std::size_t index = 0; index < coords.size(); ++index) {
-		if (index != 0) {
-			out << ",";
-		}
-		out << coord_json(coords[index]);
-	}
-	out << "]";
-	return out.str();
+std::string coords_json(const std::vector<Coord2D>& coords) {
+    std::ostringstream out;
+    out << "[";
+    for (std::size_t index = 0; index < coords.size(); ++index) {
+        if (index != 0) {
+            out << ",";
+        }
+        out << coord_json(coords[index]);
+    }
+    out << "]";
+    return out.str();
 }
 
-std::string active_piece_json(const std::optional<ActivePiece2D> &piece) {
-	if (!piece.has_value()) {
-		return "null";
-	}
-	std::ostringstream out;
-	out << "{\"blocks\":" << coords_json(piece->shape.blocks)
-		<< ",\"cells\":" << coords_json(piece->cells())
-		<< ",\"color_id\":" << piece->shape.color_id
-		<< ",\"pos\":" << coord_json(piece->pos)
-		<< ",\"rotation\":" << piece->rotation
-		<< ",\"shape\":\"" << piece->shape.name << "\"}";
-	return out.str();
+std::string active_piece_json(const std::optional<ActivePiece2D>& piece) {
+    if (!piece.has_value()) {
+        return "null";
+    }
+    std::ostringstream out;
+    out << "{\"blocks\":" << coords_json(piece->shape.blocks)
+        << ",\"cells\":" << coords_json(piece->cells()) << ",\"color_id\":" << piece->shape.color_id
+        << ",\"pos\":" << coord_json(piece->pos) << ",\"rotation\":" << piece->rotation
+        << ",\"shape\":\"" << piece->shape.name << "\"}";
+    return out.str();
 }
 
-std::string held_piece_json(const std::optional<PieceShape2D> &piece) {
-	if (!piece.has_value()) {
-		return "null";
-	}
-	std::ostringstream out;
-	out << "{\"blocks\":" << coords_json(piece->blocks)
-		<< ",\"color_id\":" << piece->color_id
-		<< ",\"shape\":\"" << piece->name << "\"}";
-	return out.str();
+std::string held_piece_json(const std::optional<PieceShape2D>& piece) {
+    if (!piece.has_value()) {
+        return "null";
+    }
+    std::ostringstream out;
+    out << "{\"blocks\":" << coords_json(piece->blocks) << ",\"color_id\":" << piece->color_id
+        << ",\"shape\":\"" << piece->name << "\"}";
+    return out.str();
 }
 
-std::string locked_cells_json(const Board2D &board) {
-	std::ostringstream out;
-	out << "[";
-	std::size_t index = 0;
-	for (const auto &[coord, value] : board.cells()) {
-		if (index != 0) {
-			out << ",";
-		}
-		out << "{\"coord\":" << coord_json(coord) << ",\"value\":" << value << "}";
-		++index;
-	}
-	out << "]";
-	return out.str();
+std::string locked_cells_json(const Board2D& board) {
+    std::ostringstream out;
+    out << "[";
+    std::size_t index = 0;
+    for (const auto& [coord, value] : board.cells()) {
+        if (index != 0) {
+            out << ",";
+        }
+        out << "{\"coord\":" << coord_json(coord) << ",\"value\":" << value << "}";
+        ++index;
+    }
+    out << "]";
+    return out.str();
 }
 
-std::string render_cells_json(const std::vector<Coord2D> &coords, int color_id, bool locked) {
-	std::ostringstream out;
-	out << "[";
-	for (std::size_t index = 0; index < coords.size(); ++index) {
-		if (index != 0) {
-			out << ",";
-		}
-		out << "{\"color_id\":" << color_id
-			<< ",\"label\":\"" << (locked ? "Locked" : "Active") << "\""
-			<< ",\"locked\":" << bool_json(locked)
-			<< ",\"position\":" << coord_json(coords[index]) << "}";
-	}
-	out << "]";
-	return out.str();
+std::string render_cells_json(const std::vector<Coord2D>& coords, int color_id, bool locked) {
+    std::ostringstream out;
+    out << "[";
+    for (std::size_t index = 0; index < coords.size(); ++index) {
+        if (index != 0) {
+            out << ",";
+        }
+        out << "{\"color_id\":" << color_id << ",\"label\":\"" << (locked ? "Locked" : "Active")
+            << "\"" << ",\"locked\":" << bool_json(locked)
+            << ",\"position\":" << coord_json(coords[index]) << "}";
+    }
+    out << "]";
+    return out.str();
 }
 
-std::string render_locked_cells_json(const Board2D &board) {
-	std::ostringstream out;
-	out << "[";
-	std::size_t index = 0;
-	for (const auto &[coord, value] : board.cells()) {
-		if (index != 0) {
-			out << ",";
-		}
-		out << "{\"color_id\":" << value
-			<< ",\"label\":\"Locked\""
-			<< ",\"locked\":true"
-			<< ",\"position\":" << coord_json(coord) << "}";
-		++index;
-	}
-	out << "]";
-	return out.str();
+std::string render_locked_cells_json(const Board2D& board) {
+    std::ostringstream out;
+    out << "[";
+    std::size_t index = 0;
+    for (const auto& [coord, value] : board.cells()) {
+        if (index != 0) {
+            out << ",";
+        }
+        out << "{\"color_id\":" << value << ",\"label\":\"Locked\"" << ",\"locked\":true"
+            << ",\"position\":" << coord_json(coord) << "}";
+        ++index;
+    }
+    out << "]";
+    return out.str();
 }
 
-std::string hash_payload_json(
-		const GameState2D &state,
-		int width,
-		int height,
-		const PlainGameSetup &setup,
-		const std::vector<PieceShape2D> &piece_bag,
-		std::size_t next_piece_index,
-		std::size_t rng_words_consumed,
-		const std::optional<PieceShape2D> &held_piece,
-		bool hold_available,
-		bool include_hold) {
-	std::ostringstream out;
-	out << "{\"active_piece\":" << active_piece_json(state.active_piece)
-		<< ",\"board_shape\":[" << width << "," << height << "]"
-		<< ",\"dimension\":2"
-		<< ",\"effective_seed\":" << setup.effective_seed
-		<< ",\"game_over\":" << bool_json(state.game_over)
-		<< ",\"game_over_reason\":\"" << state.game_over_reason << "\""
-		<< ",\"initial_speed_level\":" << setup.initial_speed_level
-		<< ",\"lines\":" << state.lines
-		<< ",\"locked_cells\":" << locked_cells_json(state.board)
-		<< ",\"next_piece_index\":" << next_piece_index
-		<< ",\"piece_bag\":[";
-	for (std::size_t index = 0; index < piece_bag.size(); ++index) {
-		if (index != 0) {
-			out << ",";
-		}
-		out << "\"" << piece_bag[index].name << "\"";
-	}
-	out << "]";
-	if (include_hold) {
-		out << ",\"held_piece\":" << held_piece_json(held_piece)
-			<< ",\"hold_available\":" << bool_json(hold_available);
-	}
-	out
-		<< ",\"piece_set_id\":\"" << setup.piece_set_id << "\""
-		<< ",\"random_mode\":\"" << setup.random_mode << "\""
-		<< ",\"rng_words_consumed\":" << rng_words_consumed
-		<< ",\"score\":" << state.score << "}";
-	return out.str();
+std::string hash_payload_json(const GameState2D& state, int width, int height,
+                              const PlainGameSetup& setup,
+                              const std::vector<PieceShape2D>& piece_bag,
+                              std::size_t next_piece_index, std::size_t rng_words_consumed,
+                              const std::optional<PieceShape2D>& held_piece, bool hold_available,
+                              bool include_hold) {
+    std::ostringstream out;
+    out << "{\"active_piece\":" << active_piece_json(state.active_piece) << ",\"board_shape\":["
+        << width << "," << height << "]" << ",\"dimension\":2"
+        << ",\"effective_seed\":" << setup.effective_seed
+        << ",\"game_over\":" << bool_json(state.game_over) << ",\"game_over_reason\":\""
+        << state.game_over_reason << "\""
+        << ",\"initial_speed_level\":" << setup.initial_speed_level << ",\"lines\":" << state.lines
+        << ",\"locked_cells\":" << locked_cells_json(state.board)
+        << ",\"next_piece_index\":" << next_piece_index << ",\"piece_bag\":[";
+    for (std::size_t index = 0; index < piece_bag.size(); ++index) {
+        if (index != 0) {
+            out << ",";
+        }
+        out << "\"" << piece_bag[index].name << "\"";
+    }
+    out << "]";
+    if (include_hold) {
+        out << ",\"held_piece\":" << held_piece_json(held_piece)
+            << ",\"hold_available\":" << bool_json(hold_available);
+    }
+    out << ",\"piece_set_id\":\"" << setup.piece_set_id << "\"" << ",\"random_mode\":\""
+        << setup.random_mode << "\"" << ",\"rng_words_consumed\":" << rng_words_consumed
+        << ",\"score\":" << state.score << "}";
+    return out.str();
 }
 
-std::string legacy_hash_payload_json(
-		const GameState2D &state,
-		int width,
-		int height,
-		std::size_t next_piece_index,
-		const std::optional<PieceShape2D> &held_piece,
-		bool hold_available,
-		bool include_hold) {
-	std::ostringstream out;
-	out << "{\"active_piece\":" << active_piece_json(state.active_piece)
-		<< ",\"board_shape\":[" << width << "," << height << "]"
-		<< ",\"dimension\":2"
-		<< ",\"game_over\":" << bool_json(state.game_over)
-		<< ",\"game_over_reason\":\"" << state.game_over_reason << "\"";
-	if (include_hold) {
-		out << ",\"held_piece\":" << held_piece_json(held_piece)
-			<< ",\"hold_available\":" << bool_json(hold_available);
-	}
-	out
-		<< ",\"lines\":" << state.lines
-		<< ",\"locked_cells\":" << locked_cells_json(state.board)
-		<< ",\"next_piece_index\":" << next_piece_index
-		<< ",\"score\":" << state.score << "}";
-	return out.str();
+std::string legacy_hash_payload_json(const GameState2D& state, int width, int height,
+                                     std::size_t next_piece_index,
+                                     const std::optional<PieceShape2D>& held_piece,
+                                     bool hold_available, bool include_hold) {
+    std::ostringstream out;
+    out << "{\"active_piece\":" << active_piece_json(state.active_piece) << ",\"board_shape\":["
+        << width << "," << height << "]" << ",\"dimension\":2"
+        << ",\"game_over\":" << bool_json(state.game_over) << ",\"game_over_reason\":\""
+        << state.game_over_reason << "\"";
+    if (include_hold) {
+        out << ",\"held_piece\":" << held_piece_json(held_piece)
+            << ",\"hold_available\":" << bool_json(hold_available);
+    }
+    out << ",\"lines\":" << state.lines << ",\"locked_cells\":" << locked_cells_json(state.board)
+        << ",\"next_piece_index\":" << next_piece_index << ",\"score\":" << state.score << "}";
+    return out.str();
 }
 
 } // namespace
 
-Plain2DSession::Plain2DSession() :
-		Plain2DSession(canonical_live_board_shape("live_2d")[0], canonical_live_board_shape("live_2d")[1]) {
-}
+Plain2DSession::Plain2DSession()
+    : Plain2DSession(canonical_live_board_shape("live_2d")[0],
+                     canonical_live_board_shape("live_2d")[1]) {}
 
-Plain2DSession::Plain2DSession(int width, int height) :
-		width_(width),
-		height_(height),
-		setup_({
-			PLAIN_SETUP_SCHEMA_VERSION,
-			"live_2d",
-			"standard",
-			{width_, height_},
-			"classic",
-			RANDOM_MODE_FIXED_SEED,
-			1337,
-			1337,
-			1,
-			false,
-		}),
-		rng_(static_cast<std::uint32_t>(setup_.effective_seed)),
-		state_(width_, height_) {
-	reset();
+Plain2DSession::Plain2DSession(int width, int height)
+    : width_(width), height_(height), setup_({
+                                          PLAIN_SETUP_SCHEMA_VERSION,
+                                          "live_2d",
+                                          "standard",
+                                          {width_, height_},
+                                          "classic",
+                                          RANDOM_MODE_FIXED_SEED,
+                                          1337,
+                                          1337,
+                                          1,
+                                          false,
+                                      }),
+      rng_(static_cast<std::uint32_t>(setup_.effective_seed)), state_(width_, height_) {
+    reset();
 }
 
 std::optional<Plain2DSession> Plain2DSession::create_validated(int width, int height) {
-	if (!is_supported_live_2d_board_shape(width, height)) {
-		return std::nullopt;
-	}
-	return Plain2DSession(width, height);
+    if (!is_supported_live_2d_board_shape(width, height)) {
+        return std::nullopt;
+    }
+    return Plain2DSession(width, height);
 }
 
 bool Plain2DSession::configure(int width, int height) {
-	BoardExtentValidationRequest extent_request;
-	extent_request.contract_version = generated::BOARD_EXTENT_CONTRACT_VERSION;
-	extent_request.mode = "live_2d";
-	extent_request.board_shape = {width, height};
-	extent_request.piece_set_id = "classic";
-	extent_request.topology_profile = bounded_topology_profile_for_shape({width, height});
-	if (!validate_live_board_setup(extent_request).ok) {
-		return false;
-	}
-	width_ = width;
-	height_ = height;
-	setup_.board_shape = {width, height};
-	reset();
-	return true;
+    BoardExtentValidationRequest extent_request;
+    extent_request.contract_version = generated::BOARD_EXTENT_CONTRACT_VERSION;
+    extent_request.mode = "live_2d";
+    extent_request.board_shape = {width, height};
+    extent_request.piece_set_id = "classic";
+    extent_request.topology_profile = bounded_topology_profile_for_shape({width, height});
+    if (!validate_live_board_setup(extent_request).ok) {
+        return false;
+    }
+    width_ = width;
+    height_ = height;
+    setup_.board_shape = {width, height};
+    reset();
+    return true;
 }
 
-bool Plain2DSession::configure(const PlainGameSetup &requested_setup) {
-	if (requested_setup.schema_version != PLAIN_SETUP_SCHEMA_VERSION ||
-			requested_setup.mode != "live_2d" ||
-			requested_setup.board_shape.size() != 2 ||
-			requested_setup.piece_set_id != "classic" ||
-			!is_valid_plain_random_mode(requested_setup.random_mode) ||
-			!is_valid_plain_speed(requested_setup.initial_speed_level)) {
-		return false;
-	}
-	const int width = requested_setup.board_shape[0];
-	const int height = requested_setup.board_shape[1];
-	BoardExtentValidationRequest extent_request;
-	extent_request.contract_version = generated::BOARD_EXTENT_CONTRACT_VERSION;
-	extent_request.mode = "live_2d";
-	extent_request.board_shape = {width, height};
-	extent_request.piece_set_id = requested_setup.piece_set_id;
-	extent_request.topology_profile = bounded_topology_profile_for_shape({width, height});
-	if (!validate_live_board_setup(extent_request).ok) {
-		return false;
-	}
-	if (requested_setup.random_mode == RANDOM_MODE_FIXED_SEED &&
-			(!requested_setup.configured_seed.has_value() ||
-			 !is_valid_plain_seed(*requested_setup.configured_seed))) {
-		return false;
-	}
-	PlainGameSetup validated = requested_setup;
-	validated.shuffle_bag = true;
-	if (validated.random_mode == RANDOM_MODE_TRUE_RANDOM) {
-		validated.configured_seed.reset();
-		validated.effective_seed = generate_effective_seed();
-	} else {
-		validated.effective_seed = *validated.configured_seed;
-	}
-	width_ = width;
-	height_ = height;
-	setup_ = std::move(validated);
-	reset();
-	return true;
+bool Plain2DSession::configure(const PlainGameSetup& requested_setup) {
+    if (requested_setup.schema_version != PLAIN_SETUP_SCHEMA_VERSION ||
+        requested_setup.mode != "live_2d" || requested_setup.board_shape.size() != 2 ||
+        requested_setup.piece_set_id != "classic" ||
+        !is_valid_plain_random_mode(requested_setup.random_mode) ||
+        !is_valid_plain_speed(requested_setup.initial_speed_level)) {
+        return false;
+    }
+    const int width = requested_setup.board_shape[0];
+    const int height = requested_setup.board_shape[1];
+    BoardExtentValidationRequest extent_request;
+    extent_request.contract_version = generated::BOARD_EXTENT_CONTRACT_VERSION;
+    extent_request.mode = "live_2d";
+    extent_request.board_shape = {width, height};
+    extent_request.piece_set_id = requested_setup.piece_set_id;
+    extent_request.topology_profile = bounded_topology_profile_for_shape({width, height});
+    if (!validate_live_board_setup(extent_request).ok) {
+        return false;
+    }
+    if (requested_setup.random_mode == RANDOM_MODE_FIXED_SEED &&
+        (!requested_setup.configured_seed.has_value() ||
+         !is_valid_plain_seed(*requested_setup.configured_seed))) {
+        return false;
+    }
+    PlainGameSetup validated = requested_setup;
+    validated.shuffle_bag = true;
+    if (validated.random_mode == RANDOM_MODE_TRUE_RANDOM) {
+        validated.configured_seed.reset();
+        validated.effective_seed = generate_effective_seed();
+    } else {
+        validated.effective_seed = *validated.configured_seed;
+    }
+    width_ = width;
+    height_ = height;
+    setup_ = std::move(validated);
+    reset();
+    return true;
 }
 
 void Plain2DSession::reset() {
-	state_ = GameState2D(width_, height_);
-	next_piece_index_ = 0;
-	piece_bag_.clear();
-	rng_.seed(static_cast<std::uint32_t>(setup_.effective_seed));
-	held_piece_.reset();
-	hold_available_ = true;
-	spawn_next_piece();
-	last_command_ = "reset";
-	last_command_status_ = "reset";
-	command_count_ = 0;
+    state_ = GameState2D(width_, height_);
+    next_piece_index_ = 0;
+    piece_bag_.clear();
+    rng_.seed(static_cast<std::uint32_t>(setup_.effective_seed));
+    held_piece_.reset();
+    hold_available_ = true;
+    spawn_next_piece();
+    last_command_ = "reset";
+    last_command_status_ = "reset";
+    command_count_ = 0;
 }
 
-std::string Plain2DSession::apply_command(const std::string &command) {
-	if (command == "reset") {
-		reset();
-		return command_status(command);
-	}
-	if (state_.game_over) {
-		last_command_ = "rejected:" + command;
-		last_command_status_ = "rejected";
-		return command_status(command);
-	}
+std::string Plain2DSession::apply_command(const std::string& command) {
+    if (command == "reset") {
+        reset();
+        return command_status(command);
+    }
+    if (state_.game_over) {
+        last_command_ = "rejected:" + command;
+        last_command_status_ = "rejected";
+        return command_status(command);
+    }
 
-	if (command == "move_left") {
-		GameStepper2D::apply(state_, {"move_left", GameCommandKind2D::Move, -1, 0});
-	} else if (command == "move_right") {
-		GameStepper2D::apply(state_, {"move_right", GameCommandKind2D::Move, 1, 0});
-	} else if (command == "rotate_cw") {
-		GameStepper2D::apply(state_, {"rotate_cw", GameCommandKind2D::Rotate, 1, 0});
-	} else if (command == "rotate_ccw") {
-		GameStepper2D::apply(state_, {"rotate_ccw", GameCommandKind2D::Rotate, -1, 0});
-	} else if (command == "soft_drop") {
-		const CommandResult2D result = GameStepper2D::apply(state_, {"soft_drop", GameCommandKind2D::SoftDrop, 0, 1});
-		last_command_ = command;
-		last_command_status_ = result.return_value.value_or(false) ? "accepted" : "rejected";
-		++command_count_;
-		return command_status(command);
-	} else if (command == "hold") {
-		const bool accepted = apply_hold();
-		last_command_ = accepted ? command : "rejected:" + command;
-		last_command_status_ = accepted ? "accepted" : "rejected";
-		++command_count_;
-		return command_status(command);
-	} else if (command == "hard_drop") {
-		state_.post_lock_spawn_shape = draw_next_piece_shape();
-		GameStepper2D::apply(state_, {"hard_drop", GameCommandKind2D::HardDrop, 0, 0});
-		hold_available_ = !state_.game_over && state_.active_piece.has_value();
-	} else if (command == "tick") {
-		tick();
-		return command_status(command);
-	} else {
-		last_command_ = "unsupported:" + command;
-		last_command_status_ = "unsupported";
-		return command_status(command);
-	}
+    if (command == "move_left") {
+        GameStepper2D::apply(state_, {"move_left", GameCommandKind2D::Move, -1, 0});
+    } else if (command == "move_right") {
+        GameStepper2D::apply(state_, {"move_right", GameCommandKind2D::Move, 1, 0});
+    } else if (command == "rotate_cw") {
+        GameStepper2D::apply(state_, {"rotate_cw", GameCommandKind2D::Rotate, 1, 0});
+    } else if (command == "rotate_ccw") {
+        GameStepper2D::apply(state_, {"rotate_ccw", GameCommandKind2D::Rotate, -1, 0});
+    } else if (command == "soft_drop") {
+        const CommandResult2D result =
+            GameStepper2D::apply(state_, {"soft_drop", GameCommandKind2D::SoftDrop, 0, 1});
+        last_command_ = command;
+        last_command_status_ = result.return_value.value_or(false) ? "accepted" : "rejected";
+        ++command_count_;
+        return command_status(command);
+    } else if (command == "hold") {
+        const bool accepted = apply_hold();
+        last_command_ = accepted ? command : "rejected:" + command;
+        last_command_status_ = accepted ? "accepted" : "rejected";
+        ++command_count_;
+        return command_status(command);
+    } else if (command == "hard_drop") {
+        state_.post_lock_spawn_shape = draw_next_piece_shape();
+        GameStepper2D::apply(state_, {"hard_drop", GameCommandKind2D::HardDrop, 0, 0});
+        hold_available_ = !state_.game_over && state_.active_piece.has_value();
+    } else if (command == "tick") {
+        tick();
+        return command_status(command);
+    } else {
+        last_command_ = "unsupported:" + command;
+        last_command_status_ = "unsupported";
+        return command_status(command);
+    }
 
-	last_command_ = command;
-	last_command_status_ = "accepted";
-	++command_count_;
-	return command_status(command);
+    last_command_ = command;
+    last_command_status_ = "accepted";
+    ++command_count_;
+    return command_status(command);
 }
 
 std::string Plain2DSession::tick() {
-	if (!state_.game_over) {
-		const bool moved = state_.try_soft_drop();
-		if (!moved) {
-			state_.lock_current_piece();
-			if (!state_.game_over) {
-				spawn_next_piece();
-			}
-			hold_available_ = !state_.game_over && state_.active_piece.has_value();
-		}
-	}
-	last_command_ = "tick";
-	last_command_status_ = state_.game_over ? "game_over" : "accepted";
-	++command_count_;
-	return command_status("tick");
+    if (!state_.game_over) {
+        const bool moved = state_.try_soft_drop();
+        if (!moved) {
+            state_.lock_current_piece();
+            if (!state_.game_over) {
+                spawn_next_piece();
+            }
+            hold_available_ = !state_.game_over && state_.active_piece.has_value();
+        }
+    }
+    last_command_ = "tick";
+    last_command_status_ = state_.game_over ? "game_over" : "accepted";
+    ++command_count_;
+    return command_status("tick");
 }
 
 std::string Plain2DSession::snapshot_json() const {
-	const std::string hash = state_hash();
-	const std::string active_cells = render_cells_json(
-		state_.active_cells(),
-		state_.active_piece.has_value() ? state_.active_piece->shape.color_id : 0,
-		false
-	);
-	const std::string locked_cells = render_locked_cells_json(state_.board);
-	const int entity_count = static_cast<int>(state_.active_cells().size() + state_.board.cells().size());
-	std::ostringstream out;
-	out << "{\"active_cells\":" << active_cells
-		<< ",\"board_shape\":[" << width_ << "," << height_ << "]"
-		<< ",\"case_id\":\"live_plain_2d\""
-		<< ",\"current_piece\":\"" << current_piece_name() << "\""
-		<< ",\"current_piece_color_id\":" << (state_.active_piece.has_value() ? state_.active_piece->shape.color_id : 0)
-		<< ",\"diagnostics_lines\":["
-		<< "\"score: " << state_.score << "\","
-		<< "\"lines: " << state_.lines << "\","
-		<< "\"game_over: " << bool_json(state_.game_over) << "\","
-		<< "\"game_over_reason: " << state_.game_over_reason << "\","
-		<< "\"paused: false\","
-		<< "\"current_piece: " << current_piece_name() << "\","
-		<< "\"next_piece: " << next_piece_name() << "\","
-		<< "\"last_command: " << last_command_ << "\","
-		<< "\"last_command_status: " << last_command_status_ << "\","
-		<< "\"piece_set: " << setup_.piece_set_id << "\","
-		<< "\"random_mode: " << setup_.random_mode << "\","
-		<< "\"effective_seed: " << setup_.effective_seed << "\","
-		<< "\"initial_speed_level: " << setup_.initial_speed_level << "\","
-		<< "\"locked_count: " << state_.board.cells().size() << "\""
-		<< "]"
-		<< ",\"dimension\":2"
-		<< ",\"energy_lines\":[]"
-		<< ",\"entity_count\":" << entity_count
-		<< ",\"entity_count_matches_metadata\":true"
-		<< ",\"event_lines\":[]"
-		<< ",\"event_markers\":[]"
-		<< ",\"frame_count\":" << (command_count_ + 1)
-		<< ",\"frame_count_matches_metadata\":true"
-		<< ",\"frame_index\":" << command_count_
-		<< ",\"locked_cells\":" << locked_cells
-		<< ",\"metadata_lines\":["
-		<< "\"mode: Live 2D\","
-		<< "\"authority: C++ GDExtension\","
-		<< "\"current_piece: " << current_piece_name() << "\","
-		<< "\"next_piece: " << next_piece_name() << "\","
-		<< "\"last_command: " << last_command_ << "\","
-		<< "\"state_hash: " << hash << "\""
-		<< "]"
-		<< ",\"particles\":[]"
-		<< ",\"probe_markers\":[]"
-		<< ",\"game_over\":" << bool_json(state_.game_over)
-		<< ",\"game_over_reason\":\"" << state_.game_over_reason << "\""
-		<< ",\"held_piece\":" << held_piece_json(held_piece_)
-		<< ",\"hold_available\":" << bool_json(hold_available())
-		<< ",\"configured_seed\":";
-	if (setup_.configured_seed.has_value()) {
-		out << *setup_.configured_seed;
-	} else {
-		out << "null";
-	}
-	out << ",\"effective_seed\":" << setup_.effective_seed
-		<< ",\"initial_speed_level\":" << setup_.initial_speed_level
-		<< ",\"last_command\":\"" << last_command_ << "\""
-		<< ",\"last_command_status\":\"" << last_command_status_ << "\""
-		<< ",\"lines\":" << state_.lines
-		<< ",\"next_piece\":\"" << next_piece_name() << "\""
-		<< ",\"piece_set_id\":\"" << setup_.piece_set_id << "\""
-		<< ",\"paused\":false"
-		<< ",\"random_mode\":\"" << setup_.random_mode << "\""
-		<< ",\"score\":" << state_.score
-		<< ",\"state_hash\":\"" << hash << "\""
-		<< ",\"trace_name\":\"live_plain_2d\""
-		<< ",\"trace_type\":\"live_2d\""
-		<< "}";
-	return out.str();
+    const std::string hash = state_hash();
+    const std::string active_cells = render_cells_json(
+        state_.active_cells(),
+        state_.active_piece.has_value() ? state_.active_piece->shape.color_id : 0, false);
+    const std::string locked_cells = render_locked_cells_json(state_.board);
+    const int entity_count =
+        static_cast<int>(state_.active_cells().size() + state_.board.cells().size());
+    std::ostringstream out;
+    out << "{\"active_cells\":" << active_cells << ",\"board_shape\":[" << width_ << "," << height_
+        << "]" << ",\"case_id\":\"live_plain_2d\"" << ",\"current_piece\":\""
+        << current_piece_name() << "\"" << ",\"current_piece_color_id\":"
+        << (state_.active_piece.has_value() ? state_.active_piece->shape.color_id : 0)
+        << ",\"diagnostics_lines\":[" << "\"score: " << state_.score << "\","
+        << "\"lines: " << state_.lines << "\"," << "\"game_over: " << bool_json(state_.game_over)
+        << "\"," << "\"game_over_reason: " << state_.game_over_reason << "\","
+        << "\"paused: false\"," << "\"current_piece: " << current_piece_name() << "\","
+        << "\"next_piece: " << next_piece_name() << "\"," << "\"last_command: " << last_command_
+        << "\"," << "\"last_command_status: " << last_command_status_ << "\","
+        << "\"piece_set: " << setup_.piece_set_id << "\","
+        << "\"random_mode: " << setup_.random_mode << "\","
+        << "\"effective_seed: " << setup_.effective_seed << "\","
+        << "\"initial_speed_level: " << setup_.initial_speed_level << "\","
+        << "\"locked_count: " << state_.board.cells().size() << "\"" << "]" << ",\"dimension\":2"
+        << ",\"energy_lines\":[]" << ",\"entity_count\":" << entity_count
+        << ",\"entity_count_matches_metadata\":true" << ",\"event_lines\":[]"
+        << ",\"event_markers\":[]" << ",\"frame_count\":" << (command_count_ + 1)
+        << ",\"frame_count_matches_metadata\":true" << ",\"frame_index\":" << command_count_
+        << ",\"locked_cells\":" << locked_cells << ",\"metadata_lines\":[" << "\"mode: Live 2D\","
+        << "\"authority: C++ GDExtension\"," << "\"current_piece: " << current_piece_name() << "\","
+        << "\"next_piece: " << next_piece_name() << "\"," << "\"last_command: " << last_command_
+        << "\"," << "\"state_hash: " << hash << "\"" << "]" << ",\"particles\":[]"
+        << ",\"probe_markers\":[]" << ",\"game_over\":" << bool_json(state_.game_over)
+        << ",\"game_over_reason\":\"" << state_.game_over_reason << "\""
+        << ",\"held_piece\":" << held_piece_json(held_piece_)
+        << ",\"hold_available\":" << bool_json(hold_available()) << ",\"configured_seed\":";
+    if (setup_.configured_seed.has_value()) {
+        out << *setup_.configured_seed;
+    } else {
+        out << "null";
+    }
+    out << ",\"effective_seed\":" << setup_.effective_seed
+        << ",\"initial_speed_level\":" << setup_.initial_speed_level << ",\"last_command\":\""
+        << last_command_ << "\"" << ",\"last_command_status\":\"" << last_command_status_ << "\""
+        << ",\"lines\":" << state_.lines << ",\"next_piece\":\"" << next_piece_name() << "\""
+        << ",\"piece_set_id\":\"" << setup_.piece_set_id << "\"" << ",\"paused\":false"
+        << ",\"random_mode\":\"" << setup_.random_mode << "\"" << ",\"score\":" << state_.score
+        << ",\"state_hash\":\"" << hash << "\"" << ",\"trace_name\":\"live_plain_2d\""
+        << ",\"trace_type\":\"live_2d\"" << "}";
+    return out.str();
 }
 
 std::string Plain2DSession::status() const {
-	std::ostringstream out;
-	out << "live_plain_2d score=" << state_.score
-		<< " lines=" << state_.lines
-		<< " current_piece=" << current_piece_name()
-		<< " next_piece=" << next_piece_name()
-		<< " held_piece=" << (held_piece_.has_value() ? held_piece_->name : "empty")
-		<< " hold_available=" << bool_json(hold_available())
-		<< " piece_set=" << setup_.piece_set_id
-		<< " random_mode=" << setup_.random_mode
-		<< " effective_seed=" << setup_.effective_seed
-		<< " initial_speed_level=" << setup_.initial_speed_level
-		<< " game_over=" << bool_json(state_.game_over)
-		<< " game_over_reason=" << state_.game_over_reason
-		<< " paused=false"
-		<< " last_command=" << last_command_
-		<< " last_command_status=" << last_command_status_;
-	return out.str();
+    std::ostringstream out;
+    out << "live_plain_2d score=" << state_.score << " lines=" << state_.lines
+        << " current_piece=" << current_piece_name() << " next_piece=" << next_piece_name()
+        << " held_piece=" << (held_piece_.has_value() ? held_piece_->name : "empty")
+        << " hold_available=" << bool_json(hold_available()) << " piece_set=" << setup_.piece_set_id
+        << " random_mode=" << setup_.random_mode << " effective_seed=" << setup_.effective_seed
+        << " initial_speed_level=" << setup_.initial_speed_level
+        << " game_over=" << bool_json(state_.game_over)
+        << " game_over_reason=" << state_.game_over_reason << " paused=false"
+        << " last_command=" << last_command_ << " last_command_status=" << last_command_status_;
+    return out.str();
 }
 
 std::string Plain2DSession::state_hash() const {
-	const bool include_hold = held_piece_.has_value() || !hold_available_;
-	if (!setup_.shuffle_bag) {
-		return sha256_hex(legacy_hash_payload_json(state_, width_, height_, next_piece_index_, held_piece_, hold_available_, include_hold));
-	}
-	return sha256_hex(hash_payload_json(
-		state_,
-		width_,
-		height_,
-		setup_,
-		piece_bag_,
-		next_piece_index_,
-		rng_.words_consumed(),
-		held_piece_,
-		hold_available_,
-		include_hold
-	));
+    const bool include_hold = held_piece_.has_value() || !hold_available_;
+    if (!setup_.shuffle_bag) {
+        return sha256_hex(legacy_hash_payload_json(state_, width_, height_, next_piece_index_,
+                                                   held_piece_, hold_available_, include_hold));
+    }
+    return sha256_hex(hash_payload_json(state_, width_, height_, setup_, piece_bag_,
+                                        next_piece_index_, rng_.words_consumed(), held_piece_,
+                                        hold_available_, include_hold));
 }
 
 PieceShape2D Plain2DSession::peek_next_piece_shape() const {
-	if (!setup_.shuffle_bag) {
-		const std::vector<PieceShape2D> &sequence = live_piece_sequence();
-		return sequence[next_piece_index_ % sequence.size()];
-	}
-	if (!piece_bag_.empty()) {
-		return piece_bag_.back();
-	}
-	PythonRandom preview_rng = rng_;
-	const std::vector<PieceShape2D> preview_bag =
-			build_shuffled_piece_bag(live_piece_sequence(), preview_rng);
-	return preview_bag.back();
+    if (!setup_.shuffle_bag) {
+        const std::vector<PieceShape2D>& sequence = live_piece_sequence();
+        return sequence[next_piece_index_ % sequence.size()];
+    }
+    if (!piece_bag_.empty()) {
+        return piece_bag_.back();
+    }
+    PythonRandom preview_rng = rng_;
+    const std::vector<PieceShape2D> preview_bag =
+        build_shuffled_piece_bag(live_piece_sequence(), preview_rng);
+    return preview_bag.back();
 }
 
 std::optional<PieceShape2D> Plain2DSession::held_piece_shape() const {
-	return held_piece_;
+    return held_piece_;
 }
 
 bool Plain2DSession::hold_available() const {
-	return hold_available_ && !state_.game_over && state_.active_piece.has_value();
+    return hold_available_ && !state_.game_over && state_.active_piece.has_value();
 }
 
 std::optional<ActivePiece2D> Plain2DSession::hard_drop_destination() const {
-	return state_.hard_drop_destination();
+    return state_.hard_drop_destination();
 }
 
-const std::string &Plain2DSession::piece_set_id() const {
-	return setup_.piece_set_id;
+const std::string& Plain2DSession::piece_set_id() const {
+    return setup_.piece_set_id;
 }
 
 void Plain2DSession::refill_piece_bag() {
-	piece_bag_ = build_shuffled_piece_bag(live_piece_sequence(), rng_);
+    piece_bag_ = build_shuffled_piece_bag(live_piece_sequence(), rng_);
 }
 
 PieceShape2D Plain2DSession::draw_next_piece_shape() {
-	if (setup_.shuffle_bag) {
-		if (piece_bag_.empty()) {
-			refill_piece_bag();
-		}
-		PieceShape2D shape = piece_bag_.back();
-		piece_bag_.pop_back();
-		return shape;
-	}
-	const std::vector<PieceShape2D> &sequence = live_piece_sequence();
-	const PieceShape2D shape = sequence[next_piece_index_ % sequence.size()];
-	++next_piece_index_;
-	return shape;
+    if (setup_.shuffle_bag) {
+        if (piece_bag_.empty()) {
+            refill_piece_bag();
+        }
+        PieceShape2D shape = piece_bag_.back();
+        piece_bag_.pop_back();
+        return shape;
+    }
+    const std::vector<PieceShape2D>& sequence = live_piece_sequence();
+    const PieceShape2D shape = sequence[next_piece_index_ % sequence.size()];
+    ++next_piece_index_;
+    return shape;
 }
 
 void Plain2DSession::spawn_next_piece() {
-	state_.spawn_piece(draw_next_piece_shape());
+    state_.spawn_piece(draw_next_piece_shape());
 }
 
 bool Plain2DSession::apply_hold() {
-	if (!hold_available()) {
-		return false;
-	}
-	const PieceShape2D outgoing = state_.active_piece->shape;
-	const PieceShape2D incoming = held_piece_.has_value() ? *held_piece_ : draw_next_piece_shape();
-	held_piece_ = outgoing;
-	hold_available_ = false;
-	state_.spawn_piece(incoming);
-	return true;
+    if (!hold_available()) {
+        return false;
+    }
+    const PieceShape2D outgoing = state_.active_piece->shape;
+    const PieceShape2D incoming = held_piece_.has_value() ? *held_piece_ : draw_next_piece_shape();
+    held_piece_ = outgoing;
+    hold_available_ = false;
+    state_.spawn_piece(incoming);
+    return true;
 }
 
 std::string Plain2DSession::current_piece_name() const {
-	if (!state_.active_piece.has_value()) {
-		return "none";
-	}
-	return state_.active_piece->shape.name;
+    if (!state_.active_piece.has_value()) {
+        return "none";
+    }
+    return state_.active_piece->shape.name;
 }
 
 std::string Plain2DSession::next_piece_name() const {
-	if (setup_.shuffle_bag) {
-		return piece_bag_.empty() ? "pending_bag" : piece_bag_.back().name;
-	}
-	const std::vector<PieceShape2D> &sequence = live_piece_sequence();
-	return sequence[next_piece_index_ % sequence.size()].name;
+    if (setup_.shuffle_bag) {
+        return piece_bag_.empty() ? "pending_bag" : piece_bag_.back().name;
+    }
+    const std::vector<PieceShape2D>& sequence = live_piece_sequence();
+    return sequence[next_piece_index_ % sequence.size()].name;
 }
 
-std::string Plain2DSession::command_status(const std::string &command) const {
-	std::ostringstream out;
-	out << "command=" << command << " " << status();
-	return out.str();
+std::string Plain2DSession::command_status(const std::string& command) const {
+    std::ostringstream out;
+    out << "command=" << command << " " << status();
+    return out.str();
 }
 
 bool is_supported_live_2d_board_shape(int width, int height) {
-	BoardExtentValidationRequest request;
-	request.contract_version = generated::BOARD_EXTENT_CONTRACT_VERSION;
-	request.mode = "live_2d";
-	request.board_shape = {width, height};
-	request.piece_set_id = "classic";
-	request.topology_profile = bounded_topology_profile_for_shape({width, height});
-	return validate_live_board_setup(request).ok;
+    BoardExtentValidationRequest request;
+    request.contract_version = generated::BOARD_EXTENT_CONTRACT_VERSION;
+    request.mode = "live_2d";
+    request.board_shape = {width, height};
+    request.piece_set_id = "classic";
+    request.topology_profile = bounded_topology_profile_for_shape({width, height});
+    return validate_live_board_setup(request).ok;
 }
 
 } // namespace tet4d::core
