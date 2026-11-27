@@ -2,8 +2,8 @@
 
 Educational material accompanying Tet4D. These are learning resources, not engine or gameplay authorities.
 
-This material lives on the **`learning`** branch, which is never merged into master; master keeps only
-chapters 1 and 2 and the interactive Earth. Changes arrive by pull request from a work branch
+This material lives on the **`learning`** branch, which is never merged into master; master holds none of
+it. Changes arrive by pull request from a work branch
 (`learning-surfaces`). [manifest.json](manifest.json) locks the branch (see [the lock](#the-lock)) and lists every
 component with its entry page, generator scripts, docs and checks; [INDEX.md](INDEX.md) is the index
 generated from it. `python3 learning/check_manifest.py` checks the manifest, the index, the links in the docs
@@ -66,7 +66,7 @@ The learning material is kept off master by these working together:
 4. **The pinned release.** The offline edition links files it does not copy to GitHub at one commit
    (`release.source_ref`), and each released state is tagged (`learning-v1`, `learning-v1.1`, ...). A tag
    ruleset on GitHub keeps `learning-v*` tags from being moved or deleted.
-5. **The master guard.** On master, CI rejects any pull request that changes `learning/`.
+5. **The master guard.** On master, CI rejects any pull request that adds or changes files under `learning/`.
 
 ## CI and CD
 
