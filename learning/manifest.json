@@ -10,7 +10,7 @@
     "output": "released",
     "builder": "build_release.py",
     "smoke_test": "smoke_embed.py",
-    "source_ref": "978feea0a5887ff74e01ead000d285ece56b6c36",
+    "source_ref": "7c89b3f969fce3636a154a04bae917f72f747e92",
     "source_ref_note": "Commit on this branch that the offline edition links to for files it does not copy (zips, rebuild guides on GitHub). Set by build_release.py --lock to the commit being released from.",
     "include": [
       "tutorials",
