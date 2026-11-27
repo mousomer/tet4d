@@ -14,9 +14,9 @@ python3.14 -m venv .venv
 
 Open **/tmp/tet4d-square-gluings/index.html** after the command finishes. Use a new or empty output directory for each run. Reserve approximately 2 GB of free space in the output location. The movies are silent. A different FFmpeg build, font or numerical library can change encoded bytes or raster pixels.
 
-## Reproducing the original MP4 bytes
+## Encoder for byte-level comparisons
 
-On the tested Apple silicon Mac, the bundled encoder reproduced all decoded video frames. For byte-identical MP4 containers as well, the original Homebrew FFmpeg 9.0.2 build with libx264 reproduced all six reference SHA-256 hashes. With that encoder on your path, use a fresh output directory:
+On the tested Apple silicon Mac, the bundled encoder reproduced all decoded video frames. For byte-identical MP4 containers as well, the original Homebrew FFmpeg 9.0.2 build with libx264 reproduced all six reference SHA-256 hashes. The two RP² recipes now render revised endings. To rebuild the current recipes with the same encoder, use a fresh output directory:
 
 ```sh
 IMAGEIO_FFMPEG_EXE="$(command -v ffmpeg)" .venv/bin/python rebuild/build.py --output /tmp/tet4d-original-encoder

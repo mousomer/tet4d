@@ -26,10 +26,10 @@
     <button type="button">Reset view</button>
     <span class="a">Seam a · AB / AD</span>
     <span class="b">Seam b · BC / CD</span>
-    <label><input type="checkbox"> Show glued seams</label>
+    <label><input type="checkbox" checked> Show glued seams</label>
   </footer><footer>
 <label>Palette <input id="hue" type="range" min="0" max="360" value="0"></label>
-<label>Opacity <input id="opacity" type="range" min="8" max="100" value="40"></label>
+<label>Opacity <input id="opacity" type="range" min="8" max="100" value="52"></label>
 <label>Lighting <input id="light" type="range" min="-100" max="100" value="-35"></label>
 <label><input id="section" type="checkbox"> Vertex labels</label></footer>
   <p class="hint" id="angles">A is the green tip at upper left in the reset view. B + C + D is the magenta tip at right. The angles on the optional labels come from the square gluing.</p>
@@ -42,7 +42,7 @@ const ctx = canvas.getContext('2d');
 const [section,opacity,light,hue]=['section','opacity','light','hue'].map(id=>document.getElementById(id));
 const reset = document.querySelector('button');
 const trace = document.querySelector('input');
-const home = { yaw: -.14, pitch: .10 };
+const home = { yaw: 0.04, pitch: 0.12 };
 let {yaw, pitch} = home;
 let drag = null;
 let pending = false;
@@ -58,7 +58,7 @@ function draw() {
   ctx.setTransform(density,0,0,density,0,0);
   const ca = Math.cos(yaw), sa = Math.sin(yaw);
   const ce = Math.cos(pitch), se = Math.sin(pitch);
-  const scale = Math.min(width*.28,height*.32);
+  const scale = Math.min(width*.27,height*.34);
   const screen = points.map(([x,y,z]) => {
     const a = ca*x+sa*z, b = -sa*x+ca*z;
     return [width/2+scale*a,height*.51-scale*(ce*y-se*b),se*y+ce*b];
@@ -82,12 +82,12 @@ function draw() {
     ctx.lineJoin = 'round';
     path(ids);
     if (!dashed) {
-      ctx.lineWidth = 6;
+      ctx.lineWidth = 3;
       ctx.strokeStyle = '#233449';
       ctx.stroke();
     }
     ctx.strokeStyle = color;
-    ctx.lineWidth = dashed ? 2 : 3.5;
+    ctx.lineWidth = dashed ? 2 : 1.7;
     ctx.stroke();
     ctx.setLineDash([]);
   }
@@ -106,6 +106,8 @@ function draw() {
   for(const [a,b,c,,illumination] of sorted) {
     const angle=Math.atan2(points[a][1]+points[b][1]+points[c][1],points[a][0]+points[b][0]+points[c][0])+palette;
     const faceColor=[0,2.1,4.2].map(v=>Math.min(255,(135+118*Math.cos(angle-v))*(.35+.8*illumination)+45*illumination**12));
+    const relief = Math.max(0,Math.min(1,((screen[a][2]+screen[b][2]+screen[c][2])/3*0.86+1.25)/1.6));
+    for (let k=0;k<3;k++) faceColor[k]*=.32+.68*relief;
     for(const id of [a,b,c]) {
       for(let k=0;k<3;k++)rgb[id][k]+=faceColor[k];
       rgb[id][3]++;
@@ -217,7 +219,7 @@ canvas.addEventListener('keydown', event => {
   event.preventDefault();
   rotate(...delta);
 });
-reset.addEventListener('click', () => { ({yaw,pitch}=home); requestDraw(); });
+reset.addEventListener('click', () => { ({yaw,pitch}=home); trace.checked=true; section.checked=false; requestDraw(); });
 trace.addEventListener('change', requestDraw);
 for (const id of ['section','opacity','light','hue']) document.getElementById(id).addEventListener('input',requestDraw);
 new ResizeObserver(requestDraw).observe(canvas);
