@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import json
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+POLICY_PACK_REL = "config/project/policy_pack.json"
 
 NATIVE_DIRS = (
     "native",
@@ -158,8 +161,20 @@ def _run_clang_format_compare(
     ]
 
 
+def pinned_clang_format_major(root: Path = ROOT) -> int:
+    """Return the clang-format major version the native sources are formatted with."""
+    policy = json.loads((root / POLICY_PACK_REL).read_text(encoding="utf-8"))
+    return int(policy["governance"]["godot_toolchain"]["build"]["clang_format_major"])
+
+
+def _clang_format_version(clang_format: str, root: Path) -> str | None:
+    result = _run_command([clang_format, "--version"], root)
+    match = re.search(r"clang-format version (\d+(?:\.\d+)*)", result.stdout)
+    return match.group(1) if match else None
+
+
 def _validate_clang_format(
-    files: list[Path], root: Path, strict: bool
+    files: list[Path], root: Path, strict: bool, pinned_major: int
 ) -> tuple[list[str], str]:
     clang_format = shutil.which("clang-format")
     if clang_format is None:
@@ -167,6 +182,17 @@ def _validate_clang_format(
         if strict:
             return ["clang-format is required in strict native tooling mode."], message
         return [], message
+
+    version = _clang_format_version(clang_format, root)
+    if version is None or int(version.split(".")[0]) != pinned_major:
+        found = version or "an unrecognised version"
+        mismatch = (
+            f"clang-format {found} found; native sources are formatted with "
+            f"clang-format {pinned_major} ({POLICY_PACK_REL})."
+        )
+        if strict:
+            return [mismatch], mismatch
+        return [], f"{mismatch} Skipping format execution."
 
     if _clang_format_supports_dry_run(clang_format, root):
         issues = _run_clang_format_dry_run(clang_format, files, root)
@@ -211,7 +237,9 @@ def _validate_clang_tidy(
 
 
 def validate(
-    root: Path = ROOT, strict: bool | None = None
+    root: Path = ROOT,
+    strict: bool | None = None,
+    clang_format_major: int | None = None,
 ) -> tuple[list[str], list[str]]:
     if strict is None:
         strict = _is_strict()
@@ -234,7 +262,11 @@ def validate(
             return issues, messages
         return [], ["Native C++ tooling validation passed.", *messages]
 
-    format_issues, format_message = _validate_clang_format(files, root, strict)
+    if clang_format_major is None:
+        clang_format_major = pinned_clang_format_major()
+    format_issues, format_message = _validate_clang_format(
+        files, root, strict, clang_format_major
+    )
     issues.extend(format_issues)
     messages.append(format_message)
 

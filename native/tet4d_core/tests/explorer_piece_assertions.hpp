@@ -24,7 +24,8 @@ inline void assert_unique_occupancy(const ExplorerPiece& piece) {
     std::set<std::pair<int, CoordND>> coordinates;
     for (const auto& cell : piece.cells) {
         require(coordinates.insert({cell.domain, cell.coordinate}).second, "unique destination");
-        require(cell.domain >= 0 && cell.domain < (piece.version == EXPLORER_DOMAIN_VERSION ? 2 : 1) &&
+        require(cell.domain >= 0 &&
+                    cell.domain < (piece.version == EXPLORER_DOMAIN_VERSION ? 2 : 1) &&
                     cell.coordinate.dimension() == piece.profile.rank,
                 "domain/rank");
         for (std::size_t j = 0; j < cell.coordinate.values.size(); ++j)

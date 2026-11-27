@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -95,7 +96,7 @@ def test_native_cpp_tooling_strict_mode_fails_for_missing_clang_tidy(
     monkeypatch.setattr(
         native_tooling,
         "_validate_clang_format",
-        lambda files, root, strict: ([], "clang-format: checked 1 files."),
+        lambda *_args: ([], "clang-format: checked 1 files."),
     )
 
     issues, messages = native_tooling.validate(tmp_path, strict=True)
@@ -133,7 +134,7 @@ def test_native_cpp_tooling_ci_advisory_skips_opportunistic_clang_execution(
     monkeypatch.setattr(
         native_tooling,
         "_validate_clang_format",
-        lambda files, root, strict: (_ for _ in ()).throw(
+        lambda *_args: (_ for _ in ()).throw(
             AssertionError("clang-format should not run in CI advisory mode")
         ),
     )
@@ -153,6 +154,82 @@ def test_native_cpp_tooling_ci_advisory_skips_opportunistic_clang_execution(
         "CI advisory native tooling: clang execution deferred until strict mode."
         in messages
     )
+
+
+def _native_tree_with_clang_format(tmp_path: Path, monkeypatch, version: str) -> None:
+    _write_text(tmp_path / ".clang-format", "BasedOnStyle: LLVM\n")
+    _write_text(tmp_path / ".clang-tidy", "Checks: clang-analyzer-*\n")
+    _write_text(tmp_path / "native" / "tet4d_core" / "src" / "core" / "sample.cpp")
+
+    def fake_which(name: str) -> str | None:
+        return "/usr/bin/clang-format" if name == "clang-format" else None
+
+    def fake_run(command: list[str], root: Path) -> subprocess.CompletedProcess[str]:
+        if command[1:] == ["--version"]:
+            stdout = f"Ubuntu clang-format version {version}\n"
+            return subprocess.CompletedProcess(command, 0, stdout, "")
+        raise AssertionError(f"clang-format must not run: {command}")
+
+    monkeypatch.setattr(native_tooling.shutil, "which", fake_which)
+    monkeypatch.setattr(native_tooling, "_run_command", fake_run)
+
+
+def test_native_cpp_tooling_pins_clang_format_major_in_policy() -> None:
+    assert native_tooling.pinned_clang_format_major() == 18
+
+
+def test_native_cpp_tooling_strict_mode_fails_on_other_clang_format_major(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _native_tree_with_clang_format(tmp_path, monkeypatch, "17.0.6")
+
+    issues, _messages = native_tooling.validate(
+        tmp_path, strict=True, clang_format_major=18
+    )
+
+    assert (
+        "clang-format 17.0.6 found; native sources are formatted with "
+        "clang-format 18 (config/project/policy_pack.json)."
+    ) in issues
+
+
+def test_native_cpp_tooling_advisory_mode_skips_other_clang_format_major(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _native_tree_with_clang_format(tmp_path, monkeypatch, "19.1.0")
+
+    issues, messages = native_tooling.validate(
+        tmp_path, strict=False, clang_format_major=18
+    )
+
+    assert issues == []
+    assert (
+        "clang-format 19.1.0 found; native sources are formatted with "
+        "clang-format 18 (config/project/policy_pack.json). Skipping format execution."
+    ) in messages
+
+
+def test_native_cpp_tooling_runs_pinned_clang_format_major(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _native_tree_with_clang_format(tmp_path, monkeypatch, "18.1.3")
+    calls: list[list[Path]] = []
+    monkeypatch.setattr(
+        native_tooling, "_clang_format_supports_dry_run", lambda *_: True
+    )
+    monkeypatch.setattr(
+        native_tooling,
+        "_run_clang_format_dry_run",
+        lambda clang_format, files, root: calls.append(files) or [],
+    )
+
+    issues, messages = native_tooling.validate(
+        tmp_path, strict=False, clang_format_major=18
+    )
+
+    assert issues == []
+    assert len(calls) == 1
+    assert "clang-format: checked 1 files." in messages
 
 
 def test_native_cpp_tooling_does_not_claim_semantic_authority() -> None:

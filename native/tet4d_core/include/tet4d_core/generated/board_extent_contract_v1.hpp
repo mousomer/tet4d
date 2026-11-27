@@ -8,23 +8,27 @@
 namespace tet4d::core::generated {
 
 struct BoardExtentModeSpec {
-	std::string_view id;
-	std::int64_t rank;
-	std::array<std::string_view, 4> axis_order;
-	std::array<std::int64_t, 4> axis_minima;
-	std::array<std::int64_t, 4> axis_maxima;
-	std::array<std::int64_t, 4> canonical_default_shape;
-	std::int64_t native_maximum_cells;
-	std::string_view supported_topology_kind;
+    std::string_view id;
+    std::int64_t rank;
+    std::array<std::string_view, 4> axis_order;
+    std::array<std::int64_t, 4> axis_minima;
+    std::array<std::int64_t, 4> axis_maxima;
+    std::array<std::int64_t, 4> canonical_default_shape;
+    std::int64_t native_maximum_cells;
+    std::string_view supported_topology_kind;
 };
 
 inline constexpr std::string_view BOARD_EXTENT_CONTRACT_NAME = "tet4d.board_extent_contract";
 inline constexpr std::int64_t BOARD_EXTENT_CONTRACT_VERSION = 1;
-inline constexpr std::string_view BOARD_EXTENT_CONTRACT_FINGERPRINT = "2eda3c114aaa43a5eca78d215c9d02f848cef38d9353587c2b45283ac58816d9";
+inline constexpr std::string_view BOARD_EXTENT_CONTRACT_FINGERPRINT =
+    "2eda3c114aaa43a5eca78d215c9d02f848cef38d9353587c2b45283ac58816d9";
+// One row per mode keeps the table reviewable; clang-format would split every field.
+// clang-format off
 inline constexpr std::array<BoardExtentModeSpec, 3> BOARD_EXTENT_MODE_SPECS{{
-	{"live_2d", 2, {"X", "Y", "", ""}, {4, 6, 0, 0}, {16, 30, 0, 0}, {10, 20, 0, 0}, 480, "bounded"},
-	{"live_3d", 3, {"X", "Y", "Z", ""}, {4, 6, 2, 0}, {10, 24, 10, 0}, {6, 10, 6, 0}, 2400, "bounded"},
-	{"live_4d", 4, {"X", "Y", "Z", "W"}, {4, 6, 2, 1}, {12, 24, 8, 12}, {5, 10, 4, 4}, 27648, "bounded"},
+    {"live_2d", 2, {"X", "Y", "", ""}, {4, 6, 0, 0}, {16, 30, 0, 0}, {10, 20, 0, 0}, 480, "bounded"},
+    {"live_3d", 3, {"X", "Y", "Z", ""}, {4, 6, 2, 0}, {10, 24, 10, 0}, {6, 10, 6, 0}, 2400, "bounded"},
+    {"live_4d", 4, {"X", "Y", "Z", "W"}, {4, 6, 2, 1}, {12, 24, 8, 12}, {5, 10, 4, 4}, 27648, "bounded"},
 }};
+// clang-format on
 
 } // namespace tet4d::core::generated

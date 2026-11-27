@@ -234,7 +234,8 @@ inline constexpr std::array<std::string_view, {len(axes)}> AXIS_NAMES{{{{{_cpp_s
 inline constexpr std::array<std::int64_t, {len(signs)}> VALID_TRANSFORM_SIGNS{{{{{_cpp_int_array(signs)}}}}};
 inline constexpr std::array<std::string_view, {len(sides)}> VALID_BOUNDARY_SIDES{{{{{_cpp_string_array(sides)}}}}};
 inline constexpr std::array<std::int64_t, {len(deltas)}> VALID_MOVEMENT_DELTAS{{{{{_cpp_int_array(deltas)}}}}};
-inline constexpr std::string_view CONTRACT_FINGERPRINT = "{fingerprint}";
+inline constexpr std::string_view CONTRACT_FINGERPRINT =
+    "{fingerprint}";
 
 }} // namespace tet4d::core::generated
 """

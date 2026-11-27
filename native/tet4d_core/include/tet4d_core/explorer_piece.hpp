@@ -140,10 +140,10 @@ PieceProposal propose_piece_inverse(const ExplorerPiece& current, std::int64_t r
 // cell reaches its turned site by walking the surface from that cell; direction is -1 or +1.
 // No wall kicks. Undo restores the recorded source exactly.
 PieceProposal propose_piece_rotation(const ExplorerPiece& source, std::int64_t revision,
-                                    int direction);
+                                     int direction);
 // Pure per-ID single-cell neighbor query, retaining domain and frame correspondence.
 PieceProposal propose_piece_neighbor(const ExplorerPiece& source, std::int64_t id,
-                                    MoveStepQuery action);
+                                     MoveStepQuery action);
 
 struct PieceEnvelope {
     std::int64_t revision = 0;

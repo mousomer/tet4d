@@ -67,10 +67,12 @@ void fixture_cases() {
         ++states;
         ExplorerPieceRuntime runtime({f.revision, f.source, f.source, {}});
         const auto before = runtime.snapshot();
-        auto result = f.rotation ? propose_piece_rotation(before.piece, before.revision, f.action.delta)
-                                 : propose_piece_translation(before.piece, before.revision, f.action);
+        auto result = f.rotation
+                          ? propose_piece_rotation(before.piece, before.revision, f.action.delta)
+                          : propose_piece_translation(before.piece, before.revision, f.action);
         require(before == runtime.snapshot(), "fixture proposal pure");
-        if (!f.rotation) assert_deterministic_proposal(f.source, f.action);
+        if (!f.rotation)
+            assert_deterministic_proposal(f.source, f.action);
         if (!f.failure.empty()) {
             ++rejected_translations;
             require(!result.candidate, "blocked has no applicable candidate");
@@ -83,7 +85,8 @@ void fixture_cases() {
         require(candidate.target == f.target && candidate.witnesses == f.witnesses,
                 "reviewed full target/witnesses");
         require(candidate.classification == f.classification, "reviewed classification");
-        require(candidate.inverse == PieceInverse{f.inverse_version, f.source, f.action, f.rotation},
+        require(candidate.inverse ==
+                    PieceInverse{f.inverse_version, f.source, f.action, f.rotation},
                 "reviewed inverse descriptor");
         commit(runtime, candidate);
         undo(runtime, candidate.inverse);
@@ -117,8 +120,7 @@ void negative_cases() {
          PieceFailure::invalid_profile},
         {[](auto& p) { p.profile.seams[0].source.axis = std::numeric_limits<std::int64_t>::max(); },
          PieceFailure::invalid_profile},
-        {[](auto& p) { p.profile.seams[0].transform.signs = {0}; },
-         PieceFailure::invalid_profile},
+        {[](auto& p) { p.profile.seams[0].transform.signs = {0}; }, PieceFailure::invalid_profile},
         {[](auto& p) { p.cells[1].id = 0; }, PieceFailure::invalid_piece_state},
         {[](auto& p) { p.cells[1].coordinate = p.cells[0].coordinate; },
          PieceFailure::invalid_piece_state},
@@ -252,7 +254,8 @@ void negative_cases() {
     auto authored = base;
     authored.profile.seams = {{"cross_axis", {1, "-"}, {0, "+"}, {{0}, {-1}}, true}};
     ExplorerPiece admitted;
-    require(validate_explorer_piece(authored, admitted) == PieceFailure::none && admitted == authored,
+    require(validate_explorer_piece(authored, admitted) == PieceFailure::none &&
+                admitted == authored,
             "cross-axis reversed custom profile is preserved, never rebuilt as wraps");
     // Noncommuting frame composition protects the future twisted-seam extension architecture.
     require(compose_piece_frames({{0, 1}, {1, -1}}, {{1, 0}, {-1, 1}}) ==
