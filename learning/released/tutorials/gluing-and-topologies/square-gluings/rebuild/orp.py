@@ -125,8 +125,8 @@ def camera(t):
     curl = ease((t - 1.55) / 2.7)
     bend = ease((t - 5.15) / 2.75)
     orbit = ease((t - 8.5) / 3)
-    az = 0.25 * curl - 0.70 * bend + 0.31 * orbit
-    el = 0.36 * curl + 0.12 * bend - 0.38 * orbit
+    az = 0.25 * curl - 0.70 * bend + 0.39 * orbit
+    el = 0.36 * curl + 0.12 * bend - 0.42 * orbit
     c, s = np.cos(az), np.sin(az)
     h, j = np.cos(el), np.sin(el)
     return np.array([[1, 0, 0], [0, h, -j], [0, j, h]]) @ np.array(
@@ -158,6 +158,8 @@ def draw_surface(cam, fold, gap, im, project, puff, transparency):
         ((p[tris, 0].mean(axis=1) + 0.7) / 1.7).clip(0, 1)[:, None]
         base = pigment(final(nodes, side)[tris].mean(axis=1))
         raw = (0.35 + 0.8 * il[:, None]) * base + 45 * il[:, None] ** 12
+        relief = np.clip((q[tris, 2].mean(1) + 1.25) / 1.6, 0, 1)
+        raw *= (1 - puff * 0.68 * (1 - relief))[:, None]
         vertex = np.zeros_like(p)
         for col in tris.T:
             np.add.at(vertex, col, raw)
@@ -221,27 +223,18 @@ def draw_orientation_markers(t, d, top, lower, txt):
                 txt(x, y, symbol, 16, colors["b"], "mm")
 
 
-def draw_edge_annotations(d, edge, glued_a, glued_b, lower, pill, project, t, top, txt):
+def draw_edge_annotations(d, edge, glued_a, glued_b, lower, t, top, txt):
     if not glued_a:
         edge(lower, edge_b[::-1], "a", True)
     if not glued_b:
         edge(lower, edge_a[::-1], "b", True)
-    if t < 12:
-        edge(top, edge_a, "a", not glued_b)
-    if t < 12:
-        edge(top, edge_b, "b", not glued_b)
+    edge(top, edge_a, "a", not glued_b)
+    edge(top, edge_b, "b", not glued_b)
     draw_orientation_markers(t, d, top, lower, txt)
-    if glued_b and t < 12:
-        x, y = project(crossing())[0, :2]
-        d.ellipse((x - 6, y - 6, x + 6, y + 6), outline="white", width=2)
-        lx = x + 130 if x > 560 else x - 130
-        ly = max(158, y - 53)
-        d.line((x, y, lx, ly), fill="#e3edf5")
-        pill(lx, ly, "Triple crossing", n=16)
 
 
 def draw_corner_labels(fold, glued_a, glued_b, lower, mark, t, top):
-    if glued_b and t < 12:
+    if glued_b and t < 9:
         mark(top, A, "A + C · 180°", (-82, 20))
         mark(top, B, "B + D · 180°", (84, 22))
     elif not glued_b:
@@ -315,22 +308,22 @@ def render(k):
         if t < 5.15
         else "Match the cyan edges in reverse order"
         if t < 7.9
-        else "Two 180° cone tips · three sheets cross at the white ring"
+        else "The orange and cyan seams meet at the two tips"
         if t < 10
-        else "Two cone tips · Boy’s surface"
+        else "Boy’s surface · three openings around the central hollow"
     )
     txt(46, 35, "Opposite-edge projective plane", 39)
     txt(48, 87, state, 23, "#a9bfd5")
     d.line((48, 128, W - 48, 128), fill="#34465c")
-    transparency = 0.65 - 0.05 * ease((t - 1.8) / 4.8)
+    transparency = 0.65 - 0.17 * puff
     draw_background_grid(d, transparency, t)
     im.copy()
     pts, im, d = draw_surface(cam, fold, gap, im, project, puff, transparency)
 
     def edge(q, ids, key, arrow):
         xy = [tuple(p) for p in q[ids, :2]]
-        d.line(xy, fill="#25334a", width=9, joint="curve")
-        d.line(xy, fill=colors[key], width=5, joint="curve")
+        d.line(xy, fill="#25334a", width=4 if glued_b else 9, joint="curve")
+        d.line(xy, fill=colors[key], width=3 if glued_b else 5, joint="curve")
         if arrow:
             mid = len(ids) // 2
             p0 = np.array(xy[mid - 4])
@@ -361,7 +354,7 @@ def render(k):
     top, lower = pts
     glued_a = t >= 4.25
     glued_b = t >= 7.9
-    draw_edge_annotations(d, edge, glued_a, glued_b, lower, pill, project, t, top, txt)
+    draw_edge_annotations(d, edge, glued_a, glued_b, lower, t, top, txt)
 
     def mark(q, i, s, offset):
         x, y = q[i, :2]
@@ -382,7 +375,7 @@ def render(k):
         1071,
         692,
         "Unlabelled surface"
-        if t >= 12
+        if t >= 9
         else "Orange and cyan lines mark glued seams"
         if glued_b
         else "Square → projective plane",
