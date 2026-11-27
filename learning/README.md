@@ -30,6 +30,11 @@ and the offline edition. [SECURITY.md](SECURITY.md) records the security review 
   [sphere](sphere-sequence/README.md), [torus](torus-sequence/README.md) and
   [Klein bottle](klein-bottle-sequence/README.md), with the four gluing diagrams side by side.
 
+## Blog
+
+- [Blog material](blog/README.md) — the Boy's Surface and Three Rings pieces: turntable animations and
+  interactive CodePen pens, with notes on publishing them. Not part of the offline edition.
+
 ## Offline edition
 
 After committing the sources on `learning-surfaces`, run `"$(./scripts/resolve_python_env.sh)" learning/release_cycle.py --pandoc-dir /path/to/pandoc-3.9` to rebuild, verify, and commit the offline edition.

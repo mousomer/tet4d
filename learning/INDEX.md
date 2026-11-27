@@ -18,6 +18,7 @@ tools need Playwright with Chromium (or a `--chrome` binary).
 | [Boy's surface viewer](#boys-surface-viewer) | viewer | [boys-surface-viewer.html](boys-surface-viewer/boys-surface-viewer.html) | PR #207 (closed, superseded by this branch) |
 | [From a square to Boy's surface (sequence)](#projective-plane-sequence) | sequence | [README.md](projective-plane-sequence/README.md) | PR #205 (closed, superseded by this branch) |
 | [Gluing a square into closed surfaces (sequences)](#surface-sequences) | sequence | [README.md](surface-sequences/README.md) | PR #206 (closed, superseded by this branch) |
+| [Blog material: Boy's Surface and Three Rings](#blog) | blog | [README.md](blog/README.md) | made in the Boy's surface viewer sessions, 2026-11-25 (viewer v7/v8 era); added to learning-surfaces 2026-11-27 |
 | [Offline browser edition](#release) | release | [index.html](released/index.html) | builder moved here from PRs #208 and #209 (removed there in 38896fad, 2696be2a); extended on this branch |
 
 ## Tutorials
@@ -166,6 +167,25 @@ Illustrated sequences for the sphere, torus and Klein bottle (two immersions), w
 ```sh
 python3 learning/surface-sequences/surface_sequences.py check
 python3 learning/surface-sequences/surface_sequences.py sphere keys
+```
+
+## Blog material
+
+<a id="blog"></a>
+
+### Blog material: Boy's Surface and Three Rings
+
+Two pieces for the blog (2026-11-25): turntable animations (WebP, GIF) and the three panes of an interactive CodePen pen each. Publishing material, not part of the offline edition.
+
+- **Folder:** [`blog/`](blog)
+- **Entry:** [README.md](blog/README.md)
+- **Generators:** —
+- **Docs:** [`README.md`](blog/README.md)
+- **Checks:** —
+- **Origin:** made in the Boy's surface viewer sessions, 2026-11-25 (viewer v7/v8 era); added to learning-surfaces 2026-11-27
+
+```sh
+open learning/blog/README.md (paste the codepen-* files into a pen on codepen.io)
 ```
 
 ## Offline edition

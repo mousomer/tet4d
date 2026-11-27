@@ -219,6 +219,24 @@
       "origin": "PR #206 (closed, superseded by this branch)"
     },
     {
+      "id": "blog",
+      "title": "Blog material: Boy's Surface and Three Rings",
+      "kind": "blog",
+      "summary": "Two pieces for the blog (2026-11-25): turntable animations (WebP, GIF) and the three panes of an interactive CodePen pen each. Publishing material, not part of the offline edition.",
+      "path": "blog",
+      "entry": "blog/README.md",
+      "generators": [],
+      "docs": [
+        "blog/README.md"
+      ],
+      "checks": [],
+      "run": [
+        "open learning/blog/README.md (paste the codepen-* files into a pen on codepen.io)"
+      ],
+      "origin": "made in the Boy's surface viewer sessions, 2026-11-25 (viewer v7/v8 era); added to learning-surfaces 2026-11-27",
+      "in_release": false
+    },
+    {
       "id": "release",
       "title": "Offline browser edition",
       "kind": "release",
