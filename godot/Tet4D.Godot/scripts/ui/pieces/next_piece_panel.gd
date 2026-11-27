@@ -10,6 +10,7 @@ var _model = PieceThumbnailModelScript.new()
 var _thumbnail
 var _piece_label: Label
 var _status_label: Label
+var _caption_gain := 1.0
 var _status_inline := false
 var _preview_signature := ""
 var _margin: MarginContainer
@@ -120,3 +121,9 @@ func deterministic_snapshot() -> Dictionary:
 		"model": _model.deterministic_snapshot(),
 		"thumbnail": _thumbnail.deterministic_snapshot(),
 	}
+
+# The cockpit dims this panel during Play; the caption is already muted text,
+# so it is lifted back by the same factor to stay readable.
+func set_caption_gain(gain: float) -> void:
+	_caption_gain = gain
+	_status_label.modulate = Color(gain, gain, gain)

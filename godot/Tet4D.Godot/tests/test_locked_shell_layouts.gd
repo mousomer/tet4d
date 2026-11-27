@@ -96,6 +96,7 @@ func _check_p3_game(tree: SceneTree) -> Array:
 	hud._settings_store._storage_path = settings_directory.get_current_dir().path_join("settings.json")
 	hud._set_onboarding_visible(false)
 	hud._apply_ui_scale("standard")
+	var nav_tops := {}
 	for size in SIZES + [SMALL_4D]:
 		tree.root.size = size
 		tree.root.content_scale_size = size
@@ -144,10 +145,42 @@ func _check_p3_game(tree: SceneTree) -> Array:
 							var required_width := font.get_string_size(caption.text, HORIZONTAL_ALIGNMENT_LEFT, -1, caption.get_theme_font_size("font_size")).x
 							if caption.size.x + 1.0 < required_width:
 								failures.append("%s clips the preview caption %s" % [name, caption.text])
-					if not header_stats and mode in ["live_2d", "live_3d"]:
+					if not header_stats:
 						var controls: HFlowContainer = hud._piece_control_strip._groups_box
 						if controls.get_line_count() != 1:
 							failures.append("%s must keep the controls on one row" % name)
+				# Switching dimension must not move the shell.
+				var nav_key := "%s %s" % [layout, size]
+				var nav_top: float = hud._cockpit_nav.get_global_rect().position.y
+				if not nav_tops.has(nav_key):
+					nav_tops[nav_key] = nav_top
+				elif not is_equal_approx(nav_tops[nav_key], nav_top):
+					failures.append("%s moves the navigation bar: %.1f, was %.1f" % [name, nav_top, nav_tops[nav_key]])
+				# Muted captions are not dimmed a second time by the Play brightness tiers.
+				for caption: Label in [hud._next_piece_panel._status_label, hud._hold_piece_panel._status_label]:
+					var drawn := 1.0
+					var node: Node = caption
+					while node != null and node != hud:
+						drawn *= (node as CanvasItem).modulate.r
+						node = node.get_parent()
+					if not is_equal_approx(drawn, 1.0):
+						failures.append("%s dims the preview caption %s to %.2f" % [name, caption.text, drawn])
+				# The fitted well keeps clear of the frame's lower edge.
+				if mode != "live_4d":
+					var lowest := -INF
+					for box in app._renderer.current_content_boxes(false):
+						var low: Vector3 = box["min"]
+						var high: Vector3 = box["max"]
+						for x in [low.x, high.x]:
+							for y in [low.y, high.y]:
+								for z in [low.z, high.z]:
+									lowest = maxf(lowest, app._camera_rig.project_world_point(Vector3(x, y, z)).y)
+					# Projection is in render pixels and the allocation in logical
+					# points; they differ on a high-density display.
+					var logical_height: float = hud.board_viewport_size().y
+					var lowest_point := lowest * logical_height / float(hud._game_viewport.size.y)
+					if lowest_point > logical_height - 1.0:
+						failures.append("%s well touches the frame's lower edge: %.1f of %.1f" % [name, lowest_point, logical_height])
 				var preview_columns := 2 if header_stats and mode != "live_2d" else 1
 				if hud._piece_preview_row.columns != preview_columns or not hud._piece_preview_row.is_visible_in_tree():
 					failures.append("%s must keep NEXT and HOLD reachable in the preview row" % name)
