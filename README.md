@@ -85,7 +85,7 @@ outside-tree smoke procedures, and current platform evidence.
 
 ## Learning and tutorials
 
-The [learning tutorials](learning/tutorials/README.md) include [Chapter 1: Gluing Edges and Recognizing Topological Surfaces](learning/tutorials/gluing-and-topologies/chapter_01_gluing_and_topologies.md) and [Chapter 2: Curvature, Seam Traversal, and Mercator Maps](learning/tutorials/curvature-seams-and-mercator/chapter_02_curvature_seams_and_mercator.md), each with executable Python examples and regression tests.
+The learning material lives on the [`learning` branch](https://github.com/mousomer/tet4d/tree/learning/learning): Chapter 1 (gluing edges and recognizing topological surfaces), Chapter 2 (curvature, seam traversal and Mercator maps), Chapter 3 (seam comparisons), the square-gluing viewers and the surface sequences. Each `learning-vN` release on the [releases page](https://github.com/mousomer/tet4d/releases) carries its offline browser edition. Learning changes go to that branch, never to master.
 
 ## Why This Exists
 
