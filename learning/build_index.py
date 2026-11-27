@@ -32,7 +32,9 @@ def render():
         "",
         f"Branch: **`{b['name']}`**"
         + (" (locked)" if b.get("locked") else "")
-        + f". {b['policy']}",
+        + f". {b['policy']}"
+        + (f" {b['protection']}" if b.get("protection") else "")
+        + " See [the lock](README.md#the-lock).",
         "",
         "Each component below lists its entry page, the scripts that generate it, its docs and its checks.",
         "Commands run from the repository root; `$PY` is `$(./scripts/resolve_python_env.sh)`. The browser",

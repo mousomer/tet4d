@@ -1,6 +1,6 @@
 # Security review of the learning material
 
-Reviewed 2026-11-27 on the `learning-surfaces` branch (everything under `learning/`). No exploitable
+Reviewed 2026-11-27 on `learning-surfaces`, the work branch of `learning` (everything under `learning/`). No exploitable
 issue was found; one dependency pin was raised.
 
 ## What was checked
@@ -19,8 +19,11 @@ issue was found; one dependency pin was raised.
   and compiles `raster.c` into a private temporary folder; the surface scripts load that library with
   `ctypes`. The local test servers (`smoke_embed.py`) bind to 127.0.0.1.
 - **C.** `raster.c` clamps its pixel loops to the image for any input, including NaN and infinite
-  coordinates, and receives arrays built by the scripts beside it. It does not check `malloc`/`realloc`
-  for failure: out of memory crashes the build instead of failing cleanly (robustness, not a vulnerability).
+  coordinates, and receives arrays built by the scripts beside it. Since the review it also validates its
+  arguments and triangle indices, checks every allocation and guards the growth of its buffer against
+  overflow, and returns a status (0 ok, 1 invalid arguments, 2 out of memory) that the five surface scripts
+  turn into an error. It renders the same frames bit for bit, and runs clean under AddressSanitizer and
+  UndefinedBehaviorSanitizer on valid, invalid, NaN and oversized inputs.
 - **Archives.** The six `stills.zip` files hold only PNG stills: no absolute paths, `..` entries or
   symlinks, and their CRCs check.
 - **Dependencies.** `rebuild/requirements.txt` pinned Pillow 12.3.0, which has 42 published

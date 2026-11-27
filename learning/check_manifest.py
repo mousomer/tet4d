@@ -79,10 +79,11 @@ def check_branch(any_branch):
     b = MANIFEST["branch"]
     current = git("branch", "--show-current").stdout.strip()
     check("branch is locked", b.get("locked") is True, b["name"])
+    allowed = [b["name"], *b.get("work_branches", [])]
     check(
-        "on the locked learning branch",
-        any_branch or current == b["name"],
-        f"current {current or '(detached)'}",
+        "on the learning branch or one of its work branches",
+        any_branch or current in allowed,
+        f"current {current or '(detached)'}, allowed {', '.join(allowed)}",
     )
     check(
         "branch base is an ancestor of HEAD",

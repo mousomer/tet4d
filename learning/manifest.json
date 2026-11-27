@@ -1,15 +1,24 @@
 {
   "schema": "tet4d-learning-manifest/v1",
   "branch": {
-    "name": "learning-surfaces",
+    "name": "learning",
     "locked": true,
-    "policy": "The learning material lives on this branch and is not merged into master. Changes to learning/ are committed here; master keeps only what it already had (chapters 1 and 2, the interactive Earth).",
+    "work_branches": [
+      "learning-surfaces"
+    ],
+    "policy": "The learning material lives on the learning branch, which is never merged into master. Changes arrive by pull request from a work branch (learning-surfaces); master keeps only what it already had (chapters 1 and 2, the interactive Earth).",
+    "protection": "GitHub branch protection on learning: changes only through pull requests, no force pushes, no deletion.",
     "base": "391ca2ae"
   },
   "release": {
     "output": "released",
     "builder": "build_release.py",
     "smoke_test": "smoke_embed.py",
+    "pandoc": {
+      "reference": "3.9",
+      "minimum": "3.1",
+      "note": "Pandoc 3.1 or newer builds the edition. Other versions write equivalent MathML with different markup (e.g. bracket fences), so rebuild with the reference version to avoid markup-only diffs; Pandoc 3.9 installs with pip install pypandoc_binary."
+    },
     "source_ref": "7c89b3f969fce3636a154a04bae917f72f747e92",
     "source_ref_note": "Commit on this branch that the offline edition links to for files it does not copy (zips, rebuild guides on GitHub). Set by build_release.py --lock to the commit being released from.",
     "include": [
@@ -227,7 +236,7 @@
         "check_manifest.py"
       ],
       "run": [
-        "PATH=<pandoc 3.x>:$PATH python3 learning/build_release.py --lock",
+        "PATH=<folder with pandoc 3.9>:$PATH python3 learning/build_release.py --lock",
         "python3 learning/smoke_embed.py",
         "python3 learning/check_manifest.py"
       ],

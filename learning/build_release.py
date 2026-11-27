@@ -167,9 +167,29 @@ def lock():
     return head
 
 
+def pandoc_version():
+    """Check Pandoc against manifest.json release.pandoc: refuse below the minimum, warn off the reference."""
+    first = subprocess.run(
+        ["pandoc", "--version"], check=True, stdout=subprocess.PIPE, text=True
+    ).stdout.split()[1]
+    version = tuple(int(x) for x in re.findall(r"\d+", first)[:3])
+    want = MANIFEST["release"]["pandoc"]
+    floor = tuple(int(x) for x in want["minimum"].split("."))
+    if version < floor:
+        raise SystemExit(
+            f"Pandoc {first} is older than {want['minimum']}. {want['note']}"
+        )
+    if first != want["reference"]:
+        print(
+            f"warning: Pandoc {first}, not the reference {want['reference']}: expect markup-only diffs in the MathML."
+        )
+    return first
+
+
 def build():
     if not shutil.which("pandoc"):
         raise SystemExit("Pandoc is required to rebuild learning/released.")
+    pandoc_version()
     if SOURCE_REF == "PENDING":
         raise SystemExit(
             "manifest.json has no release.source_ref yet: run with --lock."

@@ -87,7 +87,7 @@ outside-tree smoke procedures, and current platform evidence.
 
 The [learning tutorials](learning/tutorials/README.md) include [Chapter 1: Gluing Edges and Recognizing Topological Surfaces](learning/tutorials/gluing-and-topologies/chapter_01_gluing_and_topologies.md) and [Chapter 2: Curvature, Seam Traversal, and Mercator Maps](learning/tutorials/curvature-seams-and-mercator/chapter_02_curvature_seams_and_mercator.md), each with executable Python examples and regression tests.
 
-On the `learning-surfaces` branch, the [learning index](learning/INDEX.md) lists all the learning material: chapters 1–3, the six square gluings and their interactive viewers, the Boy's surface viewer, the illustrated surface sequences and the offline edition, each with its generator scripts, docs and checks. That branch is locked by [learning/manifest.json](learning/manifest.json) and is not merged into master.
+On the `learning` branch, the [learning index](learning/INDEX.md) lists all the learning material: chapters 1–3, the six square gluings and their interactive viewers, the Boy's surface viewer, the illustrated surface sequences and the offline edition, each with its generator scripts, docs and checks. That branch is locked by [learning/manifest.json](learning/manifest.json) and is never merged into master.
 
 ## Why This Exists
 

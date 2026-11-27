@@ -135,9 +135,13 @@ def draw_surface(cam, fold, gap, im, project, puff, transparency):
         np.argsort(depth).astype(np.int32),
     ]
     ptr = lambda a: ctypes.c_void_p(a.ctypes.data)
-    ctypes.CDLL(os.environ["GLUING_RASTER"]).paint(
+    status = ctypes.CDLL(os.environ["GLUING_RASTER"]).paint(
         ptr(arr), W, H, *map(ptr, buffers), len(depth)
     )
+    if status:
+        raise RuntimeError(
+            f"raster.c paint failed (status {status}: 1 invalid arguments, 2 out of memory)"
+        )
     im = Image.fromarray(arr)
     d = ImageDraw.Draw(im)
     return pts, im, d
