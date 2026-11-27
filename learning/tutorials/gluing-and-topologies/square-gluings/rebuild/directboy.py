@@ -98,7 +98,8 @@ def boy(uvw, side):
         if normal @ (pos - [0, 0, -0.55]) < 0:
             normal = -normal
         # Local support on the same quotient sheet; constant radial slope at apex.
-        local = np.abs(q @ center) > 0.84
+        local = np.clip((np.abs(q @ center) - 0.76) / 0.12, 0, 1)
+        local = local**2 * (3 - 2 * local)
         dist = np.linalg.norm(p - pos, axis=1)
         h = np.maximum(0, 1 - dist / 0.54) ** 2
         p += local[:, None] * h[:, None] * 0.85 * normal
@@ -108,24 +109,6 @@ def boy(uvw, side):
 def pigment(p):
     angle = np.arctan2(p[:, 1], p[:, 0])
     return np.array([135 + 118 * np.cos(angle - v) for v in (0, 2.1, 4.2)]).T
-
-
-def section_lines(vertices, faces, level=0.12):
-    tri = vertices[faces]
-    tri = tri[(tri[:, :, 2].min(1) < level) & (tri[:, :, 2].max(1) > level)]
-    segments = []
-    for face in tri:
-        hits = [
-            a + (b - a) * (level - a[2]) / (b[2] - a[2])
-            for a, b in zip(face, np.roll(face, 1, axis=0))
-            if (a[2] < level) != (b[2] < level)
-        ]
-        if len(hits) == 2:
-            segments.append(hits)
-    return np.array(segments)
-
-
-sections = np.concatenate([section_lines(boy(nodes, i), tris) for i in (1, -1)])
 
 
 def patch(uvw, side, fold, puff, gap):
@@ -159,8 +142,8 @@ def patch(uvw, side, fold, puff, gap):
 def camera(t):
     end = ease((t - 4.9) / 2.6)
     rotate = ease((t - 9) / 2.8)
-    az = -0.80 * end + 0.66 * rotate
-    el = 0.44 * end - 0.34 * rotate
+    az = -0.80 * end + 0.84 * rotate
+    el = 0.44 * end - 0.32 * rotate
     ca, sa, ce, se = math.cos(az), math.sin(az), math.cos(el), math.sin(el)
     return np.array([[1, 0, 0], [0, ce, -se], [0, se, ce]]) @ np.array(
         [[ca, 0, sa], [0, 1, 0], [-sa, 0, ca]]
@@ -187,6 +170,8 @@ def draw_surface(cam, fold, gap, im, project, puff, transparency):
         ((p[tris, 0].mean(axis=1) + 0.7) / 1.7).clip(0, 1)[:, None]
         base = pigment(boy(nodes, side)[tris].mean(axis=1))
         raw = (0.35 + 0.8 * il[:, None]) * base + 45 * il[:, None] ** 12
+        relief = np.clip((q[tris, 2].mean(1) + 1.25) / 1.6, 0, 1)
+        raw *= (1 - puff * 0.68 * (1 - relief))[:, None]
         vertex = np.zeros_like(p)
         for col in tris.T:
             np.add.at(vertex, col, raw)
@@ -224,15 +209,13 @@ def draw_surface(cam, fold, gap, im, project, puff, transparency):
     return pts, im, d
 
 
-def draw_edge_annotations(d, edge, glued_a, glued_b, lower, pill, project, t, top, txt):
+def draw_edge_annotations(d, edge, glued_a, glued_b, lower, t, top, txt):
     if not glued_a:
         edge(lower, edge_a, "a", True)
     if not glued_b:
         edge(lower, edge_b[::-1], "b", True)
-    if t < 9:
-        edge(top, edge_a, "a", not glued_b)
-    if t < 9:
-        edge(top, edge_b, "b", not glued_b)
+    edge(top, edge_a, "a", not glued_b)
+    edge(top, edge_b, "b", not glued_b)
     if 4.25 <= t < 7.55:
         for fraction, symbol in ((0.32, "●"), (0.69, "◆")):
             mid = round(N * fraction)
@@ -245,16 +228,10 @@ def draw_edge_annotations(d, edge, glued_a, glued_b, lower, pill, project, t, to
                     width=2,
                 )
                 txt(x, y, symbol, 16, colors["b"], "mm")
-    if glued_b and t < 9:
-        x, y = project(np.zeros((1, 3)))[0, :2]
-        d.ellipse((x - 5, y - 5, x + 5, y + 5), outline="white", width=2)
-        d.line((x + 5, y, x + 171, y - 92), fill="white")
-        pill(x + 225, y - 92, "Triple crossing", n=16)
 
 
 def draw_corner_labels(fold, glued_a, glued_b, lower, mark, t, top):
     if glued_b and t < 9:
-        ease((t - 9) / 2.8)
         mark(top, A, "A · 90°", (-130, -36))
         mark(top, B, "B + C + D · 270°", (97, -29))
     elif not glued_b:
@@ -332,15 +309,15 @@ def render(k):
     txt(46, 35, "Boy’s surface", 39)
     txt(48, 87, state, 23, "#a9bfd5")
     d.line((48, 128, W - 48, 128), fill="#34465c")
-    transparency = 0.65 - 0.05 * ease((t - 1.8) / 4.8)
+    transparency = 0.65 - 0.17 * puff
     draw_background_grid(d, transparency, t)
     im.copy()
     pts, im, d = draw_surface(cam, fold, gap, im, project, puff, transparency)
 
     def edge(q, ids, key, arrow):
         xy = [tuple(p) for p in q[ids, :2]]
-        d.line(xy, fill="#25334a", width=9, joint="curve")
-        d.line(xy, fill=colors[key], width=5, joint="curve")
+        d.line(xy, fill="#25334a", width=4 if glued_b else 9, joint="curve")
+        d.line(xy, fill=colors[key], width=3 if glued_b else 5, joint="curve")
         if arrow:
             mid = len(ids) // 2
             p0 = np.array(xy[mid - 4])
@@ -371,7 +348,7 @@ def render(k):
     top, lower = pts
     glued_a = t >= 4.25
     glued_b = t >= 7.9
-    draw_edge_annotations(d, edge, glued_a, glued_b, lower, pill, project, t, top, txt)
+    draw_edge_annotations(d, edge, glued_a, glued_b, lower, t, top, txt)
 
     def mark(q, i, s, offset):
         x, y = q[i, :2]
