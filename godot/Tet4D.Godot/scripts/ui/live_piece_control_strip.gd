@@ -210,13 +210,34 @@ func _rebuild() -> void:
 	_glyphs.clear()
 	_resort_host.call_deferred()
 	if _layout == LAYOUT_COMPACT:
+		var spatial := _mode in ["live_3d", "live_4d"]
 		for group in _groups:
 			var role := str(group.get("cockpit_role", ""))
+			# The spatial footer is two keycaps tall, so single-key rows pair up
+			# into columns instead of pushing the last entries onto a new line.
+			var pair: VBoxContainer = null
 			for item in _merged_items(group.get("items", [])):
 				var semantic := _semantic_row(role, item)
-				var spatial_rotation := role == "rotate" and _mode in ["live_3d", "live_4d"]
-				var stack_moves := role == "translate" and _mode in ["live_3d", "live_4d"]
-				var row := _rotation_row(semantic, 0.0) if spatial_rotation else _legend_row(semantic, 0.0, "", stack_moves)
+				var spatial_rotation := role == "rotate" and spatial
+				var stack_moves := role == "translate" and spatial
+				var paired := spatial and not spatial_rotation and not stack_moves
+				var row := _rotation_row(semantic, 0.0) if spatial_rotation else _legend_row(semantic, 0.0, "", stack_moves or paired)
+				if paired:
+					row.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_1)
+					row.size_flags_horizontal = Control.SIZE_FILL
+					(row.get_node("LegendOperation") as Label).size_flags_horizontal = Control.SIZE_FILL
+					if pair == null:
+						pair = VBoxContainer.new()
+						pair.name = "LegendPair__%s" % role
+						pair.mouse_filter = Control.MOUSE_FILTER_IGNORE
+						pair.add_theme_constant_override("separation", 0)
+						pair.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+						_groups_box.add_child(pair)
+						pair.add_child(row)
+					else:
+						pair.add_child(row)
+						pair = null
+					continue
 				if role == "translate":
 					_add_inline_movement_arrows(row, semantic["semantic"])
 				row.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_1)

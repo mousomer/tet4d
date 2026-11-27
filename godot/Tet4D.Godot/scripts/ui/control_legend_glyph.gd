@@ -66,7 +66,7 @@ static func plane(axes: Array, color_source: Label, inline: bool = false, includ
 	glyph._glyph_extent = GraphicalLanguageConfigScript.number("cockpit.inline_plane_glyph_size") if inline else standard_size
 	glyph._plane_marker_scale = glyph._glyph_extent / standard_size
 	glyph._show_w_marker = include_w
-	var marker_width := 8.0 * glyph._plane_marker_scale if include_w else 0.0
+	var marker_width := GraphicalLanguageConfigScript.number("cockpit.plane_w_marker.reserve") * glyph._plane_marker_scale if include_w else 0.0
 	glyph.custom_minimum_size = Vector2(glyph._glyph_extent + marker_width, glyph._glyph_extent)
 	glyph._color_source = color_source
 	return glyph
@@ -131,7 +131,7 @@ func _draw() -> void:
 	var dim := Color(lit, 0.28)
 	var vertical_offset := (size.y - _glyph_extent) * 0.5 if _plane_marker_scale != 1.0 else 0.0
 	var center := Vector2(_glyph_extent * 0.5, _glyph_extent * 0.5 + vertical_offset)
-	var reach := _glyph_extent * 0.42
+	var reach := _glyph_extent * GraphicalLanguageConfigScript.number("cockpit.plane_glyph_reach")
 	for axis in ["x", "y", "z"]:
 		var direction: Vector2 = _directions.get(axis, Vector2.ZERO)
 		if direction == Vector2.ZERO:
@@ -142,10 +142,15 @@ func _draw() -> void:
 	if _show_w_marker and _directions.has("w"):
 		# W has no screen direction of its own: it is the row of slice boards.
 		var on: bool = "w" in plane_axes
-		for index in range(3):
+		var marker := "cockpit.plane_w_marker."
+		var box_size := Vector2(GraphicalLanguageConfigScript.number(marker + "box_width"), GraphicalLanguageConfigScript.number(marker + "box_height"))
+		for index in range(GraphicalLanguageConfigScript.integer(marker + "boxes")):
 			var box := Rect2(
-				Vector2(_glyph_extent + _plane_marker_scale, vertical_offset + (6.0 + float(index) * 7.0) * _plane_marker_scale),
-				Vector2(6.0, 5.0) * _plane_marker_scale
+				Vector2(
+					_glyph_extent + GraphicalLanguageConfigScript.number(marker + "gap") * _plane_marker_scale,
+					vertical_offset + (GraphicalLanguageConfigScript.number(marker + "top") + float(index) * GraphicalLanguageConfigScript.number(marker + "pitch")) * _plane_marker_scale
+				),
+				box_size * _plane_marker_scale
 			)
 			if on:
 				draw_rect(box, lit, true)

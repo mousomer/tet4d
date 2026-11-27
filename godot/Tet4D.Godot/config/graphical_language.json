@@ -11,6 +11,16 @@
     "compass_arrow_length": 34.0,
     "plane_glyph_size": 30.0,
     "inline_plane_glyph_size": 21.0,
+    "plane_glyph_reach": 0.42,
+    "plane_w_marker": {
+      "boxes": 3,
+      "box_width": 6.0,
+      "box_height": 5.0,
+      "pitch": 7.0,
+      "top": 6.0,
+      "gap": 1.0,
+      "reserve": 8.0
+    },
     "empty_slot": {
       "dash_length": 22.0,
       "dash_width": 2.0
@@ -19,7 +29,7 @@
     "board": {
       "frame_padding": 4.0,
       "fit_margin_2d": 1.02,
-      "fit_margin_3d": 1.0,
+      "fit_margin_3d": 1.01,
       "slice_gutter_scale": 0.5,
       "slice_label_side_pad": 0.8
     }

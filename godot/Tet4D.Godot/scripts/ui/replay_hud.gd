@@ -1120,10 +1120,16 @@ func _uses_stacked_footer() -> bool:
 	return _cockpit_nav != null and _cockpit_nav.visible and _cockpit_layout == "concept_a" and not _explorer_cockpit.active and _active_live_mode in ["live_3d", "live_4d"]
 
 
+# Every Concept A Play dimension shares one shell margin, so switching
+# dimension never moves the navigation bar.
+func _uses_compact_play_shell() -> bool:
+	return _cockpit_nav != null and _cockpit_nav.visible and _cockpit_layout == "concept_a" and not _explorer_cockpit.active and not _active_live_mode.is_empty()
+
+
 func _apply_safe_area_insets() -> void:
 	if _shell_root_margin == null:
 		return
-	var compact_play := _current_screen == SCREEN_VIEWER and _uses_stacked_footer()
+	var compact_play := _current_screen == SCREEN_VIEWER and _uses_compact_play_shell()
 	var insets := ShellViewportLayout.local_insets(safe_area_insets(), _ui_scale_factor)
 	# Margins are in this HUD's local units, which the UI scale magnifies.
 	for side in ["left", "top", "right", "bottom"]:
@@ -3314,6 +3320,9 @@ func _apply_cockpit_brightness() -> void:
 		var value := GraphicalLanguageConfigScript.number("cockpit.brightness.%s" % tier) if live_play else 1.0
 		for surface in tiers[tier]:
 			surface.modulate = Color(value, value, value)
+		if tier == "preview":
+			for panel in [_next_piece_panel, _hold_piece_panel]:
+				panel.set_caption_gain(1.0 / value)
 
 
 func _set_game_cockpit_visible(visible_in_game: bool) -> void:
