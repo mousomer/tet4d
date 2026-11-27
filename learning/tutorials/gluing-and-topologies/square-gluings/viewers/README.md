@@ -1,7 +1,7 @@
 # Square gluing viewers
 
-Interactive versions of the tutorial's six square gluings, plus the classic glass Klein bottle. Each page
-glues one square into its closed surface; [index.html](index.html) is the menu.
+Interactive versions of the tutorial's six square gluings, plus the classic glass Klein bottle and Boy's
+surface exactly as in the Boy's surface viewer. Each page glues one square into its closed surface; [index.html](index.html) is the menu.
 
 | Page | Word | Result | Cone points |
 |---|---|---|---|
@@ -12,6 +12,7 @@ glues one square into its closed surface; [index.html](index.html) is the menu.
 | [klein-adjacent.html](klein-adjacent.html) | a b b a | Klein bottle, χ = 0 | none (360°) |
 | [klein-opposite.html](klein-opposite.html) | a b a⁻¹ b | Klein bottle, χ = 0 | none (360°) |
 | [klein-bottle.html](klein-bottle.html) | a b a⁻¹ b | Klein bottle (the glass bottle), χ = 0 | none (360°) |
+| [rp2-boy.html](rp2-boy.html) | a b a b | Boy's surface (Bryant–Kusner), χ = 1 | none: smooth (A=C, B=D at 180°) |
 
 Each page is one self-contained HTML file (WebGL2, no network). Open it in a browser.
 
@@ -33,6 +34,9 @@ Each page is one self-contained HTML file (WebGL2, no network). Open it in a bro
     smooth Boy's surface.
   - The torus and Klein bottles have no cone point (their four corners meet at 360°), so the switch is
     disabled there.
+- **Shape** (Boy's surface page): Length, Width, Protrusion and Twist, with presets, as in the Boy's
+  surface viewer (where Protrusion is called Thickness). They change the finished surface, so the run is
+  re-paced when they change.
 - **Lines**: the square's grid, the edges, the arrows, the corner discs and the corner labels.
 - **Material** and **Scene**: the glass, a turntable, the floor shadow.
 - **View**: drag to rotate, right-drag or Shift-drag to move, scroll to zoom, double-click to recentre.
@@ -63,7 +67,7 @@ The pages follow the tutorial's conventions:
 
 ## How it works
 
-- **[src/surfaces.js](src/surfaces.js)**: the seven surfaces.
+- **[src/surfaces.js](src/surfaces.js)**: the eight surfaces.
   - Each module is a line-for-line port of the tutorial's Python homotopy in [../rebuild/](../rebuild/):
     `tet4d_sphere_revised.py`, `directboy.py`, `orp.py`, `torus_direct.py`, `klein_direct.py`,
     `opklein.py`.
@@ -95,6 +99,22 @@ The pages follow the tutorial's conventions:
   has a cusp at the join: its control polygon is symmetric there, so the core arrives going down and
   leaves going up. That flip of the tube's direction is the Klein identification (−1, Y) ~ (1, −Y), and
   because the radius keeps growing through the join, the surface is smooth there.
+- **Boy's surface** ([rp2-boy.html](rp2-boy.html)) ends on exactly the surface of the
+  [Boy's surface viewer](../../../../boys-surface-viewer/README.md).
+  - The surface is Bryant–Kusner with c = 0.95, at w = Fong's elliptical map of the square (the viewer's
+    Square grid). The boundary of that disk is glued antipodally, which is the word a b a b.
+  - The shape sliders are the viewer's map of space about the 3-fold axis: radial stretch, angular lobe
+    width, axial stretch and a twist growing with height. Every setting is still an immersion.
+  - The colours are the viewer's lobe colours, and the home pose is its view from the pole side.
+  - The two stages are a staged stretch: each point moves straight from a flat square to its place on the
+    surface, arriving at T(X, Y) = 0.35 (1 − ab) + 0.65 (1 − b) a, with a = 1 − Y² and b = 1 − X².
+    - The centre arrives first.
+    - The top and bottom edges arrive together at T = 0.35. The first stage ends there, as a Möbius band.
+    - The left and right edges arrive last, closing the surface.
+  - The flat square lies in the least-squares plane of the surface, scaled to the surface's size, so it
+    stretches rather than inflates.
+  - Slimming and Gap Width are not included. They are fields computed for the viewer's mesh, and could be
+    ported the same way.
 - **[build.py](build.py)**: inlines the modules into the template and writes the pages and the menu.
   It also holds the menu's table, which the checks compare with the modules.
 

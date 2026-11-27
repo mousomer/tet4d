@@ -20,6 +20,7 @@ import argparse
 import asyncio
 import importlib.util
 import io
+import json
 import re
 import time
 from pathlib import Path
@@ -43,6 +44,7 @@ FINAL_CLASSES = {  # corner classes of the glued square (the tutorial's angle su
     "klein-adjacent": ["ABCD"],
     "klein-opposite": ["ABCD"],
     "klein-bottle": ["ABCD"],
+    "rp2-boy": ["AC", "BD"],
 }
 
 spec = importlib.util.spec_from_file_location("build", ROOT / "build.py")
@@ -81,9 +83,14 @@ SEAM_JS = """
         size = Math.max(size, Math.hypot(...a));
       }
     }
-    let flat = 0;
-    const s0 = M.params(M.span[0]);
-    for (let i = 0; i <= 20; i++) for (let j = 0; j <= 20; j++) flat = Math.max(flat, Math.abs(M.point(-1 + i / 10, -1 + j / 10, s0, cone)[2]));
+    let flat = 0;   // distance from the plane through three corners
+    const s0 = M.params(M.span[0]), o = M.point(-1, -1, s0, cone), e1 = M.point(1, -1, s0, cone), e2 = M.point(-1, 1, s0, cone);
+    const u = [0, 1, 2].map((i) => e1[i] - o[i]), v = [0, 1, 2].map((i) => e2[i] - o[i]);
+    const n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]], nl = Math.hypot(...n);
+    for (let i = 0; i <= 20; i++) for (let j = 0; j <= 20; j++) {
+      const p = M.point(-1 + i / 10, -1 + j / 10, s0, cone);
+      flat = Math.max(flat, Math.abs(((p[0] - o[0]) * n[0] + (p[1] - o[1]) * n[1] + (p[2] - o[2]) * n[2]) / nl));
+    }
     out[cone] = { rel: worst / size, flat };
   }
   return out;
@@ -146,7 +153,7 @@ async def check_page(br, sid):
         check(
             f"{sid}: flat square at the start (cones={cone})",
             r["flat"] < 1e-9,
-            f"max |z| {r['flat']:.1e}",
+            f"off-plane {r['flat']:.1e}",
         )
 
     # two-stage order on 61 slider values
@@ -198,6 +205,35 @@ async def check_page(br, sid):
                 f"classes {sorted(st['classes'])}, chi {t['chi']}, {'orientable' if t['orientable'] else 'non-orientable'}, {st['buildMs']:.0f} ms/build",
             )
     await pg.evaluate("__glue.set({motion: 'stages', cones: true})")
+
+    # shape controls (pages that have them): every preset and the slider extremes still glue up
+    ctrl = await pg.evaluate(
+        "(__glue.SURFACE.shape || []).map((c) => [c.key, c.min, c.max])"
+    )
+    if ctrl:
+        settings = [
+            {k: lo for k, lo, _hi in ctrl},
+            {k: hi for k, _lo, hi in ctrl},
+        ]
+        settings += await pg.evaluate(
+            "Object.values(__glue.SURFACE.presets || {}).map((p) => p[1])"
+        )
+        ok, worst = True, 0.0
+        for sh in settings:
+            st = await pg.evaluate(
+                f"__glue.set(Object.assign({json.dumps(sh)}, {{glue: 1}})); __glue.renderNow(); __glue.stats"
+            )
+            worst = max(worst, max(st["mismatch"]))
+            ok &= all(st["closed"]) and sorted(st["classes"]) == FINAL_CLASSES[sid]
+        check(
+            f"{sid}: shape controls keep the surface glued",
+            ok,
+            f"{len(settings)} settings, max seam gap {worst:.1e}",
+        )
+        defaults = await pg.evaluate(
+            "Object.fromEntries(__glue.SURFACE.shape.map((c) => [c.key, c.value]))"
+        )
+        await pg.evaluate(f"__glue.set({json.dumps(defaults)})")
 
     # rendering: edges and arrows paint; the glued surface differs from the flat square
     await pg.evaluate(

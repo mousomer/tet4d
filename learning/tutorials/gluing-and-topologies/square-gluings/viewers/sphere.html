@@ -164,7 +164,7 @@
 </button>
 <div id="ui">
   <h3 id="title"></h3>
-  <div class="sub">Square gluing <span class="word" id="word"></span> · <a href="index.html">all six</a></div>
+  <div class="sub">Square gluing <span class="word" id="word"></span> · <a href="index.html">all gluings</a></div>
 
   <details class="sec" id="sec-glue" open>
     <summary>Gluing</summary>
@@ -194,6 +194,15 @@
     </div>
     <div class="note" id="cone-note"></div>
     <div id="status"></div>
+  </details>
+
+  <details class="sec" id="sec-shape" open hidden>
+    <summary>Shape</summary>
+    <div class="row" id="preset-row">
+      <span>Preset</span>
+      <select id="preset"></select>
+    </div>
+    <div id="shape-sliders"></div>
   </details>
 
   <details class="sec" id="sec-lines" open>
@@ -565,6 +574,110 @@ const SURFACES = {};
     defaults: { opa: 0.2, frost: 0.08, clar: 0.9 },
   };
 
+  // ---------------------------------------------------------------- Boy's surface, Bryant–Kusner
+  // The surface of the Boy's surface viewer (../../../../boys-surface-viewer): Bryant–Kusner with c = 0.95,
+  // X = H |d|^2 / |H|^2 at w = Fong's elliptical map of the square (the viewer's Square grid), whose
+  // boundary is glued antipodally: a b a b. Length, Width, Protrusion (the viewer's Thickness) and Twist are
+  // the viewer's map of space about the 3-fold axis, so every setting is still an immersion of RP^2.
+  // Two stages: every point moves straight from a flat square (the least-squares plane of the finished
+  // surface) to its place, arriving at T(X, Y) = 0.35 (1 - ab) + 0.65 (1 - b) a with a = 1 - Y², b = 1 - X²:
+  // the centre first, the top and bottom edges together at T = 0.35 (stage 1 ends with a Möbius band), the
+  // left and right edges last (T = 1 at their middles), closing the surface.
+  const BK_C = 0.95;
+  function bkPoint(a, b) {   // the Boy's surface viewer's bk(), stable form
+    const a2 = a * a - b * b, b2 = 2 * a * b, a3 = a2 * a - b2 * b, b3 = a2 * b + b2 * a;
+    const a4 = a2 * a2 - b2 * b2, b4 = 2 * a2 * b2, a6 = a3 * a3 - b3 * b3, b6 = 2 * a3 * b3;
+    const dr = a6 + S5 * a3 - 1, di = b6 + S5 * b3;
+    const n1r = a * (1 - a4) + b * b4, n1i = -a * b4 + b * (1 - a4);
+    const n2r = a * (1 + a4) - b * b4, n2i = a * b4 + b * (1 + a4);
+    const n3r = 1 + a6, n3i = b6, dd = dr * dr + di * di;
+    const h1 = -1.5 * (n1i * dr - n1r * di), h2 = -1.5 * (n2r * dr + n2i * di), h3 = n3i * dr - n3r * di - BK_C * dd;
+    const hh = h1 * h1 + h2 * h2 + h3 * h3, k = hh > 1e-300 ? dd / hh : 0;
+    return [h1 * k, h2 * k, h3 * k];
+  }
+  const fong = (X, Y) => [X * Math.sqrt(1 - (Y * Y) / 2), Y * Math.sqrt(1 - (X * X) / 2)];
+  const boy = { sY: 1, D: null, shape: "", flat: null };
+  function deformBoy(o, D) {   // the Boy's surface viewer's deform(): radial, angular and axial, about z
+    const x = o[0], y = o[1], z = o[2] - D.z0, r2 = x * x + y * y, q = r2 + D.cc2, u = r2 / q;
+    const im3 = y * (3 * x * x - y * y) * D.ca - x * (x * x - 3 * y * y) * D.sa;
+    const ang = ((-D.k / 3) * im3) / (q * Math.sqrt(q)) + D.tw * z;
+    const sr = 1 + (D.len - 1) * u, cs = Math.cos(ang) * sr, sn = Math.sin(ang) * sr;
+    return [x * cs - y * sn, x * sn + y * cs, z * (1 + (D.thk - 1) * u)];
+  }
+  const boyFinal = (X, Y) => { const w = fong(X, boy.sY * Y); return deformBoy(bkPoint(w[0], w[1]), boy.D); };
+  SURFACES["rp2-boy"] = {
+    title: "Boy's surface (Bryant–Kusner)", short: "Boy's surface", word: "a b a b",
+    sides: { top: ["a", 1], right: ["b", 1], bottom: ["a", 1], left: ["b", 1] },
+    hasCones: false, orientable: false,
+    note: "The corners meet in pairs, A=C and B=D, at 180° each, but this immersion is smooth: no cone tips. It is the surface of the Boy's surface viewer.",
+    span: [0, 1],
+    params: (t) => ({ t, fold: Math.min(1, Math.max(0, t / 0.58)), puff: Math.min(1, Math.max(0, (t - 0.3) / 0.7)), gap: 0 }),
+    shape: [   // the Boy's surface viewer's shape controls (defaults: the lobes of its reference look)
+      { key: "len", label: "Length", min: 0.5, max: 2, step: 0.01, value: 1.3, title: "Radial stretch of the three lobes away from the symmetry axis" },
+      { key: "wid", label: "Width", min: 0.4, max: 1.6, step: 0.01, value: 0.92, title: "Angular width of each lobe around the symmetry axis" },
+      { key: "thk", label: "Protrusion", min: 0.2, max: 2, step: 0.01, value: 1.0, title: "How far the lobes protrude along the symmetry axis (the viewer's Thickness)" },
+      { key: "twist", label: "Twist", min: -4, max: 4, step: 0.01, value: 1.6, title: "Rotation about the symmetry axis that grows with height; opens the lobe pockets toward the viewer" },
+    ],
+    presets: { classic: ["Classic Bryant–Kusner", { len: 1, wid: 1, thk: 1, twist: 0 }], reference: ["Reference lobes", { len: 1.3, wid: 0.92, thk: 1, twist: 1.6 }] },
+    init() {   // the deformation's frame, from the undeformed surface (as in the viewer)
+      let zmin = Infinity, zmax = -Infinity, rhoMax = 0, tipRho = 0, tipAz = 0;
+      for (let i = 0; i <= 160; i++) for (let j = 0; j <= 160; j++) {
+        const X = -1 + i / 80, Y = -1 + j / 80, w = fong(X, Y), p = bkPoint(w[0], w[1]), rho = Math.hypot(p[0], p[1]), r = Math.hypot(w[0], w[1]);
+        zmin = Math.min(zmin, p[2]); zmax = Math.max(zmax, p[2]); rhoMax = Math.max(rhoMax, rho);
+        if (r > 0.55 && r < 0.9 && rho > tipRho) { tipRho = rho; tipAz = Math.atan2(p[1], p[0]); }
+      }
+      const third = (2 * PI) / 3, win0 = (-10 * PI) / 180;
+      tipAz = win0 + ((((tipAz - win0) % third) + third) % third);
+      boy.frame = { z0: 0.5 * (zmin + zmax), cc2: (0.42 * rhoMax) ** 2, ca: Math.cos(3 * tipAz), sa: Math.sin(3 * tipAz), dz: zmax - zmin, rhoMax, tipAz };
+      this.setShape(Object.fromEntries(this.shape.map((c) => [c.key, c.value])));
+      // home pose: the viewer's (symmetry axis tilted 24° toward the camera, pole side in front), turned
+      // about the axis so the flat square shows A at the upper left; the square is reflected if needed
+      const tilt = PI - (24 * PI) / 180;
+      for (let pass = 0; pass < 2; pass++) {
+        const f = boy.flat, roll = -Math.atan2(f.A0[1], f.A0[0]), c = Math.cos(roll), s = Math.sin(roll);
+        const a1y = s * f.A1[0] + c * f.A1[1], screenY = Math.cos(tilt) * a1y - Math.sin(tilt) * f.A1[2];
+        this.home = { tilt, turn: 0, roll };
+        if (screenY > 0) break;
+        boy.sY = -boy.sY; boy.shape = ""; this.setShape(boy.cur);
+      }
+    },
+    setShape(v) {   // called by the engine before it evaluates the surface
+      const key = [v.len, v.wid, v.thk, v.twist].join();
+      if (key === boy.shape) return;
+      const F = boy.frame;
+      boy.cur = { len: v.len, wid: v.wid, thk: v.thk, twist: v.twist }; boy.shape = key;
+      boy.D = { z0: F.z0, cc2: F.cc2, ca: F.ca, sa: F.sa, len: v.len, thk: v.thk, k: Math.max(-0.85, Math.min(0.85, (1 - v.wid) * 1.4)), tw: v.twist / F.dz };
+      // least-squares plane of the finished surface over the square (the flat start)
+      const m = [0, 0, 0], sx = [0, 0, 0], sy = [0, 0, 0], N = 61, pts = [];
+      let sxx = 0, syy = 0;
+      for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+        const X = -1 + (2 * i) / (N - 1), Y = -1 + (2 * j) / (N - 1), p = boyFinal(X, Y);
+        pts.push([X, Y, p]); for (let c = 0; c < 3; c++) m[c] += p[c] / (N * N);
+      }
+      for (const [X, Y, p] of pts) { sxx += X * X; syy += Y * Y; for (let c = 0; c < 3; c++) { sx[c] += X * (p[c] - m[c]); sy[c] += Y * (p[c] - m[c]); } }
+      // the plane's directions, made orthonormal and scaled to the surface's own size: the fitted axes of a
+      // surface that wraps around are short, and a small square would inflate rather than stretch
+      const R = Math.sqrt(pts.reduce((acc, [, , p]) => acc + (p[0] - m[0]) ** 2 + (p[1] - m[1]) ** 2 + (p[2] - m[2]) ** 2, 0) / pts.length);
+      const unit = (q) => { const l = Math.hypot(...q); return q.map((c) => c / l); };
+      const e0 = unit(sx.map((q) => q / sxx)), y1 = sy.map((q) => q / syy), dd = y1[0] * e0[0] + y1[1] * e0[1] + y1[2] * e0[2];
+      const e1 = unit(y1.map((c, i) => c - dd * e0[i]));
+      boy.flat = { m, A0: e0.map((c) => 0.75 * R * c), A1: e1.map((c) => 0.75 * R * c) };
+    },
+    color(X, Y) {   // lobe colours as in the viewer: undeformed position, turned so colour 1 sits on a fixed lobe
+      const w = fong(X, boy.sY * Y), p = bkPoint(w[0], w[1]), F = boy.frame, a = -F.tipAz - (2 * PI) / 3;
+      return [(p[0] * Math.cos(a) - p[1] * Math.sin(a)) / F.rhoMax, (p[0] * Math.sin(a) + p[1] * Math.cos(a)) / F.rhoMax];
+    },
+    point(X, Y, s) {
+      const a = 1 - Y * Y, b = 1 - X * X, T = 0.35 * (1 - a * b) + 0.65 * (1 - b) * a, W = 0.35;
+      const beta = ease((s.t - T * (1 - W)) / W);
+      const f = boy.flat, flat = [0, 1, 2].map((c) => f.m[c] + X * f.A0[c] + Y * f.A1[c]);
+      if (beta <= 0) return flat;
+      const p = boyFinal(X, Y);
+      return [0, 1, 2].map((c) => (1 - beta) * flat[c] + beta * p[c]);
+    },
+    home: { tilt: 0, turn: 0 },
+  };
+
   for (const [id, m] of Object.entries(SURFACES)) { m.id = id; if (m.init) m.init(); }
 })();
 const SURFACE = SURFACES["sphere"];
@@ -587,6 +700,27 @@ const SHAPE_KEYS = new Set(["glue", "motion", "cones"]);
 const COLOR_KEYS = ["c0", "c1", "c2", "c3", "ea", "eb"];
 const CHECK_KEYS = ["edges", "arrows", "corners", "labelsOn", "cones"];
 const SELECT_KEYS = ["gridType", "motion"];
+// A module may add shape controls (sliders that change the finished surface) and presets for them.
+const SHAPE_CTRL = SURFACE.shape || [];
+for (const c of SHAPE_CTRL) { DEFAULTS[c.key] = c.value; SLIDERS[c.key] = 2; SHAPE_KEYS.add(c.key); }
+function buildShapeUI() {
+  if (!SHAPE_CTRL.length) return;
+  $("sec-shape").hidden = false;
+  $("shape-sliders").innerHTML = SHAPE_CTRL.map((c) =>
+    `<label title="${c.title}">${c.label} <span id="${c.key}-v"></span></label>` +
+    `<input id="${c.key}" type="range" min="${c.min}" max="${c.max}" step="${c.step}" />`).join("");
+  const pr = SURFACE.presets || {};
+  if (!Object.keys(pr).length) { $("preset-row").hidden = true; return; }
+  $("preset").innerHTML = Object.entries(pr).map(([k, [name]]) => `<option value="${k}">${name}</option>`).join("") +
+    '<option value="custom" disabled>Custom</option>';
+}
+function syncPreset() {   // which preset the shape sliders match, or Custom
+  const pr = SURFACE.presets || {};
+  if (!Object.keys(pr).length) return;
+  const hit = Object.keys(pr).find((n) => Object.entries(pr[n][1]).every(([k, v]) => Math.abs(P[k] - v) < 1e-6));
+  $("preset").value = hit || "custom";
+}
+const shapeKey = () => SHAPE_CTRL.map((c) => P[c.key]).join();
 const P = { ...DEFAULTS };
 let geoDirty = true, frameDirty = true, playing = false, playT0 = 0, playG0 = 0;   // play follows the clock
 function resetView() {   // the surface's default view: its home pose, turned by SURFACE.view
@@ -606,6 +740,7 @@ function syncUI() {
   for (const k of SELECT_KEYS) $(k).value = P[k];
   for (const k of CHECK_KEYS) $(k).checked = P[k];
   if (!SURFACE.hasCones) $("cones").checked = false;
+  syncPreset();
 }
 function setGlue(g) {
   P.glue = Math.min(1, Math.max(0, g));
@@ -632,6 +767,7 @@ function bindUI() {
       if (k === "glue") { setPlaying(false); setGlue(+$(k).value); return; }
       P[k] = +$(k).value;
       if (k === "dur" && playing) { playT0 = performance.now(); playG0 = P.glue; }   // keep going from here
+      if (SHAPE_KEYS.has(k)) { geoDirty = true; syncPreset(); }
       $(k + "-v").textContent = k === "dur" ? P[k].toFixed(1) + " s" : P[k].toFixed(SLIDERS[k]);
       frameDirty = true;
     });
@@ -639,6 +775,13 @@ function bindUI() {
   for (const k of COLOR_KEYS) $(k).addEventListener("input", () => { P[k] = $(k).value; frameDirty = true; });
   for (const k of SELECT_KEYS) $(k).addEventListener("change", () => { P[k] = $(k).value; if (SHAPE_KEYS.has(k)) geoDirty = true; frameDirty = true; });
   for (const k of CHECK_KEYS) $(k).addEventListener("change", () => { P[k] = $(k).checked; if (SHAPE_KEYS.has(k)) geoDirty = true; frameDirty = true; });
+  $("preset").addEventListener("change", () => {
+    const pr = (SURFACE.presets || {})[$("preset").value];
+    if (!pr) return;
+    Object.assign(P, pr[1]);
+    syncUI();
+    geoDirty = frameDirty = true;
+  });
   $("play").addEventListener("click", () => setPlaying(!playing));
   $("back").addEventListener("click", () => stepBy(-1));
   $("fwd").addEventListener("click", () => stepBy(1));
@@ -687,7 +830,8 @@ const sqd = new Float64Array(NV * 2), sqs = new Float32Array(NV * 2), colData = 
 for (let j = 0; j <= NQ; j++) for (let i = 0; i <= NQ; i++) {
   const v = j * ROW + i, X = -1 + (2 * i) / NQ, Y = -1 + (2 * j) / NQ;
   sqd[2 * v] = sqs[2 * v] = X; sqd[2 * v + 1] = sqs[2 * v + 1] = Y;
-  colData[2 * v] = 0.75 * X; colData[2 * v + 1] = 0.75 * Y;   // material colour is attached to the square
+  const c = SURFACE.color ? SURFACE.color(X, Y) : [0.75 * X, 0.75 * Y];   // material colour is attached to the square
+  colData[2 * v] = c[0]; colData[2 * v + 1] = c[1];
 }
 const indices = (() => {
   const out = new Uint32Array(NQ * NQ * 6);
@@ -742,7 +886,8 @@ for (let j = 0; j <= NQ; j += 6) for (let i = 0; i <= NQ; i += 6) SUB.push(j * R
 let prep = null;   // per (motion, cones): cached finals, pacing table and scale
 
 function prepare() {
-  const key = P.motion + ":" + coneValue();
+  if (SURFACE.setShape) SURFACE.setShape(P);
+  const key = P.motion + ":" + coneValue() + ":" + shapeKey();
   if (prep && prep.key === key) return prep;
   const t0 = performance.now(), cone = coneValue();
   const pr = { key, motion: P.motion, cone, fin: null, end: null, flat: null };
@@ -1781,6 +1926,7 @@ const query = new URLSearchParams(location.search);
 if (query.has("glue")) P.glue = Math.min(1, Math.max(0, +query.get("glue") || 0));
 if (query.get("motion") === "stretch") P.motion = "stretch";
 if (query.get("cones") === "0") P.cones = false;
+buildShapeUI();
 resetView();
 syncUI();
 bindUI();

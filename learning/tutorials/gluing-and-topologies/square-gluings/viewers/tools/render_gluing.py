@@ -12,7 +12,8 @@ chromium, or pass --chrome). Frames are rendered by the viewer pages themselves 
 so they match what a reader sees.
 
 Options:
-  --surface  repeatable: sphere, rp2-adjacent, rp2-opposite, torus, klein-adjacent, klein-opposite, klein-bottle, or all.
+  --surface  repeatable: sphere, rp2-adjacent, rp2-opposite, torus, klein-adjacent, klein-opposite, klein-bottle, rp2-boy,
+             or all.
   --glue     START:END:COUNT (evenly spaced, inclusive) or a comma list; default 0:1:13. The pages re-time
              the slider so equal steps make equally large changes.
   --view     repeatable. home (the page's default view), back, top, side, or TILT,TURN in degrees added
@@ -48,6 +49,7 @@ SURFACES = [
     "klein-adjacent",
     "klein-opposite",
     "klein-bottle",
+    "rp2-boy",
 ]
 ARGS = [
     "--use-angle=swiftshader",

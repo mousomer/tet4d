@@ -6,7 +6,7 @@ Educational material accompanying Tet4D. These are learning resources, not engin
 - [From a square to Boy's surface](projective-plane-sequence/README.md) — illustrated sequence gluing a square into an immersion of the projective plane.
 - [Gluing a square into closed surfaces](surface-sequences/README.md) — the same kind of sequence for the sphere, torus and Klein bottle, with the four gluing diagrams side by side.
 - [Boy's surface viewer](boys-surface-viewer/README.md) — interactive frosted-glass Boy's surface: glue the square into it with a slider, rotate it at any moment, show its self-intersections and membranes.
-- [Square gluing viewers](tutorials/gluing-and-topologies/square-gluings/viewers/index.html) — the tutorial's six square gluings (sphere, two projective planes, torus, two Klein bottles) and the classic glass Klein bottle as interactive pages: glue in two stages or one stretch, set the speed, step, rotate, with or without cone points.
+- [Square gluing viewers](tutorials/gluing-and-topologies/square-gluings/viewers/index.html) — the tutorial's six square gluings (sphere, two projective planes, torus, two Klein bottles), the classic glass Klein bottle and the Bryant–Kusner Boy's surface (with the viewer's shape controls) as interactive pages: glue in two stages or one stretch, set the speed, step, rotate, with or without cone points.
 
 - [Offline browser edition](released/index.html) — open this file in a browser, or copy the entire `released/` folder to another device. Rebuild from the tutorial sources with `python3 learning/build_release.py` from the repository root (requires Pandoc).
 

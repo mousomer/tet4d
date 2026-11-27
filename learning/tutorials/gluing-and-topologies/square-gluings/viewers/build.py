@@ -72,7 +72,19 @@ PAGES = [
         False,
         None,
     ),
+    (
+        "rp2-boy",
+        "opposite-rp2",
+        "Boy's surface (Bryant–Kusner)",
+        "a b a b",
+        1,
+        False,
+        None,
+    ),
 ]
+MENU_NOTE = {
+    "rp2-boy": "smooth, no cone tips · shape controls"
+}  # replaces the cone-point text
 NAMES = {
     (2, True): "sphere",
     (1, False): "projective plane",
@@ -96,7 +108,7 @@ def menu() -> str:
     cards = []
     for sid, folder, title, word, chi, orientable, cones in PAGES:
         kind = NAMES[(chi, orientable)]
-        cone = cones or "no cone point"
+        cone = MENU_NOTE.get(sid) or cones or "no cone point"
         cards.append(
             f"""<a class="card" href="{sid}.html">
   <img src="img/{sid}.webp" alt="{html.escape(title)}, glued" loading="lazy">
@@ -132,7 +144,7 @@ footer{{margin-top:28px;color:#a9bfd5;font-size:14px}}
 <main>
 <header>
 <h1>Square gluings, interactive</h1>
-<p>The tutorial's six gluings and the classic glass Klein bottle. Each viewer glues one square into its closed surface. Corners A–D run clockwise from the upper left; the
+<p>The tutorial's six gluings, the classic glass Klein bottle and Boy's surface as in the Boy's surface viewer. Each viewer glues one square into its closed surface. Corners A–D run clockwise from the upper left; the
 orange edges a close first, then the cyan edges b. Drag the Glue slider or press ▶, set the speed, step
 frame by frame, rotate at any moment, and switch cone points on or off where the corners meet at less than 360°.</p>
 <p>Back to the <a href="../index.html">tutorial</a>.</p>
