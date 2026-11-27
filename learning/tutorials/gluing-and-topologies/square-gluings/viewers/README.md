@@ -128,7 +128,7 @@ $PY learning/tutorials/gluing-and-topologies/square-gluings/viewers/build.py   #
 cd learning/tutorials/gluing-and-topologies/square-gluings/viewers
 python3 tools/render_gluing.py --surface all --glue 0:1:25 --anim     # frames, strips, animated WebP
 python3 tools/render_gluing.py --surface sphere --cones both --view home --view 30,60
-python3 tools/render_gluing.py --thumbs                                # img/<id>.webp for the menu
+python3 tools/render_gluing.py --thumbs                                # img/<id>.webp for the menu (not kept in git)
 python3 tools/check_viewers.py                                         # browser checks for all pages
 ```
 
@@ -159,7 +159,8 @@ It checks each page:
 - **Playback**: a run takes its set duration. The step buttons step by the set size, and link
   parameters are read.
 
-It also checks that the menu links every page and that their thumbnails exist.
+It also checks that the menu links every page and that its cards work without the thumbnails, which are
+generated and not kept in the repository.
 
 ## Limits
 

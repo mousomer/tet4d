@@ -111,7 +111,7 @@ def menu() -> str:
         cone = MENU_NOTE.get(sid) or cones or "no cone point"
         cards.append(
             f"""<a class="card" href="{sid}.html">
-  <img src="img/{sid}.webp" alt="{html.escape(title)}, glued" loading="lazy">
+  <img src="img/{sid}.webp" alt="{html.escape(title)}, glued" loading="lazy" onerror="this.remove()">
   <h2>{html.escape(title)}</h2>
   <p class="word">{word_html(word)}</p>
   <p>{kind} · χ = {chi} · {"orientable" if orientable else "non-orientable"} · {cone}</p>

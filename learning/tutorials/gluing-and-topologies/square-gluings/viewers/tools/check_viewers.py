@@ -10,7 +10,7 @@ Runs every page headless (SwiftShader) and checks, per page:
   render    edges and arrows paint pixels; the glued surface differs from the flat square
   controls  play runs and stops at 1, the duration sets the speed, step buttons step, link
             parameters (?glue, ?motion, ?cones) are read, the cone switch is disabled without cones
-  menu      index.html links every page and their thumbnails exist
+  menu      index.html links every page; its cards work without the (generated) thumbnails
 
 Usage: python tools/check_viewers.py [--chrome /usr/bin/google-chrome] [--only torus,sphere]
 Requires playwright and pillow. Exit status 1 if any check fails.
@@ -325,13 +325,14 @@ def check_menu():
     html = (ROOT / "index.html").read_text(encoding="utf-8")
     links = re.findall(r'href="([a-z0-9-]+)\.html"', html)
     check("menu: links every page", sorted(links) == sorted(PAGES), ", ".join(links))
-    missing = [
-        s
-        for s in PAGES
-        if not (ROOT / f"{s}.html").exists()
-        or not (ROOT / "img" / f"{s}.webp").exists()
-    ]
-    check("menu: pages and thumbnails exist", not missing, ", ".join(missing))
+    missing = [s for s in PAGES if not (ROOT / f"{s}.html").exists()]
+    check("menu: pages exist", not missing, ", ".join(missing))
+    # thumbnails are generated (tools/render_gluing.py --thumbs) and not kept in the repository;
+    # without them the menu cards drop their images
+    check(
+        "menu: cards work without thumbnails",
+        html.count('onerror="this.remove()"') == len(PAGES),
+    )
 
 
 async def main(chrome, only):
