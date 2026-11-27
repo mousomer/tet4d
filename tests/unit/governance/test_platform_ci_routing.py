@@ -364,3 +364,54 @@ def test_every_godot_packaging_path_selects_explicit_platform_evidence() -> None
         result = classify_paths([path], config=config)
         selected = known.intersection(result.verification_requirements)
         assert selected, f"{path} selects no explicit platform evidence"
+
+
+def test_master_learning_guard_rejects_only_learning_changes(tmp_path: Path) -> None:
+    jobs = _workflow_jobs(CI_WORKFLOW_PATH)
+    guard = jobs["learning-master-guard"]
+    condition = "github.event_name == 'pull_request' && github.base_ref == 'master'"
+    assert f"    if: {condition}" in guard
+    assert "fetch-depth: 0" in guard
+    assert "    needs:" not in guard
+
+    gate = jobs["required-gate"]
+    assert "      - learning-master-guard\n" in gate
+    assert "needs.learning-master-guard.result" in gate
+    assert 'check_lane "$IS_MASTER_PR" "$RESULT_LEARNING_GUARD"' in gate
+
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, capture_output=True, check=True)
+
+    git("init", "-q")
+    git("config", "user.email", "test@example.com")
+    git("config", "user.name", "CI fixture")
+    git("config", "commit.gpgsign", "false")
+    git("commit", "--allow-empty", "-m", "master base")
+    git("update-ref", "refs/remotes/origin/master", "HEAD")
+
+    script = guard.split("        run: |\n", 1)[1]
+    (tmp_path / "unrelated.md").write_text("Unrelated change.\n")
+    git("add", ".")
+    git("commit", "-m", "unrelated change")
+    clean = subprocess.run(
+        ["bash", "-e", "-c", script], cwd=tmp_path, capture_output=True, check=False
+    )
+    assert clean.returncode == 0, clean.stderr
+
+    (tmp_path / "learning").mkdir()
+    (tmp_path / "learning" / "probe.md").write_text("Learning change.\n")
+    git("add", "learning")
+    git("commit", "-m", "learning change")
+    rejected = subprocess.run(
+        ["bash", "-e", "-c", script], cwd=tmp_path, capture_output=True, check=False
+    )
+    assert rejected.returncode == 1
+    assert b"learning/ changes go to the learning branch" in rejected.stderr
+
+    git("update-ref", "refs/remotes/origin/master", "HEAD")
+    git("rm", "-q", "learning/probe.md")
+    git("commit", "-m", "remove learning from master")
+    removed = subprocess.run(
+        ["bash", "-e", "-c", script], cwd=tmp_path, capture_output=True, check=False
+    )
+    assert removed.returncode == 0, removed.stderr
