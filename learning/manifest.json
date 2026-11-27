@@ -19,7 +19,7 @@
       "minimum": "3.1",
       "note": "Pandoc 3.1 or newer builds the edition. Other versions write equivalent MathML with different markup (e.g. bracket fences), so rebuild with the reference version to avoid markup-only diffs; Pandoc 3.9 installs with pip install pypandoc_binary."
     },
-    "source_ref": "a4eb4f571b5ab8fefcf24304e7efa6bb5f663cfe",
+    "source_ref": "a1c2e302400cd3dd3241149fb8c11c3486703036",
     "source_ref_note": "Commit on this branch that the offline edition links to for files it does not copy (zips, rebuild guides on GitHub). Set by build_release.py --lock to the commit being released from.",
     "include": [
       "tutorials",
