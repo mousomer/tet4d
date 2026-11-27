@@ -10,9 +10,6 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ## Current Authority
 
-- Learning branch CI guard: verify that a draft PR into master with a change
-  under `learning/` fails the required gate, then remove the scratch branch.
-
 - CI repair: observe settled Designer geometry and retry interrupted macOS
   asset transfers; full Godot and macOS packaging evidence remain merge gates.
 - T2A CI repair: enable extension exception support to preserve allocation-failure
