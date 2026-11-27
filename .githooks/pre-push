@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# On the learning branch the game's verifier does not run: learning changes never touch the game.
 repo_root="$(git rev-parse --show-toplevel)"
 cd "${repo_root}"
 
-echo "[tet4d pre-push] Running local gate: CODEX_MODE=${CODEX_MODE:-1} ./scripts/ci_check.sh"
-CODEX_MODE="${CODEX_MODE:-1}" ./scripts/ci_check.sh
-
+echo "[tet4d learning pre-push] Running the learning gate: learning/gate.py"
+exec "$(./scripts/resolve_python_env.sh)" learning/gate.py

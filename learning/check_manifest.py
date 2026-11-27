@@ -107,6 +107,12 @@ def check_components():
         check(f"{c['id']}: listed files exist", not missing, ", ".join(missing))
         if c["kind"] == "release":
             continue
+        if (
+            c.get("in_release") is False
+        ):  # publishing material: listed in README.md, not in the edition
+            ok = c["entry"] in readme or c["path"] in readme
+            check(f"{c['id']}: linked from README.md (not in the offline edition)", ok)
+            continue
         entry = c["entry"]
         released = (
             str(Path(entry).with_suffix(".html")) if entry.endswith(".md") else entry

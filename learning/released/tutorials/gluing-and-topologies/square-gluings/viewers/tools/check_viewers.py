@@ -18,6 +18,7 @@ Requires playwright and pillow. Exit status 1 if any check fails.
 
 import argparse
 import asyncio
+import base64
 import importlib.util
 import io
 import json
@@ -107,8 +108,19 @@ async def bg_shot(
     return img
 
 
+# Read the frame straight from the WebGL canvas in the task that renders it: a compositor
+# screenshot waits for a composited frame, which a software GPU (CI runners) can take minutes to
+# deliver. The canvas renders at an adaptive internal scale, so scale it back to the viewport.
+SHOT = (
+    "(() => { __glue.renderNow(); return __glue.gl.canvas.toDataURL('image/png'); })()"
+)
+
+
 async def shot(pg):
-    return Image.open(io.BytesIO(await pg.screenshot())).convert("RGB")
+    data = await pg.evaluate(SHOT)
+    img = Image.open(io.BytesIO(base64.b64decode(data.split(",", 1)[1]))).convert("RGB")
+    size = (pg.viewport_size["width"], pg.viewport_size["height"])
+    return img if img.size == size else img.resize(size, Image.Resampling.NEAREST)
 
 
 def colour_pixels(img, rgb, tol=40):

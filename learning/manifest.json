@@ -7,7 +7,7 @@
       "learning-surfaces"
     ],
     "policy": "The learning material lives on the learning branch, which is never merged into master. Changes arrive by pull request from a work branch (learning-surfaces); master keeps only what it already had (chapters 1 and 2, the interactive Earth).",
-    "protection": "GitHub branch protection on learning: changes only through pull requests, no force pushes, no deletion.",
+    "protection": "GitHub branch protection on learning: changes only through pull requests that pass the CI required gate of learning.yml, no force pushes, no deletion. A tag ruleset keeps learning-v* tags from being moved or deleted.",
     "base": "391ca2ae"
   },
   "release": {
@@ -19,7 +19,7 @@
       "minimum": "3.1",
       "note": "Pandoc 3.1 or newer builds the edition. Other versions write equivalent MathML with different markup (e.g. bracket fences), so rebuild with the reference version to avoid markup-only diffs; Pandoc 3.9 installs with pip install pypandoc_binary."
     },
-    "source_ref": "a1c2e302400cd3dd3241149fb8c11c3486703036",
+    "source_ref": "e0a1496aa8707301558377b547ad85e2519a1e19",
     "source_ref_note": "Commit on this branch that the offline edition links to for files it does not copy (zips, rebuild guides on GitHub). Set by build_release.py --lock to the commit being released from.",
     "include": [
       "tutorials",
@@ -219,6 +219,24 @@
       "origin": "PR #206 (closed, superseded by this branch)"
     },
     {
+      "id": "blog",
+      "title": "Blog material: Boy's Surface and Three Rings",
+      "kind": "blog",
+      "summary": "Two pieces for the blog (2026-11-25): turntable animations (WebP, GIF) and the three panes of an interactive CodePen pen each. Publishing material, not part of the offline edition.",
+      "path": "blog",
+      "entry": "blog/README.md",
+      "generators": [],
+      "docs": [
+        "blog/README.md"
+      ],
+      "checks": [],
+      "run": [
+        "open learning/blog/README.md (paste the codepen-* files into a pen on codepen.io)"
+      ],
+      "origin": "made in the Boy's surface viewer sessions, 2026-11-25 (viewer v7/v8 era); added to learning-surfaces 2026-11-27",
+      "in_release": false
+    },
+    {
       "id": "release",
       "title": "Offline browser edition",
       "kind": "release",
@@ -235,13 +253,15 @@
       "checks": [
         "smoke_embed.py",
         "check_manifest.py",
-        "tutorials/gluing-and-topologies/square-gluings/viewers/tools/check_viewers.py"
+        "tutorials/gluing-and-topologies/square-gluings/viewers/tools/check_viewers.py",
+        "gate.py"
       ],
       "run": [
         "PATH=<folder with pandoc 3.9>:$PATH python3 learning/build_release.py --lock",
         "python3 learning/smoke_embed.py",
         "python3 learning/check_manifest.py",
-        "\"$(./scripts/resolve_python_env.sh)\" learning/release_cycle.py --pandoc-dir <pandoc-3.9-directory>"
+        "\"$(./scripts/resolve_python_env.sh)\" learning/release_cycle.py --pandoc-dir <pandoc-3.9-directory>",
+        "\"$(./scripts/resolve_python_env.sh)\" learning/gate.py --full"
       ],
       "origin": "builder moved here from PRs #208 and #209 (removed there in 38896fad, 2696be2a); extended on this branch"
     }

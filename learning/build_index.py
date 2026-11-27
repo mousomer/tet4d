@@ -14,6 +14,7 @@ KINDS = {
     "tutorial": "Tutorials",
     "viewer": "Interactive viewers",
     "sequence": "Illustrated sequences",
+    "blog": "Blog material",
     "release": "Offline edition",
 }
 

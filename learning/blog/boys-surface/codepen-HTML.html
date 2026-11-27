@@ -1,0 +1,55 @@
+<canvas id="c"></canvas>
+<div id="ui">
+  <h3>Boy's Surface</h3>
+  <div class="sub">Bryant–Kusner immersion of ℝP² in ℝ³</div>
+
+  <div class="sec">Shape</div>
+  <label title="Radial stretch of the three lobes away from the symmetry axis">Lobe Length <span id="len-v"></span></label>
+  <input id="len" type="range" min="0.50" max="2.00" step="0.01" />
+  <label title="Angular width of each lobe around the symmetry axis">Lobe Width <span id="wid-v"></span></label>
+  <input id="wid" type="range" min="0.40" max="1.60" step="0.01" />
+  <label title="Stretch of the lobes along the symmetry axis">Lobe Thickness <span id="thk-v"></span></label>
+  <input id="thk" type="range" min="0.20" max="2.00" step="0.01" />
+  <label title="Bryant–Kusner inversion offset: trades the central cap against the lobes (0.5 = classic model)">Lobe Swell <span id="swell-v"></span></label>
+  <input id="swell" type="range" min="0.40" max="1.60" step="0.01" />
+  <label title="Rotation about the symmetry axis that grows with height; opens the lobe pockets toward the viewer">Twist <span id="twist-v"></span></label>
+  <input id="twist" type="range" min="-4.00" max="4.00" step="0.01" />
+
+  <div class="sec">Material</div>
+  <label title="Absorption density of the colored glass">Opacity <span id="opa-v"></span></label>
+  <input id="opa" type="range" min="0.05" max="1.00" step="0.01" />
+  <label title="How clear the pale region around the triple-point axis is">Center Clarity <span id="clar-v"></span></label>
+  <input id="clar" type="range" min="0.00" max="1.00" step="0.01" />
+  <label title="Surface frosting: blurs what is seen through the glass and adds internal scattering">Frost <span id="frost-v"></span></label>
+  <input id="frost" type="range" min="0.00" max="1.00" step="0.01" />
+  <label title="Sharpness of the studio reflections">Glossiness <span id="gloss-v"></span></label>
+  <input id="gloss" type="range" min="0.00" max="1.00" step="0.01" />
+  <label title="Extra absorption at grazing angles: darker, more saturated rims">Edge Depth <span id="edge-v"></span></label>
+  <input id="edge" type="range" min="0.00" max="1.00" step="0.01" />
+  <div class="colors">
+    <div><input id="c1" type="color" />lobe 1</div>
+    <div><input id="c2" type="color" />lobe 2</div>
+    <div><input id="c3" type="color" />lobe 3</div>
+    <div><input id="c0" type="color" />center</div>
+  </div>
+
+  <div class="sec">Scene</div>
+  <label>Spin Speed <span id="spin-v"></span></label>
+  <input id="spin" type="range" min="0" max="3" step="0.05" />
+  <div class="row">
+    <span>Spin Axis</span>
+    <select id="axis">
+      <option value="sym">Symmetry axis</option>
+      <option value="vert">Vertical (turntable)</option>
+    </select>
+  </div>
+  <label>Shadow <span id="shadow-v"></span></label>
+  <input id="shadow" type="range" min="0.00" max="1.00" step="0.01" />
+  <div class="row">
+    <span>Parameter Grid Overlay</span>
+    <input id="grid" type="checkbox" />
+  </div>
+  <button id="reset">Reset</button>
+  <div class="hint">Drag to rotate &bull; Scroll to zoom &bull; H hides this panel</div>
+</div>
+<div id="err"></div>
