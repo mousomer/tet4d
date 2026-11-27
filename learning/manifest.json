@@ -6,7 +6,7 @@
     "work_branches": [
       "learning-surfaces"
     ],
-    "policy": "The learning material lives on the learning branch, which is never merged into master. Changes arrive by pull request from a work branch (learning-surfaces); master keeps only what it already had (chapters 1 and 2, the interactive Earth).",
+    "policy": "The learning material lives on the learning branch, which is never merged into master. Changes arrive by pull request from a work branch (learning-surfaces); master holds none of it.",
     "protection": "GitHub branch protection on learning: changes only through pull requests that pass the CI required gate of learning.yml, no force pushes, no deletion. A tag ruleset keeps learning-v* tags from being moved or deleted.",
     "base": "391ca2ae"
   },
