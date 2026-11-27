@@ -4,12 +4,15 @@ Educational material accompanying Tet4D. These are learning resources, not engin
 
 This material lives on the **`learning-surfaces`** branch and is not merged into master; master keeps only
 chapters 1 and 2 and the interactive Earth. [manifest.json](manifest.json) locks the branch and lists every
-component with its entry page, generator scripts, docs and checks. `python3 learning/check_manifest.py`
-checks the manifest, the links in the docs and the offline edition.
+component with its entry page, generator scripts, docs and checks; [INDEX.md](INDEX.md) is the index
+generated from it. `python3 learning/check_manifest.py` checks the manifest, the index, the links in the docs
+and the offline edition. [SECURITY.md](SECURITY.md) records the security review and how to repeat it.
 
 ## Tutorials
 
-- [Tutorials](tutorials/README.md) — guided mathematical and computational lessons (chapters 1–3).
+- [Tutorials](tutorials/README.md) — guided mathematical and computational lessons (chapters 1–3; see each
+  chapter's README: [1](tutorials/gluing-and-topologies/README.md), [2](tutorials/curvature-seams-and-mercator/README.md),
+  [3](tutorials/seam-comparisons/README.md)).
 - [Six square gluings](tutorials/gluing-and-topologies/square-gluings/index.html) — chapter 1's gluings built
   step by step, with stills, rotatable models and a [rebuild guide](tutorials/gluing-and-topologies/square-gluings/REBUILD.md).
 - [Square gluing viewers](tutorials/gluing-and-topologies/square-gluings/viewers/index.html) — the six gluings,

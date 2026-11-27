@@ -27,6 +27,7 @@
       "id": "chapter-1",
       "title": "Chapter 1 · Gluing edges and recognizing topological surfaces",
       "kind": "tutorial",
+      "summary": "Edge identifications of one square, its symmetry group D4, quotient invariants and a classifier: 12 complete gluings, 6 classes, 4 closed surfaces.",
       "path": "tutorials/gluing-and-topologies",
       "entry": "tutorials/gluing-and-topologies/chapter_01_gluing_and_topologies.md",
       "generators": [
@@ -41,12 +42,17 @@
       "checks": [
         "tutorials/gluing-and-topologies/test_square_gluings.py"
       ],
+      "run": [
+        "\"$PY\" learning/tutorials/gluing-and-topologies/01_enumerate.py",
+        "\"$PY\" -m unittest discover -s learning/tutorials/gluing-and-topologies -p \"test_square_gluings.py\""
+      ],
       "origin": "master (PR #192)"
     },
     {
       "id": "square-gluings",
       "title": "Six square gluings (illustrated constructions)",
       "kind": "tutorial",
+      "summary": "The six complete square gluings built step by step: numbered stills, rotatable models and animations rebuilt from Python.",
       "path": "tutorials/gluing-and-topologies/square-gluings",
       "entry": "tutorials/gluing-and-topologies/square-gluings/index.html",
       "generators": [
@@ -57,12 +63,16 @@
         "tutorials/gluing-and-topologies/square-gluings/REBUILD.md"
       ],
       "checks": [],
-      "origin": "commit 70a0ab9f (branches graphical-design, codex/graphical-language-p3, claude/p3-cockpit-build; open PRs #208, #209)"
+      "run": [
+        "see tutorials/gluing-and-topologies/square-gluings/REBUILD.md (python rebuild/build.py ...)"
+      ],
+      "origin": "commit 70a0ab9f; moved here from PRs #208 and #209 (removed there in 38896fad, 2696be2a)"
     },
     {
       "id": "square-gluing-viewers",
       "title": "Square gluing viewers (interactive)",
       "kind": "viewer",
+      "summary": "Eight interactive WebGL pages: the six gluings, the glass Klein bottle and the Bryant–Kusner Boy's surface; two stages or one stretch, speed, steps, cone points, shape controls.",
       "path": "tutorials/gluing-and-topologies/square-gluings/viewers",
       "entry": "tutorials/gluing-and-topologies/square-gluings/viewers/index.html",
       "generators": [
@@ -75,12 +85,17 @@
       "checks": [
         "tutorials/gluing-and-topologies/square-gluings/viewers/tools/check_viewers.py"
       ],
+      "run": [
+        "\"$PY\" learning/tutorials/gluing-and-topologies/square-gluings/viewers/build.py",
+        "python3 learning/tutorials/gluing-and-topologies/square-gluings/viewers/tools/check_viewers.py"
+      ],
       "origin": "learning-surfaces only (commits b617d06f, d3f714f3)"
     },
     {
       "id": "chapter-2",
       "title": "Chapter 2 · Curvature, seams and Mercator maps",
       "kind": "tutorial",
+      "summary": "Gaussian curvature, Gauss–Bonnet, cone singularities, parallel transport across seams and Mercator distortion, with an interactive Earth.",
       "path": "tutorials/curvature-seams-and-mercator",
       "entry": "tutorials/curvature-seams-and-mercator/chapter_02_curvature_seams_and_mercator.md",
       "generators": [
@@ -93,25 +108,41 @@
       "checks": [
         "tutorials/curvature-seams-and-mercator/test_curvature_mercator_lab.py"
       ],
-      "origin": "master (PR #192); updated on claude/p3-cockpit-build"
+      "run": [
+        "\"$PY\" learning/tutorials/curvature-seams-and-mercator/curvature_mercator_lab.py",
+        "\"$PY\" -m unittest discover -s learning/tutorials/curvature-seams-and-mercator -p \"test_curvature_mercator_lab.py\""
+      ],
+      "origin": "master (PR #192); updated version moved here from PRs #208 and #209 (removed there in 38896fad, 2696be2a)"
     },
     {
       "id": "chapter-3",
       "title": "Lesson 03 · Can you come home mirrored?",
       "kind": "tutorial",
+      "summary": "Three square gluings compared: a frame coming home mirrored, a two-cell piece losing and regaining its bond, and an 8 × 8 benchmark of blocked moves and lost bonds.",
       "path": "tutorials/seam-comparisons",
       "entry": "tutorials/seam-comparisons/chapter_03_seam_comparisons.md",
-      "generators": [],
-      "docs": [],
+      "generators": [
+        "tutorials/seam-comparisons/domino-comparisons/domino.py"
+      ],
+      "docs": [
+        "tutorials/seam-comparisons/README.md",
+        "tutorials/seam-comparisons/domino-comparisons/README.md"
+      ],
       "checks": [
+        "tutorials/seam-comparisons/interactive/smoke_browser.py",
         "tutorials/seam-comparisons/domino-comparisons/verify_native.cpp"
       ],
-      "origin": "claude/p3-cockpit-build (open PRs #208, #209)"
+      "run": [
+        "python3 learning/tutorials/seam-comparisons/interactive/smoke_browser.py",
+        "cd learning/tutorials/seam-comparisons/domino-comparisons && python3 domino.py --out rendered"
+      ],
+      "origin": "moved here from PRs #208 and #209 (removed there in 38896fad, 2696be2a)"
     },
     {
       "id": "boys-surface-viewer",
       "title": "Boy's surface viewer",
       "kind": "viewer",
+      "summary": "Frosted-glass Bryant–Kusner Boy's surface (WebGL2): gluing slider, shape controls, presets, self-intersection curves, membranes, slimming and gap fields.",
       "path": "boys-surface-viewer",
       "entry": "boys-surface-viewer/boys-surface-viewer.html",
       "generators": [
@@ -128,12 +159,17 @@
         "boys-surface-viewer/tools/check_viewer.py",
         "boys-surface-viewer/tools/fold_check.py"
       ],
+      "run": [
+        "python3 learning/boys-surface-viewer/tools/check_viewer.py",
+        "python3 learning/boys-surface-viewer/tools/render_gluing.py --help"
+      ],
       "origin": "PR #207 (closed, superseded by this branch)"
     },
     {
       "id": "projective-plane-sequence",
       "title": "From a square to Boy's surface (sequence)",
       "kind": "sequence",
+      "summary": "Illustrated 14-stage sequence from the square to Boy's surface, as a strip, stills and an animated WebP.",
       "path": "projective-plane-sequence",
       "entry": "projective-plane-sequence/README.md",
       "generators": [
@@ -143,12 +179,16 @@
         "projective-plane-sequence/README.md"
       ],
       "checks": [],
+      "run": [
+        "python3 learning/projective-plane-sequence/projective_plane_sequence.py keys"
+      ],
       "origin": "PR #205 (closed, superseded by this branch)"
     },
     {
       "id": "surface-sequences",
       "title": "Gluing a square into closed surfaces (sequences)",
       "kind": "sequence",
+      "summary": "Illustrated sequences for the sphere, torus and Klein bottle (two immersions), with the four gluing diagrams side by side.",
       "path": "surface-sequences",
       "entry": "surface-sequences/README.md",
       "generators": [
@@ -163,12 +203,17 @@
       "checks": [
         "surface-sequences/surface_sequences.py"
       ],
+      "run": [
+        "python3 learning/surface-sequences/surface_sequences.py check",
+        "python3 learning/surface-sequences/surface_sequences.py sphere keys"
+      ],
       "origin": "PR #206 (closed, superseded by this branch)"
     },
     {
       "id": "release",
       "title": "Offline browser edition",
       "kind": "release",
+      "summary": "Offline browser edition of everything above, with MathML equations and an embeddable script; rebuilt from the manifest.",
       "path": "released",
       "entry": "released/index.html",
       "generators": [
@@ -181,7 +226,13 @@
         "smoke_embed.py",
         "check_manifest.py"
       ],
-      "origin": "claude/p3-cockpit-build (open PRs #208, #209); extended on this branch"
+      "run": [
+        "PATH=<pandoc 3.x>:$PATH python3 learning/build_release.py --lock",
+        "python3 learning/smoke_embed.py",
+        "python3 learning/check_manifest.py"
+      ],
+      "origin": "builder moved here from PRs #208 and #209 (removed there in 38896fad, 2696be2a); extended on this branch"
     }
-  ]
+  ],
+  "index": "INDEX.md"
 }

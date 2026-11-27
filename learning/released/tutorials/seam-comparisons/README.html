@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 3 — Can you come home mirrored? · Tet4D Learning</title>
+  <link rel="stylesheet" href="../../release.css">
+</head>
+<body>
+  <header class="site-header"><a href="../../index.html">Tet4D Learning</a></header>
+  <main><h1 id="lesson-3--can-you-come-home-mirrored">Lesson 3 — Can you come
+home mirrored?</h1>
+<p><a href="chapter_03_seam_comparisons.html">Read the lesson</a>.</p>
+<p>Three 5 × 5 square gluings side by side: A, an adjacent-edge sphere;
+B, an adjacent-edge projective plane; C, the opposite-edge projective
+plane. The lesson traces one loop on two boards to see a frame come home
+mirrored, moves a two-cell piece through the same commands on all three
+boards to see bonds break and rejoin, and counts blocked moves and lost
+bonds on an 8 × 8 board to give “worse” a denominator. Follow Chapter
+2’s introduction to transported frames first; allow 15–20 minutes.</p>
+<h2 id="files">Files</h2>
+<ul>
+<li><code>chapter_03_seam_comparisons.md</code> — the lesson, its worked
+comparisons, the benchmark table and teaching notes.</li>
+<li><code>interactive/index.html</code> — the interactive comparison: a
+shared step control for boards A and B (part 1), the domino on all three
+boards (part 2), and the 8 × 8 benchmark (part 3,
+<code>#benchmark</code>). The page loads the scripts and stylesheet
+beside it:
+<ul>
+<li><code>seam_comparison.js</code> — the two-board loop and frame
+transport.</li>
+<li><code>board_rules.js</code> — the three gluings and the board-axis
+move rule.</li>
+<li><code>controls_and_bonds.js</code> — the domino comparison and its
+bond display.</li>
+<li><code>domino_traces.js</code> — the native traces the domino clips
+are checked against.</li>
+<li><code>benchmark.js</code> — the 8 × 8 enumeration of blocked moves
+and lost bonds.</li>
+<li><code>styles.css</code>.</li>
+</ul></li>
+<li><code>interactive/smoke_browser.py</code> — browser smoke test of
+the interactive page (Playwright, Chromium).</li>
+<li><code>domino-comparisons/</code> — five animated GIFs of the
+two-cell piece on the three boards, the generator
+<code>domino.py</code>, the native trace <code>native_traces.txt</code>
+and the C++ program <code>verify_native.cpp</code> that regenerates it
+from Tet4D’s native core. See its <a
+href="domino-comparisons/README.html">README</a>.</li>
+</ul>
+<h2 id="run-from-the-repository-root">Run from the repository root</h2>
+<p>Open
+<code>learning/tutorials/seam-comparisons/interactive/index.html</code>
+in a browser; keep the adjacent JavaScript and CSS files together. The
+smoke test and the clip generator:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> learning/tutorials/seam-comparisons/interactive/smoke_browser.py        <span class="co"># needs Playwright + Chromium</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> learning/tutorials/seam-comparisons/domino-comparisons</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> domino.py <span class="at">--out</span> rendered                                                 <span class="co"># needs Pillow, DejaVu Sans</span></span></code></pre></div>
+<p><code>domino.py</code> checks every clip’s end pose against
+<code>native_traces.txt</code>. To regenerate the trace from Tet4D’s
+native core, see the domino README.</p>
+<h2 id="scope">Scope</h2>
+<p>The lesson uses its own board-axis rule (up increases y) and
+documents how to convert to Explorer’s engine coordinates. The counts
+are reference results for the stated presets, not global rankings of
+topologies, and the lesson does not establish authority over the native
+or Godot implementations; see the <a
+href="https://github.com/mousomer/tet4d/blob/978feea0a5887ff74e01ead000d285ece56b6c36/docs/rds/RDS_EXPLORER_TOPOLOGIES.md">Explorer
+requirements</a> for the engine’s movement and occupancy rules.</p>
+</main>
+</body>
+</html>

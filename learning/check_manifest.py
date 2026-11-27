@@ -3,7 +3,8 @@
 Checks:
   branch     the current branch is the locked learning branch, and its base commit is an ancestor
   components every path, entry page, generator, doc and check listed in the manifest exists; each
-             component's entry page is linked from learning/README.md and from the release home page
+             component's entry page is linked from learning/README.md and from the release home page;
+             INDEX.md is what build_index.py writes from the manifest
   docs       every relative link (site-absolute example paths such as /tet4d-learning/ are skipped) in the Markdown and HTML sources resolves to an existing file
   release    the offline edition holds exactly the files build_release.py would write; its local links
              resolve; its GitHub links point at files that exist at release.source_ref, an ancestor of HEAD
@@ -115,6 +116,10 @@ def check_components():
             f"{c['id']}: linked from README.md and the release home",
             in_readme and in_home,
         )
+    index = subprocess.run(
+        [sys.executable, str(LEARNING / "build_index.py"), "--check"], check=False
+    )
+    check("INDEX.md is current (build_index.py)", index.returncode == 0)
     for folder in MANIFEST["release"]["include"]:
         check(f"release includes {folder}/", (LEARNING / folder).is_dir())
 
