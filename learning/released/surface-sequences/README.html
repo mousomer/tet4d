@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gluing a square into closed surfaces · Tet4D Learning</title>
+  <link rel="stylesheet" href="../release.css">
+</head>
+<body>
+  <header class="site-header"><a href="../index.html">Tet4D Learning</a></header>
+  <main><h1 id="gluing-a-square-into-closed-surfaces">Gluing a square into
+closed surfaces</h1>
+<p>One square, four gluing rules, four closed surfaces. Each sequence
+carries the square’s grid, its edges and its corners all the way to the
+finished surface, so you can watch which edges meet and which corners
+become the same point.</p>
+<figure>
+<img src="gluing-diagrams.png" alt="The four gluing diagrams" />
+<figcaption aria-hidden="true">The four gluing diagrams</figcaption>
+</figure>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Surface</th>
+<th>Gluing</th>
+<th>Corners after gluing</th>
+<th>χ</th>
+<th>Sequence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sphere</td>
+<td>adjacent edges folded together (<em>a a⁻¹ b b⁻¹</em>)</td>
+<td>3</td>
+<td>2</td>
+<td><a href="../sphere-sequence/README.html">sphere-sequence</a></td>
+</tr>
+<tr>
+<td>Torus</td>
+<td>opposite edges straight (<em>a b a⁻¹ b⁻¹</em>)</td>
+<td>1</td>
+<td>0</td>
+<td><a href="../torus-sequence/README.html">torus-sequence</a></td>
+</tr>
+<tr>
+<td>Klein bottle</td>
+<td>one pair straight, one flipped (<em>a b a b⁻¹</em>)</td>
+<td>1</td>
+<td>0</td>
+<td><a
+href="../klein-bottle-sequence/README.html">klein-bottle-sequence</a></td>
+</tr>
+<tr>
+<td>Projective plane</td>
+<td>both pairs flipped (<em>a b a b</em>)</td>
+<td>2</td>
+<td>1</td>
+<td><a
+href="../projective-plane-sequence/README.html">projective-plane-sequence</a></td>
+</tr>
+</tbody>
+</table>
+<p>χ = corners after gluing − edge pairs + 1 face.</p>
+<h2 id="conventions">Conventions</h2>
+<ul>
+<li><strong>Edges:</strong> the two orange edges are glued to each
+other, and so are the two blue edges. In the diagrams, arrows show which
+way a pair is matched (single arrow = orange pair, double = blue).</li>
+<li><strong>Corners:</strong> corners of one colour (white / black /
+grey) become a single point.</li>
+<li><strong>Colours:</strong> surface colours agree across every gluing,
+so a finished surface has no colour seam.</li>
+<li><strong>Transparency:</strong> later stages turn semi-transparent so
+self-intersections and hidden edges stay visible.</li>
+<li><strong>In-between frames:</strong> every frame is a continuous map
+of the square, not a cross-fade between pictures.</li>
+</ul>
+<h2 id="regenerating">Regenerating</h2>
+<pre><code>python surface_sequences.py SURFACE keys [out_dir]   # captioned strip + stage_01..10.png
+python surface_sequences.py SURFACE anim [out_dir]   # animated WebP
+python surface_sequences.py overview [out_dir]       # gluing-diagrams.png
+python surface_sequences.py check                    # numerical check of every gluing</code></pre>
+<p><code>SURFACE</code> is one of <code>sphere</code>,
+<code>torus</code>, <code>klein-bottle</code>,
+<code>klein-figure8</code>, <code>projective-plane</code>.
+<code>check</code> confirms, on the finished surfaces, that each edge
+lands on its partner with the right orientation (mismatch at round-off
+level) and that corners merge into the expected number of points.</p>
+<p>This is a standalone educational script. It needs <code>numpy</code>,
+<code>scipy</code>, <code>matplotlib</code> and <code>pillow</code>,
+which are not project dependencies, and it does not touch the game
+engine, the topology resolver, or any runtime contract. The 14-stage
+projective-plane images in <code>../projective-plane-sequence/</code>
+were made with that folder’s own script; this script’s
+<code>projective-plane</code> mode makes a 10-stage version in the same
+style as the others.</p>
+</main>
+</body>
+</html>

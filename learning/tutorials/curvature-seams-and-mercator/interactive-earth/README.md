@@ -1,6 +1,6 @@
 # Drag Earth across the Tet4D S² board
 
-[Interactive Earth demo](index.html) — open `index.html` locally in a modern browser. This is a standalone, completely offline tutorial visualization, **not** an update to Explorer movement or topology logic.
+Get the repository checkout and open `learning/tutorials/curvature-seams-and-mercator/interactive-earth/index.html` in a browser. Keep the adjacent JavaScript, CSS and generated land mask together. The [HTML link](index.html) on GitHub shows the source.
 
 The square uses the exact adjacent positive gluings from [Chapter 1](../../gluing-and-topologies/chapter_01_gluing_and_topologies.md) and analysed in [Chapter 2](../chapter_02_curvature_seams_and_mercator.md):
 

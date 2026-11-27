@@ -2,6 +2,8 @@
 
 [Read the chapter](chapter_01_gluing_and_topologies.md).
 
+[Explore the six square gluings](square-gluings/index.html) to rotate each surface, inspect its seams and browse the numbered stills. The [rebuild guide](square-gluings/REBUILD.md) explains how to generate the animations and complete frame sequences locally. The [gluing viewers](square-gluings/viewers/index.html) let you glue each square yourself, step by step or at your own speed; see their [README](square-gluings/viewers/README.md).
+
 This is the editable Markdown edition of the tutorial with a source SVG figure and the accompanying Python laboratory. The chapter's Appendix A contains complete copies of the five standalone Python files. The separate files are authoritative for execution; the appendix is for reading.
 
 ## Files

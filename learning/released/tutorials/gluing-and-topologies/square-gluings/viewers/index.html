@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Square gluings — interactive viewers</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#111b2a;color:#eef2f5;font:16px/1.55 system-ui,sans-serif}
+main{max-width:1040px;margin:auto;padding:36px clamp(16px,4vw,48px)}
+h1{margin:0 0 6px;font-size:30px}
+header p{margin:0 0 6px;color:#a9bfd5;max-width:760px}
+a{color:#ffb45c}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px;margin-top:26px}
+.card{display:block;padding:12px 12px 14px;border:1px solid #34465c;border-radius:14px;background:#172335;color:inherit;text-decoration:none;transition:border-color .15s,transform .15s}
+.card:hover{border-color:#64e2e9;transform:translateY(-2px)}
+.card img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:9px;background:#cfcfd1}
+.card h2{margin:10px 0 2px;font-size:18px}
+.card p{margin:0;color:#a9bfd5;font-size:14px}
+.card .word{color:#fff3df;font:15px ui-monospace,SFMono-Regular,Menlo,monospace}
+footer{margin-top:28px;color:#a9bfd5;font-size:14px}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>Square gluings, interactive</h1>
+<p>The tutorial's six gluings, the classic glass Klein bottle and Boy's surface as in the Boy's surface viewer. Each viewer glues one square into its closed surface. Corners A–D run clockwise from the upper left; the
+orange edges a close first, then the cyan edges b. Drag the Glue slider or press ▶, set the speed, step
+frame by frame, rotate at any moment, and switch cone points on or off where the corners meet at less than 360°.</p>
+<p>Back to the <a href="../index.html">tutorial</a>.</p>
+</header>
+<div class="grid">
+<a class="card" href="sphere.html">
+  <img src="img/sphere.webp" alt="Adjacent-edge sphere, glued" loading="lazy" onerror="this.remove()">
+  <h2>Adjacent-edge sphere</h2>
+  <p class="word">a b b<sup>−1</sup> a<sup>−1</sup></p>
+  <p>sphere · χ = 2 · orientable · three cone tips</p>
+</a>
+<a class="card" href="rp2-adjacent.html">
+  <img src="img/rp2-adjacent.webp" alt="Adjacent-edge projective plane, glued" loading="lazy" onerror="this.remove()">
+  <h2>Adjacent-edge projective plane</h2>
+  <p class="word">a b b a<sup>−1</sup></p>
+  <p>projective plane · χ = 1 · non-orientable · two cone tips</p>
+</a>
+<a class="card" href="rp2-opposite.html">
+  <img src="img/rp2-opposite.webp" alt="Opposite-edge projective plane, glued" loading="lazy" onerror="this.remove()">
+  <h2>Opposite-edge projective plane</h2>
+  <p class="word">a b a b</p>
+  <p>projective plane · χ = 1 · non-orientable · two cone tips</p>
+</a>
+<a class="card" href="torus.html">
+  <img src="img/torus.webp" alt="Opposite-edge torus, glued" loading="lazy" onerror="this.remove()">
+  <h2>Opposite-edge torus</h2>
+  <p class="word">a b a<sup>−1</sup> b<sup>−1</sup></p>
+  <p>torus · χ = 0 · orientable · no cone point</p>
+</a>
+<a class="card" href="klein-adjacent.html">
+  <img src="img/klein-adjacent.webp" alt="Adjacent-edge Klein bottle, glued" loading="lazy" onerror="this.remove()">
+  <h2>Adjacent-edge Klein bottle</h2>
+  <p class="word">a b b a</p>
+  <p>Klein bottle · χ = 0 · non-orientable · no cone point</p>
+</a>
+<a class="card" href="klein-opposite.html">
+  <img src="img/klein-opposite.webp" alt="Opposite-edge Klein bottle, glued" loading="lazy" onerror="this.remove()">
+  <h2>Opposite-edge Klein bottle</h2>
+  <p class="word">a b a<sup>−1</sup> b</p>
+  <p>Klein bottle · χ = 0 · non-orientable · no cone point</p>
+</a>
+<a class="card" href="klein-bottle.html">
+  <img src="img/klein-bottle.webp" alt="Klein bottle, the glass bottle, glued" loading="lazy" onerror="this.remove()">
+  <h2>Klein bottle, the glass bottle</h2>
+  <p class="word">a b a<sup>−1</sup> b</p>
+  <p>Klein bottle · χ = 0 · non-orientable · no cone point</p>
+</a>
+<a class="card" href="rp2-boy.html">
+  <img src="img/rp2-boy.webp" alt="Boy&#x27;s surface (Bryant–Kusner), glued" loading="lazy" onerror="this.remove()">
+  <h2>Boy&#x27;s surface (Bryant–Kusner)</h2>
+  <p class="word">a b a b</p>
+  <p>projective plane · χ = 1 · non-orientable · smooth, no cone tips · shape controls</p>
+</a>
+</div>
+<footer>Built from <code>src/</code> by <code>build.py</code>; see README.md.</footer>
+</main>
+</body>
+</html>

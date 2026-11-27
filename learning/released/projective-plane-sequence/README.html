@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>From a square to Boy&#x27;s surface · Tet4D Learning</title>
+  <link rel="stylesheet" href="../release.css">
+</head>
+<body>
+  <header class="site-header"><a href="../index.html">Tet4D Learning</a></header>
+  <main><h1 id="from-a-square-to-boys-surface">From a square to Boy’s
+surface</h1>
+<p>How a flat square, with its opposite edges glued with a flip, closes
+up into Boy’s surface: an immersion of the real projective plane ℝP² in
+ℝ³.</p>
+<figure>
+<img src="projective-plane-sequence.png"
+alt="Fourteen stages from the flat square to Boy’s surface" />
+<figcaption aria-hidden="true">Fourteen stages from the flat square to
+Boy’s surface</figcaption>
+</figure>
+<p>Animated version: <a
+href="projective-plane-sequence.webp">projective-plane-sequence.webp</a>.
+Single frames: <a href="https://github.com/mousomer/tet4d/tree/a4eb4f571b5ab8fefcf24304e7efa6bb5f663cfe/learning/projective-plane-sequence/stages"><code>stages/</code></a>.</p>
+<h2 id="what-the-pictures-show">What the pictures show</h2>
+<ul>
+<li><strong>The square.</strong> ℝP² is the square [−1, 1]² with each
+boundary point glued to the point opposite it through the centre, so
+opposite edges are glued with a flip. The two <strong>orange</strong>
+edges are glued to each other, as are the two <strong>blue</strong>
+edges. The <strong>white</strong> corners become one point, and so do
+the <strong>black</strong> corners.</li>
+<li><strong>Stages 1–4, bending.</strong> The square bends into the
+small central cap of the surface. Fong’s elliptical map takes the square
+onto the unit disk. It sends opposite boundary points of the square to
+opposite points of the circle, so the gluing rule carries over
+unchanged.</li>
+<li><strong>Stages 5–14, growing.</strong> Each frame is the image of
+the parameter disk of radius <em>s</em> under the Bryant–Kusner
+parametrization (classic member, c = ½), so every frame is a genuine
+piece of Boy’s surface. Only at <em>s</em> = 1 do opposite boundary
+points coincide: the two orange edges then run along the same closed
+curve, as do the two blue edges, and each pair of corners meets in a
+single point.</li>
+<li><strong>Colours.</strong> Hue is twice the polar angle in the disk,
+so opposite points start with the same colour and the colouring stays
+continuous on the finished surface. The grid is the square’s 8 × 8 grid,
+carried along by the map.</li>
+</ul>
+<p>The surface passes through itself: ℝP² has no embedding in ℝ³, only
+immersions. From stage 5 onward the surface becomes semi-transparent so
+the self-intersections and the hidden edges stay visible.</p>
+<h2 id="regenerating">Regenerating</h2>
+<pre><code>python projective_plane_sequence.py keys [out_dir]   # strip + stage_01..14.png
+python projective_plane_sequence.py anim [out_dir]   # animated WebP</code></pre>
+<p>This is a standalone educational script; it needs <code>numpy</code>,
+<code>matplotlib</code> and <code>pillow</code>, which are not project
+dependencies. Stage times, edge width, transparency and camera path are
+set near the top and in the <code>keys</code> branch. It does not touch
+the game engine, the topology resolver, or any runtime contract.</p>
+</main>
+</body>
+</html>
