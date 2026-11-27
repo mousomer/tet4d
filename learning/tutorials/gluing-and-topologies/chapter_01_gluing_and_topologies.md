@@ -7,20 +7,20 @@
 
 ## 1.1 The construction: a quotient of a square
 
-Let \(Q=[0,1]^2\). A gluing declares that a point on one boundary edge is the *same point of the quotient space* as a specified point on another boundary edge. Symbolically, for an equivalence relation \(\sim\), the resulting space is \(Q/\sim\).
+Let $Q=[0,1]^2$. A gluing declares that a point on one boundary edge is the *same point of the quotient space* as a specified point on another boundary edge. Symbolically, for an equivalence relation $\sim$, the resulting space is $Q/\sim$.
 
-Label the corners \(A=(0,0)\), \(B=(1,0)\), \(C=(1,1)\), and \(D=(0,1)\). Name the edges **L** (left), **R** (right), **B** (bottom), and **T** (top). We parameterize them in their increasing coordinate direction:
+Label the corners $A=(0,0)$, $B=(1,0)$, $C=(1,1)$, and $D=(0,1)$. Name the edges **L** (left), **R** (right), **B** (bottom), and **T** (top). We parameterize them in their increasing coordinate direction:
 
-| Edge | Parameterization, \(0\le t\le1\) | Endpoints |
+| Edge | Parameterization, $0\le t\le1$ | Endpoints |
 |---|---|---|
-| L | \((0,t)\) | A → D |
-| R | \((1,t)\) | B → C |
-| B | \((t,0)\) | A → B |
-| T | \((t,1)\) | D → C |
+| L | $(0,t)$ | A → D |
+| R | $(1,t)$ | B → C |
+| B | $(t,0)$ | A → B |
+| T | $(t,1)$ | D → C |
 
 ![Figure 1.1. The square’s natural edge parameterizations: blue arrows increase vertically; ochre arrows increase horizontally.](square_edge_parameters.svg)
 
-**A gluing has two choices.** First select *which edges* are paired. Then choose whether their parameter coordinates are matched or reversed. Our notation is `LR+` for \(L(t)\sim R(t)\), and `LR-` for \(L(t)\sim R(1-t)\). Thus `+` and `-` are **relative to the edge parameterizations in the table**, not to arrows drawn counterclockwise around the square. This distinction is essential: a square symmetry can change a gluing's displayed sign.
+**A gluing has two choices.** First select *which edges* are paired. Then choose whether their parameter coordinates are matched or reversed. Our notation is `LR+` for $L(t)\sim R(t)$, and `LR-` for $L(t)\sim R(1-t)$. Thus `+` and `-` are **relative to the edge parameterizations in the table**, not to arrows drawn counterclockwise around the square. This distinction is essential: a square symmetry can change a gluing's displayed sign.
 
 Some edges may remain free. Their interiors form boundary points of the resulting surface. A **complete gluing** pairs all four edges; a **partial gluing** leaves at least one edge free.
 
@@ -29,7 +29,7 @@ Some edges may remain free. Their interiors form boundary points of the resultin
 Do not confuse three equivalence relations:
 
 1. **Syntactic identity.** Pair order, reciprocal descriptions, and other purely notational differences have been normalized.
-2. **Square-symmetry equivalence.** One configuration is obtained from another by rotating or reflecting the *original square* (the action of \(D_4\)).
+2. **Square-symmetry equivalence.** One configuration is obtained from another by rotating or reflecting the *original square* (the action of $D_4$).
 3. **Topological equivalence.** The quotient spaces are homeomorphic. This relation is coarser; it can relate polygon presentations that no symmetry of the square connects.
 
 The chain of counts for complete square gluings will be **12 → 6 → 4**. The three arrows represent enumeration, geometric symmetry reduction, and classification of the resulting surfaces.
@@ -44,33 +44,33 @@ There are three perfect matchings of four labelled edges:
 
 Each of the two pairs has two possible tangent signs. Consequently the complete count is
 
-\[
+```math
 3\cdot2^2=12.
-\]
+```
 
 If edges may remain unglued, the possibilities are zero pairs, one pair, or two pairs:
 
-\[
+```math
 1+\binom{4}{2}\cdot2+3\cdot2^2=1+12+12=25.
-\]
+```
 
 These are counts of **disjoint edge-pairing descriptions**. They are not counts of topological surfaces.
 
-## 1.3 The dihedral group \(D_4\)
+## 1.3 The dihedral group $D_4$
 
-The symmetry group of a square has eight elements: identity, three nontrivial rotations, and four reflections. Its order is \(|D_4|=8\). A symmetry \(g\) sends each edge to another edge, but it may also reverse that edge's natural parameter direction.
+The symmetry group of a square has eight elements: identity, three nontrivial rotations, and four reflections. Its order is $|D_4|=8$. A symmetry $g$ sends each edge to another edge, but it may also reverse that edge's natural parameter direction.
 
-Let \(\varepsilon_e(g)\in\{+1,-1\}\) record whether the parameter direction of edge \(e\) is preserved under \(g\). If edges \(a,b\) have gluing sign \(s\), then their transformed gluing sign is
+Let $\varepsilon_e(g)\in\{+1,-1\}$ record whether the parameter direction of edge $e$ is preserved under $g$. If edges $a,b$ have gluing sign $s$, then their transformed gluing sign is
 
-\[
+```math
 \boxed{s'=\varepsilon_a(g)\,s\,\varepsilon_b(g).}
-\]
+```
 
-This follows by conjugating the original coordinate correspondence by the two edge-parameter transformations. It is insufficient to rename `L`, `R`, `B`, `T`: their parameter directions must be transformed as well. Because \(s=\pm1\), reversing the source/target description of a pair does not change the sign.
+This follows by conjugating the original coordinate correspondence by the two edge-parameter transformations. It is insufficient to rename `L`, `R`, `B`, `T`: their parameter directions must be transformed as well. Because $s=\pm1$, reversing the source/target description of a pair does not change the sign.
 
 **Concrete example.** Reflect the square across its vertical centreline. The configuration `LB+, RT+` becomes `LT-, RB-`. The pairings and signs appear different, but the quotient construction is carried to the other by a rigid symmetry of the square. Conversely, `LB+, RT+` and `LR+, BT+` both yield orientable closed surfaces, but they are *not* symmetry-equivalent (one yields a sphere and the other a torus).
 
-The **orbit** of a gluing \(G\) is \(D_4\cdot G=\{g\cdot G:g\in D_4\}\). An orbit collects all descriptions of the same gluing construction obtainable by square symmetry. A canonical representative is any deterministic minimum of the orbit, after serialization.
+The **orbit** of a gluing $G$ is $D_4\cdot G=\{g\cdot G:g\in D_4\}$. An orbit collects all descriptions of the same gluing construction obtainable by square symmetry. A canonical representative is any deterministic minimum of the orbit, after serialization.
 
 ### The six symmetry orbits
 
@@ -86,17 +86,17 @@ The following table uses a representative of each orbit. Its sizes sum to twelve
 | `LB-, RT+` | 4 | Projective plane |
 | **Total** | **12** | **6 symmetry classes, 4 surface classes** |
 
-Thus the symmetry reduction is \(12\to6\), but it is **not** obtained by dividing by eight: some configurations have nontrivial stabilizers.
+Thus the symmetry reduction is $12\to6$, but it is **not** obtained by dividing by eight: some configurations have nontrivial stabilizers.
 
 ## 1.4 Burnside's lemma proves the orbit count
 
 For a finite group acting on a finite set, Burnside's lemma gives
 
-\[
+```math
 \left|X/D_4\right|=\frac{1}{8}\sum_{g\in D_4}|\mathrm{Fix}(g)|,
-\]
+```
 
-where \(\mathrm{Fix}(g)\) means configurations left unchanged by \(g\). The eight counts for the 12 complete gluings are:
+where $\mathrm{Fix}(g)$ means configurations left unchanged by $g$. The eight counts for the 12 complete gluings are:
 
 | Symmetry | Fixed configurations |
 |---|---:|
@@ -107,7 +107,7 @@ where \(\mathrm{Fix}(g)\) means configurations left unchanged by \(g\). The eigh
 | Reflections in either diagonal | 8 each |
 | **Total over all eight elements** | **48** |
 
-Therefore \(48/8=6\). For all 25 partial and complete gluings, the corresponding fixed counts sum to 88, so there are \(88/8=11\) symmetry orbits.
+Therefore $48/8=6$. For all 25 partial and complete gluings, the corresponding fixed counts sum to 88, so there are $88/8=11$ symmetry orbits.
 
 Burnside's lemma is a cross-check on the explicit orbit enumeration. The software implements both methods and asserts they agree.
 
@@ -121,27 +121,27 @@ Each gluing creates endpoint identifications. `LR+` identifies A with B and D wi
 
 ### Step 2 — Count cells and compute Euler characteristic
 
-For a square with \(m\) edge pairs, there is one face and \(4-m\) quotient edges. If \(V\) is the number of corner equivalence classes,
+For a square with $m$ edge pairs, there is one face and $4-m$ quotient edges. If $V$ is the number of corner equivalence classes,
 
-\[
+```math
 F=1,\qquad E=4-m,\qquad \chi=V-E+F.
-\]
+```
 
-For a complete gluing, \(m=2\), and hence \(\chi=V-1\).
+For a complete gluing, $m=2$, and hence $\chi=V-1$.
 
 ### Step 3 — Check orientability
 
 Traverse the original square boundary counterclockwise. Relative to our natural edge parameters, its directed edge signs are
 
-\[
+```math
 o(B)=+1,\quad o(R)=+1,\quad o(T)=-1,\quad o(L)=-1.
-\]
+```
 
-For a single oriented face, a paired edge must be attached with *opposing induced boundary orientations*. Thus every pair \((a,b,s)\) must satisfy
+For a single oriented face, a paired edge must be attached with *opposing induced boundary orientations*. Thus every pair $(a,b,s)$ must satisfy
 
-\[
+```math
 \boxed{o(a)\,s\,o(b)=-1.}
-\]
+```
 
 Failure for even one pair makes this single-square quotient nonorientable. For a complex assembled from multiple faces, the test becomes a system of consistent face-orientation constraints, rather than checking every pair independently.
 
@@ -155,23 +155,23 @@ The laboratory constructs this link graph from corner arcs and gluing-induced id
 
 ### Step 5 — Apply the classification theorem
 
-For a compact connected surface with \(b\) boundary components, genus \(g\) in the orientable case, and crosscap number \(k\) in the nonorientable case, we have
+For a compact connected surface with $b$ boundary components, genus $g$ in the orientable case, and crosscap number $k$ in the nonorientable case, we have
 
-\[
+```math
 \chi=2-2g-b,
-\]
+```
 
-\[
+```math
 \chi=2-k-b.
-\]
+```
 
-For complete square gluings, \(b=0\), giving the table:
+For complete square gluings, $b=0$, giving the table:
 
-| \(V\) | \(\chi\) | Orientable? | Surface |
+| $V$ | $\chi$ | Orientable? | Surface |
 |---:|---:|---|---|
-| 3 | 2 | Yes | Sphere \(S^2\) |
-| 2 | 1 | No | Projective plane \(\mathbb{RP}^2\) |
-| 1 | 0 | Yes | Torus \(T^2\) |
+| 3 | 2 | Yes | Sphere $S^2$ |
+| 2 | 1 | No | Projective plane $\mathbb{RP}^2$ |
+| 1 | 0 | Yes | Torus $T^2$ |
 | 1 | 0 | No | Klein bottle |
 
 No other surface classes occur in these 12 complete square gluings.
@@ -180,13 +180,13 @@ No other surface classes occur in these 12 complete square gluings.
 
 ### Example A: the torus
 
-Start from `LR+, BT+`. The first pairing gives \(A\sim B\), \(D\sim C\); the second gives \(A\sim D\), \(B\sim C\). Together, all four vertices are equivalent. Therefore \(V=1,E=2,F=1,\chi=0\). Both identifications reverse counterclockwise boundary traversal, so the quotient is orientable. With no boundary, \(0=2-2g\) implies \(g=1\): the **torus**.
+Start from `LR+, BT+`. The first pairing gives $A\sim B$, $D\sim C$; the second gives $A\sim D$, $B\sim C$. Together, all four vertices are equivalent. Therefore $V=1,E=2,F=1,\chi=0$. Both identifications reverse counterclockwise boundary traversal, so the quotient is orientable. With no boundary, $0=2-2g$ implies $g=1$: the **torus**.
 
 ### Example B: a sphere and a misleading “sphere-like” rule
 
-For `LB+, RT+`, the first pairing has endpoint identifications \(A\sim A\) and \(D\sim B\); the second adds \(B\sim D\) and \(C\sim C\). We obtain three vertex classes \(\{A\},\{B,D\},\{C\}\). Consequently \(\chi=3-2+1=2\), and the quotient is orientable: **the sphere**.
+For `LB+, RT+`, the first pairing has endpoint identifications $A\sim A$ and $D\sim B$; the second adds $B\sim D$ and $C\sim C$. We obtain three vertex classes $\{A\},\{B,D\},\{C\}$. Consequently $\chi=3-2+1=2$, and the quotient is orientable: **the sphere**.
 
-Now change both signs to `LB-, RT-`. The induced endpoint identifications connect all four vertices. We obtain \(V=1,\chi=0\), and the orientation test fails: **the Klein bottle**, not a sphere. This distinction appears in Tet4D's topology certification contract, which separates the old negative-adjacent *sphere-like transport* recipe from the positive-adjacent genuine sphere quotient.
+Now change both signs to `LB-, RT-`. The induced endpoint identifications connect all four vertices. We obtain $V=1,\chi=0$, and the orientation test fails: **the Klein bottle**, not a sphere. This distinction appears in Tet4D's topology certification contract, which separates the old negative-adjacent *sphere-like transport* recipe from the positive-adjacent genuine sphere quotient.
 
 ## 1.7 The complete distribution
 
@@ -221,10 +221,10 @@ The accompanying source files are written for **Python 3.10 or later** and use o
 
 | File | Purpose |
 |---|---|
-| `square_gluings.py` | Common mathematical engine: pairings, \(D_4\) action, orbit enumeration, union-find, link checks and surface invariants |
+| `square_gluings.py` | Common mathematical engine: pairings, $D_4$ action, orbit enumeration, union-find, link checks and surface invariants |
 | `01_enumerate.py` | Enumerate all 12 complete and all 25 partial/complete configurations |
 | `02_d4_orbits.py` | Compute the six/eleven symmetry orbits and verify Burnside's fixed-point counts |
-| `03_classify.py` | Derive \(V,E,F,\chi\), boundary components and orientability for orbit representatives |
+| `03_classify.py` | Derive $V,E,F,\chi$, boundary components and orientability for orbit representatives |
 | `test_square_gluings.py` | Regression tests for the enumeration, examples and invariance under symmetry |
 
 Place the five files in one directory. In a shell run:
@@ -255,19 +255,19 @@ Ran 8 tests ... OK
 
 `all_gluings()` recursively selects the first available edge, then either leaves it free (in partial mode) or pairs it with one of the remaining edges. For every resulting matching, `itertools.product((-1, 1), ...)` assigns all gluing signs. Normalization and a Python `set` remove redundant orders. The recursion therefore visits each legal disjoint matching, and nothing else.
 
-### 1.8.2 How the program applies \(D_4\)
+### 1.8.2 How the program applies $D_4$
 
-A square symmetry is represented by a permutation of the two coordinates and an independent sign flip along either output coordinate. There are \(2!\cdot2^2=8\) such maps. `mapped_edge()` transports both endpoints of a directed edge to determine the destination edge and whether its natural parameter has reversed. `transform()` applies the formula \(s'=\varepsilon_a s\varepsilon_b\). `orbit()` takes all eight images; `orbits()` partitions the enumeration by these images. `02_d4_orbits.py` independently checks the fixed-point sum from Burnside's lemma.
+A square symmetry is represented by a permutation of the two coordinates and an independent sign flip along either output coordinate. There are $2!\cdot2^2=8$ such maps. `mapped_edge()` transports both endpoints of a directed edge to determine the destination edge and whether its natural parameter has reversed. `transform()` applies the formula $s'=\varepsilon_a s\varepsilon_b$. `orbit()` takes all eight images; `orbits()` partitions the enumeration by these images. `02_d4_orbits.py` independently checks the fixed-point sum from Burnside's lemma.
 
 ### 1.8.3 How union-find and the link checker work
 
 `vertex_classes()` unions the original corner endpoints forced together by every pair; the quotient-vertex count is the number of connected components. `validate_vertex_links()` creates a short arc for the infinitesimal link at each original corner, then identifies arc endpoints along glued edges. The resulting graph must be one circle (degree 2 at every node) or one interval (two degree-1 ends, all other degrees 2), and must be connected. `boundary_components()` joins the endpoints of unpaired edges *after* vertex identification to count boundary loops. Finally `classify()` applies Euler characteristic and surface classification formulas.
 
-**Limits of the implementation.** The code is an exact finite combinatorial laboratory for one square with disjoint whole-edge pairs and affine \(t\mapsto t\) or \(t\mapsto1-t\) gluing maps. It does not classify arbitrary nonmanifold quotient specifications, nontrivial subdivisions, several-face complexes, non-Euclidean maps, or higher-dimensional manifolds. It validates the vertex links for its own square model; it is not a general-purpose topology prover.
+**Limits of the implementation.** The code is an exact finite combinatorial laboratory for one square with disjoint whole-edge pairs and affine $t\mapsto t$ or $t\mapsto1-t$ gluing maps. It does not classify arbitrary nonmanifold quotient specifications, nontrivial subdivisions, several-face complexes, non-Euclidean maps, or higher-dimensional manifolds. It validates the vertex links for its own square model; it is not a general-purpose topology prover.
 
 ## 1.9 What generalizes to cubes and tesseracts?
 
-An \(n\)-cube has \(2n\) codimension-one faces and hyperoctahedral symmetry group \(B_n\) of size \(2^n n!\). For a cube, the six square faces may be paired in 15 ways, and each paired face admits eight square symmetries: \(15\cdot8^3=7,680\) full descriptions. For a tesseract, there are eight cubic hyperfaces, 105 perfect matchings, and 48 cube-symmetry gluing maps per pair: \(105\cdot48^4=557,383,680\) full descriptions. These are **raw descriptions**, not manifolds or symmetry classes.
+An $n$-cube has $2n$ codimension-one faces and hyperoctahedral symmetry group $B_n$ of size $2^n n!$. For a cube, the six square faces may be paired in 15 ways, and each paired face admits eight square symmetries: $15\cdot8^3=7,680$ full descriptions. For a tesseract, there are eight cubic hyperfaces, 105 perfect matchings, and 48 cube-symmetry gluing maps per pair: $105\cdot48^4=557,383,680$ full descriptions. These are **raw descriptions**, not manifolds or symmetry classes.
 
 | Ambient cell | Boundary elements | Symmetries of the cell | Gluing maps per paired boundary element |
 |---|---:|---:|---:|
@@ -281,12 +281,12 @@ For Tet4D's Explorer, keep separate (i) a continuous topological quotient, (ii) 
 
 ## 1.10 Exercises
 
-1. Derive the formula \(1+6\cdot2+3\cdot4=25\) without writing code.
-2. Write the eight \(D_4\) transformations as maps \((x,y)\mapsto(x',y')\) and verify that they are closed under composition.
+1. Derive the formula $1+6\cdot2+3\cdot4=25$ without writing code.
+2. Write the eight $D_4$ transformations as maps $(x,y)\mapsto(x',y')$ and verify that they are closed under composition.
 3. Starting with `LR+, BT-`, calculate the image under a diagonal reflection and explain why it becomes the opposite one-flip configuration.
 4. Derive the corner equivalence classes for `LR-, BT-` and identify its surface.
 5. Remove `validate_vertex_links()` and construct, using two or more polygons joined at one vertex, a quotient for which Euler characteristic alone would mislead.
-6. Extend the canonicalization code to report stabilizer size; verify the orbit-stabilizer equation \(|D_4\cdot G|=8/|\mathrm{Stab}(G)|\).
+6. Extend the canonicalization code to report stabilizer size; verify the orbit-stabilizer equation $|D_4\cdot G|=8/|\mathrm{Stab}(G)|$.
 
 ## 1.11 References and reproducibility
 
@@ -320,7 +320,7 @@ A sign of -1 swaps them.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from itertools import combinations, permutations, product
+from itertools import permutations, product
 
 Point = tuple[int, int]
 EDGE_ENDS: dict[str, tuple[Point, Point]] = {
@@ -487,7 +487,7 @@ class DSU:
 
 
 def vertex_classes(gluing: Gluing) -> tuple[tuple[Point, ...], ...]:
-    dsu = DSU(set(v for ends in EDGE_ENDS.values() for v in ends))
+    dsu = DSU({v for ends in EDGE_ENDS.values() for v in ends})
     for p in gluing:
         a0, a1 = EDGE_ENDS[p.first]
         b0, b1 = EDGE_ENDS[p.second]
@@ -636,6 +636,7 @@ def label(gluing: Gluing) -> str:
 """Chapter 1, Example 1: enumerate all disjoint square-edge gluings."""
 
 from collections import Counter
+
 from square_gluings import all_gluings, label
 
 for complete in (True, False):
@@ -683,7 +684,8 @@ for complete in (True, False):
 """Chapter 1, Example 3: quotient vertices, Euler characteristic, topology."""
 
 from collections import Counter
-from square_gluings import all_gluings, classify, label, orbits, vertex_classes
+
+from square_gluings import all_gluings, classify, label, orbits
 
 for complete in (True, False):
     gluings = all_gluings(complete=complete)
@@ -699,7 +701,7 @@ for complete in (True, False):
             f"  {label(g):16s} | orbit={len(members)} "
             f"| V={data['V']} E={data['E']} F={data['F']} "
             f"| chi={data['chi']:2d} b={data['boundary']} "
-            f"| orientable={str(data['orientable']):5s} | {data['name']}"
+            f"| orientable={data['orientable']!s:5s} | {data['name']}"
         )
         assert all(classify(member) == data for member in members)
     assert len(counts) == (4 if complete else 7)
@@ -718,7 +720,6 @@ from square_gluings import (
     all_gluings,
     classify,
     normalize,
-    orbit,
     orbits,
     transform,
     vertex_classes,

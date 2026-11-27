@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Embed · Tet4D Learning</title>
+  <link rel="stylesheet" href="release.css">
+</head>
+<body>
+  <header class="site-header"><a href="index.html">Tet4D Learning</a></header>
+  <main><h1>Embed Tet4D Learning</h1>
+<p class="lead">Host the contents of this release folder together. Paste a script tag into your page at the point where the tutorial should appear.</p>
+
+<h2>Full learning pack</h2>
+<pre><code>&lt;script src="/tet4d-learning/tet4d-learning.js" defer&gt;&lt;/script&gt;</code></pre>
+
+<h2>Lesson 03 domino tutorial</h2>
+<pre><code>&lt;script src="/tet4d-learning/tet4d-learning.js"
+        data-view="domino" data-height="900" defer&gt;&lt;/script&gt;</code></pre>
+<p>Replace <code>/tet4d-learning/</code> with the folder URL on your host. The
+script loads the tutorial from that same folder. Set <code>data-height</code>
+in pixels to adjust the height.</p>
+
+<h2>WordPress and other page builders</h2>
+<p>Put the snippet in a Custom HTML block that allows scripts. If your editor
+allows frames, you can use this HTML-only embed:</p>
+<pre><code>&lt;iframe src="/tet4d-learning/index.html" title="Tet4D Learning"
+        width="100%" height="850" style="border:0"&gt;&lt;/iframe&gt;</code></pre>
+<p>If your editor removes both elements, link to the hosted
+<code>index.html</code> from the page. Visitors need access to the host
+serving the release.</p>
+
+<h2>Try the JavaScript embed</h2>
+<script src="tet4d-learning.js" data-view="domino" defer></script>
+</main>
+</body>
+</html>
