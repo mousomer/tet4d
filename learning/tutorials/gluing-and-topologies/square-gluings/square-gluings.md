@@ -19,4 +19,6 @@ The orange seam again merges B and D. Reversing the second cyan arrow changes th
 
 In the direct-curl animation each point keeps its distance from A as the orange edges meet. A becomes the apex of the resulting cone. The cyan rim then closes, and the B+C+D apex forms. The final model uses a Boy’s surface immersion modified locally at the two corner classes to produce visible cone tips. In the reset view A points left and B+C+D points right. The camera settles on the three apparent openings between the translucent sheets and holds. Both seams stay visible, with the cone labels off in the final frame and in the viewer’s reset view. At the central triple crossing, three distinct neighborhoods occupy the same displayed position. Only the orange and cyan edge maps identify points of the original square.
 
+In the viewer, Replay starts from the square. Pause or scrub to inspect either seam and drag to rotate at any stage. The second seam closes at 16 seconds. The camera then turns slightly and holds the finished surface with both seams visible and labels off.
+
 [Build direct-curl animation](REBUILD.md?output=direct-curl/boys-surface.mp4) · [Numbered stills](direct-curl/stills.zip) · [Rotatable model](direct-curl/rotate.html) · [Interactive gluing](viewers/rp2-adjacent.html)

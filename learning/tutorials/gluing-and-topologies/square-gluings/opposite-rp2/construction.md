@@ -8,4 +8,6 @@ Label the square A, B, C, D clockwise from the upper left. Orange pairs A→B wi
 
 The final model uses a Boy’s surface immersion modified locally at both tips. In the reset view, A+C is the green tip at upper left and B+D is the magenta tip at right. The orange and cyan seam curves each connect those two tips. The final camera looks into the three apparent openings between the translucent lobes. At the central crossing, three distinct points of the surface project to the same location. The animation holds this view with both seams visible and cone labels off. In the viewer, **Separate crossing sheets** moves the sheets apart while the seams stay joined.
 
+In the viewer, Replay starts from the square. Pause or scrub to inspect either seam and drag to rotate at any stage. The second seam closes at 16 seconds. The camera then turns slightly and holds the finished surface with both seams visible and labels off.
+
 [Build animation](../REBUILD.md?output=rp2.mp4) · [Numbered key stills](stills.zip) · [Build all frames](../REBUILD.md?output=frames.zip) · [Rotatable viewer](rotate.html)

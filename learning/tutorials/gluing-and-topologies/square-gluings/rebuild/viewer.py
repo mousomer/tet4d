@@ -17,6 +17,30 @@ def corner_labels(m, name, sphere, adjacent_rp):
     return tips
 
 
+def playback_mesh(m, adjacent, faces, points):
+    _, b, c = (m.nodes**2).T
+    square = np.vstack(
+        (
+            np.column_stack((b + c - 0.5, 0.5 - c)),
+            np.column_stack((c - 0.5, 0.5 - b - c)),
+        )
+    )
+    if adjacent:
+        points = points * 0.86
+    else:
+        axis = np.array([0.81, 0.35, 0.47])
+        heights = np.concatenate(
+            [2 * (m.material(m.nodes, side) @ axis) ** 2 - 1 for side in (1, -1)]
+        )
+        points = np.column_stack((points, heights))
+    return {
+        "square": square.round(8).tolist(),
+        "adjacent": adjacent,
+        "points": points.round(7).tolist(),
+        "faces": faces.tolist(),
+    }
+
+
 def write_viewer(name, m, destination, filename):
     sphere = name == "sphere-revised"
     adjacent_rp = name == "direct-curl"
@@ -32,38 +56,23 @@ def write_viewer(name, m, destination, filename):
     seams = [[m.edge_a, m.colors["a"]], [m.edge_b, m.colors["b"]]]
     tips = corner_labels(m, name, sphere, adjacent_rp)
     model = {"seams": seams, "tips": tips}
-    if name in ("adjacent-klein", "opposite-klein", "opposite-rp2"):
-        if name == "opposite-rp2":
-
-            def lift(q):
-                return 2 * (q @ np.array([0.81, 0.35, 0.47])) ** 2 - 1
-
+    if adjacent_rp or name == "opposite-rp2":
+        model.update(playback_mesh(m, adjacent_rp, faces, points))
+    elif name in ("adjacent-klein", "opposite-klein"):
+        markers = np.repeat(m.crossing(), 2, axis=0)
+        marker_heights = [1.0, -1.0]
+        if name == "adjacent-klein":
             heights = np.concatenate(
-                [lift(m.material(m.nodes, side)) for side in (1, -1)]
+                [np.cos(np.pi * m.coords(m.nodes, side)[1]) for side in (1, -1)]
             )
-            radius = ((3 - np.sqrt(5)) / 2) ** (1 / 3)
-            w = radius * np.exp(2j * np.pi * np.arange(3) / 3)
-            triple = (
-                np.column_stack((2 * w.real, 2 * w.imag, 1 - abs(w) ** 2))
-                / (1 + abs(w) ** 2)[:, None]
-            )
-            markers = np.zeros((3, 3))
-            marker_heights = lift(triple)
+            c, s = np.cos(0.57), np.sin(0.57)
+            rot = np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
+            points = points @ rot.T
+            markers = markers @ rot.T
         else:
-            markers = np.repeat(m.crossing(), 2, axis=0)
-            marker_heights = [1.0, -1.0]
-            if name == "adjacent-klein":
-                heights = np.concatenate(
-                    [np.cos(np.pi * m.coords(m.nodes, side)[1]) for side in (1, -1)]
-                )
-                c, s = np.cos(0.57), np.sin(0.57)
-                rot = np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
-                points = points @ rot.T
-                markers = markers @ rot.T
-            else:
-                heights = np.concatenate(
-                    [np.cos(m.phase(*m.params(m.nodes, side))) for side in (1, -1)]
-                )
+            heights = np.concatenate(
+                [np.cos(m.phase(*m.params(m.nodes, side))) for side in (1, -1)]
+            )
         model["crossings"] = list(range(len(points), len(points) + len(markers)))
         points = np.column_stack(
             (np.vstack((points, markers)), np.concatenate((heights, marker_heights)))
@@ -86,6 +95,9 @@ def write_viewer(name, m, destination, filename):
             ],
         )
     template = (Path(__file__).parent / "templates" / (name + ".html")).read_text()
+    if "RP2_PLAYBACK" in template:
+        playback = Path(__file__).parent / "templates" / "rp2-playback.js"
+        template = template.replace("RP2_PLAYBACK", playback.read_text())
     assert template.count("MESH_DATA") == 1
     (destination / filename).write_text(
         template.replace("MESH_DATA", json.dumps(model, separators=(",", ":")))
