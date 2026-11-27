@@ -5,6 +5,9 @@ on:
     branches:
       - master
   pull_request:
+    # Pull requests into learning run the learning branch's own CI (learning.yml).
+    branches-ignore:
+      - learning
     types:
       - opened
       - synchronize

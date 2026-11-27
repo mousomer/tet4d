@@ -1,0 +1,5 @@
+# Tools the learning gate needs beyond the standard library (learning/gate.py --full).
+# pypandoc_binary 1.17 bundles Pandoc 3.9, the release.pandoc reference in manifest.json.
+pypandoc_binary==1.17
+playwright==1.65.2
+Pillow==13.0.0

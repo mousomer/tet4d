@@ -1,0 +1,56 @@
+name: Learning CI
+
+# The learning branch's CI. The game's CI (ci.yml) does not run for pull requests into learning.
+on:
+  pull_request:
+    branches:
+      - learning
+  push:
+    branches:
+      - learning
+
+permissions:
+  contents: read
+
+concurrency:
+  group: learning-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  learning-gate:
+    name: Learning gate
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Install the learning tools
+        run: |
+          python -m pip install -r learning/ci/requirements.txt
+          python -m playwright install --with-deps chromium
+          echo "$(python -c 'import pypandoc, pathlib; print(pathlib.Path(pypandoc.get_pandoc_path()).parent)')" >> "$GITHUB_PATH"
+      - name: Run the full learning gate
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || 'HEAD^1' }}
+        run: python learning/gate.py --full --any-branch --base "$BASE"
+
+  # Branch protection on learning requires a check with this name.
+  required-gate:
+    name: CI required gate
+    needs:
+      - learning-gate
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Confirm the learning gate passed
+        env:
+          RESULT: ${{ needs.learning-gate.result }}
+        run: |
+          if [[ "$RESULT" != "success" ]]; then
+            echo "learning gate completed as $RESULT" >&2
+            exit 1
+          fi
+          echo "Learning gate passed."
