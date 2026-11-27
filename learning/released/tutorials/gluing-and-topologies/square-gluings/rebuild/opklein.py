@@ -159,7 +159,9 @@ def draw_surface(cam, fold, gap, im, project, puff, transparency):
         ptr(arr), W, H, *map(ptr, buffers), len(depth)
     )
     if status:
-        raise RuntimeError(f"raster.c paint failed (status {status}: 1 invalid arguments, 2 out of memory)")
+        raise RuntimeError(
+            f"raster.c paint failed (status {status}: 1 invalid arguments, 2 out of memory)"
+        )
     im = Image.fromarray(arr)
     d = ImageDraw.Draw(im)
     return pts, im, d
