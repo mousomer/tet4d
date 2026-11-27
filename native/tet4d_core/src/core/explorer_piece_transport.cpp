@@ -64,9 +64,9 @@ PieceProposal inverse(const ExplorerPiece& current, std::int64_t revision,
     if (status != PieceFailure::none)
         return failure(status);
     // Reconstruct descriptor provenance using production forward transport; no trusted snapshots.
-    auto forward = descriptor.rotation
-                       ? propose_piece_rotation(descriptor.source, revision, descriptor.forward.delta)
-                       : translate(descriptor.source, revision, descriptor.forward);
+    auto forward = descriptor.rotation ? propose_piece_rotation(descriptor.source, revision,
+                                                                descriptor.forward.delta)
+                                       : translate(descriptor.source, revision, descriptor.forward);
     if (!forward.candidate)
         return forward;
     if (!(forward.candidate->target == source))
@@ -86,7 +86,8 @@ PieceProposal inverse(const ExplorerPiece& current, std::int64_t revision,
 }
 } // namespace
 
-PieceClassification classify_piece_correspondence(const ExplorerPiece& source, const ExplorerPiece& target) {
+PieceClassification classify_piece_correspondence(const ExplorerPiece& source,
+                                                  const ExplorerPiece& target) {
     PieceFrame common;
     std::array<std::int64_t, 2> displacement{};
     for (std::size_t i = 0; i < source.cells.size(); ++i) {
@@ -202,8 +203,8 @@ PieceFailure step_explorer_cell(const ExplorerPiece& piece, const PieceCell& cel
     // r_i = -T_i a: each cell has its own physical reverse direction.
     auto reverse = apply_piece_frame(transport, step);
     reverse.delta = -reverse.delta;
-    witness = {cell.id, cell.coordinate, next.coordinate, transport, step, reverse,
-               resolved.glue_id, cell.domain, target_domain};
+    witness = {cell.id, cell.coordinate,  next.coordinate, transport,    step,
+               reverse, resolved.glue_id, cell.domain,     target_domain};
     return PieceFailure::none;
 }
 
@@ -218,7 +219,7 @@ PieceProposal propose_piece_translation(const ExplorerPiece& source, std::int64_
     }
 }
 PieceProposal propose_piece_neighbor(const ExplorerPiece& source, std::int64_t id,
-                                    MoveStepQuery action) {
+                                     MoveStepQuery action) {
     ExplorerPiece canonical;
     auto status = validate_explorer_piece(source, canonical);
     if (status != PieceFailure::none)

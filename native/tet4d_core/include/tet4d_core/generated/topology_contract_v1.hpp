@@ -18,6 +18,7 @@ inline constexpr std::array<std::string_view, 4> AXIS_NAMES{{"x", "y", "z", "w"}
 inline constexpr std::array<std::int64_t, 2> VALID_TRANSFORM_SIGNS{{-1, 1}};
 inline constexpr std::array<std::string_view, 2> VALID_BOUNDARY_SIDES{{"-", "+"}};
 inline constexpr std::array<std::int64_t, 2> VALID_MOVEMENT_DELTAS{{-1, 1}};
-inline constexpr std::string_view CONTRACT_FINGERPRINT = "42f7b78b05cd5456657a991d2fa56499d4298333af8150c6299aabd9f84b5e9c";
+inline constexpr std::string_view CONTRACT_FINGERPRINT =
+    "42f7b78b05cd5456657a991d2fa56499d4298333af8150c6299aabd9f84b5e9c";
 
 } // namespace tet4d::core::generated

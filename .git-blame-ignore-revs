@@ -1,0 +1,6 @@
+# Commits that only reformat code; `git blame` skips them when configured with
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+# Keep these commits in history: merge, never squash or rebase, the PR that adds one.
+
+# native: format tet4d_core with clang-format 18
+519cca5fe8b69520df21f0b409d0c3f06034bd93

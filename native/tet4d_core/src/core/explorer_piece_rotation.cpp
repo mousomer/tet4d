@@ -22,8 +22,9 @@ PieceProposal rotate(const ExplorerPiece& source, std::int64_t revision, int dir
     const auto& piece = result.source;
     const auto reference = explorer_reference_cell(piece);
     const auto& anchor = piece.cells[reference];
-    // Develop the material shape in the reference (anchor) cell's chart. Other cells' current sites are not
-    // consulted: the turned piece is rebuilt from the anchor, so no consistency check applies.
+    // Develop the material shape in the reference (anchor) cell's chart. Other cells' current sites
+    // are not consulted: the turned piece is rebuilt from the anchor, so no consistency check
+    // applies.
     std::vector<Point> developed;
     Point low{}, high{}, sum{};
     for (std::size_t i = 0; i < piece.cells.size(); ++i) {
@@ -48,9 +49,9 @@ PieceProposal rotate(const ExplorerPiece& source, std::int64_t revision, int dir
             // Difference of squared centroid distances, avoiding overflowing n^2*u^2.
             std::int64_t difference = 0;
             for (std::size_t axis = 0; axis < 2; ++axis)
-                difference += (developed[i][axis] - developed[nearest][axis]) *
-                              (count * (developed[i][axis] + developed[nearest][axis]) -
-                               2 * sum[axis]);
+                difference +=
+                    (developed[i][axis] - developed[nearest][axis]) *
+                    (count * (developed[i][axis] + developed[nearest][axis]) - 2 * sum[axis]);
             if (difference < 0)
                 nearest = i;
         }
@@ -106,7 +107,7 @@ PieceProposal rotate(const ExplorerPiece& source, std::int64_t revision, int dir
 }
 } // namespace
 PieceProposal propose_piece_rotation(const ExplorerPiece& source, std::int64_t revision,
-                                    int direction) {
+                                     int direction) {
     try {
         return rotate(source, revision, direction);
     } catch (const std::bad_alloc&) {

@@ -14,103 +14,110 @@
 namespace godot {
 
 class Tet4DCoreApi : public RefCounted {
-	GDCLASS(Tet4DCoreApi, RefCounted);
+    GDCLASS(Tet4DCoreApi, RefCounted);
 
-protected:
-	static void _bind_methods();
+  protected:
+    static void _bind_methods();
 
-public:
-	// Detached, single-object candidate Explorer runtime owned by this bridge.
-	// Inputs/results are copied. Begin rejects unsupported presets or invalid poses
-	// without replacing the previous runtime. Move/Retry use the T2A native owner;
-	// no gameplay session, persistence identity or authority transfer is implied.
-	// This main-thread Godot instance owns one detached Explorer runtime. begin replaces it
-	// only after strict rank-2/profile/state admission; subsequent actions require success.
-	// Returned dictionaries/arrays own their values (no borrowed core state) and report
-	// {ok, reason}. Successful snapshots include stable IDs, chart coordinates, domains,
-	// frames and separate display coordinates. Invalid/blocked requests leave state intact.
-	// Single-domain topology remains a candidate; disk-double mechanics follow AE-0056.
-	Dictionary explorer_begin(const Array &dims, const Array &original, const Array &cells, const String &preset);
-	Dictionary explorer_move(int64_t axis, int64_t direction);
-	Dictionary explorer_retry();
-	Dictionary explorer_rotate(int64_t direction); // Exact coherent quarter turn, direction -1/+1.
-	Dictionary explorer_undo(); // Source-bound inverse of the last retained action; empty rejects.
-	Dictionary explorer_neighbors(int64_t cell_id); // Read-only, four chart-axis neighbors of an ID.
-	String get_core_version() const;
-	String get_core_status() const;
-	String echo_text(const String &text) const;
-	String stable_hash_text(const String &text) const;
-	int64_t add_integers(int64_t a, int64_t b) const;
-	Array geometry_normalize_blocks(const Array &blocks) const;
-	Array geometry_translate_blocks(const Array &blocks, const Array &offset) const;
-	Array geometry_rotate_blocks(const Array &blocks, int64_t axis_a, int64_t axis_b, int64_t quarter_turns) const;
-	String geometry_hash_blocks(const Array &blocks) const;
-	Dictionary query_piece_pose_legal(const Array &dims, const Array &piece_cells, const Array &occupied_cells) const;
-	Dictionary query_topology_axis_wrap_cell_step(const Array &dims, const Array &wrapped_axes, const Array &coord, int64_t axis, int64_t delta) const;
-	Dictionary topology_transport_profile(const Variant &profile) const;
-	Dictionary topology_transport_resolve_cell_step(const Variant &profile, const Variant &query) const;
-	Dictionary get_board_extent_contract() const;
-	Dictionary validate_live_board_setup(const Variant &setup) const;
-	// Value-owned, read-only production geometry for presentation conformance;
-	// this observation does not construct or mutate a live session or its RNG.
-	Array get_live_2d_production_piece_catalog() const;
-	Array get_live_nd_production_piece_catalog() const;
-	bool run_builtin_plain_2d_smoke_case() const;
-	PackedStringArray list_plain_2d_parity_cases() const;
-	String get_plain_2d_parity_status() const;
-	String export_plain_2d_trace_json(const String &case_id) const;
-	bool get_plain_2d_required_field_parity(const String &case_id) const;
-	bool run_builtin_plain_nd_smoke_case() const;
-	PackedStringArray list_plain_nd_parity_cases() const;
-	String get_plain_nd_parity_status() const;
-	String export_plain_nd_trace_json(const String &case_id) const;
-	bool get_plain_nd_required_field_parity(const String &case_id) const;
-	bool live_2d_configure(const Dictionary &setup);
-	Dictionary live_2d_configure_checked(const Dictionary &setup);
-	// Fixture seam: changes only the board of the unconfigured session, keeping its
-	// fixed (unshuffled) piece order, so recorded traces stay independent of the
-	// product default board.
-	bool live_2d_configure_fixture_board(int64_t width, int64_t height);
-	void live_2d_reset();
-	String live_2d_apply_command(const String &command);
-	String live_2d_tick();
-	String live_2d_snapshot_json() const;
-	Dictionary live_2d_next_piece_preview() const;
-	Dictionary live_2d_held_piece_preview() const;
-	bool live_2d_hold_available() const;
-	Dictionary live_2d_hard_drop_destination() const;
-	String live_2d_status() const;
-	String live_2d_state_hash() const;
-	bool live_3d_configure(const Dictionary &setup);
-	Dictionary live_3d_configure_checked(const Dictionary &setup);
-	void live_3d_reset();
-	String live_3d_apply_command(const String &command);
-	String live_3d_tick();
-	String live_3d_snapshot_json() const;
-	Dictionary live_3d_next_piece_preview() const;
-	Dictionary live_3d_held_piece_preview() const;
-	bool live_3d_hold_available() const;
-	Dictionary live_3d_hard_drop_destination() const;
-	String live_3d_status() const;
-	String live_3d_state_hash() const;
-	bool live_4d_configure(const Dictionary &setup);
-	Dictionary live_4d_configure_checked(const Dictionary &setup);
-	void live_4d_reset();
-	String live_4d_apply_command(const String &command);
-	String live_4d_tick();
-	String live_4d_snapshot_json() const;
-	Dictionary live_4d_next_piece_preview() const;
-	Dictionary live_4d_held_piece_preview() const;
-	bool live_4d_hold_available() const;
-	Dictionary live_4d_hard_drop_destination() const;
-	String live_4d_status() const;
-	String live_4d_state_hash() const;
+  public:
+    // Detached, single-object candidate Explorer runtime owned by this bridge.
+    // Inputs/results are copied. Begin rejects unsupported presets or invalid poses
+    // without replacing the previous runtime. Move/Retry use the T2A native owner;
+    // no gameplay session, persistence identity or authority transfer is implied.
+    // This main-thread Godot instance owns one detached Explorer runtime. begin replaces it
+    // only after strict rank-2/profile/state admission; subsequent actions require success.
+    // Returned dictionaries/arrays own their values (no borrowed core state) and report
+    // {ok, reason}. Successful snapshots include stable IDs, chart coordinates, domains,
+    // frames and separate display coordinates. Invalid/blocked requests leave state intact.
+    // Single-domain topology remains a candidate; disk-double mechanics follow AE-0056.
+    Dictionary explorer_begin(const Array& dims, const Array& original, const Array& cells,
+                              const String& preset);
+    Dictionary explorer_move(int64_t axis, int64_t direction);
+    Dictionary explorer_retry();
+    Dictionary explorer_rotate(int64_t direction); // Exact coherent quarter turn, direction -1/+1.
+    Dictionary explorer_undo(); // Source-bound inverse of the last retained action; empty rejects.
+    Dictionary
+    explorer_neighbors(int64_t cell_id); // Read-only, four chart-axis neighbors of an ID.
+    String get_core_version() const;
+    String get_core_status() const;
+    String echo_text(const String& text) const;
+    String stable_hash_text(const String& text) const;
+    int64_t add_integers(int64_t a, int64_t b) const;
+    Array geometry_normalize_blocks(const Array& blocks) const;
+    Array geometry_translate_blocks(const Array& blocks, const Array& offset) const;
+    Array geometry_rotate_blocks(const Array& blocks, int64_t axis_a, int64_t axis_b,
+                                 int64_t quarter_turns) const;
+    String geometry_hash_blocks(const Array& blocks) const;
+    Dictionary query_piece_pose_legal(const Array& dims, const Array& piece_cells,
+                                      const Array& occupied_cells) const;
+    Dictionary query_topology_axis_wrap_cell_step(const Array& dims, const Array& wrapped_axes,
+                                                  const Array& coord, int64_t axis,
+                                                  int64_t delta) const;
+    Dictionary topology_transport_profile(const Variant& profile) const;
+    Dictionary topology_transport_resolve_cell_step(const Variant& profile,
+                                                    const Variant& query) const;
+    Dictionary get_board_extent_contract() const;
+    Dictionary validate_live_board_setup(const Variant& setup) const;
+    // Value-owned, read-only production geometry for presentation conformance;
+    // this observation does not construct or mutate a live session or its RNG.
+    Array get_live_2d_production_piece_catalog() const;
+    Array get_live_nd_production_piece_catalog() const;
+    bool run_builtin_plain_2d_smoke_case() const;
+    PackedStringArray list_plain_2d_parity_cases() const;
+    String get_plain_2d_parity_status() const;
+    String export_plain_2d_trace_json(const String& case_id) const;
+    bool get_plain_2d_required_field_parity(const String& case_id) const;
+    bool run_builtin_plain_nd_smoke_case() const;
+    PackedStringArray list_plain_nd_parity_cases() const;
+    String get_plain_nd_parity_status() const;
+    String export_plain_nd_trace_json(const String& case_id) const;
+    bool get_plain_nd_required_field_parity(const String& case_id) const;
+    bool live_2d_configure(const Dictionary& setup);
+    Dictionary live_2d_configure_checked(const Dictionary& setup);
+    // Fixture seam: changes only the board of the unconfigured session, keeping its
+    // fixed (unshuffled) piece order, so recorded traces stay independent of the
+    // product default board.
+    bool live_2d_configure_fixture_board(int64_t width, int64_t height);
+    void live_2d_reset();
+    String live_2d_apply_command(const String& command);
+    String live_2d_tick();
+    String live_2d_snapshot_json() const;
+    Dictionary live_2d_next_piece_preview() const;
+    Dictionary live_2d_held_piece_preview() const;
+    bool live_2d_hold_available() const;
+    Dictionary live_2d_hard_drop_destination() const;
+    String live_2d_status() const;
+    String live_2d_state_hash() const;
+    bool live_3d_configure(const Dictionary& setup);
+    Dictionary live_3d_configure_checked(const Dictionary& setup);
+    void live_3d_reset();
+    String live_3d_apply_command(const String& command);
+    String live_3d_tick();
+    String live_3d_snapshot_json() const;
+    Dictionary live_3d_next_piece_preview() const;
+    Dictionary live_3d_held_piece_preview() const;
+    bool live_3d_hold_available() const;
+    Dictionary live_3d_hard_drop_destination() const;
+    String live_3d_status() const;
+    String live_3d_state_hash() const;
+    bool live_4d_configure(const Dictionary& setup);
+    Dictionary live_4d_configure_checked(const Dictionary& setup);
+    void live_4d_reset();
+    String live_4d_apply_command(const String& command);
+    String live_4d_tick();
+    String live_4d_snapshot_json() const;
+    Dictionary live_4d_next_piece_preview() const;
+    Dictionary live_4d_held_piece_preview() const;
+    bool live_4d_hold_available() const;
+    Dictionary live_4d_hard_drop_destination() const;
+    String live_4d_status() const;
+    String live_4d_state_hash() const;
 
-private:
-	std::unique_ptr<tet4d::core::ExplorerPieceRuntime> explorer_runtime_;
-	mutable tet4d::core::Plain2DSession live_2d_session_;
-	mutable tet4d::core::PlainNDSession live_3d_session_{3};
-	mutable tet4d::core::PlainNDSession live_4d_session_{4};
+  private:
+    std::unique_ptr<tet4d::core::ExplorerPieceRuntime> explorer_runtime_;
+    mutable tet4d::core::Plain2DSession live_2d_session_;
+    mutable tet4d::core::PlainNDSession live_3d_session_{3};
+    mutable tet4d::core::PlainNDSession live_4d_session_{4};
 };
 
 } // namespace godot

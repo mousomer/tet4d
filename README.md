@@ -112,6 +112,13 @@ For the longer philosophical background, see
 scripts/bootstrap_env.sh
 ```
 
+So that `git blame` skips formatting-only commits, point it at the ignore list
+once per clone:
+
+```bash
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+```
+
 No activation is needed, and nothing should invoke a bare `python3`/`python`
 from `PATH`. Governed scripts resolve the interpreter themselves; to get it for
 a command of your own, ask the resolver:
