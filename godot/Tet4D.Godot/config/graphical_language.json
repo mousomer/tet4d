@@ -1,6 +1,39 @@
 {
   "schema_version": 1,
   "description": "Tuning values for the owner graphical language (docs/design/graphical_language/README.md). Code reads every number from here through GraphicalLanguageConfig; none is hard-coded.",
+  "cockpit": {
+    "brightness": {"helper": 0.88, "preview": 0.76, "chrome": 0.68},
+    "inline_arrow": {
+      "size": 24.0,
+      "span_factor": 0.32,
+      "line_width": 2.0
+    },
+    "compass_arrow_length": 34.0,
+    "plane_glyph_size": 30.0,
+    "inline_plane_glyph_size": 21.0,
+    "plane_glyph_reach": 0.42,
+    "plane_w_marker": {
+      "boxes": 3,
+      "box_width": 6.0,
+      "box_height": 5.0,
+      "pitch": 7.0,
+      "top": 6.0,
+      "gap": 1.0,
+      "reserve": 8.0
+    },
+    "empty_slot": {
+      "dash_length": 22.0,
+      "dash_width": 2.0
+    },
+    "stat_divider_thickness": 1.0,
+    "board": {
+      "frame_padding": 4.0,
+      "fit_margin_2d": 1.02,
+      "fit_margin_3d": 1.01,
+      "slice_gutter_scale": 0.5,
+      "slice_label_side_pad": 0.8
+    }
+  },
   "luminous": {
     "board": {
       "active": {

@@ -12,6 +12,7 @@ extends RefCounted
 #   below the board leads with NEXT/HOLD and keeps that row on screen.
 # A change to any of these is a product decision, not a layout fix.
 
+const DirectionProbe = preload("res://tests/support/legend_direction_probe.gd")
 const Tokens = preload("res://scripts/ui/style/shell_design_tokens.gd")
 const SIZES := [Vector2i(1440, 900), Vector2i(1280, 720)]
 const SMALL_4D := Vector2i(700, 480)
@@ -73,9 +74,159 @@ func run() -> Array:
 	failures.append_array(_check_4d_small(hud))
 	instance.queue_free()
 	await tree.process_frame
+	failures.append_array(await _check_p3_game(tree))
 	tree.root.size = original_size
 	tree.root.content_scale_size = original_scale
 	tree.root.min_size = original_minimum
+	return failures
+
+
+# P3 game lock. The Designer checks above preserve its established authoring
+# layout. The game shares the board, footer and controls across both choices.
+func _check_p3_game(tree: SceneTree) -> Array:
+	var failures: Array = []
+	var instance := (load("res://scenes/game_bootstrap.tscn") as PackedScene).instantiate()
+	var app = instance.get_node("App")
+	var hud = instance.get_node("ReplayHud")
+	var settings_directory := DirAccess.create_temp("tet4d-p3-layouts")
+	app._launch_view_path = settings_directory.get_current_dir().path_join("launch.cfg")
+	tree.root.add_child(instance)
+	await _frames(tree, 10)
+	app.set_process(false)
+	hud._settings_store._storage_path = settings_directory.get_current_dir().path_join("settings.json")
+	hud._set_onboarding_visible(false)
+	hud._apply_ui_scale("standard")
+	var nav_tops := {}
+	for size in SIZES + [SMALL_4D]:
+		tree.root.size = size
+		tree.root.content_scale_size = size
+		for layout in ["concept_a", "concept_b"]:
+			hud._settings_screen_panel._on_control_value_changed("display.cockpit_layout", layout)
+			for mode in ["live_2d", "live_3d", "live_4d"]:
+				app._start_configured_live_game(hud.configured_live_setup(mode))
+				await _frames(tree, 10)
+				await _settle_cockpit(tree, hud._live_cockpit)
+				var name := "%s %s at %s" % [layout, mode, size]
+				var board: Rect2 = hud._game_area.get_global_rect()
+				var header: Rect2 = hud._cockpit_nav.get_global_rect()
+				var footer: Rect2 = hud._cockpit_footer.get_global_rect()
+				var legend: Rect2 = hud._live_cockpit.control_deck.get_global_rect()
+				var viewport: Rect2 = hud.get_viewport_rect().grow(1.0)
+				if not (viewport.encloses(board) and viewport.encloses(header) and viewport.encloses(footer) and viewport.encloses(legend)):
+					failures.append("%s must keep the board, navigation, controls and status inside the window" % name)
+				if header.end.y > board.position.y + 1.0 or footer.position.y < board.end.y - 1.0:
+					failures.append("%s must keep navigation above the board and status below it" % name)
+				var header_stats: bool = layout == "concept_b"
+				if (hud._cockpit_stats.get_parent() == hud._live_cockpit.header_slot) != header_stats:
+					failures.append("%s must keep stats in its chosen location" % name)
+				if hud._cockpit_mode_title.is_visible_in_tree() != header_stats or (header_stats and not hud._cockpit_mode_title.text.begins_with("%sD" % mode[5])):
+					failures.append("%s must title header stats with the mode, and only there" % name)
+				if hud._cockpit_stat_dividers.size() != 2 or not hud._cockpit_stat_dividers.all(func(divider: ColorRect) -> bool: return divider.is_visible_in_tree() and hud._cockpit_stats.is_ancestor_of(divider)):
+					failures.append("%s must divide the three stats" % name)
+				if not hud._hold_piece_panel._thumbnail._show_empty_slot:
+					failures.append("%s must keep the empty HOLD slot visible" % name)
+				if header_stats:
+					if legend.position.x < board.end.x - 1.0:
+						failures.append("%s must keep controls beside the board" % name)
+				elif legend.position.y < board.end.y - 1.0:
+					failures.append("%s must keep controls below the board" % name)
+				if size == SIZES[0]:
+					# Outline floors at the reference window, excluding camera-fit padding.
+					var minimums := {"live_2d": 0.65, "live_3d": 0.61, "live_4d": 0.42} if header_stats else {"live_2d": 0.70, "live_3d": 0.66, "live_4d": 0.44}
+					var outline_height := DirectionProbe.projected_content_height(app, false)
+					if outline_height < float(size.y) * float(minimums[mode]):
+						failures.append("%s projected well outline is too short: %.1f px" % [name, outline_height])
+					var deck: ScrollContainer = hud._live_cockpit.deck_scroll
+					if deck.get_v_scroll_bar().visible or deck.get_h_scroll_bar().visible or hud._live_cockpit.deck_fit.fit_scale < 0.99:
+						failures.append("%s must show the complete legend at its standard scale" % name)
+					if header_stats and mode != "live_2d":
+						for caption: Label in [hud._next_piece_panel._status_label, hud._hold_piece_panel._status_label]:
+							var font := caption.get_theme_font("font")
+							var required_width := font.get_string_size(caption.text, HORIZONTAL_ALIGNMENT_LEFT, -1, caption.get_theme_font_size("font_size")).x
+							if caption.size.x + 1.0 < required_width:
+								failures.append("%s clips the preview caption %s" % [name, caption.text])
+					if not header_stats:
+						var controls: HFlowContainer = hud._piece_control_strip._groups_box
+						if controls.get_line_count() != 1:
+							failures.append("%s must keep the controls on one row" % name)
+				# Switching dimension must not move the shell.
+				var nav_key := "%s %s" % [layout, size]
+				var nav_top: float = hud._cockpit_nav.get_global_rect().position.y
+				if not nav_tops.has(nav_key):
+					nav_tops[nav_key] = nav_top
+				elif not is_equal_approx(nav_tops[nav_key], nav_top):
+					failures.append("%s moves the navigation bar: %.1f, was %.1f" % [name, nav_top, nav_tops[nav_key]])
+				# Muted captions are not dimmed a second time by the Play brightness tiers.
+				for caption: Label in [hud._next_piece_panel._status_label, hud._hold_piece_panel._status_label]:
+					var drawn := 1.0
+					var node: Node = caption
+					while node != null and node != hud:
+						drawn *= (node as CanvasItem).modulate.r
+						node = node.get_parent()
+					if not is_equal_approx(drawn, 1.0):
+						failures.append("%s dims the preview caption %s to %.2f" % [name, caption.text, drawn])
+				# The fitted well keeps clear of the frame's lower edge.
+				if mode != "live_4d":
+					var lowest := -INF
+					for box in app._renderer.current_content_boxes(false):
+						var low: Vector3 = box["min"]
+						var high: Vector3 = box["max"]
+						for x in [low.x, high.x]:
+							for y in [low.y, high.y]:
+								for z in [low.z, high.z]:
+									lowest = maxf(lowest, app._camera_rig.project_world_point(Vector3(x, y, z)).y)
+					# Projection is in render pixels and the allocation in logical
+					# points; they differ on a high-density display.
+					var logical_height: float = hud.board_viewport_size().y
+					var lowest_point := lowest * logical_height / float(hud._game_viewport.size.y)
+					if lowest_point > logical_height - 1.0:
+						failures.append("%s well touches the frame's lower edge: %.1f of %.1f" % [name, lowest_point, logical_height])
+				var preview_columns := 2 if header_stats and mode != "live_2d" else 1
+				if hud._piece_preview_row.columns != preview_columns or not hud._piece_preview_row.is_visible_in_tree():
+					failures.append("%s must keep NEXT and HOLD reachable in the preview row" % name)
+				var controls: Control = hud._piece_control_strip
+				if not (hud._game_area.modulate.r > controls.modulate.r and controls.modulate.r > hud._piece_preview_row.modulate.r and hud._piece_preview_row.modulate.r > hud._cockpit_footer.modulate.r):
+					failures.append("%s must prioritize board, helper, previews and chrome in order" % name)
+				var compass := controls.find_child("LegendCompass", true, false)
+				var expected_planes := 6 if mode == "live_4d" else 3
+				if header_stats and mode != "live_2d":
+					if compass == null or controls.find_children("ControlSectionTitle", "Label", true, false).size() != 3:
+						failures.append("%s must show the MOVE compass and all three group headings" % name)
+					if controls.find_children("LegendPlaneGlyph__*", "Control", true, false).size() != expected_planes or controls.find_children("LegendTag", "Label", true, false).size() != expected_planes:
+						failures.append("%s must show a glyph and plane label for every rotation pair" % name)
+				elif not header_stats:
+					if compass != null:
+						failures.append("%s must retain the compact footer legend" % name)
+					if mode != "live_2d":
+						app._publish_legend_screen_directions()
+						var arrow_count := 6 if mode == "live_4d" else 4
+						var arrows := controls.find_children("LegendInlineArrow__*", "Control", true, false)
+						if arrows.size() != arrow_count:
+							failures.append("%s must show an arrow beside each spatial movement key" % name)
+						for arrow in arrows:
+							var direction_row := arrow.get_parent()
+							var pair := direction_row.get_parent() as BoxContainer
+							if pair == null or not pair.vertical or pair.get_child_count() != 2 or not direction_row.get_child(0) is Label:
+								failures.append("%s must stack both movement keys with their own arrows" % name)
+							if arrow.directions().get(arrow.movement_intent, Vector2.ZERO) == Vector2.ZERO:
+								failures.append("%s is missing a direction for %s" % [name, arrow.movement_intent])
+						var rotation_glyphs := controls.find_children("LegendPlaneGlyph__*", "Control", true, false)
+						if rotation_glyphs.size() != expected_planes:
+							failures.append("%s must provide one footer glyph per rotation pair" % name)
+						var rotation_groups := {}
+						for glyph in rotation_glyphs:
+							var group := glyph.get_parent()
+							var key_group := group.get_node("LegendKeys")
+							var plane_label := group.get_node("LegendOperation") as Label
+							if group.get_parent() != hud._piece_control_strip._groups_box or rotation_groups.has(group) or not key_group.vertical or key_group.get_child_count() != 2 or plane_label.text != glyph.plane_name():
+								failures.append("%s must keep each rotation pair, glyph and plane label in one group" % name)
+							rotation_groups[group] = true
+	var reloaded = hud._settings_store.get_script().new(hud._settings_registry, hud._settings_store._storage_path)
+	reloaded.load_settings()
+	if reloaded.value("display.cockpit_layout") != "concept_b":
+		failures.append("the selected layout must survive reloading Display settings")
+	instance.queue_free()
+	await tree.process_frame
 	return failures
 
 

@@ -15,6 +15,7 @@ const ControlLegendGlyphScript = preload("res://scripts/ui/control_legend_glyph.
 const LAYOUT_DECK := "deck"
 const LAYOUT_RAIL := "rail"
 const LAYOUT_WIDE := "wide"
+const LAYOUT_COMPACT := "compact"
 # Under view-relative controls the plane letters name screen directions
 # (x sideways, y up, z depth, w the slice row), so a turn is named by what it
 # mixes, and its glyph lights those directions. The letters stay as a tag.
@@ -89,7 +90,7 @@ func configure(mode: String, basis_snapshot: Dictionary = {}, control_frame: Dic
 	_requested_layout = layout
 	if _detached_layout and layout == LAYOUT_WIDE:
 		layout = LAYOUT_RAIL
-	var legend := layout in [LAYOUT_RAIL, LAYOUT_WIDE]
+	var legend := layout != LAYOUT_DECK
 	var groups: Array = authority.play_legend_groups(mode, basis_snapshot, control_frame) if legend else authority.piece_control_groups(mode, basis_snapshot, control_frame)
 	if practice:
 		groups = authority.explorer_profile(int(mode.trim_prefix("live_").trim_suffix("d")), basis_snapshot, control_frame).piece_groups
@@ -208,6 +209,43 @@ func _rebuild() -> void:
 		child.queue_free()
 	_glyphs.clear()
 	_resort_host.call_deferred()
+	if _layout == LAYOUT_COMPACT:
+		var spatial := _mode in ["live_3d", "live_4d"]
+		for group in _groups:
+			var role := str(group.get("cockpit_role", ""))
+			# The spatial footer is two keycaps tall, so single-key rows pair up
+			# into columns instead of pushing the last entries onto a new line.
+			var pair: VBoxContainer = null
+			for item in _merged_items(group.get("items", [])):
+				var semantic := _semantic_row(role, item)
+				var spatial_rotation := role == "rotate" and spatial
+				var stack_moves := role == "translate" and spatial
+				var paired := spatial and not spatial_rotation and not stack_moves
+				var row := _rotation_row(semantic, 0.0) if spatial_rotation else _legend_row(semantic, 0.0, "", stack_moves or paired)
+				if paired:
+					row.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_1)
+					row.size_flags_horizontal = Control.SIZE_FILL
+					(row.get_node("LegendOperation") as Label).size_flags_horizontal = Control.SIZE_FILL
+					if pair == null:
+						pair = VBoxContainer.new()
+						pair.name = "LegendPair__%s" % role
+						pair.mouse_filter = Control.MOUSE_FILTER_IGNORE
+						pair.add_theme_constant_override("separation", 0)
+						pair.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+						_groups_box.add_child(pair)
+						pair.add_child(row)
+					else:
+						pair.add_child(row)
+						pair = null
+					continue
+				if role == "translate":
+					_add_inline_movement_arrows(row, semantic["semantic"])
+				row.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_1)
+				row.size_flags_horizontal = Control.SIZE_FILL
+				(row.get_node("LegendOperation") as Label).size_flags_horizontal = Control.SIZE_FILL
+				_groups_box.add_child(row)
+		rebuilt.emit()
+		return
 	if _layout in [LAYOUT_RAIL, LAYOUT_WIDE]:
 		_rebuild_rail()
 		rebuilt.emit()
@@ -235,6 +273,26 @@ func _rebuild() -> void:
 		_groups_box.add_child(section)
 
 	rebuilt.emit()
+
+
+func _add_inline_movement_arrows(row: HBoxContainer, metadata: Dictionary) -> void:
+	var intents: Array = MOVE_INTENTS.get(str(metadata.get("cockpit_direction", "")), [])
+	var keys := row.get_node("LegendKeys") as BoxContainer
+	if intents.size() != 2 or keys.get_child_count() != 2:
+		# 2D already shows the arrow keys alongside the letter aliases.
+		return
+	var caps := keys.get_children()
+	for index in range(intents.size()):
+		var cap := caps[index] as Label
+		var glyph := ControlLegendGlyphScript.inline_arrow(str(intents[index]), cap)
+		var direction_row := HBoxContainer.new()
+		keys.add_child(direction_row)
+		cap.reparent(direction_row, false)
+		direction_row.add_child(glyph)
+		glyph.set_directions(_screen_directions)
+		_glyphs.append(glyph)
+	if metadata.get("cockpit_direction") != "slice":
+		row.get_node("LegendOperation").hide()
 
 
 # New rows measure at the default theme until the host styles them, so a rail
@@ -280,7 +338,7 @@ func _slice_positive_points_left() -> bool:
 
 
 func _set_layout(layout: String) -> void:
-	var next_layout := layout if layout in [LAYOUT_RAIL, LAYOUT_WIDE] else LAYOUT_DECK
+	var next_layout := layout if layout in [LAYOUT_RAIL, LAYOUT_WIDE, LAYOUT_COMPACT] else LAYOUT_DECK
 	_title.visible = next_layout == LAYOUT_DECK
 	if next_layout == _layout:
 		return
@@ -288,9 +346,9 @@ func _set_layout(layout: String) -> void:
 	# The rail and the 4D deck both scroll as a whole, so the legend must report
 	# its true height: a nested auto-scroll reports none, which left the deck
 	# sizing to a guess and the legend scrolling even when it had room.
-	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED if _layout in [LAYOUT_RAIL, LAYOUT_WIDE] else ScrollContainer.SCROLL_MODE_AUTO
+	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO if _layout == LAYOUT_DECK else ScrollContainer.SCROLL_MODE_DISABLED
 	for side in ["top", "bottom"]:
-		_margin.add_theme_constant_override("margin_%s" % side, 2 if _layout == LAYOUT_RAIL else 6)
+		_margin.add_theme_constant_override("margin_%s" % side, 2 if _layout in [LAYOUT_RAIL, LAYOUT_COMPACT] else 6)
 	var parent := _groups_box.get_parent()
 	parent.remove_child(_groups_box)
 	_groups_box.queue_free()
@@ -299,13 +357,13 @@ func _set_layout(layout: String) -> void:
 
 
 func _new_groups_box(layout: String) -> Container:
-	if layout == LAYOUT_WIDE:
+	if layout in [LAYOUT_WIDE, LAYOUT_COMPACT]:
 		# Sections wrap onto another line in a narrow window rather than forcing
 		# the deck wider than the window.
 		var flow := HFlowContainer.new()
 		flow.name = "PieceControlGroups"
 		flow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		flow.add_theme_constant_override("h_separation", ShellDesignTokensScript.SPACE_4)
+		flow.add_theme_constant_override("h_separation", ShellDesignTokensScript.SPACE_3 if layout == LAYOUT_COMPACT else ShellDesignTokensScript.SPACE_4)
 		flow.add_theme_constant_override("v_separation", ShellDesignTokensScript.SPACE_2)
 		return flow
 	var box: BoxContainer = VBoxContainer.new() if layout == LAYOUT_RAIL else HBoxContainer.new()
@@ -360,13 +418,14 @@ func _build_spatial_legend(rows_by_role: Dictionary) -> void:
 	# The wide deck wraps whole sections instead: a flow nested in a flow only
 	# ever gets its minimum width, so it would always wrap.
 	var wide := _layout == LAYOUT_WIDE
+	var game_rail := _layout == LAYOUT_RAIL and not _practice and bool(get_meta("shell_chrome", false))
 	var move_body: Container = HBoxContainer.new() if wide else HFlowContainer.new()
 	move_body.name = "LegendMoveBody"
 	move_body.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if wide:
 		move_body.add_theme_constant_override("separation", ShellDesignTokensScript.SPACE_3)
 	else:
-		move_body.add_theme_constant_override("h_separation", ShellDesignTokensScript.SPACE_3)
+		move_body.add_theme_constant_override("h_separation", ShellDesignTokensScript.SPACE_1 if game_rail else ShellDesignTokensScript.SPACE_3)
 		move_body.add_theme_constant_override("v_separation", ShellDesignTokensScript.SPACE_1)
 	move.add_child(move_body)
 	var compass_keys: Array = []
@@ -402,7 +461,7 @@ func _build_spatial_legend(rows_by_role: Dictionary) -> void:
 			vertical["operation"] = "Up / Down"
 			move_column.add_child(_legend_row(vertical, cap_width * 2.0))
 	for semantic in rows_by_role.get("drop", []):
-		move_column.add_child(_legend_row(semantic, cap_width * 2.0))
+		move_column.add_child(_legend_row(semantic, 0.0 if game_rail else cap_width * 2.0))
 	_groups_box.add_child(move)
 
 	var rotate := PassiveControlComponentsScript.section("ROTATE", "rotate", _density)
@@ -488,21 +547,28 @@ func _compact_rows(rows: Array) -> HFlowContainer:
 
 
 # Spatial legends size to their words: a trimmed verb would leave only the key.
-func _legend_row(semantic: Dictionary, key_column: float, tag := "") -> HBoxContainer:
-	var row := PassiveControlComponentsScript.key_first_row(str(semantic["operation"]), str(semantic["binding"]), str(semantic["role"]), key_column, tag)
+func _legend_row(semantic: Dictionary, key_column: float, tag := "", stacked := false) -> HBoxContainer:
+	var row := PassiveControlComponentsScript.key_first_row(str(semantic["operation"]), str(semantic["binding"]), str(semantic["role"]), key_column, tag, stacked)
 	(row.get_node("LegendOperation") as Label).text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 	return row
 
 
 func _rotation_row(semantic: Dictionary, key_column: float) -> HBoxContainer:
 	var plane := _rotation_plane(semantic)
-	# Plane names stay as a reference tag where the rail has room for them.
-	var row := _legend_row(semantic, key_column, "" if _layout == LAYOUT_WIDE else plane)
+	var inline := _layout == LAYOUT_COMPACT
+	# The compact footer uses the plane as its short label and keeps the verb on hover.
+	var row := _legend_row(semantic, key_column, plane if _layout == LAYOUT_RAIL else "", inline)
+	if inline:
+		var operation := row.get_node("LegendOperation") as Label
+		row.mouse_filter = Control.MOUSE_FILTER_PASS
+		row.tooltip_text = "%s · %s" % [operation.text, plane]
+		operation.text = plane
 	var keys := row.get_node("LegendKeys")
-	var glyph := ControlLegendGlyphScript.plane(Array(plane.to_lower().split("")), keys.get_child(0) as Label)
+	var glyph := ControlLegendGlyphScript.plane(Array(plane.to_lower().split("")), keys.get_child(0) as Label, inline, not inline or _mode == "live_4d")
 	glyph.name = "LegendPlaneGlyph__%s" % plane
 	row.add_child(glyph)
 	row.move_child(glyph, 1)
+	glyph.set_directions(_screen_directions)
 	_glyphs.append(glyph)
 	return row
 

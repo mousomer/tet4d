@@ -103,12 +103,22 @@ language above. The tesseract (all-W overlay) and projection views in
 concept C's "4D View" selector are deferred to a later stage. They are not
 part of this adoption.
 
-## Open item: main menu
+## Cockpit layout choices
 
-The images show only in-game screens. What the player lands on at launch (a
-menu screen, or the last mode with the top bar) is **not yet decided**. P3
-needs an owner decision or a further concept image before it changes the main
-menu.
+**Concept A** is the default. NEXT, HOLD and stats stack at the right,
+and the controls sit in the footer. **Concept B** moves the stats into
+the header and places the control legend beside the board. Both layouts
+use the same status footer and the separate W-slice matrix in 4D.
+Choose the layout under Settings → Display → Cockpit Layout. The choice is
+saved locally. Older design exports can omit the layout preference.
+
+## Launch screen
+
+Open directly into the cockpit. A fresh profile opens Play · 2D.
+Later launches restore the last Play or Explore view and the selected
+2D, 3D or 4D dimension. Play shows the ready board with a Start action.
+Gravity and piece actions begin only after Start. The saved selection
+contains the view and dimension.
 
 ## What stays fixed
 

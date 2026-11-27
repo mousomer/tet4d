@@ -49,6 +49,13 @@ Primary implementation and maintenance files:
 23. `config/help/topics.json`
 24. `config/help/action_map.json`
 
+## Godot game startup
+
+The Godot game opens directly into its cockpit. A fresh profile opens Play
+in 2D. Subsequent launches restore the last Play or Explore view and
+dimension. Play waits at a ready board for Start before gravity and piece
+actions begin. The Designer uses its own bootstrap.
+
 ## 2. Design Goals
 
 1. Readable at a glance, with clear hierarchy and focus state.

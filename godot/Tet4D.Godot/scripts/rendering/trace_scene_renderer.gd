@@ -35,6 +35,8 @@ var _last_case_id := ""
 var _last_frame_index := -1
 var _particle_trails: Dictionary = {}
 var _presentation := BoardPresentationModelScript.new()
+var _slice_gutter_scale := 1.0
+var _slice_label_side_pad := ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
 var _last_bounds: Dictionary = {"ok": false}
 var _live_4d_basis = SliceBasis4DScript.identity()
 var _live_4d_local_orientation = SliceLocalOrientationScript.new()
@@ -162,6 +164,12 @@ func live_4d_basis_snapshot() -> Dictionary:
 	return snapshot
 
 
+# The game cockpit draws 4D slices closer together than the canonical spacing.
+func set_slice_spacing(gutter_scale: float, label_side_pad: float) -> void:
+	_slice_gutter_scale = gutter_scale
+	_slice_label_side_pad = label_side_pad
+
+
 func render_snapshot(snapshot: Dictionary) -> void:
 	render_interpolated_snapshot(snapshot, {}, 0.0)
 
@@ -176,7 +184,12 @@ func render_interpolated_snapshot(snapshot: Dictionary, next_snapshot: Dictionar
 	_last_case_id = case_id
 	_last_frame_index = frame_index
 
-	var presentation_basis = _live_4d_basis if str(snapshot.get("trace_type", "")) == "live_4d" else null
+	var is_live_4d := str(snapshot.get("trace_type", "")) == "live_4d"
+	var presentation_basis = _live_4d_basis if is_live_4d else null
+	_presentation.set_slice_spacing(
+		_slice_gutter_scale if is_live_4d else 1.0,
+		_slice_label_side_pad if is_live_4d else ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD
+	)
 	_presentation.configure(
 		snapshot,
 		presentation_basis,
@@ -391,11 +404,11 @@ func presented_board_shape() -> Array:
 
 # Render-effective per-slice boxes, transformed exactly as current_bounds()
 # transforms the collection AABB so both describe the same rendered geometry.
-func current_content_boxes() -> Array:
+func current_content_boxes(include_fit_padding: bool = true) -> Array:
 	if not _last_bounds.get("ok", false) or _presentation == null:
 		return []
 	var boxes: Array = []
-	for box in _presentation.content_slice_boxes():
+	for box in _presentation.content_slice_boxes(include_fit_padding):
 		boxes.append({
 			"min": (box.get("min", Vector3.ZERO) as Vector3) * scale + position,
 			"max": (box.get("max", Vector3.ZERO) as Vector3) * scale + position,

@@ -121,6 +121,7 @@ var _compacted: Array[String] = []
 var _fit_states: Dictionary = {}
 var _placement := PLACEMENT_BELOW
 var _requested_placement := PLACEMENT_BELOW
+var _full_width_deck := false
 
 signal designer_geometry_changed(rects: Dictionary)
 
@@ -289,7 +290,8 @@ func _queue_deck_metrics_check() -> void:
 		_layout_coordinator.request_metrics()
 
 
-func set_deck_placement(placement: String) -> void:
+func set_deck_placement(placement: String, full_width_deck: bool = false) -> void:
+	_full_width_deck = full_width_deck
 	_requested_placement = placement if placement in [PLACEMENT_SIDE, PLACEMENT_SPLIT] else PLACEMENT_BELOW
 	_apply_responsive_policy()
 
@@ -734,7 +736,7 @@ func _reset_fit() -> void:
 func _place_split_deck() -> void:
 	var narrowed := _layout_size.x - DECK_HORIZONTAL_INSET - side_scroll.custom_minimum_size.x - float(SIDE_RAIL_GAP)
 	narrowed -= deck_scroll.get_v_scroll_bar().get_combined_minimum_size().x
-	var full_height := _layout_size.x > 1.0 and _legend_single_line_width() <= narrowed
+	var full_height := not _full_width_deck and _layout_size.x > 1.0 and _legend_single_line_width() <= narrowed
 	var host: Container = board_column if full_height else self
 	if full_height != _split_full_height or control_deck.get_parent() != host:
 		_split_full_height = full_height

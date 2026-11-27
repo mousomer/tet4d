@@ -96,6 +96,25 @@
       "persist": true
     },
     {
+      "id": "display.cockpit_layout",
+      "label": "Cockpit Layout",
+      "description": "Choose footer controls or header stats and side controls.",
+      "category": "display",
+      "value_type": "enum",
+      "control_type": "dropdown",
+      "default": "concept_a",
+      "options": [
+        {"value": "concept_a", "label": "Concept A · Footer Controls"},
+        {"value": "concept_b", "label": "Concept B · Header Stats"}
+      ],
+      "semantic_owner": "HUD_PRESENTATION",
+      "accessibility_classification": "accessibility_composable",
+      "runtime_applicability": ["shell"],
+      "authority": "godot_shell",
+      "persistence": "local_shell",
+      "persist": true
+    },
+    {
       "id": "display.board_detail",
       "label": "Cell Outline Strength",
       "description": "Adjusts active, locked, and Ghost cell outlines without changing board geometry or gameplay.",

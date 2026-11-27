@@ -14,8 +14,10 @@ Prepared: 2026-11-24
   hue at higher transparency; overall closer to the images than to the
   current game.
 - 4D stays a W-slice matrix. The tesseract and projection views are deferred.
-- Layout: concept A (right column plus controls footer) with concept B's
-  status line in the footer.
+- Layout: Concept A is the default (right column and controls footer).
+  Concept B is selectable (header stats and side controls). Both use the
+  status footer and the separate W-slice matrix. The layout preference is
+  independent of color theme.
 - The 2026-10-25 cockpit and Main Menu layout lock is reopened for this
   redesign. `test_locked_shell_layouts.gd` is re-baselined in the same PR
   that changes the layout (P3), never earlier and never weakened.
@@ -128,7 +130,13 @@ describes the older "calm instrument" look.
 - Depends on Explorer Phase 3 (`docs/plans/explorer_cockpit_unification.md`)
   being merged first, because both edit `live_cockpit.gd`, `replay_hud.gd`
   and `practice_explorer_panel.gd`.
-- Depends on the owner's main-menu decision (open item in the spec).
+- Launch decision (owner approved 2026-11-26): open directly into the
+  cockpit. A fresh profile opens Play · 2D. Later launches restore the
+  last Play or Explore view and its dimension. Play opens ready and waits
+  for Start before gravity or piece actions begin. Restore the selection
+  only, without restoring a previous run.
+- First implementation slice: launch routing, selection persistence and
+  Start. The cockpit layout and its visual acceptance follow within P3.
 - Top bar (brand, Play / Explore / Settings / Help, 2D/3D/4D group); right
   column with NEXT, HOLD and stats; footer with the controls legend and the
   status line; the board as large as the window allows.
@@ -137,9 +145,32 @@ describes the older "calm instrument" look.
   existing `LiveCockpit`, `CockpitLayoutPolicy` and `LiveInputContract`
   groups. Dimensions differ only in which groups and labels the descriptors
   provide.
+- The owner approved both layouts on 2026-11-26 and confirmed Concept A as
+  the default. Windowed comparisons for all three dimensions are in
+  `docs/design/screenshots/graphical_language_p3/`.
+  Concept A uses the stacked right column and full-width
+  controls footer. Concept B uses the same previews with header stats and a
+  scrollable controls rail. Both keep the status footer. The Designer retains
+  its editing layout. On narrow windows, A uses the existing deck fallback.
 - Re-baseline `test_locked_shell_layouts.gd` in this PR with the
   owner-accepted rectangles, keeping its reachability, no-clipping, focus and
   small-window checks.
+- P3 review checks cover the projected well outline without spawn headroom
+  and complete legends at the standard capture window. The owner confirmed
+  compact footer controls with inline movement arrows and rotation-plane
+  glyphs for A. Stack each spatial key pair vertically beside its cue. During Play,
+  give the board full brightness, then the helper, previews and finally chrome.
+  Preserve full contrast in accessibility mode. Use the
+  grouped legend with MOVE compass and rotation-plane glyphs and labels for B. Concept B pairs NEXT and HOLD
+  across one row in 3D/4D to fit the legend at standard scale.
+  Full-size ready and seeded midgame captures show both layout choices.
+  Caption checks cover paired preview cards, and inline arrow sizing lives
+  in graphical-language config. Canonical labels read W slice 1, W slice 2,
+  and so on. Other basis orientations retain their signed axis.
+  The game gives more space to the well and narrows the live 4D slice gutters.
+  Replay keeps canonical spacing. The 3D well retains the Stage 58B
+  allocation floor at 1280 × 720.
+  Smaller windows may scroll the helper deck.
 - Retire the `plain` and `tron` themes; keep `diagnostic` and High Contrast.
 
 ### P4 — 4D views (deferred)

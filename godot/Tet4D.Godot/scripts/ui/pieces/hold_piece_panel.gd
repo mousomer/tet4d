@@ -10,6 +10,8 @@ var _model = PieceThumbnailModelScript.new()
 var _thumbnail
 var _piece_label: Label
 var _status_label: Label
+var _caption_gain := 1.0
+var _status_inline := false
 var _preview_signature := ""
 var _available := true
 var _margin: MarginContainer
@@ -94,11 +96,33 @@ func set_hold_state(payload: Dictionary, available: bool) -> bool:
 
 
 func _render_state() -> void:
-	_status_label.text = "Available · C" if _available else "Used until lock"
+	if _status_inline:
+		_status_label.text = "Free" if _available else "Used"
+	else:
+		_status_label.text = "Available · C" if _available else "Used until lock"
 	modulate = Color.WHITE if _available else Color(0.78, 0.78, 0.78, 1.0)
+	var caption := _caption_gain / modulate.r
+	_status_label.modulate = Color(caption, caption, caption)
 	if not _model.is_available() and _piece_label.text != "—":
 		_piece_label.text = "EMPTY"
 		_piece_label.tooltip_text = ""
+
+
+func set_status_inline(enabled: bool) -> void:
+	if _status_inline == enabled:
+		return
+	_status_inline = enabled
+	PiecePreviewLayoutScript.set_status_inline(_status_label, _piece_label.get_parent(), _content, enabled)
+	_render_state()
+
+
+func set_show_empty_slot(enabled: bool) -> void:
+	_thumbnail.set_show_empty_slot(enabled)
+
+
+func set_show_piece_id(enabled: bool) -> void:
+	_piece_label.visible = enabled
+	_thumbnail.set_show_slice_offsets(enabled)
 
 
 func set_style_manager(style_manager) -> void:
@@ -120,3 +144,9 @@ func deterministic_snapshot() -> Dictionary:
 		"model": _model.deterministic_snapshot(),
 		"thumbnail": _thumbnail.deterministic_snapshot(),
 	}
+
+# The cockpit dims this panel during Play; the caption is already muted text,
+# so it is lifted back by the same factor to stay readable.
+func set_caption_gain(gain: float) -> void:
+	_caption_gain = gain
+	_render_state()

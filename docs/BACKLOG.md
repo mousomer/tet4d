@@ -31,6 +31,19 @@ Completed chronology is recoverable from Git, merged PRs, CI, and
 
 ## Active Work
 
+- P3 review: recover board height, lock standard-window legend visibility,
+  highlight Start and retain full-size Ready and seeded midgame evidence for
+  both layouts, with vertical spatial key pairs and inline glyphs in A, board-first brightness, and the
+  grouped legend in B.
+  Preserve live-only tighter W spacing and the 1280 × 720 3D allocation
+  floor when integrating the reviewed cockpit refinements.
+
+- Graphical language P3: implement direct cockpit launch with Play · 2D
+  defaults, last Play/Explore view and dimension, and explicit Start in Play.
+  Lock the approved Concept A cockpit and cover the selectable Concept B
+  layout, with separate W slices in both. Adoption and remaining scope are defined in
+  `docs/plans/graphical_language_adoption.md`.
+
 - Explorer 2D relative movement: reconnect horizontal keyboard intents and
   their helper directions to the existing shared control-frame mapper. Preserve
   native board-coordinate transport and explicit absolute-frame preferences. Pin

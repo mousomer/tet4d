@@ -13,13 +13,17 @@ class_name ControlLegendGlyph
 #   slice-row marker for W, with the two directions a rotation mixes lit.
 
 const KIND_COMPASS := "compass"
+const KIND_INLINE_ARROW := "inline_arrow"
+const GraphicalLanguageConfigScript = preload("res://scripts/ui/style/graphical_language_config.gd")
 const KIND_PLANE := "plane"
-const COMPASS_ARROW := 34.0
-const PLANE_SIZE := 30.0
 
 var kind := KIND_PLANE
+var _glyph_extent := 0.0
+var _plane_marker_scale := 1.0
+var _show_w_marker := true
 # Compass: [{"intent": String, "key": String}] in display order.
 var compass_keys: Array = []
+var movement_intent := ""
 # Plane: lowercase local axes the rotation mixes, e.g. ["x", "w"].
 var plane_axes: Array = []
 var _directions: Dictionary = {}
@@ -32,7 +36,8 @@ static func compass(keys: Array, color_source_factory: Callable) -> ControlLegen
 	glyph.name = "LegendCompass"
 	glyph.kind = KIND_COMPASS
 	glyph.compass_keys = keys.duplicate(true)
-	glyph.custom_minimum_size = Vector2(COMPASS_ARROW * 2.0 + 84.0, COMPASS_ARROW * 2.0 + 64.0)
+	glyph._glyph_extent = GraphicalLanguageConfigScript.number("cockpit.compass_arrow_length")
+	glyph.custom_minimum_size = Vector2.ONE * (glyph._glyph_extent * 2.0) + Vector2(84.0, 64.0)
 	for entry in keys:
 		var cap: Label = color_source_factory.call(str(entry["key"]))
 		glyph._keycaps[str(entry["intent"])] = cap
@@ -42,12 +47,27 @@ static func compass(keys: Array, color_source_factory: Callable) -> ControlLegen
 	return glyph
 
 
-static func plane(axes: Array, color_source: Label) -> ControlLegendGlyph:
+static func inline_arrow(intent: String, color_source: Label) -> ControlLegendGlyph:
+	var glyph := ControlLegendGlyph.new()
+	glyph.name = "LegendInlineArrow__%s" % intent
+	glyph.kind = KIND_INLINE_ARROW
+	glyph.movement_intent = intent
+	glyph._color_source = color_source
+	glyph.custom_minimum_size = Vector2.ONE * GraphicalLanguageConfigScript.number("cockpit.inline_arrow.size")
+	return glyph
+
+
+static func plane(axes: Array, color_source: Label, inline: bool = false, include_w: bool = true) -> ControlLegendGlyph:
 	var glyph := ControlLegendGlyph.new()
 	glyph.name = "LegendPlaneGlyph"
 	glyph.kind = KIND_PLANE
 	glyph.plane_axes = axes.duplicate()
-	glyph.custom_minimum_size = Vector2(PLANE_SIZE + 8.0, PLANE_SIZE)
+	var standard_size := GraphicalLanguageConfigScript.number("cockpit.plane_glyph_size")
+	glyph._glyph_extent = GraphicalLanguageConfigScript.number("cockpit.inline_plane_glyph_size") if inline else standard_size
+	glyph._plane_marker_scale = glyph._glyph_extent / standard_size
+	glyph._show_w_marker = include_w
+	var marker_width := GraphicalLanguageConfigScript.number("cockpit.plane_w_marker.reserve") * glyph._plane_marker_scale if include_w else 0.0
+	glyph.custom_minimum_size = Vector2(glyph._glyph_extent + marker_width, glyph._glyph_extent)
 	glyph._color_source = color_source
 	return glyph
 
@@ -83,7 +103,7 @@ func _place_keycaps() -> void:
 		var cap_size := cap.get_combined_minimum_size()
 		cap.size = cap_size
 		# Past the arrow tip, pushed out by half the cap so it never covers the arrow.
-		var reach := COMPASS_ARROW + 6.0 + 0.5 * absf(direction.x) * cap_size.x + 0.5 * absf(direction.y) * cap_size.y
+		var reach := _glyph_extent + 6.0 + 0.5 * absf(direction.x) * cap_size.x + 0.5 * absf(direction.y) * cap_size.y
 		cap.position = center + direction * reach - cap_size * 0.5
 
 
@@ -93,17 +113,25 @@ func _lit_color() -> Color:
 
 func _draw() -> void:
 	var lit := _lit_color()
+	if kind == KIND_INLINE_ARROW:
+		var direction: Vector2 = _directions.get(movement_intent, Vector2.ZERO)
+		if direction != Vector2.ZERO:
+			var center := size * 0.5
+			var half_span := direction * (custom_minimum_size.x * GraphicalLanguageConfigScript.number("cockpit.inline_arrow.span_factor"))
+			_arrow(center - half_span, center + half_span, lit, GraphicalLanguageConfigScript.number("cockpit.inline_arrow.line_width"))
+		return
 	if kind == KIND_COMPASS:
 		var center := size * 0.5
 		draw_circle(center, 3.0, lit)
 		for intent in _keycaps:
 			var direction: Vector2 = _directions.get(intent, Vector2.ZERO)
 			if direction != Vector2.ZERO:
-				_arrow(center, center + direction * COMPASS_ARROW, lit, 2.5)
+				_arrow(center, center + direction * _glyph_extent, lit, 2.5)
 		return
 	var dim := Color(lit, 0.28)
-	var center := Vector2(PLANE_SIZE * 0.5, PLANE_SIZE * 0.5)
-	var reach := PLANE_SIZE * 0.42
+	var vertical_offset := (size.y - _glyph_extent) * 0.5 if _plane_marker_scale != 1.0 else 0.0
+	var center := Vector2(_glyph_extent * 0.5, _glyph_extent * 0.5 + vertical_offset)
+	var reach := _glyph_extent * GraphicalLanguageConfigScript.number("cockpit.plane_glyph_reach")
 	for axis in ["x", "y", "z"]:
 		var direction: Vector2 = _directions.get(axis, Vector2.ZERO)
 		if direction == Vector2.ZERO:
@@ -111,11 +139,19 @@ func _draw() -> void:
 		var on: bool = axis in plane_axes
 		# Rotations have no single direction here, so lit axes are two-sided lines.
 		draw_line(center - direction * reach, center + direction * reach, lit if on else dim, 3.0 if on else 1.5, true)
-	if _directions.has("w"):
+	if _show_w_marker and _directions.has("w"):
 		# W has no screen direction of its own: it is the row of slice boards.
 		var on: bool = "w" in plane_axes
-		for index in range(3):
-			var box := Rect2(Vector2(PLANE_SIZE + 1.0, 6.0 + float(index) * 7.0), Vector2(6.0, 5.0))
+		var marker := "cockpit.plane_w_marker."
+		var box_size := Vector2(GraphicalLanguageConfigScript.number(marker + "box_width"), GraphicalLanguageConfigScript.number(marker + "box_height"))
+		for index in range(GraphicalLanguageConfigScript.integer(marker + "boxes")):
+			var box := Rect2(
+				Vector2(
+					_glyph_extent + GraphicalLanguageConfigScript.number(marker + "gap") * _plane_marker_scale,
+					vertical_offset + (GraphicalLanguageConfigScript.number(marker + "top") + float(index) * GraphicalLanguageConfigScript.number(marker + "pitch")) * _plane_marker_scale
+				),
+				box_size * _plane_marker_scale
+			)
 			if on:
 				draw_rect(box, lit, true)
 			else:

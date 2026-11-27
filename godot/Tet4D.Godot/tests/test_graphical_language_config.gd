@@ -13,6 +13,7 @@ func run() -> Array:
 	failures.append_array(ConfigScript.validate())
 	var shipped: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(ConfigScript.CONFIG_PATH))
 	for broken in [
+		["drop arrow width", func(doc: Dictionary) -> void: doc["cockpit"]["inline_arrow"].erase("line_width"), "cockpit.inline_arrow.line_width"],
 		["drop a number", func(doc: Dictionary) -> void: doc["luminous"]["board"]["halo"].erase("alpha"), "luminous.board.halo.alpha"],
 		["number as text", func(doc: Dictionary) -> void: doc["luminous"]["board"]["active"]["cell_emission"] = "bright", "luminous.board.active.cell_emission"],
 		["drop a face", func(doc: Dictionary) -> void: doc["luminous"]["board"]["locked"]["face_shades"].erase("top"), "luminous.board.locked.face_shades.top"],

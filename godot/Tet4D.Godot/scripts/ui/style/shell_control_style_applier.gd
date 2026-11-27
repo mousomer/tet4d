@@ -43,6 +43,9 @@ func apply_panel(panel: Control, style_manager, elevated: bool = false) -> void:
 	var padding := ShellDesignTokensScript.CONTROL_PADDING if panel.name in ["LivePieceControlStrip", "LiveViewControlStrip"] else ShellDesignTokensScript.COMPACT_PADDING
 	if _is_shell_chrome(panel):
 		padding = ShellDesignTokensScript.CHROME_CONTROL_PADDING
+	# The game cockpit gives the board frame's padding to the board itself.
+	if panel.has_meta("cockpit_frame_padding"):
+		padding = int(panel.get_meta("cockpit_frame_padding"))
 	var style := _panel_box(style_manager, background_role, border_role, padding)
 	panel.add_theme_stylebox_override("panel", style)
 	panel.set_meta("shell_style_theme_id", style_manager.get_theme_id())
@@ -138,7 +141,11 @@ func _apply_label(label: Label, style_manager) -> void:
 		label.add_theme_font_size_override("font_size", _font_size(label, maxi(label.get_theme_font_size("font_size"), ShellDesignTokensScript.FONT_SUPPORTING)))
 	if label.theme_type_variation == "KeycapLabel":
 		label.add_theme_font_size_override("font_size", _font_size(label, ShellDesignTokensScript.FONT_CONTROL_HINT))
-		label.add_theme_stylebox_override("normal", _keycap_box(style_manager))
+		var box := _keycap_box(style_manager)
+		if label.has_meta("stacked_keycap"):
+			box.content_margin_top = ShellDesignTokensScript.BORDER_STANDARD
+			box.content_margin_bottom = ShellDesignTokensScript.BORDER_STANDARD
+		label.add_theme_stylebox_override("normal", box)
 	elif label.name.find("StatusBadge") >= 0:
 		var badge_border := ShellStyleRolesScript.ACCENT_PRIMARY
 		match label.theme_type_variation:

@@ -10,6 +10,8 @@ var _model = PieceThumbnailModelScript.new()
 var _thumbnail
 var _piece_label: Label
 var _status_label: Label
+var _caption_gain := 1.0
+var _status_inline := false
 var _preview_signature := ""
 var _margin: MarginContainer
 var _content: VBoxContainer
@@ -77,9 +79,28 @@ func set_preview(payload: Dictionary) -> bool:
 		_thumbnail.set_model(_model)
 	_piece_label.text = _model.piece_name
 	_piece_label.tooltip_text = _model.piece_name
-	_status_label.text = "%dD · %d cells" % [_model.dimension, _model.canonical_cells.size()]
+	_update_status()
 	PiecePreviewLayoutScript.apply_compact(self, _margin, _content, _thumbnail, _model.dimension)
 	return true
+
+
+func set_status_inline(enabled: bool) -> void:
+	if _status_inline == enabled:
+		return
+	_status_inline = enabled
+	PiecePreviewLayoutScript.set_status_inline(_status_label, _piece_label.get_parent(), _content, enabled)
+	if _model.is_available():
+		_update_status()
+
+
+func _update_status() -> void:
+	var cell_count: int = _model.canonical_cells.size()
+	_status_label.text = "%d cells" % cell_count if _status_inline else "%dD · %d cells" % [_model.dimension, cell_count]
+
+
+func set_show_piece_id(enabled: bool) -> void:
+	_piece_label.visible = enabled
+	_thumbnail.set_show_slice_offsets(enabled)
 
 
 func set_style_manager(style_manager) -> void:
@@ -100,3 +121,9 @@ func deterministic_snapshot() -> Dictionary:
 		"model": _model.deterministic_snapshot(),
 		"thumbnail": _thumbnail.deterministic_snapshot(),
 	}
+
+# The cockpit dims this panel during Play; the caption is already muted text,
+# so it is lifted back by the same factor to stay readable.
+func set_caption_gain(gain: float) -> void:
+	_caption_gain = gain
+	_status_label.modulate = Color(gain, gain, gain)

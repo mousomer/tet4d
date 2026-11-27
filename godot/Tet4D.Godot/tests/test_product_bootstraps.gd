@@ -2,6 +2,8 @@ extends RefCounted
 
 const GAME_SCENE := preload("res://scenes/game_bootstrap.tscn")
 const DESIGNER_SCENE := preload("res://scenes/designer_bootstrap.tscn")
+const GraphicalLanguageConfigScript = preload("res://scripts/ui/style/graphical_language_config.gd")
+const ReplayVisuals = preload("res://scripts/ui/replay_visuals.gd")
 
 
 func run() -> Array:
@@ -9,7 +11,9 @@ func run() -> Array:
 	var tree := Engine.get_main_loop() as SceneTree
 	if tree == null:
 		return ["product bootstrap test requires a SceneTree"]
+	var launch_path := "user://test_product_bootstrap_launch_%d.cfg" % Time.get_ticks_usec()
 	var game_root := GAME_SCENE.instantiate()
+	game_root.get_node("App")._launch_view_path = launch_path
 	tree.root.add_child(game_root)
 	for _index in range(4):
 		await tree.process_frame
@@ -19,10 +23,76 @@ func run() -> Array:
 	elif game_app._is_designer_product() or game_app._mode != game_app.MODE_LIVE_2D:
 		failures.append("game bootstrap must enter playable Live 2D without Designer initialization")
 	var game_hud = game_root.get_node_or_null("ReplayHud")
-	if game_hud != null:
+	if game_app != null and game_hud != null:
+		_assert_p3_cockpit(game_hud, 2, failures)
+		var hash_before: String = game_app._live_bridge.live_state_hash(2)
+		game_app._process(60.0)
+		game_app._dispatch_live_command(game_app.MODE_LIVE_2D, "hard_drop")
+		if not game_app._live_mode_paused() or game_hud._restart_game_button.text != "Start · Enter" or game_hud._restart_game_button.get_meta("semantic_role", "") != "action_button":
+			failures.append("fresh Play must show Start on the ready board")
+		if game_app._live_bridge.live_state_hash(2) != hash_before:
+			failures.append("gravity and piece actions must wait for Start")
+		if not game_hud._restart_game_button.is_visible_in_tree():
+			failures.append("Start must be visible in the cockpit")
+		game_hud._cockpit_dimensions[1].pressed.emit()
+		_assert_p3_cockpit(game_hud, 3, failures)
+		if not game_app._waiting_to_start or not game_app._live_mode_paused():
+			failures.append("changing dimension must preserve the initial Start gate")
+		game_hud._restart_game_button.pressed.emit()
+		if game_app._live_mode_paused() or game_app._waiting_to_start:
+			failures.append("Start must release the launch gate")
 		_assert_game_hides_design_affordances(game_hud, failures)
 	game_root.queue_free()
 	await tree.process_frame
+
+	game_root = GAME_SCENE.instantiate()
+	game_root.get_node("App")._launch_view_path = launch_path
+	tree.root.add_child(game_root)
+	for _index in range(4):
+		await tree.process_frame
+	game_app = game_root.get_node("App")
+	if game_app._mode != game_app.MODE_LIVE_3D or not game_app._waiting_to_start:
+		failures.append("a returning Play profile must restore its dimension and wait for Start")
+	var accept := InputEventAction.new()
+	accept.action = "ui_accept"
+	accept.pressed = true
+	if not game_app._handle_live_input(accept) or game_app._waiting_to_start:
+		failures.append("the standard keyboard/controller accept action must Start Play")
+	game_hud = game_root.get_node("ReplayHud")
+	game_hud._cockpit_dimensions[2].pressed.emit()
+	_assert_p3_cockpit(game_hud, 4, failures)
+	var live_gap: float = game_app._renderer._presentation.projection.mapper.layer_layout.horizontal_gap
+	game_app._enter_replay_mode()
+	var replay_gap: float = game_app._renderer._presentation.projection.mapper.layer_layout.horizontal_gap
+	var gutter_scale := GraphicalLanguageConfigScript.number("cockpit.board.slice_gutter_scale")
+	var replay_side_pad: float = game_app._renderer._presentation.projection.mapper.label_side_pad
+	if game_app._renderer.presented_board_shape().size() != 4 or not is_equal_approx(live_gap, replay_gap * gutter_scale):
+		failures.append("4D replay must restore the canonical slice gutter after live Play")
+	if not is_equal_approx(replay_side_pad, ReplayVisuals.W_SLICE_LABEL_BOUNDS_PAD):
+		failures.append("4D replay must restore canonical fit clearance beside the slices")
+	game_hud.live_4d_requested.emit()
+	var reopened_gap: float = game_app._renderer._presentation.projection.mapper.layer_layout.horizontal_gap
+	if not is_equal_approx(live_gap, reopened_gap):
+		failures.append("returning to live 4D must restore the tighter slice gutter")
+	game_hud._cockpit_explore.pressed.emit()
+	if not game_hud._cockpit_explore.button_pressed or game_hud._cockpit_stats.visible:
+		failures.append("Explorer must reuse cockpit navigation and replace the Play stats")
+	if not game_hud._cockpit_status.text.begins_with("Active: Explore 4D"):
+		failures.append("Explorer must report the active view in the shared status footer")
+	game_root.queue_free()
+	await tree.process_frame
+
+	game_root = GAME_SCENE.instantiate()
+	game_root.get_node("App")._launch_view_path = launch_path
+	tree.root.add_child(game_root)
+	for _index in range(4):
+		await tree.process_frame
+	game_app = game_root.get_node("App")
+	if game_app._practice == null or game_app._practice.dimension() != 4 or game_app._waiting_to_start:
+		failures.append("a returning Explore profile must open its dimension ready to explore")
+	game_root.queue_free()
+	await tree.process_frame
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(launch_path))
 
 	var designer_root := DESIGNER_SCENE.instantiate()
 	tree.root.add_child(designer_root)
@@ -39,6 +109,19 @@ func run() -> Array:
 	designer_root.queue_free()
 	await tree.process_frame
 	return failures
+
+
+func _assert_p3_cockpit(hud, dimension: int, failures: Array) -> void:
+	if not hud._cockpit_nav.visible or hud._top_bar.visible:
+		failures.append("%dD Play must use the P3 navigation" % dimension)
+	if not hud._cockpit_dimensions[dimension - 2].button_pressed:
+		failures.append("%dD Play must show its selected dimension" % dimension)
+	if hud._next_piece_panel._piece_label.visible or hud._hold_piece_panel._piece_label.visible:
+		failures.append("%dD Play must hide internal piece IDs" % dimension)
+	if not hud._cockpit_stats.visible or hud._piece_preview_row.columns != 1:
+		failures.append("%dD Play must share stacked previews and stats" % dimension)
+	if not hud._cockpit_footer.visible or not hud._cockpit_status.text.begins_with("Active: Play %dD" % dimension):
+		failures.append("%dD Play must publish status in the shared footer" % dimension)
 
 
 # Stage 56H-R3.3: the game product exposes only connected player actions. Its

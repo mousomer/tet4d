@@ -99,9 +99,10 @@ def validate_preset(
         )
     expected_ids = set(specs)
     actual_ids = set(properties)
-    if actual_ids != expected_ids:
-        unknown = sorted(actual_ids - expected_ids)
-        missing_properties = sorted(expected_ids - actual_ids)
+    unknown = sorted(actual_ids - expected_ids)
+    # Earlier schema-1 exports predate the shell's optional layout preference.
+    missing_properties = sorted(expected_ids - actual_ids - {"display.cockpit_layout"})
+    if unknown or missing_properties:
         raise ValidationError(
             "preset.json: property inventory mismatch"
             f"; unknown={unknown}; missing={missing_properties}"
