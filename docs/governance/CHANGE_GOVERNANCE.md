@@ -102,7 +102,7 @@ and `CURRENT_STATE.md`, 70 for each subtree dispatch, 300 for each canonical
 owner, and 250 for any active task record. `docs/BACKLOG.md` has no size limit:
 its lines are measured and reported, and open work is retired when it is
 completed or obsolete, never to satisfy a line count. The temporary
-human-governance diagnostic is 900 LOC. These limits retain their existing
+human-governance diagnostic is 1,000 LOC. These limits retain their existing
 human-reviewability, structural-discipline, and restart/handoff-usability
 rationales; they are not evidence of ordinary agent-context cost. Physical LOC
 is a provisional reviewability proxy: crossing a local or diagnostic limit
