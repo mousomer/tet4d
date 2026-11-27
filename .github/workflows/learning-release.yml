@@ -59,5 +59,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$TAG" dist/* --verify-tag --notes-from-tag \
+          # --latest=false: the repository's Latest release stays the game's.
+          gh release create "$TAG" dist/* --verify-tag --notes-from-tag --latest=false \
             --title "Tet4D learning material $TAG"
