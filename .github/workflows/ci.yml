@@ -635,6 +635,23 @@ jobs:
             tests/unit/engine/test_windows_packaging.py \
             tests/unit/engine/test_release_metadata.py
 
+  learning-master-guard:
+    name: Keep relocated learning material off master
+    if: github.event_name == 'pull_request' && github.base_ref == 'master'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Reject learning changes
+        run: |
+          changes=$(git diff --name-only origin/master...HEAD -- learning/)
+          if [[ -n "$changes" ]]; then
+            printf '%s\n' "$changes" >&2
+            echo "learning/ changes go to the learning branch; see learning/README.md#the-lock on that branch" >&2
+            exit 1
+          fi
+
   required-gate:
     name: CI required gate
     needs:
@@ -648,12 +665,15 @@ jobs:
       - platform-macos
       - integration
       - release-acceptance
+      - learning-master-guard
     if: always()
     runs-on: ubuntu-24.04
 
     steps:
       - name: Confirm every selected lane passed
         env:
+          IS_MASTER_PR: ${{ github.event_name == 'pull_request' && github.base_ref == 'master' }}
+          RESULT_LEARNING_GUARD: ${{ needs.learning-master-guard.result }}
           RESULT_PLAN: ${{ needs.plan.result }}
           SELECT_DOCS: ${{ needs.plan.outputs.lane_documentation_governance }}
           RESULT_DOCS: ${{ needs.documentation-governance.result }}
@@ -687,6 +707,7 @@ jobs:
               exit 1
             fi
           }
+          check_lane "$IS_MASTER_PR" "$RESULT_LEARNING_GUARD" "learning branch guard"
           check_lane "$SELECT_DOCS" "$RESULT_DOCS" "documentation/governance"
           check_lane "$SELECT_PYTHON" "$RESULT_PYTHON" "python"
           check_lane "$SELECT_NATIVE" "$RESULT_NATIVE" "native"
