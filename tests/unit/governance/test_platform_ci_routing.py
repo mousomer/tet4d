@@ -407,3 +407,11 @@ def test_master_learning_guard_rejects_only_learning_changes(tmp_path: Path) -> 
     )
     assert rejected.returncode == 1
     assert b"learning/ changes go to the learning branch" in rejected.stderr
+
+    git("update-ref", "refs/remotes/origin/master", "HEAD")
+    git("rm", "-q", "learning/probe.md")
+    git("commit", "-m", "remove learning from master")
+    removed = subprocess.run(
+        ["bash", "-e", "-c", script], cwd=tmp_path, capture_output=True, check=False
+    )
+    assert removed.returncode == 0, removed.stderr

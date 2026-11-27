@@ -643,9 +643,10 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
+      # Removing learning files from master is allowed; adding or changing them is not.
       - name: Reject learning changes
         run: |
-          changes=$(git diff --name-only origin/master...HEAD -- learning/)
+          changes=$(git diff --name-only --no-renames --diff-filter=d origin/master...HEAD -- learning/)
           if [[ -n "$changes" ]]; then
             printf '%s\n' "$changes" >&2
             echo "learning/ changes go to the learning branch; see learning/README.md#the-lock on that branch" >&2
