@@ -17,14 +17,17 @@ def corner_labels(m, name, sphere, adjacent_rp):
     return tips
 
 
-def playback_mesh(m, adjacent, faces, points):
+def square_coordinates(m):
     _, b, c = (m.nodes**2).T
-    square = np.vstack(
+    return np.vstack(
         (
             np.column_stack((b + c - 0.5, 0.5 - c)),
             np.column_stack((c - 0.5, 0.5 - b - c)),
         )
     )
+
+
+def playback_mesh(m, adjacent, faces, points):
     if adjacent:
         points = points * 0.86
     else:
@@ -34,7 +37,7 @@ def playback_mesh(m, adjacent, faces, points):
         )
         points = np.column_stack((points, heights))
     return {
-        "square": square.round(8).tolist(),
+        "square": square_coordinates(m).round(8).tolist(),
         "adjacent": adjacent,
         "points": points.round(7).tolist(),
         "faces": faces.tolist(),
@@ -94,11 +97,27 @@ def write_viewer(name, m, destination, filename):
                 )
             ],
         )
-    template = (Path(__file__).parent / "templates" / (name + ".html")).read_text()
+    write_page(name, m, model, destination / filename)
+
+
+def write_page(name, m, model, output):
+    templates = Path(__file__).parent / "templates"
+    template = (templates / (name + ".html")).read_text()
     if "RP2_PLAYBACK" in template:
-        playback = Path(__file__).parent / "templates" / "rp2-playback.js"
-        template = template.replace("RP2_PLAYBACK", playback.read_text())
+        template = template.replace(
+            "RP2_PLAYBACK", (templates / "rp2-playback.js").read_text()
+        )
+    else:
+        model["square"] = (2 * square_coordinates(m)).round(9).tolist()
+        equations = templates.parents[1] / "viewers" / "src" / "surfaces.js"
+        template = template.replace("GLUING_EQUATIONS", equations.read_text())
+        template = template.replace(
+            "GLUING_PLAYBACK", (templates / "gluing-playback.js").read_text()
+        )
+    template = template.replace(
+        "PLAYBACK_TRANSPORT", (templates / "transport.js").read_text()
+    )
     assert template.count("MESH_DATA") == 1
-    (destination / filename).write_text(
+    output.write_text(
         template.replace("MESH_DATA", json.dumps(model, separators=(",", ":")))
     )

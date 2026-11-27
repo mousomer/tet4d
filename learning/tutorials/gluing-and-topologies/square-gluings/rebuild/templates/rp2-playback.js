@@ -1,11 +1,8 @@
 // The first fold develops the square into a cone or a Möbius band. The
 // second closure interpolates to the Python renderer's actual tipped mesh.
-const timeline = document.getElementById('timeline');
-const play = document.getElementById('play');
-const phase = document.getElementById('phase');
-const duration = 24;
-let seconds = duration;
-let started = null;
+const firstJoin=8, secondStart=10, secondJoin=16;
+function onClosure() { section.checked=false; }
+PLAYBACK_TRANSPORT
 const adjacent = mesh.adjacent;
 const smooth = x => {
   const u = Math.max(0, Math.min(1, x));
@@ -40,39 +37,6 @@ function surfaceAt(fold, closure, separation) {
     return [target[0], target[1], z].map((v, k) => closedFold[i][k] * (1 - closure) + closure * v);
   });
 }
-function seek(value) {
-  const wasOpen = seconds < 16;
-  seconds = Math.min(duration, Math.max(0, value));
-  timeline.value = seconds;
-  phase.textContent = seconds < 8 ? 'Orange edges approaching' : seconds < 10 ? 'Orange seam joined'
-    : seconds < 16 ? 'Cyan edges approaching' : 'Both seams joined';
-  if (seconds >= 16 && (wasOpen || seconds === duration)) {
-    section.checked = false;
-    trace.checked = true;
-  }
-  if (seconds === duration) {
-    started = null;
-    play.textContent = 'Replay';
-  }
-  requestDraw();
-}
-function pause() {
-  started = null;
-  play.textContent = 'Play';
-}
-function togglePlayback() {
-  if (started !== null) { pause(); return; }
-  if (seconds === duration) seek(0);
-  started = performance.now() - seconds * 1000;
-  play.textContent = 'Pause';
-  requestDraw();
-}
-play.addEventListener('click', togglePlayback);
-timeline.addEventListener('input', () => { pause(); seek(Number(timeline.value)); });
-canvas.addEventListener('keydown', e => {
-  if (e.code === 'Space') { e.preventDefault(); togglePlayback(); }
-});
-
 const separation=document.getElementById("separate");
 separation?.addEventListener("input",requestDraw);
 

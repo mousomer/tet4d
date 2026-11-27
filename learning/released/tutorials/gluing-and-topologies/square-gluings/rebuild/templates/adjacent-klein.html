@@ -20,13 +20,17 @@
 </style>
 <main>
   <h1>Adjacent-edge Klein bottle</h1>
-  <p id="controls">Drag to rotate, or focus the model and use the arrow keys.</p>
+  <p id="controls">Drag or use the arrow keys to rotate at any stage. Use Space on the model to play or pause.</p>
   <canvas tabindex="0" aria-describedby="controls angles" aria-label="Rotatable Klein bottle with a smooth shared corner and a sheet crossing"></canvas>
   <footer>
     <button type="button">Reset view</button>
     <span class="a">Seam a · AB / DA</span>
     <span class="b">Seam b · BC / CD</span>
     <label><input type="checkbox" checked> Show glued seams</label>
+  </footer><footer>
+    <button id="play" type="button">Replay</button>
+    <label>Gluing time <input id="timeline" type="range" min="0" max="24" step=".04" value="24"></label>
+    <output id="phase" for="timeline">Both seams joined</output>
   </footer><footer>
 <label>Palette <input id="hue" type="range" min="0" max="360" value="0"></label>
 <label>Opacity <input id="opacity" type="range" min="8" max="100" value="40"></label>
@@ -51,18 +55,26 @@ const {faces,seams,tips} = mesh;
 const separation=document.getElementById("separate");
 separation.addEventListener("input",requestDraw);
 
-function draw() {
+GLUING_EQUATIONS
+const construction = SURFACES["klein-adjacent"];
+GLUING_PLAYBACK
+
+function draw(timestamp) {
+  if (started !== null) seek((timestamp - started) / 1000);
   pending = false;
   const {width, height} = canvas.getBoundingClientRect();
   const density = Math.min(devicePixelRatio || 1, 2);
   canvas.width = Math.round(width*density);
   canvas.height = Math.round(height*density);
   ctx.setTransform(density,0,0,density,0,0);
-  const ca = Math.cos(yaw), sa = Math.sin(yaw);
-  const ce = Math.cos(pitch), se = Math.sin(pitch);
+  const stage = playbackStage(seconds);
+  const azimuth = yaw - home.yaw * (1-stage.view) - .25 * stage.reveal;
+  const elevation = pitch - home.pitch * (1-stage.view);
+  const ca = Math.cos(azimuth), sa = Math.sin(azimuth);
+  const ce = Math.cos(elevation), se = Math.sin(elevation);
   const scale = Math.min(width*.30,height*.39);
-  const displacement=Number(separation.value)*.006;
-  const points=mesh.points.map(([x,y,z,w])=>[x,y,z+displacement*w]);
+  const points = stagePoints(stage);
+  const visibleSeams = stageSeams(stage);
   const screen = points.map(([x,y,z]) => {
     const a = ca*x+sa*z, b = -sa*x+ca*z;
     return [width/2+scale*a,height*.51-scale*(ce*y-se*b),se*y+ce*b];
@@ -113,7 +125,7 @@ function draw() {
   const palette=Number(hue.value)*Math.PI/180;
   const rgb=points.map(()=>[0,0,0,0]);
   for(const [a,b,c,,illumination] of sorted) {
-    const angle=Math.atan2(points[a][1]+points[b][1]+points[c][1],points[a][0]+points[b][0]+points[c][0])+palette;
+    const angle=Math.atan2(mesh.points[a][1]+mesh.points[b][1]+mesh.points[c][1],mesh.points[a][0]+mesh.points[b][0]+mesh.points[c][0])+palette;
     const faceColor=[0,2.1,4.2].map(v=>Math.min(255,(135+118*Math.cos(angle-v))*(.35+.8*illumination)+45*illumination**12));
     for(const id of [a,b,c]) {
       for(let k=0;k<3;k++)rgb[id][k]+=faceColor[k];
@@ -163,11 +175,11 @@ function draw() {
   ctx.globalAlpha=1;
   if (trace.checked) {
     ctx.globalAlpha = .72;
-    for (const [ids,color] of seams) seam(ids,color,false);
+    for (const [ids,color] of visibleSeams) seam(ids,color,false);
     ctx.globalAlpha = 1;
   }
 
-  for(const id of mesh.crossings){
+  for(const id of (stage.closed ? mesh.crossings : [])){
     const [x,y]=screen[id];
     ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);
     ctx.strokeStyle="white";ctx.lineWidth=2;ctx.stroke();
@@ -176,7 +188,7 @@ function draw() {
   ctx.font = '14px system-ui';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  for (const [id,name] of (section.checked ? tips : [])) {
+  for (const [id,name] of (section.checked && stage.closed ? tips : [])) {
     const [x,y] = screen[id];
     const w = ctx.measureText(name).width+18;
     let lx = Math.max(w/2+5,Math.min(width-w/2-5,x+(x-width/2)*.23));
@@ -204,6 +216,7 @@ function draw() {
     ctx.fillStyle = '#fff3da';
     ctx.fillText(name,lx,ly);
   }
+  if (started !== null) requestDraw();
 }
 function requestDraw() {
   if (pending) return;
@@ -231,7 +244,7 @@ canvas.addEventListener('keydown', event => {
   event.preventDefault();
   rotate(...delta);
 });
-reset.addEventListener('click', () => { ({yaw,pitch}=home); requestDraw(); });
+reset.addEventListener('click', () => { pause(); seek(duration); ({yaw,pitch}=home); separation.value=0; requestDraw(); });
 trace.addEventListener('change', requestDraw);
 for (const id of ['section','opacity','light','hue']) document.getElementById(id).addEventListener('input',requestDraw);
 new ResizeObserver(requestDraw).observe(canvas);

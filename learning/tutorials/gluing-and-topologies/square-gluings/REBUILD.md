@@ -22,6 +22,8 @@ On the tested Apple silicon Mac, the bundled encoder reproduced all decoded vide
 IMAGEIO_FFMPEG_EXE="$(command -v ffmpeg)" .venv/bin/python rebuild/build.py --output /tmp/tet4d-original-encoder
 ```
 
+The six standalone viewers open on the finished surface. Replay starts from the square, the time slider scrubs the gluing, and dragging rotates the surface even while paused. The sphere runs for 11 seconds and the other five constructions run for 24. Reset view returns to the finished pose with both seams visible.
+
 ## Building one construction
 
 ```sh
@@ -42,4 +44,5 @@ On macOS the renderer uses the system Arial Unicode font when available. Elsewhe
 - **rebuild/viewer.py** evaluates the final geometry, builds the mesh, labels, seams and crossing data, and inserts them into the matching HTML/JavaScript source under **rebuild/templates/**.
 - **rebuild/tet4d_sphere_revised.py**, **directboy.py**, **klein_direct.py**, **torus_direct.py**, **opklein.py** and **orp.py** contain the parameterizations and animation renderers. The opposite-edge RP² renderer shares the Boy’s surface parameterization in **directboy.py**.
 - **rebuild/raster.c** composites translucent triangle fragments in depth order. The sphere uses a Pillow renderer.
+- The four sphere, torus and Klein viewer builds inline **viewers/src/surfaces.js** for the intermediate shapes. The standalone pages need no external scripts.
 - **rebuild/requirements.txt** pins the three Python dependencies.

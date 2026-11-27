@@ -20,13 +20,17 @@
 </style>
 <main>
   <h1>Adjacent-edge sphere</h1>
-  <p id="controls">Drag to rotate, or focus the model and use the arrow keys.</p>
+  <p id="controls">Drag or use the arrow keys to rotate at any stage. Use Space on the model to play or pause.</p>
   <canvas tabindex="0" aria-describedby="controls angles" aria-label="Rotatable sphere with two seams and three cone vertices"></canvas>
   <footer>
     <button type="button">Reset view</button>
     <span class="a">Seam a · AB / AD</span>
     <span class="b">Seam b · BC / DC</span>
     <label><input type="checkbox" checked> Trace seams through surface</label>
+  </footer><footer>
+    <button id="play" type="button">Replay</button>
+    <label>Gluing time <input id="timeline" type="range" min="0" max="11" step=".04" value="11"></label>
+    <output id="phase" for="timeline">Both seams joined</output>
   </footer>
   <p class="hint" id="angles">Cone angles from the square gluing: A and C are 90° each. B + D is 180°.</p>
 </main>
@@ -41,23 +45,34 @@ let {yaw, pitch} = home;
 let drag = null;
 let pending = false;
 const mesh = MESH_DATA;
-const {points, faces, seams, tips} = mesh;
+const {faces, seams, tips} = mesh;
 
-function draw() {
+GLUING_EQUATIONS
+const construction = SURFACES["sphere"];
+GLUING_PLAYBACK
+
+function draw(timestamp) {
+  if (started !== null) seek((timestamp - started) / 1000);
   pending = false;
   const {width, height} = canvas.getBoundingClientRect();
   const density = Math.min(devicePixelRatio || 1, 2);
   canvas.width = Math.round(width*density);
   canvas.height = Math.round(height*density);
   ctx.setTransform(density,0,0,density,0,0);
-  const ca = Math.cos(yaw), sa = Math.sin(yaw);
-  const ce = Math.cos(pitch), se = Math.sin(pitch);
+  const stage = playbackStage(seconds);
+  const azimuth = yaw - home.yaw * (1-stage.view) - .25 * stage.reveal;
+  const elevation = pitch - home.pitch * (1-stage.view);
+  const ca = Math.cos(azimuth), sa = Math.sin(azimuth);
+  const ce = Math.cos(elevation), se = Math.sin(elevation);
   const scale = Math.min(width*.36,height*.56);
+  const points = stagePoints(stage);
+  const visibleSeams = stageSeams(stage);
   const screen = points.map(([x,y,z]) => {
     const a = ca*x+sa*z, b = -sa*x+ca*z;
     return [width/2+scale*a,height*.51-scale*(ce*y-se*b),se*y+ce*b];
   });
-  const sorted = faces.map(([a,b,c,nx,ny,nz]) => {
+  const sorted = faces.map(([a,b,c], i) => {
+    const [nx,ny,nz] = faceNormal(points[a],points[b],points[c], i<faces.length/2 ? -1 : 1);
     const x = ca*nx+sa*nz, z = -sa*nx+ca*nz;
     const diffuse = Math.max(0,-.38*x+.56*(ce*ny-se*z)+.73*(se*ny+ce*z));
     return [a,b,c,(screen[a][2]+screen[b][2]+screen[c][2])/3,diffuse];
@@ -86,7 +101,7 @@ function draw() {
     ctx.setLineDash([]);
   }
   // Faces are depth sorted. Interleave seam segments to hide them behind the mesh.
-  const segments = seams.flatMap(([ids,color]) => ids.slice(1).map((id,i) => {
+  const segments = visibleSeams.flatMap(([ids,color]) => ids.slice(1).map((id,i) => {
     const prev = ids[i];
     return [[prev,id],color,(screen[prev][2]+screen[id][2])/2+.012];
   })).sort((a,b)=>a[2]-b[2]);
@@ -111,7 +126,7 @@ function draw() {
   }
   if (trace.checked) {
     ctx.globalAlpha = .72;
-    for (const [ids,color] of seams) seam(ids,color,true);
+    for (const [ids,color] of visibleSeams) seam(ids,color,true);
     ctx.globalAlpha = 1;
   }
 
@@ -119,7 +134,7 @@ function draw() {
   ctx.font = '14px system-ui';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  for (const [id,name] of tips) {
+  for (const [id,name] of (stage.closed ? tips : [])) {
     const [x,y] = screen[id];
     const w = ctx.measureText(name).width+18;
     let lx = Math.max(w/2+5,Math.min(width-w/2-5,x+(x-width/2)*.23));
@@ -148,6 +163,7 @@ function draw() {
     ctx.fillStyle = '#fff3da';
     ctx.fillText(name,lx,ly);
   }
+  if (started !== null) requestDraw();
 }
 function requestDraw() {
   if (pending) return;
@@ -175,7 +191,7 @@ canvas.addEventListener('keydown', event => {
   event.preventDefault();
   rotate(...delta);
 });
-reset.addEventListener('click', () => { ({yaw,pitch}=home); requestDraw(); });
+reset.addEventListener('click', () => { pause(); seek(duration); ({yaw,pitch}=home); requestDraw(); });
 trace.addEventListener('change', requestDraw);
 new ResizeObserver(requestDraw).observe(canvas);
 requestDraw();
