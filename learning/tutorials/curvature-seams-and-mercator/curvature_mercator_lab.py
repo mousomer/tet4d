@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Iterable
-from math import asinh, cos, isfinite, pi, radians, tan
+from math import cos, isfinite, log, pi, radians, tan
 
 # Natural tangent coordinate directions from Chapter 1.
 EDGES = {
@@ -92,29 +92,13 @@ def sphere_seam_vector(vx: float, vy: float) -> tuple[float, float]:
     return (vy, -vx)
 
 
-def left_cell(presentation: str, size: int, cell: tuple[int, int]) -> tuple[int, int]:
-    """One educational Left proposal in Cartesian cell indices."""
-    x, y = cell
-    seam_targets = {
-        "LB+ RT+": (y, 0),
-        "LB- RT+": (size - 1 - y, 0),
-        "LR- BT-": (size - 1, size - 1 - y),
-    }
-    seam_target = seam_targets[presentation]
-    if size < 2 or not (0 <= x < size and 0 <= y < size):
-        raise ValueError("expected a cell in a square of side at least two")
-    return (x - 1, y) if x else seam_target
-
-
 def mercator_y(latitude_radians: float, radius: float = 1.0) -> float:
     """Spherical Mercator northing; undefined at or beyond either pole."""
     if not isfinite(radius) or radius <= 0 or not isfinite(latitude_radians):
         raise ValueError("radius must be finite positive, latitude finite")
     if not -pi / 2 < latitude_radians < pi / 2:
         raise ValueError("Mercator excludes both poles")
-    # Avoid rounding the shifted angle near the north pole and cancellation
-    # in the subtraction near the south pole.
-    return radius * asinh(tan(latitude_radians))
+    return radius * log(tan(pi / 4 + latitude_radians / 2))
 
 
 def mercator_scale(latitude_radians: float) -> float:
