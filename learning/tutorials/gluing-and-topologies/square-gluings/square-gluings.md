@@ -11,7 +11,7 @@ Start with corners A, B, C, D clockwise from the upper left. Orange identifies t
 
 The orange seam merges B with D. The two remaining cyan edges then run from this merged point to C. Closing them preserves A, B+D and C as three distinct points. Each original corner supplies 90° of intrinsic angle: A and C each have 90°, and B+D has 180°. The quotient has three vertices, two edges and one face, giving Euler characteristic 2. Both identifications reverse the boundary traversal, so the closed surface is orientable.
 
-The prototype folds along AC and rounds the two triangular patches into a pillow. Its three tips are part of the mesh. Their slopes are stylized, and the labels give intrinsic angles in the original square. [Build animation](REBUILD.md?output=sphere-revised/adjacent-edge-sphere.mp4) · [Numbered stills](sphere-revised/adjacent-edge-sphere-stills.zip) · [Rotatable model](sphere-revised/rotate-sphere.html)
+The prototype folds along AC and rounds the two triangular patches into a pillow. Its three tips are part of the mesh. Their slopes are stylized, and the labels give intrinsic angles in the original square. [Build animation](REBUILD.md?output=sphere-revised/adjacent-edge-sphere.mp4) · [Numbered stills](sphere-revised/adjacent-edge-sphere-stills.zip) · [Rotatable model](sphere-revised/rotate-sphere.html) · [Interactive gluing](viewers/sphere.html)
 
 ## Real projective plane (RP²)
 
@@ -19,4 +19,4 @@ The orange seam again merges B and D. Reversing the second cyan arrow changes th
 
 In the direct-curl animation each point keeps its distance from A as the orange edges meet. A becomes the apex of the resulting cone. The cyan rim then closes, and the B+C+D apex forms. The final model uses a Boy’s surface immersion modified locally at the two corner classes to produce visible cone tips. In the reset view A points left and B+C+D points right. The three apparent openings come from the immersed sheets. At the central triple crossing, three distinct neighborhoods occupy the same displayed position. Only the orange and cyan edge maps identify points of the original square.
 
-[Build direct-curl animation](REBUILD.md?output=direct-curl/boys-surface.mp4) · [Numbered stills](direct-curl/stills.zip) · [Rotatable model](direct-curl/rotate.html)
+[Build direct-curl animation](REBUILD.md?output=direct-curl/boys-surface.mp4) · [Numbered stills](direct-curl/stills.zip) · [Rotatable model](direct-curl/rotate.html) · [Interactive gluing](viewers/rp2-adjacent.html)

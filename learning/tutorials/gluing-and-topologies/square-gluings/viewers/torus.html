@@ -1,0 +1,1818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Opposite-edge torus — square gluing viewer</title>
+<style>
+  html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    background: #d6d6d8;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    cursor: grab;
+    touch-action: none;
+  }
+  canvas:active { cursor: grabbing; }
+  #ui-toggle {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 2;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.80);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+    color: #1d1d1f;
+    cursor: pointer;
+  }
+  #ui-toggle:hover { background: rgba(255, 255, 255, 0.95); }
+  #ui-toggle svg { width: 18px; height: 18px; }
+  #ui {
+    position: fixed;
+    top: 60px;
+    right: 16px;
+    width: 250px;
+    padding: 14px 15px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.80);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+    font-size: 12.5px;
+    color: #1d1d1f;
+    max-height: calc(100vh - 76px);
+    overflow-y: auto;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  #ui.hidden { opacity: 0; pointer-events: none; transform: translateY(-6px); }
+  #ui h3 { margin: 0; font-size: 14px; font-weight: 600; }
+  #ui .sub { margin: 2px 0 4px; font-size: 11px; color: #6e6e73; }
+  .sec { margin: 10px 0 2px; padding-top: 6px; border-top: 1px solid rgba(0, 0, 0, 0.08); }
+  .sec > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 0;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #6e6e73;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+  .sec > summary::-webkit-details-marker { display: none; }
+  .sec > summary::after { content: "›"; font-size: 14px; transition: transform 0.15s; }
+  .sec[open] > summary::after { transform: rotate(90deg); }
+  .sub2 { margin: 9px 0 0; font-size: 10.5px; font-weight: 600; color: #8e8e93; }
+  .colors.two { grid-template-columns: repeat(2, 1fr); }
+  .glue-row { display: flex; align-items: center; gap: 8px; }
+  .glue-row button { width: 30px; margin: 0; padding: 2px 0; flex: none; }
+  #ui label { display: flex; justify-content: space-between; margin: 7px 0 2px; font-weight: 500; }
+  #ui label span { font-variant-numeric: tabular-nums; color: #3a3a3c; }
+  #ui input[type="range"] { width: 100%; margin: 0; cursor: pointer; }
+  .row { display: flex; align-items: center; justify-content: space-between; margin: 9px 0 2px; font-weight: 500; }
+  .row input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+  .row select {
+    font: inherit;
+    padding: 2px 4px;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    background: rgba(255, 255, 255, 0.7);
+  }
+  .colors { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 5px; }
+  .colors div { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 10px; color: #6e6e73; }
+  .colors input { width: 100%; height: 26px; padding: 0; border: none; border-radius: 6px; background: none; cursor: pointer; }
+  button {
+    width: 100%;
+    margin-top: 10px;
+    padding: 6px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.75);
+    font: inherit;
+    cursor: pointer;
+  }
+  .hint {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    font-size: 11px;
+    line-height: 1.45;
+    color: #6e6e73;
+  }
+  #err {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+    font-size: 15px;
+    color: #333;
+  }
+  .play-row { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+  .play-row button { width: 34px; margin: 0; padding: 3px 0; flex: none; }
+  .play-row input[type="range"] { flex: 1; }
+  #status { margin: 8px 0 2px; padding: 7px 8px; border-radius: 8px; background: rgba(0, 0, 0, 0.045); font-size: 11.5px; line-height: 1.45; }
+  #status b { font-weight: 600; }
+  #status .chip { display: inline-block; min-width: 15px; padding: 0 4px; border-radius: 4px; text-align: center; font-weight: 700; color: #172335; }
+  #status .word { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .note { margin: 3px 0 0; font-size: 10.5px; line-height: 1.4; color: #6e6e73; }
+  .row.disabled { color: #a1a1a6; }
+  #ui a { color: #0b63c7; text-decoration: none; }
+  #ui a:hover { text-decoration: underline; }
+  #labels { position: fixed; inset: 0; pointer-events: none; z-index: 1; }
+  #labels div {
+    position: absolute;
+    transform: translate(10px, -50%);
+    padding: 1px 6px;
+    border-radius: 7px;
+    background: rgba(23, 35, 53, 0.82);
+    border: 1px solid rgba(82, 101, 122, 0.9);
+    color: #fff3df;
+    font: 600 12px/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    white-space: nowrap;
+  }
+  #labels div small { font-weight: 500; color: #a9bfd5; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="labels"></div>
+<button id="ui-toggle" type="button" title="Hide controls (H)" aria-controls="ui" aria-expanded="true">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+    <path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0" /><circle cx="16" cy="6" r="2" /><circle cx="10" cy="12" r="2" /><circle cx="18" cy="18" r="2" />
+  </svg>
+</button>
+<div id="ui">
+  <h3 id="title"></h3>
+  <div class="sub">Square gluing <span class="word" id="word"></span> · <a href="index.html">all six</a></div>
+
+  <details class="sec" id="sec-glue" open>
+    <summary>Gluing</summary>
+    <label title="0: the flat square. 1: the closed surface. Equal steps make equally large changes.">Glue <span id="glue-v"></span></label>
+    <div class="play-row">
+      <button id="play" type="button" title="Play / pause (Space)">▶</button>
+      <input id="glue" type="range" min="0" max="1" step="0.001" />
+    </div>
+    <label title="Seconds for one run from the flat square to the closed surface">Duration <span id="dur-v"></span></label>
+    <input id="dur" type="range" min="3" max="30" step="0.5" />
+    <label title="Step size of the step buttons and the arrow keys">Step <span id="stepS-v"></span></label>
+    <div class="play-row">
+      <button id="back" type="button" title="Step back (←)">⏴</button>
+      <input id="stepS" type="range" min="0.002" max="0.05" step="0.001" />
+      <button id="fwd" type="button" title="Step forward (→)">⏵</button>
+    </div>
+    <div class="row">
+      <span title="Two stages: close the orange edges first, then the cyan ones (as in the tutorial). One stretch: the whole square stretches at once, centre first and edges last, and all edges meet at the end.">Motion</span>
+      <select id="motion">
+        <option value="stages">Two stages</option>
+        <option value="stretch">One stretch</option>
+      </select>
+    </div>
+    <div class="row" id="cones-row">
+      <span title="With cone points: corners whose angles add up to less than 360° become sharp tips, as in the tutorial. Without: the same surface, smoothed.">Cone Points</span>
+      <input id="cones" type="checkbox" />
+    </div>
+    <div class="note" id="cone-note"></div>
+    <div id="status"></div>
+  </details>
+
+  <details class="sec" id="sec-lines" open>
+    <summary>Lines</summary>
+    <div class="row">
+      <span title="The grid of the flat square, carried along by the gluing">Grid</span>
+      <select id="gridType">
+        <option value="square">Square</option>
+        <option value="off">Off</option>
+      </select>
+    </div>
+    <label>Grid Density <span id="gridN-v"></span></label>
+    <input id="gridN" type="range" min="4" max="24" step="1" />
+    <label>Grid Line Width <span id="gridW-v"></span></label>
+    <input id="gridW" type="range" min="0.50" max="3.00" step="0.05" />
+    <label>Grid Strength <span id="gridS-v"></span></label>
+    <input id="gridS" type="range" min="0.05" max="1.00" step="0.01" />
+    <div class="row">
+      <span title="The square's four edges: a (orange) and b (cyan), each painted on its own side of the seam">Edges</span>
+      <input id="edges" type="checkbox" />
+    </div>
+    <div class="row">
+      <span title="One arrow at the middle of each edge. Each edge carries half of it, so the arrow is whole once the two edges meet.">Arrows</span>
+      <input id="arrows" type="checkbox" />
+    </div>
+    <div class="row">
+      <span title="Discs at the four corners, coloured by the point they become: corners with the same colour meet">Corners</span>
+      <input id="corners" type="checkbox" />
+    </div>
+    <div class="row">
+      <span title="A–D clockwise from the upper left; merged once the corners meet, with their angle sum">Corner Labels</span>
+      <input id="labelsOn" type="checkbox" />
+    </div>
+    <label>Edge Width <span id="edgeW-v"></span></label>
+    <input id="edgeW" type="range" min="1.0" max="8.0" step="0.1" />
+    <div class="colors two">
+      <div><input id="ea" type="color" />edge a</div>
+      <div><input id="eb" type="color" />edge b</div>
+    </div>
+  </details>
+
+  <details class="sec" id="sec-material">
+    <summary>Material</summary>
+    <label title="Absorption density of the coloured glass">Opacity <span id="opa-v"></span></label>
+    <input id="opa" type="range" min="0.05" max="1.00" step="0.01" />
+    <label title="How clear the pale centre of the square is">Center Clarity <span id="clar-v"></span></label>
+    <input id="clar" type="range" min="0.00" max="1.00" step="0.01" />
+    <label title="Surface frosting: blurs what is seen through the glass">Frost <span id="frost-v"></span></label>
+    <input id="frost" type="range" min="0.00" max="1.00" step="0.01" />
+    <label title="Sharpness of the studio reflections">Glossiness <span id="gloss-v"></span></label>
+    <input id="gloss" type="range" min="0.00" max="1.00" step="0.01" />
+    <label title="Extra absorption at grazing angles: darker, more saturated rims">Edge Depth <span id="edge-v"></span></label>
+    <input id="edge" type="range" min="0.00" max="1.00" step="0.01" />
+    <div class="colors">
+      <div><input id="c1" type="color" />hue 1</div>
+      <div><input id="c2" type="color" />hue 2</div>
+      <div><input id="c3" type="color" />hue 3</div>
+      <div><input id="c0" type="color" />center</div>
+    </div>
+  </details>
+
+  <details class="sec" id="sec-scene">
+    <summary>Scene</summary>
+    <label>Turntable Speed <span id="spin-v"></span></label>
+    <input id="spin" type="range" min="0" max="3" step="0.05" />
+    <label>Shadow <span id="shadow-v"></span></label>
+    <input id="shadow" type="range" min="0.00" max="1.00" step="0.01" />
+  </details>
+  <button id="reset">Reset</button>
+  <div class="hint">Space plays or pauses &bull; ← → step &bull; Drag to rotate &bull; Right-drag or Shift-drag to move &bull; Scroll to zoom &bull; Double-click to recentre &bull; H hides this panel</div>
+</div>
+<div id="err"></div>
+
+<script>
+"use strict";
+// Six square gluings, ported line for line from the tutorial's renderers in ../rebuild/
+// (tet4d_sphere_revised.py, directboy.py, orp.py, torus_direct.py, klein_direct.py, opklein.py).
+//
+// Every module evaluates its surface at a point (X, Y) of the square [-1, 1]^2, corner A = (-1, 1) at the
+// top left, B top right, C bottom right, D bottom left (y up), at a stage of its two-stage construction
+// (fold closes the orange seam a, puff the cyan seam b), with cone tips scaled by `cone` (1 = with cone
+// points, 0 = smooth). Sides are listed clockwise: top A->B, right B->C, bottom C->D, left D->A; `dir` is
+// +1 where the seam's arrow runs clockwise and -1 where it runs against.
+"use strict";
+const SURFACES = {};
+(() => {
+  const PI = Math.PI, S2 = Math.SQRT2, S5 = Math.sqrt(5);
+  const ease = (x) => { const t = Math.min(1, Math.max(0, x)); return t * t * (3 - 2 * t); };
+  const sinc = (k, y) => (Math.abs(k * y) < 1e-9 ? 1 : Math.sin(k * y) / (k * y));   // sin(k y)/(k y)
+  const sq = (a) => a * a;
+  const STD = (t) => ({ fold: ease((t - 1.55) / 2.7), puff: ease((t - 5.15) / 2.75), gap: 0 });
+  const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  const norm = (a) => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; };
+
+  // ---- Boy's surface as the tutorial builds it (directboy.py): Bryant-Kusner, family member c = 0.5,
+  // on the sphere through stereographic projection; evaluated in the stable form H |d|^2 / |H|^2.
+  function immersion(q) {
+    const s = 1 + q[2] + 1e-15, wr = q[0] / s, wi = q[1] / s;
+    const mul = (a, b) => [a[0] * b[0] - a[1] * b[1], a[0] * b[1] + a[1] * b[0]];
+    const w = [wr, wi], w2 = mul(w, w), w3 = mul(w2, w), w4 = mul(w2, w2), w6 = mul(w3, w3);
+    const d = [w6[0] + S5 * w3[0] - 1, w6[1] + S5 * w3[1]], dc = [d[0], -d[1]], dd = d[0] * d[0] + d[1] * d[1];
+    const n1 = mul(w, [1 - w4[0], -w4[1]]), n2 = mul(w, [1 + w4[0], w4[1]]), n3 = [1 + w6[0], w6[1]];
+    const h = [-1.5 * mul(n1, dc)[1], -1.5 * mul(n2, dc)[0], mul(n3, dc)[1] - 0.5 * dd];
+    const s2 = dd / Math.max(dot(h, h), 1e-300);
+    return [h[0] * s2, h[1] * s2, h[2] * s2];
+  }
+  function param(r, theta) {   // directboy.param: disk point -> rotated unit sphere point
+    theta += 0.64;
+    const k = 1 / (1 + r * r);
+    const q = [2 * r * Math.cos(theta) * k, 2 * r * Math.sin(theta) * k, (1 - r * r) * k];
+    const ax = [Math.cos(0.64), Math.sin(0.64), 0], ang = 0.64, c = Math.cos(ang), s = Math.sin(ang);
+    const axq = cross(ax, q), qa = dot(q, ax);
+    return [0, 1, 2].map((i) => q[i] * c + axq[i] * s + qa * ax[i] * (1 - c));
+  }
+  const CENTERS = [param(0, 0), param(1, 0)];
+  // cone-tip frames: tip position and outward normal of the immersion at each center (computed once)
+  const TIPS = CENTERS.map((center) => {
+    const pos = immersion(center);
+    const tangent = norm(cross(center, [0, 0, 1])), tangent2 = cross(center, tangent);
+    const p1 = immersion(norm(center.map((v, i) => v + 1e-5 * tangent[i])));
+    const p2 = immersion(norm(center.map((v, i) => v + 1e-5 * tangent2[i])));
+    let n = norm(cross(p1.map((v, i) => v - pos[i]), p2.map((v, i) => v - pos[i])));
+    if (dot(n, pos.map((v, i) => v - [0, 0, -0.55][i])) < 0) n = n.map((v) => -v);
+    return { center, pos, n };
+  });
+
+  // ---------------------------------------------------------------- sphere (adjacent edges)
+  const sphereCtr = { c: [0, 0, 0], r: 1 };
+  function spherePatch(X, Y, fold, puff, gap) {
+    const xd = (X - Y) / 2, yd = (X + Y) / 2 - 0.5;   // the tutorial's diamond, folded along A-C
+    const side = X + Y >= 0 ? 1 : -1;
+    const b = Math.max(0, side * (yd + 0.5)), c = Math.max(0, (1 - b + xd) / 2), a = Math.max(0, (1 - b - xd) / 2);
+    const u = Math.sqrt(a), v = Math.sqrt(b), w = Math.sqrt(c), bend = puff;
+    let x = c - a + bend * 0.42 * b * (c - a);
+    let y = b - 0.5 + bend * 0.18 * b * (a + c);
+    let z = side * 2.48 * puff * u * v * w;
+    if (side < 0) {
+      const angle = PI * (1 - fold);
+      y = (y + 0.5) * Math.cos(angle) - 0.5;
+      z -= (b + bend * 0.18 * b * (a + c)) * Math.sin(angle);
+      z -= gap * 4 * b * c;
+    }
+    return [x, y, z];
+  }
+  SURFACES.sphere = {
+    title: "Adjacent-edge sphere", short: "Sphere", word: "a b b⁻¹ a⁻¹",
+    sides: { top: ["a", 1], right: ["b", 1], bottom: ["b", -1], left: ["a", -1] },
+    hasCones: true, orientable: true,
+    note: "Three cone tips: A (90°), B+D (180°), C (90°). Without cone points the pillow becomes a round sphere.",
+    span: [1.6, 6.9],
+    params: (t) => ({
+      fold: ease((t - 1.65) / 2.7), puff: ease((t - 1.6) / 3.2),
+      gap: 0.62 * ease((t - 1.8) / 1.7) * (1 - ease((t - 5.25) / 1.65)),
+    }),
+    init() {   // centre and mean radius of the finished pillow, for the smooth (cone-free) version
+      let c = [0, 0, 0], n = 0;
+      const pts = [];
+      for (let i = 0; i <= 40; i++) for (let j = 0; j <= 40; j++) {
+        const p = spherePatch(-1 + i / 20, -1 + j / 20, 1, 1, 0); pts.push(p); c = c.map((v, k) => v + p[k]); n++;
+      }
+      c = c.map((v) => v / n);
+      sphereCtr.c = c;
+      sphereCtr.r = pts.reduce((s, p) => s + Math.hypot(p[0] - c[0], p[1] - c[1], p[2] - c[2]), 0) / n;
+    },
+    point(X, Y, s, cone) {
+      const p = spherePatch(X, Y, s.fold, s.puff, s.gap);
+      const k = (1 - cone) * s.puff;   // without cone points: inflate towards the round sphere
+      if (k <= 0) return p;
+      const c = sphereCtr.c, d = [p[0] - c[0], p[1] - c[1], p[2] - c[2]], l = Math.hypot(d[0], d[1], d[2]) || 1;
+      return [0, 1, 2].map((i) => p[i] + k * (c[i] + (sphereCtr.r * d[i]) / l - p[i]));
+    },
+    home: { tilt: 0.35, turn: -0.3, roll: -Math.PI / 4 }, view: { rotX: 0.45, rotY: 0.7 },
+  };
+
+  // ---------------------------------------------------------------- RP^2, adjacent edges (direct curl)
+  function boyDirect(X, Y, cone) {   // directboy.boy, at the square point
+    const x = (X + 1) / 2, y = (1 - Y) / 2;
+    const side = x >= y ? 1 : -1;
+    const r = Math.max(x, y), s = r > 0 ? (side === 1 ? y / r : x / r) : 0;
+    const theta = side === 1 ? PI * s : PI * (2 - s);
+    const q = param(r, theta);
+    const p = immersion(q);
+    for (const t of TIPS) {
+      if (Math.abs(dot(q, t.center)) <= 0.84) continue;   // local support on the same quotient sheet
+      const dist = Math.hypot(p[0] - t.pos[0], p[1] - t.pos[1], p[2] - t.pos[2]);
+      const h = sq(Math.max(0, 1 - dist / 0.54)) * 0.85 * cone;
+      for (let i = 0; i < 3; i++) p[i] += h * t.n[i];
+    }
+    return p;
+  }
+  SURFACES["rp2-adjacent"] = {
+    title: "Adjacent-edge projective plane", short: "RP² (adjacent edges)", word: "a b b a⁻¹",
+    sides: { top: ["a", 1], right: ["b", 1], bottom: ["b", 1], left: ["a", -1] },
+    hasCones: true, orientable: false,
+    note: "Two cone tips: A (90°) and B+C+D (270°). Without cone points the finished surface is the smooth Boy's surface.",
+    span: [1.55, 7.9], params: STD,
+    final: boyDirect,   // the expensive part, cached by the engine per cone setting
+    point(X, Y, s, cone, F) {
+      const x = (X + 1) / 2, y = (1 - Y) / 2;
+      const length = Math.hypot(x, y), theta = PI / 4 - Math.atan2(y, x);
+      // a circular cone develops to a sector; increasing the azimuth preserves its arc lengths
+      const beta = PI / 2 - s.fold * Math.acos(0.25), sine = Math.sin(beta), phi = theta / sine;
+      const along = length * sine * Math.cos(phi), across = length * sine * Math.sin(phi), z = length * Math.cos(beta);
+      const px = (along + across) / S2, py = (-along + across) / S2, angle = 1.37 * s.fold;
+      const apex = [-0.5 - 0.15 * s.fold, 0.5 - 0.38 * s.fold, 0];
+      const coneP = [apex[0] + Math.cos(angle) * px + Math.sin(angle) * z, apex[1] + py, apex[2] - Math.sin(angle) * px + Math.cos(angle) * z];
+      if (s.puff <= 0) return coneP;
+      const target = F || boyDirect(X, Y, cone);
+      return [0, 1, 2].map((i) => (1 - s.puff) * coneP[i] + s.puff * 0.86 * target[i]);
+    },
+    home: { tilt: 0.2, turn: 0.4 },
+  };
+
+  // ---------------------------------------------------------------- RP^2, opposite edges
+  const E1 = CENTERS[0], E2 = CENTERS[1], E3 = cross(E1, E2);
+  function boyOpposite(X, Y, cone) {   // orp.final
+    const x = X / 2, y = Y / 2;
+    const r = 2 * Math.max(Math.abs(x), Math.abs(y)), th = (3 * PI) / 4 - Math.atan2(y, x), lat = (PI * r) / 2;
+    const q = [0, 1, 2].map((i) => Math.sin(lat) * Math.cos(th) * E1[i] + Math.sin(lat) * Math.sin(th) * E2[i] + Math.cos(lat) * E3[i]);
+    const p = immersion(q[2] < 0 ? q.map((v) => -v) : q);
+    for (const t of TIPS) {
+      const d = Math.hypot(p[0] - t.pos[0], p[1] - t.pos[1], p[2] - t.pos[2]);
+      let gate = Math.min(1, Math.max(0, (Math.abs(dot(q, t.center)) - 0.72) / 0.2));
+      gate = gate * gate * (3 - 2 * gate);   // smoothly limited to this preimage on the immersed sheet
+      const height = 0.79 * sq(Math.max(0, 1 - d / ((2 * 0.79) / Math.sqrt(3)))) * cone;
+      for (let i = 0; i < 3; i++) p[i] += t.n[i] * gate * height;
+    }
+    return p.map((v) => v * 0.86);
+  }
+  SURFACES["rp2-opposite"] = {
+    title: "Opposite-edge projective plane", short: "RP² (opposite edges)", word: "a b a b",
+    sides: { top: ["a", 1], right: ["b", 1], bottom: ["a", 1], left: ["b", 1] },
+    hasCones: true, orientable: false,
+    note: "Two cone tips: A+C and B+D, each 180°. Without cone points the finished surface is the smooth Boy's surface.",
+    span: [1.55, 7.9], params: STD,
+    final: boyOpposite,
+    point(X, Y, s, cone, F) {
+      const x = X / 2, y = Y / 2, fold = s.fold, puff = s.puff;
+      let mob;
+      if (fold === 0) mob = [x, y, 0];
+      else {
+        const k = 2 * PI * fold, angle = k * y, twist = angle / 2, radius = (1 - fold) / k + 0.65 * fold;
+        const across = x * Math.cos(twist);
+        mob = [across * Math.cos(angle) + radius * (-2 * sq(Math.sin(angle / 2)) + fold * fold), (radius + across) * Math.sin(angle), x * Math.sin(twist)];
+      }
+      if (puff <= 0) return mob;
+      const f = F || boyOpposite(X, Y, cone);
+      return [0, 1, 2].map((i) => (1 - puff) * mob[i] + puff * f[i]);
+    },
+    home: { tilt: 0.2, turn: 0.4 },
+  };
+
+  // ---------------------------------------------------------------- torus (opposite edges)
+  function rollThenBend(x, y, fold, puff, extra) {   // torus_direct.patch / opklein.patch
+    const k = 2 * PI * fold, circum = 1 + 0.8 * fold;
+    let height = circum * y * sinc(k, y);
+    let offset = fold === 0 ? 0 : (circum / k) * (-2 * sq(Math.sin((k * y) / 2)) + fold * fold);
+    if (puff === 0) return [(1 + 0.65 * fold) * x, height, offset];
+    const k2 = 2 * PI * puff, radius = (1.65 * (1 - puff)) / k2 + 0.93 * puff, angle = k2 * x;
+    if (extra) [offset, height] = extra(x, y, puff, offset, height);
+    return [(radius - offset) * Math.sin(angle), height, radius * (2 * sq(Math.sin(angle / 2)) - puff * puff) + offset * Math.cos(angle)];
+  }
+  SURFACES.torus = {
+    title: "Opposite-edge torus", short: "Torus", word: "a b a⁻¹ b⁻¹",
+    sides: { top: ["a", 1], right: ["b", 1], bottom: ["a", -1], left: ["b", -1] },
+    hasCones: false, orientable: true,
+    note: "The four 90° corners meet in one smooth 360° point, so there is no cone point.",
+    span: [1.55, 7.9], params: STD,
+    point: (X, Y, s) => rollThenBend(X / 2, Y / 2, s.fold, s.puff, null),
+    home: { tilt: 0.55, turn: 0.2 },
+  };
+
+  // ---------------------------------------------------------------- Klein bottle, adjacent edges
+  SURFACES["klein-adjacent"] = {
+    title: "Adjacent-edge Klein bottle", short: "Klein bottle (adjacent edges)", word: "a b b a",
+    sides: { top: ["a", 1], right: ["b", 1], bottom: ["b", 1], left: ["a", 1] },
+    hasCones: false, orientable: false,
+    note: "The four 90° corners meet in one smooth 360° point, so there is no cone point.",
+    span: [1.55, 7.9], params: STD,
+    point(X, Y, s) {
+      const x = (X + 1) / 2, y = (1 - Y) / 2, l = x - y, m = x + y - 0.5, v = PI * m, fold = s.fold, puff = s.puff;
+      if (fold === 0) return [(l + m - 0.5) / 2, (l - m + 0.5) / 2, 0];
+      const k = 2 * PI * fold, u = k * l, radius = (1 - fold) / (S2 * k) + 0.93 * fold;
+      const transverse = (1 - puff) * m * (0.7071 - 0.29 * fold) + puff * 0.41 * Math.sin(v);
+      const height = puff * 0.29 * Math.sin(2 * v);
+      const radial = transverse * Math.cos(u / 2) - height * Math.sin(u / 2);
+      const z = transverse * Math.sin(u / 2) + height * Math.cos(u / 2);
+      const d = (radius + radial) * Math.sin(u);
+      const e = radius * (-2 * sq(Math.sin(u / 2)) + fold * fold) + radial * Math.cos(u) - ((1 - fold) * 0.5) / S2;
+      return [(d + e) / S2, (d - e) / S2, z];
+    },
+    home: { tilt: 0.75, turn: 0.4 },
+  };
+
+  // ---------------------------------------------------------------- Klein bottle, opposite edges
+  SURFACES["klein-opposite"] = {
+    title: "Opposite-edge Klein bottle", short: "Klein bottle (opposite edges)", word: "a b a⁻¹ b",
+    sides: { top: ["a", 1], right: ["b", 1], bottom: ["a", -1], left: ["b", 1] },
+    hasCones: false, orientable: false,
+    note: "The four 90° corners meet in one smooth 360° point, so there is no cone point.",
+    span: [1.55, 7.9], params: STD,
+    point: (X, Y, s) => rollThenBend(X / 2, Y / 2, s.fold, s.puff, (x, y, puff, offset, height) => {
+      const twist = PI * x, v = 2 * PI * y + 0.85 * Math.cos(PI * x + 0.54);
+      const one = 0.42 * Math.sin(v), two = 0.3 * Math.sin(2 * v);
+      return [(1 - puff) * offset + puff * (one * Math.cos(twist) - two * Math.sin(twist)),
+              (1 - puff) * height + puff * (one * Math.sin(twist) + two * Math.cos(twist))];
+    }),
+    home: { tilt: 0.55, turn: 0.2 },
+  };
+
+  // ---------------------------------------------------------------- Klein bottle, the glass bottle
+  // The classic bottle immersion as a tube: point = C(σ) + r(σ) (cos φ N + sin φ ẑ) with the core C in the
+  // xy-plane, N its in-plane normal, φ = π/2 - πY around the tube and σ along it. The finished core and
+  // radius are periodic uniform cubic B-splines with a cusp at σ = 0: the control polygon is symmetric there
+  // (P11 = P1), so C'(0) = 0 and the core arrives going down and leaves going up. N flips with it, which is
+  // exactly the Klein identification (X = -1, Y) ~ (X = 1, -Y); the radius keeps growing through the join,
+  // so the surface is smooth there. Stages: roll the square into a cylinder (orange a, as on the torus page);
+  // stand it up as bulb and neck; then the neck's open end travels along the core - up, over, down outside,
+  // through the wall, down inside - and flares to meet the bulb's bottom rim from within (cyan b).
+  const BOTTLE = [   // control polygon: x, y, radius
+    [0, -0.2, 0.45], [0, 0.55, 1.15], [0, 1.4, 1.0], [0, 2.05, 0.32], [0, 2.75, 0.25], [-0.35, 3.55, 0.24],
+    [-1.35, 3.65, 0.24], [-2.0, 2.85, 0.24], [-1.85, 1.75, 0.24], [-1.05, 1.2, 0.24], [-0.25, 0.95, 0.24], [0, 0.55, 0.27],
+  ];
+  const BN = BOTTLE.length, BQ = Array.from({ length: BN + 3 }, (_, k) => BOTTLE[(k - 1 + BN) % BN]);   // Q_-1 .. Q_n+1
+  function track(sig) {   // core point, unit direction and radius at σ in [0, 1]
+    const j = Math.min(Math.floor(sig * BN), BN - 1), t = sig * BN - j, u = 1 - t;
+    const b = [u * u * u / 6, (3 * t * t * t - 6 * t * t + 4) / 6, (-3 * t * t * t + 3 * t * t + 3 * t + 1) / 6, t * t * t / 6];
+    const d = [-u * u / 2, (3 * t * t - 4 * t) / 2, (-3 * t * t + 2 * t + 1) / 2, t * t / 2];
+    const e = [u, 3 * t - 2, 1 - 3 * t, t];
+    const o = [0, 0, 0, 0, 0, 0, 0];   // x, y, r, x', y', x'', y''
+    for (let i = 0; i < 4; i++) {
+      const q = BQ[j + i];
+      o[0] += b[i] * q[0]; o[1] += b[i] * q[1]; o[2] += b[i] * q[2];
+      o[3] += d[i] * q[0]; o[4] += d[i] * q[1]; o[5] += e[i] * q[0]; o[6] += e[i] * q[1];
+    }
+    let dx = o[3], dy = o[4];
+    if (Math.hypot(dx, dy) < 1e-12) { const g = sig < 0.5 ? 1 : -1; dx = g * o[5]; dy = g * o[6]; }   // the cusp
+    const l = Math.hypot(dx, dy);
+    return { x: o[0], y: o[1], r: o[2], dx: dx / l, dy: dy / l };
+  }
+  const tube = (x, y, r, dx, dy, phi) => [x - r * Math.cos(phi) * dy, y + r * Math.cos(phi) * dx, r * Math.sin(phi)];
+  const SIG_A = 3 / BN, U_B = 0.5, RHO0 = 1.8 / (2 * PI);   // standing tube = track [0, SIG_A]; cylinder radius
+  const BASE = track(0), TOP = track(SIG_A);
+  SURFACES["klein-bottle"] = {
+    title: "Klein bottle, the glass bottle", short: "Klein bottle (glass bottle)", word: "a b a⁻¹ b",
+    sides: { top: ["a", 1], right: ["b", 1], bottom: ["a", -1], left: ["b", 1] },
+    hasCones: false, orientable: false,
+    note: "No cone point: the four 90° corners meet in one smooth 360° point. The neck passes through the wall and meets the base from inside.",
+    span: [1.55, 10.4],
+    params: (t) => ({
+      fold: ease((t - 1.55) / 2.7), stand: ease((t - 4.6) / 1.6), lam: SIG_A + (1 - SIG_A) * ease((t - 6.2) / 4.2),
+      puff: Math.min(1, Math.max(0, (t - 4.6) / 5.8)), gap: 0,
+    }),
+    point(X, Y, s) {
+      const u = (X + 1) / 2, phi = PI / 2 - PI * Y;
+      if (s.stand <= 0) return rollThenBend(X / 2, Y / 2, s.fold, 0, null);   // stage 1: the cylinder along x
+      if (s.lam <= SIG_A) {   // stand the cylinder up about its end and shape it into bulb and neck
+        const b = s.stand, T = track(u * SIG_A), th = (b * PI) / 2;
+        const len = (1 - b) * 1.65 + b * (TOP.y - BASE.y), frac = (1 - b) * u + (b * (T.y - BASE.y)) / (TOP.y - BASE.y);
+        const sx = (1 - b) * -0.825 + b * BASE.x, sy = b * BASE.y, r = (1 - b) * RHO0 + b * T.r;
+        return tube(sx + len * frac * Math.cos(th), sy + len * frac * Math.sin(th), r, Math.cos(th), Math.sin(th), phi);
+      }
+      // the neck's end travels along the core; the bulb (first half of the square) stays put
+      const w = Math.max(0, (u - U_B) / (1 - U_B)) ** 2, T = track(u * SIG_A + (s.lam - SIG_A) * w);
+      return tube(T.x, T.y, T.r, T.dx, T.dy, phi);
+    },
+    home: { tilt: 0.12, turn: 0.45 },
+    defaults: { opa: 0.2, frost: 0.08, clar: 0.9 },
+  };
+
+  for (const [id, m] of Object.entries(SURFACES)) { m.id = id; if (m.init) m.init(); }
+})();
+const SURFACE = SURFACES["torus"];
+
+// =====================================================================
+// Parameters & UI
+// =====================================================================
+const DEFAULTS = {
+  glue: 0, dur: 12, stepS: 0.01, motion: "stages", cones: true,
+  opa: 0.35, clar: 0.75, frost: 0.25, gloss: 0.65, edge: 0.7,
+  spin: 0, shadow: 0.3,
+  gridType: "square", gridN: 8, gridW: 1.1, gridS: 0.35,
+  edges: true, arrows: true, corners: true, labelsOn: true, edgeW: 5.0,
+  c1: "#6e32c9", c2: "#b8253c", c3: "#159674", c0: "#efd2c4",
+  ea: "#ffb45c", eb: "#64e2e9",   // the tutorial's colours: a orange, b cyan
+  ...(SURFACE.defaults || {}),     // a page's own look, e.g. clearer glass to show the bottle's inside
+};
+const SLIDERS = { glue: 3, dur: 1, stepS: 3, opa: 2, clar: 2, frost: 2, gloss: 2, edge: 2, spin: 2, shadow: 2, gridN: 0, gridW: 2, gridS: 2, edgeW: 1 };
+const SHAPE_KEYS = new Set(["glue", "motion", "cones"]);
+const COLOR_KEYS = ["c0", "c1", "c2", "c3", "ea", "eb"];
+const CHECK_KEYS = ["edges", "arrows", "corners", "labelsOn", "cones"];
+const SELECT_KEYS = ["gridType", "motion"];
+const P = { ...DEFAULTS };
+let geoDirty = true, frameDirty = true, playing = false, playT0 = 0, playG0 = 0;   // play follows the clock
+function resetView() {   // the surface's default view: its home pose, turned by SURFACE.view
+  const v = SURFACE.view || {};
+  rotX = v.rotX || 0; rotY = v.rotY || 0; spinAngle = 0; camDist = CAM_DIST0; panX = 0; panY = 0;
+}
+
+const $ = (id) => document.getElementById(id);
+const STORE = "glue-" + SURFACE.id + "-";
+
+function syncUI() {
+  for (const k in SLIDERS) {
+    $(k).value = P[k];
+    $(k + "-v").textContent = k === "dur" ? (+P[k]).toFixed(1) + " s" : (+P[k]).toFixed(SLIDERS[k]);
+  }
+  for (const k of COLOR_KEYS) $(k).value = P[k];
+  for (const k of SELECT_KEYS) $(k).value = P[k];
+  for (const k of CHECK_KEYS) $(k).checked = P[k];
+  if (!SURFACE.hasCones) $("cones").checked = false;
+}
+function setGlue(g) {
+  P.glue = Math.min(1, Math.max(0, g));
+  $("glue").value = P.glue;
+  $("glue-v").textContent = P.glue.toFixed(3);
+  geoDirty = frameDirty = true;
+}
+function setPlaying(on) {
+  playing = on;
+  $("play").textContent = on ? "❚❚" : "▶";
+  $("play").title = on ? "Pause (Space)" : "Play (Space)";
+  if (on && P.glue >= 1) setGlue(0);
+  playT0 = performance.now(); playG0 = P.glue;
+}
+const stepBy = (dir) => { setPlaying(false); setGlue(P.glue + dir * P.stepS); };
+
+function bindUI() {
+  $("title").textContent = SURFACE.title;
+  $("word").textContent = SURFACE.word;
+  $("cone-note").textContent = SURFACE.note;
+  if (!SURFACE.hasCones) { $("cones").disabled = true; $("cones-row").classList.add("disabled"); }
+  for (const k in SLIDERS) {
+    $(k).addEventListener("input", () => {
+      if (k === "glue") { setPlaying(false); setGlue(+$(k).value); return; }
+      P[k] = +$(k).value;
+      if (k === "dur" && playing) { playT0 = performance.now(); playG0 = P.glue; }   // keep going from here
+      $(k + "-v").textContent = k === "dur" ? P[k].toFixed(1) + " s" : P[k].toFixed(SLIDERS[k]);
+      frameDirty = true;
+    });
+  }
+  for (const k of COLOR_KEYS) $(k).addEventListener("input", () => { P[k] = $(k).value; frameDirty = true; });
+  for (const k of SELECT_KEYS) $(k).addEventListener("change", () => { P[k] = $(k).value; if (SHAPE_KEYS.has(k)) geoDirty = true; frameDirty = true; });
+  for (const k of CHECK_KEYS) $(k).addEventListener("change", () => { P[k] = $(k).checked; if (SHAPE_KEYS.has(k)) geoDirty = true; frameDirty = true; });
+  $("play").addEventListener("click", () => setPlaying(!playing));
+  $("back").addEventListener("click", () => stepBy(-1));
+  $("fwd").addEventListener("click", () => stepBy(1));
+  window.addEventListener("keydown", (e) => {
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
+    if (e.key === " ") { e.preventDefault(); setPlaying(!playing); }
+    else if (e.key === "ArrowLeft") stepBy(-1);
+    else if (e.key === "ArrowRight") stepBy(1);
+  });
+  for (const d of document.querySelectorAll("details.sec")) {   // sections remember open/closed
+    try { const st = localStorage.getItem(STORE + d.id); if (st !== null) d.open = st === "1"; } catch (_) { /* storage unavailable */ }
+    d.addEventListener("toggle", () => { try { localStorage.setItem(STORE + d.id, d.open ? "1" : "0"); } catch (_) { /* storage unavailable */ } });
+  }
+  $("reset").addEventListener("click", () => {
+    setPlaying(false);
+    Object.assign(P, DEFAULTS);
+    resetView();
+    syncUI();
+    setGlue(0);
+  });
+  const setPanel = (show) => {
+    $("ui").classList.toggle("hidden", !show);
+    $("ui-toggle").setAttribute("aria-expanded", String(show));
+    $("ui-toggle").title = show ? "Hide controls (H)" : "Show controls (H)";
+    try { localStorage.setItem("glue-panel-hidden", show ? "0" : "1"); } catch (_) { /* storage unavailable */ }
+  };
+  const panelShown = () => !$("ui").classList.contains("hidden");
+  $("ui-toggle").addEventListener("click", () => setPanel(!panelShown()));
+  window.addEventListener("keydown", (e) => {
+    if ((e.key === "h" || e.key === "H") && !(e.target instanceof HTMLInputElement)) setPanel(!panelShown());
+  });
+  let startHidden = false;
+  try { startHidden = localStorage.getItem("glue-panel-hidden") === "1"; } catch (_) { /* storage unavailable */ }
+  setPanel(!startHidden);
+}
+
+// =====================================================================
+// The square, its edges and corners
+// =====================================================================
+// Mesh: (NQ + 1)^2 vertices on the square [-1, 1]^2, vertex (i, j) at X = -1 + 2i/NQ, Y = -1 + 2j/NQ.
+// A = (-1, 1) top left, B top right, C bottom right, D bottom left. Sides run clockwise: top A->B,
+// right B->C, bottom C->D, left D->A, each sampled at p = idx / NQ; SURFACE.sides gives each side's seam
+// and whether its arrow runs clockwise (+1) or against (-1). Partner points have equal f = (dir > 0 ? p : 1 - p).
+const NQ = 240, ROW = NQ + 1, NV = ROW * ROW;
+const sqd = new Float64Array(NV * 2), sqs = new Float32Array(NV * 2), colData = new Float32Array(NV * 2);
+for (let j = 0; j <= NQ; j++) for (let i = 0; i <= NQ; i++) {
+  const v = j * ROW + i, X = -1 + (2 * i) / NQ, Y = -1 + (2 * j) / NQ;
+  sqd[2 * v] = sqs[2 * v] = X; sqd[2 * v + 1] = sqs[2 * v + 1] = Y;
+  colData[2 * v] = 0.75 * X; colData[2 * v + 1] = 0.75 * Y;   // material colour is attached to the square
+}
+const indices = (() => {
+  const out = new Uint32Array(NQ * NQ * 6);
+  let n = 0;
+  for (let j = 0; j < NQ; j++) for (let i = 0; i < NQ; i++) {
+    const a = j * ROW + i, b = a + 1, c = a + ROW, d = c + 1;
+    out[n++] = a; out[n++] = b; out[n++] = d; out[n++] = a; out[n++] = d; out[n++] = c;
+  }
+  return out;
+})();
+const SIDE_NAMES = ["top", "right", "bottom", "left"];
+const SIDE_ENDS = [["A", "B"], ["B", "C"], ["C", "D"], ["D", "A"]];   // corner at p = 0 and p = 1
+const CORNER_V = { A: NQ * ROW, B: NQ * ROW + NQ, C: NQ, D: 0 };
+const sideVertex = (k, idx) => [NQ * ROW + idx, (NQ - idx) * ROW + NQ, NQ - idx, idx * ROW][k];
+const SEAMS = ["a", "b"].map((name) => {
+  const ks = [0, 1, 2, 3].filter((k) => SURFACE.sides[SIDE_NAMES[k]][0] === name);
+  const d = ks.map((k) => SURFACE.sides[SIDE_NAMES[k]][1]);
+  // the two ends of the seam: corners at f = 0 and f = 1 on each side
+  const ends = ks.map((k, n) => (d[n] > 0 ? SIDE_ENDS[k] : [SIDE_ENDS[k][1], SIDE_ENDS[k][0]]));
+  return { name, k1: ks[0], k2: ks[1], same: d[0] === d[1], ends };
+});
+const partnerIdx = (seam, idx) => (seam.same ? idx : NQ - idx);
+
+function cornerClasses(closed) {   // union-find over A-D, merging the ends of closed seams
+  const up = { A: "A", B: "B", C: "C", D: "D" };
+  const find = (x) => (up[x] === x ? x : (up[x] = find(up[x])));
+  SEAMS.forEach((s, n) => { if (closed[n]) for (const e of [0, 1]) up[find(s.ends[0][e])] = find(s.ends[1][e]); });
+  const groups = {};
+  for (const c of "ABCD") (groups[find(c)] ||= []).push(c);
+  return Object.values(groups);
+}
+const FINAL_CLASSES = cornerClasses([true, true]);
+const CLASS_COLORS = [[1.0, 0.6, 0.05], [0.06, 0.06, 0.07], [0.75, 0.12, 0.6], [1, 1, 1]];   // gold, black, magenta, white
+const CORNER_COLOR = {};
+FINAL_CLASSES.forEach((g, n) => g.forEach((c) => (CORNER_COLOR[c] = CLASS_COLORS[n])));
+
+// =====================================================================
+// Motion
+// =====================================================================
+// Two stages (default): the tutorial's own homotopy, SURFACE.point(X, Y, params(t)), with t running over
+// SURFACE.span: fold closes the orange seam a, puff the cyan seam b. One stretch: every point moves
+// straight from the flat square (the least-squares plane of the finished surface) to its place on the
+// finished surface, centre first and edges last, b = smoothstep(1.6 t - 0.6 max(|X|, |Y|)), so all edges
+// meet at the end. Either way the slider is re-timed by the distance the surface travels (70%) and by
+// time (30%, so the pause between the two stages stays visible), and the scale is fixed for the run.
+const smooth01 = (t) => { const x = Math.min(1, Math.max(0, t)); return x * x * (3 - 2 * x); };
+const [T0, T1] = SURFACE.span;
+const coneValue = () => (SURFACE.hasCones && P.cones ? 1 : 0);
+const PACE_K = 240;
+const SUB = [];   // every 6th vertex in each direction (edges included), for the pacing table
+for (let j = 0; j <= NQ; j += 6) for (let i = 0; i <= NQ; i += 6) SUB.push(j * ROW + i);
+let prep = null;   // per (motion, cones): cached finals, pacing table and scale
+
+function prepare() {
+  const key = P.motion + ":" + coneValue();
+  if (prep && prep.key === key) return prep;
+  const t0 = performance.now(), cone = coneValue();
+  const pr = { key, motion: P.motion, cone, fin: null, end: null, flat: null };
+  if (SURFACE.final) {   // the expensive target of the second stage, per cone setting
+    const cache = (prepare.fin ||= {});
+    if (!cache[cone]) cache[cone] = Array.from({ length: NV }, (_, v) => SURFACE.final(sqd[2 * v], sqd[2 * v + 1], cone));
+    pr.fin = cache[cone];
+  }
+  if (P.motion === "stretch") {
+    const sEnd = SURFACE.params(T1), end = (pr.end = new Float64Array(NV * 3));
+    for (let v = 0; v < NV; v++) end.set(SURFACE.point(sqd[2 * v], sqd[2 * v + 1], sEnd, cone, pr.fin && pr.fin[v]), 3 * v);
+    // least-squares plane of the finished surface over the square coordinates
+    const m = [0, 0, 0]; let sxx = 0, syy = 0, sxy = 0; const sx = [0, 0, 0], sy = [0, 0, 0];
+    for (let v = 0; v < NV; v++) for (let c = 0; c < 3; c++) m[c] += end[3 * v + c] / NV;
+    for (let v = 0; v < NV; v++) {   // the square coordinates have mean zero
+      const x = sqd[2 * v], y = sqd[2 * v + 1];
+      sxx += x * x; syy += y * y; sxy += x * y;
+      for (let c = 0; c < 3; c++) { const q = end[3 * v + c] - m[c]; sx[c] += x * q; sy[c] += y * q; }
+    }
+    const det = sxx * syy - sxy * sxy, flat = (pr.flat = new Float64Array(NV * 3));
+    const A0 = [0, 1, 2].map((c) => (syy * sx[c] - sxy * sy[c]) / det), A1 = [0, 1, 2].map((c) => (sxx * sy[c] - sxy * sx[c]) / det);
+    for (let v = 0; v < NV; v++) for (let c = 0; c < 3; c++) flat[3 * v + c] = m[c] + sqd[2 * v] * A0[c] + sqd[2 * v + 1] * A1[c];
+  }
+  // pacing table and scale, on the subsampled vertices
+  const n = SUB.length, prev = new Float64Array(3 * n), cur = new Float64Array(3 * n), arc = new Float64Array(PACE_K + 1);
+  let maxR = 0;
+  for (let k = 0; k <= PACE_K; k++) {
+    const ev = evaluator(pr, k / PACE_K), lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
+    SUB.forEach((v, q) => { const p = ev(v); for (let c = 0; c < 3; c++) { cur[3 * q + c] = p[c]; lo[c] = Math.min(lo[c], p[c]); hi[c] = Math.max(hi[c], p[c]); } });
+    const mid = [0, 1, 2].map((c) => 0.5 * (lo[c] + hi[c]));
+    let acc = 0;
+    for (let q = 0; q < n; q++) {
+      let d2 = 0, r2 = 0;
+      for (let c = 0; c < 3; c++) { cur[3 * q + c] -= mid[c]; d2 += (cur[3 * q + c] - prev[3 * q + c]) ** 2; r2 += cur[3 * q + c] ** 2; }
+      acc += Math.sqrt(d2);
+      maxR = Math.max(maxR, r2);
+    }
+    arc[k] = k ? acc : 0;
+    prev.set(cur);
+  }
+  const total = arc.reduce((a, b) => a + b, 0), cum = (pr.cum = new Float64Array(PACE_K + 1));
+  for (let k = 1; k <= PACE_K; k++) cum[k] = cum[k - 1] + 0.7 * arc[k] + (0.3 * total) / PACE_K;
+  pr.scale = 0.97 / Math.sqrt(maxR);
+  pr.ms = performance.now() - t0;
+  return (prep = pr);
+}
+function evaluator(pr, tau) {   // vertex -> point of the surface at re-timed parameter tau in [0, 1]
+  if (pr.motion === "stages") {
+    const s = SURFACE.params(T0 + tau * (T1 - T0));
+    return (v) => SURFACE.point(sqd[2 * v], sqd[2 * v + 1], s, pr.cone, pr.fin && pr.fin[v]);
+  }
+  const e = pr.end, f = pr.flat;
+  return (v) => {
+    const b = smooth01(1.6 * tau - 0.6 * Math.max(Math.abs(sqd[2 * v]), Math.abs(sqd[2 * v + 1])));
+    return [(1 - b) * f[3 * v] + b * e[3 * v], (1 - b) * f[3 * v + 1] + b * e[3 * v + 1], (1 - b) * f[3 * v + 2] + b * e[3 * v + 2]];
+  };
+}
+function paceTau(pr, g) {   // slider value -> tau, inverting the cumulative table
+  const target = g * pr.cum[PACE_K];
+  let k = 1;
+  while (k < PACE_K && pr.cum[k] < target) k++;
+  return (k - 1 + (target - pr.cum[k - 1]) / Math.max(pr.cum[k] - pr.cum[k - 1], 1e-12)) / PACE_K;
+}
+
+// =====================================================================
+// Geometry for the current slider value
+// =====================================================================
+const posData = new Float32Array(NV * 3), nrmData = new Float32Array(NV * 3);
+const SEAM_TOL = 2e-3;   // seam counts as glued below this mismatch (the surface spans about 2 units)
+let state = { tau: 0, closed: [false, false], mismatch: [1, 1], progress: [0, 0], classes: [] }, buildMs = 0;
+
+function buildGeometry() {
+  const t0 = performance.now(), pr = prepare(), tau = paceTau(pr, P.glue), ev = evaluator(pr, tau);
+  const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
+  for (let v = 0; v < NV; v++) {
+    const p = ev(v);
+    for (let c = 0; c < 3; c++) { posData[3 * v + c] = p[c]; if (p[c] < lo[c]) lo[c] = p[c]; if (p[c] > hi[c]) hi[c] = p[c]; }
+  }
+  const mid = [0, 1, 2].map((c) => 0.5 * (lo[c] + hi[c]));
+  for (let v = 0; v < NV; v++) for (let c = 0; c < 3; c++) posData[3 * v + c] = (posData[3 * v + c] - mid[c]) * pr.scale;
+  // normals: central differences on the grid (one-sided on the border, diagonals where degenerate)
+  const Pq = (i, j, c) => posData[3 * (j * ROW + i) + c];
+  for (let j = 0; j <= NQ; j++) for (let i = 0; i <= NQ; i++) {
+    const v = j * ROW + i, i0 = Math.max(i - 1, 0), i1 = Math.min(i + 1, NQ), j0 = Math.max(j - 1, 0), j1 = Math.min(j + 1, NQ);
+    let u = [0, 1, 2].map((c) => Pq(i1, j, c) - Pq(i0, j, c)), w = [0, 1, 2].map((c) => Pq(i, j1, c) - Pq(i, j0, c));
+    let n = v3.cross(u, w), l = Math.hypot(n[0], n[1], n[2]);
+    if (l < 1e-12) {
+      u = [0, 1, 2].map((c) => Pq(i1, j1, c) - Pq(i0, j0, c)); w = [0, 1, 2].map((c) => Pq(i0, j1, c) - Pq(i1, j0, c));
+      n = v3.cross(u, w); l = Math.hypot(n[0], n[1], n[2]);
+    }
+    if (l < 1e-12) { n = [0, 0, 1]; l = 1; }
+    for (let c = 0; c < 3; c++) nrmData[3 * v + c] = n[c] / l;
+  }
+  // seams: measure the gap; once closed, weld the two sides (shared positions and normals)
+  const closed = [false, false], mismatch = [0, 0];
+  SEAMS.forEach((s, n) => {
+    let worst = 0;
+    for (let idx = 0; idx <= NQ; idx++) {
+      const a = 3 * sideVertex(s.k1, idx), b = 3 * sideVertex(s.k2, partnerIdx(s, idx));
+      worst = Math.max(worst, Math.hypot(posData[a] - posData[b], posData[a + 1] - posData[b + 1], posData[a + 2] - posData[b + 2]));
+    }
+    mismatch[n] = worst;
+    if (worst > SEAM_TOL) return;
+    closed[n] = true;
+    for (let idx = 0; idx <= NQ; idx++) {
+      const a = 3 * sideVertex(s.k1, idx), b = 3 * sideVertex(s.k2, partnerIdx(s, idx));
+      const sg = Math.sign(nrmData[a] * nrmData[b] + nrmData[a + 1] * nrmData[b + 1] + nrmData[a + 2] * nrmData[b + 2]) || 1;
+      const nn = v3.norm([0, 1, 2].map((c) => nrmData[a + c] + sg * nrmData[b + c]));
+      for (let c = 0; c < 3; c++) {
+        const p = 0.5 * (posData[a + c] + posData[b + c]);
+        posData[a + c] = posData[b + c] = p;
+        nrmData[a + c] = nn[c]; nrmData[b + c] = sg * nn[c];
+      }
+    }
+  });
+  // how far each seam has come: the stage parameters (fold closes a, puff closes b), or the stretch
+  const sp = SURFACE.params(T0 + tau * (T1 - T0));
+  const progress = P.motion === "stages" ? [sp.fold, sp.puff] : [smooth01(1.6 * tau - 0.6), smooth01(1.6 * tau - 0.6)];
+  state = { tau, closed, mismatch, progress, classes: cornerClasses(closed) };
+  gl.bindBuffer(gl.ARRAY_BUFFER, bufPos); gl.bufferData(gl.ARRAY_BUFFER, posData, gl.DYNAMIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER, bufNrm); gl.bufferData(gl.ARRAY_BUFFER, nrmData, gl.DYNAMIC_DRAW);
+  buildMs = performance.now() - t0;
+  updateStatus();
+}
+
+// What the glued square is now: cells V - E + F (F = 1), orientability, boundary circles, its name.
+function topology(closed) {
+  const classes = cornerClasses(closed), of = {};
+  classes.forEach((g, n) => g.forEach((c) => (of[c] = n)));
+  const V = classes.length, E = SEAMS.reduce((e, s, n) => e + (closed[n] ? 1 : 2), 0), chi = V - E + 1;
+  const orientable = SEAMS.every((s, n) => !closed[n] || !s.same);
+  // boundary circles: components of the graph of open sides on the corner classes
+  const up = classes.map((_, n) => n), find = (x) => (up[x] === x ? x : (up[x] = find(up[x])));
+  const used = new Set();
+  SEAMS.forEach((s, n) => { if (!closed[n]) for (const k of [s.k1, s.k2]) { const [p, q] = SIDE_ENDS[k].map((c) => of[c]); used.add(p); used.add(q); up[find(p)] = find(q); } });
+  const circles = new Set([...used].map(find)).size;
+  const NAMES = {
+    "1,1,1": "disk", "0,1,2": "cylinder", "0,0,1": "Möbius band",
+    "2,1,0": "sphere", "0,1,0": "torus", "1,0,0": "projective plane", "0,0,0": "Klein bottle",
+  };
+  return { V, E, chi, orientable, circles, name: NAMES[[chi, orientable ? 1 : 0, circles].join()] || "surface" };
+}
+function updateStatus() {
+  const T = topology(state.closed);
+  const seamTxt = SEAMS.map((s, n) => {
+    const col = n ? P.eb : P.ea, pg = state.progress[n];
+    const st = state.closed[n] ? "glued" : pg <= 0 ? "open" : `closing (${Math.round(100 * pg)}%)`;
+    return `<span class="chip" style="background:${col}">${s.name}</span> ${st}`;
+  }).join(" · ");
+  $("status").innerHTML =
+    `${seamTxt}<br><b>${T.name[0].toUpperCase() + T.name.slice(1)}</b> · χ = ${T.chi} (V ${T.V} − E ${T.E} + F 1)<br>` +
+    `${T.orientable ? "orientable" : "non-orientable"} · ${T.circles ? T.circles + " boundary circle" + (T.circles > 1 ? "s" : "") : "closed, no boundary"}`;
+}
+
+// =====================================================================
+// Shaders
+// =====================================================================
+const VS_MESH = `#version 300 es
+precision highp float;
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec3 aNrm;
+layout(location = 2) in vec2 aCol;
+layout(location = 3) in vec2 aSq;
+uniform mat4 uModel;
+uniform mat4 uVP;
+out vec3 vPos;
+out vec3 vNrm;
+out vec2 vCol;
+out vec2 vSq;
+invariant gl_Position;
+void main() {
+  vec4 w = uModel * vec4(aPos, 1.0);
+  vPos = w.xyz;
+  vNrm = mat3(uModel) * aNrm;
+  vCol = aCol;
+  vSq = aSq;
+  gl_Position = uVP * w;
+}`;
+const VS_QUAD = `#version 300 es
+out vec2 vUv;
+void main() {
+  vec2 p = vec2(float((gl_VertexID << 1) & 2), float(gl_VertexID & 2));
+  vUv = p;
+  gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
+}`;
+
+// Thin frosted-glass slab model shared by the camera layers and the shadow map.
+const MATERIAL = `
+uniform vec3 uLobe0, uLobe1, uLobe2, uCenter;
+uniform float uSharp;
+uniform vec2 uCenterR;
+uniform float uDensity, uClarity, uScatter, uRim, uRough;
+
+vec3 materialTint(vec2 c, out float edge) {
+  float rho = length(c);
+  vec2 n = c / max(rho, 1e-6);
+  vec3 cosd = vec3(n.x, dot(n, vec2(-0.5, 0.8660254)), dot(n, vec2(-0.5, -0.8660254)));
+  vec3 w = exp(uSharp * (cosd - 1.0));
+  vec3 lobe = (w.x * uLobe0 + w.y * uLobe1 + w.z * uLobe2) / (w.x + w.y + w.z);
+  edge = smoothstep(uCenterR.x, uCenterR.y, rho);
+  return mix(uCenter, lobe, edge);
+}
+float pathLen(float cosT) { return mix(1.0, 1.0 / (cosT + 0.12), uRim); }
+float fresnel(float cosT) {
+  float f90 = 0.5 - 0.6 * uRough;
+  return 0.04 + max(f90 - 0.04, 0.0) * pow(1.0 - cosT, 5.0);
+}
+`;
+
+const FS_LAYER = `#version 300 es
+precision highp float;
+precision highp sampler2D;
+in vec3 vPos;
+in vec3 vNrm;
+in vec2 vCol;
+in vec2 vSq;
+uniform sampler2D uPrevDepth;
+uniform int uPeel;
+uniform vec3 uCamPos;
+uniform int uGridType;                 // 0 off, 1 square
+uniform float uGridN, uGridW, uGridS;  // lines per direction, width (px), strength
+uniform int uEdges, uArrows, uCorners;
+uniform float uEdgeW;                  // half-width of the edge band on each sheet (px)
+uniform vec3 uSideCol[4];              // top, right, bottom, left
+uniform float uSideDir[4];             // +1: the side's arrow runs clockwise
+uniform vec3 uCorner[4];               // world positions of A, B, C, D
+uniform vec3 uCornerCol[4];
+uniform vec3 uKeyDir, uKeyCol, uFillDir, uFillCol, uRimDir, uRimCol, uSky, uGround;
+layout(location = 0) out vec4 oRad;
+layout(location = 1) out vec4 oTrn;
+${MATERIAL}
+float sgLobe(vec3 R, vec3 dir, float sharp, float lr) {
+  float s = sharp * lr / (sharp + lr);
+  return s / sharp * exp(s * (dot(R, dir) - 1.0));
+}
+vec3 envRad(vec3 R) {
+  float lr = 2.0 / max(uRough * uRough, 2e-3);
+  vec3 env = mix(uGround, uSky, smoothstep(-0.3, 0.6, R.y));
+  env += uKeyCol * 4.0 * sgLobe(R, uKeyDir, 30.0, lr);
+  env += uFillCol * 1.4 * sgLobe(R, uFillDir, 14.0, lr);
+  env += uRimCol * 1.6 * sgLobe(R, uRimDir, 16.0, lr);
+  return env;
+}
+void main() {
+  if (uPeel == 1 && gl_FragCoord.z <= texelFetch(uPrevDepth, ivec2(gl_FragCoord.xy), 0).r) discard;
+  vec3 V = normalize(uCamPos - vPos);
+  vec3 N = normalize(vNrm);
+  float ndv = dot(N, V);
+  if (ndv < 0.0) { N = -N; ndv = -ndv; }   // shade the side we see
+  ndv = clamp(ndv, 1e-3, 1.0);
+
+  float edge;
+  vec3 tint = materialTint(vCol, edge);
+  float dens = uDensity * mix(uClarity, 1.0, edge);
+  vec3 sigA = -log(clamp(tint, 0.003, 1.0));
+  float path = pathLen(ndv);
+  vec3 tau = exp(-sigA * dens * path);
+  float scat = 1.0 - exp(-uScatter * dens * path);
+  vec3 alb = exp(-sigA * dens * 1.0);
+
+  float nk = dot(N, uKeyDir), nf = dot(N, uFillDir), nr = dot(N, uRimDir);
+  vec3 Ef = uKeyCol * max(nk, 0.0) + uFillCol * max(nf, 0.0) + uRimCol * max(nr, 0.0);
+  vec3 Eb = uKeyCol * max(-nk, 0.0) + uFillCol * max(-nf, 0.0) + uRimCol * max(-nr, 0.0);
+  vec3 amb = mix(uGround, uSky, N.y * 0.5 + 0.5);
+  vec3 Ls = alb * scat * (Ef + 0.6 * Eb + amb) * 0.32;
+
+  float F = fresnel(ndv);
+  vec3 rad = F * envRad(reflect(-V, N)) + (1.0 - F) * Ls;
+  vec3 trn = (1.0 - F) * (1.0 - F) * tau * (1.0 - scat);
+
+  if (uGridType > 0) {
+    vec2 g = (vSq + 1.0) * 0.5 * uGridN;
+    vec2 fw = max(fwidth(g), vec2(1e-4));
+    vec2 d = abs(fract(g + 0.5) - 0.5) / fw;
+    d += 1e3 * (1.0 - step(0.5, g) * step(g, vec2(uGridN - 0.5)));   // the boundary is drawn as edges
+    float line = 1.0 - clamp(min(d.x, d.y) - 0.5 * uGridW + 0.5, 0.0, 1.0);
+    rad += vec3(0.75 * uGridS) * line;
+    trn *= 1.0 - 0.6 * uGridS * line;
+  }
+  // Edges, arrows and corners, painted in square coordinates. Each sheet paints its own side of each
+  // edge; once two edges are glued the two halves meet on the seam, so bands and arrows are centred on it.
+  if (uEdges == 1 || uArrows == 1 || uCorners == 1) {
+    vec2 gx = vec2(dFdx(vSq.x), dFdy(vSq.x)), gy = vec2(dFdx(vSq.y), dFdy(vSq.y));
+    float pxX = max(length(gx), 1e-6), pxY = max(length(gy), 1e-6);   // square units per pixel
+    vec4 acr = vec4(1.0 - vSq.y, 1.0 - vSq.x, 1.0 + vSq.y, 1.0 + vSq.x);   // distance to each side
+    int k = 0;
+    float a = acr.x;
+    if (acr.y < a) { k = 1; a = acr.y; }
+    if (acr.z < a) { k = 2; a = acr.z; }
+    if (acr.w < a) { k = 3; a = acr.w; }
+    bool horiz = k == 0 || k == 2;
+    float pa = horiz ? pxY : pxX, pl = horiz ? pxX : pxY;
+    float along = k == 0 ? vSq.x : k == 1 ? -vSq.y : k == 2 ? -vSq.x : vSq.y;   // clockwise, 0 mid-side
+    float d = a / pa;                                     // pixels from the edge
+    float cov = 0.0, ink = 0.0;
+    vec3 col = vec3(0.0), oc = vec3(0.03);
+    if (uEdges == 1) {
+      // the pixel scale blows up where the surface is seen edge-on; cap the band's reach on the surface
+      float reach = 1.0 - smoothstep(0.06, 0.09, a);
+      cov = reach * (1.0 - smoothstep(1.45 * uEdgeW - 0.5, 1.45 * uEdgeW + 0.5, d));   // dark outline
+      ink = reach * (1.0 - smoothstep(uEdgeW - 0.5, uEdgeW + 0.5, d));
+      col = uSideCol[k];
+    }
+    if (uArrows == 1) {
+      // half of a triangle centred on the edge's midpoint, pointing the way the edge's arrow runs
+      float L = 5.0 * uEdgeW + 12.0, Hw = 1.9 * uEdgeW + 5.0;
+      float q = uSideDir[k] * along / pl;                 // pixels along the arrow from mid-side
+      float reach = 1.0 - smoothstep(0.12, 0.16, a);
+      float inside = min(Hw * (0.5 - q / L) - d, q + 0.5 * L);
+      float outer = reach * smoothstep(-0.7, 0.7, inside);
+      float inner = reach * smoothstep(-0.7, 0.7, inside - 2.2);
+      col = mix(col, vec3(0.009, 0.017, 0.035), outer);
+      col = mix(col, uSideCol[k] * 0.35 + 0.65, inner);
+      oc = mix(oc, vec3(0.009, 0.017, 0.035), outer);
+      cov = max(cov, outer); ink = max(ink, outer);
+    }
+    if (uCorners == 1 && max(abs(vSq.x), abs(vSq.y)) > 0.7) {
+      // a disc of fixed size on the surface around each corner, measured in 3D; same colour = same point
+      float Rw = 0.006 * uEdgeW + 0.014;
+      for (int c = 0; c < 4; c++) {
+        float dd = length(vPos - uCorner[c]);
+        float aa = max(fwidth(dd), 1e-5);
+        float o = 1.0 - smoothstep(1.3 * Rw - aa, 1.3 * Rw + aa, dd);
+        float i = 1.0 - smoothstep(Rw - aa, Rw + aa, dd);
+        bool dark = dot(uCornerCol[c], vec3(0.3, 0.6, 0.1)) < 0.2;
+        col = mix(col, uCornerCol[c], i);
+        if (o > 0.0) oc = dark ? vec3(0.92) : vec3(0.03);   // light outline keeps a dark disc visible
+        cov = max(cov, o); ink = max(ink, i);
+      }
+    }
+    if (cov > 0.0) {   // opaque paint: lit diffuse colour, blocks what lies behind
+      float lit = 0.45 + 0.55 * max(dot(N, uKeyDir), 0.0) + 0.25 * max(dot(N, uFillDir), 0.0);
+      vec3 paint = mix(oc, col * lit, ink);
+      rad = mix(rad, paint, cov);
+      trn *= 1.0 - cov;
+    }
+  }
+  oRad = vec4(rad, 1.0);
+  oTrn = vec4(trn, 1.0);
+}`;
+
+const FS_SHADOW = `#version 300 es
+precision highp float;
+in vec3 vPos;
+in vec3 vNrm;
+in vec2 vCol;
+out vec4 o;
+${MATERIAL}
+void main() {
+  float c = clamp(abs(normalize(vNrm).y), 1e-3, 1.0);
+  float edge;
+  vec3 tint = materialTint(vCol, edge);
+  float dens = uDensity * mix(uClarity, 1.0, edge);
+  float path = pathLen(c);
+  vec3 tau = exp(-(-log(clamp(tint, 0.003, 1.0))) * dens * path);
+  float scat = 1.0 - exp(-uScatter * dens * path);
+  float F = fresnel(c);
+  o = vec4((1.0 - F) * (1.0 - F) * tau * (1.0 - 0.6 * scat), 1.0);
+}`;
+const FS_BG = `#version 300 es
+precision highp float;
+precision highp sampler2D;
+in vec2 vUv;
+uniform vec3 uCamPos, uCamR, uCamU, uCamF;
+uniform vec2 uTanFov, uShift;
+uniform float uFloorY, uShadowExt, uShadowStr;
+uniform vec3 uBgDark, uBgLight;
+uniform sampler2D uShadow;
+out vec4 o;
+void main() {
+  vec2 ndc = vUv * 2.0 - 1.0;
+  vec2 sn = ndc - uShift;   // undo the lens shift so the floor shadow follows the object
+  vec3 dir = normalize(uCamF + sn.x * uTanFov.x * uCamR + sn.y * uTanFov.y * uCamU);
+  vec3 bg = mix(uBgDark, uBgLight, clamp(0.5 + 0.5 * (vUv.x - vUv.y), 0.0, 1.0));
+  vec2 vq = ndc * vec2(0.75, 1.0);
+  bg *= 1.0 - 0.06 * dot(vq, vq);
+  if (dir.y < -1e-4) {
+    vec3 hit = uCamPos + dir * ((uFloorY - uCamPos.y) / dir.y);
+    vec2 st = hit.xz / uShadowExt * 0.5 + 0.5;
+    if (all(greaterThan(st, vec2(0.0))) && all(lessThan(st, vec2(1.0)))) {
+      bg *= mix(vec3(1.0), texture(uShadow, st).rgb, uShadowStr);
+    }
+  }
+  o = vec4(bg, 1.0);
+}`;
+
+const FS_COMP = `#version 300 es
+precision highp float;
+precision highp sampler2D;
+uniform sampler2D uC, uT, uLR, uLT;
+layout(location = 0) out vec4 oC;
+layout(location = 1) out vec4 oT;
+void main() {
+  ivec2 p = ivec2(gl_FragCoord.xy);
+  vec3 T = texelFetch(uT, p, 0).rgb;
+  oC = vec4(texelFetch(uC, p, 0).rgb + T * texelFetch(uLR, p, 0).rgb, 1.0);
+  oT = vec4(T * texelFetch(uLT, p, 0).rgb, 1.0);
+}`;
+
+const FS_DOWN = `#version 300 es
+precision highp float;
+precision highp sampler2D;
+uniform sampler2D uC, uT, uBg;
+out vec4 o;
+void main() {
+  ivec2 lim = textureSize(uC, 0) - 1;
+  ivec2 p = ivec2(gl_FragCoord.xy) * 2;
+  vec3 s = vec3(0.0);
+  for (int j = 0; j < 2; j++) for (int i = 0; i < 2; i++) {
+    ivec2 q = min(p + ivec2(i, j), lim);
+    s += texelFetch(uC, q, 0).rgb + texelFetch(uT, q, 0).rgb * texelFetch(uBg, q, 0).rgb;
+  }
+  o = vec4(0.25 * s, 1.0);
+}`;
+
+const FS_BLUR = `#version 300 es
+precision highp float;
+precision highp sampler2D;
+in vec2 vUv;
+uniform sampler2D uTex;
+uniform vec2 uStep;
+out vec4 o;
+void main() {
+  vec3 s = texture(uTex, vUv).rgb;
+  float ws = 1.0;
+  for (int i = 1; i <= 10; i++) {
+    float x = float(i);
+    float w = exp(-x * x / 32.0);   // sigma = 4 taps
+    s += w * (texture(uTex, vUv + uStep * x).rgb + texture(uTex, vUv - uStep * x).rgb);
+    ws += 2.0 * w;
+  }
+  o = vec4(s / ws, 1.0);
+}`;
+
+const FS_FINAL = `#version 300 es
+precision highp float;
+precision highp sampler2D;
+in vec2 vUv;
+uniform sampler2D uFR, uFT, uC, uT, uBg, uBlur;
+uniform float uFrostOn, uExposure;
+out vec4 o;
+// Khronos PBR Neutral tone mapper (reference implementation)
+vec3 pbrNeutral(vec3 color) {
+  const float startCompression = 0.8 - 0.04;
+  const float desaturation = 0.15;
+  float x = min(color.r, min(color.g, color.b));
+  float offset = x < 0.08 ? x - 6.25 * x * x : 0.04;
+  color -= offset;
+  float peak = max(color.r, max(color.g, color.b));
+  if (peak < startCompression) return color;
+  const float d = 1.0 - startCompression;
+  float newPeak = 1.0 - d * d / (peak + d - startCompression);
+  color *= newPeak / peak;
+  float g = 1.0 - 1.0 / (desaturation * (peak - newPeak) + 1.0);
+  return mix(color, newPeak * vec3(1.0), g);
+}
+vec3 toSrgb(vec3 c) {
+  return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c));
+}
+void main() {
+  ivec2 p = ivec2(gl_FragCoord.xy);
+  vec4 fr = texelFetch(uFR, p, 0);
+  vec3 bg = texelFetch(uBg, p, 0).rgb;
+  vec3 col = bg;
+  if (fr.a > 0.5) {
+    vec3 behind = uFrostOn > 0.5
+      ? texture(uBlur, vUv).rgb
+      : texelFetch(uC, p, 0).rgb + texelFetch(uT, p, 0).rgb * bg;
+    col = fr.rgb + texelFetch(uFT, p, 0).rgb * behind;
+  }
+  col = toSrgb(clamp(pbrNeutral(max(col * uExposure, 0.0)), 0.0, 1.0));
+  o = vec4(col, fr.a);
+}`;
+
+// FXAA (compact Lottes variant, after mattdesl/glsl-fxaa, MIT) + grain/dither
+const FS_FXAA = `#version 300 es
+precision highp float;
+precision highp sampler2D;
+uniform sampler2D uTex;
+uniform vec2 uRes;
+uniform float uGrain;
+out vec4 o;
+float hash12(vec2 p) {
+  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
+}
+void main() {
+  vec2 inv = 1.0 / uRes;
+  vec2 fc = gl_FragCoord.xy;
+  vec3 rgbNW = texture(uTex, (fc + vec2(-1.0, -1.0)) * inv).rgb;
+  vec3 rgbNE = texture(uTex, (fc + vec2(1.0, -1.0)) * inv).rgb;
+  vec3 rgbSW = texture(uTex, (fc + vec2(-1.0, 1.0)) * inv).rgb;
+  vec3 rgbSE = texture(uTex, (fc + vec2(1.0, 1.0)) * inv).rgb;
+  vec4 mid = texture(uTex, fc * inv);
+  const vec3 luma = vec3(0.299, 0.587, 0.114);
+  float lNW = dot(rgbNW, luma), lNE = dot(rgbNE, luma), lSW = dot(rgbSW, luma), lSE = dot(rgbSE, luma);
+  float lM = dot(mid.rgb, luma);
+  float lMin = min(lM, min(min(lNW, lNE), min(lSW, lSE)));
+  float lMax = max(lM, max(max(lNW, lNE), max(lSW, lSE)));
+  vec2 dir = vec2(-((lNW + lNE) - (lSW + lSE)), (lNW + lSW) - (lNE + lSE));
+  float dirReduce = max((lNW + lNE + lSW + lSE) * (0.25 * 0.125), 1.0 / 128.0);
+  float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);
+  dir = clamp(dir * rcpDirMin, vec2(-8.0), vec2(8.0)) * inv;
+  vec3 rgbA = 0.5 * (texture(uTex, fc * inv + dir * (1.0 / 3.0 - 0.5)).rgb +
+                     texture(uTex, fc * inv + dir * (2.0 / 3.0 - 0.5)).rgb);
+  vec3 rgbB = rgbA * 0.5 + 0.25 * (texture(uTex, fc * inv - dir * 0.5).rgb +
+                                   texture(uTex, fc * inv + dir * 0.5).rgb);
+  float lB = dot(rgbB, luma);
+  vec3 col = (lB < lMin || lB > lMax) ? rgbA : rgbB;
+  float n = hash12(fc) + hash12(fc + 17.31) - 1.0;   // triangular dither, also film grain
+  col += n * uGrain * (1.0 + 3.5 * mid.a) / 255.0;
+  o = vec4(col, 1.0);
+}`;
+
+// =====================================================================
+// WebGL2 setup
+// =====================================================================
+const canvas = $("c");
+const gl = canvas.getContext("webgl2", {
+  antialias: false, alpha: false, depth: false, stencil: false,
+  premultipliedAlpha: false, powerPreference: "high-performance",
+});
+
+function fail(msg) {
+  const e = $("err");
+  e.textContent = msg;
+  e.style.display = "flex";
+  $("ui").style.display = "none";
+  throw new Error(msg);
+}
+if (!gl) fail("This viewer needs WebGL2, which this browser or device does not provide.");
+
+const HAS_FLOAT_RT = !!gl.getExtension("EXT_color_buffer_float");
+const HDR = HAS_FLOAT_RT ? gl.RGBA16F : gl.RGBA8;
+
+function makeProgram(vs, fs, label) {
+  const prog = gl.createProgram();
+  for (const [type, src] of [[gl.VERTEX_SHADER, vs], [gl.FRAGMENT_SHADER, fs]]) {
+    const sh = gl.createShader(type);
+    gl.shaderSource(sh, src);
+    gl.compileShader(sh);
+    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+      fail(`${label} ${type === gl.VERTEX_SHADER ? "vertex" : "fragment"} shader: ${gl.getShaderInfoLog(sh)}`);
+    }
+    gl.attachShader(prog, sh);
+  }
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) fail(`${label} link: ${gl.getProgramInfoLog(prog)}`);
+  const uni = {};
+  const n = gl.getProgramParameter(prog, gl.ACTIVE_UNIFORMS);
+  for (let i = 0; i < n; i++) {
+    const info = gl.getActiveUniform(prog, i);
+    uni[info.name.replace(/\[0\]$/, "")] = { loc: gl.getUniformLocation(prog, info.name), type: info.type };
+  }
+  return { prog, uni };
+}
+
+function use(p, vals) {
+  gl.useProgram(p.prog);
+  for (const k in vals) {
+    const u = p.uni[k];
+    if (!u) continue;
+    const v = vals[k];
+    switch (u.type) {
+      case gl.FLOAT: if (Array.isArray(v)) gl.uniform1fv(u.loc, v); else gl.uniform1f(u.loc, v); break;
+      case gl.FLOAT_VEC2: gl.uniform2fv(u.loc, v); break;
+      case gl.FLOAT_VEC3: gl.uniform3fv(u.loc, v); break;
+      case gl.FLOAT_VEC4: gl.uniform4fv(u.loc, v); break;
+      case gl.FLOAT_MAT4: gl.uniformMatrix4fv(u.loc, false, v); break;
+      default: gl.uniform1i(u.loc, v);
+    }
+  }
+}
+
+function bindTextures(...texs) {
+  texs.forEach((t, i) => { gl.activeTexture(gl.TEXTURE0 + i); gl.bindTexture(gl.TEXTURE_2D, t); });
+}
+
+const progLayer = makeProgram(VS_MESH, FS_LAYER, "layer");
+const progShadow = makeProgram(VS_MESH, FS_SHADOW, "shadow");
+const progBg = makeProgram(VS_QUAD, FS_BG, "background");
+const progComp = makeProgram(VS_QUAD, FS_COMP, "composite");
+const progDown = makeProgram(VS_QUAD, FS_DOWN, "downsample");
+const progBlur = makeProgram(VS_QUAD, FS_BLUR, "blur");
+const progFinal = makeProgram(VS_QUAD, FS_FINAL, "final");
+const progFxaa = makeProgram(VS_QUAD, FS_FXAA, "fxaa");
+
+// Mesh buffers / VAO
+const bufPos = gl.createBuffer(), bufNrm = gl.createBuffer(), bufCol = gl.createBuffer(), bufSq = gl.createBuffer();
+const meshVao = gl.createVertexArray();
+gl.bindVertexArray(meshVao);
+[[bufPos, 3], [bufNrm, 3], [bufCol, 2], [bufSq, 2]].forEach(([b, n], i) => {
+  gl.bindBuffer(gl.ARRAY_BUFFER, b);
+  gl.enableVertexAttribArray(i);
+  gl.vertexAttribPointer(i, n, gl.FLOAT, false, 0, 0);
+});
+gl.bindBuffer(gl.ARRAY_BUFFER, bufCol);
+gl.bufferData(gl.ARRAY_BUFFER, colData, gl.STATIC_DRAW);
+gl.bindBuffer(gl.ARRAY_BUFFER, bufSq);
+gl.bufferData(gl.ARRAY_BUFFER, sqs, gl.STATIC_DRAW);
+const bufIdx = gl.createBuffer();
+gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, bufIdx);
+gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+gl.bindVertexArray(null);
+const quadVao = gl.createVertexArray();
+const drawCount = indices.length;
+
+function drawMesh() {
+  gl.bindVertexArray(meshVao);
+  gl.drawElements(gl.TRIANGLES, drawCount, gl.UNSIGNED_INT, 0);
+}
+function drawQuad() {
+  gl.bindVertexArray(quadVao);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+
+// Render targets
+const SHADOW_RES = 256;
+const INNER_LAYERS = 8;   // depth-peeled layers behind the front surface
+let RT = null;
+let W = 1, H = 1;
+function makeTex(w, h, fmt, filter) {
+  const t = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, t);
+  gl.texStorage2D(gl.TEXTURE_2D, 1, fmt, w, h);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  return t;
+}
+function makeFbo(colors, depth) {
+  const fb = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  colors.forEach((t, i) => gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, t, 0));
+  if (depth) gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth, 0);
+  gl.drawBuffers(colors.map((_, i) => gl.COLOR_ATTACHMENT0 + i));
+  const st = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+  if (st !== gl.FRAMEBUFFER_COMPLETE) fail("Framebuffer incomplete (0x" + st.toString(16) + ")");
+  return fb;
+}
+
+function allocTargets(w, h) {
+  if (RT) {
+    RT.textures.forEach((t) => gl.deleteTexture(t));
+    RT.fbos.forEach((f) => gl.deleteFramebuffer(f));
+  }
+  const textures = [], fbos = [];
+  const T = (ww, hh, fmt, filt) => { const t = makeTex(ww, hh, fmt, filt); textures.push(t); return t; };
+  const F = (c, d) => { const f = makeFbo(c, d); fbos.push(f); return f; };
+  const N = gl.NEAREST, L = gl.LINEAR;
+  const hw = Math.max(1, w >> 1), hh = Math.max(1, h >> 1);
+  const r = {
+    bg: T(w, h, HDR, N),
+    frontR: T(w, h, HDR, N), frontT: T(w, h, HDR, N),
+    layR: T(w, h, HDR, N), layT: T(w, h, HDR, N),
+    dA: T(w, h, gl.DEPTH_COMPONENT32F, N), dB: T(w, h, gl.DEPTH_COMPONENT32F, N),
+    accC: [T(w, h, HDR, N), T(w, h, HDR, N)], accT: [T(w, h, HDR, N), T(w, h, HDR, N)],
+    half: [T(hw, hh, HDR, L), T(hw, hh, HDR, L)],
+    ldr: T(w, h, gl.RGBA8, L),
+    shadow: [T(SHADOW_RES, SHADOW_RES, gl.RGBA8, L), T(SHADOW_RES, SHADOW_RES, gl.RGBA8, L)],
+    hw, hh,
+  };
+  r.fbBg = F([r.bg]);
+  r.fbFront = F([r.frontR, r.frontT], r.dA);
+  r.fbLayA = F([r.layR, r.layT], r.dA);
+  r.fbLayB = F([r.layR, r.layT], r.dB);
+  r.fbAcc = [F([r.accC[0], r.accT[0]]), F([r.accC[1], r.accT[1]])];
+  r.fbHalf = [F([r.half[0]]), F([r.half[1]])];
+  r.fbLdr = F([r.ldr]);
+  r.fbShadow = [F([r.shadow[0]]), F([r.shadow[1]])];
+  r.textures = textures;
+  r.fbos = fbos;
+  RT = r;
+}
+
+// =====================================================================
+// Math helpers (column-major 4x4)
+// =====================================================================
+const M4 = {
+  mul(a, b) {
+    const o = new Float32Array(16);
+    for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) {
+      let s = 0;
+      for (let k = 0; k < 4; k++) s += a[k * 4 + r] * b[c * 4 + k];
+      o[c * 4 + r] = s;
+    }
+    return o;
+  },
+  rotX(t) { const c = Math.cos(t), s = Math.sin(t); return new Float32Array([1, 0, 0, 0, 0, c, s, 0, 0, -s, c, 0, 0, 0, 0, 1]); },
+  rotY(t) { const c = Math.cos(t), s = Math.sin(t); return new Float32Array([c, 0, -s, 0, 0, 1, 0, 0, s, 0, c, 0, 0, 0, 0, 1]); },
+  rotZ(t) { const c = Math.cos(t), s = Math.sin(t); return new Float32Array([c, s, 0, 0, -s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]); },
+  persp(fovy, asp, n, f) {
+    const t = 1 / Math.tan(fovy / 2);
+    return new Float32Array([t / asp, 0, 0, 0, 0, t, 0, 0, 0, 0, (f + n) / (n - f), -1, 0, 0, (2 * f * n) / (n - f), 0]);
+  },
+};
+const v3 = {
+  sub: (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]],
+  cross: (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]],
+  dot: (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2],
+  norm: (a) => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; },
+};
+
+function hexToLinear(hex) {
+  return [1, 3, 5].map((i) => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  });
+}
+function worldOf(M, v) {
+  const x = posData[3 * v], y = posData[3 * v + 1], z = posData[3 * v + 2];
+  return [M[0] * x + M[4] * y + M[8] * z + M[12], M[1] * x + M[5] * y + M[9] * z + M[13], M[2] * x + M[6] * y + M[10] * z + M[14]];
+}
+
+// =====================================================================
+// Scene constants
+// =====================================================================
+const FOVY = (30 * Math.PI) / 180;
+const CAM_ELEV = (11 * Math.PI) / 180;
+const CAM_DIST0 = 5.3;
+const TARGET = [0, -0.2, 0];
+const FLOOR_Y = -1.28;
+const SHADOW_EXT = 2.6;
+const LIGHTS = {
+  uKeyDir: v3.norm([-0.55, 0.7, 0.45]), uKeyCol: [2.6, 2.55, 2.45],
+  uFillDir: v3.norm([0.8, 0.15, 0.55]), uFillCol: [0.65, 0.68, 0.72],
+  uRimDir: v3.norm([0.25, 0.55, -0.8]), uRimCol: [1.4, 1.4, 1.4],
+  uSky: [0.55, 0.56, 0.58], uGround: [0.22, 0.22, 0.23],
+};
+const BG_DARK = [0.7, 0.7, 0.705], BG_LIGHT = [0.8, 0.8, 0.8];
+
+let rotX = 0, rotY = 0, spinAngle = 0, camDist = CAM_DIST0, panX = 0, panY = 0;   // pan: screen offset in NDC
+let renderScale = 1, slowMs = 0, lastRenderT = 0, prevTickRendered = false;   // drops internal resolution if frames stay slow
+let dragging = false;
+
+function materialUniforms() {
+  return {
+    uLobe0: hexToLinear(P.c1), uLobe1: hexToLinear(P.c2), uLobe2: hexToLinear(P.c3), uCenter: hexToLinear(P.c0),
+    uSharp: 3.5, uCenterR: [0.02, 0.42],
+    uDensity: 0.08 + 1.6 * P.opa * P.opa,
+    uClarity: 1 - 0.9 * P.clar,
+    uScatter: 0.05 + 0.6 * P.frost,
+    uRim: P.edge,
+    uRough: 0.5 - 0.42 * P.gloss,
+  };
+}
+
+function objectMatrix() {   // turntable . drag . the surface's home pose
+  const h = SURFACE.home, base = M4.mul(M4.rotX(h.tilt), M4.mul(M4.rotY(h.turn), M4.rotZ(h.roll || 0)));
+  return M4.mul(M4.rotY(spinAngle), M4.mul(M4.mul(M4.rotX(rotX), M4.rotY(rotY)), base));
+}
+function camera() {
+  const eye = [0, TARGET[1] + camDist * Math.sin(CAM_ELEV), camDist * Math.cos(CAM_ELEV)];
+  const f = v3.norm(v3.sub(TARGET, eye));
+  const r = v3.norm(v3.cross(f, [0, 1, 0]));
+  const u = v3.cross(r, f);
+  const view = new Float32Array([
+    r[0], u[0], -f[0], 0, r[1], u[1], -f[1], 0, r[2], u[2], -f[2], 0,
+    -v3.dot(r, eye), -v3.dot(u, eye), v3.dot(f, eye), 1,
+  ]);
+  const aspect = W / H;
+  const proj = M4.persp(FOVY, aspect, Math.max(0.05, camDist - 1.6), camDist + 1.6);
+  const th = Math.tan(FOVY / 2);
+  // Lens shift: translate in clip space (x' = x + panX * w), so object, floor and shadow move together
+  // on screen while the perspective of the scene stays the same.
+  const shift = new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, panX, panY, 0, 1]);
+  return { eye, r, u, f, vp: M4.mul(shift, M4.mul(proj, view)), tanFov: [th * aspect, th], shift: [panX, panY] };
+}
+
+
+// =====================================================================
+// Frame
+// =====================================================================
+const SHADOW_VP = new Float32Array([1 / SHADOW_EXT, 0, 0, 0, 0, 0, 0, 0, 0, 1 / SHADOW_EXT, 0, 0, 0, 0, 0, 1]);
+
+function blur(src, dstFbo, w, h, dx, dy, sigmaPx) {
+  gl.bindFramebuffer(gl.FRAMEBUFFER, dstFbo);
+  gl.viewport(0, 0, w, h);
+  const step = sigmaPx / 4;
+  use(progBlur, { uTex: 0, uStep: [(dx * step) / w, (dy * step) / h] });
+  bindTextures(src);
+  drawQuad();
+}
+
+let frameCount = 0, lastFrameMs = 0;
+const SIDE_COLS = () => SIDE_NAMES.flatMap((s) => hexToLinear(SURFACE.sides[s][0] === "a" ? P.ea : P.eb));
+const SIDE_DIRS = SIDE_NAMES.map((s) => SURFACE.sides[s][1]);
+
+function renderFrame() {
+  const t0 = performance.now();
+  if (geoDirty) { buildGeometry(); geoDirty = false; }
+  const model = objectMatrix();
+  const cam = camera();
+  const mat = materialUniforms();
+  gl.disable(gl.CULL_FACE);
+  gl.disable(gl.BLEND);
+  gl.disable(gl.DEPTH_TEST);
+
+  // 1) Coloured soft shadow: multiplicative transmittance seen from straight above
+  gl.bindFramebuffer(gl.FRAMEBUFFER, RT.fbShadow[0]);
+  gl.viewport(0, 0, SHADOW_RES, SHADOW_RES);
+  gl.clearColor(1, 1, 1, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.ZERO, gl.SRC_COLOR);
+  use(progShadow, { ...mat, uModel: model, uVP: SHADOW_VP });
+  drawMesh();
+  gl.disable(gl.BLEND);
+  const shSigma = SHADOW_RES * 0.04;
+  for (let i = 0; i < 2; i++) {
+    blur(RT.shadow[0], RT.fbShadow[1], SHADOW_RES, SHADOW_RES, 1, 0, shSigma);
+    blur(RT.shadow[1], RT.fbShadow[0], SHADOW_RES, SHADOW_RES, 0, 1, shSigma);
+  }
+
+  // 2) Backdrop + floor shadow
+  gl.bindFramebuffer(gl.FRAMEBUFFER, RT.fbBg);
+  gl.viewport(0, 0, W, H);
+  use(progBg, {
+    uCamPos: cam.eye, uCamR: cam.r, uCamU: cam.u, uCamF: cam.f, uTanFov: cam.tanFov, uShift: cam.shift,
+    uFloorY: FLOOR_Y, uShadowExt: SHADOW_EXT * 0.8, uShadowStr: P.shadow,
+    uBgDark: BG_DARK, uBgLight: BG_LIGHT, uShadow: 0,
+  });
+  bindTextures(RT.shadow[0]);
+  drawQuad();
+
+  // 3) Depth peeling: front layer, then INNER_LAYERS composited front-to-back
+  const meshU = { ...mat, ...LIGHTS, uModel: model, uVP: cam.vp, uCamPos: cam.eye, uPrevDepth: 0,
+    uGridType: P.gridType === "off" ? 0 : 1, uGridN: P.gridN, uGridW: P.gridW, uGridS: P.gridS,
+    uEdges: P.edges ? 1 : 0, uArrows: P.arrows ? 1 : 0, uCorners: P.corners ? 1 : 0, uEdgeW: P.edgeW,
+    uSideCol: SIDE_COLS(), uSideDir: SIDE_DIRS,
+    uCorner: "ABCD".split("").flatMap((c) => worldOf(model, CORNER_V[c])),
+    uCornerCol: "ABCD".split("").flatMap((c) => CORNER_COLOR[c]) };
+  gl.enable(gl.DEPTH_TEST);
+  gl.depthFunc(gl.LESS);
+  gl.depthMask(true);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, RT.fbFront);
+  gl.clearBufferfv(gl.COLOR, 0, [0, 0, 0, 0]);
+  gl.clearBufferfv(gl.COLOR, 1, [1, 1, 1, 1]);
+  gl.clearBufferfv(gl.DEPTH, 0, [1]);
+  use(progLayer, { ...meshU, uPeel: 0 });
+  bindTextures(RT.dB);
+  drawMesh();
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, RT.fbAcc[0]);
+  gl.clearBufferfv(gl.COLOR, 0, [0, 0, 0, 1]);
+  gl.clearBufferfv(gl.COLOR, 1, [1, 1, 1, 1]);
+  let acc = 0;
+  for (let k = 1; k <= INNER_LAYERS; k++) {
+    const odd = k & 1;
+    gl.enable(gl.DEPTH_TEST);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, odd ? RT.fbLayB : RT.fbLayA);
+    gl.clearBufferfv(gl.COLOR, 0, [0, 0, 0, 0]);
+    gl.clearBufferfv(gl.COLOR, 1, [1, 1, 1, 1]);
+    gl.clearBufferfv(gl.DEPTH, 0, [1]);
+    use(progLayer, { uPeel: 1 });
+    bindTextures(odd ? RT.dA : RT.dB);
+    drawMesh();
+    gl.disable(gl.DEPTH_TEST);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, RT.fbAcc[1 - acc]);
+    use(progComp, { uC: 0, uT: 1, uLR: 2, uLT: 3 });
+    bindTextures(RT.accC[acc], RT.accT[acc], RT.layR, RT.layT);
+    drawQuad();
+    acc = 1 - acc;
+  }
+  gl.disable(gl.DEPTH_TEST);
+
+  // 4) Frosted transmission: blur everything seen through the front surface
+  const frostOn = P.frost > 0.005;
+  if (frostOn) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, RT.fbHalf[0]);
+    gl.viewport(0, 0, RT.hw, RT.hh);
+    use(progDown, { uC: 0, uT: 1, uBg: 2 });
+    bindTextures(RT.accC[acc], RT.accT[acc], RT.bg);
+    drawQuad();
+    const sigma = Math.max(0.3, P.frost * 0.0055 * RT.hh);
+    blur(RT.half[0], RT.fbHalf[1], RT.hw, RT.hh, 1, 0, sigma);
+    blur(RT.half[1], RT.fbHalf[0], RT.hw, RT.hh, 0, 1, sigma);
+  }
+
+  // 5) Front layer over blurred interior, tone map
+  gl.bindFramebuffer(gl.FRAMEBUFFER, RT.fbLdr);
+  gl.viewport(0, 0, W, H);
+  use(progFinal, { uFR: 0, uFT: 1, uC: 2, uT: 3, uBg: 4, uBlur: 5, uFrostOn: frostOn ? 1 : 0, uExposure: 1.0 });
+  bindTextures(RT.frontR, RT.frontT, RT.accC[acc], RT.accT[acc], RT.bg, RT.half[0]);
+  drawQuad();
+
+  // 6) FXAA + grain to screen
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.viewport(0, 0, W, H);
+  use(progFxaa, { uTex: 0, uRes: [W, H], uGrain: 1.2 });
+  bindTextures(RT.ldr);
+  drawQuad();
+
+  placeLabels(model, cam);
+  frameCount++;
+  lastFrameMs = performance.now() - t0;
+}
+
+// Corner labels: A-D clockwise from the upper left, merged once their corners meet; a fully glued
+// corner point shows its angle sum (90° per corner), a cone tip when it is less than 360°.
+function placeLabels(model, cam) {
+  const box = $("labels");
+  if (!P.labelsOn) { box.innerHTML = ""; return; }
+  const rect = canvas.getBoundingClientRect(), M = cam.vp, out = [];
+  const openSides = new Set();
+  SEAMS.forEach((s, n) => { if (!state.closed[n]) { openSides.add(s.k1); openSides.add(s.k2); } });
+  for (const g of state.classes) {
+    const w = [0, 0, 0];
+    for (const c of g) { const p = worldOf(model, CORNER_V[c]); for (let i = 0; i < 3; i++) w[i] += p[i] / g.length; }
+    const x = M[0] * w[0] + M[4] * w[1] + M[8] * w[2] + M[12], y = M[1] * w[0] + M[5] * w[1] + M[9] * w[2] + M[13];
+    const ww = M[3] * w[0] + M[7] * w[1] + M[11] * w[2] + M[15];
+    if (ww <= 0) continue;
+    const interior = g.every((c) => SIDE_ENDS.every((e, k) => !e.includes(c) || !openSides.has(k)));
+    let extra = "";
+    if (interior) {
+      const ang = 90 * g.length;
+      extra = ang >= 360 ? " · 360°" : coneValue() ? ` · ${ang}° cone` : " · smoothed";
+    }
+    out.push(`<div style="left:${((x / ww + 1) / 2) * rect.width}px;top:${((1 - y / ww) / 2) * rect.height}px">${g.join("=")}<small>${extra}</small></div>`);
+  }
+  box.innerHTML = out.join("");
+}
+
+// =====================================================================
+// Interaction & loop
+// =====================================================================
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  let w = Math.round(innerWidth * dpr * renderScale), h = Math.round(innerHeight * dpr * renderScale);
+  const maxPix = 2.6e6;                       // cap internal resolution (many full-res passes)
+  if (w * h > maxPix) {
+    const s = Math.sqrt(maxPix / (w * h));
+    w = Math.round(w * s);
+    h = Math.round(h * s);
+  }
+  w = Math.max(2, w); h = Math.max(2, h);
+  if (w !== W || h !== H || !RT) {
+    W = canvas.width = w;
+    H = canvas.height = h;
+    allocTargets(W, H);
+  }
+  frameDirty = true;
+}
+
+const pointers = new Map();   // pointerId -> {x, y}
+let panMode = false;
+const PAN_LIMIT = 0.95;
+function panBy(dxPx, dyPx) {
+  const rect = canvas.getBoundingClientRect();
+  panX = Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, panX + (2 * dxPx) / rect.width));
+  panY = Math.max(-PAN_LIMIT, Math.min(PAN_LIMIT, panY - (2 * dyPx) / rect.height));
+  frameDirty = true;
+}
+const centroid = () => {
+  let x = 0, y = 0;
+  for (const p of pointers.values()) { x += p.x; y += p.y; }
+  return [x / pointers.size, y / pointers.size];
+};
+const spread = () => {
+  const [a, b] = [...pointers.values()];
+  return Math.hypot(a.x - b.x, a.y - b.y);
+};
+let lastC = [0, 0], lastSpread = 0;
+canvas.addEventListener("pointerdown", (e) => {
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  canvas.setPointerCapture(e.pointerId);
+  panMode = e.button === 1 || e.button === 2 || e.shiftKey;
+  dragging = true;
+  lastC = centroid();
+  if (pointers.size === 2) lastSpread = spread();
+});
+canvas.addEventListener("pointermove", (e) => {
+  const p = pointers.get(e.pointerId);
+  if (!p) return;
+  p.x = e.clientX; p.y = e.clientY;
+  const c = centroid();
+  const dx = c[0] - lastC[0], dy = c[1] - lastC[1];
+  lastC = c;
+  if (pointers.size >= 2) {                     // two fingers: move + pinch-zoom
+    panBy(dx, dy);
+    const sp = spread();
+    if (lastSpread > 0 && sp > 0) camDist = Math.max(3.0, Math.min(12, camDist * (lastSpread / sp)));
+    lastSpread = sp;
+  } else if (panMode) {
+    panBy(dx, dy);
+  } else {
+    rotY += dx * 0.008;
+    rotX += dy * 0.008;
+  }
+  frameDirty = true;
+});
+const endDrag = (e) => {
+  pointers.delete(e.pointerId);
+  if (pointers.size > 0) { lastC = centroid(); lastSpread = pointers.size === 2 ? spread() : 0; }
+  else { dragging = false; panMode = false; }
+};
+canvas.addEventListener("pointerup", endDrag);
+canvas.addEventListener("pointercancel", endDrag);
+canvas.addEventListener("contextmenu", (e) => e.preventDefault());   // right-drag pans
+canvas.addEventListener("dblclick", () => { panX = 0; panY = 0; frameDirty = true; });
+canvas.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  camDist = Math.max(3.0, Math.min(12, camDist * Math.exp(e.deltaY * 0.001)));
+  frameDirty = true;
+}, { passive: false });
+window.addEventListener("resize", resize);
+
+let lastT = performance.now();
+function loop(now) {
+  requestAnimationFrame(loop);
+  const dt = Math.min(0.1, (now - lastT) / 1000);
+  lastT = now;
+  if (playing) {   // wall-clock time, so the duration holds at any frame rate
+    setGlue(playG0 + (now - playT0) / 1000 / P.dur);
+    if (P.glue >= 1) setPlaying(false);
+  }
+  if (!dragging && P.spin > 0) { spinAngle += dt * P.spin * 0.5; frameDirty = true; }
+  const willRender = frameDirty || geoDirty;
+  if (willRender) {
+    if (prevTickRendered && !geoDirty) {                // back-to-back frames: the gap is real frame time
+      const gap = now - lastRenderT;
+      if (gap > 40) slowMs += gap; else slowMs = Math.max(0, slowMs - 4 * gap);
+      if (slowMs > 2500 && renderScale > 0.55) { renderScale *= 0.85; slowMs = 0; resize(); }
+    }
+    lastRenderT = now;
+    frameDirty = false;
+    renderFrame();
+  }
+  prevTickRendered = willRender;
+}
+
+// Link parameters: ?glue=0.5&motion=stretch&cones=0&play=0
+const query = new URLSearchParams(location.search);
+if (query.has("glue")) P.glue = Math.min(1, Math.max(0, +query.get("glue") || 0));
+if (query.get("motion") === "stretch") P.motion = "stretch";
+if (query.get("cones") === "0") P.cones = false;
+resetView();
+syncUI();
+bindUI();
+setGlue(P.glue);
+resize();
+requestAnimationFrame(loop);
+if (!query.has("glue") && query.get("play") !== "0") setTimeout(() => { if (P.glue === 0 && !dragging) setPlaying(true); }, 700);
+
+// Small hook for automated checks and the render tool (harmless in normal use)
+window.__glue = {
+  P, gl, SURFACE, SEAMS,
+  get stats() {
+    return { frameCount, lastFrameMs, buildMs, prepMs: prep ? prep.ms : 0, W, H, renderScale, floatRT: HAS_FLOAT_RT,
+      tau: state.tau, closed: state.closed.slice(), mismatch: state.mismatch.slice(), classes: state.classes.map((g) => g.join("")),
+      topology: topology(state.closed), playing };
+  },
+  set(obj) {
+    setPlaying(false);
+    Object.assign(P, obj); syncUI(); setGlue(P.glue);
+    if (Object.keys(obj).some((k) => SHAPE_KEYS.has(k))) geoDirty = true;
+    frameDirty = true;
+  },
+  play(on) { setPlaying(on); },
+  pose(o) {
+    if ("rotX" in o) rotX = o.rotX; if ("rotY" in o) rotY = o.rotY; if ("spin" in o) spinAngle = o.spin;
+    if ("panX" in o) panX = o.panX; if ("panY" in o) panY = o.panY; if ("dist" in o) camDist = o.dist;
+    frameDirty = true;
+  },
+  renderNow() { frameDirty = false; renderFrame(); gl.finish(); },
+  positions: () => posData,
+  internals: () => ({ meshVao, count: drawCount, model: objectMatrix(), cam: camera(), RT }),
+};
+</script>
+</body>
+</html>
