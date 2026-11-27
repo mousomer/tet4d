@@ -2319,6 +2319,7 @@ Parameters:
 - `governance.godot_toolchain.assets.windows_x86_64.name`: `"Godot_v4.7.2-stable_win64.exe.zip"` (`string`)
 - `governance.godot_toolchain.assets.windows_x86_64.sha512`: `"83decd58fdf67b9d657958a1ae6bf1929c20785315a81effe245874cdc57acb709bf...` (`string`)
 - `governance.godot_toolchain.assets.windows_x86_64.url`: `"https://github.com/godotengine/godot/releases/download/4.7.2-stable/...` (`string`)
+- `governance.godot_toolchain.build.clang_format_major`: `18` (`int`)
 - `governance.godot_toolchain.build.cpp_standard`: `"C++17"` (`string`)
 - `governance.godot_toolchain.build.scons_version`: `"4.10.1"` (`string`)
 - `governance.godot_toolchain.build_identifier`: `"4.7.2.stable.official.ed1daf0bf"` (`string`)
