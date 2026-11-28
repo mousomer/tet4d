@@ -22,7 +22,7 @@ On the tested Apple silicon Mac, the bundled encoder reproduced all decoded vide
 IMAGEIO_FFMPEG_EXE="$(command -v ffmpeg)" .venv/bin/python rebuild/build.py --output /tmp/tet4d-original-encoder
 ```
 
-The six standalone viewers open on the finished surface. Replay starts from the square, the time slider scrubs the gluing, and dragging rotates the surface even while paused. The sphere runs for 11 seconds and the other five constructions run for 24. Reset view returns to the finished pose with both seams visible.
+The six standalone viewers open on the finished surface. Replay starts from the square, the time slider scrubs the gluing, and dragging rotates the surface even while paused. The sphere runs for 11 seconds and the other five constructions run for 24. Reset view returns to the finished pose with both seams visible. During playback, the square’s grid follows the sheet, matching arrows identify each edge pair, and corner labels merge when a seam closes. These guides fade after the second seam closes.
 
 ## Building one construction
 

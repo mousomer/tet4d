@@ -58,6 +58,7 @@ separation.addEventListener("input",requestDraw);
 GLUING_EQUATIONS
 const construction = SURFACES["klein-opposite"];
 GLUING_PLAYBACK
+GLUING_GUIDES
 
 function draw(timestamp) {
   if (started !== null) seek((timestamp - started) / 1000);
@@ -184,11 +185,12 @@ function draw(timestamp) {
     ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);
     ctx.strokeStyle="white";ctx.lineWidth=2;ctx.stroke();
   }
+  drawGuides(screen,stage.firstClosed,stage.closed);
   const used = [];
   ctx.font = '14px system-ui';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  for (const [id,name] of (section.checked && stage.closed ? tips : [])) {
+  for (const [id,name] of (section.checked && seconds >= secondJoin+1.25 ? tips : [])) {
     const [x,y] = screen[id];
     const w = ctx.measureText(name).width+18;
     let lx = Math.max(w/2+5,Math.min(width-w/2-5,x+(x-width/2)*.23));

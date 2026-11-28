@@ -3,6 +3,7 @@
 const firstJoin=8, secondStart=10, secondJoin=16;
 function onClosure() { section.checked=false; }
 PLAYBACK_TRANSPORT
+GLUING_GUIDES
 const adjacent = mesh.adjacent;
 const smooth = x => {
   const u = Math.max(0, Math.min(1, x));
@@ -95,20 +96,6 @@ function draw(timestamp) {
     ctx.stroke();
     ctx.setLineDash([]);
   }
-  function arrow(ids,color) {
-    const mid=Math.floor(ids.length/2);
-    const [x,y]=screen[ids[mid]], before=screen[ids[mid-2]], after=screen[ids[mid+2]];
-    const dx=after[0]-before[0], dy=after[1]-before[1], len=Math.hypot(dx,dy);
-    if (len<1) return;
-    const u=dx/len,v=dy/len;
-    ctx.beginPath();
-    ctx.moveTo(x+8*u,y+8*v);
-    ctx.lineTo(x-5*u-4*v,y-5*v+4*u);
-    ctx.lineTo(x-5*u+4*v,y-5*v-4*u);
-    ctx.closePath();
-    ctx.fillStyle=color;
-    ctx.fill();
-  }
   const w=Math.round(width), h=Math.round(height);
   const pixels=ctx.createImageData(w,h);
   const heads=new Int32Array(w*h);
@@ -181,21 +168,16 @@ function draw(timestamp) {
       const ids = seams[adjacent ? pair : 1 - pair][0];
       const other=ids.map(id=>id+offset);
       seam(other, seams[pair][1], false);
-      arrow(seams[pair][0],seams[pair][1]);
-      arrow(adjacent && pair===0 ? other : other.reverse(),seams[pair][1]);
     }
     ctx.globalAlpha = 1;
   }
 
+  drawGuides(screen,fold===1,closure===1);
   const used = [];
   ctx.font = '14px system-ui';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  const [a,b]=seams.map(s=>s[0]);
-  const last=b[b.length-1], otherB=a[a.length-1]+mesh.square.length/2;
-  const corners=closure===1 ? tips : fold<1 ? [[0,'A'],[b[0],'B'],[last,'C'],[otherB,'D']]
-    : adjacent ? [[0,'A · 90°'],[b[0],'B + D'],[last,'C']] : [[0,'A + C'],[b[0],'B + D']];
-  for (const [id,name] of (section.checked ? corners : [])) {
+  for (const [id,name] of (section.checked && seconds>=secondJoin+1.25 ? tips : [])) {
     const [x,y] = screen[id];
     const w = ctx.measureText(name).width+18;
     let lx = Math.max(w/2+5,Math.min(width-w/2-5,x+(x-width/2)*.23));
