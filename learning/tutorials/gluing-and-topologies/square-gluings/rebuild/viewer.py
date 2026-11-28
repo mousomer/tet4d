@@ -117,6 +117,10 @@ def write_page(name, m, model, output):
     template = template.replace(
         "PLAYBACK_TRANSPORT", (templates / "transport.js").read_text()
     )
+    model["kind"] = name
+    template = template.replace(
+        "GLUING_GUIDES", (templates / "gluing-guides.js").read_text()
+    )
     assert template.count("MESH_DATA") == 1
     output.write_text(
         template.replace("MESH_DATA", json.dumps(model, separators=(",", ":")))

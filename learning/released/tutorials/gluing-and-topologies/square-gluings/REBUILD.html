@@ -41,7 +41,10 @@ fresh output directory:</p>
 starts from the square, the time slider scrubs the gluing, and dragging
 rotates the surface even while paused. The sphere runs for 11 seconds
 and the other five constructions run for 24. Reset view returns to the
-finished pose with both seams visible.</p>
+finished pose with both seams visible. During playback, the square’s
+grid follows the sheet, matching arrows identify each edge pair, and
+corner labels merge when a seam closes. These guides fade after the
+second seam closes.</p>
 <h2 id="building-one-construction">Building one construction</h2>
 <div class="sourceCode" id="cb3"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">.venv/bin/python</span> rebuild/build.py <span class="at">--only</span> opposite-rp2 <span class="at">--output</span> /tmp/tet4d-rp2-test <span class="at">--jobs</span> 4</span></code></pre></div>
 <p>The available names are <strong>sphere-revised</strong> (adjacent
